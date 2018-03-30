@@ -14,11 +14,9 @@ exports.uptime = {
   description: "returns the amount of time since the bot and the system's operating system started",
   process: function(djs, dio, msg, suffix) {
     var uptime = utils.uptime();
-    var osUptime = utils.osUptime()
     const embed = new Discord.RichEmbed()
       .setAuthor("Uptime", djs.user.avatarURL)
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
-      .addField(":arrow_up: OS Uptime", `${osUptime}`)
       .setFooter("And still going")
     return msg.channel.send({embed});
   }
@@ -33,13 +31,12 @@ exports.stats = {
     var CPUTimeTaken = Date.now() - CPUClock
     var botPing = djs.ping.toFixed(0)
     var uptime = utils.uptime();
-    var osUptime = utils.osUptime()
     var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
     const embed = new Discord.RichEmbed()
       .setAuthor("Statistics", djs.user.avatarURL)
       .addField(":cloud: Network Latency:", `${botPing}ms`)
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
-      .addField("<:cpu:402219509915713537> OS:", `**Uptime:**\n${osUptime}\n**RAM Usage:**\n${ramUsage}MB`)
+      .addField("<:cpu:402219509915713537> OS:", `**RAM Usage:**\n${ramUsage}MB`)
       .addField("<:Users:420035116866338826> User Count:", `${djs.users.size} users`)
       .addField("<:discord:419242860156813312> Guild Count:", `${djs.guilds.size} guilds`)
       .addField("<:terminal:419242860395757608> Channel Count:", `${djs.channels.size} channels`)
