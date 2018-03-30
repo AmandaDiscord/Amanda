@@ -10,18 +10,19 @@ exports.cat = {
   usage: "",
   description: "Returns an image of a cute cat",
   process: function(djs, dio, msg, suffix){
-    try {
-    require("request")("http://aws.random.cat/meow",
-      function(err, res, body){
+   require("request")("http://aws.random.cat/meow",
+    function(err, res, body) {
+        if (err) return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...`);
+        try {
         var data = JSON.parse(body);
+        } catch (error) {
+            return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...`)
+        }
         const embed = new Discord.RichEmbed()
-          .setImage(data.file)
-          .setColor('RANDOM')
-          msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed}));
+            .setImage(data.file)
+            .setColor('RANDOM')
+        msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({ embed }));
     });
-  } catch (error) {
-    msg.channel.send(error)
-  }
  }
 },
 
