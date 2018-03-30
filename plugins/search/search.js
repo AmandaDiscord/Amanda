@@ -8,10 +8,14 @@ exports.urban = {
   usage: "<search term>",
   description: "Searches the urban dictionary for a term",
   process: function(djs, dio, msg, suffix) {
-    try {
       require("request")(`http://api.urbandictionary.com/v0/define?term=${suffix}`,
         function(err, res, body){
+        if (err) return msg.channel.send("Error... API returned nothing.");
+          try {
           var data = JSON.parse(body);
+          } catch (error) {
+            return msg.channel.send(`Error while requesting the definition\n${error}`);
+          }
           if (data.result_type == "no_results") return msg.channel.send(`${msg.author.username}, those are invalid search terms`)
           const embed = new Discord.RichEmbed()
             .setAuthor(suffix)
@@ -20,8 +24,5 @@ exports.urban = {
             .setColor('RANDOM')
           msg.channel.send({embed})
       });
-    } catch (error) {
-      return msg.channel.send("There was an error querying that term...")
-      }
    }
 }

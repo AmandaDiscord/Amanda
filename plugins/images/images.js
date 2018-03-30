@@ -12,11 +12,11 @@ exports.cat = {
   process: function(djs, dio, msg, suffix){
    require("request")("http://aws.random.cat/meow",
     function(err, res, body) {
-        if (err) return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...`);
+        if (err) return msg.channel.send(`Error... API returned nothing`);
         try {
         var data = JSON.parse(body);
         } catch (error) {
-            return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...`)
+            return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...\n${error}`)
         }
         const embed = new Discord.RichEmbed()
             .setImage(data.file)
@@ -32,7 +32,12 @@ exports.dog = {
   process: function(djs, dio, msg, suffix){
     require("request")("https://api.thedogapi.co.uk/v2/dog.php",
       function(err, res, body){
+      if (err) return msg.channel.send("Error. The API returned nothing...");
+        try {
         var data = JSON.parse(body);
+        } catch (error) {
+        return msg.channel.send(`Error while requesting an image of a dog.\n${error}`);
+        }
         const embed = new Discord.RichEmbed()
           .setImage(`${data.data[0].url}`)
           .setColor('RANDOM')
@@ -47,7 +52,12 @@ exports.space = {
   process: function(djs, dio, msg, suffix) {
     require("request")("https://cheweybot.ga/api/space",
       function(err, res, body) {
+      if (err) return msg.channel.send("Error... API returned nothing");
+        try {
         var data = JSON.parse(body);
+        } catch (error) {
+            return msg.channel.send(`Error while requesting a space image\n${error}`);
+        }
         const embed = new Discord.RichEmbed()
           .setImage(data.data)
           .setColor('RANDOM')
