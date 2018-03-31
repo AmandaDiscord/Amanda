@@ -18,9 +18,9 @@ exports.urban = {
           }
           if (data.result_type == "no_results") return msg.channel.send(`${msg.author.username}, those are invalid search terms`)
           const embed = new Discord.RichEmbed()
-            .setAuthor(suffix)
+            .setAuthor(data.list[0].word)
             .addField("Definition:", data.list[0].definition)
-            .addField("Example:", data.list[0].example)
+            .addField("Example:", data.list[0].example || "Not available")
             .setColor('RANDOM')
           msg.channel.send({embed})
       });
