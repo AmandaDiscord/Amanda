@@ -15,7 +15,7 @@ exports.uptime = {
   process: function(djs, dio, msg, suffix) {
     var uptime = utils.uptime();
     const embed = new Discord.RichEmbed()
-      .setAuthor("Uptime", djs.user.avatarURL)
+      .setAuthor("Uptime")
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
       .setFooter("And still going")
     return msg.channel.send({embed});
@@ -33,7 +33,7 @@ exports.stats = {
     var uptime = utils.uptime();
     var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
     const embed = new Discord.RichEmbed()
-      .setAuthor("Statistics", djs.user.avatarURL)
+      .setAuthor("Statistics")
       .addField(":cloud: Network Latency:", `${botPing}ms`)
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
       .addField("<:cpu:402219509915713537> OS:", `**RAM Usage:**\n${ramUsage}MB`)
