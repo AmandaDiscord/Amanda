@@ -56,12 +56,12 @@ exports.slot = {
         } else if (row.coins < bet) {
           return msg.channel.send(`${msg.author.username}, not enough Discoins to place that bet.`)
         } else {
-        var slotArray = [':apple:', ':banana:', ':cherries:', ':strawberry:', ':watermelon:', ':pear:', ':heart:'];
+        var slotArray = ['apple', 'cherries', 'watermelon', 'pear', 'heart'];
         var randSlot1 = slotArray[Math.floor(Math.random() * slotArray.length)];
         var randSlot2 = slotArray[Math.floor(Math.random() * slotArray.length)];
         var randSlot3 = slotArray[Math.floor(Math.random() * slotArray.length)];
         const embed = new Discord.RichEmbed()
-          .setDescription(`|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ |\n__|       Slots       |__\n \\                    /\n   |‾‾‾‾‾‾‾‾‾‾‾‾|\n    ${randSlot1}${randSlot2}${randSlot3}\n /                    \\ \n|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾|\n|                        |\n|                        |\n|                        |\n‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾`)
+          .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
         msg.channel.send({embed});
         if (randSlot1 == randSlot2 && randSlot2 == randSlot3) {
           msg.channel.send(`Woah! Three of a kind! Lucky! You got ${bet * 4} Discoins! <a:Discoin:422523472128901140>`);
