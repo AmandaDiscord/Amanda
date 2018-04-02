@@ -42,7 +42,7 @@ exports.slot = {
     sql.get(`SELECT * FROM money WHERE userID ="${msg.author.id}"`).then(row => {
       if (!row) {
         sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-        return msg.channel.send(`No previous userdata was found for ${msg.author.username}... Creating`)
+        return msg.channel.send(`No previous userdata was found for ${msg.author.username}... An entry has been created`)
       } else {
         var argArr = args.split(' ');
         var bet = argArr[0];
@@ -133,7 +133,7 @@ exports.bf = {
     sql.get(`SELECT * FROM money WHERE userID ="${msg.author.id}"`).then(row => {
       if (!row) {
         sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-        return msg.channel.send(`No previous userdata was found for ${msg.author.username}... Creating`)
+        return msg.channel.send(`No previous userdata was found for ${msg.author.username}... An entry has been created`)
       } else {
         if (!bet) {
           return msg.channel.send(`${msg.author.username}, you must place a bet!`)
@@ -182,8 +182,11 @@ exports.coins = {
     }
     var member = findMember(msg, suffix, true);
     sql.get(`SELECT * FROM money WHERE userID ="${member.user.id}"`).then(row => {
+      if (member == null) return msg.channel.send("User not found");
+      if (member == undefined) return msg.channel.send("User not found");
       if (!row) {
-        return msg.channel.send("User not found in the database");
+        sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+        return msg.channel.send("User not found in the database. An entry has been created for them");
       } else {
         const embed = new Discord.RichEmbed()
         .setAuthor(`Coins for ${member.user.tag}`)
