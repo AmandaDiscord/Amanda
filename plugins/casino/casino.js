@@ -9,7 +9,6 @@ exports.commands = [
 ]
 
 const Discord = require('discord.js');
-const mined = new Set();
 let sql = require("sqlite");
 sql.open("./databases/money.sqlite");
 function findMember(msg, suffix, self = false) {
@@ -55,7 +54,7 @@ exports.slot = {
         if (!bet) {
           const embed = new Discord.RichEmbed()
            .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
+          msg.channel.send({embed});
         }
         if (isNaN(bet)) {
           return msg.channel.send(`${msg.author.username}, that's not a valid bet`);
@@ -64,56 +63,26 @@ exports.slot = {
         } else if (row.coins < bet) {
           return msg.channel.send(`${msg.author.username}, not enough Discoins to place that bet.`);
         } else {
-        if (randSlot1 == "heart" && randSlot1 == randSlot2 && randSlot2 == randSlot3) {
-          var result = `Woah! Three of a kind! Lucky! You got ${bet * 5} Discoins! <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 4)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot1 == "heart" && randSlot1 == randSlot2) {
-          var result = `Two of a kind! Nice. You got ${bet * 4} Discoins back <a:Discoin:422523472128901140>`;
+        if (randSlot1 == randSlot2 && randSlot2 == randSlot3) {
+          var result = `Woah! Three of a kind! Lucky! You got ${bet * 4} Discoins! <a:Discoin:422523472128901140>`;
           sql.run(`UPDATE money SET coins = ${row.coins + (bet * 3)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot1 == "heart" && randSlot1 == randSlot3) {
-          var result = `Two of a kind! Nice. You got ${bet * 4} Discoins back <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 3)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot2 == "heart" && randSlot2 == randSlot3) {
-          var result = `Two of a kind! Nice. You got ${bet * 4} Discoins back <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 3)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot1 == "heart") {
-          var result = `Cool. One heart. You got ${bet * 3} Discoins back <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 2)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot2 == "heart") {
-          var result = `Cool. One heart. You got ${bet * 3} Discoins back <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 2)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        } else if (randSlot3 == "heart") {
-          var result = `Cool. One heart. You got ${bet * 3} Discoins back <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins = ${row.coins + (bet * 2)} WHERE userID = ${msg.author.id}`);
-          const embed = new Discord.RichEmbed()
-           .setDescription(result)
-           .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          return msg.channel.send({embed});
-        }
+       } else if (randSlot1 == randSlot2) {
+         var result = `Two of a kind. Nice. You got ${bet * 2} Discoins back <a:Discoin:422523472128901140>`;
+         sql.run(`UPDATE money SET coins = ${row.coins + (bet - 0)} WHERE userID = ${msg.author.id}`);
+       } else if (randSlot1 == randSlot3) {
+         var result = `Two of a kind. Nice. You got ${bet * 2} Discoins back <a:Discoin:422523472128901140>`;
+         sql.run(`UPDATE money SET coins = ${row.coins + (bet - 0)} WHERE userID = ${msg.author.id}`);
+       } else if (randSlot2 == randSlot3) {
+         var result = `Two of a kind. Nice. You got ${bet * 2} Discoins back <a:Discoin:422523472128901140>`;
+         sql.run(`UPDATE money SET coins = ${row.coins + (bet - 0)} WHERE userID = ${msg.author.id}`);
+       } else {
+         var result = `Sorry. You didn't get a match. You lost ${bet} Discoins <a:Discoin:422523472128901140>`;
+         return sql.run(`UPDATE money SET coins = ${row.coins - bet} WHERE userID = ${msg.author.id}`);
+       }
+       const embed = new Discord.RichEmbed()
+        .setDescription(result)
+        .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
+       msg.channel.send({embed});
       }
      }
     }).catch(() => {
