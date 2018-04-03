@@ -77,7 +77,7 @@ exports.slot = {
          sql.run(`UPDATE money SET coins = ${row.coins + (bet - 0)} WHERE userID = ${msg.author.id}`);
        } else {
          var result = `Sorry. You didn't get a match. You lost ${bet} Discoins <a:Discoin:422523472128901140>`;
-         return sql.run(`UPDATE money SET coins = ${row.coins - bet} WHERE userID = ${msg.author.id}`);
+         sql.run(`UPDATE money SET coins = ${row.coins - bet} WHERE userID = ${msg.author.id}`);
        }
        const embed = new Discord.RichEmbed()
         .setDescription(result)
