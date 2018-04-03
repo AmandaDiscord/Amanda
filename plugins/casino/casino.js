@@ -54,7 +54,7 @@ exports.slot = {
         if (!bet) {
           const embed = new Discord.RichEmbed()
            .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
-          msg.channel.send({embed});
+          return msg.channel.send({embed});
         }
         if (isNaN(bet)) {
           return msg.channel.send(`${msg.author.username}, that's not a valid bet`);
