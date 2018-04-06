@@ -125,7 +125,7 @@ const commands = {
         .addBlankField(true)
         .addField("Guild Commands:", "-user <user>\n-tidy <# to delete>\n-emoji <:EMOJI:>\n-emojilist")
         .addBlankField(true)
-        .addField("Interaction Commands:", "-poke <@USER>\n-boop <@USER>\n-hug <@USER>\n-cuddle <@USER>\n-pat <@USER>\n-kiss <@USER>\n-slap <@USER>\n-stab <@USER>")
+        .addField("Interaction Commands:", "-poke <user>\n-boop <user>\n-hug <user>\n-cuddle <user>\n-pat <user>\n-kiss <user>\n-slap <user>\n-stab <user>\n-nom <user>")
         .addBlankField(true)
         .addField("Random Commands:", "-norris\n-randnum <min#> <max#>\n-yn <question>\n-ball <question>\n-rate <thing to rate>")
         .addBlankField(true)

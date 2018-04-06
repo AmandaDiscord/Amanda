@@ -230,7 +230,7 @@ exports.nom = {
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
     if (member.user.id == msg.author.id) return msg.channel.send("You are so weird...");
     if (member.user.id == djs.user.id) return msg.channel.send(`owie`);
-    require("request")("https://shodan-api.herokuapp.com/interactions/pat",
+    require("request")("https://shodan-api.herokuapp.com/interactions/nom",
     function(err, res, body) {
       if (err) return msg.channel.send("Error... Api returned nothing");
       try {

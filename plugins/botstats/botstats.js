@@ -53,7 +53,7 @@ exports.ping = {
     var npingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
     var randnPingMsg = npingArray[Math.floor(Math.random() * npingArray.length)];
     const embed = new Discord.RichEmbed()
-      .setAuthor("Pong!", djs.user.avatarURL)
+      .setAuthor("Pong!")
       .addField(":cloud: Network Latency:", `${djs.ping.toFixed(0)}ms`)
       .setColor('RANDOM')
       .setFooter("Is that slow?")
