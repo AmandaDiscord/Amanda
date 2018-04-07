@@ -28,7 +28,7 @@ exports.info = {
       .setColor(0x00AE86)
       .setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me.")
       .addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530>")
-      .addField("Bot Version:", "4.2.2")
+      .addField("Bot Version:", "4.3.0")
       .addField("Lang:", `Node.js ${process.version}`)
       .addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
       .addField("Description:", "A cutie-pie chat bot that only wishes for some love.")

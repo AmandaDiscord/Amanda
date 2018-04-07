@@ -119,7 +119,7 @@ const commands = {
         .addBlankField(true)
         .addField("Statistic Commands:", "-stats\n-ping\n-uptime")
         .addBlankField(true)
-        .addField("Casino Commands:", "-dice\n-flip\n-bf <amount> <side>\n-slot <amount>\n-megaslot\n-coins <user>")
+        .addField("Casino Commands:", "-dice\n-flip\n-bf <amount> <side>\n-slot <amount>\n-megaslot\n-coins <user>\n-mine\n-lb")
         .addBlankField(true)
         .addField("Image Commands:", "-cat\n-dog\n-space")
         .addBlankField(true)

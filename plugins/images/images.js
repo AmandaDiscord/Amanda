@@ -10,7 +10,7 @@ exports.cat = {
   usage: "",
   description: "Returns an image of a cute cat",
   process: function(djs, dio, msg, suffix){
-   require("request")("https://cheweybot.ga/api/cat",
+   require("request")("http://aws.random.cat/meow",
     function(err, res, body) {
         if (err) return msg.channel.send(`Error... API returned nothing`);
         try {
