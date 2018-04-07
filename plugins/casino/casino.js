@@ -6,9 +6,11 @@ exports.commands = [
   "bf",
   "coins",
   "mine",
+  "lb",
 ]
 
 const Discord = require('discord.js');
+const mined = new Set();
 let sql = require("sqlite");
 sql.open("./databases/money.sqlite");
 function findMember(msg, suffix, self = false) {
@@ -219,10 +221,16 @@ exports.mine = {
         sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         msg.channel.send(`No previous userdata was found for ${msg.author.username}... Creating`)
       } else {
+        if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
+        var randMine = Math.floor(Math.random() * (100 - 1) + 1);
         const embed = new Discord.RichEmbed()
           .setDescription(`**${msg.author.username} went mining for Discoins and got 1 Discoin** <a:Discoin:422523472128901140>`);
           msg.channel.send({embed});
-          return sql.run(`UPDATE money SET coins = ${row.coins + 1} WHERE userID = ${msg.author.id}`);
+          return sql.run(`UPDATE money SET coins = ${row.coins + (randMine + 0)} WHERE userID = ${msg.author.id}`);
+          mined.add(msg.author.id);
+          setTimeout(() => {
+            mined.delete(msg.author.id);
+          }, 60000);
       }
     }).catch(() => {
       console.error;
@@ -230,6 +238,19 @@ exports.mine = {
         sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         msg.channel.send("Database was either corrupted or didn't exist... Created the database");
       });
+    })
+  }
+},
+
+exports.lb = {
+  usage: "",
+  description: "Gets the leaderboard for people with the most coins",
+  process: function(djs, dio, msg, suffix) {
+    sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT 10", djs.user.id).then(all => {
+       const embed = new Discord.RichEmbed()
+         .setAuthor("Leaderboards")
+         .setDescription(all.map(row => `— ${dio.users[row.userID] ? dio.users[row.userID].username : row.userID} :: ${row.coins}`).join("\n"))
+       msg.channel.send({embed});
     })
   }
 }
