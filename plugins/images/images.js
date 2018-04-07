@@ -19,7 +19,7 @@ exports.cat = {
             return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...\n${error}`)
         }
         const embed = new Discord.RichEmbed()
-            .setImage(data.data')  )
+            .setImage(data.file')  )
             .setColor('RANDOM')
         msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({ embed }));
     });
