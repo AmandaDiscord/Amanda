@@ -40,7 +40,7 @@ exports.hug = {
         } catch (error) {
           return msg.channel.send(`There was an error:\n${error}`);
         }
-        if (member.user.id) {
+        if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -70,7 +70,7 @@ exports.kiss = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -100,7 +100,7 @@ exports.cuddle = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -130,7 +130,7 @@ exports.poke = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -160,7 +160,7 @@ exports.slap = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -190,7 +190,7 @@ exports.boop = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -220,7 +220,7 @@ exports.pat = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -242,7 +242,7 @@ exports.stab = {
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
     if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
     if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
-    if (member.user.id) {
+    if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix
@@ -270,7 +270,7 @@ exports.nom = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member.user.id) {
+      if (member !== null) {
            var atMem = `<@${member.user.id}>`
         } else {
            var atMem = suffix

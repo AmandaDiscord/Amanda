@@ -27,14 +27,14 @@ exports.info = {
       .setAuthor("Information:")
       .setColor(0x00AE86)
       .setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me.")
-      .addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530>")
+      .addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>")
       .addField("Bot Version:", "4.3.0")
       .addField("Lang:", `Node.js ${process.version}`)
       .addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
       .addField("Description:", "A cutie-pie chat bot that only wishes for some love.")
       .addField("More Info:", "Visit Amanda's [website](http://amanda.shodanbot.com) or her [support server](http://papishouse.discords.ga)")
       .addBlankField(true)
-      .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530><:NitroBadge:421774688507920406>\n[SHODAN](http://shodanbot.com)<:bot:412413027565174787>")
+      .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com)<:bot:412413027565174787>")
       .setFooter("Amanda", djs.user.avatarURL)
     msg.channel.send({embed});
   }

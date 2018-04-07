@@ -25,6 +25,7 @@ exports.user = {
   		  return
   	 }
       var member = findMember(msg, suffix, true);
+      if (member == null) return msg.channel.send("Could not find that user");
       var guildJoinedTime = new Date(member.joinedAt).toUTCString();
       var userCreatedTime = new Date(member.user.createdAt).toUTCString();
       const embed = new Discord.RichEmbed()
