@@ -10,7 +10,7 @@ exports.cat = {
   usage: "",
   description: "Returns an image of a cute cat",
   process: function(djs, dio, msg, suffix){
-   require("request")("http://aws.random.cat/meow",
+   require("request")("https://cheweybot.ga/api/cat",
     function(err, res, body) {
         if (err) return msg.channel.send(`Error... API returned nothing`);
         try {
@@ -19,7 +19,7 @@ exports.cat = {
             return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...\n${error}`)
         }
         const embed = new Discord.RichEmbed()
-            .setImage(data.file')  )
+            .setImage(data.data)
             .setColor('RANDOM')
         msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({ embed }));
     });
