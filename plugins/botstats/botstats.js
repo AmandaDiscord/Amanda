@@ -18,7 +18,8 @@ exports.uptime = {
       .setAuthor("Uptime")
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
       .setFooter("And still going")
-    return msg.channel.send({embed});
+      .setColor(504277)
+    msg.channel.send({embed});
   }
 },
 
@@ -36,12 +37,12 @@ exports.stats = {
       .setAuthor("Statistics")
       .addField(":cloud: Network Latency:", `${botPing}ms`)
       .addField(":arrow_up: Bot Uptime:", `${uptime}`)
-      .addField("<:cpu:402219509915713537> OS:", `**RAM Usage:**\n${ramUsage}MB`)
+      .addField("<:cpu:402219509915713537> RAM Usage:", `${ramUsage}MB`)
       .addField("<:Users:420035116866338826> User Count:", `${djs.users.size} users`)
       .addField("<:discord:419242860156813312> Guild Count:", `${djs.guilds.size} guilds`)
       .addField("<:terminal:419242860395757608> Channel Count:", `${djs.channels.size} channels`)
       .setFooter(`Requested by ${msg.author.username}`)
-      .setColor(0x00AE86)
+      .setColor(504277)
     return msg.channel.send({embed});
   }
 },
@@ -55,8 +56,8 @@ exports.ping = {
     const embed = new Discord.RichEmbed()
       .setAuthor("Pong!")
       .addField(":cloud: Network Latency:", `${djs.ping.toFixed(0)}ms`)
-      .setColor('RANDOM')
       .setFooter("Is that slow?")
+      .setColor(504277)
     msg.channel.send(randnPingMsg).then(nmsg => nmsg.edit({embed}))
   }
 },
@@ -69,6 +70,7 @@ exports.servers = {
       const embed = new Discord.RichEmbed()
         .setAuthor("Servers")
         .addField(`${djs.user.username} in currently in:`, `**${djs.guilds.map(g => `${g.name} - **${g.memberCount} Members**`).join(`\n`)}`, true)
+        .setColor("F8E71C")
         return msg.channel.send({embed});
     } else {
       return msg.channel.send(`${djs.user.username} is currently in ${djs.guilds.size} servers`);

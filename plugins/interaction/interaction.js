@@ -28,6 +28,7 @@ exports.hug = {
   description: "Hugs someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
     if (member.user.id == msg.author.id) return msg.channel.send("That's not strange at all...");
@@ -39,11 +40,6 @@ exports.hug = {
           var data = JSON.parse(body);
         } catch (error) {
           return msg.channel.send(`There was an error:\n${error}`);
-        }
-        if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
         }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} hugged ${atMem}`)
@@ -58,6 +54,7 @@ exports.kiss = {
   description: "Kisses someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
     if (member.user.id == msg.author.id) return msg.channel.send(`W-What? Why, ${msg.author.username}?`);
@@ -70,11 +67,6 @@ exports.kiss = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} kissed ${atMem}`)
         .setImage(data.img)
@@ -88,6 +80,7 @@ exports.cuddle = {
   description: "Cuddles someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
     if (member.user.id == msg.author.id) return msg.channel.send("I find it strange that you tried to do that...");
@@ -100,11 +93,6 @@ exports.cuddle = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} cuddled ${atMem}`)
         .setImage(data.img)
@@ -118,6 +106,7 @@ exports.poke = {
   description: "Pokes someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
     if (member.user.id == msg.author.id) return msg.channel.send("Ok then...");
@@ -148,6 +137,7 @@ exports.slap = {
   description: "Slaps someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
     if (member.user.id == msg.author.id) return msg.channel.send("Come on... Don't make yourself look like an idiot...");
@@ -160,11 +150,6 @@ exports.slap = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} hugged ${atMem}`)
         .setImage(data.img)
@@ -178,6 +163,7 @@ exports.boop = {
   description: "Boops someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
     if (member.user.id == msg.author.id) return msg.channel.send("Why even try?");
@@ -190,11 +176,6 @@ exports.boop = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} booped ${atMem}`)
         .setImage(data.img)
@@ -208,6 +189,7 @@ exports.pat = {
   description: "Pats someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
     if (member.user.id == msg.author.id) return msg.channel.send("<:NotLikeCat:411364955493761044>");
@@ -220,11 +202,6 @@ exports.pat = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} patted ${atMem}`)
         .setImage(data.img)
@@ -238,15 +215,11 @@ exports.stab = {
   description: "Stabs someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
     if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
     if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
-    if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
     const embed = new Discord.RichEmbed()
       .setDescription(`${msg.author.username} stabbed ${atMem}`)
     msg.channel.send({embed});
@@ -258,6 +231,7 @@ exports.nom = {
   description: "noms someone",
   process: function(djs, dio, msg, suffix) {
     var member = findMember(msg, suffix);
+    if (member == null) return msg.channel.send("Couldn't find that user");
     if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
     if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
     if (member.user.id == msg.author.id) return msg.channel.send("You are so weird...");
@@ -270,11 +244,6 @@ exports.nom = {
       } catch (error) {
         return msg.channel.send(`There was an error:\n${error}`);
       }
-      if (member !== null) {
-           var atMem = `<@${member.user.id}>`
-        } else {
-           var atMem = suffix
-        }
       const embed = new Discord.RichEmbed()
         .setDescription(`${msg.author.username} nommed ${atMem}`)
         .setImage(data.img)

@@ -187,9 +187,8 @@ exports.coins = {
        return msg.channel.send("You can't use this command in DMs!");
     }
     var member = findMember(msg, suffix, true);
+    if (member == null) return msg.channel.send("Could not find that user");
     sql.get(`SELECT * FROM money WHERE userID ="${member.user.id}"`).then(row => {
-      if (member == null) return msg.channel.send("User not found");
-      if (member == undefined) return msg.channel.send("User not found");
       if (!row) {
         sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
         return msg.channel.send("User not found in the database. An entry has been created for them");
@@ -197,6 +196,7 @@ exports.coins = {
         const embed = new Discord.RichEmbed()
         .setAuthor(`Coins for ${member.user.tag}`)
         .setDescription(`${row.coins} Discoins <a:Discoin:422523472128901140>`)
+        .setColor("F8E71C")
         msg.channel.send({embed})
       }
     }).catch(() => {
@@ -224,7 +224,8 @@ exports.mine = {
         if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
         var randMine = Math.floor(Math.random() * (20 - 1) + 1);
         const embed = new Discord.RichEmbed()
-          .setDescription(`**${msg.author.username} went mining for Discoins and got ${randMine} Discoins** <a:Discoin:422523472128901140>`);
+          .setDescription(`**${msg.author.username} went mining for Discoins and got ${randMine} Discoins** <a:Discoin:422523472128901140> :pick:`)
+          .setColor("F8E71C")
           msg.channel.send({embed});
           sql.run(`UPDATE money SET coins = ${row.coins + (randMine + 0)} WHERE userID = ${msg.author.id}`);
           mined.add(msg.author.id);
@@ -249,7 +250,8 @@ exports.lb = {
     sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT 10", djs.user.id).then(all => {
        const embed = new Discord.RichEmbed()
          .setAuthor("Leaderboards")
-         .setDescription(all.map(row => `— ${dio.users[row.userID] ? dio.users[row.userID].username : row.userID} :: ${row.coins}`).join("\n"))
+         .setDescription(all.map(row => `— ${dio.users[row.userID] ? dio.users[row.userID].username : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
+         .setColor("F8E71C")
        msg.channel.send({embed});
     })
   }

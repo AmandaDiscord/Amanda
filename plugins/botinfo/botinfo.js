@@ -15,6 +15,7 @@ exports.invite = {
       .setTitle("Invite Link")
       .setURL("http://amanda.discord-bots.ga/")
       .setFooter("Amanda", djs.user.avatarURL)
+      .setColor(504277)
     msg.channel.send({embed});
   }
 },
@@ -36,6 +37,7 @@ exports.info = {
       .addBlankField(true)
       .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com)<:bot:412413027565174787>")
       .setFooter("Amanda", djs.user.avatarURL)
+      .setColor(504277)
     msg.channel.send({embed});
   }
 },
@@ -48,6 +50,7 @@ exports.privacy = {
       .setAuthor("Privacy")
       .setDescription("Amanda promises to never log your messages anywhere. Amanda has no analytics outside of functions from within the Discord API; This means that how YOU use Amanda won't be displayed to other people nor will how all of the users who use Amanda be used for analytics")
       .setFooter("Amanda", djs.user.avatarURL)
+      .setColor("21FB5C")
     msg.channel.send({embed});
   }
 }

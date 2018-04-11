@@ -20,10 +20,7 @@ exports.user = {
   usage: "<user>",
   description: "Gets the user info about yourself or another user if provided.",
   process: function(djs, dio, msg, suffix) {
-     if(msg.channel.type !== 'text') {
-  		  msg.channel.send("You can't use this command in DMs!");
-  		  return
-  	 }
+     if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
       var member = findMember(msg, suffix, true);
       if (member == null) return msg.channel.send("Could not find that user");
       var guildJoinedTime = new Date(member.joinedAt).toUTCString();
@@ -53,7 +50,7 @@ exports.tidy = {
         if (suffix > 100) {
           return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`)
         }
-        msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`))
+        msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000))
       } else {
         return msg.channel.send(`${msg.author.username}, I don't have the manage messages permission`);
       }
@@ -70,12 +67,8 @@ exports.emoji = {
     var argArr = args.split(' ');
     var foundEmoji = Discord.Util.parseEmoji(argArr[0]);
     var emojiType = ""
-    if (!argArr[0]) {
-      return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-    }
-    if(foundEmoji.id == null) {
-      return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-    }
+    if (!argArr[0]) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+    if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
     if (foundEmoji.animated == true) {
       var emojiType = "gif";
     } else {
@@ -86,6 +79,7 @@ exports.emoji = {
       .addField("Emoji ID:", `${foundEmoji.id}`)
       .addField("Link to Emoji:", `[Click Here](https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType})`)
       .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
+      .setColor("RANDOM")
     msg.channel.send({embed});
   }
 },
@@ -94,11 +88,11 @@ exports.emojilist = {
   usage: "",
   description: "Gets a list of every emoji in a guild",
   process: function(djs, dio, msg, suffix) {
-    if(msg.channel.type !== 'text') {
-       msg.channel.send("You can't use this command in DMs!");
-       return
-    }
+    if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
     var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
-    msg.channel.send(emoji);
+    const embed = new Discord.RichEmbed()
+      .setDescription(emoji)
+      .setColor("50E3C2")
+    msg.channel.send({embed});
   }
 }
