@@ -42,7 +42,7 @@ exports.hug = {
           return msg.channel.send(`There was an error:\n${error}`);
         }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} hugged ${atMem}`)
+        .setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -68,7 +68,7 @@ exports.kiss = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} kissed ${atMem}`)
+        .setDescription(`${msg.author.username} kissed <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -94,7 +94,7 @@ exports.cuddle = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} cuddled ${atMem}`)
+        .setDescription(`${msg.author.username} cuddled <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -125,7 +125,7 @@ exports.poke = {
            var atMem = suffix
         }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} poked ${atMem}`)
+        .setDescription(`${msg.author.username} poked <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -151,7 +151,7 @@ exports.slap = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} hugged ${atMem}`)
+        .setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -177,7 +177,7 @@ exports.boop = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} booped ${atMem}`)
+        .setDescription(`${msg.author.username} booped <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -203,7 +203,7 @@ exports.pat = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} patted ${atMem}`)
+        .setDescription(`${msg.author.username} patted <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
@@ -221,7 +221,7 @@ exports.stab = {
     if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
     if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
     const embed = new Discord.RichEmbed()
-      .setDescription(`${msg.author.username} stabbed ${atMem}`)
+      .setDescription(`${msg.author.username} stabbed <@${member.user.id}>`)
     msg.channel.send({embed});
   }
 }
@@ -245,7 +245,7 @@ exports.nom = {
         return msg.channel.send(`There was an error:\n${error}`);
       }
       const embed = new Discord.RichEmbed()
-        .setDescription(`${msg.author.username} nommed ${atMem}`)
+        .setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
         .setImage(data.img)
       msg.channel.send({embed});
     })
