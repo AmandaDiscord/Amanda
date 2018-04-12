@@ -35,7 +35,10 @@ async function checkMessageForCommand(msg, isEdit) {
               } else if (!Config.debug) {
                 msgTxt += `\n${e}`;
               }
-              msg.channel.send(msgTxt);
+              const embed = new Discord.RichEmbed()
+                .setDescription(msgTxt)
+                .setColor("B60000")
+              msg.channel.send({embed});
             }
         } else {
             return;
@@ -116,7 +119,7 @@ const commands = {
         .addBlankField(true)
         .addField("Image Commands:", "-cat\n-dog\n-space")
         .addBlankField(true)
-        .addField("Guild Commands:", "-user <user>\n-tidy <# to delete>\n-emoji <:EMOJI:>\n-emojilist")
+        .addField("Guild Commands:", "-user <user>\n-tidy <# to delete>\n-emoji <:EMOJI:>\n-emojilist\n-guild")
         .addBlankField(true)
         .addField("Interaction Commands:", "-poke <user>\n-boop <user>\n-hug <user>\n-cuddle <user>\n-pat <user>\n-kiss <user>\n-slap <user>\n-stab <user>\n-nom <user>")
         .addBlankField(true)

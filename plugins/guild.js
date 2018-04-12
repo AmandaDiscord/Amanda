@@ -37,6 +37,7 @@ module.exports = function(passthrough) {
       usage: "<# of messages to delete>",
       description: "Tidies the chat. Requires the bot and the person who sent the message to have the manage messages permission. Default deleted messages is 50.",
       process: function(msg, suffix) {
+        if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         if (msg.member.hasPermission("MANAGE_MESSAGES")) {
           if (msg.guild.me.hasPermission("MANAGE_MESSAGES")) {
             if (isNaN(suffix)) {
@@ -90,6 +91,22 @@ module.exports = function(passthrough) {
           .setColor("50E3C2")
         msg.channel.send({embed});
       }
+    },
+
+    "guild": {
+       usage: "",
+       description: "Gets information about the server",
+       process: function(msg, suffix) {
+         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
+         const embed = new Discord.RichEmbed()
+           .setAuthor(msg.guild.name)
+           .addField("Created at:", msg.guild.createdAt.toUTCString())
+           .addField("Member Count:", `${msg.guild.memberCount} members`)
+           .addField("Owner", msg.guild.owner.user.tag)
+           .setThumbnail(msg.guild.iconURL)
+           .setColor("RANDOM")
+         msg.channel.send({embed});
+       }
     }
   }
 }
