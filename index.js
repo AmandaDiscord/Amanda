@@ -73,28 +73,21 @@ djs.on("messageUpdate", (oldMessage, newMessage) => {
 });
 
 const commands = {
-	   "eval": {
-      	usage: "<code>",
-      	description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
-      	process: function (msg, suffix) {
-       		if(msg.author.id === "320067006521147393") {
-              let result = eval(suffix)
-              if (typeof(result) === "object") {
-                msg.channel.send(JSON.stringify(result, null, 4));
-              } else {
-              msg.channel.send(result);
-              }
-        	} else if(msg.author.id === "366385096053358603") {
-              let result = eval(suffix)
-              if (typeof(result) === "object") {
-                msg.channel.send(JSON.stringify(result, null, 4));
-              } else {
-              msg.channel.send(result);
-              }
-        	} else {
-          		return msg.channel.send(`Dont even try it,  ${msg.author}`);
-        	}
-    	}
+  "eval": {
+    usage: "<code>",
+    description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
+    process: function (msg, suffix) {
+      if (["320067006521147393", "366385096053358603"].includes(msg.author.id))  {
+        let result = eval(suffix)
+        if (typeof(result) === "object") {
+          msg.channel.send(JSON.stringify(result, null, 4));
+        } else {
+        msg.channel.send(result);
+        }
+      } else {
+        return msg.channel.send(`Dont even try it, ${msg.author}`);
+      }
+    }
 	},
   "help": {
     usage: "<command>",
