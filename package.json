@@ -15,7 +15,6 @@
     "express": "^4.16.3",
     "html-entities": "^1.2.1",
     "https": "^1.0.0",
-    "npm": "^5.7.1",
     "request": "^2.83.0",
     "sqlite": "^2.9.1"
   }
