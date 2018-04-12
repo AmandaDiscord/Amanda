@@ -27,7 +27,7 @@ async function checkMessageForCommand(msg, isEdit) {
         var cmd = commands[cmdTxt];
         if (cmd) {
           try {
-            cmd.process(djs, dio, msg, suffix, isEdit);
+            cmd.process(msg, suffix, isEdit);
           } catch (e) {
               var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>`;
               if (Config.debug) {
@@ -57,7 +57,7 @@ const update = () => {
 		djs.user.setActivity(`${name} | ${Config.commandPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 };
 djs.on('ready', () => {
-    require("./plugins.js").init();
+    loadCommands();
 		console.log("Successfully logged in.");
     update();
     djs.setInterval(update, 300000);
@@ -76,7 +76,7 @@ const commands = {
 	   "eval": {
       	usage: "<code>",
       	description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
-      	process: function (djs, dio, msg, suffix) {
+      	process: function (msg, suffix) {
        		if(msg.author.id === "320067006521147393") {
               let result = eval(suffix)
               if (typeof(result) === "object") {
@@ -99,7 +99,7 @@ const commands = {
   "help": {
     usage: "<command>",
     description: "Shows a list of commands if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
-    process: function (djs, dio, msg, suffix) {
+    process: function (msg, suffix) {
       if(suffix) {
         var cmds = suffix.split(" ").filter(function (cmd) { return commands[cmd] });
         for (var i = 0; i < cmds.length; i++) {
@@ -138,20 +138,16 @@ const commands = {
   }
 };
 
-exports.addCommand = function (commandName, commandObject) {
-  try {
-    commands[commandName] = commandObject;
-  } catch (err) {
-      console.log(err);
-  }
-};
-exports.commandCount = function () {
-  return Object.keys(commands).length;
-};
-
 const express = require("express");
 const app = express()
 
 app.get('/', (req, res) => res.send('Hello World!'))
 var port = process.env.PORT || 3000
 app.listen(port, () => console.log('Webapp listening on port 3000'))
+
+function loadCommands() {
+  let passthrough = {Discord, djs, dio};
+  require("./plugins.js")(passthrough, loaded => {
+    Object.assign(commands, loaded);
+  });
+}
