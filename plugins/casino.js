@@ -217,7 +217,7 @@ module.exports = function(passthrough) {
             if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
             var randMine = Math.floor(Math.random() * (20 - 1) + 1);
             const embed = new Discord.RichEmbed()
-              .setDescription(`**${msg.author.username} went mining for Discoins and got ${randMine} Discoins** <a:Discoin:422523472128901140> :pick:`)
+              .setDescription(`**${msg.author.username} went mining and got ${randMine} Discoins** <a:Discoin:422523472128901140> :pick:`)
               .setColor("F8E71C")
               msg.channel.send({embed});
               sql.run(`UPDATE money SET coins = ${row.coins + (randMine + 0)} WHERE userID = ${msg.author.id}`);

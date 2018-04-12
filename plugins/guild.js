@@ -101,8 +101,9 @@ module.exports = function(passthrough) {
          const embed = new Discord.RichEmbed()
            .setAuthor(msg.guild.name)
            .addField("Created at:", msg.guild.createdAt.toUTCString())
+           .addField("Owner:", msg.guild.owner.user.tag)
            .addField("Member Count:", `${msg.guild.memberCount} members`)
-           .addField("Owner", msg.guild.owner.user.tag)
+           .addField("Guild ID:", msg.guild.id)
            .setThumbnail(msg.guild.iconURL)
            .setColor("RANDOM")
          msg.channel.send({embed});
