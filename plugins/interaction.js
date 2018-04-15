@@ -93,7 +93,7 @@ module.exports = function(passthrough) {
     "poke": {
       usage: "<user>",
       description: "Pokes someone",
-      process: function(djs, dio, msg, suffix) {
+      process: function(msg, suffix) {
         var member = findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
         if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
