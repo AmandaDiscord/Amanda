@@ -5,7 +5,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Returns an image of a cute cat",
       process: function(msg, suffix){
-      require("request")("https://cheweybot.ga/api/cat",
+      require("request")("https://api.cheweybot.ga/cat",
         function(err, res, body) {
             if (err) return msg.channel.send(`Error... API returned nothing`);
             try {
@@ -45,7 +45,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Returns an image of space",
       process: function(msg, suffix) {
-        require("request")("https://cheweybot.ga/api/space",
+        require("request")("https://api.cheweybot.ga/space",
           function(err, res, body) {
           if (err) return msg.channel.send("Error... API returned nothing");
             try {
