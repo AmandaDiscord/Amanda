@@ -140,7 +140,7 @@ module.exports = function(passthrough) {
             return msg.channel.send(`There was an error:\n${error}`);
           }
           const embed = new Discord.RichEmbed()
-            .setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
+            .setDescription(`${msg.author.username} slapped <@${member.user.id}>`)
             .setImage(data.img)
           msg.channel.send({embed});
         })
