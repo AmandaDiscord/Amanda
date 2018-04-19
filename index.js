@@ -147,8 +147,3 @@ function loadCommands() {
     Object.assign(commands, loaded);
   });
 }
-
-exec(`node childproc.js`, (error, stdout, stderr) => {
-      if(error) return console.log({error, stdout, stderr});
-    console.log("Finished")
-    })
