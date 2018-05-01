@@ -16,6 +16,7 @@ module.exports = (passthrough, callback) => {
         try {
             console.log("Loading "+filename);
             delete require.cache[require.resolve(filename)]; // Otherwise it loads from the cache and ignores file changes
+            passthrough.reloadEvent.emit(filename);
             callback(require(filename)(passthrough));
         } catch (e) {
             console.log("Failed to reload module "+filename+"\n"+e.stack);
@@ -25,7 +26,7 @@ module.exports = (passthrough, callback) => {
 
     fs.readdir(pluginsDir, (err, files) => {
         files.filter(f => f.endsWith(".js")).forEach(f => {
-            let filename = "./"+pj(pluginsDir, f);
+            let filename = pj(__dirname, pluginsDir, f);
             loadFile(filename);
         });
     });
