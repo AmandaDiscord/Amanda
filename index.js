@@ -6,6 +6,7 @@ const sql = require("sqlite");
 const utils = require("bot-utils");
 const os = require("os");
 const events = require("events");
+let reloadEvent = new events.EventEmitter();
 
 const Discord = require('discord.js');
 const discordClient = require("dualcord");
