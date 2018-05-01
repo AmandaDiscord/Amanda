@@ -100,7 +100,7 @@ module.exports = function(passthrough) {
     "trivia": {
       usage: "<play / categories>",
       description: "A game of trivia using OpenTDB or Open Trivia Data Base",
-      process: function(djs, dio, msg, suffix) {
+      process: function(msg, suffix) {
         if (suffix == "play") {
           doQuestion(msg);
         } else if (suffix == "categories") {
