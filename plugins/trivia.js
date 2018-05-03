@@ -2,6 +2,7 @@ var games = {};
 const letters = ["A", "B", "C", "D"];
 const https = require("https");
 const entities = require("html-entities").AllHtmlEntities;
+const Discord = require("discord.js");
 
 function newGame() {
   return {
