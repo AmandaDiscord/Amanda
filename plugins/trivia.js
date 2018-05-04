@@ -1,6 +1,7 @@
 var games = {};
 const letters = ["a", "b", "c", "d"];
 const Discord = require("discord.js");
+const https = require("https");
 
 function newGame() {
   return {
