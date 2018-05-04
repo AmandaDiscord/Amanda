@@ -1,7 +1,5 @@
 var games = {};
-const letters = ["A", "B", "C", "D"];
-const https = require("https");
-const entities = require("html-entities").AllHtmlEntities;
+const letters = ["a", "b", "c", "d"];
 const Discord = require("discord.js");
 
 function newGame() {
@@ -14,52 +12,68 @@ function newGame() {
   }
 }
 
+function shuffle(array) {
+  var j, x, i;
+  for (i = array.length -1; i > 0; i--) {
+    j = Math.floor(Math.random() * (i + 1));
+    x = array[i];
+    array[i] = array[j];
+    array[j] = x;
+  }
+  return array;
+}
+
 function doQuestion(msg) {
   var id = msg.channel.id;
   if (games[id]) return msg.channel.send(`${msg.author.username}, there's a game already in progress for this channel`);
   var game = newGame();
   games[id] = game;
-
-  console.log(game);
-
-  https.get("https://opentdb.com/api.php?amount=1", (res) => {
-    res.on("data", function(response) {
-      if (!game) return;
-      try {
-        var data = JSON.parse(response.toString());
-      } catch (error) {
-        const embed = new Discord.RichEmbed()
-          .setDescription(`An error occurred while attempting to query a trivia game\n${error}`)
-          .setColor(14164000)
-        msg.channel.send({embed});
-        return delete game;
+  require("request")("https://opentdb.com/api.php?amount=1", function(err, res, body) {
+    try {
+      var data = JSON.parse(body);
+    } catch (error) {
+      const embed = new Discord.RichEmbed()
+        .setDescription(`There was an error parsing the data returned by the api\n${error}`)
+        .setColor(14164000)
+      msg.channel.send({embed});
+      return delete game;
+    }
+    if (data.response_code != 0) {
+      msg.channel.send(`There was an error from the api`);
+      return delete game;
+    }
+    var answer = data.results[0].correct_answer;
+    game.answer = answer;
+    var choices = data.results[0].incorrect_answers;
+    choices.push(answer);
+    var shuffled = shuffle(choices);
+    var iOfA = shuffled.indexOF(answer);
+    if (iOfA == 1) game.correctID = "a";
+    else if(iOfA == 2) game.correctID = "b";
+    else if (iOfA == 3) game.correctID = "c";
+    else if (iOfA == 4) game.correctID = "d";
+    else {
+      msg.channel.send(`Fuckery happened\n\nIndex of the answer: ${iOfA}\nShuffled Answer Array: ${shuffled}`);
+      return delete game;
+    }
+    var [a1, a2, a3, a4] = shuffled;
+    var color = 3447003;
+      switch(data.results[0].difficulty) {
+        case "easy":
+          color = 4249664;
+          break;
+        case "medium":
+          color = 12632064;
+          break;
+        case "hard":
+          color = 14164000;
+          break;
       }
-      console.log(data)
-      if (data.response_code != 0) {
-        console.log(`Error from OpenTDB\n ${data}`);
-        msg.channel.send(`There was an error from the trivia api\n${data.response_code}`);
-        return delete game;
-      }
-      var answer = data.results[0].correct_answer;
-      console.log(answer);
-      answers = answer.concat(data.results[0].incorrect_answers);
-      console.log(answers);
-      var answerStr = "";
-      for (var i = 0; i <= answers.length-1; i++) {
-        if(answers[i] == data.results[0].correct_answer) game.correctID = i;
-        answerStr = `${answerStr}**${letters[i]}:** ${entities.decode(answers[i])}\n`;
-      }
-      var categoryString = entities.decode(data.results[0].category);
-      console.log(categoryString);
-      console.log(entities.decode(data.results[0].question));
-      console.log(answerStr);
-
-      var guessembed = new Discord.RichEmbed()
-        .setDescription(`*${categoryString}*\n**${entities.decode(data.results[0].question)}**\n${answerStr}\nType a letter to answer!`)
-        .setColor(4249664)
-      msg.channel.send({guessembed});
-      game.answer = data.results[0].correct_answer;
-      setTimeout(function() {
+    var guessembed = new Discord.RichEmbed()
+      .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`)
+      .setColor(color)
+    msg.channel.send({guessembed});
+    setTimeout(() => {
         if (game == undefined || game.running == false) return;
         var correctUsersStr = `**Correct Answers:**\n`;
         if (game.correct.length == 0) {
@@ -78,30 +92,25 @@ function doQuestion(msg) {
           }
         }
         var resultembed = new Discord.RichEmbed()
-          .setDescription(`**${letters[game.correctID]}:**${entities.decode(game.answer)}\n\n${correctUsersStr}`)
-          .setColor(4249664)
+          .setDescription(`**${game.correctID}:** ${game.answer}\n\n${correctUsersStr}`)
+          .setColor(color)
         msg.channel.send({resultembed});
         return delete game;
-      }, 15000);
-    })
-  }).on("error", function(err) {
-    const embed = new Discord.RichEmbed()
-      .setDescription(`An error occurred while attempting to query a trivia game\n${err}`)
-      .setColor(14164000)
-    msg.channel.send({embed});
-    return delete game;
-  })
+    }, 15000);
+  });
 }
 
 module.exports = function(passthrough) {
   const { Discord, djs, dio } = passthrough;
 
   djs.on("message", msg => {
+    if (msg.author.bot) return;
     var id = msg.channel.id;
-    if (games[id] && letters[games[id].correctID]) {
-      var game = games[id];
+    var game = games[id];
+    if (!game) return;
+    if (letters.includes(msg.content.toLowerCase())) game.players.push(msg.author.id);
+    if (msg.content.toLowerCase() == game.correctID) {
       if (game.correct.includes(msg.author.id)) return;
-      game.players.push(msg.author.id);
       game.correct.push(msg.author.id);
     } else return;
   })
