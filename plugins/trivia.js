@@ -38,8 +38,6 @@ function doQuestion(msg) {
       }
       var answer = data.results[0].correct_answer;
       answers = answer.concat(data.results[0].incorrect_answers);
-      answers.sort();
-      answers.reverse();
       var answerStr = "";
       for (var i = 0; i <= answers.length-1; i++) {
         if(answers[i] == data.results[0].correct_answer) game.correctID = i;
