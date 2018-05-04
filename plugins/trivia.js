@@ -36,8 +36,8 @@ function doQuestion(msg) {
         msg.channel.send(`There was an error from the trivia api\n${data.response_code}`);
         return delete game;
       }
-      answers[0] = data.results[0].correct_answer;
-      answers = answers.concat(data.results[0].incorrect_answers);
+      var answer = data.results[0].correct_answer;
+      answers = answer.concat(data.results[0].incorrect_answers);
       answers.sort();
       answers.reverse();
       var answerStr = "";

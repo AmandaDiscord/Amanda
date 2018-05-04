@@ -108,11 +108,6 @@ module.exports = function(passthrough) {
           } catch (error) {
             return msg.channel.send(`There was an error:\n${error}`);
           }
-          if (member !== null) {
-              var atMem = `<@${member.user.id}>`
-            } else {
-              var atMem = suffix
-            }
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} poked <@${member.user.id}>`)
             .setImage(data.img)
