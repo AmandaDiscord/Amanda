@@ -19,6 +19,9 @@ function doQuestion(msg) {
   if (games[id]) return msg.channel.send(`${msg.author.username}, there's a game already in progress for this channel`);
   var game = newGame();
   games[id] = game;
+
+  console.log(game);
+
   https.get("https://opentdb.com/api.php?amount=1", (res) => {
     res.on("data", function(response) {
       if (!game) return;
@@ -31,19 +34,26 @@ function doQuestion(msg) {
         msg.channel.send({embed});
         return delete game;
       }
+      console.log(data)
       if (data.response_code != 0) {
         console.log(`Error from OpenTDB\n ${data}`);
         msg.channel.send(`There was an error from the trivia api\n${data.response_code}`);
         return delete game;
       }
       var answer = data.results[0].correct_answer;
+      console.log(answer);
       answers = answer.concat(data.results[0].incorrect_answers);
+      console.log(answers);
       var answerStr = "";
       for (var i = 0; i <= answers.length-1; i++) {
         if(answers[i] == data.results[0].correct_answer) game.correctID = i;
         answerStr = `${answerStr}**${letters[i]}:** ${entities.decode(answers[i])}\n`;
       }
       var categoryString = entities.decode(data.results[0].category);
+      console.log(categoryString);
+      console.log(entities.decode(data.results[0].question));
+      console.log(answerStr);
+
       var guessembed = new Discord.RichEmbed()
         .setDescription(`*${categoryString}*\n**${entities.decode(data.results[0].question)}**\n${answerStr}\nType a letter to answer!`)
         .setColor(4249664)
