@@ -5,6 +5,7 @@ const { exec } = require("child_process");
 const sql = require("sqlite");
 const utils = require("bot-utils");
 const os = require("os");
+const util = require("util");
 
 const Discord = require('discord.js');
 const discordClient = require("dualcord");
@@ -82,11 +83,7 @@ const commands = {
     process: async function (msg, suffix) {
       if (["320067006521147393", "366385096053358603"].includes(msg.author.id))  {
         let result = await eval(suffix);
-        if (typeof(result) === "object") {
-          msg.channel.send(JSON.stringify(result, null, 4));
-        } else {
-        msg.channel.send(result);
-        }
+        msg.channel.send(util.inspect(result)).replace(new RegExp(Auth.bot_token,"g"),"No");
       } else {
         return msg.channel.send(`Dont even try it, ${msg.author}`);
       }
