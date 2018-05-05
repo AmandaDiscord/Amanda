@@ -83,7 +83,7 @@ const commands = {
     process: async function (msg, suffix) {
       if (["320067006521147393", "366385096053358603"].includes(msg.author.id))  {
         let result = await eval(suffix);
-        msg.channel.send(util.inspect(result)).replace(new RegExp(Auth.bot_token,"g"),"No");
+        msg.channel.send(util.inspect(result.replace(new RegExp(Auth.bot_token,"g"),"No")));
       } else {
         return msg.channel.send(`Dont even try it, ${msg.author}`);
       }
