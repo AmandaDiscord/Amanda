@@ -27,7 +27,7 @@ async function checkMessageForCommand(msg, isEdit) {
         var cmd = commands[cmdTxt];
         if (cmd) {
           try {
-            cmd.process(msg, suffix, isEdit);
+            await cmd.process(msg, suffix, isEdit);
           } catch (e) {
               var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>`;
               if (Config.debug) {
