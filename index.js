@@ -79,9 +79,9 @@ const commands = {
   "eval": {
     usage: "<code>",
     description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
-    process: function (msg, suffix) {
+    process: async function (msg, suffix) {
       if (["320067006521147393", "366385096053358603"].includes(msg.author.id))  {
-        let result = eval(suffix)
+        let result = await eval(suffix);
         if (typeof(result) === "object") {
           msg.channel.send(JSON.stringify(result, null, 4));
         } else {
