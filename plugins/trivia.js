@@ -70,7 +70,7 @@ module.exports = function(passthrough) {
             break;
         }
       var guessembed = new Discord.RichEmbed()
-        .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`.replace(/&quote;/g, `"`).replace(/&#039;/g, "'").replace(/&amp;/g, "&"))
+        .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`)
         .setColor(color)
       msg.channel.send(guessembed).then(msg => {
         let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
@@ -95,7 +95,7 @@ module.exports = function(passthrough) {
                 }
               }
               var resultembed = new Discord.RichEmbed()
-                .setDescription(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`.replace(/&quote;/g, `"`).replace(/&#039;/g, "'").replace(/&amp;/g, "&"))
+                .setDescription(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`)
                 .setColor(color)
                 .setFooter(`"&trivia play" for another round.`)
               msg.channel.send(resultembed);
