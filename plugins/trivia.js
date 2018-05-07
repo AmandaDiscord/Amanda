@@ -3,6 +3,9 @@ const letters = ["a", "b", "c", "d"];
 const Discord = require("discord.js");
 const https = require("https");
 const entities = require("entities");
+const events = require("events");
+const pj = require("path").join;
+let fakeReloadEvent = new events.EventEmitter();
 
 function newGame() {
   return {
@@ -26,6 +29,9 @@ function shuffle(array) {
 
 module.exports = function(passthrough) {
   const { Discord, djs, dio, reloadEvent } = passthrough;
+
+  let cf = require(pj(__dirname, "..", "common.js"));
+  let bf = require(pj(__dirname, "..", "commonbot.js"))({bot: dio, cf, reloadEvent: fakeReloadEvent});
 
   function doQuestion(msg) {
     var id = msg.channel.id;
@@ -98,8 +104,14 @@ module.exports = function(passthrough) {
               var resultembed = new Discord.RichEmbed()
                 .setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`))
                 .setColor(color)
-                .setFooter(`"&trivia play" for another round.`)
-              msg.channel.send(resultembed);
+                .setFooter(`Click the reaction for another round.`)
+              msg.channel.send(resultembed).then(msg => {
+                bf.reactionMenu(msg.channel.id, msg.id, [
+                  {emoji: bf.buttons["redo"], remove: "all", ignore: "total", actionType: "js", actionData: () => {
+                    doQuestion(msg);
+                  }}
+                ]);
+              });
               return delete games[id];
             }
           }, i*4000);
@@ -118,8 +130,9 @@ module.exports = function(passthrough) {
       game.answers[msg.author.id] = msg.content.toLowerCase();
     }
   }
-  reloadEvent.on(__filename, () => {
+  reloadEvent.once(__filename, () => {
     djs.removeListener("message", messageHandler);
+    fakeReloadEvent.emit(pj(__dirname, "..", "commonbot.js"));
   });
   return {
     "trivia": {
