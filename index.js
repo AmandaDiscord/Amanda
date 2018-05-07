@@ -90,7 +90,7 @@ const commands = {
   "help": {
     usage: "<command>",
     description: "Shows a list of command categories if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
-    process: function (msg, suffix) {
+    process: async function (msg, suffix) {
       if(suffix) {
         var cmds = suffix.split(" ").filter(function (cmd) { return commands[cmd] });
         for (var i = 0; i < cmds.length; i++) {
@@ -114,7 +114,12 @@ const commands = {
           .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n❯ NSFW\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list of all of the commands in that category. Ex: \`${Config.commandPrefix}commands core\`. Also typing \`${Config.commandPrefix}commands all\` will return all of the available commands**`)
           .setFooter("Amanda help pane", djs.user.avatarURL)
           .setColor('36393E')
-        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+        try {
+          await msg.author.send({embed});
+        } catch (error) {
+          return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+        }
+        if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
       }
     }
   },
