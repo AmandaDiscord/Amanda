@@ -70,7 +70,7 @@ module.exports = function(passthrough) {
             break;
         }
       var guessembed = new Discord.RichEmbed()
-        .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`.replace("&quote;", `"`).replace("&#039;", "'").replace("&amp;", "&"))
+        .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`.replace(/(?:\W|^)(&quote;)(?:\W|$)/ig, `"`).replace(/(?:\W|^)(&#039;)(?:\W|$)/ig, "'").replace(/(?:\W|^)(&amp;)(?:\W|$)/ig, "&"))
         .setColor(color)
       msg.channel.send(guessembed).then(msg => {
         let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
