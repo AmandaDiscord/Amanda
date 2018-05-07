@@ -49,6 +49,7 @@ module.exports = function(passthrough) {
             if (!bet) {
               const embed = new Discord.RichEmbed()
               .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
+              .setColor("36393E")
               return msg.channel.send({embed});
             }
             if (isNaN(bet)) {
@@ -77,6 +78,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(result)
             .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
+            .setColor("36393E")
           msg.channel.send({embed});
           }
         }
@@ -86,26 +88,6 @@ module.exports = function(passthrough) {
             sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
           });
         })
-      }
-    },
-
-    "megaslot": {
-      usage: "",
-      description: "Runs a random mega slot machine.",
-      process: function (msg, suffix) {
-        var slotArray = [':gem:', ':bomb:', ':cherries:', ':heart:', ':diamonds:', ':clubs:', ':spades:', ':black_joker:'];
-        var randSlot1 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot2 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot3 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot4 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot5 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot6 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot7 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot8 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot9 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        const embed = new Discord.RichEmbed()
-          .setDescription(`|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ |\n__|       Slots       |__\n \\                    /\n   |‾‾‾‾‾‾‾‾‾‾‾‾|\n    ${randSlot1}${randSlot2}${randSlot3}\n     ${randSlot4}${randSlot5}${randSlot6}\n     ${randSlot7}${randSlot8}${randSlot9}\n /                    \\ \n|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾|\n|                        |\n|                        |\n|                        |\n‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾`)
-        msg.channel.send({embed});
       }
     },
 
