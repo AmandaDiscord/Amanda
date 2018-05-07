@@ -102,7 +102,7 @@ const commands = {
           const embed = new Discord.RichEmbed()
             .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
             .setColor("B60000")
-          return msg.channel.send(`${msg.author.username}, I couldn't find the help pane for that command`)
+          return msg.channel.send({embed});
         }
         const embed = new Discord.RichEmbed()
           .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
@@ -166,6 +166,27 @@ const commands = {
           .setAuthor(`Images command list:`)
           .setDescription(`${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
           .setColor('36393E')
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+      } else if (suffix.toLowerCase == "all") {
+        const embed = new Discord.RichEmbed()
+          .setAuthor("Available Command List:")
+          .addField("Core Commands:", "&help <command>\n&commands <category>\n&invite\n&info\n&privacy")
+          .addBlankField(true)
+          .addField("Statistic Commands:", "&stats\n&ping\n&uptime")
+          .addBlankField(true)
+          .addField("Casino Commands:", "&dice\n&flip\n&bf <amount> <side>\n&slot <amount>\n&coins <user>\n&mine\n&lb")
+          .addBlankField(true)
+          .addField("Image Commands:", "&cat\n&dog\n&space")
+          .addBlankField(true)
+          .addField("Guild Commands:", "&user <user>\n&tidy <# to delete>\n&emoji <:EMOJI:>\n&emojilist\n&guild")
+          .addBlankField(true)
+          .addField("Interaction Commands:", "&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>")
+          .addBlankField(true)
+          .addField("Fun Commands:", "&norris\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>")
+          .addBlankField(true)
+          .addField("Search Commands:", "&urban <search terms>")
+          .setColor('36393E')
+          .setFooter("Amanda help pane", djs.user.avatarURL)
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else {
         const embed = new Discord.RichEmbed()
