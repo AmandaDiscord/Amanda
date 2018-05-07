@@ -91,26 +91,6 @@ module.exports = function(passthrough) {
       }
     },
 
-    "megaslot": {
-      usage: "",
-      description: "Runs a random mega slot machine.",
-      process: function (msg, suffix) {
-        var slotArray = [':gem:', ':bomb:', ':cherries:', ':heart:', ':diamonds:', ':clubs:', ':spades:', ':black_joker:'];
-        var randSlot1 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot2 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot3 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot4 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot5 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot6 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot7 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot8 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        var randSlot9 = slotArray[Math.floor(Math.random() * slotArray.length)];
-        const embed = new Discord.RichEmbed()
-          .setDescription(`|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾ |\n__|       Slots       |__\n \\                    /\n   |‾‾‾‾‾‾‾‾‾‾‾‾|\n    ${randSlot1}${randSlot2}${randSlot3}\n     ${randSlot4}${randSlot5}${randSlot6}\n     ${randSlot7}${randSlot8}${randSlot9}\n /                    \\ \n|‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾|\n|                        |\n|                        |\n|                        |\n‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾`)
-        msg.channel.send({embed});
-      }
-    },
-
     "flip": {
       usage: "",
       description: "Flips a coin",

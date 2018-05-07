@@ -28,7 +28,7 @@ module.exports = function(passthrough) {
             .addField("Joined guild at:", guildJoinedTime)
             .addField("Avatar URL:", `[Click Here](${member.user.avatarURL})`)
             .setThumbnail(member.user.avatarURL)
-            .setColor('RANDOM')
+            .setColor('36393E')
           msg.channel.send({embed});
       }
     },
@@ -74,7 +74,7 @@ module.exports = function(passthrough) {
           .addField("Emoji ID:", `${foundEmoji.id}`)
           .addField("Link to Emoji:", `[Click Here](https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType})`)
           .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
-          .setColor("RANDOM")
+          .setColor("36393E")
         msg.channel.send({embed});
       }
     },
@@ -85,9 +85,10 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
+        if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be desplayed`);
         const embed = new Discord.RichEmbed()
           .setDescription(emoji)
-          .setColor("50E3C2")
+          .setColor("36393E")
         msg.channel.send({embed});
       }
     },
@@ -123,7 +124,7 @@ module.exports = function(passthrough) {
            .addField("Member Count:", `${msg.guild.memberCount} members`)
            .addField("Guild ID:", msg.guild.id)
            .setThumbnail(msg.guild.iconURL)
-           .setColor("RANDOM")
+           .setColor("36393E")
          msg.channel.send({embed});
        }
     }
