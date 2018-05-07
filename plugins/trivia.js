@@ -117,7 +117,7 @@ module.exports = function(passthrough) {
       game.answers[msg.author.id] = msg.content.toLowerCase();
     }
   }
-  reloadEvent.on(__filename, () => {
+  reloadEvent.once(__filename, () => {
     djs.removeListener("message", messageHandler);
   });
   return {
