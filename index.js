@@ -111,7 +111,7 @@ const commands = {
       else {
         const embed = new Discord.RichEmbed()
           .setAuthor("Command Categories:")
-          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n❯ NSFW\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list off all of the commands in that category. Ex: ${Config.commandPrefix}commands core**`)
+          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n❯ NSFW\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list of all of the commands in that category. Ex: ${Config.commandPrefix}commands core**`)
           .setFooter("Amanda help pane", djs.user.avatarURL)
           .setColor('36393E')
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
@@ -154,6 +154,7 @@ const commands = {
           .setAuthor(`Fun command list:`)
           .setDescription(`${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .setColor('36393E')
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else if (suffix.toLowerCase() == "search") {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Search command list:`)

@@ -49,6 +49,7 @@ module.exports = function(passthrough) {
             if (!bet) {
               const embed = new Discord.RichEmbed()
               .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
+              .setColor("36393E")
               return msg.channel.send({embed});
             }
             if (isNaN(bet)) {
@@ -77,6 +78,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(result)
             .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${randSlot1}-${randSlot2}-${randSlot3}.png?raw=true`)
+            .setColor("36393E")
           msg.channel.send({embed});
           }
         }
