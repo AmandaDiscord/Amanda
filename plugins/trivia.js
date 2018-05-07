@@ -2,6 +2,8 @@ var games = {};
 const letters = ["a", "b", "c", "d"];
 const Discord = require("discord.js");
 const https = require("https");
+const Entities = require('html-entities').XmlEntities;
+const entities = new Entities();
 
 function newGame() {
   return {
@@ -70,7 +72,7 @@ module.exports = function(passthrough) {
             break;
         }
       var guessembed = new Discord.RichEmbed()
-        .setDescription(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`.replace(/(?:&[a-z="/ ]+?;|&\w+?;)/g, ""))
+        .setDescription(entities.decode(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`))
         .setColor(color)
       msg.channel.send(guessembed).then(msg => {
         let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
@@ -95,7 +97,7 @@ module.exports = function(passthrough) {
                 }
               }
               var resultembed = new Discord.RichEmbed()
-                .setDescription(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`.replace(/(?:&[a-z="/ ]+?;|&\w+?;)/g, ""))
+                .setDescription(entities.decode(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`))
                 .setColor(color)
                 .setFooter(`"&trivia play" for another round.`)
               msg.channel.send(resultembed);
