@@ -28,9 +28,9 @@ module.exports = function(passthrough) {
           .addField("Lang:", `Node.js ${process.version}`)
           .addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
           .addField("Description:", "A cutie-pie chat bot that only wishes for some love.")
-          .addField("More Info:", "Visit Amanda's [website](http://amanda.shodanbot.com) or her [support server](http://papishouse.discords.ga)")
+          .addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)")
           .addBlankField(true)
-          .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com)<:bot:412413027565174787>\ncloudrac3r <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot)<:bot:412413027565174787>")
+          .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com) <:bot:412413027565174787>\ncloudrac3r <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor(504277)
         msg.channel.send({embed});
