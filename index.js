@@ -5,6 +5,8 @@ const { exec } = require("child_process");
 const sql = require("sqlite");
 const utils = require("bot-utils");
 const os = require("os");
+const events = require("events");
+let reloadEvent = new events.EventEmitter();
 const util = require("util");
 
 const Discord = require('discord.js');
@@ -75,7 +77,7 @@ const commands = {
     usage: "<code>",
     description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
     process: async function (msg, suffix) {
-      if (["320067006521147393", "366385096053358603"].includes(msg.author.id))  {
+      if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
         let result = await eval(suffix);
         if (!result) return result
         msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
@@ -205,7 +207,7 @@ var port = process.env.PORT || 3000
 app.listen(port, () => console.log('Webapp listening on port 3000'))
 
 function loadCommands() {
-  let passthrough = {Discord, djs, dio};
+  let passthrough = {Discord, djs, dio, reloadEvent};
   require("./plugins.js")(passthrough, loaded => {
     Object.assign(commands, loaded);
   });

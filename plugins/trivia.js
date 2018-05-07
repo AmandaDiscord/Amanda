@@ -104,7 +104,8 @@ function doQuestion(msg) {
 module.exports = function(passthrough) {
   const { Discord, djs, dio } = passthrough;
 
-  djs.on("message", msg => {
+  djs.on("message", messageHandler);
+  function messageHandler(msg) {
     if (msg.author.bot) return;
     var id = msg.channel.id;
     var game = games[id];
@@ -114,7 +115,10 @@ module.exports = function(passthrough) {
       if (game.correct.includes(msg.author.id)) return;
       game.correct.push(msg.author.id);
     } else return;
-  })
+  }
+  reloadEvent.on(__filename, () => {
+    djs.removeListener("message", messageHandler);
+  });
   return {
     "trivia": {
       usage: "<play / categories>",
