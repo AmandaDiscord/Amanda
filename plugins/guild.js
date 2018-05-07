@@ -59,11 +59,10 @@ module.exports = function(passthrough) {
     "emoji": {
       usage: "<:emoji:>",
       description: "Gets the information of the emoji provided. Useful for making bot resources.",
-      process: function(msg, args) {
-        var argArr = args.split(' ');
-        var foundEmoji = Discord.Util.parseEmoji(argArr[0]);
+      process: function(msg, suffix) {
+        var foundEmoji = Discord.Util.parseEmoji(suffix);
         var emojiType = ""
-        if (!argArr[0]) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+        if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if (foundEmoji.animated == true) {
           var emojiType = "gif";
@@ -91,6 +90,25 @@ module.exports = function(passthrough) {
           .setColor("50E3C2")
         msg.channel.send({embed});
       }
+    },
+    "wumbo": {
+       usage: "<:emoji:>",
+       description: "Makes an emoji bigger",
+       process: function(msg, suffix) {
+         var foundEmoji = Discord.Util.parseEmoji(suffix);
+         var emojiType = ""
+         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
+         if (foundEmoji.animated == true) {
+           var emojiType = "gif";
+         } else {
+           var emojiType = "png";
+         }
+         const embed = new Discord.RichEmbed()
+           .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
+           .setColor("36393E")
+         msg.channel.send({embed});
+       }
     },
 
     "guild": {

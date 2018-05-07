@@ -150,7 +150,7 @@ const commands = {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Guild command list:`)
           .addField(`**Moderation:**`, `${Config.commandPrefix}tidy <# to delete>`)
-          .addField(`**Information:**`, `${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist`)
+          .addField(`**Information:**`, `${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n${Config.commandPrefix}wumbo <:emoji>`)
           .addField(`**Interaction:**`, `${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
           .setColor('36393E')
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
@@ -178,7 +178,7 @@ const commands = {
           .addField(`**❯ Core:**`, `${Config.commandPrefix}help <command>\n${Config.commandPrefix}commands <category>\n${Config.commandPrefix}invite\n${Config.commandPrefix}info\n${Config.commandPrefix}privacy`)
           .addField(`**❯ Statistics:**`, `${Config.commandPrefix}ping\n${Config.commandPrefix}uptime\n${Config.commandPrefix}stats`)
           .addField(`**❯ Gambling:**`, `${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
-          .addField(`**❯ Guild:**`, `*Moderation:*\n${Config.commandPrefix}tidy <# to delete>\n*Information:*\n${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n*Interaction:*\n${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
+          .addField(`**❯ Guild:**`, `**Moderation:**\n${Config.commandPrefix}tidy <# to delete>\n**Information:**\n${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n${Config.commandPrefix}wumbo <:emoji:>\n**Interaction:**\n${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
           .addField(`**❯ Fun:**`, `${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .addField(`**❯ Search:**`, `${Config.commandPrefix}urban <search terms>`)
           .addField(`**❯ Images:**`, `${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
