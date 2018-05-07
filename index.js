@@ -117,7 +117,7 @@ const commands = {
         try {
           await msg.author.send({embed});
         } catch (error) {
-          return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+        return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
         }
         if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
       }
