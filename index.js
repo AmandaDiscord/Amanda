@@ -102,7 +102,7 @@ const commands = {
           const embed = new Discord.RichEmbed()
             .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
             .setColor("B60000")
-          return msg.channel.send(`${msg.author.username}, I couldn't find the help pane for that command`)
+          return msg.channel.send({embed});
         }
         const embed = new Discord.RichEmbed()
           .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
