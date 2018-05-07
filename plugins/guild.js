@@ -85,7 +85,7 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
-        if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be desplayed`);
+        if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be displayed`);
         const embed = new Discord.RichEmbed()
           .setDescription(emoji)
           .setColor("36393E")
