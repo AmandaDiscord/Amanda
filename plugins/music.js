@@ -35,7 +35,7 @@ module.exports = function(passthrough) {
 					if (!queues[id]) {
 						queues[id] = newQueue(msg);
 					}
-					if (!ars[1]) {
+					if (!args[1]) {
 						if (!queues[id].songs[0]) return msg.channel.send(`${msg.author.username}, there are no songs in the queue`);
 					}
 					queues[id].songs.push(args[1]);
