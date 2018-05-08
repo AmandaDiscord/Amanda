@@ -159,7 +159,7 @@ const commands = {
       } else if (suffix.toLowerCase() == "fun") {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Fun command list:`)
-          .setDescription(`${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
+          .setDescription(`${Config.commandPrefix}trivia <play / categories>\n${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .setColor('36393E')
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else if (suffix.toLowerCase() == "search") {
@@ -174,6 +174,13 @@ const commands = {
           .setDescription(`${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
           .setColor('36393E')
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+      } else if (suffix.toLowerCase() == "music") {
+        const embed = new Discord.RichEmbed()
+          .setAuthor(`Music command list`)
+          .setDescription(`${Config.commandPrefix}music\n\n**Arguments:**`)
+          .addField(`First:`, `<join> - Joins the VC if you're in one\n<leave> - Leaves the VC\n<play> - Plays the current queue or adds songs to it\n<skip> - Skips the currently playing song\n<purge> - Purges the queue\n<now> - Shows what song is playing\n<queue> - Shows the entire queue`)
+          .addField(`Second:`, `<url> - Any valid YouTube url`)
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else if (suffix.toLowerCase() == "all") {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Full command list`)
@@ -184,7 +191,7 @@ const commands = {
           .addField(`**❯ Fun:**`, `${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .addField(`**❯ Search:**`, `${Config.commandPrefix}urban <search terms>`)
           .addField(`**❯ Images:**`, `${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
-          .addField(`**❯ Music:**`, `Null`)
+          .addField(`**❯ Music:**`, `${Config.commandPrefix}music - see \`${Config.commandPrefix}commands music\` for help`)
           .addField(`**❯ NSFW:**`, `Null`)
           .setColor('36393E')
           .setFooter("Old Amanda help pane", djs.user.avatarURL)
