@@ -255,8 +255,10 @@ module.exports = function(passthrough) {
         if (!target) return msg.channel.send(`${member.user.username} was not found in the database. They have to create an account first`);
         if (!author) return msg.channel.send(`You have not created an account yet. You can by make one by typing \`${Config.commandPrefix}coins\``);
         if (author.coins < args[0]) return msg.channel.send(`${msg.author.username}, you don't have enough coins to make that transaction`);
-        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - args[0], msg.author.id]);
-        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + args[0], member.user.id]);
+        var gift = parseInt(args[0]);
+        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
+       
+        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
         const embed = new Discord.RichEmbed()
           .setDescription(`**${msg.author.tag}** has given ${args[0]} Discoins to ${member.user.tag}`)
           .setColor("F8E71C")
@@ -283,7 +285,8 @@ module.exports = function(passthrough) {
           if (member.user.id == msg.author.id) return msg.channel.send(`You can't award yourself, silly`);
           var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
           if (!target) return msg.channel.send(`${member.user.username} was not found in the database. They have to create an account first`);
-          sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + args[0], member.user.id]);
+          var award = parseInt(args[0]);
+          sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
           const embed = new Discord.RichEmbed()
             .setDescription(`**${msg.author.tag}** has awarded ${args[0]} Discoins to ${member.user.tag}`)
             .setColor("F8E71C")
