@@ -2,6 +2,7 @@ const Discord = require('discord.js');
 const mined = new Set();
 let sql = require("sqlite");
 sql.open("./databases/money.sqlite");
+const Config = require("../config.json")
 
 function findMember(msg, suffix, self = false) {
   if (!suffix) {
@@ -58,6 +59,8 @@ module.exports = function(passthrough) {
               return msg.channel.send(`${msg.author.username}, you must place a bet that is higher than 0`);
             } else if (row.coins < bet) {
               return msg.channel.send(`${msg.author.username}, not enough Discoins to place that bet.`);
+            } else if (bet == "all" && row.coins != 0) {
+              bet = row.coins;
             } else {
             if (randSlot1 == randSlot2 && randSlot2 == randSlot3) {
               var result = `Woah! Three of a kind! Lucky! You got ${bet * 4} Discoins! <a:Discoin:422523472128901140>`;
@@ -127,8 +130,9 @@ module.exports = function(passthrough) {
               return msg.channel.send(`${msg.author.username}, not enough Discoins to place that bet`)
             } else if (!side) {
               return msg.channel.send(`${msg.channel.username}, you must choose a side to bet on. Valid sides are h or t`);
-            }
-            else {
+            } else if (bet == "all" && row.coins != 0) {
+              bet = row.coins;
+            } else {
             var randFlip = Math.floor(Math.random() * (4 - 1) + 1)
             if (side == "h" && randFlip == 1) {
               msg.channel.send(`You guessed it! you got ${bet * 2} Discoins! <a:Discoin:422523472128901140>`);
@@ -229,6 +233,68 @@ module.exports = function(passthrough) {
             .setColor("F8E71C")
           msg.channel.send({embed});
         })
+      }
+    },
+
+    "give": {
+      usage: "<amount> <user>",
+      description: "Gives discoins to a user from your account",
+      process: async function(msg, suffix) {
+        if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
+        var args = suffix.split(" ");
+        if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
+        if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to gift`);
+        if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot gift an amount less than 1`);
+        var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6)
+        if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to give to`);
+        var member = findMember(msg, usertxt);
+        if (member == null) return msg.channel.send("Could not find that user");
+        if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
+        var author = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+        var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+        if (!target) return msg.channel.send(`${member.user.username} was not found in the database. They have to create an account first`);
+        if (!author) return msg.channel.send(`You have not created an account yet. You can by make one by typing \`${Config.commandPrefix}coins\``);
+        if (author.coins < args[0]) return msg.channel.send(`${msg.author.username}, you don't have enough coins to make that transaction`);
+        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - (args[0] + 0), msg.author.id]);
+        sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + (args[0] + 0), member.user.id]);
+        const embed = new Discord.RichEmbed()
+          .setDescription(`**${msg.author.tag}** has given ${args[0]} Discoins to ${member.user.tag}`)
+          .setColor("F8E71C")
+        msg.channel.send({embed});
+      }
+    },
+
+    "award": {
+      usage: "<amount> <user>",
+      description: "Awards a specific user ",
+      process: async function(msg, suffix) {
+        var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
+        var [no, time] = nope[Math.floor(Math.random() * nope.length)];
+        if (["320067006521147393"].includes(msg.author.id)) {
+          if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
+          var args = suffix.split(" ");
+          if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to award and then a user`);
+          if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to award`);
+          if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot award an amount less than 1`);
+          var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6)
+          if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
+          var member = findMember(msg, usertxt);
+          if (member == null) return msg.channel.send("Could not find that user");
+          if (member.user.id == msg.author.id) return msg.channel.send(`You can't award yourself, silly`);
+          var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+          if (!target) return msg.channel.send(`${member.user.username} was not found in the database. They have to create an account first`);
+          sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + (args[0] + 0), member.user.id]);
+          const embed = new Discord.RichEmbed()
+            .setDescription(`**${msg.author.tag}** has awarded ${args[0]} Discoins to ${member.user.tag}`)
+            .setColor("F8E71C")
+          msg.channel.send({embed});
+        } else {
+          msg.channel.startTyping();
+          setTimeout(() => {
+            await msg.channel.send(no);
+            msg.channel.stopTyping();
+          }, time)
+        }
       }
     }
   }

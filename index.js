@@ -20,7 +20,7 @@ console.log(`Starting...\nYour Node.js version is: ${process.version}`);
 console.log(`Your Discord.js version is: ${Discord.version}`);
 
 process.on("unhandledRejection", (reason) => {
-    console.error(reason);
+    console.error(reason)
 });
 
 async function checkMessageForCommand(msg, isEdit) {
@@ -82,10 +82,13 @@ const commands = {
         if (!result) return result
         msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
       } else {
+        var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
+        var [no, time] = nope[Math.floor(Math.random() * nope.length)];
         msg.channel.startTyping();
         setTimeout(() => {
-          msg.channel.send(`Dont even try it, ${msg.author}`).then(() => msg.channel.stopTyping());
-        }, 5000)
+          var nsmg = await msg.channel.send(no);
+          nmsg.channel.stopTyping();
+        }, time)
       }
     }
 	},
@@ -145,7 +148,7 @@ const commands = {
       } else if (suffix.toLowerCase() == "gambling") {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Gambling command list:`)
-          .setDescription(`${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
+          .setDescription(`${Config.commandPrefix}give <amount> <user>\n${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
           .setColor('36393E')
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else if (suffix.toLowerCase() == "guild") {
@@ -186,7 +189,7 @@ const commands = {
           .setAuthor(`Full command list`)
           .addField(`**❯ Core:**`, `${Config.commandPrefix}help <command>\n${Config.commandPrefix}commands <category>\n${Config.commandPrefix}invite\n${Config.commandPrefix}info\n${Config.commandPrefix}privacy`)
           .addField(`**❯ Statistics:**`, `${Config.commandPrefix}ping\n${Config.commandPrefix}uptime\n${Config.commandPrefix}stats`)
-          .addField(`**❯ Gambling:**`, `${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
+          .addField(`**❯ Gambling:**`, `${Config.commandPrefix}give <amount> <user>\n${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
           .addField(`**❯ Guild:**`, `**Moderation:**\n${Config.commandPrefix}tidy <# to delete>\n**Information:**\n${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n${Config.commandPrefix}wumbo <:emoji:>\n**Interaction:**\n${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
           .addField(`**❯ Fun:**`, `${Config.commandPrefix}trivia <play / categories>\n${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .addField(`**❯ Search:**`, `${Config.commandPrefix}urban <search terms>`)

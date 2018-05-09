@@ -16,7 +16,15 @@ module.exports = function(passthrough) {
       usage: "",
       description: "",
       process: async function(msg, suffix) {
-				if(!["320067006521147393"].includes(msg.author.id)) return msg.channel.send(`Sorry, ${msg.author.username}, but this feature isn't available to the public yet`)
+				var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
+	      var [no, time] = nope[Math.floor(Math.random() * nope.length)];
+				if(!["320067006521147393"].includes(msg.author.id)) {
+					msg.channel.startTyping();
+	        setTimeout(() => {
+	          var nsmg = await msg.channel.send(no);
+	          return nmsg.channel.stopTyping();
+	        }, time)
+				}
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				var args = suffix.split(" ");
 				if (args[0].toLowerCase() == "play") {
@@ -63,25 +71,25 @@ module.exports = function(passthrough) {
 					if (!permissions.has("SPEAK")) return msg.channel.send(`${msg.author.username}, I don't have permissions to speak in that voice channel`);
 					try {
 						voiceChannel.join();
-						const joinembed = new Discord.RichEmbed()
-							.setDescription(`Successfully joined ${voiceChannel.name}`)
-						msg.channel.send({joinembed});
 					} catch (reason) {
 						console.error(reason);
 						return msg.channel.send(`I couldn't join the channel for whatever reason:\n\`\`\`js\n${reason}\n\`\`\``);
 					}
+					const joinembed = new Discord.RichEmbed()
+						.setDescription(`Successfully joined ${voiceChannel.name}`)
+					msg.channel.send({joinembed});
 				} else if (args[0].toLowerCase() == "leave") {
 					const voiceChannel = msg.member.voiceChannel;
 					if (!voiceChannel) return msg.channel.send(`${msg.author.username}, you are not currently in a voice channel`);
 					try {
 						voiceChannel.leave();
-						const leaveembed = new Discord.RichEmbed()
-							.setDescription(`Successfully left ${voiceChannel.name}`)
-						msg.channel.send({leaveembed});
 					} catch (reason) {
 						console.error(reason);
 						return msg.channel.send(`I couldn't leave the channel for whatever reason:\n\`\`\`js\n${reason}\n\`\`\``);
 					}
+					const leaveembed = new Discord.RichEmbed()
+						.setDescription(`Successfully left ${voiceChannel.name}`)
+					msg.channel.send({leaveembed});
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
       }
     }
