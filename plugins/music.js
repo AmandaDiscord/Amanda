@@ -20,7 +20,7 @@ module.exports = function(passthrough) {
 	      var [no, time] = nope[Math.floor(Math.random() * nope.length)];
 				if(!["320067006521147393"].includes(msg.author.id)) {
 					msg.channel.startTyping();
-        setTimeout(() => {
+        return setTimeout(() => {
           msg.channel.send(no).then(() => msg.channel.stopTyping());
         }, time)
 				}
