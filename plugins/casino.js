@@ -278,7 +278,7 @@ module.exports = function(passthrough) {
           if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to award and then a user`);
           if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to award`);
           if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot award an amount less than 1`);
-          var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6)
+          var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 8)
           if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
           var member = findMember(msg, usertxt);
           if (member == null) return msg.channel.send("Could not find that user");
