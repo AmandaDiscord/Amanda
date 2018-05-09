@@ -289,10 +289,9 @@ module.exports = function(passthrough) {
             .setColor("F8E71C")
           msg.channel.send({embed});
         } else {
-          msg.channel.startTyping();
-          setTimeout(() => {
-            await msg.channel.send(no);
-            msg.channel.stopTyping();
+           msg.channel.startTyping();
+           setTimeout(() => {
+             msg.channel.send(no).then(() => msg.channel.stopTyping());
           }, time)
         }
       }

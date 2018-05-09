@@ -20,10 +20,9 @@ module.exports = function(passthrough) {
 	      var [no, time] = nope[Math.floor(Math.random() * nope.length)];
 				if(!["320067006521147393"].includes(msg.author.id)) {
 					msg.channel.startTyping();
-	        setTimeout(() => {
-	          var nsmg = await msg.channel.send(no);
-	          return nmsg.channel.stopTyping();
-	        }, time)
+        setTimeout(() => {
+          msg.channel.send(no).then(() => msg.channel.stopTyping());
+        }, time)
 				}
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				var args = suffix.split(" ");

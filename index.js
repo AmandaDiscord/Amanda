@@ -86,8 +86,7 @@ const commands = {
         var [no, time] = nope[Math.floor(Math.random() * nope.length)];
         msg.channel.startTyping();
         setTimeout(() => {
-          var nsmg = await msg.channel.send(no);
-          nmsg.channel.stopTyping();
+          msg.channel.send(no).then(() => msg.channel.stopTyping());
         }, time)
       }
     }
