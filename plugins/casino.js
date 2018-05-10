@@ -62,6 +62,8 @@ module.exports = function(passthrough) {
             } else if (bet == "all" && row.coins != 0) {
               bet = row.coins;
             } else {
+            var bet = parseInt(bet);
+            var bet = Math.floor(bet);
             if (randSlot1 == randSlot2 && randSlot2 == randSlot3) {
               var result = `Woah! Three of a kind! Lucky! You got ${bet * 4} Discoins! <a:Discoin:422523472128901140>`;
               sql.run(`UPDATE money SET coins = ${row.coins + (bet * 3)} WHERE userID = ${msg.author.id}`);
@@ -133,6 +135,8 @@ module.exports = function(passthrough) {
             } else if (bet == "all" && row.coins != 0) {
               bet = row.coins;
             } else {
+            var bet = parseInt(bet);
+            var bet = Math.floor(bet);
             var randFlip = Math.floor(Math.random() * (4 - 1) + 1)
             if (side == "h" && randFlip == 1) {
               msg.channel.send(`You guessed it! you got ${bet * 2} Discoins! <a:Discoin:422523472128901140>`);
@@ -256,6 +260,7 @@ module.exports = function(passthrough) {
         if (!author) return msg.channel.send(`You have not created an account yet. You can by make one by typing \`${Config.commandPrefix}coins\``);
         if (author.coins < args[0]) return msg.channel.send(`${msg.author.username}, you don't have enough coins to make that transaction`);
         var gift = parseInt(args[0]);
+        var gift = Math.floor(gift);
         sql.run(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
        
         sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
@@ -286,6 +291,7 @@ module.exports = function(passthrough) {
           var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
           if (!target) return msg.channel.send(`${member.user.username} was not found in the database. They have to create an account first`);
           var award = parseInt(args[0]);
+          var award = Math.floor(award);
           sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
           const embed = new Discord.RichEmbed()
             .setDescription(`**${msg.author.tag}** has awarded ${args[0]} Discoins to ${member.user.tag}`)
