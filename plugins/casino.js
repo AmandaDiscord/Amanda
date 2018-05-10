@@ -265,7 +265,7 @@ module.exports = function(passthrough) {
        
         sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
         const embed = new Discord.RichEmbed()
-          .setDescription(`**${msg.author.tag}** has given ${args[0]} Discoins to ${member.user.tag}`)
+          .setDescription(`**${msg.author.tag}** has given ${gift} Discoins to ${member.user.tag}`)
           .setColor("F8E71C")
         msg.channel.send({embed});
       }
@@ -294,7 +294,7 @@ module.exports = function(passthrough) {
           var award = Math.floor(award);
           sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
           const embed = new Discord.RichEmbed()
-            .setDescription(`**${msg.author.tag}** has awarded ${args[0]} Discoins to ${member.user.tag}`)
+            .setDescription(`**${msg.author.tag}** has awarded ${award} Discoins to ${member.user.tag}`)
             .setColor("F8E71C")
           msg.channel.send({embed});
         } else {
