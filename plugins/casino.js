@@ -31,7 +31,7 @@ module.exports = function(passthrough) {
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id).catch(() => sql.run("CREATE TABLE IF NOT EXISTS money (userID TEXT, coins INTEGER)").then(() => sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000])));
-        if (!money) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+        if (!money) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         var args = suffix.split(" ");
         var array = ['apple', 'cherries', 'watermelon', 'pear', 'heart'];
         var slot1 = array[Math.floor(Math.random() * array.length)];
@@ -95,7 +95,7 @@ module.exports = function(passthrough) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
         var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id).catch(() => sql.run("CREATE TABLE IF NOT EXISTS money (userID TEXT, coins INTEGER)").then(() => sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000])));
-        if (!money) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+        if (!money) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         if (!args[0]) return msg.channel.send(`${msg.author.username}, you need to provide a bet and a side to bet on`);
         if (args[0] == "all") {
           if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
@@ -127,7 +127,7 @@ module.exports = function(passthrough) {
         var member = findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id).catch(() => sql.run("CREATE TABLE IF NOT EXISTS money (userID TEXT, coins INTEGER)").then(() => sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000])));
-        if (!target) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+        if (!target) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
         const embed = new Discord.RichEmbed()
           .setAuthor(`Coins for ${member.user.tag}`)
           .setDescription(`${target.coins} Discoins <a:Discoin:422523472128901140>`)
@@ -142,7 +142,7 @@ module.exports = function(passthrough) {
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id).catch(() => sql.run("CREATE TABLE IF NOT EXISTS money (userID TEXT, coins INTEGER)").then(() => sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000])));
-        if (!money) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+        if (!money) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
         var mine = Math.floor(Math.random() * (100 - 1) + 1);
         const embed = new Discord.RichEmbed()
@@ -186,8 +186,8 @@ module.exports = function(passthrough) {
         if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
         var author = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
         var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
-        if (!target) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
-        if (!author) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+        if (!target) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+        if (!author) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
         if (author.coins < args[0]) return msg.channel.send(`${msg.author.username}, you don't have enough coins to make that transaction`);
         var gift = parseInt(args[0]);
         var gift = Math.floor(gift);
@@ -218,7 +218,7 @@ module.exports = function(passthrough) {
           if (member == null) return msg.channel.send("Could not find that user");
           if (member.user.id == msg.author.id) return msg.channel.send(`You can't award yourself, silly`);
           var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
-          if (!target) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+          if (!target) sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
           var award = parseInt(args[0]);
           var award = Math.floor(award);
           sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
@@ -243,7 +243,7 @@ module.exports = function(passthrough) {
         var member = findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id).catch(() => sql.run(`CREATE TABLE IF NOT EXISTS waifu (userID TEXT, waifuID TEXT, price INTEGER, claimedByID TEXT)`).then(() => sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null])));
-        if (!waifu) await sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null])
+        if (!waifu) sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null])
         const embed = new Discord.RichEmbed()
           .setAuthor(`Waifu ${member.user.tag}`)
           .addField(`Price:`, waifu.price || 0)
