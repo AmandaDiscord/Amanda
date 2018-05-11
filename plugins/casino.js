@@ -240,7 +240,7 @@ module.exports = function(passthrough) {
       description: "Gets the waifu information about yourself or a user",
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-        var member = findMember(msg. suffix, true);
+        var member = findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id).catch(() => sql.run(`CREATE TABLE IF NOT EXISTS waifu (userID TEXT, waifuID TEXT, price INTEGER, claimedByID TEXT)`).then(() => sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null])));
         if (!waifu) await sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null])
