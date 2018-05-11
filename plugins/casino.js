@@ -130,7 +130,7 @@ module.exports = function(passthrough) {
         if (!target) await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
         const embed = new Discord.RichEmbed()
           .setAuthor(`Coins for ${member.user.tag}`)
-          .setDescription(`${row.coins} Discoins <a:Discoin:422523472128901140>`)
+          .setDescription(`${target.coins} Discoins <a:Discoin:422523472128901140>`)
           .setColor("F8E71C")
         msg.channel.send({embed})
       }
