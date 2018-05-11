@@ -107,7 +107,7 @@ module.exports = function(passthrough) {
           if (bet > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
         }
         if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
-        if (args[1] != "h" || args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
+        if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
         var flip = Math.floor(Math.random() * (2 - 1) + 1);
         if (args[1] == "h" && flip == 1 || args[1] == "t" && flip == 2) {
           msg.channel.send(`You guessed it! you got ${bet * 2} <a:Discoin:422523472128901140>`);
