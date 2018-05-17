@@ -11,10 +11,9 @@ module.exports = (passthrough, callback) => {
             fs.watchFile(filename, {interval: 2018}, () => { // watch it.
                 loadFile(filename);
             });
-            console.log("Watching "+filename);
         }
         try {
-            console.log("Loading "+filename);
+            console.log("Loaded "+filename);
             delete require.cache[require.resolve(filename)]; // Otherwise it loads from the cache and ignores file changes
             passthrough.reloadEvent.emit(filename);
             callback(require(filename)(passthrough));

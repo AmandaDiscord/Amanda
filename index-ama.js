@@ -24,52 +24,52 @@ process.on("unhandledRejection", (reason) => {
 });
 
 async function checkMessageForCommand(msg, isEdit) {
-    if (!msg.author.bot && (msg.content.startsWith(Config.commandPrefix))) {
-        var cmdTxt = msg.content.split(" ")[0].substring(Config.commandPrefix.length);
-        var suffix = msg.content.substring(cmdTxt.length + Config.commandPrefix.length + 1);
-        var cmd = commands[cmdTxt];
-        if (cmd) {
-          try {
-            await cmd.process(msg, suffix, isEdit);
-          } catch (e) {
-              var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>`;
-              if (Config.debug) {
-                msgTxt += `\n${e.stack}`;
-              } else if (!Config.debug) {
-                msgTxt += `\n${e}`;
-              }
-              const embed = new Discord.RichEmbed()
-                .setDescription(msgTxt)
-                .setColor("B60000")
-              msg.channel.send({embed});
-            }
-        } else return;
+  if (!msg.author.bot && (msg.content.startsWith(Config.commandPrefix))) {
+    var cmdTxt = msg.content.split(" ")[0].substring(Config.commandPrefix.length);
+    var suffix = msg.content.substring(cmdTxt.length + Config.commandPrefix.length + 1);
+    var cmd = commands[cmdTxt];
+    if (cmd) {
+      try {
+        await cmd.process(msg, suffix, isEdit);
+      } catch (e) {
+        var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>`;
+        if (Config.debug) {
+          msgTxt += `\n${e.stack}`;
+        } else if (!Config.debug) {
+          msgTxt += `\n${e}`;
+        }
+        const embed = new Discord.RichEmbed()
+          .setDescription(msgTxt)
+          .setColor("B60000")
+        msg.channel.send({embed});
+      }
     } else return;
+  } else return;
 };
 const presences = [
-    ['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
-    ['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
-    ['music', 'LISTENING'], ['Spootify', 'LISTENING'],
-    ['with Shodan', 'STREAMING'],
+  ['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
+  ['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
+  ['music', 'LISTENING'], ['Spootify', 'LISTENING'],
+  ['with Shodan', 'STREAMING'],
 ];
 const update = () => {
-		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-		djs.user.setActivity(`${name} | ${Config.commandPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+	const [name, type] = presences[Math.floor(Math.random() * presences.length)];
+	djs.user.setActivity(`${name} | ${Config.commandPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 };
 djs.on('ready', () => {
-    loadCommands();
-		console.log("Successfully logged in.");
-    update();
-    djs.setInterval(update, 300000);
-    console.log(`${djs.user.username} is currently in ${djs.guilds.size} servers.`);
+  loadCommands();
+	console.log("Successfully logged in.");
+  update();
+  djs.setInterval(update, 300000);
+  console.log(`${djs.user.username} is currently in ${djs.guilds.size} servers.`);
 });
-djs.on("disconnected", function () {
-    console.log("Disconnected! Attempting to reconnect in 6 seconds.");
-    setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
+djs.on("disconnect", reason => {
+  console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
+  setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
 });
 djs.on("message", async msg => checkMessageForCommand(msg, false));
 djs.on("messageUpdate", (oldMessage, newMessage) => {
-    checkMessageForCommand(newMessage, true);
+  checkMessageForCommand(newMessage, true);
 });
 
 const commands = {
@@ -110,13 +110,13 @@ const commands = {
         }
         const embed = new Discord.RichEmbed()
           .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
-          msg.channel.send({embed});
+        msg.channel.send({embed});
       }
       else {
         const embed = new Discord.RichEmbed()
           .setAuthor("Command Categories:")
           .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n❯ NSFW\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list of all of the commands in that category. Ex: \`${Config.commandPrefix}commands core\`. Also typing \`${Config.commandPrefix}commands all\` will return all of the available commands**`)
-          .setFooter("Amanda help pane", djs.user.avatarURL)
+          .setFooter("Amanda help panel", djs.user.avatarURL)
           .setColor('36393E')
         try {
           await msg.author.send({embed});
@@ -189,7 +189,7 @@ const commands = {
           .addField(`**❯ Core:**`, `${Config.commandPrefix}help <command>\n${Config.commandPrefix}commands <category>\n${Config.commandPrefix}invite\n${Config.commandPrefix}info\n${Config.commandPrefix}privacy`)
           .addField(`**❯ Statistics:**`, `${Config.commandPrefix}ping\n${Config.commandPrefix}uptime\n${Config.commandPrefix}stats`)
           .addField(`**❯ Gambling:**`, `${Config.commandPrefix}give <amount> <user>\n${Config.commandPrefix}coins <user>\n${Config.commandPrefix}slot <amount>\n${Config.commandPrefix}flip\n${Config.commandPrefix}bf <amount> <side>\n${Config.commandPrefix}lb\n${Config.commandPrefix}mine\n${Config.commandPrefix}dice`)
-          .addField(`**❯ Guild:**`, `**Moderation:**\n${Config.commandPrefix}tidy <# to delete>\n**Information:**\n${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n${Config.commandPrefix}wumbo <:emoji:>\n**Interaction:**\n${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
+          .addField(`**❯ Guild:**`, `**Moderation:**\n${Config.commandPrefix}ban <user>\n${Config.commandPrefix}hackban <id>\n${Config.commandPrefix}kick <user>\n${Config.commandPrefix}tidy <# to delete>\n**Information:**\n${Config.commandPrefix}guild\n${Config.commandPrefix}user <user>\n${Config.commandPrefix}emoji <:emoji:>\n${Config.commandPrefix}emojilist\n${Config.commandPrefix}wumbo <:emoji:>\n**Interaction:**\n${Config.commandPrefix}poke <user>\n${Config.commandPrefix}boop <user>\n${Config.commandPrefix}hug <user>\n${Config.commandPrefix}cuddle <user>\n${Config.commandPrefix}pat <user>\n${Config.commandPrefix}kiss <user>\n${Config.commandPrefix}slap <user>\n${Config.commandPrefix}stab <user>\n${Config.commandPrefix}nom <user>`)
           .addField(`**❯ Fun:**`, `${Config.commandPrefix}trivia <play / categories>\n${Config.commandPrefix}norris\n${Config.commandPrefix}randnum <min#> <max#>\n${Config.commandPrefix}yn <question>\n${Config.commandPrefix}ball <question>\n${Config.commandPrefix}rate <thing to rate>`)
           .addField(`**❯ Search:**`, `${Config.commandPrefix}urban <search terms>`)
           .addField(`**❯ Images:**`, `${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
@@ -208,12 +208,6 @@ const commands = {
   }
 };
 
-const express = require("express");
-const app = express()
-
-app.get('/', (req, res) => res.send('Hello World!'))
-var port = process.env.PORT || 3000
-app.listen(port, () => console.log('Webapp listening on port 3000'))
 
 function loadCommands() {
   let passthrough = {Discord, djs, dio, reloadEvent};
@@ -221,3 +215,15 @@ function loadCommands() {
     Object.assign(commands, loaded);
   });
 }
+
+let stdin = process.stdin;
+stdin.on("data", async function(input) {
+  input = input.toString();
+  try {
+    let result = await eval(input);
+    if (!result) return result
+    console.log(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
+  } catch (e) {
+      console.log("Error in eval.\n"+e.stack, "responseError");
+  }
+});

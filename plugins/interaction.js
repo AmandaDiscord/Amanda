@@ -1,4 +1,5 @@
 const utils = require("bot-utils");
+
 function findMember(msg, suffix, self = false) {
   if (!suffix) {
     if (self) return msg.member

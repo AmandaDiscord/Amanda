@@ -1,12 +1,26 @@
 const ytdl = require("ytdl-core");
+const Discord = require("discord.js");
 
-const queues = {};
-function newQueue(msg) {
-	var id = msg.guild.id;
-	return {
-		guild: id,
-		songs: []
+const queues = new Map();
+
+async function play(msg, guild, song) {
+	const queue = queues.get(guild.id);
+	if (!queue) return;
+	if (!song) {
+		await queue.textchan.send(`We've run out of songs`);
+		queues.delete(guild.id);
+		return msg.member.voiceChannel.leave();
 	}
+	const dispatcher = queue.connection.playStream(ytdl(queue.songs[0].url));
+	dispatcher.on("end", async () => {
+		queue.songs.shift();
+		play(msg, guild, queue.songs[0]);
+	})
+	dispatcher.on("error", reason => console.error(reason));
+	dispatcher.setVolumeLogarithmic(queue.volume / 5);
+	const embed = new Discord.RichEmbed()
+		.setDescription(`Now playing: ${song.title}`);
+	msg.channel.send({embed});
 }
 
 module.exports = function(passthrough) {
@@ -16,79 +30,94 @@ module.exports = function(passthrough) {
       usage: "",
       description: "",
       process: async function(msg, suffix) {
-				var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
-	      var [no, time] = nope[Math.floor(Math.random() * nope.length)];
-				if(!["320067006521147393"].includes(msg.author.id)) {
-					msg.channel.startTyping();
-        return setTimeout(() => {
-          msg.channel.send(no).then(() => msg.channel.stopTyping());
-        }, time)
-				}
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
+				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250"].includes(msg.guild.id)) {
+					var isPrem = true;
+				} else if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id)) {
+					var isPrem = true;
+				} else {
+					var isPrem = false;
+				}
+				if (isPrem == false) {
+					msg.channel.startTyping();
+        	return setTimeout(() => {
+         		msg.channel.send(`${msg.author.username}, you or this guild is not apart of the patreon system. You can obtain information about upgrading via the \`&upgrade\` command`).then(() => msg.channel.stopTyping());
+       	 	}, 2000)
+				}
 				var args = suffix.split(" ");
+				const queue = queues.get(msg.guild.id);
+				const voiceChannel = msg.member.voiceChannel;
 				if (args[0].toLowerCase() == "play") {
-					const voiceChannel = msg.member.voiceChannel;
-					if (!voiceChannel) return msg.channel.send(`${msg.author.username}, you are not currently in a voice channel`);
+					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(`${msg.author.username}, I don't have permissions to connect to that voice channel`);
-					if (!permissions.has("SPEAK")) return msg.channel.send(`${msg.author.username}, I don't have permissions to speak in that voice channel`);
-					try {
-						var connection = await voiceChannel.join();
-					} catch (error) {
-						console.error(error);
-						return msg.channel.send(`${msg.author.username}, I could not join the voice channel`);
+					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
+					if (!permissions.has("SPEAK")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to speak in that voice channel`);
+					if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a valid youtube link as an argument to the play sub-command`);
+					const songInfo = await ytdl.getInfo(args[1]);
+					const song = {
+						title: Discord.Util.escapeMarkdown(songInfo.title),
+						url: songInfo.video_url
 					}
-					var id = msg.guild.id;
-					if (!queues[id]) {
-						queues[id] = newQueue(msg);
+					if (!queue) {
+						const queueConstruct = {
+							textchan: msg.channel,
+							voiceChan: voiceChannel,
+							connection: null,
+							songs: [],
+							volume: 5,
+							playing: true
+						}
+						queues.set(msg.guild.id, queueConstruct);
+						queueConstruct.songs.push(song);
+						try {
+							var connection = await voiceChannel.join();
+							await voiceChannel.join();
+							queueConstruct.connection = connection;
+							await play(msg, msg.guild, queueConstruct.songs[0]);
+							msg.react("👌");
+						} catch (reason) {
+							queues.delete(msg.guild.id);
+							return msg.channel.send(`There was an error:\n${reason}`);
+						}
+					} else {
+						queue.songs.push(song)
+						msg.react("👌");
 					}
-					if (!args[1]) {
-						if (!queues[id].songs[0]) return msg.channel.send(`${msg.author.username}, there are no songs in the queue`);
-					}
-					queues[id].songs.push(args[1]);
-					const addembed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username}, I've added the song to the queue`)
-					msg.channel.send({addembed});
-					const dispatcher = connection.playStream(ytdl(queues[id].songs[0]));
-					dispatcher.on("end", () => {
-						queues[id].songs = queues[id].songs.shift()
-						if (!queues[id].songs[0]) {
-							delete queues[id];
-							return msg.channel.send(`We've run out of songs`);
-						} else connection.playStream(ytdl(queues[id].songs[0]));
-					})
-					dispatcher.on("error", reason => {
-						delete queues[id];
-						console.error(error);
-						return msg.channel.send(`Uhh. Hate to say this now but, there was an error with the dispatcher:\n\`\`\`js\n${reason}\n\`\`\` `);
-					});
 				} else if (args[0].toLowerCase() == "join") {
-					const voiceChannel = msg.member.voiceChannel;
 					if (!voiceChannel) return msg.channel.send(`${msg.author.username}, you are not currently in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
 					if (!permissions.has("CONNECT")) return msg.channel.send(`${msg.author.username}, I don't have permissions to connect to that voice channel`);
 					if (!permissions.has("SPEAK")) return msg.channel.send(`${msg.author.username}, I don't have permissions to speak in that voice channel`);
 					try {
-						voiceChannel.join();
+						await voiceChannel.join();
+						msg.react("👌");
 					} catch (reason) {
 						console.error(reason);
-						return msg.channel.send(`I couldn't join the channel for whatever reason:\n\`\`\`js\n${reason}\n\`\`\``);
+						return msg.channel.send(`There was an error:\n\`\`\`js\n${reason}\n\`\`\``);
 					}
-					const joinembed = new Discord.RichEmbed()
-						.setDescription(`Successfully joined ${voiceChannel.name}`)
-					msg.channel.send({joinembed});
-				} else if (args[0].toLowerCase() == "leave") {
-					const voiceChannel = msg.member.voiceChannel;
-					if (!voiceChannel) return msg.channel.send(`${msg.author.username}, you are not currently in a voice channel`);
+				} else if (args[0].toLowerCase() == "stop") {
+					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					try {
-						voiceChannel.leave();
+						queues.delete(msg.guild.id);
+						await voiceChannel.leave();
+						msg.react("👌");
 					} catch (reason) {
-						console.error(reason);
-						return msg.channel.send(`I couldn't leave the channel for whatever reason:\n\`\`\`js\n${reason}\n\`\`\``);
+						msg.channel.send(`There was an error:\n\`\`\`js\n${reason}\n\`\`\``);
 					}
-					const leaveembed = new Discord.RichEmbed()
-						.setDescription(`Successfully left ${voiceChannel.name}`)
-					msg.channel.send({leaveembed});
+				} else if (args[0].toLowerCase() == "queue") {
+					if (!queue) return msg.channel.send(`There aren't any songs queued`);
+					let index = 0;
+					const embed = new Discord.RichEmbed()
+						.setAuthor(`Queue for ${msg.guild.name}`)
+						.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}**`).join('\n'))
+					msg.channel.send({embed});
+				} else if (args[0].toLowerCase() == "skip") {
+					if (!voiceChannel) return msg.channel.send('You are not in a voice channel!');
+					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+					await queue.connection.dispatcher.end('Skip command has been used!');
+					return msg.react("👌");
+				} else if (args[0].toLowerCase() == "remove") {
+
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
       }
     }
