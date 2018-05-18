@@ -19,17 +19,17 @@ async function play(msg, guild, song) {
 	dispatcher.on("error", reason => console.error(reason));
 	dispatcher.setVolumeLogarithmic(queue.volume / 5);
 	const embed = new Discord.RichEmbed()
-		.setDescription(`Now playing: ${song.title}`);
+	.setDescription(`Now playing: ${song.title}`);
 	msg.channel.send({embed});
 }
 
 module.exports = function(passthrough) {
-  const { Discord, djs, dio } = passthrough;
-  return {
-    "music": {
-      usage: "",
-      description: "",
-      process: async function(msg, suffix) {
+	const { Discord, djs, dio } = passthrough;
+	return {
+		"music": {
+			usage: "",
+			description: "",
+			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250"].includes(msg.guild.id)) {
 					var isPrem = true;
@@ -40,9 +40,9 @@ module.exports = function(passthrough) {
 				}
 				if (isPrem == false) {
 					msg.channel.startTyping();
-        	return setTimeout(() => {
-         		msg.channel.send(`${msg.author.username}, you or this guild is not apart of the patreon system. You can obtain information about upgrading via the \`&upgrade\` command`).then(() => msg.channel.stopTyping());
-       	 	}, 2000)
+					return setTimeout(() => {
+						msg.channel.send(`${msg.author.username}, you or this guild is not apart of the patreon system. You can obtain information about upgrading via the \`&upgrade\` command`).then(() => msg.channel.stopTyping());
+					}, 2000)
 				}
 				var args = suffix.split(" ");
 				const queue = queues.get(msg.guild.id);
@@ -108,8 +108,8 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send(`There aren't any songs queued`);
 					let index = 0;
 					const embed = new Discord.RichEmbed()
-						.setAuthor(`Queue for ${msg.guild.name}`)
-						.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}**`).join('\n'))
+					.setAuthor(`Queue for ${msg.guild.name}`)
+					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}**`).join('\n'))
 					msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel!');
@@ -117,9 +117,9 @@ module.exports = function(passthrough) {
 					await queue.connection.dispatcher.end('Skip command has been used!');
 					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "remove") {
-
+					
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
-      }
-    }
-  }
+			}
+		}
+	}
 }
