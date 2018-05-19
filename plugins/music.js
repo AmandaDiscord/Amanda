@@ -1,5 +1,7 @@
 const ytdl = require("ytdl-core");
 const Discord = require("discord.js");
+let sqlite3 = require("sqlite3");
+sql.open("./databases/music.sqlite");
 
 const queues = new Map();
 const timeout = new Set();
@@ -59,6 +61,22 @@ function play(msg, guild, song) {
 	const embed = new Discord.RichEmbed()
 	.setDescription(`Now playing: ${song.title}`);
 	msg.channel.send({embed});
+}
+
+function prettySeconds(seconds) {
+	let minutes = Math.floor(seconds / 60);
+	seconds = seconds % 60;
+	let hours = Math.floor(minutes / 60);
+	minutes = minutes % 60;
+	let output = [];
+	if (hours) {
+		output.push(hours);
+		output.push(minutes.toString().padStart(2, "0"));
+	} else {
+		output.push(minutes);
+	}
+	output.push(seconds.toString().padStart(2, "0"));
+	return output.join(":");
 }
 
 module.exports = function(passthrough) {
@@ -122,6 +140,73 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 					.setDescription(`Currently playing song: **${queue.songs[0].title}**`)
 					return msg.channel.send({embed});
+				} else if (args[0].toLowerCase() == "playlist") {
+					let playlistName = args[1];
+					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
+					let playlistRow = await sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
+					if (!playlistRow) {
+						if (args[2] == "create") {
+							await sql.run("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
+							return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`);
+						} else {
+							return msg.channel.send(`${msg.author.username}, That playlist does not exist. Use \`&music playlist ${playlistName} create\` to create it.`);
+						}
+					}
+					let songs = await sql.all("SELECT * FROM PlaylistSongs INNER JOIN Songs ON Songs.videoID = PlaylistSongs.videoID WHERE playlistID = ?", playlistRow.playlistID);
+					let orderedSongs = [];
+					let song = songs.find(row => !songs.some(r => r.next == row.videoID));
+					while (song) {
+						orderedSongs.push(song);
+						if (song.next) song = songs.find(row => row.videoID == song.next);
+						else song = null;
+					}
+					let action = args[2] || "";
+					if (action.toLowerCase() == "add") {
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						let videoID = args[3];
+						if (!videoID) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link`);
+						ytdl.getInfo(videoID).then(async video => {
+							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(`${msg.author.username}, That song is already in the playlist.`);
+							await Promise.all([
+								sql.run("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
+								sql.run("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
+								sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [video.video_id, playlistRow.playlistID, video.video_id])
+							]);
+							return msg.channel.send(`${msg.author.username}, Added **${video.title}** to playlist **${playlistName}**`);
+						}).catch(e => {
+							return msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
+						});
+					} else if (action.toLowerCase() == "remove") {
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						let index = parseInt(args[3]);
+						if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`);
+						index = index-1;
+						if (!orderedSongs[index]) return msg.channel.send(`${msg.author.username}, That index is out of range`);
+						let toRemove = orderedSongs[index];
+						await Promise.all([
+							sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
+							sql.run("DELETE FROM PlaylistSongs WHERE playlistID = ? AND videoID = ?", [playlistRow.playlistID, toRemove.videoID])
+						]);
+						return msg.channel.send(`Removed **${toRemove.name}** from playlist **${playlistName}**`);
+					} else if (action.toLowerCase() == "play") {
+						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
+						while (orderedSongs.length) {
+							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
+							await handleVideo(video, msg, voiceChannel);
+						}
+					} else {
+						let totalLength = orderedSongs.reduce((p,c) => (p += c.length), 0);
+						let author = [];
+						if (djs.users.get(playlistRow.author)) {
+							author.push(`${djs.users.get(playlistRow.author).username} — ${playlistName}`, `https://cdn.discordapp.com/avatars/${djs.users.get(playlistRow.author).id}/${djs.users.get(playlistRow.author).avatar}.png?size=32`);
+						} else {
+							author.push(playlistName);
+						}
+						let embed = new Discord.RichEmbed()
+						.setAuthor(author[0], author[1])
+						.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength));
+						msg.channel.send(embed);
+					}
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
 			}
 		}
