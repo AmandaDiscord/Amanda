@@ -157,6 +157,22 @@ module.exports = function(passthrough) {
 						orderedSongs.push(song);
 						if (song.next) song = songs.find(row => row.videoID == song.next);
 						else song = null;
+						if (orderedSongs.includes(song)) {
+							await unbreakDatabase();
+							return;
+						}
+					}
+					if (orderedSongs.length != songs.length) {
+						await unbreakDatabase();
+						return;
+					}
+					async function unbreakDatabase() {
+						await sql.run("BEGIN TRANSACTION");
+						await Promise.all(songs.map((row, index) => {
+							return sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index+1] ? songs[index+1].videoID : null), row.playlistID, row.videoID]);
+						}));
+						await sql.run("END TRANSACTION");
+						return msg.channel.send(`${msg.author.username}, The database entries for that playlist are inconsistent. The inconsistencies have been resolved by resetting the order of the songs in that playlist. Apart from the song order, no data was lost. Other playlists were not affected.`);
 					}
 					let action = args[2] || "";
 					if (action.toLowerCase() == "add") {
