@@ -185,7 +185,27 @@ module.exports = function(passthrough) {
 							sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
 							sql.run("DELETE FROM PlaylistSongs WHERE playlistID = ? AND videoID = ?", [playlistRow.playlistID, toRemove.videoID])
 						]);
-						return msg.channel.send(`Removed **${toRemove.name}** from playlist **${playlistName}**`);
+						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
+					} else if (action.toLowerCase() == "move") {
+						let from = parseInt(args[3]);
+						let to = parseInt(args[4]);
+						if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
+						from--; to--;
+						if (!orderedSongs[from]) return msg.channel.send(`${msg.author.username}, That index is out of range`);
+						if (!orderedSongs[to]) return msg.channel.send(`${msg.author.username}, That index is out of range`);
+						let fromRow = orderedSongs[from], toRow = orderedSongs[to];
+						if (from < to) {
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.next, fromRow.playlistID, fromRow.videoID]); // update moved item
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
+						} else if (from > to) {
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
+							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.videoID, fromRow.playlistID, fromRow.videoID]); // update moved item
+						} else {
+							return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`);
+						}
+						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play") {
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
