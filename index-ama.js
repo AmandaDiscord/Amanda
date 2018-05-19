@@ -210,9 +210,14 @@ const commands = {
 
 
 function loadCommands() {
-  let passthrough = {Discord, djs, dio, reloadEvent};
-  require("./plugins.js")(passthrough, loaded => {
-    Object.assign(commands, loaded);
+  Promise.all([
+    sql.open("./databases/money.sqlite"),
+    sql.open("./databases/music.sqlite")
+  ]).then(dbs => {
+    let passthrough = {Discord, djs, dio, reloadEvent, dbs};
+    require("./plugins.js")(passthrough, loaded => {
+      Object.assign(commands, loaded);
+    });
   });
 }
 

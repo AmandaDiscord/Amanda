@@ -1,8 +1,5 @@
 const ytdl = require("ytdl-core");
 const Discord = require("discord.js");
-let sql = require("sqlite");
-sql.open("./databases/music.sqlite");
-
 const queues = new Map();
 const timeout = new Set();
 
@@ -80,7 +77,8 @@ function prettySeconds(seconds) {
 }
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio } = passthrough;
+	const { Discord, djs, dio, dbs } = passthrough;
+	let sql = dbs[1];
 	return {
 		"music": {
 			usage: "Null",

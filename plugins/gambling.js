@@ -1,7 +1,5 @@
 const Discord = require('discord.js');
 const mined = new Set();
-let sql = require("sqlite");
-sql.open("./databases/money.sqlite");
 const Config = require("../config.json");
 
 function findMember(msg, suffix, self = false) {
@@ -15,7 +13,8 @@ function findMember(msg, suffix, self = false) {
 }
 
 module.exports = function(passthrough) {
-  const { Discord, djs, dio } = passthrough;
+  const { Discord, djs, dio, dbs } = passthrough;
+  let sql = dbs[0];
   return {
     "dice": {
       usage: "",
