@@ -1,6 +1,6 @@
 const ytdl = require("ytdl-core");
 const Discord = require("discord.js");
-let sqlite3 = require("sqlite3");
+let sql = require("sqlite3");
 sql.open("./databases/music.sqlite");
 
 const queues = new Map();
