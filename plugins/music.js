@@ -227,7 +227,7 @@ module.exports = function(passthrough) {
 						let to = parseInt(args[4]) || from || orderedSongs.length;
 						from = Math.max(from, 1);
 						to = Math.min(orderedSongs.length, to);
-						orderedSongs = orderedSongs.slice(from-1, to-1);
+						orderedSongs = orderedSongs.slice(from-1, to);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
 							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
