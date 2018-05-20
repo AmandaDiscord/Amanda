@@ -223,6 +223,9 @@ module.exports = function(passthrough) {
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play") {
+						let from = (parseInt(args[3]) || 1)-1;
+						let to = parseInt(args[4]) || from || orderedSongs.length-1;
+						orderedSongs = orderedSongs.slice(from, to);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
 							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
