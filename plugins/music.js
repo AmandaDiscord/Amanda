@@ -225,6 +225,8 @@ module.exports = function(passthrough) {
 					} else if (action.toLowerCase() == "play") {
 						let from = (parseInt(args[3]) || 1)-1;
 						let to = parseInt(args[4]) || from || orderedSongs.length-1;
+						from = Math.max(from, 0);
+						to = Math.min(orderedSongs.length-1, to);
 						orderedSongs = orderedSongs.slice(from, to);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
