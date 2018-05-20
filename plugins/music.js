@@ -223,11 +223,11 @@ module.exports = function(passthrough) {
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play") {
-						let from = (parseInt(args[3]) || 1)-1;
-						let to = parseInt(args[4]) || from || orderedSongs.length-1;
-						from = Math.max(from, 0);
-						to = Math.min(orderedSongs.length-1, to);
-						orderedSongs = orderedSongs.slice(from, to);
+						let from = (parseInt(args[3]) || 1);
+						let to = parseInt(args[4]) || from || orderedSongs.length;
+						from = Math.max(from, 1);
+						to = Math.min(orderedSongs.length, to);
+						orderedSongs = orderedSongs.slice(from-1, to-1);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
 							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
