@@ -116,7 +116,7 @@ module.exports = function(passthrough) {
         }
         if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
         if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
-        var flip = Math.floor(Math.random() * (4 - 1) + 1);
+        var flip = Math.floor(Math.random() * (3 - 1) + 1);
         if (args[1] == "h" && flip == 1 || args[1] == "t" && flip == 2) {
           msg.channel.send(`You guessed it! you got ${bet * 2} <a:Discoin:422523472128901140>`);
           return sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + bet, msg.author.id]);
@@ -177,7 +177,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Gets the leaderboard for people with the most coins",
       process: async function(msg, suffix) {
-        var all = await sql.all("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", djs.user.id)
+        var all = await sql.all("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", djs.user.id);
         let index = 0;
         const embed = new Discord.RichEmbed()
           .setAuthor("Leaderboards")
@@ -194,9 +194,7 @@ module.exports = function(passthrough) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
         if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
-        if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to gift`);
-        if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot gift an amount less than 1`);
-        var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6)
+        var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6);
         if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to give to`);
         var member = findMember(msg, usertxt);
         if (member == null) return msg.channel.send("Could not find that user");
@@ -213,9 +211,15 @@ module.exports = function(passthrough) {
           await msg.channel.send(`Created user account`);
           var author = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
         }
-        if (author.coins < args[0]) return msg.channel.send(`${msg.author.username}, you don't have enough coins to make that transaction`);
-        var gift = parseInt(args[0]);
-        var gift = Math.floor(gift);
+        if (args[0] == "all") {
+          if (author.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to give!`);
+          var gift = author.coins;
+        } else {
+          if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to give`);
+          var gift = Math.floor(parseInt(args[0]));
+          if (gift < 1) return msg.channel.send(`${msg.author.username}, you cannot give less than 1`);
+          if (gift > author.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
+        }
         sql.run(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
         sql.run(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
         const embed = new Discord.RichEmbed()

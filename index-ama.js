@@ -77,7 +77,7 @@ const commands = {
     usage: "<code>",
     description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
     process: async function (msg, suffix) {
-      if (["320067006521147393", "366385096053358603", "176580265294954507","220625669032247296"].includes(msg.author.id))  {
+      if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
         let result = await eval(suffix);
         if (!result) return result
         msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
@@ -113,9 +113,9 @@ const commands = {
         msg.channel.send({embed});
       }
       else {
-        const embed = new Discord.RichEmbed()
+        const embed = new Discord.RichEmbed() // \n❯ NSFW
           .setAuthor("Command Categories:")
-          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n❯ NSFW\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list of all of the commands in that category. Ex: \`${Config.commandPrefix}commands core\`. Also typing \`${Config.commandPrefix}commands all\` will return all of the available commands**`)
+          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: **Typing \`${Config.commandPrefix}commands <category>\` will get you a list of all of the commands in that category. Ex: \`${Config.commandPrefix}commands core\`. Also typing \`${Config.commandPrefix}commands all\` will return all of the available commands**`)
           .setFooter("Amanda help panel", djs.user.avatarURL)
           .setColor('36393E')
         try {
@@ -179,9 +179,8 @@ const commands = {
       } else if (suffix.toLowerCase() == "music") {
         const embed = new Discord.RichEmbed()
           .setAuthor(`Music command list`)
-          .setDescription(`${Config.commandPrefix}music\n\n**Arguments:**`)
-          .addField(`First:`, `<join> - Joins the VC if you're in one\n<leave> - Leaves the VC\n<play> - Plays the current queue or adds songs to it\n<skip> - Skips the currently playing song\n<purge> - Purges the queue\n<now> - Shows what song is playing\n<queue> - Shows the entire queue`)
-          .addField(`Second:`, `<url> - Any valid YouTube url`)
+          .setDescription(`${Config.commandPrefix}music`)
+          .addField(`Arguments:`, `<play> / Plays the current queue or adds songs to it\n- <url> / Any valid YouTube url\n---------------------------\n<skip> / Skips the currently playing song\n---------------------------\n<stop> / Purges the queue and leaves the voice channel\n---------------------------\n<now> / Shows what song is playing\n---------------------------\n<queue> / Shows the entire queue\n---------------------------\n<volume> / changes the volume of the music dispatcher\n- <# (5 is the default volume)>\n---------------------------\n<playlist> / Custom playlists made by users through Amanda\n<playlist name>\n- <add>\n-- <url>\n---------------------------\n- <remove>\n-- <# of position of song>\n---------------------------\n- <play>\n---------------------------\n- <move>\n-- <# of position of song to move>\n--- <# of position to move song to>\n\nEx for playlist: \`&music playlist xi play\``)
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else if (suffix.toLowerCase() == "all") {
         const embed = new Discord.RichEmbed()
@@ -194,9 +193,9 @@ const commands = {
           .addField(`**❯ Search:**`, `${Config.commandPrefix}urban <search terms>`)
           .addField(`**❯ Images:**`, `${Config.commandPrefix}cat\n${Config.commandPrefix}dog\n${Config.commandPrefix}space`)
           .addField(`**❯ Music:**`, `${Config.commandPrefix}music - see \`${Config.commandPrefix}commands music\` for help`)
-          .addField(`**❯ NSFW:**`, `Null`)
+          //.addField(`**❯ NSFW:**`, `Null`)
           .setColor('36393E')
-          .setFooter("Old Amanda help pane", djs.user.avatarURL)
+          .setFooter("Old Amanda help pane", `https://cdn.discordapp.com/avatars/${djs.user.id}/${djs.user.avatar}.png?size=32`)
         msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       } else {
         const embed = new Discord.RichEmbed()
@@ -225,10 +224,12 @@ let stdin = process.stdin;
 stdin.on("data", async function(input) {
   input = input.toString();
   try {
-    let result = await eval(input);
-    if (!result) return result
-    console.log(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
+    await eval(input);
   } catch (e) {
-      console.log("Error in eval.\n"+e.stack, "responseError");
+      console.log(e.stack);
   }
 });
+
+console.clear = function () {
+  return process.stdout.write('\x1Bc');
+}

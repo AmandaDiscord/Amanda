@@ -21,7 +21,7 @@ module.exports = function(passthrough) {
           var guildJoinedTime = new Date(member.joinedAt).toUTCString();
           var userCreatedTime = new Date(member.user.createdAt).toUTCString();
           const embed = new Discord.RichEmbed()
-            .setAuthor(`User data for: ${member.user.username}`)
+            .setAuthor(`User data for: ${member.displayName || member.user.username}`)
             .addField("User#Discrim:", `${member.user.tag}`)
             .addField("User ID:", member.user.id)
             .addField("Account created at:", userCreatedTime)
@@ -42,8 +42,8 @@ module.exports = function(passthrough) {
           if (msg.guild.me.hasPermission("MANAGE_MESSAGES")) {
             suffix = parseInt(suffix);
             if (isNaN(suffix)) return msg.channel.send(`That's not a valid number of messages to delete`);
-            if (suffix > 100) return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`)
-            msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000))
+            if (suffix > 100) return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`);
+            msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000));
           } else msg.channel.send(`${msg.author.username}, I don't have the manage messages permission`);
         } else msg.channel.send(`${msg.author.username}, you don't have the manage messages permission.`);
       }
@@ -54,7 +54,7 @@ module.exports = function(passthrough) {
       description: "Gets the information of the emoji provided. Useful for making bot resources.",
       process: function(msg, suffix) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);
-        var emojiType = ""
+        var emojiType = "";
         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if (foundEmoji.animated == true) var emojiType = "gif";
@@ -83,40 +83,37 @@ module.exports = function(passthrough) {
       }
     },
     "wumbo": {
-       usage: "<:emoji:>",
-       description: "Makes an emoji bigger",
-       process: function(msg, suffix) {
-         var foundEmoji = Discord.Util.parseEmoji(suffix);
-         var emojiType = ""
-         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-         if (foundEmoji.animated == true) {
-           var emojiType = "gif";
-         } else {
-           var emojiType = "png";
-         }
-         const embed = new Discord.RichEmbed()
-           .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
-           .setColor("36393E")
-         msg.channel.send({embed});
-       }
+      usage: "<:emoji:>",
+      description: "Makes an emoji bigger",
+      process: function(msg, suffix) {
+        var foundEmoji = Discord.Util.parseEmoji(suffix);
+        var emojiType = "";
+        if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+        if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
+        if (foundEmoji.animated == true) var emojiType = "gif";
+        else var emojiType = "png";
+        const embed = new Discord.RichEmbed()
+          .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
+          .setColor("36393E")
+        msg.channel.send({embed});
+      }
     },
 
     "guild": {
-       usage: "",
-       description: "Gets information about the server",
-       process: function(msg, suffix) {
-         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
-         const embed = new Discord.RichEmbed()
-           .setAuthor(msg.guild.name)
-           .addField("Created at:", msg.guild.createdAt.toUTCString())
-           .addField("Owner:", msg.guild.owner.user.tag)
-           .addField("Member Count:", `${msg.guild.memberCount} members`)
-           .addField("Guild ID:", msg.guild.id)
-           .setThumbnail(msg.guild.iconURL)
-           .setColor("36393E")
-         msg.channel.send({embed});
-       }
+      usage: "",
+      description: "Gets information about the server",
+      process: function(msg, suffix) {
+        if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
+        const embed = new Discord.RichEmbed()
+          .setAuthor(msg.guild.name)
+          .addField("Created at:", msg.guild.createdAt.toUTCString())
+          .addField("Owner:", msg.guild.owner.user.tag)
+          .addField("Member Count:", `${msg.guild.memberCount} members`)
+          .addField("Guild ID:", msg.guild.id)
+          .setThumbnail(msg.guild.iconURL)
+          .setColor("36393E")
+        msg.channel.send({embed});
+      }
     },
 
     "ban": {

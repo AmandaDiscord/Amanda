@@ -6,12 +6,12 @@ module.exports = function(passthrough) {
   return {
     "uptime": {
       usage: "",
-      description: "returns the amount of time since the bot and the system's operating system started",
+      description: "Returns the amount of time since Amanda and her operating system has started",
       process: function(msg, suffix) {
-        var uptime = utils.uptime();
         const embed = new Discord.RichEmbed()
           .setAuthor("Uptime")
-          .addField("❯ Bot Uptime:", `${uptime}`)
+          .addField("❯ Bot Uptime:", `${utils.uptime()}`)
+          .addField("❯ OS Uptime:", `${utils.osUptime()}`)
           .setFooter("And still going")
           .setColor("36393E")
         msg.channel.send({embed});
@@ -20,39 +20,38 @@ module.exports = function(passthrough) {
 
     "stats": {
       usage: "",
-      description: "Displays detailed statistics of the bot",
+      description: "Displays detailed statistics of Amanda",
       process: function(msg, suffix) {
-        var CPUClock = Date.now();
-        var CPUTimeTaken = Date.now() - CPUClock
-        var botPing = djs.ping.toFixed(0)
-        var uptime = utils.uptime();
         var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
         const embed = new Discord.RichEmbed()
           .setAuthor("Statistics")
-          .addField("❯ Network Latency:", `${botPing}ms`)
-          .addField("❯ Bot Uptime:", `${uptime}`)
+          .addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
+          .addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
+          .addField("❯ Bot Uptime:", `${utils.uptime()}`)
+          .addField("❯ OS Uptime:", `${utils.osUptime()}`)
           .addField("❯ RAM Usage:", `${ramUsage}MB`)
           .addField("❯ User Count:", `${djs.users.size} users`)
           .addField("❯ Guild Count:", `${djs.guilds.size} guilds`)
           .addField("❯ Channel Count:", `${djs.channels.size} channels`)
           .setFooter(`Requested by ${msg.author.username}`)
           .setColor("36393E")
-        return msg.channel.send({embed});
+        msg.channel.send({embed});
       }
     },
 
     "ping": {
       usage: "",
       description: "Tests the bot's network latency.",
-      process: function (msg, args) {
-        var npingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
-        var randnPingMsg = npingArray[Math.floor(Math.random() * npingArray.length)];
+      process: function (msg, suffix) {
+        var pingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
+        var randPingMsg = pingArray[Math.floor(Math.random() * pingArray.length)];
         const embed = new Discord.RichEmbed()
           .setAuthor("Pong!")
-          .addField("❯ Network Latency:", `${djs.ping.toFixed(0)}ms`)
+          .addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
+          .addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
           .setFooter("Is that slow?")
           .setColor("36393E")
-        msg.channel.send(randnPingMsg).then(nmsg => nmsg.edit({embed}))
+        msg.channel.send(randPingMsg).then(nmsg => nmsg.edit({embed}));
       }
     },
 
@@ -65,10 +64,8 @@ module.exports = function(passthrough) {
             .setAuthor("Servers")
             .addField(`${djs.user.username} in currently in:`, `**${djs.guilds.map(g => `${g.name} - **${g.memberCount} Members**`).join(`\n`)}`, true)
             .setColor("F8E71C")
-            return msg.channel.send({embed});
-        } else {
-          return msg.channel.send(`${djs.user.username} is currently in ${djs.guilds.size} servers`);
-        }
+          msg.channel.send({embed});
+        } else msg.channel.send(`${djs.user.username} is currently in ${djs.guilds.size} servers`);
       }
     },
 
@@ -88,14 +85,14 @@ module.exports = function(passthrough) {
 
     "info": {
       usage: "",
-      description: "Displays information about the bot",
+      description: "Displays information about Amanda",
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Information:")
           .setColor("36393E")
           .setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me.")
           .addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>")
-          .addField("Bot Version:", "4.3.5")
+          .addField("Bot Version:", "5.0.0")
           .addField("Lang:", `Node.js ${process.version}`)
           .addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
           .addField("Description:", "A cutie-pie chat bot that only wishes for some love.")

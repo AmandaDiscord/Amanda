@@ -23,14 +23,13 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
         if (member.user.id == msg.author.id) return msg.channel.send("That's not strange at all...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
-          require("request")("http://api.shodanbot.com/interactions/hug",
-          function(err, res, body) {
-            if (err) return msg.channel.send("Error... Api returned nothing");
-            try {
-              var data = JSON.parse(body);
-            } catch (error) {
-              return msg.channel.send(`There was an error:\n${error}`);
-            }
+        require("request")("http://api.shodanbot.com/interactions/hug", function(err, res, body) {
+          if (err) return msg.channel.send("Error... Api returned nothing");
+          try {
+            var data = JSON.parse(body);
+          } catch (error) {
+            return msg.channel.send(`There was an error:\n${error}`);
+          }
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
             .setImage(data.img)
@@ -49,8 +48,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
         if (member.user.id == msg.author.id) return msg.channel.send(`W-What? Why, ${msg.author.username}?`);
         if (member.user.id == djs.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
-        require("request")("http://api.shodanbot.com/interactions/kiss",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/kiss", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -75,8 +73,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
         if (member.user.id == msg.author.id) return msg.channel.send("I find it strange that you tried to do that...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
-        require("request")("http://api.shodanbot.com/interactions/cuddle",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/cuddle", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -101,8 +98,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
         if (member.user.id == msg.author.id) return msg.channel.send("Ok then...");
         if (member.user.id == djs.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
-        require("request")("http://api.shodanbot.com/interactions/poke",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/poke", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -127,8 +123,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
         if (member.user.id == msg.author.id) return msg.channel.send("Come on... Don't make yourself look like an idiot...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
-        require("request")("http://api.shodanbot.com/interactions/slap",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/slap", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -153,8 +148,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
         if (member.user.id == msg.author.id) return msg.channel.send("Why even try?");
         if (member.user.id == djs.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
-        require("request")("http://api.shodanbot.com/interactions/boop",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/boop", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -179,8 +173,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
         if (member.user.id == msg.author.id) return msg.channel.send("<:NotLikeCat:411364955493761044>");
         if (member.user.id == djs.user.id) return msg.channel.send(`≥ w ≤`);
-        require("request")("http://api.shodanbot.com/interactions/pat",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/pat", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
@@ -221,8 +214,7 @@ module.exports = function(passthrough) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
         if (member.user.id == msg.author.id) return msg.channel.send("You are so weird...");
         if (member.user.id == djs.user.id) return msg.channel.send(`owie`);
-        require("request")("http://api.shodanbot.com/interactions/nom",
-        function(err, res, body) {
+        require("request")("http://api.shodanbot.com/interactions/nom", function(err, res, body) {
           if (err) return msg.channel.send("Error... Api returned nothing");
           try {
             var data = JSON.parse(body);
