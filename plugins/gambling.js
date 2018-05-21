@@ -14,6 +14,18 @@ function findMember(msg, suffix, self = false) {
 
 module.exports = function(passthrough) {
   const { Discord, djs, dio, dbs } = passthrough;
+
+  async function getWaifuInfo(userID) {
+    let [meRow, claimerRow] = await Promise.all([
+      sql.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
+      sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
+    ]);
+    let claimer = claimerRow ? dio.users[claimerRow.userID] : undefined;
+    let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
+    let waifu = meRow ? dio.users[meRow.waifuID] : undefined;
+    return {claimer, price, waifu};
+  }
+
   let sql = dbs[0];
   return {
     "dice": {
@@ -277,17 +289,13 @@ module.exports = function(passthrough) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var member = findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
-        var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id);
-        if (!waifu) {
-          await sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null]);
-          await msg.channel.send(`Created user account`);
-          var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id);
-        }
+        let info = await getWaifuInfo(member.user.id);
+
         const embed = new Discord.RichEmbed()
           .setAuthor(`Waifu ${member.user.tag}`)
-          .addField(`Price:`, waifu.price || 0)
-          .addField(`Claimed by:`, dio.users[waifu.claimedByID] ? dio.users[waifu.claimedByID].username : waifu.claimedByID || "Nobody")
-          .addField(`Waifu:`, djs.users.get(waifu.waifuID) ? djs.users.get(waifu.waifuID).tag : waifu.waifuID || "Nobody")
+          .addField(`Price:`, info.price)
+          .addField(`Claimed by:`, info.claimer ? info.claimer.username : "(nobody)")
+          .addField(`Waifu:`, info.waifu ? info.waifu.username : "(nobody)")
           .setColor("36393E")
         msg.channel.send({embed});
       }
@@ -299,48 +307,40 @@ module.exports = function(passthrough) {
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
-        var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 7);
+        var usertxt = args.slice(1).join(" ");
         if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a member you would like to claim`);
         var member = findMember(msg, usertxt);
-        if (member == null) return msg.channel.send(`Couldn't find that user`);
-        var selfwaifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, msg.author.id);
-        var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id);
-        var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-        var oldclaim = await sql.get(`SELECT * FROM waifu WHERE userID =?`, waifu.claimedByID);
-        if (!waifu) {
-          await sql.run(`INSERT INTO waifu (userID, waifuID, price, claimedByID) VALUES (?, ?, ?, ?)`, [member.user.id, null, null, null]);
-          await msg.channel.send(`Created user account`);
-          var waifu = await sql.get(`SELECT * FROM waifu WHERE userID =?`, member.user.id);
-        }
+        if (!member) return msg.channel.send(`Couldn't find that user`);
+        let [memberInfo, myInfo, money] = await Promise.all([
+          getWaifuInfo(member.user.id),
+          getWaifuInfo(msg.author.id),
+          sql.get("SELECT coins FROM money WHERE userID = ?", msg.author.id)
+        ]);
+        money = money.coins;
         if (!money) {
-          await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-          await msg.channel.send(`Created user account`);
-          var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+          money = 5000;
+          await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, money]);
         }
+        let claim = 0;
         if (args[0] == "all") {
-          if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to claim someone with!`);
-          var claimamou = money.coins;
+          if (!money) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to claim someone with!`);
+          claim = money;
         } else {
-          var claimamou = Math.floor(parseInt(args[0]));
-          if (isNaN(claimamou)) return msg.channel.send(`${msg.author.username}, that is not a valid amount to claim someone with`);
-          if (claimamou < 1) return msg.channel.send(`${msg.author.username}, you cannot claim someone for less than 1 <a:Discoin:422523472128901140>`);
-          if (claimamou > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
+          claim = Math.floor(parseInt(args[0]));
+          if (isNaN(claim)) return msg.channel.send(`${msg.author.username}, that is not a valid amount to claim someone with`);
+          if (claim < 1) return msg.channel.send(`${msg.author.username}, you cannot claim someone for less than 1 <a:Discoin:422523472128901140>`);
+          if (claim > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
         }
-        if (selfwaifu.waifuID != null) return msg.cahnnel.send(`**${msg.author.tag}**, you have to divorce your current waifu before attempting to claim another person`);
-        var newprice = waifu.price * 1.25;
-        if ((newprice * 1.25) > claimamou) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction. You need ${waifu.price * 1.25}`);
-        if (waifu.claimedByID == msg.author.id) return msg.channel.send(`${msg.author.username}, you can't claim your waifu twice over, silly. You can \`&invest <amount> <user>\` into them, however`);
-        if (oldclaim) {
-          await sql.run(`UPDATE waifu SET waifuID =? WHERE userID =?`, [null, waifu.claimedByID]);
-        }
-        await sql.run(`UPDATE waifu SET claimedByID =? WHERE userID =?`, [msg.author.id, waifu.userID]);
-        await sql.run(`UPDATE waifu SET price =? WHERE userID =?`, [newprice, waifu.userID]);
-        await sql.run(`UPDATE waifu SET waifuID =? WHERE userID =?`, [waifu.userID, msg.author.id]);
-        await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - newprice, msg.author.id]);
-        var claimed = djs.users.get(waifu.userID);
-        claimed.send(`**${msg.author.tag}** has claimed you for ${newprice} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send(`I tried to DM a **${claimed.tag}** about the transaction but they may have DMs from me disabled`));
+        if (memberInfo.price > claim) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction. You need ${memberInfo.price}`);
+        if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(`${msg.author.username}, you can't claim your waifu twice over, silly. You can \`&invest <amount> <user>\` into them, however`);
+        await Promise.all([
+          sql.run("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, member.user.id]),
+          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money - claim, msg.author.id])
+        ]);
+        sql.run("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
+        member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
         const embed = new Discord.RichEmbed()
-          .setDescription(`**${msg.author.tag}** has claimed **${claimed.tag}** for ${newprice}`)
+          .setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim}`)
         msg.channel.send({embed});
       }
     },
