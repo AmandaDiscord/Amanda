@@ -252,7 +252,6 @@ module.exports = function(input) {
                             callback(err);
                         }
                     } else {
-                        cf.log(`Added the reaction ${reaction} to a message (${messageID}) in ${availableFunctions.nameOfChannel(channelID)} (${channelID})`, "spam");
                         callback(err, res);
                     }
                 });

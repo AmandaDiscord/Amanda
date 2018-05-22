@@ -233,3 +233,19 @@ stdin.on("data", async function(input) {
 console.clear = function () {
   return process.stdout.write('\x1Bc');
 }
+
+async function handleAi(msg) {
+
+}
+
+var responses = {
+  "questions": {
+
+  },
+  "answers": {
+
+  },
+  "facts": {
+    
+  }
+}

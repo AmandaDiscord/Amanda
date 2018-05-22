@@ -28,7 +28,8 @@ function shuffle(array) {
 }
 
 module.exports = function(passthrough) {
-  const { Discord, djs, dio, reloadEvent } = passthrough;
+  const { Discord, djs, dio, reloadEvent, dbs } = passthrough;
+  let sql = dbs[0];
 
   let cf = require(pj(__dirname, "..", "common.js"));
   let bf = require(pj(__dirname, "..", "commonbot.js"))({bot: dio, cf, reloadEvent: fakeReloadEvent});
@@ -65,19 +66,27 @@ module.exports = function(passthrough) {
       }
       var [a1, a2, a3, a4] = shuffled;
       var color = 3447003;
+      var reward = 10;
+      var difficulty = undefined;
         switch(data.results[0].difficulty) {
           case "easy":
             color = 4249664;
+            reward = 100;
+            difficulty = "easy";
             break;
           case "medium":
             color = 12632064;
+            reward = 250;
+            difficulty = "medium";
             break;
           case "hard":
             color = 14164000;
+            reward = 500;
+            difficulty = "hard";
             break;
         }
       var guessembed = new Discord.RichEmbed()
-        .setDescription(entities.decodeHTML(`**${data.results[0].category}**\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`))
+        .setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`))
         .setColor(color)
       msg.channel.send(guessembed).then(msg => {
         let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
@@ -92,12 +101,28 @@ module.exports = function(passthrough) {
                 correctUsersStr = "Nobody got the answer right!";
               } else {
                 if (correct.length > 6) {
-                  correct.forEach(function(item, index, array) {
+                  correct.forEach(async function(item, index, array) {
                     correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}, `;
+                    var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+                    if (!row) {
+                      await sql.run(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
+                      var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+                    }
+                    await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
+                    var user = await djs.users.get(item)
+                    user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
                   })
                 } else {
-                  correct.forEach(function(item, index, array) {
+                  correct.forEach(async function(item, index, array) {
                     correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}\n`;
+                    var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+                    if (!row) {
+                      await sql.run(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
+                      var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+                    }
+                    await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
+                    var user = await djs.users.get(item)
+                    user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
                   })
                 }
               }

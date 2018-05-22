@@ -1,19 +1,23 @@
 const Discord = require('discord.js');
 const mined = new Set();
 const Config = require("../config.json");
+const Canvas = require("canvas");
+const util = require("util");
+const fs = require("fs");
 
 function findMember(msg, suffix, self = false) {
   if (!suffix) {
     if (self) return msg.member
     else return null
   } else {
-    let member = msg.mentions.members.first() || msg.guild.members.get(suffix) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(suffix.toLowerCase()) || m.user.username.toLowerCase().includes(suffix.toLowerCase()));
+    let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(suffix.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(suffix) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(suffix.toLowerCase()) || m.user.username.toLowerCase().includes(suffix.toLowerCase()));
     return member
   }
 }
 
 module.exports = function(passthrough) {
   const { Discord, djs, dio, dbs } = passthrough;
+  let sql = dbs[0];
 
   async function getWaifuInfo(userID) {
     let [meRow, claimerRow] = await Promise.all([
@@ -26,7 +30,6 @@ module.exports = function(passthrough) {
     return {claimer, price, waifu};
   }
 
-  let sql = dbs[0];
   return {
     "dice": {
       usage: "",
@@ -48,49 +51,68 @@ module.exports = function(passthrough) {
           var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
         }
         var args = suffix.split(" ");
-        var array = ['apple', 'cherries', 'watermelon', 'pear', 'heart'];
+        var array = ['apple', 'cherries', 'watermelon', 'pear', 'heart', "strawberry"];
         var slot1 = array[Math.floor(Math.random() * array.length)];
         var slot2 = array[Math.floor(Math.random() * array.length)];
         var slot3 = array[Math.floor(Math.random() * array.length)];
-        if (!args[0]) {
-          const embed = new Discord.RichEmbed()
-            .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${slot1}-${slot2}-${slot3}.png?raw=true`)
-            .setColor("36393E")
-          return msg.channel.send({embed});
-        }
-        if (args[0] == "all") {
-          if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
-          var bet = money.coins;
-        } else {
-          if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid bet`);
-          var bet = Math.floor(parseInt(args[0]));
-          if (bet < 1) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 1`);
-          if (bet > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
-        }
-        var result = `**${msg.author.tag}**, `;
-        if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
-          result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 29), msg.author.id]);
-        } else if (slot1 == "heart" && slot1 == slot2 || slot1 == "heart" && slot1 == slot3) {
-          result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
-        } else if (slot2 == "heart" && slot2 == slot3) {
-          result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
-        } else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
-          result += `A single :heart: You won your bet back`;
-        } else if (slot1 == slot2 && slot2 == slot3) {
-          result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
-        } else {
-          result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
-          sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
-        }
-        const embed = new Discord.RichEmbed()
-          .setDescription(result)
-          .setImage(`https://github.com/bitsnake/resources/blob/master/Bot/Slots/AmandaSlots-${slot1}-${slot2}-${slot3}.png?raw=true`)
-          .setColor("36393E")
-        msg.channel.send({embed});
+        let canvas = new Canvas.createCanvas(553, 552);
+        let ctx = canvas.getContext("2d");
+        Promise.all([
+          util.promisify(fs.readFile)(`./images/emojis/${slot1}.png`),
+          util.promisify(fs.readFile)(`./images/emojis/${slot2}.png`),
+          util.promisify(fs.readFile)(`./images/emojis/${slot3}.png`),
+          util.promisify(fs.readFile)(`./images/slot.png`)
+        ]).then(async ([image1, image2, image3, template]) => {
+          let templateI = new Canvas.Image();
+          templateI.src = template;
+          ctx.drawImage(templateI, 0, 0, 553, 552);
+          let imageI = new Canvas.Image();
+          imageI.src = image1;
+          ctx.drawImage(imageI, 91, 320, 85, 85);
+          let imageII = new Canvas.Image();
+          imageII.src = image2;
+          ctx.drawImage(imageII, 234, 320, 85, 85);
+          let imageIII = new Canvas.Image();
+          imageIII.src = image3;
+          ctx.drawImage(imageIII, 376, 320, 85, 85);
+          let buffer = canvas.toBuffer();
+
+          if (!args[0]) {
+            await msg.channel.send({files: [buffer]});
+            return msg.channel.stopTyping();
+          }
+          if (args[0] == "all") {
+            if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
+            var bet = money.coins;
+          } else {
+            if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid bet`);
+            var bet = Math.floor(parseInt(args[0]));
+            if (bet < 1) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 1`);
+            if (bet > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
+          }
+          msg.channel.startTyping();
+          var result = `**${msg.author.tag}**, `;
+          if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
+            result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
+            sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 29), msg.author.id]);
+          } else if (slot1 == "heart" && slot1 == slot2 || slot1 == "heart" && slot1 == slot3) {
+            result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
+            sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
+          } else if (slot2 == "heart" && slot2 == slot3) {
+            result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
+            sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
+          } else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
+            result += `A single :heart: You won your bet back`;
+          } else if (slot1 == slot2 && slot2 == slot3) {
+            result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
+            sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
+          } else {
+            result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
+            sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
+          }
+          await msg.channel.send(result, {files: [buffer]});
+          msg.channel.stopTyping();
+        })
       }
     },
 
@@ -128,7 +150,7 @@ module.exports = function(passthrough) {
         }
         if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
         if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
-        var flip = Math.floor(Math.random() * (3 - 1) + 1);
+        var flip = Math.floor(Math.random() * (4 - 1) + 1);
         if (args[1] == "h" && flip == 1 || args[1] == "t" && flip == 2) {
           msg.channel.send(`You guessed it! you got ${bet * 2} <a:Discoin:422523472128901140>`);
           return sql.run(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + bet, msg.author.id]);
