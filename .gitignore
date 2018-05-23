@@ -3,3 +3,6 @@ auth.json
 /bats
 /databases
 /build
+launch.json
+csak-timelog.json
+nohup.out

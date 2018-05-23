@@ -7,7 +7,8 @@ async function handleVideo(video, msg, voiceChannel, playlist = false) {
 	const queue = queues.get(msg.guild.id);
 	const song = {
 		title: Discord.Util.escapeMarkdown(video.title),
-		url: video.video_url
+		url: video.video_url,
+		video: video
 	};
 	if (!queue) {
 		const queueConstruct = {
@@ -56,7 +57,7 @@ function play(msg, guild, song) {
 	.on('error', error => console.error(error));
 	dispatcher.setVolumeLogarithmic(queue.volume / 5);
 	const embed = new Discord.RichEmbed()
-	.setDescription(`Now playing: ${song.title}`);
+	.setDescription(`Now playing: **${song.title}**`);
 	msg.channel.send({embed});
 }
 
@@ -119,7 +120,7 @@ module.exports = function(passthrough) {
 					let index = 0;
 					const embed = new Discord.RichEmbed()
 					.setAuthor(`Queue for ${msg.guild.name}`)
-					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}**`).join('\n'))
+					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n')+"\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0)))
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
@@ -136,7 +137,7 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "now") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
-					.setDescription(`Currently playing song: **${queue.songs[0].title}**`)
+					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "playlist") {
 					let playlistName = args[1];
@@ -227,7 +228,7 @@ module.exports = function(passthrough) {
 						let to = parseInt(args[4]) || from || orderedSongs.length;
 						from = Math.max(from, 1);
 						to = Math.min(orderedSongs.length, to);
-						orderedSongs = orderedSongs.slice(from-1, to);
+						if (args[3]) orderedSongs = orderedSongs.slice(from-1, to);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 						while (orderedSongs.length) {
 							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
