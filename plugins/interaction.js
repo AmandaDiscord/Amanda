@@ -2,6 +2,7 @@ const utils = require("bot-utils");
 const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
+const crypto = require("crypto");
 
 function findMember(msg, suffix, self = false) {
   if (!suffix) {
@@ -236,27 +237,28 @@ module.exports = function(passthrough) {
       usage: "<mention 1> <mention 2>",
       description: "Ships two people",
       process: async function(msg, suffix) {
+        console.log(msg.mentions.members);
+        console.log(msg.mentions.members[0]);
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
-        if (!args[0]) return msg.channel.send(`You need to provide two users as arguments`);
-        if (!args[1]) return msg.channel.send(`You need to provide two users as arguments`);
-        if (msg.mentions.members.first()) return msg.channel.send(`You cannot mention users to ship them due to issues. This will be resolved soon:tm:`);
-        var member1 = findMember(msg, args[0]);
-        if (member1 == null) return msg.channel.send(`Couldn't find the first member provided`);
-        var member2 = findMember(msg, args[1]);
-        if (member2 == null) return msg.channel.send(`Couldn't find the second member provided`);
-        if (member1.id == member2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
+        if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
+        let members = [];
+        let mentions = msg.mentions.members.array();
+        members = args.map(arg => {
+          if (arg.match(/^<@!?\d+>$/)) return mentions.pop();
+          else return findMember(msg, arg);
+        });
+        if (members.every(m => m.id == members[0].id)) return msg.channel.send(`You can't ship someone with themselves, silly`);
         msg.channel.startTyping();
         let canvas = new Canvas.createCanvas(300, 100);
         let ctx = canvas.getContext("2d");
-        var pfpurl1 =(member1.user.avatar)?`https://cdn.discordapp.com/avatars/${member1.user.id}/${member1.user.avatar}.png?size=128`: member1.user.defaultAvatarURL
-        var pfpurl2 =(member2.user.avatar)?`https://cdn.discordapp.com/avatars/${member2.user.id}/${member2.user.avatar}.png?size=128`: member2.user.defaultAvatarURL
-        Promise.all([
-          new Promise(resolve => require("request")(pfpurl1, {encoding: null}, (e,r,b) => resolve(b))),
-          new Promise(resolve => require("request")(pfpurl2, {encoding: null}, (e,r,b) => resolve(b))),
+        let pfpurls = members.map(m => {
+          return (m.user.avatar)?`https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`: m.user.defaultAvatarURL
+        });
+        Promise.all(pfpurls.map(p => new Promise(resolve => require("request")(p, {encoding: null}, (e,r,b) => resolve(b)))).concat([
           util.promisify(fs.readFile)("./images/emojis/heart.png", { encoding: null }),
           util.promisify(fs.readFile)("./images/300x100.png", { encoding: null })
-        ]).then(async ([avatar1, avatar2, emoji, template]) => {
+        ])).then(async ([avatar1, avatar2, emoji, template]) => {
           let templateI = new Canvas.Image();
           templateI.src = template;
           ctx.drawImage(templateI, 0, 0, 300, 100);
@@ -270,8 +272,10 @@ module.exports = function(passthrough) {
           avatarII.src = avatar2;
           ctx.drawImage(avatarII, 200, 0, 100, 100);
           let buffer = canvas.toBuffer();
-          let percentage = Math.floor(Math.random() * (100 -1) + 1);
-          await msg.channel.send(`Aww. I'd rate ${member1.user.tag} and ${member2.user.tag} being together a ${percentage}%`,{files: [buffer]});
+          let strings = [members[0].id, members[1].id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
+          let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
+          let percentage = parseInt("0x"+hash)%101;
+          await msg.channel.send(`Aww. I'd rate ${members[0].user.tag} and ${members[1].user.tag} being together a ${percentage}%`,{files: [buffer]});
           msg.channel.stopTyping();
         })
       }
