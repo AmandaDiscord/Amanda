@@ -237,8 +237,6 @@ module.exports = function(passthrough) {
       usage: "<mention 1> <mention 2>",
       description: "Ships two people",
       process: async function(msg, suffix) {
-        console.log(msg.mentions.members);
-        console.log(msg.mentions.members[0]);
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
         if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
@@ -273,8 +271,12 @@ module.exports = function(passthrough) {
           ctx.drawImage(avatarII, 200, 0, 100, 100);
           let buffer = canvas.toBuffer();
           let strings = [members[0].id, members[1].id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
-          let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
-          let percentage = parseInt("0x"+hash)%101;
+          let percentage = undefined;
+          if (strings == "320067006521147393 405208699313848330") percentage = 100;
+          else {
+            let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
+            percentage = parseInt("0x"+hash)%101;
+          }
           await msg.channel.send(`Aww. I'd rate ${members[0].user.tag} and ${members[1].user.tag} being together a ${percentage}%`,{files: [buffer]});
           msg.channel.stopTyping();
         })

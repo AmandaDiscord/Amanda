@@ -304,6 +304,16 @@ module.exports = function(passthrough) {
       }
     },
 
+    "wheel": {
+      usage: "<bet>",
+      description: "Runs a random wheel for a chance at gaining discoins",
+      process: async function(msg, suffix) {
+        var args = suffix.split(" ");
+        var arrows = ["up", "down", "left", "right", "lower_left", "lower_right", "upper_left", "upper_right"];
+        return msg.channel.send(`Work in progress`);
+      }
+    },
+
     "waifu": {
       usage: "<user>",
       description: "Gets the waifu information about yourself or a user",
