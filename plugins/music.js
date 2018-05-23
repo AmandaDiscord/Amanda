@@ -7,7 +7,7 @@ module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs } = passthrough;
 	let sql = dbs[1];
 
-	async function handleVideo(video, msg, voiceChannel, playlist = false) {
+	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist = false) {
 		const queue = queues.get(msg.guild.id);
 		const song = {
 			title: Discord.Util.escapeMarkdown(video.title),
@@ -37,7 +37,7 @@ module.exports = function(passthrough) {
 				return msg.channel.send(`I could not join the voice channel: ${error}`);
 			}
 		} else {
-			if (timeout.has(msg.guild.id)) return;
+			if (timeout.has(msg.guild.id) && !ignoreTimeout) return;
 			queue.songs.push(song);
 			timeout.add(msg.guild.id);
 			setTimeout(() => timeout.delete(msg.guild.id), 1000)
@@ -271,7 +271,7 @@ module.exports = function(passthrough) {
 							});
 						})).then(videos => {
 							handleVideo(videos.shift(), msg, voiceChannel).then(() => {
-								videos.forEach(video => handleVideo(video, msg, voiceChannel));
+								videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
 							});
 						});
 					} else {
