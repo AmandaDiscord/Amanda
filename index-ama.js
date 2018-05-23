@@ -238,6 +238,8 @@ async function handleAi(msg) {
 
 }
 
+var identqs = ["?", "who", "what", "when", "where", "why"];
+
 var responses = {
   "questions": {
 
@@ -246,6 +248,6 @@ var responses = {
 
   },
   "facts": {
-    
+
   }
 }
