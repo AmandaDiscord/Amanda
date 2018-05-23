@@ -3,83 +3,107 @@ const Discord = require("discord.js");
 const queues = new Map();
 const timeout = new Set();
 
-async function handleVideo(video, msg, voiceChannel, playlist = false) {
-	const queue = queues.get(msg.guild.id);
-	const song = {
-		title: Discord.Util.escapeMarkdown(video.title),
-		url: video.video_url,
-		video: video
-	};
-	if (!queue) {
-		const queueConstruct = {
-			textChannel: msg.channel,
-			voiceChannel: voiceChannel,
-			connection: null,
-			songs: [],
-			volume: 5,
-			playing: true
-		};
-		queues.set(msg.guild.id, queueConstruct);
-		if (timeout.has(msg.guild.id)) return;
-		queueConstruct.songs.push(song);
-		timeout.add(msg.guild.id);
-		setTimeout(() => timeout.delete(msg.guild.id), 1000)
-		try {
-			var connection = await voiceChannel.join();
-			queueConstruct.connection = connection;
-			play(msg, msg.guild, queueConstruct.songs[0]);
-		} catch (error) {
-			queues.delete(msg.guild.id);
-			return msg.channel.send(`I could not join the voice channel: ${error}`);
-		}
-	} else {
-		if (timeout.has(msg.guild.id)) return;
-		queue.songs.push(song);
-		timeout.add(msg.guild.id);
-		setTimeout(() => timeout.delete(msg.guild.id), 1000)
-		if (playlist) return;
-		else return msg.react("👌");
-	}
-}
-
-function play(msg, guild, song) {
-	const queue = queues.get(guild.id);
-	if (!song) {
-		queue.voiceChannel.leave();
-		queues.delete(guild.id);
-		return msg.channel.send(`We've run out of songs`)
-	}
-	const dispatcher = queue.connection.playStream(ytdl(song.url))
-	.on('end', reason => {
-		queue.songs.shift();
-		play(msg, guild, queue.songs[0]);
-	})
-	.on('error', error => console.error(error));
-	dispatcher.setVolumeLogarithmic(queue.volume / 5);
-	const embed = new Discord.RichEmbed()
-	.setDescription(`Now playing: **${song.title}**`);
-	msg.channel.send({embed});
-}
-
-function prettySeconds(seconds) {
-	let minutes = Math.floor(seconds / 60);
-	seconds = seconds % 60;
-	let hours = Math.floor(minutes / 60);
-	minutes = minutes % 60;
-	let output = [];
-	if (hours) {
-		output.push(hours);
-		output.push(minutes.toString().padStart(2, "0"));
-	} else {
-		output.push(minutes);
-	}
-	output.push(seconds.toString().padStart(2, "0"));
-	return output.join(":");
-}
-
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs } = passthrough;
 	let sql = dbs[1];
+
+	async function handleVideo(video, msg, voiceChannel, playlist = false) {
+		const queue = queues.get(msg.guild.id);
+		const song = {
+			title: Discord.Util.escapeMarkdown(video.title),
+			url: video.video_url,
+			video: video
+		};
+		if (!queue) {
+			const queueConstruct = {
+				textChannel: msg.channel,
+				voiceChannel: voiceChannel,
+				connection: null,
+				songs: [],
+				volume: 5,
+				playing: true
+			};
+			queues.set(msg.guild.id, queueConstruct);
+			if (timeout.has(msg.guild.id)) return;
+			queueConstruct.songs.push(song);
+			timeout.add(msg.guild.id);
+			setTimeout(() => timeout.delete(msg.guild.id), 1000)
+			try {
+				var connection = await voiceChannel.join();
+				queueConstruct.connection = connection;
+				play(msg, msg.guild, queueConstruct.songs[0]);
+			} catch (error) {
+				queues.delete(msg.guild.id);
+				return msg.channel.send(`I could not join the voice channel: ${error}`);
+			}
+		} else {
+			if (timeout.has(msg.guild.id)) return;
+			queue.songs.push(song);
+			timeout.add(msg.guild.id);
+			setTimeout(() => timeout.delete(msg.guild.id), 1000)
+			if (playlist) return;
+			else return msg.react("👌");
+		}
+	}
+
+	function play(msg, guild, song) {
+		const queue = queues.get(guild.id);
+		if (!song) {
+			queue.voiceChannel.leave();
+			queues.delete(guild.id);
+			return msg.channel.send(`We've run out of songs`)
+		}
+		const dispatcher = queue.connection.playStream(ytdl(song.url))
+		.on('end', reason => {
+			queue.songs.shift();
+			play(msg, guild, queue.songs[0]);
+		})
+		.on('error', error => console.error(error));
+		dispatcher.setVolumeLogarithmic(queue.volume / 5);
+		queue.startedAt = Date.now();
+
+		function getNPEmbed() {
+			return new Discord.RichEmbed().setDescription(`Now playing: **${song.title}** (${songProgress(queue)})`);
+		}
+		msg.channel.send(getNPEmbed()).then(npmsg => {
+			setTimeout(() => {
+				function updateProgress() {
+					npmsg.edit(getNPEmbed());
+				}
+				updateProgress();
+				let updateProgressInterval = setInterval(updateProgress, 5000);
+				setTimeout(() => {
+					clearInterval(updateProgressInterval);
+					updateProgress();
+				}, (queue.songs[0].video.length_seconds-(Date.now()-queue.startedAt)/1000)*1000);
+			}, 5000-(Date.now()-queue.startedAt)%5000);
+		});
+	}
+
+	function prettySeconds(seconds) {
+		let minutes = Math.floor(seconds / 60);
+		seconds = seconds % 60;
+		let hours = Math.floor(minutes / 60);
+		minutes = minutes % 60;
+		let output = [];
+		if (hours) {
+			output.push(hours);
+			output.push(minutes.toString().padStart(2, "0"));
+		} else {
+			output.push(minutes);
+		}
+		output.push(seconds.toString().padStart(2, "0"));
+		return output.join(":");
+	}
+
+	function songProgress(queue) {
+		if (!queue.songs.length) return "0:00/0:00";
+		let max = queue.songs[0].video.length_seconds;
+		let current = Math.floor((Date.now()-queue.startedAt)/1000);
+		if (current > max) current = max;
+		return prettySeconds(current)+"/"+prettySeconds(max);
+	}
+
 	return {
 		"music": {
 			usage: "Null",
@@ -137,7 +161,7 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "now") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
-					.setDescription(`Now playing: **${queue.songs[0].title}**`)
+					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue)})`)
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "playlist") {
 					let playlistName = args[1];
@@ -230,10 +254,26 @@ module.exports = function(passthrough) {
 						to = Math.min(orderedSongs.length, to);
 						if (args[3]) orderedSongs = orderedSongs.slice(from-1, to);
 						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
-						while (orderedSongs.length) {
-							let video = await ytdl.getInfo(orderedSongs.shift().videoID);
-							await handleVideo(video, msg, voiceChannel);
-						}
+						let progress = 0;
+						const getProgressMessage = () => `Please wait, loading songs (${progress}/${orderedSongs.length})`;
+						let progressMessage = await msg.channel.send(getProgressMessage());
+						let lastEdit = 0;
+						Promise.all(orderedSongs.map(song => {
+							return new Promise(resolve => {
+								ytdl.getInfo(song.videoID).then(info => {
+									progress++;
+									if (Date.now()-lastEdit > 2000 || progress == orderedSongs.length) {
+										lastEdit = Date.now();
+										progressMessage.edit(getProgressMessage());
+									}
+									resolve(info);
+								});
+							});
+						})).then(videos => {
+							handleVideo(videos.shift(), msg, voiceChannel).then(() => {
+								videos.forEach(video => handleVideo(video, msg, voiceChannel));
+							});
+						});
 					} else {
 						let totalLength = orderedSongs.reduce((p,c) => (p += c.length), 0);
 						let author = [];
