@@ -65,8 +65,7 @@ module.exports = function(passthrough) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Yes or No")
           .setDescription(`I'd have to say ${choice}`)
-        var nmsg = await msg.channel.send(":thinking: Let me think about that one...");
-        nmsg.edit({embed});
+        msg.channel.send({embed});
       }
     },
 
@@ -81,8 +80,7 @@ module.exports = function(passthrough) {
           .setDescription(":8ball:")
           .addField("You asked:", suffix)
           .addField("I'd have to say:", choice)
-        var nmsg = await msg.channel.send(":thinking: Let me think about that one...");
-        nmsg.edit({embed});
+        msg.channel.send({embed});
       }
     },
 

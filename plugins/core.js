@@ -57,7 +57,7 @@ module.exports = function(passthrough) {
 
     "servers": {
       usage: "",
-      description: "Tells you what servers the bot is in if you are the bot owner. Else, returns the amount of servers.",
+      description: "Returns the amount of servers the bot is in",
       process: function(msg) {
         if(msg.author.id === "320067006521147393") {
           const embed = new Discord.RichEmbed()
@@ -92,13 +92,12 @@ module.exports = function(passthrough) {
           .setColor("36393E")
           .setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me.")
           .addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>")
-          .addField("Bot Version:", "5.0.0")
           .addField("Lang:", `Node.js ${process.version}`)
           .addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
-          .addField("Description:", "A cutie-pie chat bot that only wishes for some love.")
+          .addField("Description:", "A cutie-pie general purpose bot that only wishes for some love.")
           .addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)")
           .addBlankField(true)
-          .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com) <:bot:412413027565174787>\ncloudrac3r <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
+          .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com) <:bot:412413027565174787>\n[cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor(504277)
         msg.channel.send({embed});
@@ -111,7 +110,7 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Privacy")
-          .setDescription("Amanda promises to never log your messages anywhere. Amanda has no analytics outside of functions from within the Discord API; This means that how YOU use Amanda won't be displayed to other people nor will how all of the users who use Amanda be used for analytics")
+          .setDescription("Amanda collects basic user information which includes, but is not limited to, usernames and discriminators, profile pictures and their urls and user Snowflakes/IDs. This information is solely used to bring you content relevant to the command executed and that data is not stored anywhere outside of the bot's cache. In other words, only data that's needed which is relevant to the command is being used and your information or how you use the bot is not collected and sent to external places for others to see. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor("36393E")
         msg.channel.send({embed});
