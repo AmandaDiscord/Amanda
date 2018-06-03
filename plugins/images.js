@@ -1,3 +1,5 @@
+const request = require("request");
+
 module.exports = function(passthrough) {
   const {Discord, djs, dio} = passthrough;
   return {
@@ -5,7 +7,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Returns an image of a cute cat",
       process: function(msg, suffix){
-        require("request")("https://api.cheweybot.ga/cat", function(err, res, body) {
+        request("https://api.cheweybot.ga/cat", function(err, res, body) {
           if (err) return msg.channel.send(`Error... API returned nothing`);
           try {
             var data = JSON.parse(body);
@@ -15,6 +17,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setImage(data.data)
             .setColor('36393E')
+            .setFooter("Powered by api.cheweybot.ga")
           msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed}));
         });
       }
@@ -24,7 +27,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Returns an image of a cute doggo",
       process: function(msg, suffix){
-        require("request")("https://api.thedogapi.co.uk/v2/dog.php", function(err, res, body) {
+        request("https://api.thedogapi.co.uk/v2/dog.php", function(err, res, body) {
           if (err) return msg.channel.send("Error. The API returned nothing...");
           try {
             var data = JSON.parse(body);
@@ -43,7 +46,7 @@ module.exports = function(passthrough) {
       usage: "",
       description: "Returns an image of space",
       process: function(msg, suffix) {
-        require("request")("https://api.cheweybot.ga/space", function(err, res, body) {
+        request("https://api.cheweybot.ga/space", function(err, res, body) {
           if (err) return msg.channel.send("Error... API returned nothing");
           try {
             var data = JSON.parse(body);
@@ -53,6 +56,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setImage(data.data)
             .setColor('36393E')
+            .setFooter("Powered by api.cheweybot.ga")
           msg.channel.send("<a:SpaceLoading:429061691633041419>").then(nmsg => nmsg.edit({embed}))
         })
       }

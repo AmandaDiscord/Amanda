@@ -322,9 +322,8 @@ module.exports = function(passthrough) {
         var member = findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         let info = await getWaifuInfo(member.user.id);
-
         const embed = new Discord.RichEmbed()
-          .setAuthor(`Waifu ${member.user.tag}`)
+          .setAuthor(member.user.tag, member.user.avatarURL)
           .addField(`Price:`, info.price)
           .addField(`Claimed by:`, info.claimer ? info.claimer.username : "(nobody)")
           .addField(`Waifu:`, info.waifu ? info.waifu.username : "(nobody)")

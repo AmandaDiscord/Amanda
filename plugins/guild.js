@@ -57,6 +57,7 @@ module.exports = function(passthrough) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);
         var emojiType = "";
         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+        if(foundEmoji == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if (foundEmoji.animated == true) var emojiType = "gif";
         else var emojiType = "png";
@@ -90,6 +91,7 @@ module.exports = function(passthrough) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);
         var emojiType = "";
         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+        if(foundEmoji == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
         if (foundEmoji.animated == true) var emojiType = "gif";
         else var emojiType = "png";
