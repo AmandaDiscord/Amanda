@@ -1,4 +1,4 @@
 {
-  "commandPrefix": "&",
+  "prefixes": ["&", "<@405208699313848330>"],
   "debug": false
 }

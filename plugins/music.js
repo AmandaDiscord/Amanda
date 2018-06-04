@@ -42,7 +42,7 @@ module.exports = function(passthrough) {
 			timeout.add(msg.guild.id);
 			setTimeout(() => timeout.delete(msg.guild.id), 1000)
 			if (playlist) return;
-			else return msg.react("👌");
+			else return msg.react("👌").catch(() => { return });
 		}
 	}
 
@@ -68,7 +68,7 @@ module.exports = function(passthrough) {
 		msg.channel.send(getNPEmbed()).then(npmsg => {
 			setTimeout(() => {
 				function updateProgress() {
-					npmsg.edit(getNPEmbed());
+					npmsg.edit(getNPEmbed()).catch(() => { return });
 				}
 				updateProgress();
 				let updateProgressInterval = setInterval(updateProgress, 5000);
@@ -120,7 +120,7 @@ module.exports = function(passthrough) {
 				if (isPrem == false) {
 					msg.channel.startTyping();
 					return setTimeout(() => {
-						msg.channel.send(`${msg.author.username}, you or this guild is not apart of the patreon system. You can obtain information about upgrading via the \`&upgrade\` command`).then(() => msg.channel.stopTyping());
+						msg.channel.send(`${msg.author.username}, you or this guild is not apart of the partner system. Information can be obtained by DMing PapiOphidian#8685`).then(() => msg.channel.stopTyping());
 					}, 2000)
 				}
 				var args = suffix.split(" ");
@@ -150,14 +150,14 @@ module.exports = function(passthrough) {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
 					await queue.connection.dispatcher.end();
-					return msg.react("👌");
+					return msg.react("👌").catch(() => { return });
 				} else if (args[0].toLowerCase() == "volume") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
 					queue.volume = args[1];
 					queue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
-					return msg.react("👌");
+					return msg.react("👌").catch(() => { return });
 				} else if (args[0].toLowerCase() == "now") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()

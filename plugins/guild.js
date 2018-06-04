@@ -44,7 +44,7 @@ module.exports = function(passthrough) {
             suffix = parseInt(suffix);
             if (isNaN(suffix)) return msg.channel.send(`That's not a valid number of messages to delete`);
             if (suffix > 100) return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`);
-            msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000));
+            msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000)).catch(() => { return });
           } else msg.channel.send(`${msg.author.username}, I don't have the manage messages permission`);
         } else msg.channel.send(`${msg.author.username}, you don't have the manage messages permission.`);
       }
@@ -133,13 +133,7 @@ module.exports = function(passthrough) {
             if (member.bannable == false) return msg.channel.send(`I am not able to ban that user. They may possess a role higher than or equal to my highest`);
             try {
               member.ban();
-              const embed = new Discord.RichEmbed()
-                .setAuthor("Administrative Action:", msg.author.avatarURL)
-                .addField("Action:", "ban")
-                .addField("Member Banned:", `**${member.user.tag}**\n${member.id}`)
-                .addField("Moderator:", `**${msg.author.tag}**\n${msg.author.id}`)
-                .setColor("B60000")
-              msg.channel.send({embed});
+              msg.channel.send("👌");
             } catch(reason) {
               msg.channel.send(`There was an error with banning that member\n\`\`\`js\n${reason}\n\`\`\``);
             }
@@ -159,13 +153,7 @@ module.exports = function(passthrough) {
             if (suffix.length < 18) return msg.channel.send(`${msg.author.username}, that is not a valid Snowflake`);
             try {
               msg.guild.ban(suffix, { reason: `Banned by ${msg.author.id} aka ${msg.author.tag}` });
-              const embed = new Discord.RichEmbed()
-                .setAuthor("Administrative Action:", msg.author.avatarURL)
-                .addField("Action:", "hackban")
-                .addField("Member Banned:", suffix)
-                .addField("Moderator:", `**${msg.author.tag}**\n${msg.author.id}`)
-                .setColor("B60000")
-              msg.channel.send({embed});
+              msg.channel.send("👌");
             } catch (reason) {
               msg.channel.send(`There was an error with banning that member\n\`\`\`js\n${reason}\n\`\`\``);
             }
@@ -188,13 +176,7 @@ module.exports = function(passthrough) {
             if (member.kickable == false) return msg.channel.send(`I am not able to kick that user. They may possess a role higher than my highest`);
             try {
               member.kick();
-              const embed = new Discord.RichEmbed()
-                .setAuthor("Administrative Action:", msg.author.avatarURL)
-                .addField("Action:", "kick")
-                .addField("Member kicked:", `**${member.user.tag}**\n${member.id}`)
-                .addField("Moderator:", `**${msg.author.tag}**\n${msg.author.id}`)
-                .setColor("B60000")
-              msg.channel.send({embed});
+              msg.channel.send("👌");
             } catch(reason) {
               msg.channel.send(`There was an error with kicking that member\n\`\`\`js\n${reason}\n\`\`\``);
             }

@@ -1,9 +1,8 @@
 const Discord = require('discord.js');
 const mined = new Set();
-const Config = require("../config.json");
+const fs = require("fs");
 const Canvas = require("canvas");
 const util = require("util");
-const fs = require("fs");
 
 function findMember(msg, suffix, self = false) {
   if (!suffix) {
@@ -228,7 +227,7 @@ module.exports = function(passthrough) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
         if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
-        var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 6);
+        var usertxt = suffix.slice(args[0].length + 1);
         if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to give to`);
         var member = findMember(msg, usertxt);
         if (member == null) return msg.channel.send("Could not find that user");
@@ -276,7 +275,7 @@ module.exports = function(passthrough) {
           if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to award and then a user`);
           if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to award`);
           if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot award an amount less than 1`);
-          var usertxt = msg.content.substring(Config.commandPrefix.length + args[0].length + 7);
+          var usertxt = suffix.slice(args[0].length + 1);
           if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
           var member = findMember(msg, usertxt);
           if (member == null) return msg.channel.send("Could not find that user");
