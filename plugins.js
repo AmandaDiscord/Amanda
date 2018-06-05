@@ -16,7 +16,14 @@ module.exports = (passthrough, callback) => {
       console.log("Loaded "+filename);
       delete require.cache[require.resolve(filename)];
       passthrough.reloadEvent.emit(filename);
-      callback(require(filename)(passthrough));
+      let result = require(filename);
+      if (typeof(result) == "function") {
+        setImmediate(() => {
+          callback(result(passthrough));
+        });
+      } else if (typeof(result) == "object") {
+        Object.assign(passthrough.utils, result);
+      }
     } catch (e) {
         console.log("Failed to reload module "+filename+"\n"+e.stack);
     }

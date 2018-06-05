@@ -1,9 +1,8 @@
-const utils = require("../util/core-utils.js");
 const os = require("os");
 const index = require("../index-ama.js");
 
 module.exports = function(passthrough) {
-  const {Discord, djs, dio} = passthrough;
+  const {Discord, djs, dio, utils} = passthrough;
   return {
     "uptime": {
       usage: "",

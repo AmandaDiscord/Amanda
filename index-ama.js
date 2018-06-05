@@ -4,11 +4,11 @@ const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const { exec } = require("child_process");
 const sql = require("sqlite");
-const utils = require("./util/core-utils.js");
 const os = require("os");
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
 const util = require("util")
+let utils = {};
 
 const Discord = require('discord.js');
 const discordClient = require("dualcord");
@@ -138,7 +138,7 @@ function loadCommands() {
     sql.open("./databases/money.sqlite"),
     sql.open("./databases/music.sqlite")
   ]).then(dbs => {
-    let passthrough = {Discord, djs, dio, reloadEvent, dbs};
+    let passthrough = {Discord, djs, dio, reloadEvent, utils, dbs};
     require("./plugins.js")(passthrough, loaded => {
       Object.assign(commands, loaded);
     });

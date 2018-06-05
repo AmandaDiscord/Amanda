@@ -3,10 +3,9 @@ const mined = new Set();
 const fs = require("fs");
 const Canvas = require("canvas");
 const util = require("util");
-const utils = require("../util/core-utils.js");
 
 module.exports = function(passthrough) {
-  const { Discord, djs, dio, dbs } = passthrough;
+  const { Discord, djs, dio, dbs, utils } = passthrough;
   let sql = dbs[0];
 
   async function getWaifuInfo(userID) {
