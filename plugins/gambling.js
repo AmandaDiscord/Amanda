@@ -3,16 +3,7 @@ const mined = new Set();
 const fs = require("fs");
 const Canvas = require("canvas");
 const util = require("util");
-
-function findMember(msg, suffix, self = false) {
-  if (!suffix) {
-    if (self) return msg.member
-    else return null
-  } else {
-    let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(suffix.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(suffix) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(suffix.toLowerCase()) || m.user.username.toLowerCase().includes(suffix.toLowerCase()));
-    return member
-  }
-}
+const utils = require("../util/core-utils.js");
 
 module.exports = function(passthrough) {
   const { Discord, djs, dio, dbs } = passthrough;
@@ -165,7 +156,7 @@ module.exports = function(passthrough) {
       description: "Returns the amount of Discoins you or another user has",
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-        var member = findMember(msg, suffix, true);
+        var member = utils.findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
         if (!target) {
@@ -177,7 +168,7 @@ module.exports = function(passthrough) {
           .setAuthor(`Coins for ${member.user.tag}`)
           .setDescription(`${target.coins} Discoins <a:Discoin:422523472128901140>`)
           .setColor("F8E71C")
-        msg.channel.send({embed})
+        msg.channel.send({embed});
       }
     },
 
@@ -229,7 +220,7 @@ module.exports = function(passthrough) {
         if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
         var usertxt = suffix.slice(args[0].length + 1);
         if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to give to`);
-        var member = findMember(msg, usertxt);
+        var member = utils.findMember(msg, usertxt);
         if (member == null) return msg.channel.send("Could not find that user");
         if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
         var author = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
@@ -277,7 +268,7 @@ module.exports = function(passthrough) {
           if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot award an amount less than 1`);
           var usertxt = suffix.slice(args[0].length + 1);
           if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
-          var member = findMember(msg, usertxt);
+          var member = utils.findMember(msg, usertxt);
           if (member == null) return msg.channel.send("Could not find that user");
           if (member.user.id == msg.author.id) return msg.channel.send(`You can't award yourself, silly`);
           var target = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
@@ -318,7 +309,7 @@ module.exports = function(passthrough) {
       description: "Gets the waifu information about yourself or a user",
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-        var member = findMember(msg, suffix, true);
+        var member = utils.findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         let info = await getWaifuInfo(member.user.id);
         const embed = new Discord.RichEmbed()
@@ -339,7 +330,7 @@ module.exports = function(passthrough) {
         var args = suffix.split(" ");
         var usertxt = args.slice(1).join(" ");
         if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a member you would like to claim`);
-        var member = findMember(msg, usertxt);
+        var member = utils.findMember(msg, usertxt);
         if (!member) return msg.channel.send(`Couldn't find that user`);
         let [memberInfo, myInfo, money] = await Promise.all([
           getWaifuInfo(member.user.id),

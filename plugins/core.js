@@ -1,5 +1,6 @@
-const utils = require("bot-utils");
+const utils = require("../util/core-utils.js");
 const os = require("os");
+const index = require("../index-ama.js");
 
 module.exports = function(passthrough) {
   const {Discord, djs, dio} = passthrough;
@@ -10,8 +11,7 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Uptime")
-          .addField("❯ Bot Uptime:", `${utils.uptime()}`)
-          .addField("❯ OS Uptime:", `${utils.osUptime()}`)
+          .addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`)
           .setFooter("And still going")
           .setColor("36393E")
         msg.channel.send({embed});
@@ -27,7 +27,7 @@ module.exports = function(passthrough) {
           .setAuthor("Statistics")
           .addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
           .addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
-          .addField("❯ Bot Uptime:", `${utils.uptime()}`)
+          .addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`)
           .addField("❯ RAM Usage:", `${ramUsage}MB`)
           .addField("❯ User Count:", `${djs.users.size} users`)
           .addField("❯ Guild Count:", `${djs.guilds.size} guilds`)
@@ -99,7 +99,7 @@ module.exports = function(passthrough) {
           .addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com) <:bot:412413027565174787>\n[cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor(504277)
-        msg.channel.send({embed});
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       }
     },
 
@@ -109,47 +109,10 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Privacy")
-          .setDescription("Amanda collects basic user information which includes, but is not limited to, usernames and discriminators, profile pictures and their urls and user Snowflakes/IDs. This information is solely used to bring you content relevant to the command executed and that data is not stored anywhere outside of the bot's cache. In other words, only data that's needed which is relevant to the command is being used and your information or how you use the bot is not collected and sent to external places for others to see. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it")
+          .setDescription("Amanda collects basic user information which includes, but is not limited to, usernames and discriminators, profile pictures and their urls and user Snowflakes/IDs. This information is solely used to bring you content relevant to the command executed and that data is not stored anywhere where it is not essential for the bot to operate. In other words, only data that's needed which is relevant to the command is being used and your information or how you use the bot is not collected and sent to external places for others to see. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor("36393E")
-        msg.channel.send({embed});
-      }
-    },
-
-    "help": {
-      usage: "<command>",
-      description: "Shows a list of command categories if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
-      process: async function (msg, suffix) {
-        if(suffix) {
-          var cmds = suffix.split(" ").filter(function (cmd) { return commands[cmd] });
-          for (var i = 0; i < cmds.length; i++) {
-            var cmd = cmds[i];
-            var usage = commands[cmd].usage;
-            var description = commands[cmd].description;
-          }
-          if (!cmd) {
-            const embed = new Discord.RichEmbed()
-              .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
-              .setColor("B60000")
-            return msg.channel.send({embed});
-          }
-          const embed = new Discord.RichEmbed()
-            .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
-          msg.channel.send({embed});
-        }
-        else {
-          const embed = new Discord.RichEmbed() // \n❯ NSFW
-            .setAuthor("Command Categories:")
-            .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: **Typing \`&commands <category>\` will get you a list of all of the commands in that category. Ex: \`&commands core\`. Also typing \`&commands all\` will return all of the available commands**`)
-            .setFooter("Amanda help panel", djs.user.avatarURL)
-            .setColor('36393E')
-          try {
-            await msg.author.send({embed});
-          } catch (error) {
-          return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
-          }
-          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-        }
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       }
     },
 
@@ -173,7 +136,7 @@ module.exports = function(passthrough) {
         } else if (suffix.toLowerCase() == "gambling") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Gambling command list:`)
-            .setDescription(`&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice`)
+            .setDescription(`&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice\n&waifu <user>\n&claim <amount> <user>`)
             .setColor('36393E')
           msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
         } else if (suffix.toLowerCase() == "guild") {
@@ -181,7 +144,7 @@ module.exports = function(passthrough) {
             .setAuthor(`Guild command list:`)
             .addField(`**Moderation:**`, `&tidy <# to delete>`)
             .addField(`**Information:**`, `&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji>`)
-            .addField(`**Interaction:**`, `&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>`)
+            .addField(`**Interaction:**`, `&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
             .setColor('36393E')
           msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
         } else if (suffix.toLowerCase() == "fun") {
@@ -199,7 +162,7 @@ module.exports = function(passthrough) {
         } else if (suffix.toLowerCase() == "images") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Images command list:`)
-            .setDescription(`&cat\n&dog\n&space`)
+            .setDescription(`&cat\n&dog\n&space\n&meme`)
             .setColor('36393E')
           msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
         } else if (suffix.toLowerCase() == "music") {
@@ -213,11 +176,11 @@ module.exports = function(passthrough) {
             .setAuthor(`Full command list`)
             .addField(`**❯ Core:**`, `&help <command>\n&commands <category>\n&invite\n&info\n&privacy`)
             .addField(`**❯ Statistics:**`, `&ping\n&uptime\n&stats`)
-            .addField(`**❯ Gambling:**`, `&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice`)
-            .addField(`**❯ Guild:**`, `**Moderation:**\n&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>\n**Information:**\n&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji:>\n**Interaction:**\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>`)
+            .addField(`**❯ Gambling:**`, `&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice\n&waifu <user>\n&claim <amount> <user>`)
+            .addField(`**❯ Guild:**`, `**Moderation:**\n&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>\n**Information:**\n&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji:>\n**Interaction:**\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
             .addField(`**❯ Fun:**`, `&trivia <play / categories>\n&norris\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
             .addField(`**❯ Search:**`, `&urban <search terms>`)
-            .addField(`**❯ Images:**`, `&cat\n&dog\n&space`)
+            .addField(`**❯ Images:**`, `&cat\n&dog\n&space\n&meme`)
             .addField(`**❯ Music:**`, `&music - see \`&commands music\` for help`)
             //.addField(`**❯ NSFW:**`, `Null`)
             .setColor('36393E')

@@ -4,7 +4,7 @@ const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const { exec } = require("child_process");
 const sql = require("sqlite");
-const utils = require("bot-utils");
+const utils = require("./util/core-utils.js");
 const os = require("os");
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
@@ -93,9 +93,45 @@ const commands = {
         }, time)
       }
     }
-	}
+  },
+  
+  "help": {
+    usage: "<command>",
+    description: "Shows a list of command categories if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
+    process: async function (msg, suffix) {
+      if(suffix) {
+        var cmds = suffix.split(" ").filter(function (cmd) { return commands[cmd] });
+        for (var i = 0; i < cmds.length; i++) {
+          var cmd = cmds[i];
+          var usage = commands[cmd].usage;
+          var description = commands[cmd].description;
+        }
+        if (!cmd) {
+          const embed = new Discord.RichEmbed()
+            .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
+            .setColor("B60000")
+          return msg.channel.send({embed});
+        }
+        const embed = new Discord.RichEmbed()
+          .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
+        msg.channel.send({embed});
+      }
+      else {
+        const embed = new Discord.RichEmbed() // \n❯ NSFW
+          .setAuthor("Command Categories:")
+          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: **Typing \`&commands <category>\` will get you a list of all of the commands in that category. Ex: \`&commands core\`. Also typing \`&commands all\` will return all of the available commands**`)
+          .setFooter("Amanda help panel", djs.user.avatarURL)
+          .setColor('36393E')
+        try {
+          await msg.author.send({embed});
+        } catch (error) {
+        return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+        }
+        if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+      }
+    }
+  }
 };
-
 
 function loadCommands() {
   Promise.all([
