@@ -1,36 +1,41 @@
-function findMember(msg, suffix, self = false) {
-  if (!suffix) {
-    if (self) return msg.member
-    else return null
-  } else {
-    let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(suffix.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(suffix) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(suffix.toLowerCase()) || m.user.username.toLowerCase().includes(suffix.toLowerCase()));
-    return member
-  }
-}
-
 module.exports = function(passthrough) {
-  const {Discord, djs, dio} = passthrough;
+  const {Discord, djs, dio, utils} = passthrough;
   return {
     "user": {
       usage: "<user>",
       description: "Gets the user info about yourself or another user if provided.",
       process: function(msg, suffix) {
-        if(msg.channel.type !== 'text') return msg.channel.send("You cannot use this command in DMs");
-        var member = findMember(msg, suffix, true);
-        if (member == null) return msg.channel.send("Could not find that user");
-        var pfpurl =(member.user.avatar)?member.user.avatarURL: member.user.defaultAvatarURL
-        var guildJoinedTime = new Date(member.joinedAt).toUTCString();
-        var userCreatedTime = new Date(member.user.createdAt).toUTCString();
-        const embed = new Discord.RichEmbed()
-          .setAuthor(`User data for: ${member.displayName || member.user.username}`)
-          .addField("User#Discrim:", `${member.user.tag}`)
-          .addField("User ID:", member.user.id)
-          .addField("Account created at:", userCreatedTime)
-          .addField("Joined guild at:", guildJoinedTime)
-          .addField("Avatar URL:", `[Click Here](${pfpurl})`)
-          .setThumbnail(pfpurl)
-          .setColor('36393E')
-        msg.channel.send({embed});
+        if (msg.channel.type == "dm") {
+          var user = utils.findUser(msg, djs, suffix, true);
+          if (user == null) return msg.channel.send(`Couldn't find that user`);
+          var pfpurl = (user.avatar)?user.avatarURL: user.defaultAvatarURL
+          var userCreatedTime = new Date(user.createdAt).toUTCString();
+          const embed = new Discord.RichEmbed()
+            .setAuthor(`User data for ${user.username}`)
+            .addField("User#Discrim:", `${user.tag}`)
+            .addField("User ID:", user.id)
+            .addField("Account created at:", userCreatedTime)
+            .addField("Avatar URL:", `[Click Here](${pfpurl})`)
+            .setThumbnail(pfpurl)
+            .setColor('36393E')
+          msg.channel.send({embed});
+        } else if (msg.channel.type == "text") {
+          var member = utils.findMember(msg, suffix, true);
+          if (member == null) return msg.channel.send("Could not find that user");
+          var pfpurl =(member.user.avatar)?member.user.avatarURL: member.user.defaultAvatarURL
+          var guildJoinedTime = new Date(member.joinedAt).toUTCString();
+          var userCreatedTime = new Date(member.user.createdAt).toUTCString();
+          const embed = new Discord.RichEmbed()
+            .setAuthor(`User data for: ${member.displayName || member.user.username}`)
+            .addField("User#Discrim:", `${member.user.tag}`)
+            .addField("User ID:", member.user.id)
+            .addField("Account created at:", userCreatedTime)
+            .addField("Joined guild at:", guildJoinedTime)
+            .addField("Avatar URL:", `[Click Here](${pfpurl})`)
+            .setThumbnail(pfpurl)
+            .setColor('36393E')
+          msg.channel.send({embed});
+        } else return console.log("Commands can be initiated from Voice Channels?");
       }
     },
 

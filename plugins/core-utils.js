@@ -37,10 +37,28 @@ exports.humanize = function(input, format) {
  */
 exports.findMember = function(msg, usertxt, self = false) {
   if (!usertxt) {
-    if (self) return msg.member
-    else return null
+    if (self) return msg.member;
+    else return null;
   } else {
     let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(usertxt.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(usertxt) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(usertxt.toLowerCase()) || m.user.username.toLowerCase().includes(usertxt.toLowerCase()));
-    return member
+    return member;
+  }
+}
+
+/**
+ * Finds a user in cache
+ * @param {*} msg MessageResolvable
+ * @param {*} client Discord client
+ * @param {String} usertxt Text that contains user's display data to search them by
+ * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
+ * @returns {*} A user object or null if it couldn't find a user
+ */
+exports.findUser = function(msg, client, usertxt, self = false) {
+  if (!usertxt) {
+    if (self) return msg.author;
+    else return null;
+  } else {
+    let user = client.users.find(u => u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase())) || msg.mentions.users.first() || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase()));
+    return user;
   }
 }
