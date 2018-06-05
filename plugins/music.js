@@ -248,8 +248,8 @@ module.exports = function(passthrough) {
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play") {
-						let from = (parseInt(args[3]) || 1);
-						let to = parseInt(args[4]) || from || orderedSongs.length;
+						let from = args[3] == "-" ? 1 : (parseInt(args[3]) || 1);
+						let to = args[4] == "-" ? orderedSongs.length : (parseInt(args[4]) || from || orderedSongs.length);
 						from = Math.max(from, 1);
 						to = Math.min(orderedSongs.length, to);
 						if (args[3]) orderedSongs = orderedSongs.slice(from-1, to);
