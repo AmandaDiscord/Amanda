@@ -16,17 +16,6 @@ function newGame() {
   }
 }
 
-function shuffle(array) {
-  var j, x, i;
-  for (i = array.length -1; i > 0; i--) {
-    j = Math.floor(Math.random() * (i + 1));
-    x = array[i];
-    array[i] = array[j];
-    array[j] = x;
-  }
-  return array;
-}
-
 module.exports = function(passthrough) {
   const { Discord, djs, dio, reloadEvent, dbs } = passthrough;
   let sql = dbs[0];
@@ -57,7 +46,7 @@ module.exports = function(passthrough) {
       game.answer = answer;
       var choices = data.results[0].incorrect_answers;
       choices.push(answer);
-      var shuffled = shuffle(choices);
+      var shuffled = choices.shuffle();
       var iOfA = shuffled.indexOf(answer);
       game.correctID = String.fromCharCode(iOfA+97);
       if (!game.correctID) {
