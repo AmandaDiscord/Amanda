@@ -169,6 +169,11 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue)})`)
 					return msg.channel.send({embed});
+				} else if (args[0].toLowerCase() == "shuffle") {
+					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
+					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
+					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
+					return msg.react("👌").catch(() => { return });
 				} else if (args[0].toLowerCase() == "playlist") {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);

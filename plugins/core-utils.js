@@ -62,3 +62,17 @@ exports.findUser = function(msg, client, usertxt, self = false) {
     return user;
   }
 }
+
+/**
+ * Shuffles an array psuedorandomly
+ * @returns {Array} An array which has psuedorandomly shuffled
+ */
+Array.prototype.shuffle = function() {
+  let old = [...this];
+  let output = [];
+  while (old.length) {
+      let random = old.splice(Math.floor(Math.random()*old.length), 1)[0];
+      output.push(random);
+  }
+  return output;
+}
