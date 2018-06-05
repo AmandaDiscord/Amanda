@@ -67,15 +67,21 @@ module.exports = function(passthrough) {
 		}
 		msg.channel.send(getNPEmbed()).then(npmsg => {
 			setTimeout(() => {
-				function updateProgress() {
-					npmsg.edit(getNPEmbed()).catch(() => { return });
-				}
-				updateProgress();
-				let updateProgressInterval = setInterval(updateProgress, 5000);
-				setTimeout(() => {
-					clearInterval(updateProgressInterval);
+				if (queue.songs[0]) {
+					function updateProgress() {
+						npmsg.edit(getNPEmbed()).catch(() => { return });
+					}
 					updateProgress();
-				}, (queue.songs[0].video.length_seconds-(Date.now()-queue.startedAt)/1000)*1000);
+					let updateProgressInterval = setInterval(updateProgress, 5000);
+					let finalUpdateTimeout = setTimeout(() => {
+						clearInterval(updateProgressInterval);
+						updateProgress();
+					}, (queue.songs[0].video.length_seconds-(Date.now()-queue.startedAt)/1000)*1000);
+					dispatcher.once("end", () => {
+						clearInterval(updateProgressInterval);
+						clearTimeout(finalUpdateTimeout);
+					});
+				}
 			}, 5000-(Date.now()-queue.startedAt)%5000);
 		});
 	}
