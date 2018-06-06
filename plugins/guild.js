@@ -5,73 +5,40 @@ module.exports = function(passthrough) {
       usage: "<user>",
       description: "Gets the user info about yourself or another user if provided.",
       process: function(msg, suffix) {
-        if (msg.channel.type == "dm") {
-          var user = utils.findUser(msg, djs, suffix, true);
-          if (user == null) return msg.channel.send(`Couldn't find that user`);
-          var pfpurl = (user.avatar)?user.avatarURL: user.defaultAvatarURL
-          var userCreatedTime = new Date(user.createdAt).toUTCString();
-          const embed = new Discord.RichEmbed()
-            .setAuthor(`User data for ${user.username}`)
-            .addField("User#Discrim:", `${user.tag}`)
-            .addField("User ID:", user.id)
-            .addField("Account created at:", userCreatedTime)
-            .addField("Avatar URL:", `[Click Here](${pfpurl})`)
-            .setThumbnail(pfpurl)
-            .setColor('36393E')
-          msg.channel.send({embed});
-        } else if (msg.channel.type == "text") {
-          var member = utils.findMember(msg, suffix, true);
-          if (member == null) return msg.channel.send("Could not find that user");
-          var pfpurl =(member.user.avatar)?member.user.avatarURL: member.user.defaultAvatarURL
-          var guildJoinedTime = new Date(member.joinedAt).toUTCString();
-          var userCreatedTime = new Date(member.user.createdAt).toUTCString();
-          var nametxt = `**${member.user.tag}**`;
-          var gametxt = ``;
-          switch(member.user.presence.status) {
-            case "online":
-              status = ` <:online:453823508200554508>`;
-              break;
-            case "idle":
-              status = ` <:idle:453823508028456971>`;
-              break;
-            case "dnd":
-              status = ` <:dnd:453823507864748044>`;
-              break;
-            case "offline":
-              status = ` <:invisible:453827513995755520>`;
-              break;
-          }
-          if (member.user.bot) {
-            nametxt += ` <:bot:412413027565174787>`;
-            status = "";
-          }
-          if (member.user.presence.game) {
-            switch(member.user.presence.game.type) {
-              case 0:
-                gametxt = `Playing **${member.user.presence.game.name}**`;
-                break;
-              case 1:
-                gametxt = `Streaming [${member.user.presence.game.name}](${member.user.presence.game.url})`;
-                break;
-              case 2:
-                gametxt = `Listening to **${member.user.presence.game.name}**`;
-                break;
-              case 3:
-                gametxt = `Watching **${member.user.presence.game.name}**`;
-                break;
-            }
-          } else gametxt = `No activity set`;
-          const embed = new Discord.RichEmbed()
-            .setTitle(`${nametxt} ${status}`)
-            .setDescription(gametxt)
-            .addField("User ID:", member.id)
-            .addField("Account created at:", userCreatedTime)
-            .addField(`Joined ${msg.guild.name} at:`, guildJoinedTime)
-            .addField("Avatar URL:", `[Click Here](${pfpurl})`)
-            .setThumbnail(pfpurl)
-            .setColor('36393E')
-          msg.channel.send({embed});
-        } else return console.log("Commands can be initiated from Voice Channels?");
+        // Get user or member
+        let user, member;
+        user = utils.findUser(msg, djs, suffix, true);
+        if (msg.channel.type == "text") {
+          member = utils.findMember(msg, suffix, true);
+        }
+        if (!user) return msg.channel.send(`Couldn't find that user`);
+        // Create embed
+        let embed = new Discord.RichEmbed().setColor("36393E");
+        // User ID
+        embed.addField("User ID:", user.id);
+        // Account created
+        let userCreatedTime = user.createdAt.toUTCString();
+        embed.addField("Account created at:", userCreatedTime);
+        // Joined guild
+        if (member) {
+          let guildJoinedTime = member.joinedAt.toUTCString();
+          embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
+        }
+        // Presence (status)
+        let status = utils.getPresenceEmoji(user.presence.status);
+        if (user.bot) status = "<:bot:412413027565174787>";
+        // Presence (game)
+        let game = "Not playing anything";
+        if (user.presence.game && user.presence.game.streaming) game = `Streaming [${member.user.presence.game.name}](${member.user.presence.game.url})`;
+        else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
+        // Embed thumbnail
+        let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
+        embed.setThumbnail(pfpurl);
+        embed.addField("Avatar URL:", `[Click Here](${pfpurl})`);
+        // Embed title and description
+        embed.setTitle(`${user.tag} ${status}`);
+        embed.setDescription(game);
+        msg.channel.send(embed);
       }
     },
 

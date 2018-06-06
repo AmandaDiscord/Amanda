@@ -58,7 +58,7 @@ exports.findUser = function(msg, client, usertxt, self = false) {
     if (self) return msg.author;
     else return null;
   } else {
-    let user = client.users.find(u => u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase())) || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase()));
+    let user = client.users.find(u => usertxt.includes(u.id+">") || u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase().replace(/^@/, "")) || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase())));
     return user;
   }
 }
@@ -75,4 +75,29 @@ Array.prototype.shuffle = function() {
       output.push(random);
   }
   return output;
+}
+
+/**
+ * Changes a presence string into an emoji
+ * @param {String} presence The user's presence string
+ * @returns {String} The emoji that matches that presence
+ */
+exports.getPresenceEmoji = function(presence) {
+  const presences = {
+    online: "<:online:453823508200554508>",
+    idle: "<:idle:453823508028456971>",
+    dnd: "<:dnd:453823507864748044>",
+    offline: "<:invisible:453827513995755520>"
+  };
+  return presences[presence];
+}
+
+/**
+ * Changes a presence type integer to a prefix string
+ * @param {Number} type The user's presence integer
+ * @returns {String} The prefix that matches the presence type
+ */
+exports.getPresencePrefix = function(type) {
+  const prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+  return prefixes[type];
 }
