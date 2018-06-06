@@ -25,12 +25,48 @@ module.exports = function(passthrough) {
           var pfpurl =(member.user.avatar)?member.user.avatarURL: member.user.defaultAvatarURL
           var guildJoinedTime = new Date(member.joinedAt).toUTCString();
           var userCreatedTime = new Date(member.user.createdAt).toUTCString();
+          var nametxt = `**${member.user.tag}**`;
+          var gametxt = ``;
+          switch(member.user.presence.status) {
+            case "online":
+              status = ` <:online:453823508200554508>`;
+              break;
+            case "idle":
+              status = ` <:idle:453823508028456971>`;
+              break;
+            case "dnd":
+              status = ` <:dnd:453823507864748044>`;
+              break;
+            case "offline":
+              status = ` <:invisible:453827513995755520>`;
+              break;
+          }
+          if (member.user.bot) {
+            nametxt += ` <:bot:412413027565174787>`;
+            status = "";
+          }
+          if (member.user.presence.game) {
+            switch(member.user.presence.game.type) {
+              case 0:
+                gametxt = `Playing **${member.user.presence.game.name}**`;
+                break;
+              case 1:
+                gametxt = `Streaming [${member.user.presence.game.name}](${member.user.presence.game.url})`;
+                break;
+              case 2:
+                gametxt = `Listening to **${member.user.presence.game.name}**`;
+                break;
+              case 3:
+                gametxt = `Watching **${member.user.presence.game.name}**`;
+                break;
+            }
+          } else gametxt = `No activity set`;
           const embed = new Discord.RichEmbed()
-            .setAuthor(`User data for: ${member.displayName || member.user.username}`)
-            .addField("User#Discrim:", `${member.user.tag}`)
-            .addField("User ID:", member.user.id)
+            .setTitle(`${nametxt} ${status}`)
+            .setDescription(gametxt)
+            .addField("User ID:", member.id)
             .addField("Account created at:", userCreatedTime)
-            .addField("Joined guild at:", guildJoinedTime)
+            .addField(`Joined ${msg.guild.name} at:`, guildJoinedTime)
             .addField("Avatar URL:", `[Click Here](${pfpurl})`)
             .setThumbnail(pfpurl)
             .setColor('36393E')
@@ -132,7 +168,7 @@ module.exports = function(passthrough) {
         if (msg.member.hasPermission("BAN_MEMBERS")) {
           if (msg.guild.me.hasPermission("BAN_MEMBERS")) {
             if (!suffix) return msg.channel.send("You have to tell me who to ban!");
-            var member = findMember(msg, suffix);
+            var member = utils.findMember(msg, suffix);
             if (member == null) return msg.channel.send("I could not find that user to ban");
             if (member.user.id == msg.author.id) return msg.channel.send("You can't ban yourself, silly");
             if (member.bannable == false) return msg.channel.send(`I am not able to ban that user. They may possess a role higher than or equal to my highest`);
@@ -175,7 +211,7 @@ module.exports = function(passthrough) {
         if (msg.member.hasPermission("KICK_MEMBERS")) {
           if (msg.guild.me.hasPermission("KICK_MEMBERS")) {
             if (!suffix) return msg.channel.send("You have to tell me who to kick!");
-            var member = findMember(msg, suffix);
+            var member = utils.findMember(msg, suffix);
             if (member == null) return msg.channel.send("I could not find that user to kick");
             if (member.user.id == msg.author.id) return msg.channel.send("You can't kick yourself, silly");
             if (member.kickable == false) return msg.channel.send(`I am not able to kick that user. They may possess a role higher than my highest`);

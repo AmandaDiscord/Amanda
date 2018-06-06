@@ -2,18 +2,8 @@ const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
 
-function findMember(msg, suffix, self = false) {
-  if (!suffix) {
-    if (self) return msg.member
-    else return null
-  } else {
-    let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(suffix.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(suffix) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(suffix.toLowerCase()) || m.user.username.toLowerCase().includes(suffix.toLowerCase()));
-    return member
-  }
-}
-
 module.exports = function(passthrough) {
-  const { Discord, djs, dio, dbs } = passthrough;
+  const { Discord, djs, dio, dbs, utils } = passthrough;
   let sql = dbs[0];
   return {
     "profile": {
@@ -21,7 +11,7 @@ module.exports = function(passthrough) {
       description: "Gets the Amanda profile for a user",
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-        var member = findMember(msg, suffix, true);
+        var member = utils.findMember(msg, suffix, true);
         if (member == null) return msg.channel.send(`Couldn't find that user`);
         var money = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
         if (!money) {

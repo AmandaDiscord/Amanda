@@ -299,7 +299,14 @@ module.exports = function(passthrough) {
       process: async function(msg, suffix) {
         var args = suffix.split(" ");
         var arrows = ["up", "down", "left", "right", "lower_left", "lower_right", "upper_left", "upper_right"];
-        return msg.channel.send(`Work in progress`);
+        var choice = arrows[Math.floor(Math.random() * arrows.length)];
+        var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+        if (!money) {
+          await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+          await msg.channel.send(`Created user account`);
+          var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+        }
+        msg.channel.send(`:arrow_${choice}:`);
       }
     },
 

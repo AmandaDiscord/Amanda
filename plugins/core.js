@@ -40,7 +40,7 @@ module.exports = function(passthrough) {
     "ping": {
       usage: "",
       description: "Tests the bot's network latency.",
-      process: function (msg, suffix) {
+      process: async function (msg, suffix) {
         var pingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
         var randPingMsg = pingArray[Math.floor(Math.random() * pingArray.length)];
         const embed = new Discord.RichEmbed()
@@ -49,21 +49,8 @@ module.exports = function(passthrough) {
           .addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
           .setFooter("Is that slow?")
           .setColor("36393E")
-        msg.channel.send(randPingMsg).then(nmsg => nmsg.edit({embed}));
-      }
-    },
-
-    "servers": {
-      usage: "",
-      description: "Returns the amount of servers the bot is in",
-      process: function(msg) {
-        if(msg.author.id === "320067006521147393") {
-          const embed = new Discord.RichEmbed()
-            .setAuthor("Servers")
-            .addField(`${djs.user.username} in currently in:`, `**${djs.guilds.map(g => `${g.name} - **${g.memberCount} Members**`).join(`\n`)}`, true)
-            .setColor("F8E71C")
-          msg.channel.send({embed});
-        } else msg.channel.send(`${djs.user.username} is currently in ${djs.guilds.size} servers`);
+        var nmsg = await msg.channel.send(randPingMsg);
+        nmsg.edit({embed});
       }
     },
 
@@ -77,7 +64,7 @@ module.exports = function(passthrough) {
           .setURL("http://amanda.discord-bots.ga/")
           .setFooter("Amanda", djs.user.avatarURL)
           .setColor("36393E")
-        msg.channel.send({embed});
+        msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
       }
     },
 
@@ -149,7 +136,7 @@ module.exports = function(passthrough) {
         } else if (suffix.toLowerCase() == "fun") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Fun command list:`)
-            .setDescription(`&trivia <play / categories>\n&norris\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
+            .setDescription(`&trivia <play / categories>\n&norris\n&yomamma\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
             .setColor('36393E')
           msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
         } else if (suffix.toLowerCase() == "search") {
@@ -177,13 +164,13 @@ module.exports = function(passthrough) {
             .addField(`**❯ Statistics:**`, `&ping\n&uptime\n&stats`)
             .addField(`**❯ Gambling:**`, `&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice\n&waifu <user>\n&claim <amount> <user>`)
             .addField(`**❯ Guild:**`, `**Moderation:**\n&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>\n**Information:**\n&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji:>\n**Interaction:**\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
-            .addField(`**❯ Fun:**`, `&trivia <play / categories>\n&norris\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
+            .addField(`**❯ Fun:**`, `&trivia <play / categories>\n&norris\n&yomamma\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
             .addField(`**❯ Search:**`, `&urban <search terms>`)
             .addField(`**❯ Images:**`, `&cat\n&dog\n&space\n&meme`)
             .addField(`**❯ Music:**`, `&music - see \`&commands music\` for help`)
             //.addField(`**❯ NSFW:**`, `Null`)
             .setColor('36393E')
-            .setFooter("Old Amanda help pane", `https://cdn.discordapp.com/avatars/${djs.user.id}/${djs.user.avatar}.png?size=32`)
+            .setFooter("Amanda help pane", `https://cdn.discordapp.com/avatars/${djs.user.id}/${djs.user.avatar}.png?size=32`)
           msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
         } else {
           const embed = new Discord.RichEmbed()

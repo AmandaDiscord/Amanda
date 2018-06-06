@@ -37,21 +37,17 @@ module.exports = function(passthrough) {
       }
     },
 
-    "meme": {
+    "yomamma": {
       usage: "",
-      description: "Gives a random meme",
-      process: async function(msg, suffix) {
-        var array = ["dankmemes"];
-        var choice = array[Math.floor(Math.random() * array.length)];
-        request({ url: `https://api.reddit.com/r/${choice}/random`, headers: { "User-Agent": "Amanda" } }, function(err, res, body) {
-          if (err) throw err;
+      process: function(msg, suffix) {
+        request("http://api.yomomma.info/", function(err, res, body) {
+        try {
           var data = JSON.parse(body);
-          var url = data[0].data.children[0].data.preview.images[0].source.url;
-          const embed = new Discord.RichEmbed()
-            .setImage(url)
-            .setColor('36393E')
-          msg.channel.send({embed});
-        })
+        } catch(reason) {
+          msg.channel.send(`There was an error parsing the data:\n${reason}`);
+        }
+        msg.channel.send(data.joke);
+        });
       }
     },
 

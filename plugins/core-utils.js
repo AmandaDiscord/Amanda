@@ -58,14 +58,14 @@ exports.findUser = function(msg, client, usertxt, self = false) {
     if (self) return msg.author;
     else return null;
   } else {
-    let user = client.users.find(u => u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase())) || msg.mentions.users.first() || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase()));
+    let user = client.users.find(u => u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase())) || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase()));
     return user;
   }
 }
 
 /**
  * Shuffles an array psuedorandomly
- * @returns {Array} An array which has psuedorandomly shuffled
+ * @returns {Array} An array which has been psuedorandomly shuffled
  */
 Array.prototype.shuffle = function() {
   let old = [...this];
