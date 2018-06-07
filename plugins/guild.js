@@ -7,9 +7,11 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         // Get user or member
         let user, member;
-        user = utils.findUser(msg, djs, suffix, true);
         if (msg.channel.type == "text") {
           member = utils.findMember(msg, suffix, true);
+          if (member) user = member.user;
+        } else {
+          user = utils.findUser(msg, djs, suffix, true);
         }
         if (!user) return msg.channel.send(`Couldn't find that user`);
         // Create embed

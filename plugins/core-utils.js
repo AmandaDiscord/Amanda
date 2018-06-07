@@ -36,12 +36,23 @@ exports.humanize = function(input, format) {
  * @returns {*} A member object or null if it couldn't find a member
  */
 exports.findMember = function(msg, usertxt, self = false) {
+  usertxt = usertxt.toLowerCase();
+  let userIDMatch = usertxt.match(/<@!?(\d+)>/);
+  let usertxtWithoutAt = usertxt.replace(/^@/, "");
+  let matchFunctions = [];
+  if (userIDMatch) matchFunctions.push(user => user.id == userIDMatch[1]);
+  matchFunctions = matchFunctions.concat([
+    user => user.tag.toLowerCase() == usertxtWithoutAt,
+    user => user.username.toLowerCase() == usertxtWithoutAt,
+    user => user.username.toLowerCase().includes(usertxtWithoutAt)
+  ]);
   if (!usertxt) {
     if (self) return msg.member;
     else return null;
   } else {
-    let member = msg.guild.members.find(m => m.user.tag.toLowerCase().includes(usertxt.toLowerCase())) || msg.mentions.members.first() || msg.guild.members.get(usertxt) || msg.guild.members.find(m => m.displayName.toLowerCase().includes(usertxt.toLowerCase()) || m.user.username.toLowerCase().includes(usertxt.toLowerCase()));
-    return member;
+    return matchFunctions.map(f => {
+        return msg.guild.members.find(m => f(m.user));
+    }).find(m => m) || null;
   }
 }
 
