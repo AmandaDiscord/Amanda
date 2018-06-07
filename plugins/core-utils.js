@@ -50,7 +50,7 @@ exports.findMember = function(msg, usertxt, self = false) {
     if (self) return msg.member;
     else return null;
   } else {
-    return matchFunctions.map(f => {
+    return msg.guild.members.get(usertxt) || matchFunctions.map(f => {
         return msg.guild.members.find(m => f(m.user));
     }).find(m => m) || null;
   }
@@ -79,7 +79,7 @@ exports.findUser = function(msg, client, usertxt, self = false) {
     if (self) return msg.author;
     else return null;
   } else {
-    return matchFunctions.map(f => {
+    return client.users.get(usertxt) || matchFunctions.map(f => {
         return client.users.find(u => f(u));
     }).find(u => u) || null;
   }
