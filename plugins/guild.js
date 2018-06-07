@@ -29,13 +29,13 @@ module.exports = function(passthrough) {
         }
         // Presence (status)
         let status = utils.getPresenceEmoji(user.presence.status);
-        if (user.bot) status = "<:bot:412413027565174787>";
         // Presence (game)
         let game = "No activity set";
         if (user.presence.game && user.presence.game.streaming) {
            game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
            status = `<:streaming:454228675227942922>`;
         } else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
+        if (user.bot) status = "<:bot:412413027565174787>";
         // Embed thumbnail
         let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
         embed.setThumbnail(pfpurl);
@@ -49,12 +49,13 @@ module.exports = function(passthrough) {
 
     "tidy": {
       usage: "<# of messages to delete>",
-      description: "Tidies the chat. Requires the bot and the person who sent the message to have the manage messages permission. Default deleted messages is 50.",
+      description: "Tidies the chat. Requires the bot and the person who sent the message to have the manage messages permission",
       aliases: ["tidy", "purge"],
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You cannot use this command in DMs");
         if (msg.member.hasPermission("MANAGE_MESSAGES")) {
           if (msg.guild.me.hasPermission("MANAGE_MESSAGES")) {
+            if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide a number of messages to delete`);
             suffix = parseInt(suffix);
             if (isNaN(suffix)) return msg.channel.send(`That's not a valid number of messages to delete`);
             if (suffix > 100) return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`);
@@ -66,7 +67,7 @@ module.exports = function(passthrough) {
 
     "emoji": {
       usage: "<:emoji:>",
-      description: "Gets the information of the emoji provided. Useful for making bot resources.",
+      description: "Gets the information of the emoji provided",
       aliases: ["emoji"],
       process: function(msg, suffix) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);

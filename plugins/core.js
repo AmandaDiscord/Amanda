@@ -11,7 +11,7 @@ module.exports = function(passthrough) {
   return {
     "uptime": {
       usage: "",
-      description: "Returns the amount of time since Amanda and her operating system has started",
+      description: "Returns the amount of time since Amanda has started",
       aliases: ["uptime"],
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
@@ -46,7 +46,7 @@ module.exports = function(passthrough) {
 
     "ping": {
       usage: "",
-      description: "Tests the bot's network latency.",
+      description: "Tests Amanda's network latency.",
       aliases: ["ping", "pong"],
       process: async function (msg, suffix) {
         var pingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
@@ -64,7 +64,7 @@ module.exports = function(passthrough) {
 
     "invite": {
       usage: "",
-      description: "Sends the bot invite link to chat",
+      description: "Sends the bot invite link to you via DMs",
       aliases: ["invite", "inv"],
       process: function(msg, suffix) {
         const embed = new Discord.RichEmbed()
@@ -195,7 +195,7 @@ module.exports = function(passthrough) {
 
     "help": {
       usage: "<command>",
-      description: "Shows a list of command categories if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
+      description: "Your average help command",
       aliases: ["help", "h"],
       process: async function (msg, suffix) {
         if(suffix) {
