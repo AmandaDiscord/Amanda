@@ -4,6 +4,7 @@ module.exports = function(passthrough) {
     "user": {
       usage: "<user>",
       description: "Gets the user info about yourself or another user if provided.",
+      aliases: ["user"],
       process: function(msg, suffix) {
         // Get user or member
         let user, member;
@@ -30,9 +31,11 @@ module.exports = function(passthrough) {
         let status = utils.getPresenceEmoji(user.presence.status);
         if (user.bot) status = "<:bot:412413027565174787>";
         // Presence (game)
-        let game = "Not playing anything";
-        if (user.presence.game && user.presence.game.streaming) game = `Streaming [${member.user.presence.game.name}](${member.user.presence.game.url})`;
-        else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
+        let game = "No activity set";
+        if (user.presence.game && user.presence.game.streaming) {
+           game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
+           status = `<:streaming:454228675227942922>`;
+        } else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
         // Embed thumbnail
         let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
         embed.setThumbnail(pfpurl);
@@ -47,6 +50,7 @@ module.exports = function(passthrough) {
     "tidy": {
       usage: "<# of messages to delete>",
       description: "Tidies the chat. Requires the bot and the person who sent the message to have the manage messages permission. Default deleted messages is 50.",
+      aliases: ["tidy", "purge"],
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You cannot use this command in DMs");
         if (msg.member.hasPermission("MANAGE_MESSAGES")) {
@@ -63,6 +67,7 @@ module.exports = function(passthrough) {
     "emoji": {
       usage: "<:emoji:>",
       description: "Gets the information of the emoji provided. Useful for making bot resources.",
+      aliases: ["emoji"],
       process: function(msg, suffix) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);
         var emojiType = "";
@@ -84,6 +89,7 @@ module.exports = function(passthrough) {
     "emojilist": {
       usage: "",
       description: "Gets a list of every emoji in a guild",
+      aliases: ["emojilist"],
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
@@ -97,6 +103,7 @@ module.exports = function(passthrough) {
     "wumbo": {
       usage: "<:emoji:>",
       description: "Makes an emoji bigger",
+      aliases: ["wumbo"],
       process: function(msg, suffix) {
         var foundEmoji = Discord.Util.parseEmoji(suffix);
         var emojiType = "";
@@ -115,6 +122,7 @@ module.exports = function(passthrough) {
     "guild": {
       usage: "",
       description: "Gets information about the server",
+      aliases: ["guild", "server"],
       process: function(msg, suffix) {
         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         const embed = new Discord.RichEmbed()
@@ -132,6 +140,7 @@ module.exports = function(passthrough) {
     "ban": {
       usage: "<user>",
       description: "Bans a member",
+      aliases: ["ban"],
       process: function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         if (msg.member.hasPermission("BAN_MEMBERS")) {
@@ -155,6 +164,7 @@ module.exports = function(passthrough) {
     "hackban": {
       usage: "<snowflake / ID>",
       description: "Bans a member who may not be in the guild. Still works if they are. Requires a user ID to be passed as an argument",
+      aliases: ["hackban", "hb"],
       process: function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         if (msg.member.hasPermission("BAN_MEMBERS")) {
@@ -175,6 +185,7 @@ module.exports = function(passthrough) {
     "kick": {
       usage: "<user>",
       description: "Kicks a member",
+      aliases: ["kick"],
       process: function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         if (msg.member.hasPermission("KICK_MEMBERS")) {

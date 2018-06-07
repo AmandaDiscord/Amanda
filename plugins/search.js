@@ -4,6 +4,7 @@ module.exports = function(passthrough) {
     "urban": {
       usage: "<search term>",
       description: "Searches the urban dictionary for a term",
+      aliases: ["urban", "define"],
       process: function(msg, suffix) {
         require("request")(`http://api.urbandictionary.com/v0/define?term=${suffix}`, function(err, res, body) {
           if (err) return msg.channel.send("Error... API returned nothing.");

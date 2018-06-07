@@ -151,6 +151,7 @@ module.exports = function(passthrough) {
   return {
     "trivia": {
       usage: "<play / categories>",
+      aliases: ["trivia", "t"],
       description: "A game of trivia using OpenTDB or Open Trivia Data Base",
       process: function(msg, suffix) {
         if (suffix == "play") {

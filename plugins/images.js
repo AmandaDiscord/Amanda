@@ -6,6 +6,7 @@ module.exports = function(passthrough) {
     "cat": {
       usage: "",
       description: "Returns an image of a cute cat",
+      aliases: ["cat"],
       process: function(msg, suffix){
         request("https://api.cheweybot.ga/cat", function(err, res, body) {
           if (err) return msg.channel.send(`Error... API returned nothing`);
@@ -26,6 +27,7 @@ module.exports = function(passthrough) {
     "dog": {
       usage: "",
       description: "Returns an image of a cute doggo",
+      aliases: ["dog", "doggo"],
       process: function(msg, suffix){
         request("https://api.thedogapi.co.uk/v2/dog.php", function(err, res, body) {
           if (err) return msg.channel.send("Error. The API returned nothing...");
@@ -45,6 +47,7 @@ module.exports = function(passthrough) {
     "space": {
       usage: "",
       description: "Returns an image of space",
+      aliases: ["space"],
       process: function(msg, suffix) {
         request("https://api.cheweybot.ga/space", function(err, res, body) {
           if (err) return msg.channel.send("Error... API returned nothing");
@@ -65,6 +68,7 @@ module.exports = function(passthrough) {
     "meme": {
       usage: "",
       description: "Gives a random meme",
+      aliases: ["meme"],
       process: async function(msg, suffix) {
         var array = ["dankmemes"];
         var choice = array[Math.floor(Math.random() * array.length)];

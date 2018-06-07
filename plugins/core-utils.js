@@ -3,16 +3,15 @@ var exports = module.exports = {};
 /**
  * Converts seconds or miliseconds to a time string
  * @param {Int} input Any number
- * @param {String} format What format the input is; sec or ms
+ * @param {String} format What format the input is; sec, ms or date
  * @returns {String} A humanized string of time
  */
 exports.humanize = function(input, format) {
-  if (!input) return "RangeError: Not enough input";
-  if (!format) return "RangeError: No format was provided to describe the input";
-  if (format.toLowerCase() == "ms") var msec = parseInt(Math.floor(input * 1000));
+  if (format.toLowerCase() == "ms") var msec = parseInt(Math.floor(input));
   else if (format.toLowerCase() == "sec") var msec = parseInt(Math.floor(input * 1000));
-  else return "TypeError: Invalid format provided";
-  if (isNaN(msec)) return "TypeError: Input provided is NaN";
+  else if (format.toLocaleLowerCase() == "date") return new Date(input).toUTCString();
+  else throw new Error("Invalid format provided");
+  if (isNaN(msec)) throw new Error("Input provided is NaN");
   var days = Math.floor(msec / 1000 / 60 / 60 / 24);
   msec -= days * 1000 * 60 * 60 * 24;
   var hours = Math.floor(msec / 1000 / 60 / 60);
@@ -85,6 +84,21 @@ exports.findUser = function(msg, client, usertxt, self = false) {
         return client.users.find(u => f(u));
     }).find(u => u) || null;
   }
+}
+
+/**
+ * Sends a message to a channel ID or user
+ * @param {*} client Discord client
+ * @param {String} id The ID of the channel or user if the user param is true
+ * @param {*} message MessageResolvable
+ * @param {Boolean} user If a message should be sent to a user by the id param
+ * @returns {*} MessageResolvable
+ */
+exports.send = function(client, id, message, user = false) {
+  return new Promise(function(resolve) {
+    if (user) resolve(client.users.get(id).send(message));
+    else resolve(client.channels.get(id).send(message));
+  });
 }
 
 /**

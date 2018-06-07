@@ -2,12 +2,9 @@ process.title = "Amanda";
 const fs = require("fs");
 const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
-const { exec } = require("child_process");
 const sql = require("sqlite");
-const os = require("os");
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
-const util = require("util")
 let utils = {};
 
 const Discord = require('discord.js');
@@ -34,7 +31,7 @@ async function checkMessageForCommand(msg, isEdit) {
     var cmdTxt = msg.content.split(" ")[0].substring(prefix.length);
     var suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
   }
-  var cmd = commands[cmdTxt];
+  var cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));
   if (cmd) {
     try {
       await cmd.process(msg, suffix, isEdit);
@@ -75,70 +72,14 @@ djs.on("messageUpdate", (oldMessage, newMessage) => {
   checkMessageForCommand(newMessage, true);
 });
 
-const commands = {
-  "eval": {
-    usage: "<code>",
-    description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
-    process: async function (msg, suffix) {
-      if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
-        let result = await eval(suffix);
-        if (!result) return result
-        msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
-      } else {
-        var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
-        var [no, time] = nope[Math.floor(Math.random() * nope.length)];
-        msg.channel.startTyping();
-        setTimeout(() => {
-          msg.channel.send(no).then(() => msg.channel.stopTyping());
-        }, time)
-      }
-    }
-  },
-  
-  "help": {
-    usage: "<command>",
-    description: "Shows a list of command categories if no argument is passed. If an argument is passed, it searches the list of commands for the help pane for that command",
-    process: async function (msg, suffix) {
-      if(suffix) {
-        var cmds = suffix.split(" ").filter(function (cmd) { return commands[cmd] });
-        for (var i = 0; i < cmds.length; i++) {
-          var cmd = cmds[i];
-          var usage = commands[cmd].usage;
-          var description = commands[cmd].description;
-        }
-        if (!cmd) {
-          const embed = new Discord.RichEmbed()
-            .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
-            .setColor("B60000")
-          return msg.channel.send({embed});
-        }
-        const embed = new Discord.RichEmbed()
-          .addField(`Help for ${cmd}:`, `Usage: ${usage}\nDescription: ${description}`)
-        msg.channel.send({embed});
-      }
-      else {
-        const embed = new Discord.RichEmbed() // \n❯ NSFW
-          .setAuthor("Command Categories:")
-          .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: **Typing \`&commands <category>\` will get you a list of all of the commands in that category. Ex: \`&commands core\`. Also typing \`&commands all\` will return all of the available commands**`)
-          .setFooter("Amanda help panel", djs.user.avatarURL)
-          .setColor('36393E')
-        try {
-          await msg.author.send({embed});
-        } catch (error) {
-        return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
-        }
-        if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-      }
-    }
-  }
-};
+const commands = {};
 
 function loadCommands() {
   Promise.all([
     sql.open("./databases/money.sqlite"),
     sql.open("./databases/music.sqlite")
   ]).then(dbs => {
-    let passthrough = {Discord, djs, dio, reloadEvent, utils, dbs};
+    let passthrough = {Discord, djs, dio, reloadEvent, utils, dbs, commands};
     require("./plugins.js")(passthrough, loaded => {
       Object.assign(commands, loaded);
     });

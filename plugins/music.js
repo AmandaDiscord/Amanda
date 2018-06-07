@@ -114,9 +114,10 @@ module.exports = function(passthrough) {
 		"music": {
 			usage: "Null",
 			description: "See `&commands music` for help",
+			aliases: ["music", "m"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250", "223247740346302464"].includes(msg.guild.id)) {
+				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250", "223247740346302464", "264445053596991498"].includes(msg.guild.id)) {
 					var isPrem = true;
 				} else if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id)) {
 					var isPrem = true;
@@ -161,8 +162,9 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					queue.volume = args[1];
-					queue.connection.dispatcher.setVolumeLogarithmic(args[1] / 5);
+					if (isNaN(args[1])) return msg.channel.send(`${msg.author.username}, that is not a valid number to set the volume to`);
+					queue.volume = Math.floor(parseInt(args[1]));
+					queue.connection.dispatcher.setVolumeLogarithmic(Math.floor(parseInt(args[1])) / 5);
 					return msg.react("👌").catch(() => { return });
 				} else if (args[0].toLowerCase() == "now") {
 					if (!queue) return msg.channel.send('There is nothing playing.');

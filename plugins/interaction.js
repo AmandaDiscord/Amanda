@@ -10,10 +10,11 @@ module.exports = function(passthrough) {
     "hug": {
       usage: "<user>",
       description: "Hugs someone",
+      aliases: ["hug"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
         if (member.user.id == msg.author.id) return msg.channel.send("That's not strange at all...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
@@ -35,10 +36,11 @@ module.exports = function(passthrough) {
     "kiss": {
       usage: "<user>",
       description: "Kisses someone",
+      aliases: ["kiss"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
         if (member.user.id == msg.author.id) return msg.channel.send(`W-What? Why, ${msg.author.username}?`);
         if (member.user.id == djs.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
@@ -60,10 +62,11 @@ module.exports = function(passthrough) {
     "cuddle": {
       usage: "<user>",
       description: "Cuddles someone",
+      aliases: ["cuddle"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
         if (member.user.id == msg.author.id) return msg.channel.send("I find it strange that you tried to do that...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
@@ -85,10 +88,11 @@ module.exports = function(passthrough) {
     "poke": {
       usage: "<user>",
       description: "Pokes someone",
+      aliases: ["poke"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
         if (member.user.id == msg.author.id) return msg.channel.send("Ok then...");
         if (member.user.id == djs.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
@@ -110,10 +114,11 @@ module.exports = function(passthrough) {
     "slap": {
       usage: "<user>",
       description: "Slaps someone",
+      aliases: ["slap"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
         if (member.user.id == msg.author.id) return msg.channel.send("Come on... Don't make yourself look like an idiot...");
         if (member.user.id == djs.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
@@ -135,10 +140,11 @@ module.exports = function(passthrough) {
     "boop": {
       usage: "<user>",
       description: "Boops someone",
+      aliases: ["boop"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
         if (member.user.id == msg.author.id) return msg.channel.send("Why even try?");
         if (member.user.id == djs.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
@@ -160,10 +166,11 @@ module.exports = function(passthrough) {
     "pat": {
       usage: "<user>",
       description: "Pats someone",
+      aliases: ["pat"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
         if (member.user.id == msg.author.id) return msg.channel.send("<:NotLikeCat:411364955493761044>");
         if (member.user.id == djs.user.id) return msg.channel.send(`≥ w ≤`);
@@ -185,10 +192,11 @@ module.exports = function(passthrough) {
     "stab": {
       usage: "<user>",
       description: "Stabs someone",
+      aliases: ["stab"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
         if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
         if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
@@ -201,10 +209,11 @@ module.exports = function(passthrough) {
     "nom": {
       usage: "<user>",
       description: "noms someone",
+      aliases: ["nom"],
       process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
         var member = utils.findMember(msg, suffix);
         if (member == null) return msg.channel.send("Couldn't find that user");
-        if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
         if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
         if (member.user.id == msg.author.id) return msg.channel.send("You are so weird...");
         if (member.user.id == djs.user.id) return msg.channel.send(`owie`);
@@ -226,6 +235,7 @@ module.exports = function(passthrough) {
     "ship": {
       usage: "<mention 1> <mention 2>",
       description: "Ships two people",
+      aliases: ["ship"],
       process: async function(msg, suffix) {
         if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
         var args = suffix.split(" ");
@@ -270,6 +280,19 @@ module.exports = function(passthrough) {
           await msg.channel.send(`Aww. I'd rate ${members[0].user.tag} and ${members[1].user.tag} being together a ${percentage}%`,{files: [buffer]});
           msg.channel.stopTyping();
         })
+      }
+    },
+
+    "bean": {
+      usage: "<user>",
+      description: "Beans a user",
+      aliases: ["bean"],
+      process: function(msg, suffix) {
+        if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
+        if (!suffix) return msg.channel.send(`You have to tell me someone to bean!`);
+        var member = utils.findMember(msg, suffix);
+        if (member == null) return msg.channel.send(`User not found`);
+        msg.channel.send(`**${member.user.tag}** has been beaned!`);
       }
     }
   }
