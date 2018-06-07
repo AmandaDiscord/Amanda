@@ -42,16 +42,18 @@ exports.findMember = function(msg, usertxt, self = false) {
   let matchFunctions = [];
   if (userIDMatch) matchFunctions.push(user => user.id == userIDMatch[1]);
   matchFunctions = matchFunctions.concat([
-    user => user.tag.toLowerCase() == usertxtWithoutAt,
-    user => user.username.toLowerCase() == usertxtWithoutAt,
-    user => user.username.toLowerCase().includes(usertxtWithoutAt)
+    member => member.user.tag.toLowerCase() == usertxtWithoutAt,
+    member => member.user.username.toLowerCase() == usertxtWithoutAt,
+    member => member.displayName.toLowerCase() == usertxtWithoutAt,
+    member => member.user.username.toLowerCase().includes(usertxtWithoutAt),
+    member => member.displayName.toLowerCase().includes(usertxtWithoutAt)
   ]);
   if (!usertxt) {
     if (self) return msg.member;
     else return null;
   } else {
     return msg.guild.members.get(usertxt) || matchFunctions.map(f => {
-        return msg.guild.members.find(m => f(m.user));
+        return msg.guild.members.find(m => f(m));
     }).find(m => m) || null;
   }
 }
