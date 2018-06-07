@@ -54,12 +54,23 @@ exports.findMember = function(msg, usertxt, self = false) {
  * @returns {*} A user object or null if it couldn't find a user
  */
 exports.findUser = function(msg, client, usertxt, self = false) {
+  usertxt = usertxt.toLowerCase();
+  let userIDMatch = usertxt.match(/<@!?(\d+)>/);
+  let usertxtWithoutAt = usertxt.replace(/^@/, "");
+  let matchFunctions = [];
+  if (userIDMatch) matchFunctions.push(user => user.id == userIDMatch[1]);
+  matchFunctions = matchFunctions.concat([
+    user => user.tag.toLowerCase() == usertxtWithoutAt,
+    user => user.username.toLowerCase() == usertxtWithoutAt,
+    user => user.username.toLowerCase().includes(usertxtWithoutAt)
+  ]);
   if (!usertxt) {
     if (self) return msg.author;
     else return null;
   } else {
-    let user = client.users.find(u => usertxt.includes(u.id+">") || u.username.toLowerCase() == usertxt.toLowerCase() || u.tag.toLowerCase().includes(usertxt.toLowerCase().replace(/^@/, "")) || client.users.get(usertxt) || client.users.find(u => u.username.toLowerCase().includes(usertxt.toLowerCase())));
-    return user;
+    return matchFunctions.map(f => {
+        return client.users.find(u => f(u));
+    }).find(u => u) || null;
   }
 }
 
