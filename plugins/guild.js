@@ -43,7 +43,28 @@ module.exports = function(passthrough) {
         // Embed title and description
         embed.setTitle(`${user.tag} ${status}`);
         embed.setDescription(game);
-        msg.channel.send(embed);
+        msg.channel.send({embed});
+      }
+    },
+
+    "avatar": {
+      usage: "<user>",
+      description: "Gets the avatar of a user",
+      aliases: ["avatar", "pfp"],
+      process: function(msg, suffix) {
+        let user, member;
+        if (msg.channel.type == "text") {
+          member = utils.findMember(msg, suffix, true);
+          if (member) user = member.user;
+        } else {
+          user = utils.findUser(msg, djs, suffix, true);
+        }
+        if (!user) return msg.channel.send(`Couldn't find that user`);
+        let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
+        const embed = new Discord.RichEmbed()
+          .setImage(pfpurl)
+          .setColor("36393E");
+        msg.channel.send({embed});
       }
     },
 
@@ -129,7 +150,7 @@ module.exports = function(passthrough) {
         const embed = new Discord.RichEmbed()
           .setAuthor(msg.guild.name)
           .addField("Created at:", msg.guild.createdAt.toUTCString())
-          .addField("Owner:", msg.guild.owner.user.tag)
+          .addField("Owner:", msg.guild.owner? msg.guild.owner.user.tag: "Server owner not in cache")
           .addField("Member Count:", `${msg.guild.memberCount} members`)
           .addField("Guild ID:", msg.guild.id)
           .setThumbnail(msg.guild.iconURL)

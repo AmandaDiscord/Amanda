@@ -28,6 +28,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -54,6 +55,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} kissed <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -80,6 +82,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} cuddled <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -106,6 +109,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} poked <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -132,6 +136,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} slapped <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -158,6 +163,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} booped <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -184,6 +190,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} patted <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -202,6 +209,7 @@ module.exports = function(passthrough) {
         if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
         const embed = new Discord.RichEmbed()
           .setDescription(`${msg.author.username} stabbed <@${member.user.id}>`)
+          .setColor("36393E");
         msg.channel.send({embed});
       }
     },
@@ -227,6 +235,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
             .setImage(data.img)
+            .setColor("36393E");
           msg.channel.send({embed});
         })
       }
@@ -290,9 +299,17 @@ module.exports = function(passthrough) {
       process: function(msg, suffix) {
         if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
         if (!suffix) return msg.channel.send(`You have to tell me someone to bean!`);
-        var member = utils.findMember(msg, suffix);
-        if (member == null) return msg.channel.send(`User not found`);
-        msg.channel.send(`**${member.user.tag}** has been beaned!`);
+        let user, member;
+        if (msg.channel.type == "text") {
+          member = utils.findMember(msg, suffix, true);
+          if (member) user = member.user;
+        } else {
+          user = utils.findUser(msg, djs, suffix, true);
+        }
+        if (!user) return msg.channel.send(`Couldn't find that user`);
+        if (user.id == djs.user.id) return msg.channel.send(`No u`);
+        if (user.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
+        msg.channel.send(`**${user.tag}** has been banned!`);
       }
     }
   }

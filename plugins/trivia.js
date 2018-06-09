@@ -74,10 +74,12 @@ module.exports = function(passthrough) {
             difficulty = "hard";
             break;
         }
-      var guessembed = new Discord.RichEmbed()
-        .setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\nA: *${a1}*\nB: *${a2}*\nC: *${a3}*\nD: *${a4}*`))
-        .setColor(color)
-      msg.channel.send(guessembed).then(msg => {
+        var str = `A: *${a1}*\nB: *${a2}*`;
+        if (a3 && a4) str += `\nC: *${a3}*\nD: *${a4}*`;
+        var guessembed = new Discord.RichEmbed()
+          .setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\n${str}`))
+          .setColor(color)
+        msg.channel.send(guessembed).then(msg => {
         let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
         clocks.forEach((c,i) => {
           setTimeout(() => {

@@ -63,7 +63,7 @@ module.exports = function(passthrough) {
 		queue.startedAt = Date.now();
 
 		function getNPEmbed() {
-			return new Discord.RichEmbed().setDescription(`Now playing: **${song.title}** (${songProgress(queue)})`);
+			return new Discord.RichEmbed().setColor("36393E").setDescription(`Now playing: **${song.title}** (${songProgress(queue)})`);
 		}
 		msg.channel.send(getNPEmbed()).then(npmsg => {
 			setTimeout(() => {
@@ -152,6 +152,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 					.setAuthor(`Queue for ${msg.guild.name}`)
 					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n')+"\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0)))
+					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
@@ -170,6 +171,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue)})`)
+					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "shuffle") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
@@ -297,7 +299,8 @@ module.exports = function(passthrough) {
 						}
 						let embed = new Discord.RichEmbed()
 						.setAuthor(author[0], author[1])
-						.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength));
+						.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength))
+						.setColor("36393E")
 						msg.channel.send(embed);
 					}
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);

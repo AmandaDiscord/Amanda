@@ -73,11 +73,14 @@ module.exports = function(passthrough) {
         var array = ["dankmemes"];
         var choice = array[Math.floor(Math.random() * array.length)];
         request({ url: `https://api.reddit.com/r/${choice}/random`, headers: { "User-Agent": "Amanda" } }, function(err, res, body) {
-          if (err) throw err;
-          var data = JSON.parse(body);
-          var url = data[0].data.children[0].data.preview.images[0].source.url;
+          if (err) return msg.channel.send("Error... API returned nothing");
+          try {
+            var data = JSON.parse(body);
+          } catch (error) {
+              return msg.channel.send(`Error while requesting a meme\n${error}`);
+          }
           const embed = new Discord.RichEmbed()
-            .setImage(url)
+            .setImage(data[0].data.children[0].data.preview.images[0].source.url)
             .setColor('36393E')
           msg.channel.send({embed});
         })

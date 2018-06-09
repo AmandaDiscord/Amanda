@@ -49,15 +49,17 @@ module.exports = function(passthrough) {
       description: "Tests Amanda's network latency.",
       aliases: ["ping", "pong"],
       process: async function (msg, suffix) {
-        var pingArray = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
-        var randPingMsg = pingArray[Math.floor(Math.random() * pingArray.length)];
+        var array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
+        var message = array[Math.floor(Math.random() * array.length)];
+        var footers = ["Is that slow?", "W-Wait... It's called table tennis"];
+        var footer = footers[Math.floor(Math.random() * footers.length)];
         const embed = new Discord.RichEmbed()
           .setAuthor("Pong!")
           .addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
           .addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
-          .setFooter("Is that slow?")
+          .setFooter(footer)
           .setColor("36393E")
-        var nmsg = await msg.channel.send(randPingMsg);
+        var nmsg = await msg.channel.send(message);
         nmsg.edit({embed});
       }
     },
@@ -117,58 +119,67 @@ module.exports = function(passthrough) {
       usage: "<category>",
       description: "Shows the command list from a specific category of commands",
       aliases: ["commands", "cmds"],
-      process: function(msg, suffix) {
+      process: async function(msg, suffix) {
         if (!suffix) return msg.channel.send(`${msg.author.username}, you must provide a command category as an argument`);
         if (suffix.toLowerCase() == "core") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Core command list:`)
             .setDescription(`&help <command>\n&commands <category>\n&invite\n&info\n&privacy`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "statistics") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Statistics command list:`)
             .setDescription(`&ping\n&uptime\n&stats`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "gambling") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Gambling command list:`)
             .setDescription(`&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice\n&waifu <user>\n&claim <amount> <user>`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "guild") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Guild command list:`)
-            .addField(`**Moderation:**`, `&tidy <# to delete>`)
+            .addField(`**Moderation:**`, `&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>`)
             .addField(`**Information:**`, `&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji>`)
             .addField(`**Interaction:**`, `&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "fun") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Fun command list:`)
             .setDescription(`&trivia <play / categories>\n&norris\n&yomamma\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "search") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Search command list:`)
             .setDescription(`&urban <search terms>`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "images") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Images command list:`)
             .setDescription(`&cat\n&dog\n&space\n&meme`)
             .setColor('36393E')
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "music") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Music command list`)
             .setDescription(`&music`)
             .addField(`Arguments:`, `<play> / Plays the current queue or adds songs to it\n- <url> / Any valid YouTube url\n---------------------------\n<skip> / Skips the currently playing song\n---------------------------\n<stop> / Purges the queue and leaves the voice channel\n---------------------------\n<now> / Shows what song is playing\n---------------------------\n<queue> / Shows the entire queue\n---------------------------\n<volume> / changes the volume of the music dispatcher\n- <# (5 is the default volume)>\n---------------------------\n<shuffle> / Randomly shuffles the current queue\n---------------------------\n<playlist> / Custom playlists made by users through Amanda\n<playlist name>\n- <add>\n-- <url>\n---------------------------\n- <remove>\n-- <# of position of song>\n---------------------------\n- <play>\n---------------------------\n- <move>\n-- <# of position of song to move>\n--- <# of position to move song to>\n\nEx for playlist: \`&music playlist xi play\``)
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+            .setColor('36393E')
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else if (suffix.toLowerCase() == "all") {
           const embed = new Discord.RichEmbed()
             .setAuthor(`Full command list`)
@@ -183,7 +194,8 @@ module.exports = function(passthrough) {
             //.addField(`**❯ NSFW:**`, `Null`)
             .setColor('36393E')
             .setFooter("Amanda help pane", `https://cdn.discordapp.com/avatars/${djs.user.id}/${djs.user.avatar}.png?size=32`)
-          msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+          if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         } else {
           const embed = new Discord.RichEmbed()
             .setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`)
@@ -202,7 +214,7 @@ module.exports = function(passthrough) {
           var cmd = Object.values(commands).find(c => c.aliases.includes(suffix));
           if (!cmd) {
             const embed = new Discord.RichEmbed()
-              .setDescription(`**${msg.author.tag}**, I couldn't find the help pane for that command`)
+              .setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`)
               .setColor("B60000")
             return msg.channel.send({embed});
           }
@@ -210,6 +222,7 @@ module.exports = function(passthrough) {
           var description = cmd.description;
           const embed = new Discord.RichEmbed()
             .addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${usage}\nDescription: ${description}`)
+            .setColor('36393E')
           msg.channel.send({embed});
         } else {
           const embed = new Discord.RichEmbed() // \n❯ NSFW
@@ -217,11 +230,7 @@ module.exports = function(passthrough) {
             .setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: **Typing \`&commands <category>\` will get you a list of all of the commands in that category. Ex: \`&commands core\`. Also typing \`&commands all\` will return all of the available commands**`)
             .setFooter("Amanda help panel", djs.user.avatarURL)
             .setColor('36393E')
-          try {
-            await msg.author.send({embed});
-          } catch (error) {
-            return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
-          }
+            await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work`));
           if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
         }
       }

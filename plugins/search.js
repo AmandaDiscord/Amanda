@@ -18,7 +18,7 @@ module.exports = function(passthrough) {
               .setAuthor(data.list[0].word)
               .addField("Definition:", data.list[0].definition)
               .addField("Example:", data.list[0].example || "Not available")
-              .setColor('RANDOM')
+              .setColor("36393E");
             msg.channel.send({embed})
         });
       }

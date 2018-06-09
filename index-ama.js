@@ -22,6 +22,7 @@ process.on("unhandledRejection", (reason) => {
 });
 
 async function checkMessageForCommand(msg, isEdit) {
+  if (msg.author.bot) return;
   var prefix = Config.prefixes.find(p => msg.content.startsWith(p));
   if (!prefix) return;
   if (prefix == "<@405208699313848330>") {

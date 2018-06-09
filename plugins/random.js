@@ -17,8 +17,8 @@ module.exports = function(passthrough) {
         if (isNaN(min)) return msg.channel.send(`${msg.author.username}, the minimum value you provided is not a number`);
         if (isNaN(max)) return msg.channel.send(`${msg.author.username}, the maximum value you provided is not a number`);
         const embed = new Discord.RichEmbed()
-          .setAuthor("✨Random Number✨")
           .setDescription(Math.floor(Math.random() * (max - min) + min))
+          .setColor("36393E");
         msg.channel.send({embed})
       }
     },
@@ -66,6 +66,7 @@ module.exports = function(passthrough) {
         const embed = new Discord.RichEmbed()
           .setAuthor("Yes or No")
           .setDescription(`I'd have to say ${choice}`)
+          .setColor("36393E");
         msg.channel.send({embed});
       }
     },
@@ -82,6 +83,7 @@ module.exports = function(passthrough) {
           .setDescription(":8ball:")
           .addField("You asked:", suffix)
           .addField("I'd have to say:", choice)
+          .setColor("36393E");
         msg.channel.send({embed});
       }
     },
