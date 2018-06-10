@@ -178,7 +178,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
 					return msg.react("👌").catch(() => { return });
-				} else if (args[0].toLowerCase() == "playlist" || args[0].toLowerCase() == "pl") {
+				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
 					let playlistRow = await sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);

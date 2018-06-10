@@ -18,7 +18,7 @@ console.log(`Starting...\nYour Node.js version is: ${process.version}`);
 console.log(`Your Discord.js version is: ${Discord.version}`);
 
 process.on("unhandledRejection", (reason) => {
-		console.error(reason)
+	console.error(reason)
 });
 
 const presences = [
