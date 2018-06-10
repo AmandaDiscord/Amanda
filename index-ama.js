@@ -10,50 +10,38 @@ let utils = {};
 const Discord = require('discord.js');
 const discordClient = require("dualcord");
 const client = new discordClient();
-client.login({token: Auth.bot_token});
+client.login({ token: Auth.bot_token });
 const dio = client.dioClient();
 const djs = client.djsClient();
 
-console.log(`Starting...\nYour Node.js version is: ${process.version}`);
-console.log(`Your Discord.js version is: ${Discord.version}`);
+console.log(`Starting`);
 
 process.on("unhandledRejection", (reason) => {
-	console.error(reason)
+	console.error(reason);
 });
 
-const presences = [
-	['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
-	['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
-	['music', 'LISTENING'], ['Spootify', 'LISTENING'],
-	['with Shodan', 'STREAMING'],
-];
-const update = () => {
-	const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-	djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
-};
 djs.on('ready', () => {
-	loadCommands();
-	console.log("Successfully logged in.");
-	update();
-	djs.setInterval(update, 300000);
+	load();
 });
+
 djs.on("disconnect", reason => {
 	console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 	setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
 });
+
 const commands = {};
 
-function loadCommands() {
+function load() {
 	Promise.all([
 		sql.open("./databases/money.sqlite"),
 		sql.open("./databases/music.sqlite")
 	]).then(dbs => {
-		let passthrough = {Config, Discord, djs, dio, reloadEvent, utils, dbs, commands};
+		let passthrough = { Config, Discord, djs, dio, reloadEvent, utils, dbs, commands };
 		require("./plugins.js")(passthrough, loaded => {
 			Object.assign(commands, loaded);
 		});
 	});
-}
+};
 
 let stdin = process.stdin;
 stdin.on("data", async function(input) {
@@ -64,7 +52,3 @@ stdin.on("data", async function(input) {
 			console.log(e.stack);
 	}
 });
-
-console.clear = function () {
-	return process.stdout.write('\x1Bc');
-}

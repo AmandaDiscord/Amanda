@@ -32,7 +32,7 @@ module.exports = function(passthrough) {
 		"slot": {
 			usage: "<bet>",
 			description: "Runs a random slot machine for a chance at Discoins",
-			aliases: ["slot"],
+			aliases: ["slot", "slots"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var money = await sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);

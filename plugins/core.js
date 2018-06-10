@@ -1,5 +1,4 @@
 const fs = require("fs");
-const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const os = require("os");
 const util = require("util");
@@ -274,7 +273,7 @@ module.exports = function(passthrough) {
 			process: async function (msg, suffix) {
 				if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
 					let result = await eval(suffix);
-					if (!result) return result
+					if (!result) return result;
 					msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
 				} else {
 					var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];

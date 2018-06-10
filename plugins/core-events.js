@@ -1,18 +1,39 @@
 module.exports = function(passthrough) {
-	let {Config, Discord, djs, dio, reloadEvent, utils, dbs, commands} = passthrough;
+	let { Config, Discord, djs, dio, reloadEvent, utils, dbs, commands } = passthrough;
 	djs.on("message", manageMessage);
 	djs.on("messageUpdate", manageEdit);
+	djs.on("ready", manageReady);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
+		djs.removeListener("ready", manageReady);
 	});
+
+	const presences = [
+		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
+		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
+		['music', 'LISTENING'], ['Spootify', 'LISTENING'],
+		['with Shodan', 'STREAMING'],
+	];
+	const update = () => {
+		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
+		djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+	};
+
+	function manageReady() {
+		console.log("Successfully logged in");
+		update();
+		djs.setInterval(update, 300000);
+	}
 
 	function manageMessage(msg) {
 		checkMessageForCommand(msg, false);
 	}
+
 	function manageEdit(oldMessage, newMessage) {
 		if (newMessage.editedTimestamp && oldMessage.editedTimestamp != newMessage.editedTimestamp) checkMessageForCommand(newMessage, true);
 	}
+
 	async function checkMessageForCommand(msg, isEdit) {
 		if (msg.author.bot) return;
 		var prefix = Config.prefixes.find(p => msg.content.startsWith(p));
