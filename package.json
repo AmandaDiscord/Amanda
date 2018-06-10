@@ -7,6 +7,7 @@
   "license": "MIT",
   "dependencies": {
     "bot-utils": "^1.1.7",
+    "bufferutil": "^3.0.5",
     "canvas": "github:Automattic/node-canvas",
     "discord.js": "^11.3.2",
     "dualcord": "^1.0.5",
@@ -14,10 +15,13 @@
     "ffmpeg": "^0.0.4",
     "ffmpeg-binaries": "^3.2.2-3",
     "https": "^1.0.0",
+    "libsodium-wrappers": "^0.7.3",
+    "node-opus": "^0.2.9",
     "opusscript": "^0.0.6",
     "request": "^2.86.0",
+    "sodium": "^2.0.3",
     "sqlite": "^2.9.2",
-    "uws": "^10.148.0",
+    "uws": "^9.148.0",
     "ytdl-core": "^0.20.4"
   }
 }
