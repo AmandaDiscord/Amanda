@@ -36,7 +36,6 @@ djs.on('ready', () => {
 	console.log("Successfully logged in.");
 	update();
 	djs.setInterval(update, 300000);
-	console.log(`${djs.user.username} is currently in ${djs.guilds.size} servers.`);
 });
 djs.on("disconnect", reason => {
 	console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
