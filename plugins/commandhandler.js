@@ -11,7 +11,7 @@ module.exports = function(passthrough) {
 		checkMessageForCommand(msg, false);
 	}
 	function manageEdit(oldMessage, newMessage) {
-		checkMessageForCommand(newMessage, true);
+		if (oldMessage.editedTimestamp != newMessage.editedTimestamp) checkMessageForCommand(newMessage, true);
 	}
 	async function checkMessageForCommand(msg, isEdit) {
 		if (msg.author.bot) return;
