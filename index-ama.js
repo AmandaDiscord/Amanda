@@ -100,21 +100,3 @@ stdin.on("data", async function(input) {
 console.clear = function () {
   return process.stdout.write('\x1Bc');
 }
-
-async function handleAi(msg) {
-
-}
-
-var identqs = ["?", "who", "what", "when", "where", "why"];
-
-var responses = {
-  "questions": {
-
-  },
-  "answers": {
-
-  },
-  "facts": {
-
-  }
-}
