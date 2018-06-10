@@ -275,7 +275,7 @@ module.exports = function(passthrough) {
 				if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
 					let result = await eval(suffix);
 					if (!result) return result
-					msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No"));
+					msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
 				} else {
 					var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
 					var [no, time] = nope[Math.floor(Math.random() * nope.length)];
