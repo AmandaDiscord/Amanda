@@ -163,10 +163,13 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					if (isNaN(args[1])) return msg.channel.send(`${msg.author.username}, that is not a valid number to set the volume to`);
-					queue.volume = Math.floor(parseInt(args[1]));
-					queue.connection.dispatcher.setVolumeLogarithmic(Math.floor(parseInt(args[1])) / 5);
-					return msg.react("👌").catch(() => { return });
+					var setv = Math.floor(parseInt(args[1]));
+					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, that is not a valid number to set the volume to`);
+					if (setv > 0 && setv < 6) {
+						queue.volume = setv;
+						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
+						return msg.react("👌").catch(() => { return });
+					} else return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0 or less than or equal to 5`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
