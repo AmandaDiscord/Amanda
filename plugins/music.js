@@ -262,7 +262,7 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`);
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
-					} else if (action.toLowerCase() == "play") {
+					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
 						let from = args[3] == "-" ? 1 : (parseInt(args[3]) || 1);
 						let to = args[4] == "-" ? orderedSongs.length : (parseInt(args[4]) || from || orderedSongs.length);
 						from = Math.max(from, 1);
@@ -273,6 +273,9 @@ module.exports = function(passthrough) {
 						const getProgressMessage = () => `Please wait, loading songs (${progress}/${orderedSongs.length})`;
 						let progressMessage = await msg.channel.send(getProgressMessage());
 						let lastEdit = 0;
+						if (action.toLowerCase() == "shuffle") {
+							orderedSongs = orderedSongs.shuffle();
+						}
 						Promise.all(orderedSongs.map(song => {
 							return new Promise(resolve => {
 								ytdl.getInfo(song.videoID).then(info => {
