@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 var exports = module.exports = {};
 
 /**
@@ -138,4 +139,20 @@ exports.getPresenceEmoji = function(presence) {
 exports.getPresencePrefix = function(type) {
   const prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
   return prefixes[type];
+}
+
+/**
+ * Converts a string to an emoji object
+ * @param {String} emoji An emoji which is managed by Discord
+ * @returns {String} The object of the provided emoji
+ */
+exports.emoji = function(emoji) {
+  if (!emoji) return null;
+  emoji = Discord.Util.parseEmoji(emoji);
+  if(emoji == null) return null;
+  if(emoji.id == null) return null;
+  let type = "";
+  if (emoji.animated) type = "gif";
+  else type = "png";
+  return { url: `https://cdn.discordapp.com/emojis/${emoji.id}.${type}`, id: emoji.id, name: emoji.name };
 }

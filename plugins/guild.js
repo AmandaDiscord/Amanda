@@ -91,18 +91,14 @@ module.exports = function(passthrough) {
       description: "Gets the information of the emoji provided",
       aliases: ["emoji"],
       process: function(msg, suffix) {
-        var foundEmoji = Discord.Util.parseEmoji(suffix);
-        var emojiType = "";
         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-        if(foundEmoji == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-        if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-        if (foundEmoji.animated == true) var emojiType = "gif";
-        else var emojiType = "png";
+        var emoji = utils.emoji(suffix);
+        if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
         const embed = new Discord.RichEmbed()
-          .setAuthor(foundEmoji.name)
-          .addField("Emoji ID:", `${foundEmoji.id}`)
-          .addField("Link to Emoji:", `[Click Here](https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType})`)
-          .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
+          .setAuthor(emoji.name)
+          .addField("Emoji ID:", `${emoji.id}`)
+          .addField("Link to Emoji:", `[Click Here](${emoji.url})`)
+          .setImage(emoji.url)
           .setColor("36393E")
         msg.channel.send({embed});
       }
@@ -117,7 +113,7 @@ module.exports = function(passthrough) {
         var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
         if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be displayed`);
         const embed = new Discord.RichEmbed()
-          .setDescription(emoji)
+          .setDescription(emoji.url)
           .setColor("36393E")
         msg.channel.send({embed});
       }
@@ -127,15 +123,11 @@ module.exports = function(passthrough) {
       description: "Makes an emoji bigger",
       aliases: ["wumbo"],
       process: function(msg, suffix) {
-        var foundEmoji = Discord.Util.parseEmoji(suffix);
-        var emojiType = "";
         if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-        if(foundEmoji == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-        if(foundEmoji.id == null) return msg.channel.send(`${msg.author.username}, That's not a valid emoji`);
-        if (foundEmoji.animated == true) var emojiType = "gif";
-        else var emojiType = "png";
+        var emoji = utils.emoji(suffix);
+        if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
         const embed = new Discord.RichEmbed()
-          .setImage(`https://cdn.discordapp.com/emojis/${foundEmoji.id}.${emojiType}`)
+          .setImage(emoji.url)
           .setColor("36393E")
         msg.channel.send({embed});
       }
@@ -149,8 +141,8 @@ module.exports = function(passthrough) {
         if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
         const embed = new Discord.RichEmbed()
           .setAuthor(msg.guild.name)
-          .addField("Created at:", msg.guild.createdAt.toUTCString())
-          .addField("Owner:", msg.guild.owner? msg.guild.owner.user.tag: "Server owner not in cache")
+          .addField("Created at:", utils.humanize(msg.guild.createdAt, "date"))
+          .addField("Owner:", msg.guild.owner? `${msg.guild.owner.user.tag} <:OwnerCrown:455188860817899520>`: "Server owner not in cache")
           .addField("Member Count:", `${msg.guild.memberCount} members`)
           .addField("Guild ID:", msg.guild.id)
           .setThumbnail(msg.guild.iconURL)

@@ -147,7 +147,7 @@ module.exports = function(passthrough) {
             .setAuthor(`Guild command list:`)
             .addField(`**Moderation:**`, `&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>`)
             .addField(`**Information:**`, `&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji>`)
-            .addField(`**Interaction:**`, `&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
+            .addField(`**Interaction:**`, `&bean <user>\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
             .setColor('36393E')
           await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
           if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
@@ -186,7 +186,7 @@ module.exports = function(passthrough) {
             .addField(`**❯ Core:**`, `&help <command>\n&commands <category>\n&invite\n&info\n&privacy`)
             .addField(`**❯ Statistics:**`, `&ping\n&uptime\n&stats`)
             .addField(`**❯ Gambling:**`, `&give <amount> <user>\n&coins <user>\n&slot <amount>\n&flip\n&bf <amount> <side>\n&lb\n&mine\n&dice\n&waifu <user>\n&claim <amount> <user>`)
-            .addField(`**❯ Guild:**`, `**Moderation:**\n&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>\n**Information:**\n&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji:>\n**Interaction:**\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
+            .addField(`**❯ Guild:**`, `**Moderation:**\n&ban <user>\n&hackban <id>\n&kick <user>\n&tidy <# to delete>\n**Information:**\n&guild\n&user <user>\n&emoji <:emoji:>\n&emojilist\n&wumbo <:emoji:>\n**Interaction:**\n&bean <user>\n&poke <user>\n&boop <user>\n&hug <user>\n&cuddle <user>\n&pat <user>\n&kiss <user>\n&slap <user>\n&stab <user>\n&nom <user>\n&ship <user 1> <user 2>`)
             .addField(`**❯ Fun:**`, `&trivia <play / categories>\n&norris\n&yomamma\n&randnum <min#> <max#>\n&yn <question>\n&ball <question>\n&rate <thing to rate>`)
             .addField(`**❯ Search:**`, `&urban <search terms>`)
             .addField(`**❯ Images:**`, `&cat\n&dog\n&space\n&meme`)
@@ -218,10 +218,8 @@ module.exports = function(passthrough) {
               .setColor("B60000")
             return msg.channel.send({embed});
           }
-          var usage = cmd.usage;
-          var description = cmd.description;
           const embed = new Discord.RichEmbed()
-            .addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${usage}\nDescription: ${description}`)
+            .addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${cmd.usage}\nDescription: ${cmd.description}\nAliases: [${cmd.aliases.join(", ")}]`)
             .setColor('36393E')
           msg.channel.send({embed});
         } else {

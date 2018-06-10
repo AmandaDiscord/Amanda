@@ -117,7 +117,7 @@ module.exports = function(passthrough) {
 			aliases: ["music", "m"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250", "223247740346302464", "264445053596991498"].includes(msg.guild.id)) {
+				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250", "223247740346302464", "264445053596991498", "110373943822540800"].includes(msg.guild.id)) {
 					var isPrem = true;
 				} else if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id)) {
 					var isPrem = true;
@@ -133,7 +133,7 @@ module.exports = function(passthrough) {
 				var args = suffix.split(" ");
 				const queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
-				if (args[0].toLowerCase() == "play") {
+				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "p") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
 					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
@@ -146,7 +146,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing playing to stop');
 					queue.songs = [];
 					return queue.connection.dispatcher.end();
-				} else if (args[0].toLowerCase() == "queue") {
+				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send(`There aren't any songs queued`);
 					let index = 0;
 					const embed = new Discord.RichEmbed()
@@ -154,12 +154,12 @@ module.exports = function(passthrough) {
 					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n')+"\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0)))
 					.setColor("36393E")
 					return msg.channel.send({embed});
-				} else if (args[0].toLowerCase() == "skip") {
+				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
 					await queue.connection.dispatcher.end();
 					return msg.react("👌").catch(() => { return });
-				} else if (args[0].toLowerCase() == "volume") {
+				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
@@ -167,7 +167,7 @@ module.exports = function(passthrough) {
 					queue.volume = Math.floor(parseInt(args[1]));
 					queue.connection.dispatcher.setVolumeLogarithmic(Math.floor(parseInt(args[1])) / 5);
 					return msg.react("👌").catch(() => { return });
-				} else if (args[0].toLowerCase() == "now") {
+				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue)})`)
@@ -178,7 +178,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
 					return msg.react("👌").catch(() => { return });
-				} else if (args[0].toLowerCase() == "playlist") {
+				} else if (args[0].toLowerCase() == "playlist" || args[0].toLowerCase() == "pl") {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
 					let playlistRow = await sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);

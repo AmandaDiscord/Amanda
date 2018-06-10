@@ -82,6 +82,7 @@ module.exports = function(passthrough) {
           const embed = new Discord.RichEmbed()
             .setImage(data[0].data.children[0].data.preview.images[0].source.url)
             .setColor('36393E')
+            .setFooter(`r/dankmemes`)
           msg.channel.send({embed});
         })
       }
