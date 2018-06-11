@@ -113,7 +113,7 @@ module.exports = function(passthrough) {
 				var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
 				if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be displayed`);
 				const embed = new Discord.RichEmbed()
-					.setDescription(emoji.url)
+					.setDescription(emoji)
 					.setColor("36393E")
 				msg.channel.send({embed});
 			}

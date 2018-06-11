@@ -1,5 +1,7 @@
 const ytdl = require("ytdl-core");
 const Discord = require("discord.js");
+const YouTube = require('simple-youtube-api');
+const youtube = new YouTube("AIzaSyCSazLCS6oulNlmWC7NtDgoNJCWEp5O0MY");
 const queues = new Map();
 const timeout = new Set();
 
@@ -139,8 +141,18 @@ module.exports = function(passthrough) {
 					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
 					if (!permissions.has("SPEAK")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to speak in that voice channel`);
 					if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a valid youtube link as an argument to the play sub-command`);
-					const video = await ytdl.getInfo(args[1]);
-					return handleVideo(video, msg, voiceChannel);
+					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+						var playlist = await youtube.getPlaylist(args[1]);
+						var videos = await playlist.getVideos();
+						for (var video of Object.values(videos)) {
+							const video2 = await youtube.getVideoByID(video.id);
+							await handleVideo(video2, msg, voiceChannel, false, true);
+						}
+						return msg.react("👌").catch(() => { return });
+					} else {
+						const video = await ytdl.getInfo(args[1]);
+						return handleVideo(video, msg, voiceChannel);
+					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing to stop');
