@@ -266,8 +266,6 @@ module.exports = function(passthrough) {
 			description: "Awards a specific user ",
 			aliases: ["award"],
 			process: async function(msg, suffix) {
-				var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
-				var [no, time] = nope[Math.floor(Math.random() * nope.length)];
 				if (["320067006521147393"].includes(msg.author.id)) {
 					if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 					var args = suffix.split(" ");
@@ -294,10 +292,7 @@ module.exports = function(passthrough) {
 					msg.channel.send({embed});
 					member.send(`**${msg.author.tag}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 				} else {
-					 msg.channel.startTyping();
-					 setTimeout(() => {
-						 msg.channel.send(no).then(() => msg.channel.stopTyping());
-					}, time)
+					utils.sendNopeMessage(msg);
 				}
 			}
 		},

@@ -6,7 +6,7 @@ const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, dbs } = passthrough;
+	const { Discord, djs, dio, utils, dbs } = passthrough;
 	let sql = dbs[1];
 
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist = false) {
@@ -88,6 +88,30 @@ module.exports = function(passthrough) {
 		});
 	}
 
+	async function bulkPlaySongs(msg, voiceChannel, videoIDs) {
+		if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
+		let progress = 0;
+		const getProgressMessage = () => `Please wait, loading songs (${progress}/${videoIDs.length})`;
+		let progressMessage = await msg.channel.send(getProgressMessage());
+		let lastEdit = 0;
+		Promise.all(videoIDs.map(videoID => {
+			return new Promise(resolve => {
+				ytdl.getInfo(videoID).then(info => {
+					progress++;
+					if (Date.now()-lastEdit > 2000 || progress == videoIDs.length) {
+						lastEdit = Date.now();
+						progressMessage.edit(getProgressMessage());
+					}
+					resolve(info);
+				});
+			});
+		})).then(videos => {
+			handleVideo(videos.shift(), msg, voiceChannel).then(() => {
+				videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
+			});
+		});
+	}
+
 	function prettySeconds(seconds) {
 		let minutes = Math.floor(seconds / 60);
 		seconds = seconds % 60;
@@ -119,19 +143,8 @@ module.exports = function(passthrough) {
 			aliases: ["music", "m"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				if(["434187284477116426", "400034967322624020", "399054909695328277", "357272833824522250", "223247740346302464", "264445053596991498", "110373943822540800"].includes(msg.guild.id)) {
-					var isPrem = true;
-				} else if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id)) {
-					var isPrem = true;
-				} else {
-					var isPrem = false;
-				}
-				if (isPrem == false) {
-					msg.channel.startTyping();
-					return setTimeout(() => {
-						msg.channel.send(`${msg.author.username}, you or this guild is not apart of the partner system. Information can be obtained by DMing PapiOphidian#8685`).then(() => msg.channel.stopTyping());
-					}, 2000)
-				}
+				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
+				if (!allowed) return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing PapiOphidian#8685`);
 				var args = suffix.split(" ");
 				const queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
@@ -144,11 +157,7 @@ module.exports = function(passthrough) {
 					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 						var playlist = await youtube.getPlaylist(args[1]);
 						var videos = await playlist.getVideos();
-						for (var video of Object.values(videos)) {
-							const video2 = await youtube.getVideoByID(video.id);
-							await handleVideo(video2, msg, voiceChannel, false, true);
-						}
-						return msg.react("👌").catch(() => { return });
+						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id));
 					} else {
 						const video = await ytdl.getInfo(args[1]);
 						return handleVideo(video, msg, voiceChannel);
@@ -283,30 +292,10 @@ module.exports = function(passthrough) {
 						from = Math.max(from, 1);
 						to = Math.min(orderedSongs.length, to);
 						if (args[3]) orderedSongs = orderedSongs.slice(from-1, to);
-						if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
-						let progress = 0;
-						const getProgressMessage = () => `Please wait, loading songs (${progress}/${orderedSongs.length})`;
-						let progressMessage = await msg.channel.send(getProgressMessage());
-						let lastEdit = 0;
 						if (action.toLowerCase() == "shuffle") {
 							orderedSongs = orderedSongs.shuffle();
 						}
-						Promise.all(orderedSongs.map(song => {
-							return new Promise(resolve => {
-								ytdl.getInfo(song.videoID).then(info => {
-									progress++;
-									if (Date.now()-lastEdit > 2000 || progress == orderedSongs.length) {
-										lastEdit = Date.now();
-										progressMessage.edit(getProgressMessage());
-									}
-									resolve(info);
-								});
-							});
-						})).then(videos => {
-							handleVideo(videos.shift(), msg, voiceChannel).then(() => {
-								videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
-							});
-						});
+						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID));
 					} else {
 						let totalLength = orderedSongs.reduce((p,c) => (p += c.length), 0);
 						let author = [];
