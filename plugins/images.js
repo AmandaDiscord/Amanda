@@ -70,10 +70,10 @@ module.exports = function(passthrough) {
 			description: "Gives a random meme",
 			aliases: ["meme"],
 			process: async function(msg, suffix) {
-				var array = ["dankmemes"];
+				var array = ["dankmemes", "meirl", "2meirl4meirl", "animemes", "sbubby", "fellowkids", "bertstrips", "hmmm", "2healthbars", "coaxedintoasnafu", "bossfight"];
 				var choice = array[Math.floor(Math.random() * array.length)];
 				request({ url: `https://api.reddit.com/r/${choice}/random`, headers: { "User-Agent": "Amanda" } }, function(err, res, body) {
-					if (err) return msg.channel.send("Error... API returned nothing");
+					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					try {
 						var data = JSON.parse(body);
 					} catch (error) {
@@ -82,7 +82,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data[0].data.children[0].data.preview.images[0].source.url)
 						.setColor('36393E')
-						.setFooter(`r/dankmemes`)
+						.setFooter(`r/${choice}`)
 					msg.channel.send({embed});
 				})
 			}
