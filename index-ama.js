@@ -38,8 +38,6 @@ djs.on('ready', () => {
 	djs.setInterval(update, 300000);
 });
 
-=======
->>>>>>> move-ready
 djs.on("disconnect", reason => {
 	console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 	setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
