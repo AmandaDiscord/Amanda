@@ -20,7 +20,6 @@ process.on("unhandledRejection", (reason) => {
 	console.error(reason);
 });
 
-<<<<<<< HEAD
 const presences = [
 	['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
 	['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
