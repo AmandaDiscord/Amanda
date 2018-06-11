@@ -25,7 +25,8 @@ const commands = {};
 function load() {
 	Promise.all([
 		sql.open("./databases/money.sqlite"),
-		sql.open("./databases/music.sqlite")
+		sql.open("./databases/music.sqlite"),
+		sql.open("./databases/misc.sqlite")
 	]).then(dbs => {
 		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, dbs, commands };
 		require("./plugins.js")(passthrough, loaded => {
@@ -40,7 +41,7 @@ stdin.on("data", async function(input) {
 	try {
 		await eval(input);
 	} catch (e) {
-			console.log(e.stack);
+		console.log(e.stack);
 	}
 });
 

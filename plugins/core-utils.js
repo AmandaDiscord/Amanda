@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const util = require("util");
 var exports = module.exports = {};
 
 /**
@@ -155,4 +156,37 @@ exports.emoji = function(emoji) {
 	if (emoji.animated) type = "gif";
 	else type = "png";
 	return { url: `https://cdn.discordapp.com/emojis/${emoji.id}.${type}`, id: emoji.id, name: emoji.name };
+}
+
+/**
+ * Convert anything to a format suitable for sending as a Discord message.
+ * @param {*} data Something to convert
+ * @returns {String} The result of the conversion
+ */
+exports.stringify = async function(data) {
+	let result;
+	if (data === undefined) result = "(undefined)";
+	else if (data === null) result = "(null)";
+	else if (typeof(data) == "function") result = "(function)";
+	else if (typeof(data) == "string") result = `"${data}"`;
+	else if (typeof(data) == "number") result = data.toString();
+	else if (data.constructor.name == "Promise")
+		result = exports.stringify(await data);
+	else if (data.constructor.name.toLowerCase().includes("error")) {
+		let errorObject = {};
+		Object.entries(data).forEach(e => {
+			errorObject[e[0]] = e[1];
+		});
+		result = "```\n"+data.stack+"``` "+(await exports.stringify(errorObject));
+	} else result = "```js\n"+util.inspect(data)+"```";
+
+	if (result.length >= 2000) {
+		if (result.startsWith("```")) {
+			result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")+"…```";
+		} else {
+			result = result.slice(0, 1998)+"…";
+		}
+	}
+
+	return result;
 }

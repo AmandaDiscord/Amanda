@@ -27,7 +27,7 @@ module.exports = function(passthrough) {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
 		djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
-	
+
 	function manageDisconnect() {
 		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 		setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
@@ -52,13 +52,11 @@ module.exports = function(passthrough) {
 			try {
 				await cmd.process(msg, suffix, isEdit);
 			} catch (e) {
-				var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>`;
-			if (Config.debug) msgTxt += `\n${e.stack}`;
-			else msgTxt += `\n${e}`;
-			const embed = new Discord.RichEmbed()
-			.setDescription(msgTxt)
-			.setColor("B60000")
-			msg.channel.send({embed});
+				var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
+				const embed = new Discord.RichEmbed()
+				.setDescription(msgTxt)
+				.setColor("B60000")
+				msg.channel.send({embed});
 			}
 		} else return;
 	};

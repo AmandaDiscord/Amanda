@@ -271,17 +271,16 @@ module.exports = function(passthrough) {
 			description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 			aliases: ["evaluate", "eval"],
 			process: async function (msg, suffix) {
-				if (["320067006521147393", "366385096053358603", "176580265294954507"].includes(msg.author.id))  {
-					let result = await eval(suffix);
-					if (!result) return result;
-					msg.channel.send(util.inspect(result).replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+				let allowed = await utils.hasPermission(msg.author, "eval");
+				if (allowed) {
+					try {
+						let result = await utils.stringify(eval(suffix));
+						msg.channel.send(result.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+					} catch (err) {
+						msg.channel.send(await utils.stringify(err));
+					}
 				} else {
-					var nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
-					var [no, time] = nope[Math.floor(Math.random() * nope.length)];
-					msg.channel.startTyping();
-					setTimeout(() => {
-						msg.channel.send(no).then(() => msg.channel.stopTyping());
-					}, time)
+					utils.sendNopeMessage(msg);
 				}
 			}
 		}

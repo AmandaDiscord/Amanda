@@ -25,7 +25,7 @@ module.exports = (passthrough, callback) => {
 				Object.assign(passthrough.utils, result);
 			}
 		} catch (e) {
-				console.log("Failed to reload module "+filename+"\n"+e.stack);
+			console.log("Failed to reload module "+filename+"\n"+e.stack);
 		}
 	}
 	fs.readdir(pluginsDir, (err, files) => {
