@@ -20,29 +20,6 @@ process.on("unhandledRejection", (reason) => {
 	console.error(reason);
 });
 
-const presences = [
-	['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
-	['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
-	['music', 'LISTENING'], ['Spootify', 'LISTENING'],
-	['with Shodan', 'STREAMING'],
-];
-const update = () => {
-	const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-	djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
-};
-
-djs.on('ready', () => {
-	console.log("Successfully logged in");
-	load();
-	update();
-	djs.setInterval(update, 300000);
-});
-
-djs.on("disconnect", reason => {
-	console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
-	setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
-});
-
 const commands = {};
 
 function load() {
@@ -50,7 +27,7 @@ function load() {
 		sql.open("./databases/money.sqlite"),
 		sql.open("./databases/music.sqlite")
 	]).then(dbs => {
-		let passthrough = { Config, Discord, djs, dio, reloadEvent, utils, dbs, commands };
+		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, dbs, commands };
 		require("./plugins.js")(passthrough, loaded => {
 			Object.assign(commands, loaded);
 		});
