@@ -80,11 +80,11 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`Error while requesting a meme\n${error}`);
 					}
 					const embed = new Discord.RichEmbed()
-						.setImage(data[0].data.children[0].data.preview.images[0].source.url)
+						.setImage(data[0].data.children[0].data.preview?data[0].data.children[0].data.preview.images[0].source.url: "https://www.funpedia.net/imgs/may11/creative-404-not-found-pages-01.jpg")
 						.setColor('36393E')
 						.setFooter(`r/${choice}`)
 					msg.channel.send({embed});
-				})
+				});
 			}
 		}
 	}
