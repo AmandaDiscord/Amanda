@@ -148,6 +148,7 @@ module.exports = function(passthrough) {
 							const video2 = await youtube.getVideoByID(video.id);
 							await handleVideo(video2, msg, voiceChannel, false, true);
 						}
+						return msg.react("👌").catch(() => { return });
 					} else {
 						const video = await ytdl.getInfo(args[1]);
 						return handleVideo(video, msg, voiceChannel);
