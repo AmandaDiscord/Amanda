@@ -2,11 +2,9 @@ module.exports = function(passthrough) {
 	let { Config, Discord, djs, dio, reloadEvent, utils, dbs, commands } = passthrough;
 	djs.on("message", manageMessage);
 	djs.on("messageUpdate", manageEdit);
-	djs.on("ready", manageReady);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
-		djs.removeListener("ready", manageReady);
 	});
 
 	function manageMessage(msg) {
