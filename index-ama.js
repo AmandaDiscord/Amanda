@@ -20,6 +20,7 @@ process.on("unhandledRejection", (reason) => {
 	console.error(reason);
 });
 
+<<<<<<< HEAD
 const presences = [
 	['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
 	['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
@@ -38,6 +39,8 @@ djs.on('ready', () => {
 	djs.setInterval(update, 300000);
 });
 
+=======
+>>>>>>> move-ready
 djs.on("disconnect", reason => {
 	console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 	setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
@@ -66,3 +69,5 @@ stdin.on("data", async function(input) {
 			console.log(e.stack);
 	}
 });
+
+load();
