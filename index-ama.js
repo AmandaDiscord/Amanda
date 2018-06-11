@@ -20,8 +20,22 @@ process.on("unhandledRejection", (reason) => {
 	console.error(reason);
 });
 
+const presences = [
+	['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire', 'PLAYING'],
+	['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
+	['music', 'LISTENING'], ['Spootify', 'LISTENING'],
+	['with Shodan', 'STREAMING'],
+];
+const update = () => {
+	const [name, type] = presences[Math.floor(Math.random() * presences.length)];
+	djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+};
+
 djs.on('ready', () => {
+	console.log("Successfully logged in");
 	load();
+	update();
+	djs.setInterval(update, 300000);
 });
 
 djs.on("disconnect", reason => {
