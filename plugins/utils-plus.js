@@ -37,18 +37,15 @@ module.exports = function(passthrough) {
  * @returns {*} A user's information in the database
  */
 utils.get = function(data) {
-	console.log(data);
 	return new Promise(function(resolve, reject) {
-		db.query("SELECT * FROM `money` WHERE `userID` =?", data, function(reason, row) {
-			if (reason) reject(reason); console.error(reason);
-			console.log(row);
+		db.query("SELECT * FROM money WHERE userID =?", data, (reason, row) => {
+			if (reason) reject(reason);
 			if (!row) {
-				db.query("INSERT INTO money (userID, coins) VALUES (?, ?)", [data, 5000], function(err, data) {
-					if (err) reject(err); console.error(err);
-					console.log(data);
+				db.query("INSERT INTO money (userID,coins) VALUES (?, ?)", [data, 5000], (err, data) => {
+					if (err) reject(err);
 					resolve(data[0]);
 				});
-			} else resolve(row[0]); console.log(row);
+			} else resolve(row[0]);
 		});
 	});
 }
