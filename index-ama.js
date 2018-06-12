@@ -4,6 +4,13 @@ const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const sql = require("sqlite");
 const events = require("events");
+const mysql = require("mysql");
+const db = mysql.createConnection({
+	host: 'localhost',
+	user: 'Amanda',
+	database: 'general'
+});
+db.connect();
 let reloadEvent = new events.EventEmitter();
 let utils = {};
 
@@ -28,7 +35,7 @@ function load() {
 		sql.open("./databases/music.sqlite"),
 		sql.open("./databases/misc.sqlite")
 	]).then(dbs => {
-		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, dbs, commands };
+		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, db, dbs, commands };
 		require("./plugins.js")(passthrough, loaded => {
 			Object.assign(commands, loaded);
 		});

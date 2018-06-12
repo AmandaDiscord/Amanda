@@ -1,12 +1,5 @@
 const Discord = require("discord.js");
 const util = require("util");
-const mysql = require("mysql");
-const db = mysql.createConnection({
-	host: 'localhost',
-	user: 'Amanda',
-	database: 'general'
-});
-db.connect();
 var exports = module.exports = {};
 
 /**
@@ -196,23 +189,4 @@ exports.stringify = async function(data) {
 	}
 
 	return result;
-}
-
-/**
- * Gets data from the MySQL database
- * @param {String} data A Discord Snowflake
- * @returns {*} A user's information in the database
- */
-exports.get = function(data) {
-	return new Promise(function(resolve, reject) {
-		db.query(`SELECT * FROM money WHERE userID =?`, [data], function(reason, row) {
-			if (reason) reject(reason);
-			if (!row) {
-				db.query(`INSERT INTRO money (userID, coins) VALUES (?, ?)`, [data, 5000], function(err, data) {
-					if (err) reject(err);
-					resolve(data);
-				})
-			} else resolve(row);
-		})
-	})
 }

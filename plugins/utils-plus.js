@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Config, Discord, client, djs, dio, reloadEvent, utils, dbs, commands } = passthrough;
+	let { Config, Discord, client, djs, dio, reloadEvent, utils, db, dbs, commands } = passthrough;
 
 	utils.hasPermission = async function() {
 		let args = [...arguments];
@@ -30,6 +30,25 @@ module.exports = function(passthrough) {
 			msg.channel.send(no);
 		}, time);
 	}
+
+	/**
+ * Gets data from the MySQL database
+ * @param {String} data A Discord Snowflake
+ * @returns {*} A user's information in the database
+ */
+utils.get = function(data) {
+	return new Promise(function(resolve, reject) {
+		db.query(`SELECT * FROM money WHERE userID ="${data}"`, function(reason, row) {
+			if (reason) reject(reason);
+			if (!row) {
+				db.query(`INSERT INTRO money (userID, coins) VALUES ("${data}", 5000)`, function(err, data) {
+					if (err) reject(err);
+					resolve(data);
+				});
+			} else resolve(row);
+		});
+	});
+}
 
 	return {};
 }

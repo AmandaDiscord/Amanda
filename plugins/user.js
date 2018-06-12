@@ -3,7 +3,7 @@ const util = require("util");
 const fs = require("fs");
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, dbs, utils } = passthrough;
+	const { Discord, djs, dio, db, dbs, utils } = passthrough;
 	let sql = dbs[0];
 	return {
 		"profile": {
