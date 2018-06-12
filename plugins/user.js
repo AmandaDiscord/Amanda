@@ -1,6 +1,14 @@
 const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
+const mysql = require("mysql");
+const db = mysql.createConnection({
+	host: 'localhost',
+	user: 'Amanda',
+	database: 'general'
+});
+
+db.connect();
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs, utils } = passthrough;
@@ -43,6 +51,19 @@ module.exports = function(passthrough) {
 					await msg.channel.send({files: [buffer]});
 					msg.channel.stopTyping();
 				});
+			}
+		},
+
+		"mydata": {
+			usage: "",
+			description: "A command to test MySQL",
+			aliases: ["mydata"],
+			process: async function(msg, suffix) {
+				db.query(`SELECT * FROM money WHERE userID =?`, [msg.author.id], function(err, row) {
+					const embed = new Discord.RichEmbed()
+						.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
+					msg.channel.send({embed});
+				})
 			}
 		}
 	}
