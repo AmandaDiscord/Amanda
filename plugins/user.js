@@ -59,7 +59,8 @@ module.exports = function(passthrough) {
 			description: "A command to test MySQL",
 			aliases: ["mydata"],
 			process: async function(msg, suffix) {
-				db.query(`SELECT * FROM money WHERE userID =?`, [msg.author.id], function(err, row) {
+				db.query(`SELECT * FROM money WHERE userID =?`, [msg.author.id], function(reason, row) {
+					if (reason) msg.channel.send(reason);
 					const embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
 					msg.channel.send({embed});
