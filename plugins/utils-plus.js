@@ -31,27 +31,25 @@ module.exports = function(passthrough) {
 		}, time);
 	}
 
-/**
- * Gets data from the MySQL database
- * @param {String} data A Discord Snowflake
- * @returns {*} A user's information in the database
- */
-utils.get = function(data) {
-	return new Promise(function(resolve, reject) {
-		db.query("SELECT * FROM money WHERE userID =?", data, (reason, row) => {
-			if (reason) reject(reason);
-			if (!row) {
-				db.query("INSERT INTO money (userID,coins) VALUES (?, ?)", [data, 5000], (err, data) => {
-					if (err) reject(err);
-					db.query("SELECT * FROM money WHERE userID =?", data, (error, newrow) => {
-						if (error) reject(error);
-						resolve(newrow[0]);
+	/**
+	 * Gets data from the MySQL database
+	 * @param {String} data A Discord Snowflake
+	 * @returns {*} A user's information in the database
+	 */
+	utils.get = function(data) {
+		return new Promise(function(resolve, reject) {
+			db.query("SELECT * FROM money WHERE userID =?", data, (reason, rows) => {
+				if (reason) reject(reason);
+				let row = rows[0];
+				if (!row) {
+					db.query("INSERT INTO money (userID,coins) VALUES (?, ?)", [data, 5000], err => {
+						if (err) reject(err);
+						utils.get(data).then(resolve);
 					});
-				});
-			} else resolve(row[0]);
+				} else resolve(row);
+			});
 		});
-	});
-}
+	}
 
 	return {};
 }

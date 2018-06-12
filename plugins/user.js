@@ -51,10 +51,13 @@ module.exports = function(passthrough) {
 			description: "A command to test MySQL",
 			aliases: ["mydata"],
 			process: async function(msg, suffix) {
-				var row = await utils.get(msg.author.id).catch(why => msg.channel.send(why));
-				const embed = new Discord.RichEmbed()
+				utils.get(msg.author.id)
+				.catch(why => msg.channel.send(why))
+				.then(row => {
+					const embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
-				msg.channel.send({embed});
+					msg.channel.send({embed});
+				})
 			}
 		}
 	}
