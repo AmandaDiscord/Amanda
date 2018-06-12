@@ -1,15 +1,6 @@
 const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
-const mysql = require("mysql");
-const db = mysql.createConnection({
-	host: 'localhost',
-	user: 'Amanda',
-	database: 'general'
-});
-
-db.connect();
-const database = util.promisify(db.query);
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs, utils } = passthrough;
@@ -60,12 +51,7 @@ module.exports = function(passthrough) {
 			description: "A command to test MySQL",
 			aliases: ["mydata"],
 			process: async function(msg, suffix) {
-				var row = await database(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-					if (!row) {
-						await database(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [msg.author.id, 5000]);
-						await msg.channel.send(`Created user account`);
-						var row = await database(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-					}
+				var row = await utils.get(msg.author.id);
 					const embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
 					msg.channel.send({embed});
