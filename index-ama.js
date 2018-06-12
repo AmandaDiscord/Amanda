@@ -4,7 +4,7 @@ const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const sql = require("sqlite");
 const events = require("events");
-const mysql = require("mysql2");
+const mysql = require("mysql");
 const db = mysql.createConnection({
 	host: 'localhost',
 	user: 'Amanda',
