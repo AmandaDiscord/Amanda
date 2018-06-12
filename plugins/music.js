@@ -55,52 +55,60 @@ module.exports = function(passthrough) {
 			queues.delete(guild.id);
 			return msg.channel.send(`We've run out of songs`)
 		}
-		const dispatcher = queue.connection.playStream(ytdl(song.url))
-		.on('end', reason => {
-			queue.songs.shift();
-			play(msg, guild, queue.songs[0]);
-		})
-		.on('error', error => console.error(error));
-		dispatcher.setVolumeLogarithmic(queue.volume / 5);
-		queue.startedAt = Date.now();
-
-		function getNPEmbed() {
-			return new Discord.RichEmbed().setColor("36393E").setDescription(`Now playing: **${song.title}** (${songProgress(queue)})`);
-		}
-		msg.channel.send(getNPEmbed()).then(npmsg => {
-			setTimeout(() => {
-				if (queue.songs[0]) {
-					function updateProgress() {
-						npmsg.edit(getNPEmbed()).catch(() => { return });
-					}
-					updateProgress();
-					let updateProgressInterval = setInterval(updateProgress, 5000);
-					let finalUpdateTimeout = setTimeout(() => {
-						clearInterval(updateProgressInterval);
+		const dispatcher = queue.connection.playStream(ytdl(song.url));
+		dispatcher.on("start", () => {
+			function getNPEmbed() {
+				return new Discord.RichEmbed().setColor("36393E").setDescription(`Now playing: **${song.title}** (${songProgress(dispatcher, queue, !queue.connection.dispatcher)})`);
+			}
+			msg.channel.send(getNPEmbed()).then(npmsg => {
+				setTimeout(() => {
+					if (queue.songs[0]) {
+						function updateProgress() {
+							npmsg.edit(getNPEmbed()).catch(() => { return });
+						}
 						updateProgress();
-					}, (queue.songs[0].video.length_seconds-(Date.now()-queue.startedAt)/1000)*1000);
-					dispatcher.once("end", () => {
-						clearInterval(updateProgressInterval);
-						clearTimeout(finalUpdateTimeout);
-					});
-				}
-			}, 5000-(Date.now()-queue.startedAt)%5000);
+						let updateProgressInterval = setInterval(() => {
+							updateProgress();
+						}, 5000);
+						dispatcher.once("end", () => {
+							clearInterval(updateProgressInterval);
+							updateProgress();
+							queue.songs.shift();
+							play(msg, guild, queue.songs[0]);
+						});
+					}
+				}, 5000-dispatcher.time%5000);
+			});
 		});
+		dispatcher.on('error', error => console.error(error));
+		dispatcher.setVolumeLogarithmic(queue.volume / 5);
 	}
 
-	async function bulkPlaySongs(msg, voiceChannel, videoIDs) {
+	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
+		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
+		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
+		from = Math.max(from, 1);
+		to = Math.min(videoIDs.length, to);
+		if (startString) videoIDs = videoIDs.slice(from-1, to);
+		if (shuffle) {
+			videoIDs = videoIDs.shuffle();
+		}
 		if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 		let progress = 0;
 		const getProgressMessage = () => `Please wait, loading songs (${progress}/${videoIDs.length})`;
-		let progressMessage = await msg.channel.send(getProgressMessage());
 		let lastEdit = 0;
+		let editInProgress = false;
+		let progressMessage = await msg.channel.send(getProgressMessage());
 		Promise.all(videoIDs.map(videoID => {
 			return new Promise(resolve => {
 				ytdl.getInfo(videoID).then(info => {
 					progress++;
-					if (Date.now()-lastEdit > 2000 || progress == videoIDs.length) {
+					if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == videoIDs.length) {
 						lastEdit = Date.now();
-						progressMessage.edit(getProgressMessage());
+						editInProgress = true;
+						progressMessage.edit(getProgressMessage()).then(() => {;
+							editInProgress = false;
+						});
 					}
 					resolve(info);
 				});
@@ -128,11 +136,11 @@ module.exports = function(passthrough) {
 		return output.join(":");
 	}
 
-	function songProgress(queue) {
+	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
 		let max = queue.songs[0].video.length_seconds;
-		let current = Math.floor((Date.now()-queue.startedAt)/1000);
-		if (current > max) current = max;
+		let current = Math.floor(dispatcher.time/1000);
+		if (current > max || done) current = max;
 		return prettySeconds(current)+"/"+prettySeconds(max);
 	}
 
@@ -146,7 +154,7 @@ module.exports = function(passthrough) {
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
 				if (!allowed) return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing PapiOphidian#8685`);
 				var args = suffix.split(" ");
-				const queue = queues.get(msg.guild.id);
+				let queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "p") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
@@ -155,9 +163,9 @@ module.exports = function(passthrough) {
 					if (!permissions.has("SPEAK")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to speak in that voice channel`);
 					if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a valid youtube link as an argument to the play sub-command`);
 					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-						var playlist = await youtube.getPlaylist(args[1]);
-						var videos = await playlist.getVideos();
-						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id));
+						let playlist = await youtube.getPlaylist(args[1]);
+						let videos = await playlist.getVideos();
+						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
 					} else {
 						const video = await ytdl.getInfo(args[1]);
 						return handleVideo(video, msg, voiceChannel);
@@ -168,11 +176,22 @@ module.exports = function(passthrough) {
 					queue.songs = [];
 					return queue.connection.dispatcher.end();
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
-					if (!queue) return msg.channel.send(`There aren't any songs queued`);
-					let index = 0;
+					if (!queue) {
+						//return msg.channel.send(`There aren't any songs queued`);
+						queue = {songs: Array(100).fill().map((_,i) => {
+							return {title: "BURRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRP", video: {length_seconds: Math.floor(Math.random()*600).toString()}};
+						})};
+					}
+					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0));
+					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n');
+					if (body.length > 2000) {
+						let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
+						let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
+						body = first+"\n…\n"+last;
+					}
 					const embed = new Discord.RichEmbed()
 					.setAuthor(`Queue for ${msg.guild.name}`)
-					.setDescription(queue.songs.map(songss => `${++index}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n')+"\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0)))
+					.setDescription(body+totalLength)
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
@@ -194,7 +213,7 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
-					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue)})`)
+					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue.connection.dispatcher, queue)})`)
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "shuffle") {
@@ -287,15 +306,7 @@ module.exports = function(passthrough) {
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
-						let from = args[3] == "-" ? 1 : (parseInt(args[3]) || 1);
-						let to = args[4] == "-" ? orderedSongs.length : (parseInt(args[4]) || from || orderedSongs.length);
-						from = Math.max(from, 1);
-						to = Math.min(orderedSongs.length, to);
-						if (args[3]) orderedSongs = orderedSongs.slice(from-1, to);
-						if (action.toLowerCase() == "shuffle") {
-							orderedSongs = orderedSongs.shuffle();
-						}
-						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID));
+						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase() == "shuffle");
 					} else {
 						let totalLength = orderedSongs.reduce((p,c) => (p += c.length), 0);
 						let author = [];
