@@ -9,7 +9,7 @@ const db = mysql.createConnection({
 });
 
 db.connect();
-sql = util.promisify(db.query);
+const sql = util.promisify(db.query);
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs, utils } = passthrough;
