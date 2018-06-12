@@ -16,6 +16,7 @@
     "ffmpeg-binaries": "^3.2.2-3",
     "https": "^1.0.0",
     "libsodium-wrappers": "^0.7.3",
+    "mysql": "^2.15.0",
     "node-opus": "^0.2.9",
     "opusscript": "^0.0.6",
     "request": "^2.86.0",
