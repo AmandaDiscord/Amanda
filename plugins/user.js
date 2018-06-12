@@ -9,7 +9,7 @@ const db = mysql.createConnection({
 });
 
 db.connect();
-const sql = util.promisify(db.query);
+const database = util.promisify(db.query);
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, dbs, utils } = passthrough;
@@ -60,11 +60,11 @@ module.exports = function(passthrough) {
 			description: "A command to test MySQL",
 			aliases: ["mydata"],
 			process: async function(msg, suffix) {
-				var row = await sql(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				var row = await database(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 					if (!row) {
-						await sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [msg.author.id, 5000]);
+						await database(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [msg.author.id, 5000]);
 						await msg.channel.send(`Created user account`);
-						var row = await sql(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+						var row = await database(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 					}
 					const embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
