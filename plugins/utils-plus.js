@@ -40,12 +40,8 @@ utils.get = function(data) {
 	return new Promise(function(resolve, reject) {
 		db.query("SELECT * FROM `money` WHERE `userID` =?", data, function(reason, row) {
 			if (reason) reject(reason);
-			if (!row) {
-				db.query("INSERT INTO `money` (userID, coins) VALUES (?, ?)", [data, 5000], function(err, data) {
-					if (err) reject(err);
-					resolve(data[0]);
-				});
-			} else resolve(row[0]);
+			if (!row) resolve({});
+			else resolve(row[0]);
 		});
 	});
 }
