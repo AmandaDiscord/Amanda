@@ -43,7 +43,7 @@ utils.get = function(data) {
 			if (!row) {
 				db.query("INSERT INTO money (userID, coins) VALUES (?, ?)", [data, 5000], function(err, data) {
 					if (err) reject(err);
-					resolve(data);
+					resolve(data[0]);
 				});
 			} else resolve(row[0]);
 		});
