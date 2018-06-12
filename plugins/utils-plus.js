@@ -31,7 +31,7 @@ module.exports = function(passthrough) {
 		}, time);
 	}
 
-	/**
+/**
  * Gets data from the MySQL database
  * @param {String} data A Discord Snowflake
  * @returns {*} A user's information in the database

@@ -6,9 +6,10 @@ const sql = require("sqlite");
 const events = require("events");
 const mysql = require("mysql");
 const db = mysql.createConnection({
-	host: 'localhost',
-	user: 'Amanda',
-	database: 'general'
+	host: 'cadence.gq',
+	user: 'amanda',
+	password: "password",
+	database: 'money'
 });
 db.connect();
 let reloadEvent = new events.EventEmitter();
