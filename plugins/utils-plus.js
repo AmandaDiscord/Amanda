@@ -43,7 +43,10 @@ utils.get = function(data) {
 			if (!row) {
 				db.query("INSERT INTO money (userID,coins) VALUES (?, ?)", [data, 5000], (err, data) => {
 					if (err) reject(err);
-					resolve(data[0]);
+					db.query("SELECT * FROM money WHERE userID =?", data, (error, newrow) => {
+						if (error) reject(error);
+						resolve(newrow[0]);
+					});
 				});
 			} else resolve(row[0]);
 		});
