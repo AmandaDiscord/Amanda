@@ -52,9 +52,9 @@ module.exports = function(passthrough) {
 			aliases: ["mydata"],
 			process: async function(msg, suffix) {
 				var row = await utils.get(msg.author.id);
-					const embed = new Discord.RichEmbed()
-						.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
-					msg.channel.send({embed});
+				const embed = new Discord.RichEmbed()
+					.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
+				msg.channel.send({embed});
 			}
 		}
 	}
