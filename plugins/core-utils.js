@@ -170,9 +170,9 @@ exports.stringify = async function(data) {
 	else if (typeof(data) == "function") result = "(function)";
 	else if (typeof(data) == "string") result = `"${data}"`;
 	else if (typeof(data) == "number") result = data.toString();
-	else if (data.constructor.name == "Promise")
+	else if (data.constructor && data.constructor.name == "Promise")
 		result = exports.stringify(await data);
-	else if (data.constructor.name.toLowerCase().includes("error")) {
+	else if (data.constructor && data.constructor.name.toLowerCase().includes("error")) {
 		let errorObject = {};
 		Object.entries(data).forEach(e => {
 			errorObject[e[0]] = e[1];
