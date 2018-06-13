@@ -281,6 +281,7 @@ module.exports = function(passthrough) {
 						]);
 						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 					} else if (action.toLowerCase() == "move") {
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
 						let from = parseInt(args[3]);
 						let to = parseInt(args[4]);
 						if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
@@ -302,17 +303,65 @@ module.exports = function(passthrough) {
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase() == "shuffle");
+					} else if (action.toLowerCase() == "import") {
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+							let playlist = await youtube.getPlaylist(args[3]);
+							let videos = await playlist.getVideos();
+							let promises = [];
+							videos = videos.filter((video, i) => {
+								if (orderedSongs.some(row => row.videoID == video.id)) return false;
+								else if (videos.slice(0, i).some(v => v.id == video.id)) return false;
+								else return true;
+							});
+							let editmsg = await msg.channel.send("Importing playlist. This could take a moment...\n(Fetching song info)");
+							videos = await Promise.all(videos.map(video => ytdl.getInfo(video.id)));
+							if (!videos.length) return editmsg.edit(`${msg.author.username}, all videos in that playlist have already been imported.`);
+							await editmsg.edit("Importing playlist. This could take a moment...\n(Updating database)");
+							for (let i = 0; i < videos.length; i++) {
+								let video = videos[i];
+								promises.push(sql.run(
+									"INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)",
+									[video.video_id, video.title, video.length_seconds, video.video_id]
+								));
+								if (i != videos.length-1) {
+									let nextVideo = videos[i+1];
+									promises.push(sql.run(
+										"INSERT INTO PlaylistSongs VALUES (?, ?, ?)",
+										[playlistRow.playlistID, video.video_id, nextVideo.video_id]
+									));
+								} else {
+									promises.push(sql.run(
+										"INSERT INTO PlaylistSongs VALUES (?, ?, NULL)",
+										[playlistRow.playlistID, video.video_id]
+									));
+								}
+							}
+							promises.push(sql.run(
+								"UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?",
+								[videos[0].video_id, playlistRow.playlistID, videos.slice(-1)[0].video_id]
+							));
+							await Promise.all(promises);
+							editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);
+						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 					} else {
-						let totalLength = orderedSongs.reduce((p,c) => (p += c.length), 0);
 						let author = [];
 						if (djs.users.get(playlistRow.author)) {
 							author.push(`${djs.users.get(playlistRow.author).username} — ${playlistName}`, `https://cdn.discordapp.com/avatars/${djs.users.get(playlistRow.author).id}/${djs.users.get(playlistRow.author).avatar}.png?size=32`);
 						} else {
 							author.push(playlistName);
 						}
+						let totalLength = "\nTotal length: "+prettySeconds(orderedSongs.reduce((p,c) => (p+parseInt(c.length)), 0));
+						let body = orderedSongs.map((songss, index) => `${index+1}. **${songss.name}** (${prettySeconds(songss.length)})`).join('\n');
+						if (body.length > 2000) {
+							let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
+							let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
+							body = first+"\n…\n"+last;
+						}
 						let embed = new Discord.RichEmbed()
 						.setAuthor(author[0], author[1])
-						.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength))
+						//.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength))
+						.setDescription(body)
 						.setColor("36393E")
 						msg.channel.send(embed);
 					}
