@@ -215,7 +215,8 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
-					.setDescription(`Now playing: **${queue.songs[0].title}** (${songProgress(queue.connection.dispatcher, queue)})`)
+					.setDescription(`Now playing: **${queue.songs[0].title}**`)
+					.addField("­", songProgress(queue.connection.dispatcher, queue))
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "shuffle") {
@@ -320,6 +321,8 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`);
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
+					} else if (action.toLowerCase() == "search" || action.toLowerCase() == "find") {
+
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase() == "shuffle");
 					} else if (action.toLowerCase() == "import") {
