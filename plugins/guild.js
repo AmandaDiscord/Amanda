@@ -6,7 +6,6 @@ module.exports = function(passthrough) {
 			description: "Gets the user info about yourself or another user if provided.",
 			aliases: ["user"],
 			process: function(msg, suffix) {
-				// Get user or member
 				let user, member;
 				if (msg.channel.type == "text") {
 					member = utils.findMember(msg, suffix, true);
@@ -15,32 +14,23 @@ module.exports = function(passthrough) {
 					user = utils.findUser(msg, djs, suffix, true);
 				}
 				if (!user) return msg.channel.send(`Couldn't find that user`);
-				// Create embed
 				let embed = new Discord.RichEmbed().setColor("36393E");
-				// User ID
 				embed.addField("User ID:", user.id);
-				// Account created
 				let userCreatedTime = user.createdAt.toUTCString();
 				embed.addField("Account created at:", userCreatedTime);
-				// Joined guild
 				if (member) {
 					let guildJoinedTime = member.joinedAt.toUTCString();
 					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
 				}
-				// Presence (status)
 				let status = utils.getPresenceEmoji(user.presence.status);
-				// Presence (game)
 				let game = "No activity set";
 				if (user.presence.game && user.presence.game.streaming) {
 					 game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
 				} else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
 				if (user.bot) status = "<:bot:412413027565174787>";
-				// Embed thumbnail
-				let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
-				embed.setThumbnail(pfpurl);
-				embed.addField("Avatar URL:", `[Click Here](${pfpurl})`);
-				// Embed title and description
+				embed.setThumbnail(user.displayAvatarURL);
+				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
 				embed.setTitle(`${user.tag} ${status}`);
 				embed.setDescription(game);
 				msg.channel.send({embed});
@@ -60,9 +50,8 @@ module.exports = function(passthrough) {
 					user = utils.findUser(msg, djs, suffix, true);
 				}
 				if (!user) return msg.channel.send(`Couldn't find that user`);
-				let pfpurl = user.avatar ? user.avatarURL : user.defaultAvatarURL;
 				const embed = new Discord.RichEmbed()
-					.setImage(pfpurl)
+					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
 				msg.channel.send({embed});
 			}
