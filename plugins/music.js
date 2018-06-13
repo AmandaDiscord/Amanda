@@ -216,6 +216,18 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
 					return msg.react("👌").catch(() => { return });
+				} else if (args[0].toLowerCase() == "pause") {
+					if (queue && queue.playing) {
+						queue.playing = false;
+						queue.connection.dispatcher.pause();
+						return msg.react("👌").catch(() => { return });
+					} else return msg.channel.send(`There is nothing playing to pause`);
+				} else if (args[0].toLowerCase() == "resume") {
+					if (serverQueue && !serverQueue.playing) {
+						queue.playing = true;
+						queue.connection.dispatcher.resume();
+						return msg.react("👌").catch(() => { return });
+					} else return msg.channel.send(`There is nothing in the queue to resume`);
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
