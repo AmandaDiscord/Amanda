@@ -10,7 +10,7 @@ module.exports = function(passthrough) {
 	return {
 		"uptime": {
 			usage: "",
-			description: "Returns the amount of time since Amanda has started",
+			description: "Returns the amount of time since the process has started",
 			aliases: ["uptime"],
 			process: function(msg, suffix) {
 				const embed = new Discord.RichEmbed()
@@ -24,7 +24,7 @@ module.exports = function(passthrough) {
 
 		"stats": {
 			usage: "",
-			description: "Displays detailed statistics of Amanda",
+			description: "Displays detailed statistics",
 			aliases: ["stats"],
 			process: function(msg, suffix) {
 				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
@@ -45,7 +45,7 @@ module.exports = function(passthrough) {
 
 		"ping": {
 			usage: "",
-			description: "Tests Amanda's network latency.",
+			description: "Gets latency to Discord",
 			aliases: ["ping", "pong"],
 			process: async function (msg, suffix) {
 				var array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
