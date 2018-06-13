@@ -176,12 +176,7 @@ module.exports = function(passthrough) {
 					queue.songs = [];
 					return queue.connection.dispatcher.end();
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
-					if (!queue) {
-						//return msg.channel.send(`There aren't any songs queued`);
-						queue = {songs: Array(100).fill().map((_,i) => {
-							return {title: "BURRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRP", video: {length_seconds: Math.floor(Math.random()*600).toString()}};
-						})};
-					}
+					if (!queue) return msg.channel.send(`There aren't any songs queued`);
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0));
 					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n');
 					if (body.length > 2000) {
