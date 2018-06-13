@@ -58,7 +58,9 @@ module.exports = function(passthrough) {
 		const dispatcher = queue.connection.playStream(ytdl(song.url));
 		dispatcher.on("start", () => {
 			function getNPEmbed() {
-				return new Discord.RichEmbed().setColor("36393E").setDescription(`Now playing: **${song.title}** (${songProgress(dispatcher, queue, !queue.connection.dispatcher)})`);
+				return new Discord.RichEmbed().setColor("36393E")
+				.setDescription(`Now playing: **${song.title}**`)
+				.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
 			}
 			msg.channel.send(getNPEmbed()).then(npmsg => {
 				setTimeout(() => {
@@ -137,11 +139,16 @@ module.exports = function(passthrough) {
 	}
 
 	function songProgress(dispatcher, queue, done) {
+		/*if (!queue.songs.length) return "0:00/0:00";
+		let max = queue.songs[0].video.length_seconds;
+		let current = Math.floor(dispatcher.time/1000);
+		if (current > max || done) current = max;
+		return prettySeconds(current)+"/"+prettySeconds(max);*/
 		if (!queue.songs.length) return "0:00/0:00";
 		let max = queue.songs[0].video.length_seconds;
 		let current = Math.floor(dispatcher.time/1000);
 		if (current > max || done) current = max;
-		return prettySeconds(current)+"/"+prettySeconds(max);
+		return `\`[ ${prettySeconds(current)} ${utils.progressBar(35, current, max)} ${prettySeconds(max)} ]\``;
 	}
 
 	return {

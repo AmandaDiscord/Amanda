@@ -190,3 +190,12 @@ exports.stringify = async function(data) {
 
 	return result;
 }
+
+exports.progressBar = function(length, value, max) {
+	let result = "";
+	for (let i = 1; i <= length; i++) {
+		if (value/max*length >= i) result += "=";
+		else result += " ";
+	}
+	return result;
+}
