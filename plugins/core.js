@@ -28,12 +28,12 @@ module.exports = function(passthrough) {
 			aliases: ["stats"],
 			process: function(msg, suffix) {
 				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
-				let status = utils.getPresenceEmoji(user.presence.status);
+				let status = utils.getPresenceEmoji(djs.user.presence.status);
 				let game = "No activity set";
 				if (djs.user.presence.game && djs.user.presence.game.streaming) {
 					 game = `Streaming [${djs.user.presence.game.name}](${djs.user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
-				} else if (djs.user.presence.game) game = utils.getPresencePrefix(djs.user.presence.game.type)+" **"+djsuser.presence.game.name+"**";
+				} else if (djs.user.presence.game) game = utils.getPresencePrefix(djs.user.presence.game.type)+" **"+djs.user.presence.game.name+"**";
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Statistics", djs.user.displayAvatarURL)
 					.setTitle(`${djs.user.tag} ${status}`)
