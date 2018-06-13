@@ -174,7 +174,7 @@ module.exports = function(passthrough) {
 				} else if (suffix.toLowerCase() == "music") {
 					const embed = new Discord.RichEmbed()
 						.setAuthor(`&music: command help`)
-						.addField("play", "Play a song or add it to the queue. Use any YouTube url as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs`")
+						.addField("play", "Play a song or add it to the queue. Use any YouTube video or playlist url as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs`")
 						.addField("now", "Show the current song.\n`&music now`")
 						.addField("queue", "Show the current queue.\n`&music queue`")
 						.addField("shuffle", "Shuffle the queue. Does not affect the current song.\n`&music queue`")
@@ -209,6 +209,8 @@ module.exports = function(passthrough) {
 							"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. "+
 							"If you don't understand what this means, try it out yourself.\n"+
 							"`&music playlist xi move 12 13`")
+						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
+							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.setColor('36393E')
 					await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
