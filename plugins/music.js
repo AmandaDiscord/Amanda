@@ -223,7 +223,7 @@ module.exports = function(passthrough) {
 						return msg.react("👌").catch(() => { return });
 					} else return msg.channel.send(`There is nothing playing to pause`);
 				} else if (args[0].toLowerCase() == "resume") {
-					if (serverQueue && !serverQueue.playing) {
+					if (queue && !queue.playing) {
 						queue.playing = true;
 						queue.connection.dispatcher.resume();
 						return msg.react("👌").catch(() => { return });
