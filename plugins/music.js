@@ -214,6 +214,7 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+					if (!queue.connection || !queue.connection.dispatcher) return msg.channel.send(`${msg.author.username} You cannot skip a song before the next has started! Wait a moment and try again."`);
 					if (queue.connection.dispatcher.time > 50) {
 						queue.connection.dispatcher.end();
 						return msg.react("👌").catch(() => { return });
