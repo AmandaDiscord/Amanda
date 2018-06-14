@@ -170,6 +170,7 @@ module.exports = function(passthrough) {
 					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
 					if (!permissions.has("SPEAK")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to speak in that voice channel`);
 					if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a valid youtube link as an argument to the play sub-command`);
+					args[1] = args[1].replace(/^<|>$/g, "");
 					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 						let playlist = await youtube.getPlaylist(args[1]);
 						let videos = await playlist.getVideos();
