@@ -5,15 +5,13 @@ let reactionMenus = {};
 module.exports = function(passthrough) {
 	let { djs, reloadEvent, utils } = passthrough;
 
-	utils.reactionMenu = function(msg, actions) {
-		return new Promise(function(resolve) {
-			reactionMenus[msg.id] = {
-				actions: actions
-			}
-			actions.forEach(a => {
-				resolve(msg.react(a.emoji));
-			});
-		})
+	utils.reactionMenu = async function(msg, actions) {
+		reactionMenus[msg.id] = {
+			actions: actions
+		}
+		for (let a of actions) {
+			await msg.react(a.emoji);
+		}
 	}
 
 	djs.on("messageReactionAdd", reactionEvent);
