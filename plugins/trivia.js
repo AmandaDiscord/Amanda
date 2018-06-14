@@ -1,11 +1,7 @@
 var games = {};
 const letters = ["a", "b", "c", "d"];
-const Discord = require("discord.js");
 const https = require("https");
 const entities = require("entities");
-const events = require("events");
-const pj = require("path").join;
-let fakeReloadEvent = new events.EventEmitter();
 
 function newGame() {
 	return {
@@ -17,15 +13,13 @@ function newGame() {
 }
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, reloadEvent, dbs } = passthrough;
+	const { Discord, djs, dio, utils, reloadEvent, dbs } = passthrough;
 	let sql = dbs[0];
 
-	let cf = require(pj(__dirname, "..", "common.js"));
-	let bf = require(pj(__dirname, "..", "commonbot.js"))({bot: dio, cf, reloadEvent: fakeReloadEvent});
-
-	function doQuestion(msg) {
+	function doQuestion(msg, authorName) {
 		var id = msg.channel.id;
-		if (games[id]) return msg.channel.send(`${msg.author.username}, there's a game already in progress for this channel`);
+		if (!authorName) authorName = msg.author.username;
+		if (games[id]) return msg.channel.send(`${authorName}, there's a game already in progress for this channel`);
 		var game = newGame();
 		games[id] = game;
 		require("request")("https://opentdb.com/api.php?amount=1", function(err, res, body) {
@@ -89,7 +83,7 @@ module.exports = function(passthrough) {
 							var correctUsersStr = `**Correct Answers:**\n`;
 							let correct = Object.keys(game.answers).filter(k => game.correctID == game.answers[k]);
 							if (correct.length == 0) {
-								correctUsersStr = "Nobody got the answer right!";
+								correctUsersStr = "Nobody got the answer right.";
 							} else {
 								if (correct.length > 6) {
 									correct.forEach(async function(item, index, array) {
@@ -113,7 +107,7 @@ module.exports = function(passthrough) {
 										}
 										await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
 										var user = await djs.users.get(item)
-										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
+										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please ena	le DMs so I can tell you your earnings`));
 									})
 								}
 							}
@@ -122,9 +116,9 @@ module.exports = function(passthrough) {
 								.setColor(color)
 								.setFooter(`Click the reaction for another round.`)
 							msg.channel.send(resultembed).then(msg => {
-								bf.reactionMenu(msg.channel.id, msg.id, [
-									{emoji: bf.buttons["redo"], remove: "all", ignore: "total", actionType: "js", actionData: () => {
-										doQuestion(msg);
+								utils.reactionMenu(msg, [
+									{emoji: djs.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+										doQuestion(msg, user.username);
 									}}
 								]);
 							});
@@ -148,7 +142,6 @@ module.exports = function(passthrough) {
 	}
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("message", messageHandler);
-		fakeReloadEvent.emit(pj(__dirname, "..", "commonbot.js"));
 	});
 	return {
 		"trivia": {
