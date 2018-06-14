@@ -103,7 +103,7 @@ module.exports = function(passthrough) {
 		let editInProgress = false;
 		let progressMessage = await msg.channel.send(getProgressMessage());
 		Promise.all(videoIDs.map(videoID => {
-			return new Promise(resolve => {
+			return new Promise((resolve, reject) => {
 				ytdl.getInfo(videoID).then(info => {
 					progress++;
 					if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == videoIDs.length) {
@@ -114,13 +114,28 @@ module.exports = function(passthrough) {
 						});
 					}
 					resolve(info);
-				});
+				}).catch(reject);
 			});
 		})).then(videos => {
+			videos = videos.filter(v => v);
 			handleVideo(videos.shift(), msg, voiceChannel).then(() => {
 				videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
 			});
+		}).catch(reason => {
+			manageYtdlGetInfoErrors(msg, reason);
 		});
+	}
+
+	function manageYtdlGetInfoErrors(msg, reason) {
+		if (reason.message && reason.message.startsWith("No video id found:")) {
+			msg.channel.send(`${msg.author.username}, that is not a valid YouTube video.`);
+		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
+			msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`)
+		} else if (reason.message && reason.message.startsWith("The uploader has not made this video available in your country")) {
+			msg.channel.send(`${msg.author.username}, that video is not available.`);
+		} else {
+			utils.stringify(reason).then(result => msg.channel.send(result));
+		}
 	}
 
 	function prettySeconds(seconds) {
@@ -176,8 +191,11 @@ module.exports = function(passthrough) {
 						let videos = await playlist.getVideos();
 						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
 					} else {
-						const video = await ytdl.getInfo(args[1]);
-						return handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+						ytdl.getInfo(args[1]).then(video => {
+							handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+						}).catch(reason => {
+							manageYtdlGetInfoErrors(msg, reason);
+						});
 					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
