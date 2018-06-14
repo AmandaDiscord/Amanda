@@ -155,11 +155,6 @@ module.exports = function(passthrough) {
 	}
 
 	function songProgress(dispatcher, queue, done) {
-		/*if (!queue.songs.length) return "0:00/0:00";
-		let max = queue.songs[0].video.length_seconds;
-		let current = Math.floor(dispatcher.time/1000);
-		if (current > max || done) current = max;
-		return prettySeconds(current)+"/"+prettySeconds(max);*/
 		if (!queue.songs.length) return "0:00/0:00";
 		let max = queue.songs[0].video.length_seconds;
 		let current = Math.floor(dispatcher.time/1000);
@@ -219,8 +214,15 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
-					await queue.connection.dispatcher.end();
-					return msg.react("👌").catch(() => { return });
+					if (queue.connection.dispatcher.time > 50) {
+						queue.connection.dispatcher.end();
+						return msg.react("👌").catch(() => { return });
+					} else {
+						queue.connection.dispatcher.once("start", () => {
+							queue.connection.dispatcher.end();
+							return msg.react("👌").catch(() => { return });
+						})
+					}
 				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
