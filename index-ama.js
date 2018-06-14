@@ -24,10 +24,6 @@ const djs = client.djsClient();
 
 console.log(`Starting`);
 
-process.on("unhandledRejection", (reason) => {
-	console.error(reason);
-});
-
 const commands = {};
 
 function load() {

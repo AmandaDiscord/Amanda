@@ -4,12 +4,19 @@ module.exports = function(passthrough) {
 	djs.on("disconnect", manageDisconnect);
 	djs.on("message", manageMessage);
 	djs.on("messageUpdate", manageEdit);
+	process.on("unhandledRejection", manageRejection);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("ready", manageReady);
 		djs.removeListener("disconnect", manageDisconnect);
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
+		process.removeListener("unhandledRejection", manageRejection);
 	});
+
+	function manageRejection(reason) {
+		if (reason.code == 10008) return;
+		console.error(reason);
+	}
 
 	function manageReady() {
 		console.log("Successfully logged in");

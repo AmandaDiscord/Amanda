@@ -6,12 +6,14 @@ module.exports = function(passthrough) {
 	let { djs, reloadEvent, utils } = passthrough;
 
 	utils.reactionMenu = function(msg, actions) {
-		reactionMenus[msg.id] = {
-			actions: actions
-		}
-		actions.forEach(a => {
-			msg.react(a.emoji);
-		});
+		return new Promise(function(resolve) {
+			reactionMenus[msg.id] = {
+				actions: actions
+			}
+			actions.forEach(a => {
+				resolve(msg.react(a.emoji));
+			});
+		})
 	}
 
 	djs.on("messageReactionAdd", reactionEvent);
