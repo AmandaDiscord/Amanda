@@ -4,7 +4,6 @@ const YouTube = require('simple-youtube-api');
 const youtube = new YouTube("AIzaSyCSazLCS6oulNlmWC7NtDgoNJCWEp5O0MY");
 const queues = new Map();
 const timeout = new Set();
-const fs = require("fs");
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils, dbs } = passthrough;
@@ -59,13 +58,13 @@ module.exports = function(passthrough) {
 			return msg.channel.send(`We've run out of songs`)
 		}
 		const stream = ytdl(song.url);
-		console.log("Waiting for response");
+		//console.log("Waiting for response");
 		stream.once("progress", () => {
-			console.log("Progress");
+			//console.log("Progress");
 			const dispatcher = queue.connection.playStream(stream);
 			dispatcher.once("start", () => {
 				queue.skippable = true;
-				console.log("Dispatcher start");
+				//console.log("Dispatcher start");
 				function getNPEmbed() {
 					return new Discord.RichEmbed().setColor("36393E")
 					.setDescription(`Now playing: **${song.title}**`)
@@ -83,9 +82,9 @@ module.exports = function(passthrough) {
 						let updateProgressInterval = setInterval(() => {
 							updateProgress();
 						}, 5000);
-						console.log("setTimeout dispatcher event ready");
+						//console.log("setTimeout dispatcher event ready");
 						dispatcherEndCode = () => {
-							console.log("setTimeout dispatcher end");
+							//console.log("setTimeout dispatcher end");
 							clearInterval(updateProgressInterval);
 							updateProgress();
 						};
@@ -93,7 +92,7 @@ module.exports = function(passthrough) {
 				});
 				dispatcher.on("end", () => {
 					dispatcherEndCode();
-					console.log("Dispatcher end");
+					//console.log("Dispatcher end");
 					queue.skippable = false;
 					queue.songs.shift();
 					play(msg, guild, queue.songs[0]);
