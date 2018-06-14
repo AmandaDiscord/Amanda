@@ -4,6 +4,7 @@ const YouTube = require('simple-youtube-api');
 const youtube = new YouTube("AIzaSyCSazLCS6oulNlmWC7NtDgoNJCWEp5O0MY");
 const queues = new Map();
 const timeout = new Set();
+const fs = require("fs");
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils, dbs } = passthrough;
@@ -23,7 +24,8 @@ module.exports = function(passthrough) {
 				connection: null,
 				songs: [],
 				volume: 5,
-				playing: true
+				playing: true,
+				skippable: false
 			};
 			queues.set(msg.guild.id, queueConstruct);
 			if (timeout.has(msg.guild.id)) return;
@@ -45,7 +47,7 @@ module.exports = function(passthrough) {
 			timeout.add(msg.guild.id);
 			setTimeout(() => timeout.delete(msg.guild.id), 1000)
 			if (playlist) return;
-			else return msg.react("👌").catch(() => { return });
+			else return msg.react("👌");
 		}
 	}
 
@@ -56,35 +58,50 @@ module.exports = function(passthrough) {
 			queues.delete(guild.id);
 			return msg.channel.send(`We've run out of songs`)
 		}
-		const dispatcher = queue.connection.playStream(ytdl(song.url));
-		dispatcher.on("start", () => {
-			function getNPEmbed() {
-				return new Discord.RichEmbed().setColor("36393E")
-				.setDescription(`Now playing: **${song.title}**`)
-				.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
-			}
-			msg.channel.send(getNPEmbed()).then(npmsg => {
-				setTimeout(() => {
-					if (queue.songs[0]) {
+		const stream = ytdl(song.url);
+		console.log("Waiting for response");
+		stream.once("progress", () => {
+			console.log("Progress");
+			const dispatcher = queue.connection.playStream(stream);
+			dispatcher.once("start", () => {
+				queue.skippable = true;
+				console.log("Dispatcher start");
+				function getNPEmbed() {
+					return new Discord.RichEmbed().setColor("36393E")
+					.setDescription(`Now playing: **${song.title}**`)
+					.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
+				}
+				let dispatcherEndCode = new Function();
+				msg.channel.send(getNPEmbed()).then(npmsg => {
+					if (!queue.songs[0] || !queue.connection.dispatcher) return;
+					setTimeout(() => {
+						if (!queue.songs[0] || !queue.connection.dispatcher) return;
 						function updateProgress() {
-							npmsg.edit(getNPEmbed()).catch(() => { return });
+							if (queue.songs[0]) npmsg.edit(getNPEmbed());
 						}
 						updateProgress();
 						let updateProgressInterval = setInterval(() => {
 							updateProgress();
 						}, 5000);
-						dispatcher.once("end", () => {
+						console.log("setTimeout dispatcher event ready");
+						dispatcherEndCode = () => {
+							console.log("setTimeout dispatcher end");
 							clearInterval(updateProgressInterval);
 							updateProgress();
-							queue.songs.shift();
-							play(msg, guild, queue.songs[0]);
-						});
-					}
-				}, 5000-dispatcher.time%5000);
+						};
+					}, 5000-dispatcher.time%5000);
+				});
+				dispatcher.on("end", () => {
+					dispatcherEndCode();
+					console.log("Dispatcher end");
+					queue.skippable = false;
+					queue.songs.shift();
+					play(msg, guild, queue.songs[0]);
+				});
 			});
+			dispatcher.on('error', error => console.error(error));
+			dispatcher.setVolumeLogarithmic(queue.volume / 5);
 		});
-		dispatcher.on('error', error => console.error(error));
-		dispatcher.setVolumeLogarithmic(queue.volume / 5);
 	}
 
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
@@ -214,16 +231,9 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
 					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
-					if (!queue.connection || !queue.connection.dispatcher) return msg.channel.send(`${msg.author.username} You cannot skip a song before the next has started! Wait a moment and try again."`);
-					if (queue.connection.dispatcher.time > 50) {
-						queue.connection.dispatcher.end();
-						return msg.react("👌").catch(() => { return });
-					} else {
-						queue.connection.dispatcher.once("start", () => {
-							queue.connection.dispatcher.end();
-							return msg.react("👌").catch(() => { return });
-						})
-					}
+					if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`${msg.author.username}, You cannot skip a song before the next has started! Wait a moment and try again.`);
+					queue.connection.dispatcher.end();
+					msg.react("👌");
 				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
@@ -233,7 +243,7 @@ module.exports = function(passthrough) {
 					if (setv > 0 && setv < 6) {
 						queue.volume = setv;
 						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
-						return msg.react("👌").catch(() => { return });
+						return msg.react("👌");
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0 or less than or equal to 5`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
@@ -246,18 +256,18 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
-					return msg.react("👌").catch(() => { return });
+					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "pause") {
 					if (queue && queue.playing) {
 						queue.playing = false;
 						queue.connection.dispatcher.pause();
-						return msg.react("👌").catch(() => { return });
+						return msg.react("👌");
 					} else return msg.channel.send(`There is nothing playing to pause`);
 				} else if (args[0].toLowerCase() == "resume") {
 					if (queue && !queue.playing) {
 						queue.playing = true;
 						queue.connection.dispatcher.resume();
-						return msg.react("👌").catch(() => { return });
+						return msg.react("👌");
 					} else return msg.channel.send(`There is nothing in the queue to resume`);
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];

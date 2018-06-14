@@ -69,7 +69,7 @@ module.exports = function(passthrough) {
 						suffix = parseInt(suffix);
 						if (isNaN(suffix)) return msg.channel.send(`That's not a valid number of messages to delete`);
 						if (suffix > 100) return msg.channel.send(`${msg.author.username}, I can only delete up to 100 messages.`);
-						msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000)).catch(() => { return });
+						msg.channel.bulkDelete(suffix).then(messages => msg.channel.send(`Deleted ${messages.size} messages`)).then(nmsg => nmsg.delete(5000));
 					} else msg.channel.send(`${msg.author.username}, I don't have the manage messages permission`);
 				} else msg.channel.send(`${msg.author.username}, you don't have the manage messages permission.`);
 			}
