@@ -9,7 +9,7 @@ module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils, dbs } = passthrough;
 	let sql = dbs[1];
 
-	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist = false) {
+	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
 		const queue = queues.get(msg.guild.id);
 		const song = {
 			title: Discord.Util.escapeMarkdown(video.title),
@@ -40,7 +40,8 @@ module.exports = function(passthrough) {
 			}
 		} else {
 			if (timeout.has(msg.guild.id) && !ignoreTimeout) return;
-			queue.songs.push(song);
+			if (insert) queue.songs.splice(1, 0, song);
+			else queue.songs.push(song);
 			timeout.add(msg.guild.id);
 			setTimeout(() => timeout.delete(msg.guild.id), 1000)
 			if (playlist) return;
@@ -163,7 +164,7 @@ module.exports = function(passthrough) {
 				var args = suffix.split(" ");
 				let queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
-				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "p") {
+				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
 					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
@@ -175,7 +176,7 @@ module.exports = function(passthrough) {
 						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
 					} else {
 						const video = await ytdl.getInfo(args[1]);
-						return handleVideo(video, msg, voiceChannel);
+						return handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
 					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
