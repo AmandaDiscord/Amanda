@@ -25,6 +25,7 @@ module.exports = function(passthrough) {
 
 	function manageRejection(reason) {
 		if (reason.code == 10008) return;
+		if (reason.code == 40001) return;
 		console.error(reason);
 	}
 
