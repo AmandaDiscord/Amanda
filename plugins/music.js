@@ -8,6 +8,32 @@ const timeout = new Set();
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils, db } = passthrough;
 
+	function callskip(msg, queue) {
+		if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+		if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
+		return queue.connection.dispatcher.end();
+	}
+
+	function callstop(msg, queue) {
+		if (!queue) return msg.channel.send('There is nothing playing to stop');
+		queue.songs = [];
+		return queue.connection.dispatcher.end();
+	}
+
+	function callpause(msg, queue) {
+		if (queue && queue.playing) {
+			queue.playing = false;
+			return queue.connection.dispatcher.pause();
+		} else return msg.channel.send(`There is nothing playing to pause`);
+	}
+
+	function callresume(msg, queue) {
+		if (queue && !queue.playing) {
+			queue.playing = true;
+			return queue.connection.dispatcher.resume();
+		} else return msg.channel.send(`There is nothing in the queue to resume`);
+	}
+
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
 		const queue = queues.get(msg.guild.id);
 		const song = {
@@ -225,9 +251,8 @@ module.exports = function(passthrough) {
 					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
-					if (!queue) return msg.channel.send('There is nothing playing to stop');
-					queue.songs = [];
-					return queue.connection.dispatcher.end();
+					callstop(msg, queue);
+					return msg.react("👌")
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send(`There aren't any songs queued`);
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0));
@@ -243,11 +268,9 @@ module.exports = function(passthrough) {
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
-					if (!voiceChannel) return msg.channel.send('You are not in a voice channel');
-					if (!queue) return msg.channel.send(`There aren't any songs to skip`);
-					if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`${msg.author.username}, You cannot skip a song before the next has started! Wait a moment and try again.`);
-					queue.connection.dispatcher.end();
-					msg.react("👌");
+					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
+					callskip(msg, queue);
+					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
@@ -272,17 +295,13 @@ module.exports = function(passthrough) {
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
 					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "pause") {
-					if (queue && queue.playing) {
-						queue.playing = false;
-						queue.connection.dispatcher.pause();
-						return msg.react("👌");
-					} else return msg.channel.send(`There is nothing playing to pause`);
+					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
+					callpause(msg, queue);
+					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "resume") {
-					if (queue && !queue.playing) {
-						queue.playing = true;
-						queue.connection.dispatcher.resume();
-						return msg.react("👌");
-					} else return msg.channel.send(`There is nothing in the queue to resume`);
+					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
+					callresume(msg, queue);
+					return msg.react("👌");
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
