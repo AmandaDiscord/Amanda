@@ -292,7 +292,7 @@ module.exports = function(passthrough) {
 					let output = await utils.stringify(result);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
 					utils.reactionMenu(nmsg, [
-						{emoji: "🗑", allowedUsers: [msg.author.id], remove: "message"}
+						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
 					]);
 				} else {
 					utils.sendNopeMessage(msg);

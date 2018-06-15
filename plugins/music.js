@@ -72,6 +72,13 @@ module.exports = function(passthrough) {
 				let dispatcherEndCode = new Function();
 				msg.channel.send(getNPEmbed()).then(npmsg => {
 					if (!queue.songs[0] || !queue.connection.dispatcher) return;
+					utils.reactionMenu(npmsg, [
+						{ emoji: djs.emojis.get("457087487341232129"), remove: "all", actionType: "js", actionData: () => {
+							if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+							if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`${msg.author.username}, You cannot skip a song before the next has started! Wait a moment and try again.`);
+							queue.connection.dispatcher.end();
+						}}
+					]);
 					setTimeout(() => {
 						if (!queue.songs[0] || !queue.connection.dispatcher) return;
 						function updateProgress() {
