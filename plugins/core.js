@@ -285,9 +285,19 @@ module.exports = function(passthrough) {
 				if (allowed) {
 					try {
 						let result = await utils.stringify(eval(suffix));
-						msg.channel.send(result.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+						var nmsg = await msg.channel.send(result.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+						utils.reactionMenu(nsmg, [
+							{ emoji: "🗑", remove: "all", actionType: "js", actionData: () => {
+								nmsg.delete();
+							}}
+						]);
 					} catch (err) {
-						msg.channel.send(await utils.stringify(err));
+						var nmsg = await msg.channel.send(await utils.stringify(err));
+						utils.reactionMenu(nsmg, [
+							{ emoji: "🗑", remove: "all", actionType: "js", actionData: () => {
+								nmsg.delete();
+							}}
+						]);
 					}
 				} else {
 					utils.sendNopeMessage(msg);
