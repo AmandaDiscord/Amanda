@@ -283,22 +283,17 @@ module.exports = function(passthrough) {
 			process: async function (msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (allowed) {
+					let result;
 					try {
-						let result = await utils.stringify(eval(suffix));
-						var nmsg = await msg.channel.send(result.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
-						utils.reactionMenu(nsmg, [
-							{ emoji: "🗑", remove: "all", actionType: "js", actionData: () => {
-								nmsg.delete();
-							}}
-						]);
-					} catch (err) {
-						var nmsg = await msg.channel.send(await utils.stringify(err));
-						utils.reactionMenu(nsmg, [
-							{ emoji: "🗑", remove: "all", actionType: "js", actionData: () => {
-								nmsg.delete();
-							}}
-						]);
+						result = eval(suffix);
+					} catch (e) {
+						result = e;
 					}
+					let output = await utils.stringify(result);
+					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+					utils.reactionMenu(nmsg, [
+						{emoji: "🗑", allowedUsers: [msg.author.id], remove: "message"}
+					]);
 				} else {
 					utils.sendNopeMessage(msg);
 				}
