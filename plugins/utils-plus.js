@@ -33,6 +33,13 @@ module.exports = function(passthrough) {
 
 	utils.sql = async function(string, prepared) {
 		if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
+		if (db.connection._closing) {
+			console.log("Database disconnected. Reconnecting...");
+			let newdb = await require("../database.js")();
+			passthrough.db = newdb;
+			db = newdb;
+			console.log("Database reconnected. Continuing where we left off...");
+		}
 		return (await db.query(string, prepared))[0];
 	}
 
