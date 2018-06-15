@@ -23,7 +23,18 @@ module.exports = function(passthrough) {
 				songs: [],
 				volume: 5,
 				playing: true,
-				skippable: false
+				skippable: false,
+				nowPlayingMsg: null,
+				generateReactions: function() {
+					utils.reactionMenu(this.nowPlayingMsg, [
+						{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
+							if (this.songs.length <= 1) return msg.channel.send(`There aren't any songs to skip`);
+							if (!this.skippable || !this.connection || !this.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
+							if (this.songs.length == 2) messageReaction.remove();
+							this.connection.dispatcher.end();
+						}}
+					]);
+				}
 			};
 			queues.set(msg.guild.id, queueConstruct);
 			if (timeout.has(msg.guild.id)) return;
@@ -53,6 +64,7 @@ module.exports = function(passthrough) {
 		const queue = queues.get(guild.id);
 		if (!song) {
 			queue.voiceChannel.leave();
+			queue.nowPlayingMsg.clearReactions();
 			queues.delete(guild.id);
 			return msg.channel.send(`We've run out of songs`)
 		}
@@ -61,7 +73,7 @@ module.exports = function(passthrough) {
 		stream.once("progress", () => {
 			//console.log("Progress");
 			const dispatcher = queue.connection.playStream(stream);
-			dispatcher.once("start", () => {
+			dispatcher.once("start", async () => {
 				queue.skippable = true;
 				//console.log("Dispatcher start");
 				function getNPEmbed() {
@@ -70,32 +82,29 @@ module.exports = function(passthrough) {
 					.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
 				}
 				let dispatcherEndCode = new Function();
-				msg.channel.send(getNPEmbed()).then(npmsg => {
+				function updateProgress() {
+					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed());
+					else return Promise.resolve();
+				}
+				if (!queue.nowPlayingMsg) {
+					await msg.channel.send(getNPEmbed()).then(n => queue.nowPlayingMsg = n);
+					queue.generateReactions();
+				} else {
+					await updateProgress();
+				}
+				setTimeout(() => {
 					if (!queue.songs[0] || !queue.connection.dispatcher) return;
-					utils.reactionMenu(npmsg, [
-						{ emoji: "⏭", ignore: "total", remove: "all", actionType: "js", actionData: () => {
-							if (!queue) return msg.channel.send(`There aren't any songs to skip`);
-							if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
-							queue.connection.dispatcher.end();
-						}}
-					]);
-					setTimeout(() => {
-						if (!queue.songs[0] || !queue.connection.dispatcher) return;
-						function updateProgress() {
-							if (queue.songs[0]) npmsg.edit(getNPEmbed());
-						}
+					updateProgress();
+					let updateProgressInterval = setInterval(() => {
 						updateProgress();
-						let updateProgressInterval = setInterval(() => {
-							updateProgress();
-						}, 5000);
-						//console.log("setTimeout dispatcher event ready");
-						dispatcherEndCode = () => {
-							//console.log("setTimeout dispatcher end");
-							clearInterval(updateProgressInterval);
-							updateProgress();
-						};
-					}, 5000-dispatcher.time%5000);
-				});
+					}, 5000);
+					//console.log("setTimeout dispatcher event ready");
+					dispatcherEndCode = () => {
+						//console.log("setTimeout dispatcher end");
+						clearInterval(updateProgressInterval);
+						updateProgress();
+					};
+				}, 5000-dispatcher.time%5000);
 				dispatcher.on("end", () => {
 					dispatcherEndCode();
 					//console.log("Dispatcher end");

@@ -39,7 +39,7 @@ module.exports = function(passthrough) {
 			msg.edit(action.actionData);
 			break;
 		case "js":
-			action.actionData(msg, emoji, user, reactionMenus);
+			action.actionData(msg, emoji, user, messageReaction, reactionMenus);
 			break;
 		}
 		switch (action.ignore) {
