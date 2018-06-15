@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Config, Discord, client, djs, dio, reloadEvent, utils, dbs, commands } = passthrough;
+	let { Config, Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
 	djs.on("ready", manageReady);
 	djs.on("disconnect", manageDisconnect);
 	djs.on("message", manageMessage);

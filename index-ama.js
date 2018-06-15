@@ -2,7 +2,6 @@ process.title = "Amanda";
 const fs = require("fs");
 const Config = JSON.parse(fs.readFileSync("./config.json", "utf8"));
 const Auth = JSON.parse(fs.readFileSync("./auth.json", "utf8"));
-const sql = require("sqlite");
 const events = require("events");
 const mysql = require("mysql2/promise");
 let reloadEvent = new events.EventEmitter();
@@ -20,20 +19,14 @@ console.log(`Starting`);
 const commands = {};
 
 function load() {
-	Promise.all([
-		sql.open("./databases/money.sqlite"),
-		sql.open("./databases/music.sqlite"),
-		sql.open("./databases/misc.sqlite"),
-		mysql.createConnection({
-			host: 'cadence.gq',
-			user: 'amanda',
-			password: "password",
-			database: 'money'
-		})
-	]).then(dbs => {
-		let db = dbs.pop();
+	mysql.createConnection({
+		host: 'cadence.gq',
+		user: 'amanda',
+		password: "password",
+		database: 'money'
+	}).then(db => {
 		db.connect();
-		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, db, dbs, commands };
+		let passthrough = { Config, Discord, client, djs, dio, reloadEvent, utils, db, commands };
 		require("./plugins.js")(passthrough, loaded => {
 			Object.assign(commands, loaded);
 		});
