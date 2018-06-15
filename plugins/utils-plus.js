@@ -14,9 +14,9 @@ module.exports = function(passthrough) {
 		}
 		let result;
 		if (thingType == "user" || thingType == "member") {
-			result = await dbs[2].get(`SELECT ${permissionType} FROM UserPermissions WHERE userID = ?`, thing);
+			result = await utils.get(`SELECT ${permissionType} FROM UserPermissions WHERE userID = ?`, thing);
 		} else if (thingType == "server" || thingType == "guild") {
-			result = await dbs[2].get(`SELECT ${permissionType} FROM ServerPermissions WHERE serverID = ?`, thing);
+			result = await utils.get(`SELECT ${permissionType} FROM ServerPermissions WHERE serverID = ?`, thing);
 		}
 		if (result) result = Object.values(result)[0];
 		return !!result;
@@ -31,24 +31,13 @@ module.exports = function(passthrough) {
 		}, time);
 	}
 
-	/**
-	 * Gets data from the MySQL database
-	 * @param {String} data A Discord Snowflake
-	 * @returns {*} A user's information in the database
-	 */
-	utils.get = function(data) {
-		return new Promise(function(resolve, reject) {
-			db.query("SELECT * FROM money WHERE userID =?", data, (reason, rows) => {
-				if (reason) reject(reason);
-				let row = rows[0];
-				if (!row) {
-					db.query("INSERT INTO money (userID,coins) VALUES (?, ?)", [data, 5000], err => {
-						if (err) reject(err);
-						utils.get(data).then(resolve);
-					});
-				} else resolve(row);
-			});
-		});
+	utils.sql = async function(string, prepared) {
+		if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
+		return (await db.query(string, prepared))[0];
+	}
+
+	utils.get = async function(string, prepared) {
+		return (await utils.sql(string, prepared))[0];
 	}
 
 	return {};

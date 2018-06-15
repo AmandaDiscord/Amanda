@@ -5,8 +5,7 @@ const util = require("util");
 const { exec } = require("child_process");
 
 module.exports = function(passthrough) {
-	const { Config, Discord, client, djs, dio, db, dbs, utils, commands } = passthrough;
-	let sql = dbs[0];
+	const { Config, Discord, client, djs, dio, db, utils, commands } = passthrough;
 	return {
 		"uptime": {
 			usage: "",

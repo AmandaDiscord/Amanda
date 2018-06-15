@@ -3,8 +3,7 @@ const util = require("util");
 const fs = require("fs");
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, db, dbs, utils } = passthrough;
-	let sql = dbs[0];
+	const { Discord, djs, dio, utils } = passthrough;
 	return {
 		"profile": {
 			usage: "<user>",
@@ -14,13 +13,13 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				var member = utils.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
-				var money = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				if (!money) {
-					await sql.run("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
 					await msg.channel.send(`Created user account`);
-					var money = await sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
-				msg.channel.startTyping();
+				dio.simulateTyping(msg.channel.id);
 				let canvas = new Canvas.createCanvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
 				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
@@ -41,25 +40,7 @@ module.exports = function(passthrough) {
 					ctx.fillText("0", 110, 178)
 					let buffer = canvas.toBuffer();
 					await msg.channel.send({files: [buffer]});
-					msg.channel.stopTyping();
 				});
-			}
-		},
-
-		"mydata": {
-			usage: "",
-			description: "A command to test MySQL",
-			aliases: ["mydata"],
-			process: async function(msg, suffix) {
-				let row = await utils.get(msg.author.id);
-				const embed = new Discord.RichEmbed()
-				.setDescription(`**${msg.author.tag}** has ${row.coins} coins`)
-				let result = await msg.channel.send({embed});
-				utils.reactionMenu(result, [
-					{emoji: "🤔", remove: "user", actionType: "js", actionData: () => {
-						result.channel.send("🤔");
-					}}
-				]);
 			}
 		}
 	}

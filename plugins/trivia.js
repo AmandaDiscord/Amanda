@@ -13,8 +13,7 @@ function newGame() {
 }
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils, reloadEvent, dbs } = passthrough;
-	let sql = dbs[0];
+	const { Discord, djs, dio, utils, reloadEvent } = passthrough;
 
 	function doQuestion(msg, authorName) {
 		var id = msg.channel.id;
@@ -88,24 +87,24 @@ module.exports = function(passthrough) {
 								if (correct.length > 6) {
 									correct.forEach(async function(item, index, array) {
 										correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}, `;
-										var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
-											await sql.run(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
-											var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
+											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
-										await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
+										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
 										var user = await djs.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
 									})
 								} else {
 									correct.forEach(async function(item, index, array) {
 										correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}\n`;
-										var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
-											await sql.run(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
-											var row = await sql.get(`SELECT * FROM money WHERE userID =?`, item);
+											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
+											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
-										await sql.run(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
+										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
 										var user = await djs.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please ena	le DMs so I can tell you your earnings`));
 									})

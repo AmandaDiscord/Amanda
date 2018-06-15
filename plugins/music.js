@@ -6,8 +6,7 @@ const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils, dbs } = passthrough;
-	let sql = dbs[1];
+	const { Discord, djs, dio, utils, db } = passthrough;
 
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
 		const queue = queues.get(msg.guild.id);
@@ -271,16 +270,16 @@ module.exports = function(passthrough) {
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
-					let playlistRow = await sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
+					let playlistRow = await utils.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
 					if (!playlistRow) {
 						if (args[2] == "create") {
-							await sql.run("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
+							await utils.sql("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
 							return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`);
 						} else {
 							return msg.channel.send(`${msg.author.username}, That playlist does not exist. Use \`&music playlist ${playlistName} create\` to create it.`);
 						}
 					}
-					let songs = await sql.all("SELECT * FROM PlaylistSongs INNER JOIN Songs ON Songs.videoID = PlaylistSongs.videoID WHERE playlistID = ?", playlistRow.playlistID);
+					let songs = await utils.sql("SELECT * FROM PlaylistSongs INNER JOIN Songs ON Songs.videoID = PlaylistSongs.videoID WHERE playlistID = ?", playlistRow.playlistID);
 					let orderedSongs = [];
 					let song = songs.find(row => !songs.some(r => r.next == row.videoID));
 					while (song) {
@@ -297,11 +296,11 @@ module.exports = function(passthrough) {
 						return;
 					}
 					async function unbreakDatabase() {
-						await sql.run("BEGIN TRANSACTION");
+						await utils.sql("BEGIN TRANSACTION");
 						await Promise.all(songs.map((row, index) => {
-							return sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index+1] ? songs[index+1].videoID : null), row.playlistID, row.videoID]);
+							return utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index+1] ? songs[index+1].videoID : null), row.playlistID, row.videoID]);
 						}));
-						await sql.run("END TRANSACTION");
+						await utils.sql("END TRANSACTION");
 						return msg.channel.send(`${msg.author.username}, The database entries for that playlist are inconsistent. The inconsistencies have been resolved by resetting the order of the songs in that playlist. Apart from the song order, no data was lost. Other playlists were not affected.`);
 					}
 					let action = args[2] || "";
@@ -312,9 +311,9 @@ module.exports = function(passthrough) {
 						ytdl.getInfo(videoID).then(async video => {
 							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(`${msg.author.username}, That song is already in the playlist.`);
 							await Promise.all([
-								sql.run("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
-								sql.run("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
-								sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [video.video_id, playlistRow.playlistID, video.video_id])
+								utils.sql("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
+								utils.sql("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
+								utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [video.video_id, playlistRow.playlistID, video.video_id])
 							]);
 							return msg.channel.send(`${msg.author.username}, Added **${video.title}** to playlist **${playlistName}**`);
 						}).catch(e => {
@@ -328,8 +327,8 @@ module.exports = function(passthrough) {
 						if (!orderedSongs[index]) return msg.channel.send(`${msg.author.username}, That index is out of range`);
 						let toRemove = orderedSongs[index];
 						await Promise.all([
-							sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
-							sql.run("DELETE FROM PlaylistSongs WHERE playlistID = ? AND videoID = ?", [playlistRow.playlistID, toRemove.videoID])
+							utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
+							utils.sql("DELETE FROM PlaylistSongs WHERE playlistID = ? AND videoID = ?", [playlistRow.playlistID, toRemove.videoID])
 						]);
 						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 					} else if (action.toLowerCase() == "move") {
@@ -342,13 +341,13 @@ module.exports = function(passthrough) {
 						if (!orderedSongs[to]) return msg.channel.send(`${msg.author.username}, That index is out of range`);
 						let fromRow = orderedSongs[from], toRow = orderedSongs[to];
 						if (from < to) {
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.next, fromRow.playlistID, fromRow.videoID]); // update moved item
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.next, fromRow.playlistID, fromRow.videoID]); // update moved item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
 						} else if (from > to) {
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
-							await sql.run("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.videoID, fromRow.playlistID, fromRow.videoID]); // update moved item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]); // update row before moved item
+							await utils.sql("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.videoID, fromRow.playlistID, fromRow.videoID]); // update moved item
 						} else {
 							return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`);
 						}
@@ -374,24 +373,24 @@ module.exports = function(passthrough) {
 							await editmsg.edit("Importing playlist. This could take a moment...\n(Updating database)");
 							for (let i = 0; i < videos.length; i++) {
 								let video = videos[i];
-								promises.push(sql.run(
+								promises.push(utils.sql(
 									"INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)",
 									[video.video_id, video.title, video.length_seconds, video.video_id]
 								));
 								if (i != videos.length-1) {
 									let nextVideo = videos[i+1];
-									promises.push(sql.run(
+									promises.push(utils.sql(
 										"INSERT INTO PlaylistSongs VALUES (?, ?, ?)",
 										[playlistRow.playlistID, video.video_id, nextVideo.video_id]
 									));
 								} else {
-									promises.push(sql.run(
+									promises.push(utils.sql(
 										"INSERT INTO PlaylistSongs VALUES (?, ?, NULL)",
 										[playlistRow.playlistID, video.video_id]
 									));
 								}
 							}
-							promises.push(sql.run(
+							promises.push(utils.sql(
 								"UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?",
 								[videos[0].video_id, playlistRow.playlistID, videos.slice(-1)[0].video_id]
 							));
