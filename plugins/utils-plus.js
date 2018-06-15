@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Config, Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
+	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
 
 	utils.hasPermission = async function() {
 		let args = [...arguments];

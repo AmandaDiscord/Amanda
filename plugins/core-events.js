@@ -1,21 +1,44 @@
 module.exports = function(passthrough) {
-	let { Config, Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
+	let { Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
+	let prefixes = [];
+	setImmediate(() => {
+		utils.sql("SELECT * FROM Prefixes").then(result => {
+			prefixes = result.map(r => r.prefix);
+		});
+	});
+	let stdin = process.stdin;
+
 	djs.on("ready", manageReady);
 	djs.on("disconnect", manageDisconnect);
 	djs.on("message", manageMessage);
 	djs.on("messageUpdate", manageEdit);
 	process.on("unhandledRejection", manageRejection);
+	stdin.on("data", manageInput);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("ready", manageReady);
 		djs.removeListener("disconnect", manageDisconnect);
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
 		process.removeListener("unhandledRejection", manageRejection);
+		stdin.removeListener("data", manageInput);
 	});
 
 	function manageRejection(reason) {
 		if (reason.code == 10008) return;
 		console.error(reason);
+	}
+
+	function manageInput(input) {
+		input = input.toString();
+		try {
+			let result;
+			result = eval(input);
+			utils.stringify(result).then(output => {
+				console.log(output);
+			});
+		} catch (e) {
+			console.log(e.stack);
+		}
 	}
 
 	function manageReady() {
@@ -32,7 +55,7 @@ module.exports = function(passthrough) {
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-		djs.user.setActivity(`${name} | ${Config.prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+		djs.user.setActivity(`${name} | ${prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
 
 	function manageDisconnect() {
@@ -50,7 +73,7 @@ module.exports = function(passthrough) {
 
 	async function checkMessageForCommand(msg, isEdit) {
 		if (msg.author.bot) return;
-		var prefix = Config.prefixes.find(p => msg.content.startsWith(p));
+		var prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) return;
 		var cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
 		var suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
