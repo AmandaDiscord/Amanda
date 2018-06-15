@@ -53,11 +53,17 @@ module.exports = function(passthrough) {
 				nowPlayingMsg: null,
 				generateReactions: function() {
 					utils.reactionMenu(this.nowPlayingMsg, [
-						{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
-							if (this.songs.length <= 1) return msg.channel.send(`There aren't any songs to skip`);
-							if (!this.skippable || !this.connection || !this.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
-							if (this.songs.length == 2) messageReaction.remove();
-							this.connection.dispatcher.end();
+						{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg) => {
+							if (this.playing) callpause(msg, this);
+							else callresume(msg, this);
+						}},
+						{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
+							if (callskip(msg, this)) {
+								if (this.songs.length == 2) messageReaction.remove();
+							}
+						}},
+						{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg) => {
+							callstop(msg, this);
 						}}
 					]);
 				}
@@ -288,7 +294,10 @@ module.exports = function(passthrough) {
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
 					.setColor("36393E")
-					return msg.channel.send({embed});
+					let n = await msg.channel.send(embed);
+					queue.nowPlayingMsg.clearReactions();
+					queue.nowPlayingMsg = n;
+					queue.generateReactions();
 				} else if (args[0].toLowerCase() == "shuffle") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
