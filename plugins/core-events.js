@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
+	let { Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
 	let prefixes = [];
 	setImmediate(() => {
 		utils.sql("SELECT * FROM Prefixes").then(result => {

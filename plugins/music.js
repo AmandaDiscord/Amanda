@@ -6,7 +6,7 @@ const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils, db } = passthrough;
+	const { Discord, djs, dio, utils } = passthrough;
 
 	function callskip(msg, queue) {
 		if (!queue) return msg.channel.send(`There aren't any songs to skip`);

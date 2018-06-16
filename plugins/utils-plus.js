@@ -40,7 +40,7 @@ module.exports = function(passthrough) {
 			db = newdb;
 			console.log("Database reconnected. Continuing where we left off...");
 		}
-		return (await db.query(string, prepared))[0];
+		return (await db.execute(string, prepared))[0];
 	}
 
 	utils.get = async function(string, prepared) {
