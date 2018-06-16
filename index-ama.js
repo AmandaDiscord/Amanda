@@ -13,11 +13,10 @@ client.login({ token: Auth.bot_token });
 const dio = client.dioClient();
 const djs = client.djsClient();
 
+process.on("unhandledRejection", reason => { if (reason.code == 10008) return; if (reason.code == 50013) return; console.error(reason); });
 console.log(`Starting`);
 
 require("./database.js")().then(db => {
 	let passthrough = { Discord, client, djs, dio, reloadEvent, utils, db, commands };
-	require("./plugins.js")(passthrough, loaded => {
-		Object.assign(commands, loaded);
-	});
+	require("./plugins.js")(passthrough, loaded => { Object.assign(commands, loaded); });
 });

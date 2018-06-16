@@ -10,28 +10,32 @@ module.exports = function(passthrough) {
 
 	function callskip(msg, queue) {
 		if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+		if (!queue.connection || queue.connection.dispatcher) return;
 		if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
 		return queue.connection.dispatcher.end();
 	}
 
 	function callstop(msg, queue) {
 		if (!queue) return msg.channel.send('There is nothing playing to stop');
+		if (!queue.connection || queue.connection.dispatcher) return;
 		queue.songs = [];
 		return queue.connection.dispatcher.end();
 	}
 
 	function callpause(msg, queue) {
+		if (!queue.connection || queue.connection.dispatcher) return;
 		if (queue && queue.playing) {
 			queue.playing = false;
 			return queue.connection.dispatcher.pause();
-		} else return msg.channel.send(`There is nothing playing to pause`);
+		} else return;
 	}
 
 	function callresume(msg, queue) {
+		if (!queue.connection || queue.connection.dispatcher) return;
 		if (queue && !queue.playing) {
 			queue.playing = true;
 			return queue.connection.dispatcher.resume();
-		} else return msg.channel.send(`There is nothing in the queue to resume`);
+		} else return;
 	}
 
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
