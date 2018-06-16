@@ -402,6 +402,17 @@ module.exports = function(passthrough) {
 						}
 						return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to+1}**`);
 					} else if (action.toLowerCase() == "search" || action.toLowerCase() == "find") {
+						let body = orderedSongs
+							.map((songss, index) => `${index+1}. **${songss.name}** (${prettySeconds(songss.length)})`)
+							.filter(s => s.toLowerCase().includes(args.slice(3).join(" ").toLowerCase()))
+							.join("\n");
+						if (body.length > 2000) {
+							body = body.slice(0, 1998).split("\n").slice(0, -1).join("\n")+"\n…";
+						}
+						let embed = new Discord.RichEmbed()
+						.setDescription(body)
+						.setColor("36393E")
+						msg.channel.send(embed);
 
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase() == "shuffle");
