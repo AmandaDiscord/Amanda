@@ -39,6 +39,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
+						.setFooter("Powered by api.cheweybot.ga")
 					msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed})).catch(() => msg.channel.send("There was an error while fetching a doggo..."))
 				});
 			}
