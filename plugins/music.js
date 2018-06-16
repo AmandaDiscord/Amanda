@@ -466,11 +466,12 @@ module.exports = function(passthrough) {
 						}
 						let totalLength = "\nTotal length: "+prettySeconds(orderedSongs.reduce((p,c) => (p+parseInt(c.length)), 0));
 						let body = orderedSongs.map((songss, index) => `${index+1}. **${songss.name}** (${prettySeconds(songss.length)})`).join('\n');
-						if (body.length > 2000) {
+						if (body.length+totalLength.length > 2000) {
 							let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
 							let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
 							body = first+"\n…\n"+last;
 						}
+						body += totalLength;
 						let embed = new Discord.RichEmbed()
 						.setAuthor(author[0], author[1])
 						//.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+prettySeconds(totalLength))
