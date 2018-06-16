@@ -124,7 +124,7 @@ module.exports = function(passthrough) {
 				} else {
 					await updateProgress();
 				}
-				setTimeout(() => {
+				let npStartTimeout = setTimeout(() => {
 					if (!queue.songs[0] || !queue.connection.dispatcher) return;
 					updateProgress();
 					let updateProgressInterval = setInterval(() => {
@@ -138,6 +138,7 @@ module.exports = function(passthrough) {
 					};
 				}, 5000-dispatcher.time%5000);
 				dispatcher.on("end", () => {
+					clearTimeout(npStartTimeout);
 					dispatcherEndCode();
 					//console.log("Dispatcher end");
 					queue.skippable = false;
