@@ -6,38 +6,55 @@ module.exports = function(passthrough) {
 			prefixes = result.map(r => r.prefix);
 		});
 	});
-	let stdin = process.stdin;
 
-	djs.on("ready", manageReady);
-	djs.on("disconnect", manageDisconnect);
 	djs.on("message", manageMessage);
 	djs.on("messageUpdate", manageEdit);
-	stdin.on("data", manageInput);
+	djs.on("ready", manageReady);
+	djs.on("disconnect", manageDisconnect);
+	djs.on("error", manageError);
+	djs.on("warn", manageWarn);
+	process.on("unhandledRejection", manageRejection);
 	reloadEvent.once(__filename, () => {
-		djs.removeListener("ready", manageReady);
-		djs.removeListener("disconnect", manageDisconnect);
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
-		stdin.removeListener("data", manageInput);
+		djs.removeListener("ready", manageReady);
+		djs.removeListener("disconnect", manageDisconnect);
+		djs.removeListener("error", manageError);
+		djs.removeListener("warn", manageWarn);
+		process.removeListener("unhandledRejection", manageRejection);
 	});
 
-	function manageInput(input) {
-		input = input.toString();
-		try {
-			let result;
-			result = eval(input);
-			utils.stringify(result).then(output => {
-				console.log(output);
-			});
-		} catch (e) {
-			console.log(e.stack);
-		}
+	function manageMessage(msg) {
+		checkMessageForCommand(msg, false);
+	}
+
+	function manageEdit(oldMessage, newMessage) {
+		if (newMessage.editedTimestamp && oldMessage.editedTimestamp != newMessage.editedTimestamp) checkMessageForCommand(newMessage, true);
 	}
 
 	function manageReady() {
 		console.log("Successfully logged in");
 		update();
 		djs.setInterval(update, 300000);
+	}
+
+	function manageDisconnect(reason) {
+		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
+		setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
+	}
+
+	function manageError(reason) {
+		console.error(reason);
+	}
+
+	function manageWarn(reason) {
+		console.error(reason);
+	}
+
+	function manageRejection(reason) {
+		if (reason.code == 10008) return;
+		if (reason.code == 50013) return;
+		console.error(reason);
 	}
 
 	const presences = [
@@ -50,19 +67,6 @@ module.exports = function(passthrough) {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
 		djs.user.setActivity(`${name} | ${prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
-
-	function manageDisconnect() {
-		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
-		setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
-	}
-
-	function manageMessage(msg) {
-		checkMessageForCommand(msg, false);
-	}
-
-	function manageEdit(oldMessage, newMessage) {
-		if (newMessage.editedTimestamp && oldMessage.editedTimestamp != newMessage.editedTimestamp) checkMessageForCommand(newMessage, true);
-	}
 
 	async function checkMessageForCommand(msg, isEdit) {
 		if (msg.author.bot) return;
