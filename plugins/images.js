@@ -29,7 +29,7 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a cute doggo",
 			aliases: ["dog", "doggo"],
 			process: function(msg, suffix){
-				request("https://api.thedogapi.co.uk/v2/dog.php", function(err, res, body) {
+				request("https://api.cheweybot.ga/dog", function(err, res, body) {
 					if (err) return msg.channel.send("Error. The API returned nothing...");
 					try {
 						var data = JSON.parse(body);
@@ -37,7 +37,7 @@ module.exports = function(passthrough) {
 						return msg.channel.send(`Error while requesting an image of a dog.\n${error}`);
 					}
 					const embed = new Discord.RichEmbed()
-						.setImage(`${data.data[0].url}`)
+						.setImage(data.data)
 						.setColor('36393E')
 					msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed})).catch(() => msg.channel.send("There was an error while fetching a doggo..."))
 				});
