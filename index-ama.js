@@ -14,6 +14,8 @@ const dio = client.dioClient();
 const djs = client.djsClient();
 
 console.log(`Starting`);
+process.on("unhandledRejection", reason => { if (reason.code == 10008) return; if (reason.code == 50013) return; console.error(reason); });
+process.prependListener('uncaughtException', reason => { console.error(reason) });
 
 require("./database.js")().then(db => {
 	let passthrough = { Discord, client, djs, dio, reloadEvent, utils, db, commands };
