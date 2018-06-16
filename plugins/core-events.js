@@ -13,6 +13,7 @@ module.exports = function(passthrough) {
 	djs.on("disconnect", manageDisconnect);
 	djs.on("error", manageError);
 	djs.on("warn", manageWarn);
+	process.on("unhandledRejection", manageRejection);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
@@ -20,7 +21,9 @@ module.exports = function(passthrough) {
 		djs.removeListener("disconnect", manageDisconnect);
 		djs.removeListener("error", manageError);
 		djs.removeListener("warn", manageWarn);
+		process.removeListener("unhandledRejection", manageRejection);
 	});
+
 	function manageMessage(msg) {
 		checkMessageForCommand(msg, false);
 	}
@@ -45,6 +48,12 @@ module.exports = function(passthrough) {
 	}
 
 	function manageWarn(reason) {
+		console.error(reason);
+	}
+
+	function manageRejection(reason) {
+		if (reason.code == 10008) return;
+		if (reason.code == 50013) return;
 		console.error(reason);
 	}
 
