@@ -310,7 +310,7 @@ module.exports = function(passthrough) {
 					await msg.channel.send(`Created user account`);
 					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
-				msg.channel.send(`:arrow_${choice}:`);
+				msg.channel.send(`:arrow_${choice}:\nThere. This line was added. That means I did some work. Are you happy, suler?`);
 			}
 		},
 

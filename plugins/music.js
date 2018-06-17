@@ -57,16 +57,16 @@ module.exports = function(passthrough) {
 				nowPlayingMsg: null,
 				generateReactions: function() {
 					utils.reactionMenu(this.nowPlayingMsg, [
-						{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg) => {
+						{ emoji: "⏯", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id), actionType: "js", actionData: (msg) => {
 							if (this.playing) callpause(msg, this);
 							else callresume(msg, this);
 						}},
-						{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
+						{ emoji: "⏭", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id),  actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
 							if (callskip(msg, this)) {
 								if (this.songs.length == 2) messageReaction.remove();
 							}
 						}},
-						{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg) => {
+						{ emoji: "⏹", remove: "all", allowedUsers: voiceChannel.members.map(m => m.id), ignore: "total", actionType: "js", actionData: (msg) => {
 							callstop(msg, this);
 						}}
 					]);
