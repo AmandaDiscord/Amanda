@@ -28,7 +28,7 @@ module.exports = function(passthrough) {
 		let action = menu.actions.find(a => a.emoji == emoji || (a.emoji.name == emoji.name && a.emoji.id == emoji.id));
 		if (!action) return;
 		if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {
-			if (action.remove == "user") messageReaction.remove();
+			if (action.remove == "user") messageReaction.remove(user);
 			return;
 		}
 		switch (action.actionType) {
