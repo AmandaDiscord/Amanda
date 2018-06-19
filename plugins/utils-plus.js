@@ -6,7 +6,7 @@ module.exports = function(passthrough) {
 		db.removeListener("error", handleDisconnect);
 	});
 
-	function handleDisconnect(reason) {
+	async function handleDisconnect(reason) {
 		if (reason.code == "PROTOCOL_CONNECTION_LOST") {
 			console.log("Database disconnected. Reconnecting...");
 			let newdb = await require("../database.js")();
