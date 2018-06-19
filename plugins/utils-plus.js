@@ -1,6 +1,20 @@
 module.exports = function(passthrough) {
 	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
 
+	db.on("error", handleDisconnect);
+	reloadEvent.once(__filename, () => {
+		db.removeListener("error", handleDisconnect);
+	});
+
+	function handleDisconnect(reason) {
+		if (reason.code == "PROTOCOL_CONNECTION_LOST") {
+			console.log("Database disconnected. Reconnecting...");
+			let newdb = await require("../database.js")();
+			passthrough.db = newdb;
+			console.log("Database reconnected");
+		} else console.error(reason);
+	}
+
 	utils.hasPermission = async function() {
 		let args = [...arguments];
 		let thing, thingType, permissionType;
@@ -33,13 +47,6 @@ module.exports = function(passthrough) {
 
 	utils.sql = async function(string, prepared) {
 		if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
-		if (db.connection._closing) {
-			console.log("Database disconnected. Reconnecting...");
-			let newdb = await require("../database.js")();
-			passthrough.db = newdb;
-			db = newdb;
-			console.log("Database reconnected. Continuing where we left off...");
-		}
 		return (await db.execute(string, prepared))[0];
 	}
 
