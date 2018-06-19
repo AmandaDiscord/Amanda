@@ -4,7 +4,7 @@ const pj = require("path").join;
 
 let watched = [];
 
-module.exports = (passthrough, callback) => {
+module.exports = function(passthrough) {
 	function loadFile(filename) {
 		if (!watched.includes(filename)) {
 			watched.push(filename);
@@ -19,7 +19,7 @@ module.exports = (passthrough, callback) => {
 			let result = require(filename);
 			if (typeof(result) == "function") {
 				setImmediate(() => {
-					callback(result(passthrough));
+					Object.assign(passthrough.commands, result(passthrough));
 				});
 			} else if (typeof(result) == "object") {
 				Object.assign(passthrough.utils, result);

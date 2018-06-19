@@ -15,7 +15,6 @@ const djs = client.djsClient();
 
 console.log(`Starting`);
 
-require("./database.js")().then(db => {
-	let passthrough = { Discord, client, djs, dio, reloadEvent, utils, db, commands };
-	require("./plugins.js")(passthrough, loaded => { Object.assign(commands, loaded); });
-});
+let db = require("./database.js")();
+let passthrough = { Discord, client, djs, dio, reloadEvent, utils, db, commands };
+require("./plugins.js")(passthrough);

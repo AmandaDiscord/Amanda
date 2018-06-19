@@ -1,9 +1,10 @@
 module.exports = function() {
 	const mysql = require("mysql2/promise");
-	return mysql.createConnection({
-		host: 'cadence.gq',
-		user: 'amanda',
-		password: "password",
-		database: 'money'
+	return mysql.createPool({
+		host: "cadence.gq",
+		user: "amanda",
+		password: require("./auth.json").mysql_password,
+		database: "money",
+		connectionLimit: 5
 	});
 }

@@ -1,20 +1,6 @@
 module.exports = function(passthrough) {
 	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
 
-	db.on("error", handleDisconnect);
-	reloadEvent.once(__filename, () => {
-		db.removeListener("error", handleDisconnect);
-	});
-
-	async function handleDisconnect(reason) {
-		if (reason.code == "PROTOCOL_CONNECTION_LOST") {
-			console.log("Database disconnected. Reconnecting...");
-			let newdb = await require("../database.js")();
-			passthrough.db = newdb;
-			console.log("Database reconnected");
-		} else console.error(reason);
-	}
-
 	utils.hasPermission = async function() {
 		let args = [...arguments];
 		let thing, thingType, permissionType;

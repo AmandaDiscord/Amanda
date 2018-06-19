@@ -1,5 +1,6 @@
 module.exports = function(passthrough) {
 	let { Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
+	const stdin = process.stdin;
 	let prefixes = [];
 	setImmediate(() => {
 		utils.sql("SELECT * FROM Prefixes").then(result => {
@@ -14,6 +15,7 @@ module.exports = function(passthrough) {
 	djs.on("error", manageError);
 	djs.on("warn", manageWarn);
 	process.on("unhandledRejection", manageRejection);
+	stdin.on("data", manageStdin);
 	reloadEvent.once(__filename, () => {
 		djs.removeListener("message", manageMessage);
 		djs.removeListener("messageUpdate", manageEdit);
@@ -22,7 +24,17 @@ module.exports = function(passthrough) {
 		djs.removeListener("error", manageError);
 		djs.removeListener("warn", manageWarn);
 		process.removeListener("unhandledRejection", manageRejection);
+		stdin.removeListener("data", manageStdin);
 	});
+
+	async function manageStdin(input) {
+		input = input.toString();
+		try {
+			console.log(await utils.stringify(eval(input)));
+		} catch (e) {
+			console.log(e.stack);
+		}
+	}
 
 	function manageMessage(msg) {
 		checkMessageForCommand(msg, false);
