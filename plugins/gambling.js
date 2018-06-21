@@ -35,7 +35,7 @@ module.exports = function(passthrough) {
 			aliases: ["slot", "slots"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				return msg.channel.send(`This feature is currently disabled while hosting issues with node-canvas get resolved`)
+				return msg.channel.send(`This feature is currently disabled while hosting issues with node-canvas get resolved`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
 					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
