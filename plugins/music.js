@@ -1,7 +1,7 @@
 const ytdl = require("ytdl-core");
 const Discord = require("discord.js");
 const YouTube = require('simple-youtube-api');
-const youtube = new YouTube("AIzaSyCSazLCS6oulNlmWC7NtDgoNJCWEp5O0MY");
+const youtube = new YouTube(require("../auth.json").yt_api_key);
 const queues = new Map();
 const timeout = new Set();
 
