@@ -4,6 +4,9 @@
   "description": "A cutie-pie chat bot that only wants some love",
   "main": "index.js",
   "author": "PapiOphidian",
+  "scripts": {
+    "start": "node index-ama.js"
+  },
   "license": "MIT",
   "engines": {
     "node": "8.11.3",
