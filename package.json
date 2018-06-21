@@ -18,8 +18,6 @@
     "libsodium-wrappers": "^0.7.3",
     "mysql": "^2.15.0",
     "mysql2": "^1.5.3",
-    "node-opus": "^0.2.9",
-    "opusscript": "^0.0.6",
     "request": "^2.86.0",
     "simple-youtube-api": "^5.0.2",
     "sodium": "^2.0.3",
