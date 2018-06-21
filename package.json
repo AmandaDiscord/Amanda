@@ -15,6 +15,7 @@
   "dependencies": {
     "bot-utils": "^1.1.7",
     "bufferutil": "^3.0.5",
+    "canvas": "github:Automattic/node-canvas", 
     "discord.js": "^11.3.2",
     "dualcord": "^1.0.5",
     "entities": "^1.1.1",
