@@ -11,6 +11,7 @@ module.exports = function(passthrough) {
 			aliases: ["profile"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
+				return msg.channel.send(`This feature is currently disabled while hosting issues with node-canvas get resolved`);
 				var member = utils.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
