@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "PapiOphidian",
   "license": "MIT",
+  "engines": {
+    "node": "8.11.3",
+    "npm": "5.6.0"
+  },
   "dependencies": {
     "bot-utils": "^1.1.7",
     "bufferutil": "^3.0.5",
