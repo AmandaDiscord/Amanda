@@ -1,6 +1,7 @@
-const Canvas = require("canvas");
+// const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
+const Canvas = "";
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils } = passthrough;

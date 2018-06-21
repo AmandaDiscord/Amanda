@@ -1,8 +1,9 @@
 const Discord = require('discord.js');
 const mined = new Set();
 const fs = require("fs");
-const Canvas = require("canvas");
+// const Canvas = require("canvas");
 const util = require("util");
+const Canvas = "";
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils } = passthrough;
