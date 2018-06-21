@@ -1,6 +1,6 @@
 process.title = "Amanda";
 const fs = require("fs");
-const Auth =(process.env.is_heroku)? process.env.auth:JSON.parse(fs.readFileSync("./auth.json", "utf8"));
+const Auth =(process.env.is_heroku)? JSON.parse(process.env.auth):JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
 let utils = {};
