@@ -77,7 +77,7 @@ module.exports = function(passthrough) {
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-		djs.user.setActivity(`${name} | ${prefixes[0]}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+		djs.user.setActivity(`${name} | &help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
 
 	async function checkMessageForCommand(msg, isEdit) {
