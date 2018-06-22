@@ -22,10 +22,10 @@ exports.humanize = function(input, format) {
 	msec -= mins * 1000 * 60;
 	var secs = Math.floor(msec / 1000);
 	var timestr = "";
-	if (days > 0) timestr += days + " d ";
-	if (hours > 0) timestr += hours + " h ";
-	if (mins > 0) timestr += mins + " m ";
-	if (secs > 0) timestr += secs + " s";
+	if (days > 0) timestr += days + "d ";
+	if (hours > 0) timestr += hours + "h ";
+	if (mins > 0) timestr += mins + "m ";
+	if (secs > 0) timestr += secs + "s";
 	return timestr;
 }
 
