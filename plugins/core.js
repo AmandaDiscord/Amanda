@@ -25,7 +25,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Displays detailed statistics",
 			aliases: ["stats"],
-			process: function(msg, suffix) {
+			process: async function(msg, suffix) {
 				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
 				let status = utils.getPresenceEmoji(djs.user.presence.status);
 				let game = "No activity set";
@@ -33,20 +33,21 @@ module.exports = function(passthrough) {
 					 game = `Streaming [${djs.user.presence.game.name}](${djs.user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
 				} else if (djs.user.presence.game) game = utils.getPresencePrefix(djs.user.presence.game.type)+" **"+djs.user.presence.game.name+"**";
+				var nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				const embed = new Discord.RichEmbed()
-					.setAuthor("Statistics", djs.user.displayAvatarURL)
+					.setAuthor("Statistics")
 					.setTitle(`${djs.user.tag} ${status}`)
 					.setDescription(game)
-					.addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
-					.addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
-					.addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`)
-					.addField("❯ RAM Usage:", `${ramUsage}MB`)
-					.addField("❯ User Count:", `${djs.users.size} users`)
-					.addField("❯ Guild Count:", `${djs.guilds.size} guilds`)
-					.addField("❯ Channel Count:", `${djs.channels.size} channels`)
+					.addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`, true)
+					.addField(`❯ Message Edit:`, `${Date.now() - nmsg.createdTimestamp}ms`, true)
+					.addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`, true)
+					.addField("❯ RAM Usage:", `${ramUsage}MB`, true)
+					.addField("❯ User Count:", `${djs.users.size} users`, true)
+					.addField("❯ Guild Count:", `${djs.guilds.size} guilds`, true)
+					.addField("❯ Channel Count:", `${djs.channels.size} channels`, true)
 					.setFooter(`Requested by ${msg.author.username}`)
 					.setColor("36393E")
-				msg.channel.send({embed});
+				nmsg.edit({embed});
 			}
 		},
 
@@ -61,8 +62,8 @@ module.exports = function(passthrough) {
 				var footer = footers[Math.floor(Math.random() * footers.length)];
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Pong!")
-					.addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`)
-					.addField(`❯ Message Latency:`, `${Date.now() - msg.createdTimestamp}ms`)
+					.addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`, true)
+					.addField(`❯ Message Edit:`, `${Date.now() - msg.createdTimestamp}ms`, true)
 					.setFooter(footer)
 					.setColor("36393E")
 				var nmsg = await msg.channel.send(message);
