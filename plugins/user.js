@@ -1,4 +1,4 @@
-const Canvas = require("canvas");
+const Canvas = require("canvas-prebuilt");
 const util = require("util");
 const fs = require("fs");
 
