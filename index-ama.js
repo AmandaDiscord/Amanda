@@ -1,6 +1,6 @@
 process.title = "Amanda";
 const fs = require("fs");
-const Auth =(process.env.is_heroku)? JSON.parse(process.env.auth):JSON.parse(fs.readFileSync("./auth.json", "utf8"));
+process.env.auth = (process.env.is_heroku)? JSON.parse(process.env.auth):require('./auth.json'); 
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
 let utils = {};
@@ -9,7 +9,7 @@ const commands = {};
 const Discord = require('discord.js');
 const discordClient = require("dualcord");
 const client = new discordClient();
-client.login({ token: Auth.bot_token });
+client.login({ token: process.env.auth.bot_token });
 const dio = client.dioClient();
 const djs = client.djsClient();
 

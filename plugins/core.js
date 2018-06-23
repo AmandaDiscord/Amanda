@@ -1,5 +1,5 @@
 const fs = require("fs");
-const Auth = (process.env.is_heroku)? JSON.parse(process.env.auth):JSON.parse(fs.readFileSync("./auth.json", "utf8"));
+const Auth = process.env.auth;
 const os = require("os");
 const util = require("util");
 const { exec } = require("child_process");

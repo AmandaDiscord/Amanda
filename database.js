@@ -3,7 +3,7 @@ module.exports = function() {
 	return mysql.createPool({
 		host: "cadence.gq",
 		user: "amanda",
-		password: (process.env.is_heroku)? JSON.parse(process.env.auth).mysql_password:JSON.parse(fs.readFileSync("./auth.json", "utf8")),
+		password: process.env.auth.mysql_password,
 		database: "money",
 		connectionLimit: 5
 	});
