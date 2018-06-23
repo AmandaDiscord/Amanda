@@ -102,7 +102,7 @@ module.exports = function(passthrough) {
 					}
 					await msg.channel.send(result, {files: [buffer]});
 					msg.channel.stopTyping();
-				})
+				});
 			}
 		},
 
