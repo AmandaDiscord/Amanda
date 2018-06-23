@@ -1,8 +1,9 @@
-const Canvas = require("canvas");
+// const Canvas = require("canvas");
 const util = require("util");
 const fs = require("fs");
 const crypto = require("crypto");
 const request = require("request");
+const Canvas = "";
 
 module.exports = function(passthrough) {
 	const {Discord, djs, dio, utils} = passthrough;
@@ -247,6 +248,7 @@ module.exports = function(passthrough) {
 			aliases: ["ship"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
+				return msg.channel.send(`Due to deprecation, this feature is being reworked`);
 				var args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
 				let members = [];
