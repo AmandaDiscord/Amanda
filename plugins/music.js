@@ -1,7 +1,8 @@
 const ytdl = require("ytdl-core");
+const fs = require("fs");
 const Discord = require("discord.js");
 const YouTube = require('simple-youtube-api');
-const youtube = new YouTube(((process.env.is_heroku)? JSON.parse(process.env.auth).yt_api_key:JSON.parse(fs.readFileSync("./auth.json", "utf8"))));
+const youtube = new YouTube(((process.env.is_heroku)? JSON.parse(process.env.auth).yt_api_key:JSON.parse(fs.readFileSync("./auth.json", "utf8")).yt_api_key));
 const queues = new Map();
 const timeout = new Set();
 
