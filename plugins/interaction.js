@@ -290,7 +290,7 @@ module.exports = function(passthrough) {
 					}
 					await msg.channel.send(`Aww. I'd rate ${members[0].user.tag} and ${members[1].user.tag} being together a ${percentage}%`,{files: [buffer]});
 					msg.channel.stopTyping();
-				})
+				});
 			}
 		},
 
