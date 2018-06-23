@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const mined = new Set();
 const fs = require("fs");
-const Canvas = require("canvas-prebuilt");
+const Canvas = require("canvas");
 const util = require("util");
 
 module.exports = function(passthrough) {

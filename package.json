@@ -33,6 +33,6 @@
     "sqlite": "^2.9.2",
     "uws": "^9.148.0",
     "ytdl-core": "^0.20.4",
-    "canvas-prebuilt": "1.6.5-prerelease.1"
+    "canvas": "1.6.11"
   }
 }
