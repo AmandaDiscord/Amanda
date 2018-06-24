@@ -1,7 +1,6 @@
-// const Canvas = require("canvas");
+const Canvas = require("canvas-prebuilt");
 const util = require("util");
 const fs = require("fs");
-const Canvas = "";
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils } = passthrough;
@@ -12,7 +11,6 @@ module.exports = function(passthrough) {
 			aliases: ["profile"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				return msg.channel.send(`Due to deprecation, this feature is being reworked`);
 				var member = utils.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
@@ -22,7 +20,7 @@ module.exports = function(passthrough) {
 					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
 				dio.simulateTyping(msg.channel.id);
-				let canvas = new Canvas.createCanvas(640, 314);
+				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
 				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
 				Promise.all([

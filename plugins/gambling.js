@@ -1,9 +1,8 @@
 const Discord = require('discord.js');
 const mined = new Set();
 const fs = require("fs");
-// const Canvas = require("canvas");
+const Canvas = require("canvas-prebuilt");
 const util = require("util");
-const Canvas = "";
 
 module.exports = function(passthrough) {
 	const { Discord, djs, dio, utils } = passthrough;
@@ -35,7 +34,6 @@ module.exports = function(passthrough) {
 			aliases: ["slot", "slots"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				return msg.channel.send(`Due to deprecation, this feature is being reworked`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
 					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
@@ -47,7 +45,7 @@ module.exports = function(passthrough) {
 				var slot1 = array[Math.floor(Math.random() * array.length)];
 				var slot2 = array[Math.floor(Math.random() * array.length)];
 				var slot3 = array[Math.floor(Math.random() * array.length)];
-				let canvas = new Canvas.createCanvas(553, 552);
+				let canvas = new Canvas(553, 552);
 				let ctx = canvas.getContext("2d");
 				Promise.all([
 					util.promisify(fs.readFile)(`./images/emojis/${slot1}.png`),

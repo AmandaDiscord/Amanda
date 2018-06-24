@@ -1,9 +1,8 @@
-// const Canvas = require("canvas");
+const Canvas = require("canvas-prebuilt");
 const util = require("util");
 const fs = require("fs");
 const crypto = require("crypto");
 const request = require("request");
-const Canvas = "";
 
 module.exports = function(passthrough) {
 	const {Discord, djs, dio, utils} = passthrough;
@@ -248,7 +247,6 @@ module.exports = function(passthrough) {
 			aliases: ["ship"],
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				return msg.channel.send(`Due to deprecation, this feature is being reworked`);
 				var args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
 				let members = [];
@@ -259,7 +257,7 @@ module.exports = function(passthrough) {
 				});
 				if (members.every(m => m.id == members[0].id)) return msg.channel.send(`You can't ship someone with themselves, silly`);
 				msg.channel.startTyping();
-				let canvas = new Canvas.createCanvas(300, 100);
+				let canvas = new Canvas(300, 100);
 				let ctx = canvas.getContext("2d");
 				let pfpurls = members.map(m => {
 					return (m.user.avatar)?`https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`: m.user.defaultAvatarURL
