@@ -1,11 +1,10 @@
 const fs = require("fs");
-const Auth = (process.env.is_heroku)? JSON.parse(process.env.auth):JSON.parse(fs.readFileSync("./auth.json", "utf8"));
 const os = require("os");
 const util = require("util");
 const { exec } = require("child_process");
 
 module.exports = function(passthrough) {
-	const { Discord, client, djs, dio, db, utils, commands } = passthrough;
+	const { Auth, Discord, client, djs, dio, db, utils, commands } = passthrough;
 	return {
 		"uptime": {
 			usage: "",
@@ -291,7 +290,7 @@ module.exports = function(passthrough) {
 						result = e;
 					}
 					let output = await utils.stringify(result);
-					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token,"g"),"No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token, "g"), "No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
 					utils.reactionMenu(nmsg, [
 						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
 					]);

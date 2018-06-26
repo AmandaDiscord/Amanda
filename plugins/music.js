@@ -2,12 +2,12 @@ const ytdl = require("ytdl-core");
 const fs = require("fs");
 const Discord = require("discord.js");
 const YouTube = require('simple-youtube-api');
-const youtube = new YouTube(((process.env.is_heroku)? JSON.parse(process.env.auth).yt_api_key:JSON.parse(fs.readFileSync("./auth.json", "utf8")).yt_api_key));
 const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils } = passthrough;
+	const { Auth, Discord, djs, dio, utils } = passthrough;
+	const youtube = new YouTube(Auth.yt_api_key);
 
 	function callskip(msg, queue) {
 		if (!queue) return msg.channel.send(`There aren't any songs to skip`);

@@ -52,7 +52,7 @@ module.exports = function(passthrough) {
 
 	function manageDisconnect(reason) {
 		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
-		setTimeout(function(){ client.login(Auth.bot_token); }, 6000);
+		setTimeout(() => client.login(Auth.bot_token), 6000);
 	}
 
 	function manageError(reason) {
