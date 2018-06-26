@@ -31,13 +31,29 @@ module.exports = function(passthrough) {
 		}, time);
 	}
 
-	utils.sql = async function(string, prepared) {
-		if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
-		return (await db.execute(string, prepared))[0];
+	utils.getConnection = function() {
+		return db.getConnection();
 	}
 
-	utils.get = async function(string, prepared) {
-		return (await utils.sql(string, prepared))[0];
+	utils.sql = function(string, prepared, connection, attempts) {
+		if (!attempts) attempts = 2;
+		if (!connection) connection = db;
+		if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
+		return new Promise((resolve, reject) => {
+			connection.execute(string, prepared).then(result => {
+				let rows = result[0];
+				resolve(rows);
+			}).catch(err => {
+				console.error(err);
+				attempts--;
+				if (attempts) utils.sql(string, prepared, connection, attempts).then(resolve).catch(reject);
+				else reject(err);
+			});
+		});
+	}
+
+	utils.get = async function(string, prepared, connection) {
+		return (await utils.sql(string, prepared, connection))[0];
 	}
 
 	return {};
