@@ -15,7 +15,10 @@ const djs = client.djsClient();
 
 console.log(`Starting`);
 
-if (process.env.is_heroku) require("http").createServer(new Function(), process.env.PORT);
+if (process.env.is_heroku) require("http").createServer((req, res) => {
+	res.writeHead(200, {"Content-Type": "text/plain"});
+	res.end("Nice");
+}).listen(process.env.PORT);
 
 let db = require("./database.js")(Auth.mysql_password);
 let passthrough = { Auth, Discord, client, djs, dio, reloadEvent, utils, db, commands };
