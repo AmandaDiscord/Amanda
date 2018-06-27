@@ -11,6 +11,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Hugs someone",
 			aliases: ["hug"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna hug`);
@@ -39,6 +40,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Kisses someone",
 			aliases: ["kiss"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna kiss`);
@@ -67,6 +69,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Cuddles someone",
 			aliases: ["cuddle"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna cuddle`);
@@ -95,6 +98,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Pokes someone",
 			aliases: ["poke"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna poke`);
@@ -123,6 +127,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Slaps someone",
 			aliases: ["slap"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna slap`);
@@ -151,6 +156,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Boops someone",
 			aliases: ["boop"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna boop`);
@@ -179,6 +185,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Pats someone",
 			aliases: ["pat"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna pat`);
@@ -207,6 +214,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Stabs someone",
 			aliases: ["stab"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna stab`);
@@ -226,6 +234,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "noms someone",
 			aliases: ["nom"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna nom`);
@@ -254,6 +263,7 @@ module.exports = function(passthrough) {
 			usage: "<mention 1> <mention 2>",
 			description: "Ships two people",
 			aliases: ["ship"],
+			category: "interaction",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
@@ -306,6 +316,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Beans a user",
 			aliases: ["bean"],
+			category: "interaction",
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(`You have to tell me someone to bean!`);

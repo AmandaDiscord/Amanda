@@ -7,6 +7,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Returns an image of a cute cat",
 			aliases: ["cat"],
+			category: "images",
 			process: function(msg, suffix){
 				request("https://api.cheweybot.ga/cat", function(err, res, body) {
 					if (err) return msg.channel.send(`Error... API returned nothing`);
@@ -28,6 +29,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Returns an image of a cute doggo",
 			aliases: ["dog", "doggo"],
+			category: "images",
 			process: function(msg, suffix){
 				request("https://api.cheweybot.ga/dog", function(err, res, body) {
 					if (err) return msg.channel.send("Error. The API returned nothing...");
@@ -49,6 +51,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Returns an image of space",
 			aliases: ["space"],
+			category: "images",
 			process: function(msg, suffix) {
 				request("https://api.cheweybot.ga/space", function(err, res, body) {
 					if (err) return msg.channel.send("Error... API returned nothing");
@@ -70,6 +73,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Gives a random meme",
 			aliases: ["meme"],
+			category: "images",
 			process: async function(msg, suffix) {
 				var array = ["dankmemes", "meirl", "2meirl4meirl", "animemes", "sbubby", "fellowkids", "bertstrips", "hmmm", "2healthbars", "coaxedintoasnafu", "bossfight"];
 				var choice = array[Math.floor(Math.random() * array.length)];

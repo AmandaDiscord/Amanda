@@ -145,12 +145,13 @@ module.exports = function(passthrough) {
 	return {
 		"trivia": {
 			usage: "<play / categories>",
-			aliases: ["trivia", "t"],
 			description: "A game of trivia using OpenTDB or Open Trivia Data Base",
+			aliases: ["trivia", "t"],
+			category: "fun",
 			process: function(msg, suffix) {
-				if (suffix == "play") {
+				if (suffix.toLowerCase() == "play" || suffix.toLowerCase() == "p") {
 					doQuestion(msg);
-				} else if (suffix == "categories") {
+				} else if (suffix.toLowerCase() == "categories") {
 					https.get("https://opentdb.com/api_category.php", (res) => {
 						res.on('data', function(data) {
 							try {

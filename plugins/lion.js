@@ -9,6 +9,7 @@ module.exports = function(passthrough) {
 			usage: "Pet test",
 			description: "Pet test description",
 			aliases: ["pet", "pets"],
+			category: "fun",
 			process: async function(msg, suffix) {
 				if (!await utils.hasPermission(msg.author, "eval")) return utils.sendNopeMessage(msg);
 				let action = suffix.split(" ")[0];

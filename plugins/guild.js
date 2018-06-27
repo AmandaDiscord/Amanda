@@ -5,6 +5,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Gets the user info about yourself or another user if provided.",
 			aliases: ["user"],
+			category: "guild",
 			process: function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
@@ -41,6 +42,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Gets the avatar of a user",
 			aliases: ["avatar", "pfp"],
+			category: "guild",
 			process: function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
@@ -61,6 +63,7 @@ module.exports = function(passthrough) {
 			usage: "<# of messages to delete>",
 			description: "Tidies the chat. Requires the bot and the person who sent the message to have the manage messages permission",
 			aliases: ["tidy", "purge"],
+			category: "moderation",
 			process: function(msg, suffix) {
 				if(msg.channel.type !== 'text') return msg.channel.send("You cannot use this command in DMs");
 				if (msg.member.hasPermission("MANAGE_MESSAGES")) {
@@ -79,6 +82,7 @@ module.exports = function(passthrough) {
 			usage: "<:emoji:>",
 			description: "Gets the information of the emoji provided",
 			aliases: ["emoji"],
+			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
 				var emoji = utils.emoji(suffix);
@@ -96,7 +100,8 @@ module.exports = function(passthrough) {
 		"emojilist": {
 			usage: "",
 			description: "Gets a list of every emoji in a guild",
-			aliases: ["emojilist"],
+			aliases: ["emojilist", "emojis"],
+			category: "guild",
 			process: function(msg, suffix) {
 				if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
 				var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
@@ -111,6 +116,7 @@ module.exports = function(passthrough) {
 			usage: "<:emoji:>",
 			description: "Makes an emoji bigger",
 			aliases: ["wumbo"],
+			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
 				var emoji = utils.emoji(suffix);
@@ -126,6 +132,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Gets information about the server",
 			aliases: ["guild", "server"],
+			category: "guild",
 			process: function(msg, suffix) {
 				if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
 				const embed = new Discord.RichEmbed()
@@ -144,6 +151,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Bans a member",
 			aliases: ["ban"],
+			category: "moderation",
 			process: function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				if (msg.member.hasPermission("BAN_MEMBERS")) {
@@ -168,6 +176,7 @@ module.exports = function(passthrough) {
 			usage: "<snowflake / ID>",
 			description: "Bans a member who may not be in the guild. Still works if they are. Requires a user ID to be passed as an argument",
 			aliases: ["hackban", "hb"],
+			category: "moderation",
 			process: function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				if (msg.member.hasPermission("BAN_MEMBERS")) {
@@ -189,6 +198,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Kicks a member",
 			aliases: ["kick"],
+			category: "moderation",
 			process: function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				if (msg.member.hasPermission("KICK_MEMBERS")) {

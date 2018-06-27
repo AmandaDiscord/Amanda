@@ -23,6 +23,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Rolls two six sided die",
 			aliases: ["dice"],
+			category: "gambling",
 			process: function(msg, suffix) {
 				msg.channel.send(`You rolled a ${Math.floor(Math.random() * (6 - 1) + 1)} and a ${Math.floor(Math.random() * (6 - 1) + 1)}`);
 			}
@@ -32,6 +33,7 @@ module.exports = function(passthrough) {
 			usage: "<bet>",
 			description: "Runs a random slot machine for a chance at Discoins",
 			aliases: ["slot", "slots"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
@@ -110,6 +112,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Flips a coin",
 			aliases: ["flip"],
+			category: "gambling",
 			process: function(msg, suffix) {
 				var array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
 				var flip = array[Math.floor(Math.random() * array.length)];
@@ -121,6 +124,7 @@ module.exports = function(passthrough) {
 			usage: "<bet> <side (h or t)>",
 			description: "Place a bet on a random flip for a chance of Discoins",
 			aliases: ["betflip", "bf"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
@@ -157,6 +161,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Returns the amount of Discoins you or another user has",
 			aliases: ["coins", "$"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var member = utils.findMember(msg, suffix, true);
@@ -179,6 +184,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Mines for Discoins",
 			aliases: ["mine"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
@@ -205,6 +211,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Gets the leaderboard for people with the most coins",
 			aliases: ["leaderboard", "lb"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				var all = await utils.sql("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", djs.user.id);
 				let index = 0;
@@ -220,6 +227,7 @@ module.exports = function(passthrough) {
 			usage: "<amount> <user>",
 			description: "Gives discoins to a user from your account",
 			aliases: ["give", "gift"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
@@ -264,6 +272,7 @@ module.exports = function(passthrough) {
 			usage: "<amount> <user>",
 			description: "Awards a specific user ",
 			aliases: ["award"],
+			category: "admin",
 			process: async function(msg, suffix) {
 				if (["320067006521147393"].includes(msg.author.id)) {
 					if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
@@ -300,6 +309,7 @@ module.exports = function(passthrough) {
 			usage: "<bet>",
 			description: "Runs a random wheel for a chance at gaining discoins",
 			aliases: ["wheel"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				var args = suffix.split(" ");
 				var arrows = ["up", "down", "left", "right", "lower_left", "lower_right", "upper_left", "upper_right"];
@@ -318,6 +328,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Gets the waifu information about yourself or a user",
 			aliases: ["waifu"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var member = utils.findMember(msg, suffix, true);
@@ -337,6 +348,7 @@ module.exports = function(passthrough) {
 			usage: "<price> <user>",
 			description: "Claims someone as a waifu. Requires Discoins",
 			aliases: ["claim"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
@@ -382,6 +394,7 @@ module.exports = function(passthrough) {
 			usage: "<amount> <user>",
 			description: "Invests Discoins into your waifu",
 			aliases: ["invest"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				var array = [["Soon", 500], ["It's almost here", 1200], ["Not too much longer of a wait", 2000]];
 				var [soon, time] = array[Math.floor(Math.random() * array.length)];

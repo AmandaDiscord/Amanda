@@ -9,6 +9,7 @@ module.exports = function(passthrough) {
 			usage: "<user>",
 			description: "Gets the Amanda profile for a user",
 			aliases: ["profile"],
+			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				var member = utils.findMember(msg, suffix, true);

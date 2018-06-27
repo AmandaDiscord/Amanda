@@ -236,6 +236,7 @@ module.exports = function(passthrough) {
 			usage: "Null",
 			description: "See `&commands music` for help",
 			aliases: ["music", "m"],
+			category: "music",
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
