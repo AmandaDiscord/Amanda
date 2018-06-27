@@ -233,7 +233,7 @@ module.exports = function(passthrough) {
 
 	return {
 		"music": {
-			usage: "Null",
+			usage: "",
 			description: "See `&commands music` for help",
 			aliases: ["music", "m"],
 			category: "music",

@@ -48,7 +48,8 @@ module.exports = function(passthrough) {
 					.addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`, true)
 					.addField("❯ Channel Count:", `${djs.channels.size} channels`, true)
 					.addBlankField(true)
-					.addField("❯ RAM Usage:", `${ramUsage}MB`)
+					.addField("❯ RAM Usage:", `${ramUsage}MB`, true)
+					.addField("❯ Voice Connections:", `${djs.voiceConnections.size}`, true)
 					.setFooter(`Requested by ${msg.author.username}`)
 					.setColor("36393E")
 				nmsg.edit({embed});
@@ -105,13 +106,13 @@ module.exports = function(passthrough) {
 					.addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>")
 					.addField("Lang:", `Node.js ${process.version}`)
 					.addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
-					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love.")
+					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love")
 					.addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)")
 					.addBlankField(true)
 					.addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>\n[SHODAN](http://shodanbot.com) <:bot:412413027565174787>\n[cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>\n[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
 					.setFooter("Amanda", djs.user.avatarURL)
 					.setColor(504277)
-				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+				msg.channel.send({embed});
 			}
 		},
 
