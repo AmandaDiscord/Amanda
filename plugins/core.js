@@ -150,9 +150,10 @@ module.exports = function(passthrough) {
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
-						await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
-						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-						return;
+						.setColor('36393E')
+					await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					return;
 				}
 				if (suffix.toLowerCase() == "playlist") {
 					const embed = new Discord.RichEmbed()
