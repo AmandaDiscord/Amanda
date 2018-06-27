@@ -138,6 +138,53 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you must provide a command category as an argument`);
 				var cat = Object.values(commands).filter(c => c.category == suffix.toLowerCase());
+				if (suffix.toLowerCase() == "music") {
+					const embed = new Discord.RichEmbed()
+						.setAuthor("&music: command help [music, m]")
+						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\``)
+						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
+						.addField(`now`, `Show the current song.\n\`&music now\``)
+						.addField(`queue`, `Shows the current queue.\n\`&music queue\``)
+						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
+						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
+						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
+						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
+						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
+						await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+						return;
+				}
+				if (suffix.toLowerCase() == "playlist") {
+					const embed = new Discord.RichEmbed()
+						.setAuthor(`&music playlist: command help`)
+						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. "+
+							"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n"+
+							"Note that using `add`, `remove`, `move` and `import` require you to be the owner (creator) of a playlist.")
+						.addField("play [start] [end]", "Play a playlist.\n"+
+							"Optionally, specify values for start and end to play specific songs from a playlist. "+
+							"Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\n"+
+							"`&music playlist xi play` (plays the entire playlist named `xi`)\n"+
+							"`&music playlist xi play 32` (plays item #32 from the playlist)\n"+
+							"`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\n"+
+							"`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)")
+						.addField("shuffle [start] [end]", "Play the songs from a playlist in a random order. Works exactly like `play`.\n`&music playlist xi shuffle`")
+						.addField("add <url>", "Add a song to playlist. Specify a URL the same as `&music play`.\n"+
+							"`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`")
+						.addField("remove <index>", "Remove a song from a playlist.\n"+
+							"`index` is the index of the item to be removed.\n"+
+							"`&music playlist xi remove 12`")
+						.addField("move <index1> <index2>", "Move items around within a playlist. "+
+							"`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\n"+
+							"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. "+
+							"If you don't understand what this means, try it out yourself.\n"+
+							"`&music playlist xi move 12 13`")
+						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
+							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
+						.setColor('36393E')
+					await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					return;
+				}
 				if (!cat || cat.toString().length < 1) {
 					const embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`)
