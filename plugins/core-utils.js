@@ -38,16 +38,15 @@ exports.humanize = function(input, format) {
  */
 exports.findMember = function(msg, usertxt, self = false) {
 	usertxt = usertxt.toLowerCase();
-	let userIDMatch = usertxt.match(/<@!?(\d+)>/);
-	let usertxtWithoutAt = usertxt.replace(/^@/, "");
+	if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
 	let matchFunctions = [];
-	if (userIDMatch) matchFunctions.push(user => user.id == userIDMatch[1]);
 	matchFunctions = matchFunctions.concat([
-		member => member.user.tag.toLowerCase() == usertxtWithoutAt,
-		member => member.user.username.toLowerCase() == usertxtWithoutAt,
-		member => member.displayName.toLowerCase() == usertxtWithoutAt,
-		member => member.user.username.toLowerCase().includes(usertxtWithoutAt),
-		member => member.displayName.toLowerCase().includes(usertxtWithoutAt)
+		member => member.id.includes(usertxt),
+		member => member.user.tag.toLowerCase() == usertxt,
+		member => member.user.username.toLowerCase() == usertxt,
+		member => member.displayName.toLowerCase() == usertxt,
+		member => member.user.username.toLowerCase().includes(usertxt),
+		member => member.displayName.toLowerCase().includes(usertxt)
 	]);
 	if (!usertxt) {
 		if (self) return msg.member;
@@ -69,14 +68,13 @@ exports.findMember = function(msg, usertxt, self = false) {
  */
 exports.findUser = function(msg, client, usertxt, self = false) {
 	usertxt = usertxt.toLowerCase();
-	let userIDMatch = usertxt.match(/<@!?(\d+)>/);
-	let usertxtWithoutAt = usertxt.replace(/^@/, "");
+	if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
 	let matchFunctions = [];
-	if (userIDMatch) matchFunctions.push(user => user.id == userIDMatch[1]);
 	matchFunctions = matchFunctions.concat([
-		user => user.tag.toLowerCase() == usertxtWithoutAt,
-		user => user.username.toLowerCase() == usertxtWithoutAt,
-		user => user.username.toLowerCase().includes(usertxtWithoutAt)
+		user => user.id.includes(usertxt),
+		user => user.tag.toLowerCase() == usertxt,
+		user => user.username.toLowerCase() == usertxt,
+		user => user.username.toLowerCase().includes(usertxt)
 	]);
 	if (!usertxt) {
 		if (self) return msg.author;

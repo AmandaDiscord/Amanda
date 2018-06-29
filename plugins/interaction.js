@@ -268,24 +268,19 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
-				let members = [];
-				let mentions = msg.mentions.members.array();
-				members = args.map(arg => {
-					if (arg.match(/^<@!?\d+>$/)) return mentions.pop();
-					else return utils.findMember(msg, arg);
-				});
-				if (members.every(m => !m)) return msg.channel.send(`One or both of the members provided couldn't be found`);
-				if (members.every(m => m.id == members[0].id)) return msg.channel.send(`You can't ship someone with themselves, silly`);
+				var mem1 = utils.findMember(msg, args[0]);
+				var mem2 = utils.findMember(msg, args[1]);
+				if (mem1 == null) return msg.channel.send(`The first member provided was not found`);
+				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
 				msg.channel.startTyping();
 				let canvas = new Canvas(300, 100);
 				let ctx = canvas.getContext("2d");
-				let pfpurls = members.map(m => {
-					return (m.user.avatar)?`https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png?size=128`: m.user.defaultAvatarURL
-				});
-				Promise.all(pfpurls.map(p => new Promise(resolve => request(p, {encoding: null}, (e,r,b) => resolve(b)))).concat([
+				Promise.all([
+					new Promise(resolve => request(mem1.user.displayAvatarURL, {encoding: null}, (e, r, b) => resolve(b))),
+					new Promise(resolve => request(mem2.user.displayAvatarURL, {encoding: null}, (e, r, b) => resolve(b))),
 					util.promisify(fs.readFile)("./images/emojis/heart.png", { encoding: null }),
 					util.promisify(fs.readFile)("./images/300x100.png", { encoding: null })
-				])).then(async ([avatar1, avatar2, emoji, template]) => {
+				]).then(async ([avatar1, avatar2, emoji, template]) => {
 					let templateI = new Canvas.Image();
 					templateI.src = template;
 					ctx.drawImage(templateI, 0, 0, 300, 100);
@@ -299,14 +294,14 @@ module.exports = function(passthrough) {
 					avatarII.src = avatar2;
 					ctx.drawImage(avatarII, 200, 0, 100, 100);
 					let buffer = canvas.toBuffer();
-					let strings = [members[0].id, members[1].id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
+					let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
 					let percentage = undefined;
 					if (strings == "320067006521147393 405208699313848330") percentage = 100;
 					else {
 						let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 						percentage = parseInt("0x"+hash)%101;
 					}
-					await msg.channel.send(`Aww. I'd rate ${members[0].user.tag} and ${members[1].user.tag} being together a ${percentage}%`,{files: [buffer]});
+					await msg.channel.send(`Aww. I'd rate ${mem1.user.tag} and ${mem2.user.tag} being together a ${percentage}%`,{files: [buffer]});
 					msg.channel.stopTyping();
 				});
 			}
