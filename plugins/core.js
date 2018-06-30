@@ -215,7 +215,7 @@ module.exports = function(passthrough) {
 				} else {
 					const embed = new Discord.RichEmbed() // \n❯ NSFW
 						.setAuthor("Command Categories:")
-						.setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n⮟ Server\n   Guild\n   Moderation\n   Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``)
+						.setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``)
 						.setFooter("Amanda help panel", djs.user.avatarURL)
 						.setColor('36393E')
 						await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work`));
