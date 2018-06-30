@@ -153,6 +153,7 @@ module.exports = function(passthrough) {
 			});
 			dispatcher.on('error', error => console.error(error));
 			dispatcher.setVolumeLogarithmic(queue.volume / 5);
+			dispatcher.setBitrate("auto");
 		});
 	}
 
