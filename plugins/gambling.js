@@ -94,7 +94,8 @@ module.exports = function(passthrough) {
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
-						result += `A single :heart: You won your bet back`;
+						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
+						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 1.25)), msg.author.id]);
 					} else if (slot1 == slot2 && slot2 == slot3) {
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
