@@ -12,9 +12,9 @@ module.exports = function(passthrough) {
 			utils.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
 			utils.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
 		]);
-		let claimer = claimerRow ? dio.users[claimerRow.userID] : undefined;
+		let claimer = claimerRow ? djs.users.get(claimerRow.userID) : undefined;
 		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
-		let waifu = meRow ? dio.users[meRow.waifuID] : undefined;
+		let waifu = meRow ? djs.users.get(meRow.waifuID) : undefined;
 		return {claimer, price, waifu};
 	}
 
@@ -42,6 +42,7 @@ module.exports = function(passthrough) {
 					await msg.channel.send(`Created user account`);
 					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
+				dio.simulateTyping(msg.channel.id);
 				var args = suffix.split(" ");
 				var array = ['apple', 'cherries', 'watermelon', 'pear', 'heart', "strawberry"];
 				var slot1 = array[Math.floor(Math.random() * array.length)];
@@ -71,7 +72,6 @@ module.exports = function(passthrough) {
 
 					if (!args[0]) {
 						await msg.channel.send({files: [buffer]});
-						return msg.channel.stopTyping();
 					}
 					if (args[0] == "all") {
 						if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
@@ -79,10 +79,9 @@ module.exports = function(passthrough) {
 					} else {
 						if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid bet`);
 						var bet = Math.floor(parseInt(args[0]));
-						if (bet < 1) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 1`);
+						if (bet < 2) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 2`);
 						if (bet > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
 					}
-					msg.channel.startTyping();
 					var result = `**${msg.author.tag}**, `;
 					if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
 						result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
@@ -95,7 +94,7 @@ module.exports = function(passthrough) {
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
 						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 1.25)), msg.author.id]);
+						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 0.25)), msg.author.id]);
 					} else if (slot1 == slot2 && slot2 == slot3) {
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
@@ -104,7 +103,6 @@ module.exports = function(passthrough) {
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
 					}
 					await msg.channel.send(result, {files: [buffer]});
-					msg.channel.stopTyping();
 				});
 			}
 		},
@@ -218,7 +216,7 @@ module.exports = function(passthrough) {
 				let index = 0;
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboards")
-					.setDescription(all.map(row => `${++index}. ${dio.users[row.userID] ? dio.users[row.userID].username : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
+					.setDescription(all.map(row => `${++index}. ${djs.users.get(row.userID) ? djs.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
 					.setColor("F8E71C")
 				msg.channel.send({embed});
 			}
@@ -338,8 +336,8 @@ module.exports = function(passthrough) {
 				const embed = new Discord.RichEmbed()
 					.setAuthor(member.user.tag, member.user.avatarURL)
 					.addField(`Price:`, info.price)
-					.addField(`Claimed by:`, info.claimer ? info.claimer.username : "(nobody)")
-					.addField(`Waifu:`, info.waifu ? info.waifu.username : "(nobody)")
+					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
+					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")
 					.setColor("36393E")
 				msg.channel.send({embed});
 			}

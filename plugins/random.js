@@ -17,10 +17,7 @@ module.exports = function(passthrough) {
 				if (!max) return msg.channel.send("Please provide a maximum number");
 				if (isNaN(min)) return msg.channel.send(`${msg.author.username}, the minimum value you provided is not a number`);
 				if (isNaN(max)) return msg.channel.send(`${msg.author.username}, the maximum value you provided is not a number`);
-				const embed = new Discord.RichEmbed()
-					.setDescription(Math.floor(Math.random() * (max - min) + min))
-					.setColor("36393E");
-				msg.channel.send({embed})
+				msg.channel.send(`${Math.floor(Math.random() * (max - min) + min)}, <@${msg.author.id}>`)
 			}
 		},
 
@@ -31,6 +28,7 @@ module.exports = function(passthrough) {
 			category: "fun",
 			process: function(msg, suffix) {
 				request("http://api.icndb.com/jokes/random", function(err, res, body) {
+					if (err) return msg.channel.send(`Error: The API didn't return anything`);
 					try {
 						var data = JSON.parse(body);
 					} catch (reason) {
@@ -48,12 +46,13 @@ module.exports = function(passthrough) {
 			category: "fun",
 			process: function(msg, suffix) {
 				request("http://api.yomomma.info/", function(err, res, body) {
-				try {
-					var data = JSON.parse(body);
-				} catch(reason) {
-					msg.channel.send(`There was an error parsing the data:\n${reason}`);
-				}
-				msg.channel.send(data.joke);
+					if (err) return msg.channel.send(`Error: The API didn't return anything`);
+					try {
+						var data = JSON.parse(body);
+					} catch(reason) {
+						msg.channel.send(`There was an error parsing the data:\n${reason}`);
+					}
+					msg.channel.send(data.joke);
 				});
 			}
 		},
@@ -67,11 +66,7 @@ module.exports = function(passthrough) {
 				var array = ["yes", "no"];
 				var choice = array[Math.floor(Math.random() * array.length)];
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you didn't ask a question`);
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Yes or No")
-					.setDescription(`I'd have to say ${choice}`)
-					.setColor("36393E");
-				msg.channel.send({embed});
+				msg.channel.send(`I'd have to say ${choice}, <@${msg.author.id}>`);
 			}
 		},
 
@@ -84,12 +79,7 @@ module.exports = function(passthrough) {
 				var array = ["The stars have fortold.", "The prophecy has told true.", "Absolutely", "Answer Unclear Ask Later", "Cannot Foretell Now", "Can't Say Now", "Chances Aren't Good", "Consult Me Later", "Don't Bet On It", "Focus And Ask Again", "Indications Say Yes", "Looks Like Yes", "No", "No Doubt About It", "Positively", "Prospect Good", "So It Shall Be", "The Stars Say No", "Unlikely", "Very Likely", "Yes", "You Can Count On It", "As I See It Yes", "Ask Again Later", "Better Not Tell You Now", "Cannot Predict Now", "Concentrate and Ask Again", "Don't Count On It", "It Is Certain", "It Is Decidedly So", "Most Likely", "My Reply Is No", "My Sources Say No", "Outlook Good", "Outlook Not So Good", "Reply Hazy Try Again", "Signs Point to Yes", "Very Doubtful", "Without A Doubt", "Yes", "Yes - Definitely", "You May Rely On It", "Ask Me If I Care", "Dumb Question Ask Another", "Forget About It", "Not A Chance", "Obviously", "Well Maybe", "What Do You Think?", "Whatever"];
 				var choice = array[Math.floor(Math.random() * array.length)];
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you didn't ask the 8ball a question`);
-				const embed = new Discord.RichEmbed()
-					.setDescription(":8ball:")
-					.addField("You asked:", suffix)
-					.addField("I'd have to say:", choice)
-					.setColor("36393E");
-				msg.channel.send({embed});
+				msg.channel.send(`${choice}, <@${msg.author.id}>`);
 			}
 		},
 
