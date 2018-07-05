@@ -240,8 +240,8 @@ module.exports = function(passthrough) {
 			category: "music",
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
-				if (!allowed) return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing PapiOphidian#8685`);
+				// let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
+				// if (!allowed) return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing PapiOphidian#8685`);
 				var args = suffix.split(" ");
 				let queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
