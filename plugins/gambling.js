@@ -71,7 +71,7 @@ module.exports = function(passthrough) {
 					let buffer = canvas.toBuffer();
 
 					if (!args[0]) {
-						await msg.channel.send({files: [buffer]});
+						return msg.channel.send({files: [buffer]});
 					}
 					if (args[0] == "all") {
 						if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
