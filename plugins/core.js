@@ -95,7 +95,7 @@ module.exports = function(passthrough) {
 					.setAuthor("Information:")
 					.setColor("36393E")
 					.setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me")
-					.addField("Creator:", `${owner.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`)
+					.addField("Creator:", `${creator.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`)
 					.addField("Lang:", `Node.js ${process.version}`)
 					.addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)")
 					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love")
