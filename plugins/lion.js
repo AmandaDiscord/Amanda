@@ -3,7 +3,7 @@ const lengths = ["long", "short"];
 const scents = ["grass", "dirt", "flour", "basil"];
 
 module.exports = function(passthrough) {
-	let { djs, reloadEvent, utils } = passthrough;
+	let { client, reloadEvent, utils } = passthrough;
 	return {
 		"pet": {
 			usage: "Pet test",

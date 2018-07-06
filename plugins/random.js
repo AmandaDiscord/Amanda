@@ -2,7 +2,7 @@ const entities = require("entities");
 const request = require("request");
 
 module.exports = function(passthrough) {
-	const {Discord, djs, dio} = passthrough;
+	const { Discord, client } = passthrough;
 	return {
 		"randnumber": {
 			usage: "<min #> <max #>",
@@ -17,7 +17,7 @@ module.exports = function(passthrough) {
 				if (!max) return msg.channel.send("Please provide a maximum number");
 				if (isNaN(min)) return msg.channel.send(`${msg.author.username}, the minimum value you provided is not a number`);
 				if (isNaN(max)) return msg.channel.send(`${msg.author.username}, the maximum value you provided is not a number`);
-				msg.channel.send(`${Math.floor(Math.random() * (max - min) + min)}, <@${msg.author.id}>`)
+				msg.channel.send(`${Math.floor(Math.random() * (max - min) + min)}, ${msg.author.username}`)
 			}
 		},
 
@@ -66,7 +66,7 @@ module.exports = function(passthrough) {
 				var array = ["yes", "no"];
 				var choice = array[Math.floor(Math.random() * array.length)];
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you didn't ask a question`);
-				msg.channel.send(`I'd have to say ${choice}, <@${msg.author.id}>`);
+				msg.channel.send(`I'd have to say ${choice}, ${msg.author.username}`);
 			}
 		},
 
@@ -79,7 +79,7 @@ module.exports = function(passthrough) {
 				var array = ["The stars have fortold.", "The prophecy has told true.", "Absolutely", "Answer Unclear Ask Later", "Cannot Foretell Now", "Can't Say Now", "Chances Aren't Good", "Consult Me Later", "Don't Bet On It", "Focus And Ask Again", "Indications Say Yes", "Looks Like Yes", "No", "No Doubt About It", "Positively", "Prospect Good", "So It Shall Be", "The Stars Say No", "Unlikely", "Very Likely", "Yes", "You Can Count On It", "As I See It Yes", "Ask Again Later", "Better Not Tell You Now", "Cannot Predict Now", "Concentrate and Ask Again", "Don't Count On It", "It Is Certain", "It Is Decidedly So", "Most Likely", "My Reply Is No", "My Sources Say No", "Outlook Good", "Outlook Not So Good", "Reply Hazy Try Again", "Signs Point to Yes", "Very Doubtful", "Without A Doubt", "Yes", "Yes - Definitely", "You May Rely On It", "Ask Me If I Care", "Dumb Question Ask Another", "Forget About It", "Not A Chance", "Obviously", "Well Maybe", "What Do You Think?", "Whatever"];
 				var choice = array[Math.floor(Math.random() * array.length)];
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you didn't ask the 8ball a question`);
-				msg.channel.send(`${choice}, <@${msg.author.id}>`);
+				msg.channel.send(`${choice}, ${msg.author.username}`);
 			}
 		},
 

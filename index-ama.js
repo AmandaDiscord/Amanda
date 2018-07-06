@@ -7,11 +7,8 @@ let utils = {};
 const commands = {};
 
 const Discord = require('discord.js');
-const discordClient = require("dualcord");
-const client = new discordClient();
-client.login({token: Auth.bot_token});
-const dio = client.dioClient();
-const djs = client.djsClient();
+const client = new Discord.Client();
+client.login(Auth.bot_token);
 
 console.log(`Starting`);
 
@@ -21,5 +18,5 @@ if (process.env.is_heroku) require("http").createServer((req, res) => {
 }).listen(process.env.PORT);
 
 let db = require("./database.js")(Auth.mysql_password);
-let passthrough = { Auth, Discord, client, djs, dio, reloadEvent, utils, db, commands };
+let passthrough = { Auth, Discord, client, reloadEvent, utils, db, commands };
 require("./plugins.js")(passthrough);

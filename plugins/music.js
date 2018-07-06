@@ -6,7 +6,7 @@ const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Auth, Discord, djs, dio, utils } = passthrough;
+	const { Auth, Discord, client, utils } = passthrough;
 	const youtube = new YouTube(Auth.yt_api_key);
 
 	function callskip(msg, queue) {
@@ -462,8 +462,8 @@ module.exports = function(passthrough) {
 						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 					} else {
 						let author = [];
-						if (djs.users.get(playlistRow.author)) {
-							author.push(`${djs.users.get(playlistRow.author).username} — ${playlistName}`, `https://cdn.discordapp.com/avatars/${djs.users.get(playlistRow.author).id}/${djs.users.get(playlistRow.author).avatar}.png?size=32`);
+						if (client.users.get(playlistRow.author)) {
+							author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, `https://cdn.discordapp.com/avatars/${client.users.get(playlistRow.author).id}/${client.users.get(playlistRow.author).avatar}.png?size=32`);
 						} else {
 							author.push(playlistName);
 						}

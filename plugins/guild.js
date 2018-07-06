@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	const {Discord, djs, dio, utils} = passthrough;
+	const { Discord, client, utils } = passthrough;
 	return {
 		"user": {
 			usage: "<user>",
@@ -49,7 +49,7 @@ module.exports = function(passthrough) {
 					member = utils.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else {
-					user = utils.findUser(msg, djs, suffix, true);
+					user = utils.findUser(msg, suffix, true);
 				}
 				if (!user) return msg.channel.send(`Couldn't find that user`);
 				const embed = new Discord.RichEmbed()

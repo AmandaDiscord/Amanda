@@ -17,7 +17,6 @@
     "bufferutil": "^3.0.5",
     "canvas-prebuilt": "^1.6.5-prerelease.1",
     "discord.js": "^11.3.2",
-    "dualcord": "^1.0.5",
     "entities": "^1.1.1",
     "ffmpeg": "^0.0.4",
     "ffmpeg-binaries": "^3.2.2-3",

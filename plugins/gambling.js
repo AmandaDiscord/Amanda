@@ -5,17 +5,17 @@ const Canvas = require("canvas-prebuilt");
 const util = require("util");
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils } = passthrough;
+	const { Discord, client, utils } = passthrough;
 
 	async function getWaifuInfo(userID) {
 		let [meRow, claimerRow] = await Promise.all([
 			utils.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
 			utils.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
 		]);
-		let claimer = claimerRow ? djs.users.get(claimerRow.userID) : undefined;
+		let claimer = claimerRow ? client.users.get(claimerRow.userID) : undefined;
 		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
-		let waifu = meRow ? djs.users.get(meRow.waifuID) : undefined;
-		return {claimer, price, waifu};
+		let waifu = meRow ? client.users.get(meRow.waifuID) : undefined;
+		return { claimer, price, waifu };
 	}
 
 	return {
@@ -42,7 +42,7 @@ module.exports = function(passthrough) {
 					await msg.channel.send(`Created user account`);
 					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
-				dio.simulateTyping(msg.channel.id);
+				msg.channel.sendTyping();
 				var args = suffix.split(" ");
 				var array = ['apple', 'cherries', 'watermelon', 'pear', 'heart', "strawberry"];
 				var slot1 = array[Math.floor(Math.random() * array.length)];
@@ -212,11 +212,11 @@ module.exports = function(passthrough) {
 			aliases: ["leaderboard", "lb"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				var all = await utils.sql("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", djs.user.id);
+				var all = await utils.sql("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", client.user.id);
 				let index = 0;
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboards")
-					.setDescription(all.map(row => `${++index}. ${djs.users.get(row.userID) ? djs.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
+					.setDescription(all.map(row => `${++index}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
 					.setColor("F8E71C")
 				msg.channel.send({embed});
 			}
@@ -397,9 +397,9 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				var array = [["Soon", 500], ["It's almost here", 1200], ["Not too much longer of a wait", 2000]];
 				var [soon, time] = array[Math.floor(Math.random() * array.length)];
-				msg.channel.startTyping();
+				msg.channel.sendTyping();
 				setTimeout(() => {
-					msg.channel.send(soon).then(() => msg.channel.stopTyping());
+					msg.channel.send(soon);
 				}, time)
 			}
 		}

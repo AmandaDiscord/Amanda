@@ -13,7 +13,7 @@ function newGame() {
 }
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils, reloadEvent } = passthrough;
+	const { Discord, client, utils, reloadEvent } = passthrough;
 
 	function doQuestion(msg, authorName) {
 		var id = msg.channel.id;
@@ -86,26 +86,26 @@ module.exports = function(passthrough) {
 							} else {
 								if (correct.length > 6) {
 									correct.forEach(async function(item, index, array) {
-										correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}, `;
+										correctUsersStr += `${client.users.get(item) ? client.users.get(item).username : item}, `;
 										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
 											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
 											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
 										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
-										var user = await djs.users.get(item)
+										var user = await client.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
 									})
 								} else {
 									correct.forEach(async function(item, index, array) {
-										correctUsersStr += `${dio.users[item] ? dio.users[item].username : item}\n`;
+										correctUsersStr += `${client.users.get(item) ? client.users.get(item).username : item}\n`;
 										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
 											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
 											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
 										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
-										var user = await djs.users.get(item)
+										var user = await client.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please ena	le DMs so I can tell you your earnings`));
 									})
 								}
@@ -116,7 +116,7 @@ module.exports = function(passthrough) {
 								.setFooter(`Click the reaction for another round.`)
 							msg.channel.send(resultembed).then(msg => {
 								utils.reactionMenu(msg, [
-									{emoji: djs.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+									{ emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
 										doQuestion(msg, user.username);
 									}}
 								]);
@@ -129,7 +129,7 @@ module.exports = function(passthrough) {
 		});
 	}
 
-	djs.on("message", messageHandler);
+	client.on("message", messageHandler);
 	function messageHandler(msg) {
 		if (msg.author.bot) return;
 		var id = msg.channel.id;
@@ -140,7 +140,7 @@ module.exports = function(passthrough) {
 		}
 	}
 	reloadEvent.once(__filename, () => {
-		djs.removeListener("message", messageHandler);
+		client.removeListener("message", messageHandler);
 	});
 	return {
 		"trivia": {

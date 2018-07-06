@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	const {Discord, djs, dio} = passthrough;
+	const { Discord, client } = passthrough;
 	return {
 		"urban": {
 			usage: "<search term>",
@@ -16,8 +16,8 @@ module.exports = function(passthrough) {
 						}
 						if (data.result_type == "no_results") return msg.channel.send(`${msg.author.username}, those are invalid search terms`);
 						const embed = new Discord.RichEmbed()
-							.setAuthor(data.list[0].word)
-							.addField("Definition:", data.list[0].definition)
+							.setAuthor(data.list[0].word || suffix)
+							.addField("Definition:", data.list[0].definition || "Not available")
 							.addField("Example:", data.list[0].example || "Not available")
 							.setColor("36393E");
 						msg.channel.send({embed})

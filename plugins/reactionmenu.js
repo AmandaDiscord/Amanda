@@ -3,7 +3,7 @@ const events = require("events");
 let reactionMenus = {};
 
 module.exports = function(passthrough) {
-	let { djs, reloadEvent, utils } = passthrough;
+	let { client, reloadEvent, utils } = passthrough;
 
 	utils.reactionMenu = async function(msg, actions) {
 		reactionMenus[msg.id] = {
@@ -14,15 +14,15 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	djs.on("messageReactionAdd", reactionEvent);
+	client.on("messageReactionAdd", reactionEvent);
 	reloadEvent.once(__filename, () => {
-		djs.removeListener("messageReactionAdd", reactionEvent);
+		client.removeListener("messageReactionAdd", reactionEvent);
 	});
 
 	function reactionEvent(messageReaction, user) {
 		let msg = messageReaction.message;
 		let emoji = messageReaction.emoji;
-		if (user.id == djs.user.id) return;
+		if (user.id == client.user.id) return;
 		let menu = reactionMenus[msg.id];
 		if (!menu) return;
 		let action = menu.actions.find(a => a.emoji == emoji || (a.emoji.name == emoji.name && a.emoji.id == emoji.id));

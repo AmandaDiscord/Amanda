@@ -1,1 +1,0 @@
-pm2 start index-ama.js

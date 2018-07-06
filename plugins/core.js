@@ -4,7 +4,7 @@ const util = require("util");
 const { exec } = require("child_process");
 
 module.exports = function(passthrough) {
-	const { Auth, Discord, client, djs, dio, db, utils, commands } = passthrough;
+	const { Auth, Discord, client, db, utils, commands } = passthrough;
 	return {
 		"uptime": {
 			usage: "",
@@ -28,19 +28,19 @@ module.exports = function(passthrough) {
 			category: "statistics",
 			process: async function(msg, suffix) {
 				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
-				let status = utils.getPresenceEmoji(djs.user.presence.status);
+				let status = utils.getPresenceEmoji(client.user.presence.status);
 				let game = "No activity set";
-				if (djs.user.presence.game && djs.user.presence.game.streaming) {
-					 game = `Streaming [${djs.user.presence.game.name}](${djs.user.presence.game.url})`;
+				if (client.user.presence.game && client.user.presence.game.streaming) {
+					 game = `Streaming [${client.user.presence.game.name}](${client.user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
-				} else if (djs.user.presence.game) game = utils.getPresencePrefix(djs.user.presence.game.type)+" **"+djs.user.presence.game.name+"**";
+				} else if (client.user.presence.game) game = utils.getPresencePrefix(client.user.presence.game.type)+" **"+client.user.presence.game.name+"**";
 				var nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Statistics")
-					.setTitle(`${djs.user.tag} ${status}`)
+					.setTitle(`${client.user.tag} ${status}`)
 					.setDescription(game)
-					.addField("­", `**❯ API Latency:**\n${djs.ping.toFixed(0)}ms\n**❯ Message Edit:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true)
-					.addField("­", `**❯ User Count:**\n${djs.users.size} users\n**❯ Guild Count:**\n${djs.guilds.size} guilds\n**❯ Channel Count:**\n${djs.channels.size} channels\n**❯ Voice Connections:**\n${djs.voiceConnections.size}`, true)
+					.addField("­", `**❯ API Latency:**\n${client.ping.toFixed(0)}ms\n**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true)
+					.addField("­", `**❯ User Count:**\n${client.users.size} users\n**❯ Guild Count:**\n${client.guilds.size} guilds\n**❯ Channel Count:**\n${client.channels.size} channels\n**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
 					.setFooter(`Requested by ${msg.author.username}`)
 					.setColor("36393E")
 				nmsg.edit({embed});
@@ -59,7 +59,7 @@ module.exports = function(passthrough) {
 				var footer = footers[Math.floor(Math.random() * footers.length)];
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Pong!")
-					.addField("❯ API Latency:", `${djs.ping.toFixed(0)}ms`, true)
+					.addField("❯ API Latency:", `${client.ping.toFixed(0)}ms`, true)
 					.addField(`❯ Message Edit:`, `${Date.now() - msg.createdTimestamp}ms`, true)
 					.setFooter(footer)
 					.setColor("36393E")
@@ -78,7 +78,7 @@ module.exports = function(passthrough) {
 					.setDescription("**I've been invited?**\n*Be sure that you have administrator permissions on the server you would like to invite me to*")
 					.setTitle("Invite Link")
 					.setURL("http://amanda.discord-bots.ga/")
-					.setFooter("Amanda", djs.user.avatarURL)
+					.setFooter("Amanda", client.user.avatarURL)
 					.setColor("36393E")
 				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
 			}
@@ -93,16 +93,16 @@ module.exports = function(passthrough) {
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Information:")
 					.setColor("36393E")
-					.setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me.")
+					.setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me")
 					.addField("Creator:", "PapiOphidian#8685 <:HypeBadge:421764718580203530>")
 					.addField("Lang:", `Node.js ${process.version}`)
-					.addField("Library:", "[Dualcord](https://www.npmjs.com/package/dualcord)")
+					.addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)")
 					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love")
 					.addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord bots](https://bots.discord.pw/bots/405208699313848330)")
 					.addBlankField(true)
 					.addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>, [SHODAN](http://shodanbot.com) <:bot:412413027565174787>, [cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>, [botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Change log:", "```\n- Added a change log\n- More edits to the info command\n```")
-					.setFooter("Amanda", djs.user.avatarURL)
+					.addField("Change log:", "```\n- RAM usage improvements\n- Migrated clients from [Dualcord](https://www.npmjs.com/package/dualcord) to [Discord.js](https://www.npmjs.com/package/discord.js)\n- Typing event issue fixes\n- Utility function improvements\n- Fix an issue with \"&avatar\" command in DMs\n```")
+					.setFooter("Amanda", client.user.avatarURL)
 					.setColor(504277)
 				msg.channel.send({embed});
 			}
@@ -117,7 +117,7 @@ module.exports = function(passthrough) {
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Privacy")
 					.setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms) it is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it")
-					.setFooter("Amanda", djs.user.avatarURL)
+					.setFooter("Amanda", client.user.avatarURL)
 					.setColor("36393E")
 				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
 			}
@@ -217,7 +217,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed() // \n❯ NSFW
 						.setAuthor("Command Categories:")
 						.setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``)
-						.setFooter("Amanda help panel", djs.user.avatarURL)
+						.setFooter("Amanda help panel", client.user.avatarURL)
 						.setColor('36393E')
 						await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work`));
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);

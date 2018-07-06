@@ -1,1 +1,0 @@
-pm2 stop index-ama.js

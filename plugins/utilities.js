@@ -1,12 +1,22 @@
 const util = require("util");
 
 module.exports = function(passthrough) {
-	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
+	let { Discord, client, reloadEvent, utils, db, commands } = passthrough;
 
+	/**
+	 * Sends a typing event to a channel that times out
+	 * @returns {*} void
+	 */
 	Discord.Channel.prototype.sendTyping = function() {
 		if (this.startTyping) this.client.rest.methods.sendTyping(this.id);
 	}
 
+	/**
+	 * Checks if a user or guild has certain permission levels
+	 * @param {Object} DiscordObject An object of a user or guild
+	 * @param {String} Permission The permission to test if the Snowflake has
+	 * @returns {Boolean} If the Snowflake is allowed to use the provided string permission
+	 */
 	utils.hasPermission = async function() {
 		let args = [...arguments];
 		let thing, thingType, permissionType;
@@ -28,19 +38,36 @@ module.exports = function(passthrough) {
 		return !!result;
 	}
 
+	/**
+	 * Sends a denying message to a text channel
+	 * @param {*} msg MessageResolvable
+	 * @returns {*} void
+	 */
 	utils.sendNopeMessage = function(msg) {
 		const nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
 		let [no, time] = nope[Math.floor(Math.random() * nope.length)];
-		dio.simulateTyping(msg.channel.id);
+		msg.channel.sendTyping();
 		setTimeout(() => {
 			msg.channel.send(no);
 		}, time);
 	}
 
+	/**
+	 * Gets the connection to the MySQL database
+	 * @returns {*} Database Connection
+	 */
 	utils.getConnection = function() {
 		return db.getConnection();
 	}
 
+	/**
+	 * Easy SQL statements that return promises for the MySQL database
+	 * @param {*} string SQL statement
+	 * @param {*} prepared An array of items supporting prepared statements
+	 * @param {*} connection Database connection
+	 * @param {*} attempts I actually don't know what this is
+	 * @returns {Promise} Queried data
+	 */
 	utils.sql = function(string, prepared, connection, attempts) {
 		if (!attempts) attempts = 2;
 		if (!connection) connection = db;
@@ -58,6 +85,12 @@ module.exports = function(passthrough) {
 		});
 	}
 
+	/**
+	 * The same as utils.sql (?) :thonk:
+	 * @param {*} string SQL statement
+	 * @param {*} prepared An array of items supporting prepared statements
+	 * @param {*} connection Database connection
+	 */
 	utils.get = async function(string, prepared, connection) {
 		return (await utils.sql(string, prepared, connection))[0];
 	}
@@ -121,7 +154,6 @@ module.exports = function(passthrough) {
 	/**
 	 * Finds a user in cache
 	 * @param {*} msg MessageResolvable
-	 * @param {*} client Discord client
 	 * @param {String} usertxt Text that contains user's display data to search them by
 	 * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
 	 * @returns {*} A user object or null if it couldn't find a user
@@ -140,15 +172,14 @@ module.exports = function(passthrough) {
 			if (self) return msg.author;
 			else return null;
 		} else {
-			return djs.users.get(usertxt) || matchFunctions.map(f => {
-				return djs.users.find(u => f(u));
+			return client.users.get(usertxt) || matchFunctions.map(f => {
+				return client.users.find(u => f(u));
 			}).find(u => u) || null;
 		}
 	}
 
 	/**
 	 * Sends a message to a channel ID or user
-	 * @param {*} client Discord client
 	 * @param {String} id The ID of the channel or user if the user param is true
 	 * @param {*} message MessageResolvable
 	 * @param {Boolean} user If a message should be sent to a user by the id param
@@ -156,8 +187,8 @@ module.exports = function(passthrough) {
 	 */
 	utils.send = function(id, message, user = false) {
 		return new Promise(function(resolve) {
-			if (user) resolve(djs.users.get(id).send(message));
-			else resolve(djs.channels.get(id).send(message));
+			if (user) resolve(client.users.get(id).send(message));
+			else resolve(client.channels.get(id).send(message));
 		});
 	}
 
@@ -248,6 +279,12 @@ module.exports = function(passthrough) {
 		return result;
 	}
 
+	/**
+	 * A progress bar for music
+	 * @param {*} length Length of the bar
+	 * @param {*} value The current time in the video
+	 * @param {*} max The max amount of time in the video
+	 */
 	utils.progressBar = function(length, value, max) {
 		let result = "";
 		for (let i = 1; i <= length; i++) {

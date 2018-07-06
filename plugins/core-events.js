@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Discord, client, djs, dio, reloadEvent, utils, commands } = passthrough;
+	let { Discord, client, reloadEvent, utils, commands } = passthrough;
 	const stdin = process.stdin;
 	let prefixes = [];
 	setImmediate(() => {
@@ -8,21 +8,21 @@ module.exports = function(passthrough) {
 		});
 	});
 
-	djs.on("message", manageMessage);
-	djs.on("messageUpdate", manageEdit);
-	djs.on("ready", manageReady);
-	djs.on("disconnect", manageDisconnect);
-	djs.on("error", manageError);
-	djs.on("warn", manageWarn);
+	client.on("message", manageMessage);
+	client.on("messageUpdate", manageEdit);
+	client.on("ready", manageReady);
+	client.on("disconnect", manageDisconnect);
+	client.on("error", manageError);
+	client.on("warn", manageWarn);
 	process.on("unhandledRejection", manageRejection);
 	stdin.on("data", manageStdin);
 	reloadEvent.once(__filename, () => {
-		djs.removeListener("message", manageMessage);
-		djs.removeListener("messageUpdate", manageEdit);
-		djs.removeListener("ready", manageReady);
-		djs.removeListener("disconnect", manageDisconnect);
-		djs.removeListener("error", manageError);
-		djs.removeListener("warn", manageWarn);
+		client.removeListener("message", manageMessage);
+		client.removeListener("messageUpdate", manageEdit);
+		client.removeListener("ready", manageReady);
+		client.removeListener("disconnect", manageDisconnect);
+		client.removeListener("error", manageError);
+		client.removeListener("warn", manageWarn);
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
 	});
@@ -47,7 +47,7 @@ module.exports = function(passthrough) {
 	function manageReady() {
 		console.log("Successfully logged in");
 		update();
-		djs.setInterval(update, 300000);
+		client.setInterval(update, 300000);
 	}
 
 	function manageDisconnect(reason) {
@@ -77,7 +77,7 @@ module.exports = function(passthrough) {
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-		djs.user.setActivity(`${name} | &help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+		client.user.setActivity(`${name} | &help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
 
 	async function checkMessageForCommand(msg, isEdit) {

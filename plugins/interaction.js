@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const request = require("request");
 
 module.exports = function(passthrough) {
-	const {Discord, djs, dio, utils} = passthrough;
+	const { Discord, client, utils } = passthrough;
 	return {
 		"hug": {
 			usage: "<user>",
@@ -19,7 +19,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
 				if (member.user.id == msg.author.id) return msg.channel.send("That's not strange at all...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
+				if (member.user.id == client.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
 				request("http://api.shodanbot.com/interactions/hug", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -48,7 +48,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
 				if (member.user.id == msg.author.id) return msg.channel.send(`W-What? Why, ${msg.author.username}?`);
-				if (member.user.id == djs.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
+				if (member.user.id == client.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
 				request("http://api.shodanbot.com/interactions/kiss", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -77,7 +77,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
 				if (member.user.id == msg.author.id) return msg.channel.send("I find it strange that you tried to do that...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
+				if (member.user.id == client.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
 				request("http://api.shodanbot.com/interactions/cuddle", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -106,7 +106,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
 				if (member.user.id == msg.author.id) return msg.channel.send("Ok then...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
+				if (member.user.id == client.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
 				request("http://api.shodanbot.com/interactions/poke", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -135,7 +135,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
 				if (member.user.id == msg.author.id) return msg.channel.send("Come on... Don't make yourself look like an idiot...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
+				if (member.user.id == client.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
 				request("http://api.shodanbot.com/interactions/slap", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -164,7 +164,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
 				if (member.user.id == msg.author.id) return msg.channel.send("Why even try?");
-				if (member.user.id == djs.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
+				if (member.user.id == client.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
 				request("http://api.shodanbot.com/interactions/boop", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -193,7 +193,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
 				if (member.user.id == msg.author.id) return msg.channel.send("<:NotLikeCat:411364955493761044>");
-				if (member.user.id == djs.user.id) return msg.channel.send(`≥ w ≤`);
+				if (member.user.id == client.user.id) return msg.channel.send(`≥ w ≤`);
 				request("http://api.shodanbot.com/interactions/pat", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -222,7 +222,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
 				if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
+				if (member.user.id == client.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
 				const embed = new Discord.RichEmbed()
 					.setDescription(`${msg.author.username} stabbed <@${member.user.id}>`)
 					.setColor("36393E");
@@ -242,7 +242,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
 				if (member.user.id == msg.author.id) return msg.channel.send("You are so weird...");
-				if (member.user.id == djs.user.id) return msg.channel.send(`owie`);
+				if (member.user.id == client.user.id) return msg.channel.send(`owie`);
 				request("http://api.shodanbot.com/interactions/nom", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
 					try {
@@ -272,7 +272,7 @@ module.exports = function(passthrough) {
 				var mem2 = utils.findMember(msg, args[1]);
 				if (mem1 == null) return msg.channel.send(`The first member provided was not found`);
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
-				msg.channel.startTyping();
+				msg.channel.sendTyping();
 				let canvas = new Canvas(300, 100);
 				let ctx = canvas.getContext("2d");
 				Promise.all([
@@ -301,8 +301,7 @@ module.exports = function(passthrough) {
 						let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 						percentage = parseInt("0x"+hash)%101;
 					}
-					await msg.channel.send(`Aww. I'd rate ${mem1.user.tag} and ${mem2.user.tag} being together a ${percentage}%`,{files: [buffer]});
-					msg.channel.stopTyping();
+					msg.channel.send(`Aww. I'd rate ${mem1.user.tag} and ${mem2.user.tag} being together a ${percentage}%`,{files: [buffer]});
 				});
 			}
 		},
@@ -316,16 +315,11 @@ module.exports = function(passthrough) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(`You have to tell me someone to bean!`);
 				let user, member;
-				if (msg.channel.type == "text") {
-					member = utils.findMember(msg, suffix, true);
-					if (member) user = member.user;
-				} else {
-					user = utils.findUser(msg, djs, suffix, true);
-				}
-				if (!user) return msg.channel.send(`Couldn't find that user`);
-				if (user.id == djs.user.id) return msg.channel.send(`No u`);
-				if (user.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
-				msg.channel.send(`**${user.tag}** has been banned!`);
+				member = utils.findMember(msg, suffix, true);
+				if (member == null) return msg.channel.send(`Couldn't find that user`);
+				if (member.id == client.user.id) return msg.channel.send(`No u`);
+				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
+				msg.channel.send(`**${member.user.tag}** has been banned!`);
 			}
 		}
 	}

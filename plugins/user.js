@@ -3,7 +3,7 @@ const util = require("util");
 const fs = require("fs");
 
 module.exports = function(passthrough) {
-	const { Discord, djs, dio, utils } = passthrough;
+	const { Discord, client, utils } = passthrough;
 	return {
 		"profile": {
 			usage: "<user>",
@@ -20,7 +20,7 @@ module.exports = function(passthrough) {
 					await msg.channel.send(`Created user account`);
 					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
-				dio.simulateTyping(msg.channel.id);
+				msg.channel.sendTyping();
 				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
 				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
