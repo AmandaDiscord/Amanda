@@ -89,12 +89,13 @@ module.exports = function(passthrough) {
 			description: "Displays information about Amanda",
 			aliases: ["info", "inf"],
 			category: "core",
-			process: function(msg, suffix) {
+			process: async function(msg, suffix) {
+				let creator = await client.fetchUser("320067006521147393");
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Information:")
 					.setColor("36393E")
 					.setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me")
-					.addField("Creator:", `${client.fetchUser("320067006521147393").tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`)
+					.addField("Creator:", `${owner.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`)
 					.addField("Lang:", `Node.js ${process.version}`)
 					.addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)")
 					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love")
