@@ -3,6 +3,10 @@ const util = require("util");
 module.exports = function(passthrough) {
 	let { Discord, client, djs, dio, reloadEvent, utils, db, commands } = passthrough;
 
+	Discord.Channel.prototype.sendTyping = function() {
+		if (this.startTyping) this.client.rest.methods.sendTyping(this.id);
+	}
+
 	utils.hasPermission = async function() {
 		let args = [...arguments];
 		let thing, thingType, permissionType;
