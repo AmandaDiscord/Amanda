@@ -27,7 +27,8 @@ module.exports = function(passthrough) {
 		if (!queue.connection || !queue.connection.dispatcher) return;
 		if (queue && queue.playing) {
 			queue.playing = false;
-			return queue.connection.dispatcher.pause();
+			queue.connection.dispatcher.pause();
+			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
 		} else return;
 	}
 
@@ -35,8 +36,16 @@ module.exports = function(passthrough) {
 		if (!queue.connection || !queue.connection.dispatcher) return;
 		if (queue && !queue.playing) {
 			queue.playing = true;
-			return queue.connection.dispatcher.resume();
+			queue.connection.dispatcher.resume();
+			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
 		} else return;
+	}
+
+	function getNPEmbed(dispatcher, queue) {
+		let song = queue.songs[0];
+		return new Discord.RichEmbed().setColor("36393E")
+		.setDescription(`Now playing: **${song.title}**`)
+		.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
 	}
 
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
@@ -113,18 +122,13 @@ module.exports = function(passthrough) {
 			dispatcher.once("start", async () => {
 				queue.skippable = true;
 				//console.log("Dispatcher start");
-				function getNPEmbed() {
-					return new Discord.RichEmbed().setColor("36393E")
-					.setDescription(`Now playing: **${song.title}**`)
-					.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
-				}
 				let dispatcherEndCode = new Function();
 				function updateProgress() {
-					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed());
+					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
 					else return Promise.resolve();
 				}
 				if (!queue.nowPlayingMsg) {
-					await msg.channel.send(getNPEmbed()).then(n => queue.nowPlayingMsg = n);
+					await msg.channel.send(getNPEmbed(dispatcher, queue)).then(n => queue.nowPlayingMsg = n);
 					queue.generateReactions();
 				} else {
 					await updateProgress();
@@ -258,7 +262,7 @@ module.exports = function(passthrough) {
 		let max = queue.songs[0].video.length_seconds;
 		let current = Math.floor(dispatcher.time/1000);
 		if (current > max || done) current = max;
-		return `\`[ ${prettySeconds(current)} ${utils.progressBar(35, current, max)} ${prettySeconds(max)} ]\``;
+		return `\`[ ${prettySeconds(current)} ${utils.progressBar(35, current, max, dispatcher.paused ? " [PAUSED] " : "")} ${prettySeconds(max)} ]\``;
 	}
 
 	return {

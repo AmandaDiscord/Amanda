@@ -284,11 +284,17 @@ module.exports = function(passthrough) {
 	 * @param {*} value The current time in the video
 	 * @param {*} max The max amount of time in the video
 	 */
-	utils.progressBar = function(length, value, max) {
+	utils.progressBar = function(length, value, max, text) {
+		if (!text) text = "";
+		let textPosition = Math.floor(length/2) - Math.ceil(text.length/2) + 1;
 		let result = "";
 		for (let i = 1; i <= length; i++) {
-			if (value/max*length >= i) result += "=";
-			else result += " ";
+			if (i >= textPosition && i < textPosition+text.length) {
+				result += text[i-textPosition];
+			} else {
+				if (value/max*length >= i) result += "=";
+				else result += " ";
+			}
 		}
 		return result;
 	}
