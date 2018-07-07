@@ -193,7 +193,6 @@ module.exports = function(passthrough) {
 			let batch = batches.shift();
 			batchNumber++;
 			let batchProgress = 0;
-			console.log("Loading batch");
 			Promise.all(batch.map(videoID => {
 				return new Promise((resolve, reject) => {
 					ytdl.getInfo(videoID).then(info => {
@@ -206,12 +205,11 @@ module.exports = function(passthrough) {
 								editInProgress = false;
 							});
 						}
-						videos.push(info);
-						resolve();
+						resolve(info);
 					}).catch(reject);
 				});
-			})).then(() => {
-				console.log("Batch complete");
+			})).then(batchVideos => {
+				videos = videos.push(...batchVideos);
 				if (batches.length) nextBatch();
 				else {
 					handleVideo(videos.shift(), msg, voiceChannel).then(() => {
