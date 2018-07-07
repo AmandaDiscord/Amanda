@@ -1,4 +1,5 @@
 {
 	"prefixes": ["&", "<@405208699313848330> ", "<@!405208699313848330> ", "amanda, "],
-	"debug": false
+	"debug": false,
+	"fake_token": "NDAwNzg5OTczMTg1NTkzMzQ2.DTgxDw.Qh8XS0SrX7zR3WRAC1cOsgBrvS8"
 }

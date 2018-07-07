@@ -4,7 +4,7 @@ const util = require("util");
 const { exec } = require("child_process");
 
 module.exports = function(passthrough) {
-	const { Auth, Discord, client, db, utils, commands } = passthrough;
+	const { Auth, Discord, client, db, utils, commands, Config } = passthrough;
 	return {
 		"uptime": {
 			usage: "",
@@ -237,12 +237,12 @@ module.exports = function(passthrough) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
 					try {
-						result = eval(suffix);
+						result = eval(suffix.replace(/client.token/g, `"${Config.fake_token}"`));
 					} catch (e) {
 						result = e;
 					}
 					let output = await utils.stringify(result);
-					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token, "g"), "No")).catch(reason => msg.channel.send(`Uh oh. There was an error sending that message\n${reason}`));
+					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token, "g"), "No"));
 					utils.reactionMenu(nmsg, [
 						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
 					]);
