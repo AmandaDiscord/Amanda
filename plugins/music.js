@@ -183,8 +183,8 @@ module.exports = function(passthrough) {
 			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})`;
 		}
 		let videos = [];
-		function reject(reason) {
-			manageYtdlGetInfoErrors(msg, reason).then(() => {
+		function reject({reason, id}) {
+			manageYtdlGetInfoErrors(msg, reason, id).then(() => {
 				msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
 			});
 		}
@@ -206,7 +206,7 @@ module.exports = function(passthrough) {
 							});
 						}
 						resolve(info);
-					}).catch(reject);
+					}).catch(reason => reject({reason, id: videoID}));
 				});
 			})).then(batchVideos => {
 				videos.push(...batchVideos);
@@ -221,12 +221,13 @@ module.exports = function(passthrough) {
 	}
 
 	function manageYtdlGetInfoErrors(msg, reason, id) {
+		let idString = id ? ` (id: ${id})` : "";
 		if (reason.message && reason.message.startsWith("No video id found:")) {
-			return msg.channel.send(`${msg.author.username}, that is not a valid YouTube video. (${id})`);
+			return msg.channel.send(`${msg.author.username}, that is not a valid YouTube video.`+idString);
 		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
-			return msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it. (${id})`)
+			return msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`+idString)
 		} else if (reason.message && (reason.message.startsWith("The uploader has not made this video available in your country") || reason.message.includes("not available"))) {
-			return msg.channel.send(`${msg.author.username}, that video is not available. (${id})`);
+			return msg.channel.send(`${msg.author.username}, that video is not available.`+idString);
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
@@ -288,7 +289,7 @@ module.exports = function(passthrough) {
 						ytdl.getInfo(args[1]).then(video => {
 							handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
 						}).catch(reason => {
-							manageYtdlGetInfoErrors(msg, reason);
+							manageYtdlGetInfoErrors(msg, reason, args[1]);
 						});
 					}
 				} else if (args[0].toLowerCase() == "stop") {
