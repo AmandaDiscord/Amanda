@@ -25,7 +25,7 @@ module.exports = function(passthrough) {
 				let ctx = canvas.getContext("2d", { alpha: false });
 				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
 				Promise.all([
-					new Promise(resolve => require("request")(pfpurl, {encoding: null}, (e,r,b) => resolve(b))),
+					new Promise(resolve => require("request")(pfpurl, { encoding: null }, (e,r,b) => resolve(b))),
 					util.promisify(fs.readFile)("./images/profile.png", { encoding: null })
 				]).then(async ([avatar, template]) => {
 					let templateI = new Canvas.Image();
@@ -37,8 +37,7 @@ module.exports = function(passthrough) {
 					ctx.font = "bold 25px 'Whitney'";
 					ctx.fillStyle = "white"
 					ctx.fillText(member.user.tag, 205, 93);
-					ctx.fillText(money.coins, 90, 239);
-					ctx.fillText("0", 110, 178)
+					ctx.fillText(`$ ${money.coins}`, 90, 239);
 					let buffer = canvas.toBuffer();
 					await msg.channel.send({files: [buffer]});
 				});
