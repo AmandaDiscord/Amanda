@@ -5,7 +5,6 @@ module.exports = function(passthrough) {
 
 	/**
 	 * Sends a typing event to a channel that times out
-	 * @returns {*} void
 	 */
 	Discord.Channel.prototype.sendTyping = function() {
 		if (this.startTyping) this.client.rest.methods.sendTyping(this.id);
@@ -41,7 +40,6 @@ module.exports = function(passthrough) {
 	/**
 	 * Sends a denying message to a text channel
 	 * @param {*} msg MessageResolvable
-	 * @returns {*} void
 	 */
 	utils.sendNopeMessage = function(msg) {
 		const nope = [["no", 300], ["Nice try", 1000], ["How about no?", 1550], [`Don't even try it ${msg.author.username}`, 3000]];
@@ -66,7 +64,7 @@ module.exports = function(passthrough) {
 	 * @param {*} prepared An array of items supporting prepared statements
 	 * @param {*} connection Database connection
 	 * @param {*} attempts I actually don't know what this is
-	 * @returns {Promise} Queried data
+	 * @returns {Promise} An array of database rows
 	 */
 	utils.sql = function(string, prepared, connection, attempts) {
 		if (!attempts) attempts = 2;
@@ -90,6 +88,7 @@ module.exports = function(passthrough) {
 	 * @param {*} string SQL statement
 	 * @param {*} prepared An array of items supporting prepared statements
 	 * @param {*} connection Database connection
+	 * @returns {Promise} A database row
 	 */
 	utils.get = async function(string, prepared, connection) {
 		return (await utils.sql(string, prepared, connection))[0];
@@ -127,7 +126,7 @@ module.exports = function(passthrough) {
 	 * @param {*} msg MessageResolvable
 	 * @param {String} usertxt Text that contains user's display data to search them by
 	 * @param {Boolean} self If the function should return <MessageResolvable>.member if no usertxt is provided
-	 * @returns {*} A member object or null if it couldn't find a member
+	 * @returns {(Member|null)} A member object or null if it couldn't find a member
 	 */
 	utils.findMember = function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
@@ -156,7 +155,7 @@ module.exports = function(passthrough) {
 	 * @param {*} msg MessageResolvable
 	 * @param {String} usertxt Text that contains user's display data to search them by
 	 * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
-	 * @returns {*} A user object or null if it couldn't find a user
+	 * @returns {(User|null)} A user object or null if it couldn't find a user
 	 */
 	utils.findUser = function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
@@ -181,9 +180,9 @@ module.exports = function(passthrough) {
 	/**
 	 * Sends a message to a channel ID or user
 	 * @param {String} id The ID of the channel or user if the user param is true
-	 * @param {*} message MessageResolvable
+	 * @param {MessageResolvable} message MessageResolvable
 	 * @param {Boolean} user If a message should be sent to a user by the id param
-	 * @returns {*} MessageResolvable
+	 * @returns {MessageResolvable} MessageResolvable
 	 */
 	utils.send = function(id, message, user = false) {
 		return new Promise(function(resolve) {
