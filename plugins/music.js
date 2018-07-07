@@ -158,6 +158,9 @@ module.exports = function(passthrough) {
 	}
 
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
+		const useBatchLimit = 30;
+		const batchSize = 10;
+
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
 		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
 		from = Math.max(from, 1);
@@ -168,43 +171,70 @@ module.exports = function(passthrough) {
 		}
 		if (!voiceChannel) return msg.channel.send(`${msg.author.username}, You must join a voice channel first`);
 		let progress = 0;
-		const getProgressMessage = () => `Please wait, loading songs (${progress}/${videoIDs.length})`;
+		let total = videoIDs.length;
 		let lastEdit = 0;
 		let editInProgress = false;
 		let progressMessage = await msg.channel.send(getProgressMessage());
-		Promise.all(videoIDs.map(videoID => {
-			return new Promise((resolve, reject) => {
-				ytdl.getInfo(videoID).then(info => {
-					progress++;
-					if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == videoIDs.length) {
-						lastEdit = Date.now();
-						editInProgress = true;
-						progressMessage.edit(getProgressMessage()).then(() => {;
-							editInProgress = false;
-						});
-					}
-					resolve(info);
-				}).catch(reject);
+		let batches = [];
+		if (total <= useBatchLimit) batches.push(videoIDs);
+		else while (videoIDs.length) batches.push(videoIDs.splice(0, batchSize));
+		function getProgressMessage(batchNumber, batchProgress, batchTotal) {
+			if (!batchNumber) return `Please wait, loading songs...`;
+			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})`;
+		}
+		let videos = [];
+		function reject(reason) {
+			manageYtdlGetInfoErrors(msg, reason).then(() => {
+				msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
 			});
-		})).then(videos => {
-			videos = videos.filter(v => v);
-			handleVideo(videos.shift(), msg, voiceChannel).then(() => {
-				videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
-			});
-		}).catch(reason => {
-			manageYtdlGetInfoErrors(msg, reason);
-		});
+		}
+		let batchNumber = 0;
+		(function nextBatch() {
+			let batch = batches.shift();
+			batchNumber++;
+			let batchProgress = 0;
+			console.log("Loading batch");
+			Promise.all(batch.map(videoID => {
+				return new Promise((resolve, reject) => {
+					ytdl.getInfo(videoID).then(info => {
+						progress++;
+						batchProgress++;
+						if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == total) {
+							lastEdit = Date.now();
+							editInProgress = true;
+							progressMessage.edit(getProgressMessage(batchNumber, batchProgress, batch.length)).then(() => {;
+								editInProgress = false;
+							});
+						}
+						videos.push(info);
+						resolve();
+					}).catch(reject);
+				});
+			})).then(() => {
+				console.log("Batch complete");
+				if (batches.length) nextBatch();
+				else {
+					handleVideo(videos.shift(), msg, voiceChannel).then(() => {
+						videos.forEach(video => handleVideo(video, msg, voiceChannel, true, true));
+					});
+				}
+			}).catch(reject);
+		})();
 	}
 
-	function manageYtdlGetInfoErrors(msg, reason) {
+	function manageYtdlGetInfoErrors(msg, reason, id) {
 		if (reason.message && reason.message.startsWith("No video id found:")) {
-			msg.channel.send(`${msg.author.username}, that is not a valid YouTube video.`);
+			return msg.channel.send(`${msg.author.username}, that is not a valid YouTube video. (${id})`);
 		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
-			msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`)
+			return msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it. (${id})`)
 		} else if (reason.message && reason.message.startsWith("The uploader has not made this video available in your country")) {
-			msg.channel.send(`${msg.author.username}, that video is not available.`);
+			return msg.channel.send(`${msg.author.username}, that video is not available. (${id})`);
 		} else {
-			utils.stringify(reason).then(result => msg.channel.send(result));
+			return new Promise(resolve => {
+				utils.stringify(reason).then(result => {
+					msg.channel.send(result).then(resolve);
+				});
+			});
 		}
 	}
 
