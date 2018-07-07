@@ -209,7 +209,7 @@ module.exports = function(passthrough) {
 					}).catch(reject);
 				});
 			})).then(batchVideos => {
-				videos = videos.push(...batchVideos);
+				videos.push(...batchVideos);
 				if (batches.length) nextBatch();
 				else {
 					handleVideo(videos.shift(), msg, voiceChannel).then(() => {
