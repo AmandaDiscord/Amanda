@@ -102,7 +102,7 @@ module.exports = function(passthrough) {
 					.addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord bots](https://bots.discord.pw/bots/405208699313848330)")
 					.addBlankField(true)
 					.addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>, [SHODAN](http://shodanbot.com) <:bot:412413027565174787>, [cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>, [botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Change log:", "```\n- General improvements behind the scenes\n```")
+					.addField("Change log:", "```\n- Improvements to music and loading playlists\n- Profile command reworked\n```")
 					.setFooter("Amanda", client.user.avatarURL)
 					.setColor(504277)
 				msg.channel.send({embed});

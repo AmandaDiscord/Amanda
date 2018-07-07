@@ -24,6 +24,7 @@ module.exports = function(passthrough) {
 				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
 				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
+				let index = await utils.sql("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
 				Promise.all([
 					new Promise(resolve => require("request")(pfpurl, { encoding: null }, (e,r,b) => resolve(b))),
 					util.promisify(fs.readFile)("./images/profile.png", { encoding: null })
@@ -37,7 +38,9 @@ module.exports = function(passthrough) {
 					ctx.font = "bold 25px 'Whitney'";
 					ctx.fillStyle = "white"
 					ctx.fillText(member.user.tag, 205, 93);
-					ctx.fillText(`$ ${money.coins}`, 90, 239);
+					ctx.fillText(`Discoins:`, 52, 170);
+					ctx.fillText(`${money.coins}`, 52, 210);
+					ctx.fillText(`Position on leaderboard: ${index}`, 52, 270);
 					let buffer = canvas.toBuffer();
 					await msg.channel.send({files: [buffer]});
 				});
