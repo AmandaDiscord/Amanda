@@ -272,6 +272,7 @@ module.exports = function(passthrough) {
 				var mem2 = utils.findMember(msg, args[1]);
 				if (mem1 == null) return msg.channel.send(`The first member provided was not found`);
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
+				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
 				msg.channel.sendTyping();
 				let canvas = new Canvas(300, 100);
 				let ctx = canvas.getContext("2d");
