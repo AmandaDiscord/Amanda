@@ -158,8 +158,8 @@ module.exports = function(passthrough) {
 	}
 
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
-		const useBatchLimit = 30;
-		const batchSize = 10;
+		const useBatchLimit = 50;
+		const batchSize = 30;
 
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
 		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
@@ -445,8 +445,8 @@ module.exports = function(passthrough) {
 						.setColor("36393E")
 						msg.channel.send(embed);
 
-					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "shuffle") {
-						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase() == "shuffle");
+					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
+						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase()[0] == "s");
 					} else if (action.toLowerCase() == "import") {
 						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
 						if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
