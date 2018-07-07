@@ -138,6 +138,10 @@ module.exports = function(passthrough) {
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`now`, `Show the current song.\n\`&music now\``)
+						.addField(`related [play|insert] [index]`,
+							"Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n"+
+							"`&music related` (shows related songs)\n"+
+							"`&music rel play 8` (adds related song #8 to the end of the queue)")
 						.addField(`queue`, `Shows the current queue.\n\`&music queue\``)
 						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)

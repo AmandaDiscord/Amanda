@@ -335,6 +335,31 @@ module.exports = function(passthrough) {
 					queue.nowPlayingMsg.clearReactions();
 					queue.nowPlayingMsg = n;
 					queue.generateReactions();
+				} else if ("related".startsWith(args[0].toLowerCase())) {
+					if (!queue) return msg.channel.send('There is nothing playing.');
+					let mode = args[1];
+					let index = parseInt(args[2])-1;
+					let related = queue.songs[0].video.related_videos.filter(v => v.title).slice(0, 10);
+					if (related[index] && mode && ["p", "i"].includes(mode[0])) {
+						let videoID = related[index].id;
+						ytdl.getInfo(videoID).then(video => {
+							handleVideo(video, msg, voiceChannel, false, false, mode[0] == "i");
+						}).catch(reason => {
+							manageYtdlGetInfoErrors(msg, reason, args[1]);
+						});
+					} else {
+						let body = "";
+						related.forEach((songss, index) => {
+							let toAdd = `${index+1}. **${songss.title}** (${prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
+							if (body.length + toAdd.length < 2000) body += toAdd;
+						});
+						const embed = new Discord.RichEmbed()
+						.setAuthor(`Related videos`)
+						.setDescription(body)
+						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
+						.setColor("36393E")
+						return msg.channel.send(embed);
+					}
 				} else if (args[0].toLowerCase() == "shuffle") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing queued to shuffle');
