@@ -225,7 +225,7 @@ module.exports = function(passthrough) {
 			return msg.channel.send(`${msg.author.username}, that is not a valid YouTube video. (${id})`);
 		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
 			return msg.channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it. (${id})`)
-		} else if (reason.message && reason.message.startsWith("The uploader has not made this video available in your country")) {
+		} else if (reason.message && (reason.message.startsWith("The uploader has not made this video available in your country") || reason.message.includes("not available"))) {
 			return msg.channel.send(`${msg.author.username}, that video is not available. (${id})`);
 		} else {
 			return new Promise(resolve => {
