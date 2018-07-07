@@ -1,6 +1,6 @@
 process.title = "Amanda";
 const Auth = process.env.is_heroku ? JSON.parse(process.env.auth) : require("./auth.json", "utf8");
-const Config = require("./auth.json", "utf8");
+const Config = require("./config.json", "utf8");
 const events = require("events");
 let reloadEvent = new events.EventEmitter();
 let utils = {};
