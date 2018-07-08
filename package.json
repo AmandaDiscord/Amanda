@@ -26,7 +26,7 @@
     "node-opus": "^0.2.9",
     "opusscript": "^0.0.6",
     "request": "^2.86.0",
-    "simple-git": "^1.96.0",
+    "request-promise": "^4.2.2",
     "simple-youtube-api": "^5.0.2",
     "uws": "^9.148.0",
     "ytdl-core": "^0.20.4"
