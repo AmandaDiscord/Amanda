@@ -2,6 +2,7 @@ const fs = require("fs");
 const os = require("os");
 const util = require("util");
 const { exec } = require("child_process");
+const simpleGit = require("simple-git")(".");
 
 module.exports = function(passthrough) {
 	const { Auth, Discord, client, db, utils, commands, Config } = passthrough;
@@ -86,8 +87,66 @@ module.exports = function(passthrough) {
 						"[SHODAN](http://shodanbot.com) <:bot:412413027565174787>, "+
 						"[Cadence](https://cadence.gq/) <:NitroBadge:421774688507920406>, "+
 						"[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Changelog", utils.getChangelog())
-				msg.channel.send({embed});
+					.addField("Changelog", "*(See &changelog and &commits for more)*\n"+utils.getChangelog(3))
+					.setColor("36393E");
+				msg.channel.send(embed);
+			}
+		},
+
+		"changelog": {
+			usage: "",
+			description: "Gets the latest changes to Amanda",
+			aliases: ["changelog", "changes"],
+			category: "core",
+			process: async function(msg, suffix) {
+				msg.channel.send(new Discord.RichEmbed()
+					.setTitle("Changelog (latest 10 entries)")
+					.setDescription(utils.getChangelog(10))
+					.setColor("36393E")
+				);
+			}
+		},
+
+		"commits": {
+			usage: "",
+			description: "Gets the latest git commits to Amanda",
+			aliases: ["commits", "commit", "git"],
+			category: "core",
+			process: async function(msg, suffix) {
+				const logSize = 5;
+				const authorNameMap = {
+					"Edward Fish": "176580265294954507",
+					"snakke": "320067006521147393"
+				};
+				simpleGit.status((err, status) => {
+					simpleGit.log({"--no-decorate": null}, (err, log) => {
+						Promise.all(Array(5).fill().map((_, i) => new Promise(resolve => {
+							simpleGit.diffSummary([log.all[i+1].hash, log.all[i].hash], (err, diff) => {
+								resolve(diff);
+							});
+						}))).then(diffs => {
+							msg.channel.send(new Discord.RichEmbed()
+								.setTitle("Git info")
+								.addField("Status",
+									"On branch "+status.current+", latest commit "+log.latest.hash.slice(0, 7))
+								.addField(`Commits (latest ${logSize} entries)`,
+									log.all.slice(0, logSize).map((line, index) => {
+										let date = new Date(line.date);
+										let dateString = date.toDateString()+" @ "+date.toTimeString().split(":").slice(0, 2).join(":");
+										let diff =
+											diffs[index].files.length+" files changed, "+
+											diffs[index].files.reduce((p,c) => (p+c.insertions), 0)+" insertions, "+
+											diffs[index].files.reduce((p,c) => (p+c.insertions), 0)+" deletions.";
+										return ""+
+											"`» "+line.hash.slice(0, 7)+": "+dateString+" — "+(authorNameMap[line.author_name] ? client.users.get(authorNameMap[line.author_name]).username : "Unknown")+"`\n"+
+											"`» "+diff+"`\n"+
+											line.message;
+									}).join("\n\n"))
+								.setColor("36393E")
+							);
+						});
+					});
+				});
 			}
 		},
 

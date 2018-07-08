@@ -299,16 +299,16 @@ module.exports = function(passthrough) {
 		return result;
 	}
 
-	utils.getChangelog = function() {
+	utils.getChangelog = function(limit = 10) {
 		delete require.cache[require.resolve("../changelog.js")];
 		let changelog = require("../changelog.js");
 		let result = [];
-		for (let entry of changelog.slice(0, 10)) {
+		for (let entry of changelog.slice(0, limit)) {
 			let date = new Date(entry.date);
 			let dateString = date.toDateString()+" @ "+date.toTimeString().split(":").slice(0, 2).join(":");
 			result.push("`» "+dateString+" — "+client.users.get(entry.authorID).username+"`\n"+entry.text);
 		}
-		return result.join("\n");
+		return result.join("\n\n");
 	}
 
 	return {};
