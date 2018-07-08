@@ -73,8 +73,20 @@ module.exports = function(passthrough) {
 			category: "core",
 			process: async function(msg, suffix) {
 				let creator = await client.fetchUser("320067006521147393");
-				const embed = new Discord.RichEmbed().setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me").addField("Creator:", `${creator.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`).addField("Lang:", `Node.js ${process.version}`).addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)").addField("Description:", "A cutie-pie general purpose bot that only wishes for some love").addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord bots](https://bots.discord.pw/bots/405208699313848330)").addBlankField(true).addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>, [SHODAN](http://shodanbot.com) <:bot:412413027565174787>, [cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>, [botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Change log:", "```\n- Improvements to music and loading playlists\n- Profile command reworked\n```").setColor("36393E")
+				const embed = new Discord.RichEmbed()
+					.setAuthor("Amanda", `https://cdn.discordapp.com/avatars/${client.user.id}/${client.user.avatar}.jpg?size=32`)
+					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
+					.addField("Creators",
+						`${creator.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
+						`${client.users.get("176580265294954507").tag} <:NitroBadge:421774688507920406>`)
+					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js)`)
+					.addField("Links", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
+					.addField("Partners",
+						"axelgreavette <:HypeBadge:421764718580203530>, "+
+						"[SHODAN](http://shodanbot.com) <:bot:412413027565174787>, "+
+						"[Cadence](https://cadence.gq/) <:NitroBadge:421774688507920406>, "+
+						"[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
+					.addField("Changelog", utils.getChangelog())
 				msg.channel.send({embed});
 			}
 		},
