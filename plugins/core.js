@@ -90,7 +90,7 @@ module.exports = function(passthrough) {
 						"[SHODAN](http://shodanbot.com) <:bot:412413027565174787>, "+
 						"[Cadence](https://cadence.gq/) <:NitroBadge:421774688507920406>, "+
 						"[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Changelog", "*(See &changelog and &commits for more)*\n"+utils.getChangelog(3))
+					.addField("Changelog", "*(See &changelog and &commits for more)*\n"+utils.getChangelog(1))
 					.setColor("36393E");
 				msg.channel.send(embed);
 			}
