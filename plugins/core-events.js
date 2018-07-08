@@ -2,8 +2,8 @@ module.exports = function(passthrough) {
 	let { Discord, client, reloadEvent, utils, commands } = passthrough;
 	const stdin = process.stdin;
 	let prefixes = [];
-	setImmediate(() => {
-		utils.sql("SELECT * FROM Prefixes").then(result => {
+	client.once("ready", () => {
+		utils.sql("SELECT prefix FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 			prefixes = result.map(r => r.prefix);
 		});
 	});
