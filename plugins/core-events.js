@@ -2,11 +2,7 @@ module.exports = function(passthrough) {
 	let { Discord, client, reloadEvent, utils, commands } = passthrough;
 	const stdin = process.stdin;
 	let prefixes = [];
-	setImmediate(() => {
-		utils.sql("SELECT * FROM Prefixes").then(result => {
-			prefixes = result.map(r => r.prefix);
-		});
-	});
+	let statusPrefix = "&";
 
 	client.on("message", manageMessage);
 	client.on("messageUpdate", manageEdit);
@@ -46,8 +42,13 @@ module.exports = function(passthrough) {
 
 	function manageReady() {
 		console.log("Successfully logged in");
-		update();
-		client.setInterval(update, 300000);
+		utils.sql("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
+			prefixes = result.map(r => r.prefix);
+			statusPrefix = result.find(r => r.status).prefix;
+			console.log("Loaded "+prefixes.length+" prefixes");
+			update();
+			client.setInterval(update, 300000);
+		});
 	}
 
 	function manageDisconnect(reason) {
@@ -77,7 +78,7 @@ module.exports = function(passthrough) {
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
-		client.user.setActivity(`${name} | &help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
+		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
 
 	async function checkMessageForCommand(msg, isEdit) {
