@@ -12,11 +12,7 @@ module.exports = function(passthrough) {
 			aliases: ["uptime"],
 			category: "core",
 			process: function(msg, suffix) {
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Uptime")
-					.addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`)
-					.setFooter("And still going")
-					.setColor("36393E")
+				const embed = new Discord.RichEmbed().addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`).setFooter("And still going").setColor("36393E")
 				msg.channel.send({embed});
 			}
 		},
@@ -35,14 +31,7 @@ module.exports = function(passthrough) {
 					 status = `<:streaming:454228675227942922>`;
 				} else if (client.user.presence.game) game = utils.getPresencePrefix(client.user.presence.game.type)+" **"+client.user.presence.game.name+"**";
 				var nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Statistics")
-					.setTitle(`${client.user.tag} ${status}`)
-					.setDescription(game)
-					.addField("­", `**❯ API Latency:**\n${client.ping.toFixed(0)}ms\n**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true)
-					.addField("­", `**❯ User Count:**\n${client.users.size} users\n**❯ Guild Count:**\n${client.guilds.size} guilds\n**❯ Channel Count:**\n${client.channels.size} channels\n**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
-					.setFooter(`Requested by ${msg.author.username}`)
-					.setColor("36393E")
+				const embed = new Discord.RichEmbed().setTitle(`${client.user.tag} ${status}`).setDescription(game).addField("­", `**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true).addField("­", `**❯ User Count:**\n${client.users.size} users\n**❯ Guild Count:**\n${client.guilds.size} guilds\n**❯ Channel Count:**\n${client.channels.size} channels\n**❯ Voice Connections:**\n${client.voiceConnections.size}`, true).setFooter(`Requested by ${msg.author.username}`).setColor("36393E")
 				nmsg.edit({embed});
 			}
 		},
@@ -55,15 +44,8 @@ module.exports = function(passthrough) {
 			process: async function (msg, suffix) {
 				var array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				var message = array[Math.floor(Math.random() * array.length)];
-				var footers = ["Is that slow?", "W-Wait... It's called table tennis"];
-				var footer = footers[Math.floor(Math.random() * footers.length)];
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Pong!")
-					.addField("❯ API Latency:", `${client.ping.toFixed(0)}ms`, true)
-					.addField(`❯ Message Edit:`, `${Date.now() - msg.createdTimestamp}ms`, true)
-					.setFooter(footer)
-					.setColor("36393E")
 				var nmsg = await msg.channel.send(message);
+				const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
 				nmsg.edit({embed});
 			}
 		},
@@ -73,14 +55,14 @@ module.exports = function(passthrough) {
 			description: "Sends the bot invite link to you via DMs",
 			aliases: ["invite", "inv"],
 			category: "core",
-			process: function(msg, suffix) {
-				const embed = new Discord.RichEmbed()
-					.setDescription("**I've been invited?**\n*Be sure that you have administrator permissions on the server you would like to invite me to*")
-					.setTitle("Invite Link")
-					.setURL("http://amanda.discord-bots.ga/")
-					.setFooter("Amanda", client.user.avatarURL)
-					.setColor("36393E")
-				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+			process: async function(msg, suffix) {
+				const embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have administrator permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("http://amanda.discord-bots.ga/").setColor("36393E")
+				try {
+					await msg.author.send({embed});
+					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+				} catch (reason) {
+					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+				}
 			}
 		},
 
@@ -91,20 +73,8 @@ module.exports = function(passthrough) {
 			category: "core",
 			process: async function(msg, suffix) {
 				let creator = await client.fetchUser("320067006521147393");
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Information:")
-					.setColor("36393E")
-					.setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me")
-					.addField("Creator:", `${creator.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`)
-					.addField("Lang:", `Node.js ${process.version}`)
-					.addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)")
-					.addField("Description:", "A cutie-pie general purpose bot that only wishes for some love")
-					.addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord bots](https://bots.discord.pw/bots/405208699313848330)")
-					.addBlankField(true)
-					.addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>, [SHODAN](http://shodanbot.com) <:bot:412413027565174787>, [cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>, [botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Change log:", "```\n- General improvements behind the scenes\n```")
-					.setFooter("Amanda", client.user.avatarURL)
-					.setColor(504277)
+				const embed = new Discord.RichEmbed().setDescription("Thank you for choosing me as your companion :heart: Here's a little bit of info about me").addField("Creator:", `${creator.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>`).addField("Lang:", `Node.js ${process.version}`).addField("Library:", "[Discord.js](https://www.npmjs.com/package/discord.js)").addField("Description:", "A cutie-pie general purpose bot that only wishes for some love").addField("More Info:", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](http://papishouse.discords.ga)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord bots](https://bots.discord.pw/bots/405208699313848330)").addBlankField(true).addField("Partners:", "axelgreavette <:HypeBadge:421764718580203530>, [SHODAN](http://shodanbot.com) <:bot:412413027565174787>, [cloudrac3r](https://cadence.gq/) <:NitroBadge:421774688507920406>, [botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
+					.addField("Change log:", "```\n- Improvements to music and loading playlists\n- Profile command reworked\n```").setColor("36393E")
 				msg.channel.send({embed});
 			}
 		},
@@ -114,13 +84,14 @@ module.exports = function(passthrough) {
 			description: "Details Amanda's privacy statement",
 			aliases: ["privacy"],
 			category: "core",
-			process: function(msg, suffix) {
-				const embed = new Discord.RichEmbed()
-					.setAuthor("Privacy")
-					.setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms) it is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it")
-					.setFooter("Amanda", client.user.avatarURL)
-					.setColor("36393E")
-				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+			process: async function(msg, suffix) {
+				const embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				try {
+					await msg.author.send({embed});
+					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+				} catch (reason) {
+					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+				}
 			}
 		},
 
@@ -180,23 +151,25 @@ module.exports = function(passthrough) {
 						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.setColor('36393E')
-					await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
-					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-					return;
+					try {
+						await msg.author.send({embed});
+						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					} catch (reason) {
+						return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+					}
 				}
 				if (!cat || cat.toString().length < 1) {
-					const embed = new Discord.RichEmbed()
-						.setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`)
-						.setColor('36393E')
+					const embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
 					return msg.channel.send({embed});
 				}
 				var str = cat.map(c => `${c.aliases[0]} ${c.usage}    [${c.aliases.join(", ")}]`).join("\n");
-				const embed = new Discord.RichEmbed()
-					.setAuthor(`${suffix.toLowerCase()} command list`)
-					.setTitle("command <usage>    [aliases]")
-					.setDescription(str)
-					.setColor("36393E")
-				msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
+				const embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command <usage>    [aliases]").setDescription(str).setColor("36393E")
+				try {
+					await msg.author.send({embed});
+					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+				} catch (reason) {
+					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+				}
 			}
 		},
 
@@ -209,23 +182,19 @@ module.exports = function(passthrough) {
 				if(suffix) {
 					var cmd = Object.values(commands).find(c => c.aliases.includes(suffix));
 					if (!cmd) {
-						const embed = new Discord.RichEmbed()
-							.setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`)
-							.setColor("B60000")
+						const embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000")
 						return msg.channel.send({embed});
 					}
-					const embed = new Discord.RichEmbed()
-						.addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${cmd.usage}\nDescription: ${cmd.description}\nAliases: [${cmd.aliases.join(", ")}]`)
-						.setColor('36393E')
+					const embed = new Discord.RichEmbed().addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${cmd.usage}\nDescription: ${cmd.description}\nAliases: [${cmd.aliases.join(", ")}]`).setColor('36393E')
 					msg.channel.send({embed});
 				} else {
-					const embed = new Discord.RichEmbed() // \n❯ NSFW
-						.setAuthor("Command Categories:")
-						.setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``)
-						.setFooter("Amanda help panel", client.user.avatarURL)
-						.setColor('36393E')
-						await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work`));
-					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					const embed = new Discord.RichEmbed().setAuthor("Command Categories:").setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``).setFooter("Amanda help panel", client.user.avatarURL).setColor('36393E')
+					try {
+						await msg.author.send({embed});
+						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					} catch (reason) {
+						return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+					}
 				}
 			}
 		},
