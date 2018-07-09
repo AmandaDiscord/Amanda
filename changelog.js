@@ -1,7 +1,7 @@
 // Newest entries first
 module.exports = [
 	{
-		authorID: "",
+		authorID: "320067006521147393",
 		date: 1531111535739,
 		text:
 			"Added `&snek` command"
