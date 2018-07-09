@@ -99,7 +99,7 @@ module.exports = function(passthrough) {
 			aliases: ["snek", "snake"],
 			category: "images",
 			process: function(msg, suffix) {
-				request("https://augu.me/api/img/snek", function(err, res, body) {
+				request("https://api.cheweybot.ga/snake", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					try {
 						var data = JSON.parse(body);
@@ -107,8 +107,31 @@ module.exports = function(passthrough) {
 						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
 					}
 					const embed = new Discord.RichEmbed()
-						.setImage(data.url)
-						.setColor("36393E")
+						.setImage(data.data)
+						.setColor('36393E')
+						.setFooter("Powered by api.cheweybot.ga")
+					msg.channel.send({embed});
+				});
+			}
+		},
+
+		"birb": {
+			usage: "",
+			description: "Returns an image of a birb",
+			aliases: ["birb", "bird"],
+			category: "images",
+			process: function(msg, suffix) {
+				request("https://api.cheweybot.ga/birb", function(err, res, body) {
+					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					try {
+						var data = JSON.parse(body);
+					} catch (error) {
+						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
+					}
+					const embed = new Discord.RichEmbed()
+						.setImage(data.data)
+						.setColor('36393E')
+						.setFooter("Powered by api.cheweybot.ga")
 					msg.channel.send({embed});
 				});
 			}
