@@ -78,7 +78,7 @@ module.exports = function(passthrough) {
 					client.fetchUser("176580265294954507")
 				]);
 				const embed = new Discord.RichEmbed()
-					.setAuthor("Amanda", `https://cdn.discordapp.com/avatars/${client.user.id}/${client.user.avatar}.jpg?size=32`)
+					.setAuthor("Amanda", `https://cdn.discordapp.com/avatars/${client.user.id}/${client.user.avatar}.png?size=32`)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
 						`${c1.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
