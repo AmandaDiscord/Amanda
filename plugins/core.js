@@ -116,6 +116,7 @@ module.exports = function(passthrough) {
 			aliases: ["commits", "commit", "git"],
 			category: "core",
 			process: async function(msg, suffix) {
+				msg.channel.sendTyping();
 				const limit = 5;
 				rp("https://cadence.gq/api/amandacommits?limit="+limit).then(body => {
 					let data = JSON.parse(body);
