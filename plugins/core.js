@@ -24,7 +24,7 @@ module.exports = function(passthrough) {
 			aliases: ["statistics", "stats"],
 			category: "statistics",
 			process: async function(msg, suffix) {
-				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
+				var ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let status = utils.getPresenceEmoji(client.user.presence.status);
 				let game = "No activity set";
 				if (client.user.presence.game && client.user.presence.game.streaming) {
@@ -270,9 +270,7 @@ module.exports = function(passthrough) {
 					utils.reactionMenu(nmsg, [
 						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
 					]);
-				} else {
-					utils.sendNopeMessage(msg);
-				}
+				} else utils.sendNopeMessage(msg);
 			}
 		}
 	}
