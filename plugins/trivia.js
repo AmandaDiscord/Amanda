@@ -106,7 +106,7 @@ module.exports = function(passthrough) {
 										}
 										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
 										var user = await client.users.get(item)
-										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please ena	le DMs so I can tell you your earnings`));
+										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
 									})
 								}
 							}
