@@ -24,7 +24,7 @@ module.exports = function(passthrough) {
 			aliases: ["statistics", "stats"],
 			category: "statistics",
 			process: async function(msg, suffix) {
-				var ramUsage = ((process.memoryUsage().heapUsed / 1024) / 1024).toFixed(2);
+				var ramUsage = ((process.memoryUsage().rss / 1024) / 1024).toFixed(2);
 				let status = utils.getPresenceEmoji(client.user.presence.status);
 				let game = "No activity set";
 				if (client.user.presence.game && client.user.presence.game.streaming) {

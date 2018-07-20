@@ -1,0 +1,125 @@
+<!-- TEMPLATE pre -->
+
+<script>
+	let time = null;
+	let totalTime = null;
+	let queue = null;
+
+	function prettySeconds(seconds) {
+		let minutes = Math.floor(seconds / 60);
+		seconds = seconds % 60;
+		let hours = Math.floor(minutes / 60);
+		minutes = minutes % 60;
+		let output = [];
+		if (hours) {
+			output.push(hours);
+			output.push(minutes.toString().padStart(2, "0"));
+		} else {
+			output.push(minutes);
+		}
+		output.push(seconds.toString().padStart(2, "0"));
+		return output.join(":");
+	}
+
+	function updatePte() {
+		if (typeof(time) == "number" && q("#playTimeElapsed")) {
+			q("#playTimeElapsed").innerText = prettySeconds(Math.floor(time/1000));
+			q("#totalTime").innerText = prettySeconds(totalTime);
+			let percent = ((time/1000)/totalTime*100).toFixed(1);
+			q("#progressBar").style.background = `linear-gradient(to right, #5669ac ${percent}%, white ${percent}%)`;
+		}
+	}
+
+	ws.addEventListener("open", event => {
+		wssend({event: "login", token: token, serverID: getGuild()});
+	});
+	ws.addEventListener("message", event => {
+		console.log("Received WS data: "+event.data);
+		let data = JSON.parse(event.data);
+		if (data.event == "queuesUpdate") {
+			queue = data.queue;
+			if (!queue) {
+				q("#nothingPlaying").style.display = "block";
+				q("#somethingPlaying").style.display = "none";
+			} else {
+				q("#nothingPlaying").style.display = "none";
+				let display = q("#somethingPlaying");
+				display.style.display = "block";
+				q("#nowPlaying").innerText = "Now playing: "+queue.songs[0].title+(queue.playing ? "" : " (paused)");
+				q("#bigThumbnail").src = `https://i.ytimg.com/vi/${queue.songs[0].id}/hqdefault.jpg`
+				time = queue.time || 0;
+				totalTime = queue.totalTime || 0;
+				updatePte();
+				if (queue.songs[1]) {
+					q("#upNextContainer").style.display = "block";
+					q("#upNextEmpty").style.display = "none";
+					q("#upNextContainer").innerHTML = "";
+					for (let song of queue.songs.slice(1)) {
+						let ie = q("#queueItemStorage").children[0].cloneNode(true);
+						ie.children[0].children[0].src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
+						ie.children[1].children[0].innerText = song.title;
+						ie.children[1].children[1].innerText = song.author;
+						ie.children[1].children[2].innerText = prettySeconds(song.length_seconds);
+						q("#upNextContainer").appendChild(ie);
+					}
+				} else {
+					q("#upNextContainer").style.display = "none";
+					q("#upNextEmpty").style.display = "block";
+				}
+			}
+		}
+	});
+
+	setInterval(() => {
+		if (!queue) return;
+		if (!queue.playing || !queue.skippable) return;
+		if (typeof(time) != "number") return;
+		time += 100;
+		updatePte();
+	}, 100);
+
+</script>
+
+<!-- TEMPLATE header -->
+
+<h1>Server</h1>
+<div id="nothingPlaying">
+	<p>Nothing is playing.</p>
+</div>
+<div id="somethingPlaying" style="display: none;">
+	<div style="display: flex">
+		<div><img id="bigThumbnail"></div>
+		<div>
+			<div id="nowPlaying"></div>
+			<span id="progressContainer">
+				<span id="playTimeElapsed">0:00</span>
+				<span id="progressBar"></span>
+				<span id="totalTime">0:00</span>
+			</span>
+			<div id="buttonControlContainer">
+				<button onclick='playPause(queue.playing)'><img src="/playpause.svg"></button>
+				<button onclick='simpleAPI("skip")'><img src="/skip.svg"></button>
+				<button onclick='simpleAPI("stop")'><img src="/stop.svg"></button>
+			</div>
+		</div>
+	</div>
+	<h2>Up next:</h2>
+	<div id="upNextContainer"></div>
+	<div id="upNextEmpty">
+		<p>Nothing here. Queue some songs and they'll be played once the current song ends.</p>
+	</div>
+</div>
+<div id="queueItemStorage">
+	<span class="queueItem">
+		<span>
+			<img>
+		</span>
+		<span>
+			<div class="queueSongTitle">xi - Agartha</div>
+			<div class="queueSongAuthor">Cool Music Makers™</div>
+			<div class="queueSongTime">2:48</div>
+		</span>
+	</span>
+</div>
+
+<!-- TEMPLATE end -->

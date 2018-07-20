@@ -6,21 +6,59 @@ const queues = new Map();
 const timeout = new Set();
 
 module.exports = function(passthrough) {
-	const { Auth, Discord, client, utils } = passthrough;
+	const { Auth, Discord, client, utils, reloadEvent } = passthrough;
 	const youtube = new YouTube(Auth.yt_api_key);
 
+	reloadEvent.on("music", musicCommandListener);
+	reloadEvent.once(__filename, () => {
+		reloadEvent.removeListener("music", musicCommandListener);
+	});
+	function musicCommandListener(action) {
+		if (action == "getQueues") {
+			reloadEvent.emit("musicOut", "queues", queues);
+		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
+			let [serverID, callback] = [...arguments].slice(1);
+			const actions = {
+				skip: callskip,
+				stop: callstop,
+				pause: callpause,
+				resume: callresume
+			};
+			let queue = queues.get(serverID);
+			if (!queue) return callback([400, "Server is not playing music"]);
+			if (actions[action]) {
+				let result = actions[action](undefined, queue);
+				if (result) callback([200, result]);
+				else callback([204, ""]);
+			} else {
+				callback([400, "Action does not exist"]);
+			}
+		}
+	}
+
 	function callskip(msg, queue) {
-		if (!queue) return msg.channel.send(`There aren't any songs to skip`);
+		if (!queue) {
+			if (msg) return msg.channel.send(`There aren't any songs to skip`);
+			else return "There aren't any songs to skip";
+		}
 		if (!queue.connection || !queue.connection.dispatcher) return;
-		if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
-		return queue.connection.dispatcher.end();
+		if (!queue.skippable || !queue.connection || !queue.connection.dispatcher) {
+			if (msg) return msg.channel.send(`You cannot skip a song before the next has started! Wait a moment and try again.`);
+			else return "You cannot skip a song before the next has started! Wait a moment and try again.";
+		}
+		queue.connection.dispatcher.end();
+		reloadEvent.emit("musicOut", "queues", queues);
 	}
 
 	function callstop(msg, queue) {
-		if (!queue) return msg.channel.send('There is nothing playing to stop');
+		if (!queue) {
+			if (msg) return msg.channel.send('There is nothing playing to stop');
+			else return "There is nothing playing to stop";
+		}
 		if (!queue.connection || !queue.connection.dispatcher) return;
 		queue.songs = [];
-		return queue.connection.dispatcher.end();
+		queue.connection.dispatcher.end();
+		reloadEvent.emit("musicOut", "queues", queues);
 	}
 
 	function callpause(msg, queue) {
@@ -29,6 +67,7 @@ module.exports = function(passthrough) {
 			queue.playing = false;
 			queue.connection.dispatcher.pause();
 			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
+			reloadEvent.emit("musicOut", "queues", queues);
 		} else return;
 	}
 
@@ -38,6 +77,7 @@ module.exports = function(passthrough) {
 			queue.playing = true;
 			queue.connection.dispatcher.resume();
 			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
+			reloadEvent.emit("musicOut", "queues", queues);
 		} else return;
 	}
 
@@ -112,8 +152,10 @@ module.exports = function(passthrough) {
 			queue.voiceChannel.leave();
 			queue.nowPlayingMsg.clearReactions();
 			queues.delete(guild.id);
+			reloadEvent.emit("musicOut", "queues", queues);
 			return msg.channel.send(`We've run out of songs`)
 		}
+		reloadEvent.emit("musicOut", "queues", queues);
 		const stream = ytdl(song.url);
 		//console.log("Waiting for response");
 		stream.once("progress", () => {
@@ -121,6 +163,7 @@ module.exports = function(passthrough) {
 			const dispatcher = queue.connection.playStream(stream);
 			dispatcher.once("start", async () => {
 				queue.skippable = true;
+				reloadEvent.emit("musicOut", "queues", queues);
 				//console.log("Dispatcher start");
 				let dispatcherEndCode = new Function();
 				function updateProgress() {

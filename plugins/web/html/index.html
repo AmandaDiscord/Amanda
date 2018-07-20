@@ -1,0 +1,27 @@
+<!-- TEMPLATE pre -->
+
+<script>
+	getSharedServers(result => {
+		let servers = JSON.parse(result.responseText);
+		if (servers.length) {
+			let content = "";
+			for (let server of servers) {
+				content += `<a class="serverListItem" href="/servers/${server.id}">`+
+					`<img src="https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png?size=128">`+
+					`<span>${server.name}</span>`;
+			}
+			q("#serverList").innerHTML = content;
+		} else {
+			q("#serverListUnclickable").innerText = "No shared servers where you are allowed to play music :(";
+		}
+	});
+</script>
+
+<!-- TEMPLATE header -->
+
+<h1>Select a server</h1>
+<p id="serverList">
+	<span id="serverListUnclickable">Loading...</span>
+</p>
+
+<!-- TEMPLATE end -->
