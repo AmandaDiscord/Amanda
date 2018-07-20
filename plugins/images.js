@@ -71,7 +71,7 @@ module.exports = function(passthrough) {
 
 		"meme": {
 			usage: "",
-			description: "Gives a random meme",
+			description: "Returns a meme",
 			aliases: ["meme"],
 			category: "images",
 			process: async function(msg, suffix) {
@@ -88,6 +88,50 @@ module.exports = function(passthrough) {
 						.setImage(data[0].data.children[0].data.preview?data[0].data.children[0].data.preview.images[0].source.url: "https://i2.wp.com/www.funnygrins.com/main/wp-content/uploads/2011/03/404Death.png")
 						.setColor('36393E')
 						.setFooter(`r/${choice}`)
+					msg.channel.send({embed});
+				});
+			}
+		},
+
+		"snek": {
+			usage: "",
+			description: "Returns an image of a snek",
+			aliases: ["snek", "snake"],
+			category: "images",
+			process: function(msg, suffix) {
+				request("https://api.cheweybot.ga/snake", function(err, res, body) {
+					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					try {
+						var data = JSON.parse(body);
+					} catch (error) {
+						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
+					}
+					const embed = new Discord.RichEmbed()
+						.setImage(data.data)
+						.setColor('36393E')
+						.setFooter("Powered by api.cheweybot.ga")
+					msg.channel.send({embed});
+				});
+			}
+		},
+
+		"birb": {
+			usage: "",
+			description: "Returns an image of a birb",
+			aliases: ["birb", "bird"],
+			category: "images",
+			process: function(msg, suffix) {
+				request("https://api.cheweybot.ga/birb", function(err, res, body) {
+					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					try {
+						var data = JSON.parse(body);
+					} catch (error) {
+						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
+					}
+					const embed = new Discord.RichEmbed()
+						.setImage(data.data)
+						.setColor('36393E')
+						.setFooter("Powered by api.cheweybot.ga")
 					msg.channel.send({embed});
 				});
 			}

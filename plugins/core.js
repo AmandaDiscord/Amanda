@@ -24,7 +24,7 @@ module.exports = function(passthrough) {
 			aliases: ["statistics", "stats"],
 			category: "statistics",
 			process: async function(msg, suffix) {
-				var ramUsage = ((process.memoryUsage().rss / 1024) / 1024).toFixed(2);
+				var ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let status = utils.getPresenceEmoji(client.user.presence.status);
 				let game = "No activity set";
 				if (client.user.presence.game && client.user.presence.game.streaming) {
@@ -45,9 +45,13 @@ module.exports = function(passthrough) {
 			process: async function (msg, suffix) {
 				var array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				var message = array[Math.floor(Math.random() * array.length)];
-				var nmsg = await msg.channel.send(message);
-				const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
-				nmsg.edit({embed});
+				var otherarray = ["Not happening", `F-Fine but don't think this means anything. Gateway: ${client.ping.toFixed(0)}ms`, "hahayes", "hahano"];
+				var othermessage = otherarray[Math.floor(Math.random() * otherarray.length)];
+				if (Math.floor(Math.random() * 2) == 0) {
+					var nmsg = await msg.channel.send(message);
+					const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+					nmsg.edit({embed});
+				} else return msg.channel.send(othermessage);
 			}
 		},
 
@@ -116,6 +120,7 @@ module.exports = function(passthrough) {
 			aliases: ["commits", "commit", "git"],
 			category: "core",
 			process: async function(msg, suffix) {
+				msg.channel.sendTyping();
 				const limit = 5;
 				rp("https://cadence.gq/api/amandacommits?limit="+limit).then(body => {
 					let data = JSON.parse(body);
@@ -269,9 +274,7 @@ module.exports = function(passthrough) {
 					utils.reactionMenu(nmsg, [
 						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
 					]);
-				} else {
-					utils.sendNopeMessage(msg);
-				}
+				} else utils.sendNopeMessage(msg);
 			}
 		}
 	}
