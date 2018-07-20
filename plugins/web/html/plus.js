@@ -34,7 +34,7 @@ if (window.location.pathname == "/login") {
 	}, {token});
 }
 
-const ws = new WebSocket("ws://"+window.location.hostname+":1272", ["soap"]);
+const ws = new WebSocket("wss://"+window.location.hostname+":1272", ["soap"]);
 function wssend(data) {
 	let message = JSON.stringify(data);
 	console.log("Sending WS data: "+message);
