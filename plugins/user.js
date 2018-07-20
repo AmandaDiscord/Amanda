@@ -36,7 +36,7 @@ module.exports = function(passthrough) {
 					avatarI.src = avatar;
 					ctx.drawImage(avatarI, 52, 47, 76, 76);
 					ctx.font = "bold 25px 'Whitney'";
-					ctx.fillStyle = "white"
+					ctx.fillStyle = "white";
 					ctx.fillText(member.user.tag, 205, 93);
 					ctx.fillText(`Discoins:`, 52, 170);
 					ctx.fillText(`${money.coins}`, 52, 210);

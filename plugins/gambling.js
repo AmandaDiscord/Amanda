@@ -48,7 +48,7 @@ module.exports = function(passthrough) {
 				var slot1 = array[Math.floor(Math.random() * array.length)];
 				var slot2 = array[Math.floor(Math.random() * array.length)];
 				var slot3 = array[Math.floor(Math.random() * array.length)];
-				let canvas = new Canvas(553, 552);
+				let canvas = new Canvas(601, 600);
 				let ctx = canvas.getContext("2d");
 				Promise.all([
 					util.promisify(fs.readFile)(`./images/emojis/${slot1}.png`),
@@ -58,19 +58,23 @@ module.exports = function(passthrough) {
 				]).then(async ([image1, image2, image3, template]) => {
 					let templateI = new Canvas.Image();
 					templateI.src = template;
-					ctx.drawImage(templateI, 0, 0, 553, 552);
+					ctx.drawImage(templateI, 0, 0, 601, 600);
 					let imageI = new Canvas.Image();
 					imageI.src = image1;
-					ctx.drawImage(imageI, 91, 320, 85, 85);
+					ctx.drawImage(imageI, 120, 360, 85, 85); // 91, 320
 					let imageII = new Canvas.Image();
 					imageII.src = image2;
-					ctx.drawImage(imageII, 234, 320, 85, 85);
+					ctx.drawImage(imageII, 258, 360, 85, 85);
 					let imageIII = new Canvas.Image();
 					imageIII.src = image3;
-					ctx.drawImage(imageIII, 376, 320, 85, 85);
-					let buffer = canvas.toBuffer();
-
+					ctx.drawImage(imageIII, 392, 360, 85, 85);
+					ctx.font = "20px 'Whitney'";
+					ctx.fillStyle = "white";
+					let buffer;
 					if (!args[0]) {
+						ctx.fillText("Nothing", 130, 540);
+						ctx.fillText("Nothing", 405, 540 );
+						buffer = canvas.toBuffer();
 						return msg.channel.send({files: [buffer]});
 					}
 					if (args[0] == "all") {
@@ -82,26 +86,36 @@ module.exports = function(passthrough) {
 						if (bet < 2) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 2`);
 						if (bet > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
 					}
-					var result = `**${msg.author.tag}**, `;
+					let result = `**${msg.author.tag}**, `;
+					let winning;
 					if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
+						winning = bet * 30;
 						result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 29), msg.author.id]);
 					} else if (slot1 == "heart" && slot1 == slot2 || slot1 == "heart" && slot1 == slot3) {
+						winning = bet * 4;
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot2 == "heart" && slot2 == slot3) {
+						winning = bet * 4;
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
+						winning = Math.floor(bet * 1.25);
 						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 0.25)), msg.author.id]);
 					} else if (slot1 == slot2 && slot2 == slot3) {
+						winning = bet * 10;
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
 					} else {
+						winning = "Nothing"
 						result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
 					}
+					ctx.fillText(winning, 115, 540);
+					ctx.fillText(bet, 390, 540 );
+					buffer = canvas.toBuffer();
 					await msg.channel.send(result, {files: [buffer]});
 				});
 			}
