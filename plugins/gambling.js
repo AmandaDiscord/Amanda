@@ -109,14 +109,14 @@ module.exports = function(passthrough) {
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
 					} else {
-						winning = "Nothing"
+						winning = "Nothing";
 						result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
 						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
 					}
 					ctx.fillText(winning, 115, 540);
 					ctx.fillText(bet, 390, 540 );
 					buffer = canvas.toBuffer();
-					await msg.channel.send(result, {files: [buffer]});
+					msg.channel.send(result, {files: [buffer]});
 				});
 			}
 		},
