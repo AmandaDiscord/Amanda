@@ -116,7 +116,7 @@ module.exports = function(passthrough) {
 					ctx.fillText(winning, 115, 540);
 					ctx.fillText(bet, 390, 540 );
 					buffer = canvas.toBuffer();
-					await msg.channel.send(result, {files: [buffer]});
+					msg.channel.send(result, {files: [buffer]});
 				});
 			}
 		},
