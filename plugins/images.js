@@ -9,7 +9,7 @@ module.exports = function(passthrough) {
 			aliases: ["cat"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.cheweybot.ga/cat", function(err, res, body) {
+				request("https://api.chewey-bot.ga/cat", function(err, res, body) {
 					if (err) return msg.channel.send(`Error... API returned nothing`);
 					try {
 						var data = JSON.parse(body);
@@ -19,7 +19,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
-						.setFooter("Powered by api.cheweybot.ga")
+						.setFooter("Powered by api.chewey-bot.ga")
 					msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed}));
 				});
 			}
@@ -31,7 +31,7 @@ module.exports = function(passthrough) {
 			aliases: ["dog", "doggo"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.cheweybot.ga/dog", function(err, res, body) {
+				request("https://api.chewey-bot.ga/dog", function(err, res, body) {
 					if (err) return msg.channel.send("Error. The API returned nothing...");
 					try {
 						var data = JSON.parse(body);
@@ -41,7 +41,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
-						.setFooter("Powered by api.cheweybot.ga")
+						.setFooter("Powered by api.chewey-bot.ga")
 					msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => nmsg.edit({embed}));
 				});
 			}
@@ -53,7 +53,7 @@ module.exports = function(passthrough) {
 			aliases: ["space"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.cheweybot.ga/space", function(err, res, body) {
+				request("https://api.chewey-bot.ga/space", function(err, res, body) {
 					if (err) return msg.channel.send("Error... API returned nothing");
 					try {
 						var data = JSON.parse(body);
@@ -63,7 +63,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
-						.setFooter("Powered by api.cheweybot.ga")
+						.setFooter("Powered by api.chewey-bot.ga")
 					msg.channel.send("<a:SpaceLoading:429061691633041419>").then(nmsg => nmsg.edit({embed}))
 				})
 			}
@@ -99,7 +99,7 @@ module.exports = function(passthrough) {
 			aliases: ["snek", "snake"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.cheweybot.ga/snake", function(err, res, body) {
+				request("https://api.chewey-bot.ga/snake", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					try {
 						var data = JSON.parse(body);
@@ -109,7 +109,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
-						.setFooter("Powered by api.cheweybot.ga")
+						.setFooter("Powered by api.chewey-bot.ga")
 					msg.channel.send({embed});
 				});
 			}
@@ -121,7 +121,7 @@ module.exports = function(passthrough) {
 			aliases: ["birb", "bird"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.cheweybot.ga/birb", function(err, res, body) {
+				request("https://api.chewey-bot.ga/birb", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					try {
 						var data = JSON.parse(body);
@@ -131,7 +131,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
-						.setFooter("Powered by api.cheweybot.ga")
+						.setFooter("Powered by api.chewey-bot.ga")
 					msg.channel.send({embed});
 				});
 			}
