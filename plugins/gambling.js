@@ -369,10 +369,11 @@ module.exports = function(passthrough) {
 				if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a member you would like to claim`);
 				var member = utils.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
+				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
 					getWaifuInfo(member.user.id),
 					getWaifuInfo(msg.author.id),
-					utils.get("SELECT coins FROM money WHERE userID = ?", msg.author.id)
+					utils.get("SELECT * FROM money WHERE userID = ?", msg.author.id)
 				]);
 				money = money.coins;
 				if (!money) {
