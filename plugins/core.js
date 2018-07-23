@@ -11,7 +11,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "Returns the amount of time since the process has started",
 			aliases: ["uptime"],
-			category: "core",
+			category: "statistics",
 			process: function(msg, suffix) {
 				const embed = new Discord.RichEmbed().addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`).setFooter("And still going").setColor("36393E")
 				msg.channel.send({embed});
