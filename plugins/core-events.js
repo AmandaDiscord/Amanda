@@ -47,7 +47,7 @@ module.exports = function(passthrough) {
 	}
 
 	function manageReady() {
-		console.log("Successfully logged in");
+		console.log("Successfully logged in as "+client.user.username);
 		utils.sql("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 			prefixes = result.map(r => r.prefix);
 			statusPrefix = result.find(r => r.status).prefix;
