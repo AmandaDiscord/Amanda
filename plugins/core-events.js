@@ -4,8 +4,18 @@ module.exports = function(passthrough) {
 	const stdin = process.stdin;
 	let prefixes = [];
 	let statusPrefix = "&";
-	const dbl = require("dblapi.js");
-	const poster = new dbl(Auth.dbl_key, client);
+
+	if (Auth.dbl_key) {
+		const dbl = require("dblapi.js");
+		const poster = new dbl(Auth.dbl_key, client);
+		poster.once("posted", () => console.log("Server count posted"));
+		poster.on("error", reason => console.error(reason));
+		reloadEvent.once(__filename, () => {
+			poster.removeListener("error");
+		});
+	} else {
+		console.log("No DBL API key. Server count posting is disabled.");
+	}
 
 	client.on("message", manageMessage);
 	client.on("messageUpdate", manageEdit);
@@ -15,8 +25,6 @@ module.exports = function(passthrough) {
 	client.on("warn", manageWarn);
 	process.on("unhandledRejection", manageRejection);
 	stdin.on("data", manageStdin);
-	poster.once("posted", () => console.log("Server count posted"));
-	poster.on("error", reason => console.error(reason));
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", manageMessage);
 		client.removeListener("messageUpdate", manageEdit);
@@ -26,7 +34,6 @@ module.exports = function(passthrough) {
 		client.removeListener("warn", manageWarn);
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
-		poster.removeListener("error");
 	});
 
 	async function manageStdin(input) {
