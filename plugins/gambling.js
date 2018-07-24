@@ -438,6 +438,22 @@ module.exports = function(passthrough) {
 				let user = await client.fetchUser(waifu.waifuID);
 				msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
+		},
+
+		"waifuleaderboard": {
+			usage: "",
+			description: "Displays the leaderboard of the top waifus",
+			aliases: ["waifuleaderboard", "waifulb"],
+			category: "gambling",
+			process: async function(msg, suffix) {
+				var all = await utils.sql("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT 10", client.user.id);
+				let index = 0;
+				const embed = new Discord.RichEmbed()
+					.setAuthor("waifu leaderboard")
+					.setDescription(all.map(async row => `${++index}. ${await client.fetchUser(row.waifuID).tag || row.waifuID} claimed by ${await client.fetchUser(row.userID).tag || row.userID} for ${row.price} <a:Discoin:422523472128901140>`).join("\n"))
+					.setColor("F8E71C")
+				msg.channel.send({embed});
+			}
 		}
 	}
 }
