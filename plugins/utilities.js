@@ -11,6 +11,18 @@ module.exports = function(passthrough) {
 	}
 
 	/**
+	 * Gets the 32×32 avatar URL of a user, useful for embed authors and footers
+	 */
+	Discord.User.prototype.smallAvatarURL = function() {
+		debugger;
+		if (this.avatar) {
+			return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
+		} else {
+			return `https://cdn.discordapp.com/embed/avatars/${this.discriminator % 5}.png`;
+		}
+	}
+
+	/**
 	 * Checks if a user or guild has certain permission levels
 	 * @param {Object} DiscordObject An object of a user or guild
 	 * @param {String} Permission The permission to test if the Snowflake has
