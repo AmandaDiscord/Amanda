@@ -47,7 +47,9 @@ module.exports = function(passthrough) {
 				var message = array[Math.floor(Math.random() * array.length)];
 				var otherarray = ["Not happening", `F-Fine but don't think this means anything. Gateway: ${client.ping.toFixed(0)}ms`, "hahayes", "hahano"];
 				var othermessage = otherarray[Math.floor(Math.random() * otherarray.length)];
-				if (Math.floor(Math.random() * 2) == 0) {
+				// what the fuck papi
+				// if (Math.floor(Math.random() * 2) == 2) {
+				if (true) {
 					var nmsg = await msg.channel.send(message);
 					const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
 					nmsg.edit({embed});
