@@ -564,7 +564,7 @@ module.exports = function(passthrough) {
 					} else {
 						let author = [];
 						if (client.users.get(playlistRow.author)) {
-							author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, `https://cdn.discordapp.com/avatars/${client.users.get(playlistRow.author).id}/${client.users.get(playlistRow.author).avatar}.png?size=32`);
+							author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).smallAvatarURL());
 						} else {
 							author.push(playlistName);
 						}

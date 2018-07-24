@@ -48,7 +48,7 @@ module.exports = function(passthrough) {
 				var otherarray = ["Not happening", `F-Fine but don't think this means anything. Gateway: ${client.ping.toFixed(0)}ms`, "hahayes", "hahano"];
 				var othermessage = otherarray[Math.floor(Math.random() * otherarray.length)];
 				// what the fuck papi
-				// if (Math.floor(Math.random() * 2) == 2) {
+				// if (Math.floor(Math.random() * 2) == 0) {
 				if (true) {
 					var nmsg = await msg.channel.send(message);
 					const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
@@ -84,7 +84,7 @@ module.exports = function(passthrough) {
 					client.fetchUser("176580265294954507")
 				]);
 				const embed = new Discord.RichEmbed()
-					.setAuthor("Amanda", `https://cdn.discordapp.com/avatars/${client.user.id}/${client.user.avatar}.png?size=32`)
+					.setAuthor("Amanda", client.user.smallAvatarURL())
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
 						`${c1.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
@@ -245,7 +245,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed().addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${cmd.usage}\nDescription: ${cmd.description}\nAliases: [${cmd.aliases.join(", ")}]`).setColor('36393E')
 					msg.channel.send({embed});
 				} else {
-					const embed = new Discord.RichEmbed().setAuthor("Command Categories:").setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``).setFooter("Amanda help panel", client.user.avatarURL).setColor('36393E')
+					const embed = new Discord.RichEmbed().setAuthor("Command Categories:").setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``).setFooter("Amanda help panel", client.user.smallAvatarURL()).setColor('36393E')
 					try {
 						await msg.author.send({embed});
 						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);

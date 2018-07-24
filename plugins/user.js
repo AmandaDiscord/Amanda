@@ -23,7 +23,7 @@ module.exports = function(passthrough) {
 				msg.channel.sendTyping();
 				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
-				var pfpurl =(member.user.avatar)?`https://cdn.discordapp.com/avatars/${member.user.id}/${member.user.avatar}.png?size=128`: member.user.defaultAvatarURL
+				var pfpurl = member.user.displayAvatarURL;
 				let index = await utils.sql("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
 				Promise.all([
 					new Promise(resolve => require("request")(pfpurl, { encoding: null }, (e,r,b) => resolve(b))),
