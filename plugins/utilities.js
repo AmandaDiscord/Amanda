@@ -305,7 +305,7 @@ module.exports = function(passthrough) {
 				result += text[i-textPosition];
 			} else {
 				if (value/max*length >= i) result += "=";
-				else result += " "; // em space to prevent shrinking
+				else result += " ​"; // space + zwsp to prevent shrinking
 			}
 		}
 		return result;
