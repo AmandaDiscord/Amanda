@@ -366,6 +366,7 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var args = suffix.split(" ");
 				var usertxt = args.slice(1).join(" ");
+				if (!args[0]) return msg.channel.send(`You need to provide an amount to claim the user with`);
 				if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a member you would like to claim`);
 				var member = utils.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
@@ -399,7 +400,8 @@ module.exports = function(passthrough) {
 				utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
 				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
 				const embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim}`)
+					.setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim} <a:Discoin:422523472128901140>`)
+					.setColor("36393E")
 				msg.channel.send({embed});
 			}
 		},
