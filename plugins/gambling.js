@@ -414,19 +414,13 @@ module.exports = function(passthrough) {
 			aliases: ["divorce"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				var waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
-				if (!waifu) {
-					await utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
-					var waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
-				}
-				if (waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
+				let info = await getWaifuInfo(msg.author.id);
+				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
 				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				let user = await client.fetchUser(waifu.waifuID);
-				await utils.sql("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, user.id]);
-				await utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
-				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${user.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
-				user.send(`${msg.author.tag} has filed for a divorce from you ${face}`).catch(() => msg.channel.send(`I tried to DM ${user.tag} but they may have DMs disabled from me`));
+				await utils.sql("DELETE FROM waifu WHERE userID = ?", [msg.author.id]);
+				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
+				info.waifu.send(`${msg.author.tag} has filed for a divorce from you ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} but they may have DMs disabled from me`));
 			}
 		},
 
