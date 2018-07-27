@@ -420,7 +420,7 @@ module.exports = function(passthrough) {
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				await utils.sql("DELETE FROM waifu WHERE userID = ?", [msg.author.id]);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
-				info.waifu.send(`${msg.author.tag} has filed for a divorce from you ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} but they may have DMs disabled from me`));
+				info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
 		},
 
