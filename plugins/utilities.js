@@ -14,7 +14,6 @@ module.exports = function(passthrough) {
 	 * Gets the 32×32 avatar URL of a user, useful for embed authors and footers
 	 */
 	Discord.User.prototype.smallAvatarURL = function() {
-		debugger;
 		if (this.avatar) {
 			return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
 		} else {
