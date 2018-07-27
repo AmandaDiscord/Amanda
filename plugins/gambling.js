@@ -345,8 +345,8 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				var member = utils.findMember(msg, suffix, true);
-				if (member == null) return msg.channel.send(`Couldn't find that user`);
-				let info = await getWaifuInfo(member.user.id);
+				if (!member) return msg.channel.send(`Couldn't find that user`);
+				let info = await getWaifuInfo(member.id);
 				const embed = new Discord.RichEmbed()
 					.setAuthor(member.user.tag, member.user.smallAvatarURL())
 					.addField(`Price:`, info.price)
@@ -398,11 +398,35 @@ module.exports = function(passthrough) {
 					utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money - claim, msg.author.id])
 				]);
 				utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
-				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
+				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
+				let face = faces[Math.floor(Math.random() * faces.length)];
+				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
 				const embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim} <a:Discoin:422523472128901140>`)
 					.setColor("36393E")
 				msg.channel.send({embed});
+			}
+		},
+
+		"divorce": {
+			usage: "<reason>",
+			description: "Divorces a user",
+			aliases: ["divorce"],
+			category: "gambling",
+			process: async function(msg, suffix) {
+				var waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
+				if (!waifu) {
+					await utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
+					var waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
+				}
+				if (waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
+				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
+				let face = faces[Math.floor(Math.random() * faces.length)];
+				let user = await client.fetchUser(waifu.waifuID);
+				await utils.sql("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, user.id]);
+				await utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
+				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${user.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
+				user.send(`${msg.author.tag} has filed for a divorce from you ${face}`).catch(() => msg.channel.send(`I tried to DM ${user.tag} but they may have DMs disabled from me`));
 			}
 		},
 
