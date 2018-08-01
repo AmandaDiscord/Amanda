@@ -16,15 +16,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna hug`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
 				request("https://nekos.life/api/v2/img/hug", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -46,15 +47,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna kiss`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
 				request("https://nekos.life/api/v2/img/kiss", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -76,15 +78,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna cuddle`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
 				request("https://nekos.life/api/v2/img/cuddle", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -106,15 +109,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna poke`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
 				request("https://nekos.life/api/v2/img/poke", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -136,15 +140,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna slap`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
 				request("https://nekos.life/api/v2/img/slap", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -166,15 +171,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna boop`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
 				request("http://api.shodanbot.com/interactions/boop", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -195,15 +201,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna pat`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`≥ w ≤`);
 				request("https://nekos.life/api/v2/img/pat", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -225,7 +232,7 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna stab`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
 				if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
@@ -245,15 +252,16 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
 				if (!suffix) return msg.channel.send(`You have to tell me who you wanna nom`);
-				var member = utils.findMember(msg, suffix);
+				let member = utils.findMember(msg, suffix);
 				if (member == null) return msg.channel.send("Couldn't find that user");
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`owie`);
 				request("http://api.shodanbot.com/interactions/nom", function(err, res, body) {
 					if (err) return msg.channel.send("Error... Api returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
@@ -273,10 +281,10 @@ module.exports = function(passthrough) {
 			category: "interaction",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				var args = suffix.split(" ");
+				let args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
-				var mem1 = utils.findMember(msg, args[0]);
-				var mem2 = utils.findMember(msg, args[1]);
+				let mem1 = utils.findMember(msg, args[0]);
+				let mem2 = utils.findMember(msg, args[1]);
 				if (mem1 == null) return msg.channel.send(`The first member provided was not found`);
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
 				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
@@ -322,7 +330,7 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(`You have to tell me someone to bean!`);
-				let user, member;
+				let member;
 				member = utils.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
 				if (member.id == client.user.id) return msg.channel.send(`No u`);

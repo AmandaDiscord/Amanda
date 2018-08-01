@@ -11,8 +11,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://api.chewey-bot.ga/cat", function(err, res, body) {
 					if (err) return msg.channel.send(`Error... API returned nothing`);
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 							return msg.channel.send(`Uh oh. There was an error while requesting an image of a cat...\n${error}`);
 					}
@@ -33,8 +34,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://api.chewey-bot.ga/dog", function(err, res, body) {
 					if (err) return msg.channel.send("Error. The API returned nothing...");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a dog.\n${error}`);
 					}
@@ -55,8 +57,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://api.chewey-bot.ga/space", function(err, res, body) {
 					if (err) return msg.channel.send("Error... API returned nothing");
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 							return msg.channel.send(`Error while requesting a space image\n${error}`);
 					}
@@ -75,12 +78,13 @@ module.exports = function(passthrough) {
 			aliases: ["meme"],
 			category: "images",
 			process: async function(msg) {
-				var array = ["dankmemes", "meirl", "2meirl4meirl", "animemes", "sbubby", "fellowkids", "bertstrips", "2healthbars", "coaxedintoasnafu", "bossfight"];
-				var choice = array[Math.floor(Math.random() * array.length)];
+				let array = ["dankmemes", "meirl", "2meirl4meirl", "animemes", "sbubby", "fellowkids", "bertstrips", "2healthbars", "coaxedintoasnafu", "bossfight"];
+				let choice = array[Math.floor(Math.random() * array.length)];
 				request({ url: `https://api.reddit.com/r/${choice}/random`, headers: { "User-Agent": "Amanda" } }, function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 							return msg.channel.send(`Error while requesting a meme\n${error}`);
 					}
@@ -101,8 +105,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://api.chewey-bot.ga/snake", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
 					}
@@ -123,8 +128,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://api.chewey-bot.ga/birb", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
 					}
@@ -145,8 +151,9 @@ module.exports = function(passthrough) {
 			process: function(msg) {
 				request("https://nekos.life/api/v2/img/neko", function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
+					let data;
 					try {
-						var data = JSON.parse(body);
+						data = JSON.parse(body);
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a neko\n${error}`);
 					}

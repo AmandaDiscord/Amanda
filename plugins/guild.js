@@ -85,7 +85,7 @@ module.exports = function(passthrough) {
 			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-				var emoji = utils.emoji(suffix);
+				let emoji = utils.emoji(suffix);
 				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
 				const embed = new Discord.RichEmbed()
 					.setAuthor(emoji.name)
@@ -104,7 +104,7 @@ module.exports = function(passthrough) {
 			category: "guild",
 			process: function(msg, suffix) {
 				if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
-				var emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
+				let emoji = msg.guild.emojis.map(e=>e.toString()).join(" ");
 				if (emoji.length > 2048) return msg.channel.send(`${msg.author.username}, there are to many emojis to be displayed`);
 				const embed = new Discord.RichEmbed()
 					.setDescription(emoji)
@@ -112,6 +112,7 @@ module.exports = function(passthrough) {
 				msg.channel.send({embed});
 			}
 		},
+
 		"wumbo": {
 			usage: "<:emoji:>",
 			description: "Makes an emoji bigger",
@@ -119,7 +120,7 @@ module.exports = function(passthrough) {
 			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-				var emoji = utils.emoji(suffix);
+				let emoji = utils.emoji(suffix);
 				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
 				const embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
@@ -157,7 +158,7 @@ module.exports = function(passthrough) {
 				if (msg.member.hasPermission("BAN_MEMBERS")) {
 					if (msg.guild.me.hasPermission("BAN_MEMBERS")) {
 						if (!suffix) return msg.channel.send("You have to tell me who to ban!");
-						var member = utils.findMember(msg, suffix);
+						let member = utils.findMember(msg, suffix);
 						if (member == null) return msg.channel.send("I could not find that user to ban");
 						if (member.user.id == msg.author.id) return msg.channel.send("You can't ban yourself, silly");
 						if (member.bannable == false) return msg.channel.send(`I am not able to ban that user. They may possess a role higher than or equal to my highest`);
@@ -177,12 +178,17 @@ module.exports = function(passthrough) {
 			description: "Bans a member who may not be in the guild. Still works if they are. Requires a user ID to be passed as an argument",
 			aliases: ["hackban", "hb"],
 			category: "moderation",
-			process: function(msg, suffix) {
+			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				if (msg.member.hasPermission("BAN_MEMBERS")) {
 					if (msg.guild.me.hasPermission("BAN_MEMBERS")) {
 						if (!suffix) return msg.channel.send("You have to tell me who to hackban!");
-						if (suffix.length < 18) return msg.channel.send(`${msg.author.username}, that is not a valid Snowflake`);
+						if (suffix == 1) return msg.channel.send(`${msg.author.username}, that is not a valid user Snowflake`);
+						try {
+							await client.fetchUser(suffix);
+						} catch (error) {
+							return msg.channel.send(`${msg.author.username}, that is not a valid user Snowflake`);
+						}
 						try {
 							msg.guild.ban(suffix, { reason: `Banned by ${msg.author.id} aka ${msg.author.tag}` });
 							msg.channel.send("👌");
@@ -204,7 +210,7 @@ module.exports = function(passthrough) {
 				if (msg.member.hasPermission("KICK_MEMBERS")) {
 					if (msg.guild.me.hasPermission("KICK_MEMBERS")) {
 						if (!suffix) return msg.channel.send("You have to tell me who to kick!");
-						var member = utils.findMember(msg, suffix);
+						let member = utils.findMember(msg, suffix);
 						if (member == null) return msg.channel.send("I could not find that user to kick");
 						if (member.user.id == msg.author.id) return msg.channel.send("You can't kick yourself, silly");
 						if (member.kickable == false) return msg.channel.send(`I am not able to kick that user. They may possess a role higher than my highest`);

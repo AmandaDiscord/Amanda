@@ -112,19 +112,20 @@ module.exports = function(passthrough) {
 	 * @returns {String} A humanized string of time
 	 */
 	utils.humanize = function(input, format) {
-		if (format.toLowerCase() == "ms") var msec = parseInt(Math.floor(input));
-		else if (format.toLowerCase() == "sec") var msec = parseInt(Math.floor(input * 1000));
+		let msec;
+		if (format.toLowerCase() == "ms") msec = parseInt(Math.floor(input));
+		else if (format.toLowerCase() == "sec") msec = parseInt(Math.floor(input * 1000));
 		else if (format.toLocaleLowerCase() == "date") return new Date(input).toUTCString();
 		else throw new Error("Invalid format provided");
 		if (isNaN(msec)) throw new Error("Input provided is NaN");
-		var days = Math.floor(msec / 1000 / 60 / 60 / 24);
+		let days = Math.floor(msec / 1000 / 60 / 60 / 24);
 		msec -= days * 1000 * 60 * 60 * 24;
-		var hours = Math.floor(msec / 1000 / 60 / 60);
+		let hours = Math.floor(msec / 1000 / 60 / 60);
 		msec -= hours * 1000 * 60 * 60;
-		var mins = Math.floor(msec / 1000 / 60);
+		let mins = Math.floor(msec / 1000 / 60);
 		msec -= mins * 1000 * 60;
-		var secs = Math.floor(msec / 1000);
-		var timestr = "";
+		let secs = Math.floor(msec / 1000);
+		let timestr = "";
 		if (days > 0) timestr += days + "d ";
 		if (hours > 0) timestr += hours + "h ";
 		if (mins > 0) timestr += mins + "m ";

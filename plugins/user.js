@@ -12,18 +12,18 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				var member = utils.findMember(msg, suffix, true);
+				let member = utils.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
-				var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				if (!money) {
 					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
 					await msg.channel.send(`Created user account`);
-					var money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+					money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
 				msg.channel.sendTyping();
 				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
-				var pfpurl = member.user.displayAvatarURL;
+				let pfpurl = member.user.displayAvatarURL;
 				let index = await utils.sql("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
 				Promise.all([
 					new Promise(resolve => require("request")(pfpurl, { encoding: null }, (e,r,b) => resolve(b))),
