@@ -24,14 +24,14 @@ module.exports = function(passthrough) {
 			aliases: ["statistics", "stats"],
 			category: "statistics",
 			process: async function(msg, suffix) {
-				var ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
+				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let status = utils.getPresenceEmoji(client.user.presence.status);
 				let game = "No activity set";
 				if (client.user.presence.game && client.user.presence.game.streaming) {
 					 game = `Streaming [${client.user.presence.game.name}](${client.user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
 				} else if (client.user.presence.game) game = utils.getPresencePrefix(client.user.presence.game.type)+" **"+client.user.presence.game.name+"**";
-				var nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
+				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				const embed = new Discord.RichEmbed().setTitle(`${client.user.tag} ${status}`).setDescription(game).addField("­", `**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true).addField("­", `**❯ User Count:**\n${client.users.size} users\n**❯ Guild Count:**\n${client.guilds.size} guilds\n**❯ Channel Count:**\n${client.channels.size} channels\n**❯ Voice Connections:**\n${client.voiceConnections.size}`, true).setFooter(`Requested by ${msg.author.username}`).setColor("36393E")
 				nmsg.edit({embed});
 			}
@@ -43,17 +43,11 @@ module.exports = function(passthrough) {
 			aliases: ["ping", "pong"],
 			category: "statistics",
 			process: async function (msg, suffix) {
-				var array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
-				var message = array[Math.floor(Math.random() * array.length)];
-				var otherarray = ["Not happening", `F-Fine but don't think this means anything. Gateway: ${client.ping.toFixed(0)}ms`, "hahayes", "hahano"];
-				var othermessage = otherarray[Math.floor(Math.random() * otherarray.length)];
-				// what the fuck papi
-				// if (Math.floor(Math.random() * 2) == 0) {
-				if (true) {
-					var nmsg = await msg.channel.send(message);
-					const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
-					nmsg.edit({embed});
-				} else return msg.channel.send(othermessage);
+				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
+				let message = array[Math.floor(Math.random() * array.length)];
+				let nmsg = await msg.channel.send(message);
+				const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+				nmsg.edit({embed});
 			}
 		},
 
@@ -124,15 +118,14 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				msg.channel.sendTyping();
 				const limit = 5;
-				rp("https://cadence.gq/api/amandacommits?limit="+limit).then(body => {
-					let data = JSON.parse(body);
-					msg.channel.send(new Discord.RichEmbed()
-						.setTitle("Git info")
-						.addField("Status", "On branch "+data.branch+", latest commit "+data.latestCommitHash)
-						.addField(`Commits (latest ${limit} entries)`, data.logString)
-						.setColor("36393E")
-					);
-				});
+				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
+				let data = JSON.parse(body);
+				msg.channel.send(new Discord.RichEmbed()
+					.setTitle("Git info")
+					.addField("Status", "On branch "+data.branch+", latest commit "+data.latestCommitHash)
+					.addField(`Commits (latest ${limit} entries)`, data.logString)
+					.setColor("36393E")
+				);
 			}
 		},
 
@@ -159,7 +152,7 @@ module.exports = function(passthrough) {
 			category: "core",
 			process: async function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you must provide a command category as an argument`);
-				var cat = Object.values(commands).filter(c => c.category == suffix.toLowerCase());
+				let cat = Object.values(commands).filter(c => c.category == suffix.toLowerCase());
 				if (suffix.toLowerCase() == "music") {
 					const embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help [music, m]")
@@ -219,7 +212,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
 					return msg.channel.send({embed});
 				}
-				var str = cat.map(c => `${c.aliases[0]} ${c.usage}    [${c.aliases.join(", ")}]`).join("\n");
+				let str = cat.map(c => `${c.aliases[0]} ${c.usage}    [${c.aliases.join(", ")}]`).join("\n");
 				const embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command <usage>    [aliases]").setDescription(str).setColor("36393E")
 				try {
 					await msg.author.send({embed});
@@ -237,7 +230,7 @@ module.exports = function(passthrough) {
 			category: "core",
 			process: async function (msg, suffix) {
 				if(suffix) {
-					var cmd = Object.values(commands).find(c => c.aliases.includes(suffix));
+					let cmd = Object.values(commands).find(c => c.aliases.includes(suffix));
 					if (!cmd) {
 						const embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000")
 						return msg.channel.send({embed});

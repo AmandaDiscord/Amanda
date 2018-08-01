@@ -1,4 +1,4 @@
-var games = {};
+const games = {};
 const letters = ["a", "b", "c", "d"];
 const https = require("https");
 const entities = require("entities");
@@ -16,14 +16,15 @@ module.exports = function(passthrough) {
 	const { Discord, client, utils, reloadEvent } = passthrough;
 
 	function doQuestion(msg, authorName) {
-		var id = msg.channel.id;
+		let id = msg.channel.id;
 		if (!authorName) authorName = msg.author.username;
 		if (games[id]) return msg.channel.send(`${authorName}, there's a game already in progress for this channel`);
-		var game = newGame();
+		let game = newGame();
 		games[id] = game;
 		require("request")("https://opentdb.com/api.php?amount=1", function(err, res, body) {
+			let data;
 			try {
-				var data = JSON.parse(body);
+				data = JSON.parse(body);
 			} catch (error) {
 				const embed = new Discord.RichEmbed()
 					.setDescription(`There was an error parsing the data returned by the api\n${error}`)
@@ -35,21 +36,21 @@ module.exports = function(passthrough) {
 				msg.channel.send(`There was an error from the api`);
 				return delete games[id];
 			}
-			var answer = data.results[0].correct_answer;
+			let answer = data.results[0].correct_answer;
 			game.answer = answer;
-			var choices = data.results[0].incorrect_answers;
+			let choices = data.results[0].incorrect_answers;
 			choices.push(answer);
-			var shuffled = choices.shuffle();
-			var iOfA = shuffled.indexOf(answer);
+			let shuffled = choices.shuffle();
+			let iOfA = shuffled.indexOf(answer);
 			game.correctID = String.fromCharCode(iOfA+97);
 			if (!game.correctID) {
 				msg.channel.send(`Fuckery happened\n\nIndex of the answer: ${iOfA}\nShuffled Answer Array: ${shuffled}`);
 				return delete games[id];
 			}
-			var [a1, a2, a3, a4] = shuffled;
-			var color = 3447003;
-			var reward = 10;
-			var difficulty = undefined;
+			let [a1, a2, a3, a4] = shuffled;
+			let color = 3447003;
+			let reward = 10;
+			let difficulty = undefined;
 				switch(data.results[0].difficulty) {
 					case "easy":
 						color = 4249664;
@@ -67,19 +68,20 @@ module.exports = function(passthrough) {
 						difficulty = "hard";
 						break;
 				}
-				var str = `A: *${a1}*\nB: *${a2}*`;
+				let str = `A: *${a1}*\nB: *${a2}*`;
 				if (a3 && a4) str += `\nC: *${a3}*\nD: *${a4}*`;
-				var guessembed = new Discord.RichEmbed()
+				let guessembed = new Discord.RichEmbed()
 					.setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\n${str}`))
 					.setColor(color)
 				msg.channel.send(guessembed).then(msg => {
 				let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
 				clocks.forEach((c,i) => {
 					setTimeout(() => {
+						let correctUsersStr = "";
 						msg.react(c);
 						if (i == clocks.length-1) {
 							if (game == undefined || game.running == false) return;
-							var correctUsersStr = `**Correct Answers:**\n`;
+							correctUsersStr = `**Correct Answers:**\n`;
 							let correct = Object.keys(game.answers).filter(k => game.correctID == game.answers[k]);
 							if (correct.length == 0) {
 								correctUsersStr = "Nobody got the answer right.";
@@ -87,30 +89,30 @@ module.exports = function(passthrough) {
 								if (correct.length > 6) {
 									correct.forEach(async function(item, index, array) {
 										correctUsersStr += `${client.users.get(item) ? client.users.get(item).username : item}, `;
-										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
+										let row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
 											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
-											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
+											row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
 										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
-										var user = await client.users.get(item)
+										let user = await client.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
 									})
 								} else {
 									correct.forEach(async function(item, index, array) {
 										correctUsersStr += `${client.users.get(item) ? client.users.get(item).username : item}\n`;
-										var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
+										let row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										if (!row) {
 											await utils.sql(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
-											var row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
+											row = await utils.get(`SELECT * FROM money WHERE userID =?`, item);
 										}
 										await utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
-										var user = await client.users.get(item)
+										let user = await client.users.get(item)
 										user.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${user.tag}**, please enable DMs so I can tell you your earnings`));
 									})
 								}
 							}
-							var resultembed = new Discord.RichEmbed()
+							let resultembed = new Discord.RichEmbed()
 								.setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${correctUsersStr}`))
 								.setColor(color)
 								.setFooter(`Click the reaction for another round.`)
@@ -132,8 +134,8 @@ module.exports = function(passthrough) {
 	client.on("message", messageHandler);
 	function messageHandler(msg) {
 		if (msg.author.bot) return;
-		var id = msg.channel.id;
-		var game = games[id];
+		let id = msg.channel.id;
+		let game = games[id];
 		if (!game) return;
 		if (letters.includes(msg.content.toLowerCase())) {
 			game.answers[msg.author.id] = msg.content.toLowerCase();
@@ -154,15 +156,16 @@ module.exports = function(passthrough) {
 				} else if (suffix.toLowerCase() == "categories") {
 					https.get("https://opentdb.com/api_category.php", (res) => {
 						res.on('data', function(data) {
+							let json;
 							try {
-							var json = JSON.parse(data.toString());
+							json = JSON.parse(data.toString());
 							} catch (error) {
 								msg.channel.send(`An error occurred while attempting to query the trivia category list\n${error}`);
 							}
-							var categories = "**Categories:** ";
-							var i = 0;
+							let categories = "**Categories:** ";
+							let i = 0;
 							for(i in json.trivia_categories) categories = categories + "\n" + json.trivia_categories[i].name;
-							var str = "A list has been sent to you via DM.";
+							let str = "A list has been sent to you via DM.";
 							if(msg.channel.type == 'dm') str = "";
 							msg.author.send(categories).catch(function(err) {
 								str = "Unable to send you the list because you cannot receive DMs.";

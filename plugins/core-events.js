@@ -96,16 +96,16 @@ module.exports = function(passthrough) {
 
 	async function checkMessageForCommand(msg, isEdit) {
 		if (msg.author.bot) return;
-		var prefix = prefixes.find(p => msg.content.startsWith(p));
+		let prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) return;
-		var cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
-		var suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
-		var cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));
+		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
+		let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
+		let cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));
 		if (cmd) {
 			try {
 				await cmd.process(msg, suffix, isEdit);
 			} catch (e) {
-				var msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
+				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
 				const embed = new Discord.RichEmbed()
 				.setDescription(msgTxt)
 				.setColor("B60000")

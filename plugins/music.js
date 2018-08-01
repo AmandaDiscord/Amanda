@@ -126,9 +126,10 @@ module.exports = function(passthrough) {
 			if (timeout.has(msg.guild.id)) return;
 			queueConstruct.songs.push(song);
 			timeout.add(msg.guild.id);
-			setTimeout(() => timeout.delete(msg.guild.id), 1000)
+			setTimeout(() => timeout.delete(msg.guild.id), 1000);
+			let connection;
 			try {
-				var connection = await voiceChannel.join();
+				connection = await voiceChannel.join();
 				queueConstruct.connection = connection;
 				play(msg, msg.guild, queueConstruct.songs[0]);
 			} catch (error) {
@@ -189,16 +190,17 @@ module.exports = function(passthrough) {
 						updateProgress();
 					};
 				}, 5000-dispatcher.time%5000);
-				dispatcher.on("end", () => {
+				function handleError(error) { console.error(error) };
+				dispatcher.on('error', handleError);
+				dispatcher.once("end", () => {
+					dispatcher.removeListener("error", handleError);
 					clearTimeout(npStartTimeout);
 					dispatcherEndCode();
-					//console.log("Dispatcher end");
 					queue.skippable = false;
 					queue.songs.shift();
 					play(msg, guild, queue.songs[0]);
 				});
 			});
-			dispatcher.on('error', error => console.error(error));
 			dispatcher.setVolumeLogarithmic(queue.volume / 5);
 			dispatcher.setBitrate("auto");
 		});
@@ -316,9 +318,12 @@ module.exports = function(passthrough) {
 			category: "music",
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				// let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
-				// if (!allowed) return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing PapiOphidian#8685`);
-				var args = suffix.split(" ");
+				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
+				if (!allowed) {
+					let owner = await client.fetchUser("320067006521147393")
+					return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing ${owner.tag}`);
+				}
+				let args = suffix.split(" ");
 				let queue = queues.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p") {
@@ -365,7 +370,7 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					var setv = Math.floor(parseInt(args[1]));
+					let setv = Math.floor(parseInt(args[1]));
 					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, that is not a valid number to set the volume to`);
 					if (setv > 0 && setv < 6) {
 						queue.volume = setv;
