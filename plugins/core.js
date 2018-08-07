@@ -208,7 +208,7 @@ module.exports = function(passthrough) {
 						return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
 					}
 				}
-				if (!cat || cat.toString().length < 1) {
+				if (!cat || cat.toString().length < 1 || suffix.toLowerCase() == "dev") {
 					const embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
 					return msg.channel.send({embed});
 				}
