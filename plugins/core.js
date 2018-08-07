@@ -25,14 +25,19 @@ module.exports = function(passthrough) {
 			category: "statistics",
 			process: async function(msg, suffix) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
-				let status = utils.getPresenceEmoji(client.user.presence.status);
-				let game = "No activity set";
-				if (client.user.presence.game && client.user.presence.game.streaming) {
-					 game = `Streaming [${client.user.presence.game.name}](${client.user.presence.game.url})`;
-					 status = `<:streaming:454228675227942922>`;
-				} else if (client.user.presence.game) game = utils.getPresencePrefix(client.user.presence.game.type)+" **"+client.user.presence.game.name+"**";
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				const embed = new Discord.RichEmbed().setTitle(`${client.user.tag} ${status}`).setDescription(game).addField("­", `**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n**❯ RAM Usage:**\n${ramUsage}MB`, true).addField("­", `**❯ User Count:**\n${client.users.size} users\n**❯ Guild Count:**\n${client.guilds.size} guilds\n**❯ Channel Count:**\n${client.channels.size} channels\n**❯ Voice Connections:**\n${client.voiceConnections.size}`, true).setFooter(`Requested by ${msg.author.username}`).setColor("36393E")
+				const embed = new Discord.RichEmbed()
+				.addField(client.user.tag+" "+utils.getPresenceEmoji("online"),
+					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
+					`**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
+					`**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n`+
+					`**❯ RAM Usage:**\n${ramUsage}MB`, true)
+				.addField("­",
+					`**❯ User Count:**\n${client.users.size} users\n`+
+					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
+					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
+					`**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
+				.setFooter(`Requested by ${msg.author.username}`).setColor("36393E")
 				nmsg.edit({embed});
 			}
 		},
