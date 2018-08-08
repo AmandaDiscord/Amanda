@@ -3,7 +3,7 @@ const path = require("path");
 const mime = require("mime");
 const cf = require("./web/util/common.js");
 
-const globalHeaders = {"Access-Control-Allow-Origin": "*"};
+const globalHeaders = {};
 const apiDir = "web/api";
 
 const webHandlers = fs.readdirSync(path.join(__dirname, apiDir)).map(f => path.join(apiDir, f));
