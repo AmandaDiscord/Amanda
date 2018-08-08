@@ -4,6 +4,7 @@ const Discord = require("discord.js");
 const YouTube = require('simple-youtube-api');
 const queues = new Map();
 const timeout = new Set();
+const crypto = require("crypto");
 
 module.exports = function(passthrough) {
 	const { Auth, Discord, client, utils, reloadEvent } = passthrough;
@@ -311,6 +312,26 @@ module.exports = function(passthrough) {
 	}
 
 	return {
+		"musictoken": {
+			usage: "",
+			description: "Assign a login token for use on Amanda's web dashboard",
+			aliases: ["token", "musictoken", "webtoken"],
+			category: "music",
+			process: async function(msg, suffix) {
+				if (msg.channel.type == "text") return msg.channel.send(`Please use this command in a DM.`);
+				await utils.sql("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
+				let hash = crypto.createHash("sha256").update(""+Math.random()).digest("hex");
+				await utils.sql("INSERT INTO WebTokens VALUES (?, ?)", [msg.author.id, hash]);
+				msg.channel.send(
+					`Music login token created!\n`+
+					"`"+hash+"`\n"+
+					`Anyone who gets access to this token can control Amanda's music playback in any of your servers and can edit or delete any of your playlists.\n`+
+					`**Keep it secret!**\n`+
+					`(Unless you wish to collaborate on a playlist with a trusted person, in which case make sure that you *really* trust them.)\n`+
+					`If you think somebody unscrupulous has gotten hold of this token, you can use this command again at any time to generate a new token and disable all previous ones.\n\n`+
+					`You can find the music dashboard at https://amandabot.ga/dash.`);
+			}
+		},
 		"music": {
 			usage: "",
 			description: "See `&commands music` for help",
