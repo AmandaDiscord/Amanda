@@ -45,6 +45,7 @@ module.exports = function(passthrough) {
 			result = await utils.get(`SELECT ${permissionType} FROM ServerPermissions WHERE serverID = ?`, thing);
 		}
 		if (result) result = Object.values(result)[0];
+		if (permissionType == "music") return true;
 		return !!result;
 	}
 
