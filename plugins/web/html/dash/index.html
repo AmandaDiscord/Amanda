@@ -1,0 +1,27 @@
+<!-- TEMPLATE predash -->
+<script>
+	getSharedServers(result => {
+		let servers = JSON.parse(result.responseText);
+		if (servers.length) {
+			let content = "";
+			for (let server of servers) {
+				content += `<a class="whitebox serverListItem" href="/dash/servers/${server.id}">`+
+					`<img src="https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png?size=128">`+
+					`<span>${server.name}</span>`;
+			}
+			q("#serverList").innerHTML = content;
+		} else {
+			q("#serverListUnclickable").innerText = "No shared servers where you are allowed to play music :(";
+		}
+	});
+</script>
+<!-- TEMPLATE header -->
+<div class="flexcenter">
+	<span class="whitebox aboutbox">
+		Select a server
+	</span>
+</div>
+<p id="serverList">
+	<span id="serverListUnclickable">Loading...</span>
+</p>
+<!-- TEMPLATE end -->

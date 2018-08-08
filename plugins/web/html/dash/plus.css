@@ -1,24 +1,26 @@
+#serverList {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+}
+
 #serverListUnclickable {
 	color: #666;
 }
+
 .serverListItem {
-	background-color: #ddd;
-	border: 1px solid black;
-	border-radius: 4px;
 	width: 280px;
 	display: flex;
 	align-items: center;
 	margin: 10px;
-}
-a, a:visited {
-	color: black;
 }
 .serverListItem img {
 	width: 80px;
 	height: 80px;
 	border-radius: 50%;
 	border: 2px solid #000;
-	background: #5669ac;
+	background: #3b88c3;
 	margin: 10px;
 }
 .serverListItem span {
@@ -90,4 +92,8 @@ button {
 }
 #queueItemStorage {
 	display: none;
+}
+
+#bigThumbnail {
+	border: 5px solid;
 }

@@ -1,6 +1,12 @@
 // Newest entries first
 module.exports = [
 	{
+		authorID: "176580265294954507",
+		date: 1533689843657,
+		text:
+			"New website!"
+	},
+	{
 		authorID: "320067006521147393",
 		date: 1532154472796,
 		text:

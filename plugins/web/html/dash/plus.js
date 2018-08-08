@@ -21,16 +21,16 @@ function request(url, callback, body, method) {
 
 const token = window.localStorage.getItem("token");
 let shouldRedirect = 0;
-if (window.location.pathname == "/login") {
+if (window.location.pathname == "/dash/login") {
 	if (token) {
 		request("/api/userid", result => {
-			if (result.status == 200) window.location.replace("/");
+			if (result.status == 200) window.location.replace("/dash");
 		}, {token});
 	}
 } else {
-	if (!token) window.location.replace("/login");
+	if (!token) window.location.replace("/dash/login");
 	else request("/api/userid", result => {
-		if (result.status != 200) window.location.replace("/login");
+		if (result.status != 200) window.location.replace("/dash/login");
 	}, {token});
 }
 
@@ -56,7 +56,7 @@ function login(newToken) {
 	request(`/api/userid`, result => {
 		if (result.status == 200) {
 			window.localStorage.setItem("token", newToken);
-			window.location.assign("/");
+			window.location.assign("/dash");
 		}
 	}, {token: newToken});
 }

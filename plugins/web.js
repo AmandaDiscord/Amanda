@@ -9,8 +9,10 @@ const apiDir = "web/api";
 const webHandlers = fs.readdirSync(path.join(__dirname, apiDir)).map(f => path.join(apiDir, f));
 const pageHandlers = [
 	{web: "/", local: "index.html"},
-	{web: "/login", local: "login.html"},
-	{web: "/servers/[0-9]+", local: "server.html"},
+	{web: "/about", local: "about.html"},
+	{web: "/dash", local: "dash/index.html"},
+	{web: "/dash/login", local: "dash/login.html"},
+	{web: "/dash/servers/[0-9]+", local: "dash/server.html"}
 ];
 const cacheControl = [
 	"ttf", "png", "jpg", "svg"

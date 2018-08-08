@@ -1,27 +1,17 @@
 <!-- TEMPLATE pre -->
-
-<script>
-	getSharedServers(result => {
-		let servers = JSON.parse(result.responseText);
-		if (servers.length) {
-			let content = "";
-			for (let server of servers) {
-				content += `<a class="serverListItem" href="/servers/${server.id}">`+
-					`<img src="https://cdn.discordapp.com/icons/${server.id}/${server.icon}.png?size=128">`+
-					`<span>${server.name}</span>`;
-			}
-			q("#serverList").innerHTML = content;
-		} else {
-			q("#serverListUnclickable").innerText = "No shared servers where you are allowed to play music :(";
-		}
-	});
-</script>
-
+<title>Amanda - Home</title>
 <!-- TEMPLATE header -->
-
-<h1>Select a server</h1>
-<p id="serverList">
-	<span id="serverListUnclickable">Loading...</span>
-</p>
-
+<div class="landing">
+	<img src="/images/logo.png" alt="icon">
+	<p>Amanda#8293</p>
+	<p>
+		A cutie-pie general purpose Discord bot that can do the following and more:
+		<br>
+		Connect you with your server members, has an economy and most importantly, cat pictures.
+		<br>
+		Enough said.
+	</p>
+	<p><a href="http://amanda.discord-bots.ga/" class="pinkbutton">Invite</a> <a href="https://discord.gg/zhthQjH" class="pinkbutton">Support Server</a></p>
+	<a href="https://discordbots.org/bot/405208699313848330"><img src="https://discordbots.org/api/widget/405208699313848330.png"></a>
+</div>
 <!-- TEMPLATE end -->

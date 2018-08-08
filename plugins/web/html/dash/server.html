@@ -1,5 +1,4 @@
-<!-- TEMPLATE pre -->
-
+<!-- TEMPLATE predash -->
 <script>
 	let time = null;
 	let totalTime = null;
@@ -26,7 +25,7 @@
 			q("#playTimeElapsed").innerText = prettySeconds(Math.floor(time/1000));
 			q("#totalTime").innerText = prettySeconds(totalTime);
 			let percent = ((time/1000)/totalTime*100).toFixed(1);
-			q("#progressBar").style.background = `linear-gradient(to right, #5669ac ${percent}%, white ${percent}%)`;
+			q("#progressBar").style.background = `linear-gradient(to right, #3b88c3 ${percent}%, white ${percent}%)`;
 		}
 	}
 
@@ -79,15 +78,14 @@
 	}, 100);
 
 </script>
-
 <!-- TEMPLATE header -->
-
-<h1>Server</h1>
 <div id="nothingPlaying">
-	<p>Nothing is playing.</p>
+	<span class="whitebox aboutbox">
+		Nothing is playing.
+	</span>
 </div>
 <div id="somethingPlaying" style="display: none;">
-	<div style="display: flex">
+	<div style="display: flex" class="whitebox">
 		<div><img id="bigThumbnail"></div>
 		<div>
 			<div id="nowPlaying"></div>
@@ -97,9 +95,9 @@
 				<span id="totalTime">0:00</span>
 			</span>
 			<div id="buttonControlContainer">
-				<button onclick='playPause(queue.playing)'><img src="/playpause.svg"></button>
-				<button onclick='simpleAPI("skip")'><img src="/skip.svg"></button>
-				<button onclick='simpleAPI("stop")'><img src="/stop.svg"></button>
+				<button onclick='playPause(queue.playing)'><img src="/images/playpause.svg"></button>
+				<button onclick='simpleAPI("skip")'><img src="/images/skip.svg"></button>
+				<button onclick='simpleAPI("stop")'><img src="/images/stop.svg"></button>
 			</div>
 		</div>
 	</div>
@@ -110,7 +108,7 @@
 	</div>
 </div>
 <div id="queueItemStorage">
-	<span class="queueItem">
+	<span class="queueItem whitebox">
 		<span>
 			<img>
 		</span>
@@ -121,5 +119,4 @@
 		</span>
 	</span>
 </div>
-
 <!-- TEMPLATE end -->
