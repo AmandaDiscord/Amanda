@@ -9,7 +9,7 @@ let utils = {};
 const commands = {};
 
 const Discord = require('discord.js');
-const client = new Discord.Client();
+const client = new Discord.Client({ messageCacheMaxSize: 20, messageCacheLifetime: 7200, disableEveryone: true });
 client.login(Auth.bot_token);
 
 console.log(`Starting`);
