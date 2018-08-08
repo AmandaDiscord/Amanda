@@ -11,13 +11,13 @@ module.exports = function ({utils, client}) {
 			return crypto.createHash("sha256").update(data).digest("hex");
 		},
 		checkToken: async function(data, resolve, callback) {
-			if (!data || !data.token) return resolve([400, "No token"]);
+			if (!data || typeof(data.token) != "string") return resolve([400, "No token"]);
 			let userRow = await utils.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
 			if (!userRow) return resolve([401, "Bad token"]);
 			callback(userRow);
 		},
 		checkTokenWS: async function(data, ws, callback) {
-			if (!data || !data.token) return ws.removeAllListeners();
+			if (!data || typeof(data.token) != "string") return ws.removeAllListeners();
 			let userRow = await utils.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
 			if (!userRow) return ws.removeAllListeners();
 			callback(userRow);

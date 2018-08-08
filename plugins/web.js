@@ -84,7 +84,7 @@ module.exports = function(passthrough) {
 						});
 						req.on("end", (chunk) => {
 							let body = Buffer.concat(buffers);
-							let data;
+							let data = {};
 							try {
 								data = JSON.parse(body);
 							} catch (e) {};
