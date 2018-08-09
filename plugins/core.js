@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 					.addField("Creators",
 						`${c1.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
 						`${c2.tag} <:NitroBadge:421774688507920406>`)
-					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js)`)
+					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
 					.addField("Partners",
 						"axelgreavette <:HypeBadge:421764718580203530>, "+
