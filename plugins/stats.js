@@ -7,7 +7,7 @@ module.exports = function(passthrough) {
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
 
-	reloadEvent.on(__filename, () => {
+	reloadEvent.once(__filename, () => {
 		clearTimeout(sendStatsTimeout);
 	});
 

@@ -5,7 +5,7 @@ module.exports = (passthrough) => {
 
 	function addTemporaryListener(eventEmitter, event, callback) {
 		eventEmitter.on(event, callback);
-		reloadEvent.on(__filename, () => eventEmitter.removeListener(event, callback));
+		reloadEvent.once(__filename, () => eventEmitter.removeListener(event, callback));
 	}
 
 	utils.ws = function(ws) {
@@ -103,7 +103,7 @@ module.exports = (passthrough) => {
 			}
 		}
 
-		ws.on("close", () => {
+		ws.once("close", () => {
 			disconnect();
 		});
 
