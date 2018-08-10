@@ -28,10 +28,12 @@ module.exports = function(passthrough) {
 				if (user.presence.game && user.presence.game.streaming) {
 					 game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
 					 status = `<:streaming:454228675227942922>`;
-				} else if (user.presence.game) game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
-				if (user.presence.game.details) game += ` <:RichPresence:477242282265935902>\n*${user.presence.game.details}*`;
-				if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\n*by ${user.presence.game.state}*`;
-				else if(user.presence.game.state) game += `\n*${user.presence.game.state}*`;
+				} else if (user.presence.game) {
+					game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n*${user.presence.game.details}*`;
+					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\n*by ${user.presence.game.state}*`;
+					else if(user.presence.game.state) game += `\n*${user.presence.game.state}*`;
+				}
 				if (user.bot) status = "<:bot:412413027565174787>";
 				embed.setThumbnail(user.displayAvatarURL);
 				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
