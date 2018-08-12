@@ -276,6 +276,35 @@ module.exports = function(passthrough) {
 					]);
 				} else utils.sendNopeMessage(msg);
 			}
+		},
+
+		"execute": {
+			usage: "<code>",
+			description: "Executes a shell operation",
+			aliases: ["execute", "exec"],
+			category: "admin",
+			process: async function (msg, suffix) {
+				let allowed = await utils.hasPermission(msg.author, "eval");
+				if (!allowed) return utils.sendNopeMessage(msg);
+				if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly");
+				msg.channel.sendTyping();
+				require("child_process").exec(suffix, (error, stdout, stderr) => {
+					let result = "Output too large";
+					if (error) {
+						if (error.toString("utf8").length >= 2000) result = error.toString("utf8").slice(0, 1998)+"…";
+						else result = error;
+					}
+					if (stderr) {
+						if (stderr.toString("utf8").length >= 2000) result = stderr.toString("utf8").slice(0, 1998)+"…";
+						else result = stderr;
+					}
+					if (stdout) {
+						if (stdout.toString("utf8").length >= 2000) result = stdout.toString("utf8").slice(0, 1998)+"…";
+						else result = stdout;
+					}
+					msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
+				});
+			}
 		}
 	}
 }
