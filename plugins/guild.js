@@ -26,8 +26,9 @@ module.exports = function(passthrough) {
 				let status = utils.getPresenceEmoji(user.presence.status);
 				let game = "No activity set";
 				if (user.presence.game && user.presence.game.streaming) {
-					 game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
-					 status = `<:streaming:454228675227942922>`;
+					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
+					status = `<:streaming:454228675227942922>`;
 				} else if (user.presence.game) {
 					game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
