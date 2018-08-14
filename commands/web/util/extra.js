@@ -14,25 +14,25 @@ module.exports = function ({utils, client}) {
 		},
 		checkToken: async function(data, resolve, callback) {
 			if (!data || typeof(data.token) != "string" || !data.token.match(tokenRegex)) return resolve([400, "No token"]);
-			let userRow = await utils.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
+			let userRow = await utils.sql.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
 			if (!userRow) return resolve([401, "Bad token"]);
 			callback(userRow);
 		},
 		checkTokenWS: async function(data, ws, callback) {
 			if (!data || typeof(data.token) != "string" || !data.token.match(tokenRegex)) return ws.removeAllListeners();
-			let userRow = await utils.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
+			let userRow = await utils.sql.get("SELECT WebTokens.userID, music FROM WebTokens LEFT JOIN UserPermissions ON UserPermissions.userID = WebTokens.userID WHERE token = ?", data.token);
 			if (!userRow) return ws.removeAllListeners();
 			callback(userRow);
 		},
 		getMusicGuilds: async function(userID, hasPremium) {
 			if (hasPremium === undefined) {
-				hasPremium = (await utils.get("SELECT music FROM UserPermissions WHERE userID = ?", userID)).music;
+				hasPremium = (await utils.sql.get("SELECT music FROM UserPermissions WHERE userID = ?", userID)).music;
 			}
 			let guilds = client.guilds.filter(g => g.members.get(userID));
 			if (hasPremium) {
 				return guilds;
 			} else {
-				let musicGuilds = await utils.sql("SELECT serverID FROM ServerPermissions WHERE music = 1");
+				let musicGuilds = await utils.sql.all("SELECT serverID FROM ServerPermissions WHERE music = 1");
 				musicGuilds = musicGuilds.map(r => r.serverID);
 				guilds = guilds.filter(g => musicGuilds.includes(g.id));
 				return guilds;

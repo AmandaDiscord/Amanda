@@ -452,7 +452,7 @@ module.exports = function(passthrough) {
 					let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
 					if (!playlistRow) {
 						if (args[2] == "create") {
-							await utils.sql("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
+							await utils.sql.all("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
 							return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`);
 						} else {
 							return msg.channel.send(`${msg.author.username}, That playlist does not exist. Use \`&music playlist ${playlistName} create\` to create it.`);
