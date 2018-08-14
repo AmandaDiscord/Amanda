@@ -4,3 +4,4 @@ config.json
 launch.json
 csak-timelog.json
 nohup.out
+*.sqlite

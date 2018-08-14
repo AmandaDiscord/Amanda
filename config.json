@@ -1,7 +1,7 @@
 {
-	"bot_token": "INSERT TOKEN",
-	"fake_token": "ANYTHING YOU WANT HERE",
-	"mysql_password": "MY SQL PASSWORD",
-	"yt_api_key": "YT TOKEN",
+	"bot_token": "Mzc4NzczODAzMjI1ODQxNjY4.DPpm8w.rtWM_Ky3EXCAL9bdMoh-MjCfYYE",
+	"fake_token": "https://cdn.discordapp.com/attachments/399061601216495626/478866656026951690/unknown.png",
+	"mysql_password": "bsq4FxzUBP2oGZ7j",
+	"yt_api_key": "AIzaSyC7RzRURFcbLRZ-BslNTcX0jcYsm2VkjSs",
 	"dbl_key": null
 }
