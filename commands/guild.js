@@ -9,10 +9,10 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = utils.findMember(msg, suffix, true);
+					member = msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else {
-					user = utils.findUser(msg, suffix, true);
+					user = client.findUser(msg, suffix, true);
 				}
 				if (!user) return msg.channel.send(`Couldn't find that user`);
 				let embed = new Discord.RichEmbed().setColor("36393E");
@@ -23,14 +23,14 @@ module.exports = function(passthrough) {
 					let guildJoinedTime = member.joinedAt.toUTCString();
 					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
 				}
-				let status = utils.getPresenceEmoji(user.presence.status);
+				let status = user.presenceEmoji();
 				let game = "No activity set";
 				if (user.presence.game && user.presence.game.streaming) {
 					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
 					status = `<:streaming:454228675227942922>`;
 				} else if (user.presence.game) {
-					game = utils.getPresencePrefix(user.presence.game.type)+" **"+user.presence.game.name+"**";
+					game = user.presencePrefix()+" **"+user.presence.game.name+"**";
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
 					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
 					else if(user.presence.game.state) game += `\n${user.presence.game.state}`;
@@ -52,10 +52,10 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = utils.findMember(msg, suffix, true);
+					member = msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else {
-					user = utils.findUser(msg, suffix, true);
+					user = client.findUser(msg, suffix, true);
 				}
 				if (!user) return msg.channel.send(`Couldn't find that user`);
 				const embed = new Discord.RichEmbed()
@@ -91,8 +91,13 @@ module.exports = function(passthrough) {
 			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-				let emoji = utils.emoji(suffix);
+				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				if (emoji.id == undefined) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				let type;
+				if (emoji.animated) type = "gif";
+				else type = "png";
+				emoji.url = `https://cdn.discordapp.com/emojis/${emoji.id}.${type}`;
 				const embed = new Discord.RichEmbed()
 					.setAuthor(emoji.name)
 					.addField("Emoji ID:", `${emoji.id}`)
@@ -126,8 +131,13 @@ module.exports = function(passthrough) {
 			category: "guild",
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
-				let emoji = utils.emoji(suffix);
+				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				if (emoji.id == undefined) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				let type;
+				if (emoji.animated) type = "gif";
+				else type = "png";
+				emoji.url = `https://cdn.discordapp.com/emojis/${emoji.id}.${type}`;
 				const embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
@@ -144,7 +154,7 @@ module.exports = function(passthrough) {
 				if(msg.channel.type !== 'text') return msg.channel.send("You can't use this command in DMs!");
 				const embed = new Discord.RichEmbed()
 					.setAuthor(msg.guild.name)
-					.addField("Created at:", utils.humanize(msg.guild.createdAt, "date"))
+					.addField("Created at:", new Date(msg.guild.createdAt).toUTCString())
 					.addField("Owner:", msg.guild.owner? `${msg.guild.owner.user.tag} <:OwnerCrown:455188860817899520>`: "Server owner not in cache")
 					.addField("Member Count:", `${msg.guild.memberCount} members`)
 					.addField("Guild ID:", msg.guild.id)

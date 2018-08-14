@@ -7,8 +7,8 @@ module.exports = function(passthrough) {
 	
 	async function getWaifuInfo(userID) {
 		let [meRow, claimerRow] = await Promise.all([
-			utils.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
-			utils.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
+			utils.sql.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
+			utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
 		]);
 		let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
 		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
@@ -24,21 +24,21 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
-				let member = utils.findMember(msg, suffix, true);
+				let member = msg.guild.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
-				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.id);
+				let money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.id);
 				let waifu = await getWaifuInfo(member.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.id, 5000]);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.id, 5000]);
 					await msg.channel.send(`Created user account`);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, member.id);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.id);
 				}
 				msg.channel.sendTyping();
 				let canvas = new Canvas(640, 314);
 				let ctx = canvas.getContext("2d", { alpha: false });
 				let pfpurl = member.user.displayAvatarURL;
-				let coinindex = await utils.sql("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
-				let waifuindex = await utils.sql("SELECT * FROM waifu WHERE userID != ? ORDER BY price DESC", client.user.id).then(all => all.findIndex(obj => obj.waifuID == member.id) + 1);
+				let coinindex = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
+				let waifuindex = await utils.sql.all("SELECT * FROM waifu WHERE userID != ? ORDER BY price DESC", client.user.id).then(all => all.findIndex(obj => obj.waifuID == member.id) + 1);
 				let waifustring, moneystring;
 				if (waifuindex == 0) waifustring = "Not on waifu lb";
 				else waifustring = `#${waifuindex} on waifu lb`;

@@ -5,7 +5,7 @@ const { exec } = require("child_process");
 const rp = require("request-promise");
 
 module.exports = function(passthrough) {
-	const { Auth, Discord, client, db, utils, commands, Config } = passthrough;
+	const { Auth, Discord, client, db, utils, commands, config } = passthrough;
 	return {
 		"uptime": {
 			usage: "",
@@ -13,7 +13,7 @@ module.exports = function(passthrough) {
 			aliases: ["uptime"],
 			category: "statistics",
 			process: function(msg, suffix) {
-				const embed = new Discord.RichEmbed().addField("❯ Bot Uptime:", `${utils.humanize(process.uptime(), "sec")}`).setFooter("And still going").setColor("36393E")
+				const embed = new Discord.RichEmbed().addField("❯ Bot Uptime:", `${process.uptime().humanize("sec")}`).setFooter("And still going").setColor("36393E")
 				msg.channel.send({embed});
 			}
 		},
@@ -27,10 +27,10 @@ module.exports = function(passthrough) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				const embed = new Discord.RichEmbed()
-				.addField(client.user.tag+" "+utils.getPresenceEmoji("online"),
+				.addField(client.user.tag+" "+client.user.presenceEmoji(),
 					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 					`**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
-					`**❯ Bot Uptime:**\n${utils.humanize(process.uptime(), "sec")}\n`+
+					`**❯ Bot Uptime:**\n${process.uptime().humanize("sec")}\n`+
 					`**❯ RAM Usage:**\n${ramUsage}MB`, true)
 				.addField("­",
 					`**❯ User Count:**\n${client.users.size} users\n`+
@@ -95,23 +95,8 @@ module.exports = function(passthrough) {
 						"[SHODAN](http://shodanbot.com) <:bot:412413027565174787>, "+
 						"[Cadence](https://cadence.gq/) <:NitroBadge:421774688507920406>, "+
 						"[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
-					.addField("Changelog", "*(See &changelog and &commits for more)*\n"+utils.getChangelog(1))
 					.setColor("36393E");
 				msg.channel.send(embed);
-			}
-		},
-
-		"changelog": {
-			usage: "",
-			description: "Gets the latest changes to Amanda",
-			aliases: ["changelog", "changes"],
-			category: "core",
-			process: async function(msg, suffix) {
-				msg.channel.send(new Discord.RichEmbed()
-					.setTitle("Changelog (latest 10 entries)")
-					.setDescription(utils.getChangelog(10))
-					.setColor("36393E")
-				);
 			}
 		},
 
@@ -175,9 +160,13 @@ module.exports = function(passthrough) {
 						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
 						.setColor('36393E')
-					await msg.author.send({embed}).catch(() => msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`));
-					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-					return;
+						try {
+							await msg.author.send({embed});
+							if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+							return;
+						} catch (reason) {
+							return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+						}
 				}
 				if (suffix.toLowerCase() == "playlist") {
 					const embed = new Discord.RichEmbed()
@@ -209,6 +198,7 @@ module.exports = function(passthrough) {
 					try {
 						await msg.author.send({embed});
 						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+						return;
 					} catch (reason) {
 						return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
 					}
@@ -265,16 +255,14 @@ module.exports = function(passthrough) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
 					try {
-						result = eval(suffix.replace(/client.token/g, `"${Config.fake_token}"`));
+						result = eval(suffix.replace(/client.token/g, `"${config.fake_token}"`));
 					} catch (e) {
 						result = e;
 					}
 					let output = await utils.stringify(result);
-					let nmsg = await msg.channel.send(output.replace(new RegExp(Auth.bot_token, "g"), "No"));
-					utils.reactionMenu(nmsg, [
-						{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }
-					]);
-				} else utils.sendNopeMessage(msg);
+					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
+					nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+				} else msg.channel.sendNopeMessage();
 			}
 		},
 
@@ -285,10 +273,10 @@ module.exports = function(passthrough) {
 			category: "admin",
 			process: async function (msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
-				if (!allowed) return utils.sendNopeMessage(msg);
+				if (!allowed) return msg.channel.sendNopeMessage(msg);
 				if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly");
-				msg.channel.sendTyping();
-				require("child_process").exec(suffix, (error, stdout, stderr) => {
+				await msg.channel.sendTyping();
+				require("child_process").exec(suffix, async (error, stdout, stderr) => {
 					let result = "Output too large";
 					if (error) {
 						if (error.toString("utf8").length >= 2000) result = error.toString("utf8").slice(0, 1998)+"…";
@@ -302,7 +290,8 @@ module.exports = function(passthrough) {
 						if (stdout.toString("utf8").length >= 2000) result = stdout.toString("utf8").slice(0, 1998)+"…";
 						else result = stdout;
 					}
-					msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
+					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
+					nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 				});
 			}
 		}

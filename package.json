@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
-    "start": "node index-ama.js"
+    "start": "node index.js"
   },
   "license": "MIT",
   "engines": {
@@ -16,8 +16,9 @@
     "bufferutil": "^3.0.5",
     "canvas-prebuilt": "^1.6.5-prerelease.1",
     "dblapi.js": "^2.2.0",
-    "discord.js": "^11.4.1",
+    "discord.js": "^11.4.2",
     "entities": "^1.1.1",
+    "events": "^3.0.0",
     "ffmpeg-binaries": "^4.0.0",
     "https": "^1.0.0",
     "mime": "^2.3.1",
@@ -28,8 +29,8 @@
     "prism-media": "0.0.3",
     "request": "^2.87.0",
     "request-promise": "^4.2.2",
+    "require-all": "^3.0.0",
     "simple-youtube-api": "^5.0.2",
-    "uws": "^9.148.0",
     "ytdl-core": "^0.20.4"
   }
 }

@@ -21,7 +21,7 @@ module.exports = function(passthrough) {
 		let channels = client.channels.size;
 		let voiceConnections = client.voiceConnections.size;
 		let uptime = process.uptime();
-		await utils.sql("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime]);
+		await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime]);
 		if (msg) msg.react("👌");
 		console.log("Sent stats.", new Date().toUTCString());
 	}

@@ -1,0 +1,10 @@
+process.title = "Amanda";
+const Discord = require("discord.js");
+const client = new Discord.Client({ disableEveryone: true });
+const config = process.env.is_heroku ? JSON.parse(process.env.config) : require("./config.json", "utf8");
+const utils = {};
+const commands = {};
+let events = require("events");
+let reloadEvent = new events.EventEmitter();
+require("./loader.js")({ Discord, client, config, utils, commands, reloadEvent });
+client.login(config.bot_token);

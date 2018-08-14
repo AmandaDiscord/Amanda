@@ -1,7 +1,5 @@
 /node_modules
-auth.json
-/bats
-/databases
+config.json
 /build
 launch.json
 csak-timelog.json

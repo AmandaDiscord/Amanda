@@ -9,8 +9,8 @@ module.exports = function(passthrough) {
 
 	async function getWaifuInfo(userID) {
 		let [meRow, claimerRow] = await Promise.all([
-			utils.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
-			utils.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
+			utils.sql.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
+			utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
 		]);
 		let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
 		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
@@ -36,11 +36,10 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				let money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				msg.channel.sendTyping();
 				let args = suffix.split(" ");
@@ -92,27 +91,27 @@ module.exports = function(passthrough) {
 					if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
 						winning = bet * 30;
 						result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 29), msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 29), msg.author.id]);
 					} else if (slot1 == "heart" && slot1 == slot2 || slot1 == "heart" && slot1 == slot3) {
 						winning = bet * 4;
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot2 == "heart" && slot2 == slot3) {
 						winning = bet * 4;
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 3), msg.author.id]);
 					} else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
 						winning = Math.floor(bet * 1.25);
 						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 0.25)), msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (Math.floor(bet * 0.25)), msg.author.id]);
 					} else if (slot1 == slot2 && slot2 == slot3) {
 						winning = bet * 10;
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + (bet * 9), msg.author.id]);
 					} else {
 						winning = "Nothing";
 						result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
-						utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
+						utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
 					}
 					ctx.fillText(winning, 115, 540);
 					ctx.fillText(bet, 390, 540 );
@@ -142,11 +141,10 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let args = suffix.split(" ");
-				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				let money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you need to provide a bet and a side to bet on`);
 				let bet;
@@ -164,10 +162,10 @@ module.exports = function(passthrough) {
 				let flip = Math.floor(Math.random() * (4 - 1) + 1);
 				if (args[1] == "h" && flip == 1 || args[1] == "t" && flip == 2) {
 					msg.channel.send(`You guessed it! you got ${bet * 2} <a:Discoin:422523472128901140>`);
-					return utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + bet, msg.author.id]);
+					return utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + bet, msg.author.id]);
 				} else {
 					msg.channel.send(`Sorry but you didn't guess correctly. Better luck next time`);
-					return utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
+					return utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins - bet, msg.author.id]);
 				}
 			}
 		},
@@ -179,13 +177,12 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				let member = utils.findMember(msg, suffix, true);
+				let member = msg.guild.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
-				let target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+				let target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				if (!target) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+					target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
 				const embed = new Discord.RichEmbed()
 					.setAuthor(`Coins for ${member.user.tag}`)
@@ -202,11 +199,10 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				let money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
 				let mine = Math.floor(Math.random() * (100 - 1) + 1);
@@ -214,7 +210,7 @@ module.exports = function(passthrough) {
 					.setDescription(`**${msg.author.username} went mining and got ${mine} <a:Discoin:422523472128901140> :pick:**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + mine, msg.author.id]);
+				utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money.coins + mine, msg.author.id]);
 				mined.add(msg.author.id);
 				setTimeout(() => {
 					mined.delete(msg.author.id);
@@ -228,7 +224,7 @@ module.exports = function(passthrough) {
 			aliases: ["leaderboard", "lb"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				let all = await utils.sql("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", client.user.id);
+				let all = await utils.sql.all("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", client.user.id);
 				let index = 0;
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboards")
@@ -249,20 +245,18 @@ module.exports = function(passthrough) {
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to give to`);
-				let member = utils.findMember(msg, usertxt);
+				let member = msg.guild.findMember(msg, usertxt);
 				if (member == null) return msg.channel.send("Could not find that user");
 				if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
-				let author = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-				let target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+				let author = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				let target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				if (!target) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+					target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
 				if (!author) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					author = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					author = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				let gift;
 				if (args[0] == "all") {
@@ -274,8 +268,8 @@ module.exports = function(passthrough) {
 					if (gift < 1) return msg.channel.send(`${msg.author.username}, you cannot give less than 1`);
 					if (gift > author.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
 				}
-				utils.sql(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
-				utils.sql(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
+				utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
+				utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
 				const embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.tag}** has given ${gift} Discoins to **${member.user.tag}**`)
 					.setColor("F8E71C")
@@ -298,23 +292,22 @@ module.exports = function(passthrough) {
 					if (args[0] < 1) return msg.channel.send(`${msg.author.username}, you cannot award an amount less than 1`);
 					let usertxt = suffix.slice(args[0].length + 1);
 					if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
-					let member = utils.findMember(msg, usertxt);
+					let member = msg.guild.findMember(msg, usertxt);
 					if (member == null) return msg.channel.send("Could not find that user");
 					if (member.user.id == msg.author.id) return msg.channel.send(`You can't award yourself, silly`);
-					let target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+					let target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 					if (!target) {
-						await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
-						await msg.channel.send(`Created user account`);
-						target = await utils.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
+						await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
+						target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 					}
-					let award = math.floor(parseInt(args[0]));
-					utils.sql(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
+					let award = Math.floor(parseInt(args[0]));
+					utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
 					const embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}** has awarded ${award} Discoins to **${member.user.tag}**`)
 						.setColor("F8E71C")
 					msg.channel.send({embed});
 					member.send(`**${msg.author.tag}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
-				} else utils.sendNopeMessage(msg);
+				} else msg.channel.sendNopeMessage();
 			}
 		},
 
@@ -327,11 +320,10 @@ module.exports = function(passthrough) {
 				let args = suffix.split(" ");
 				let arrows = ["up", "down", "left", "right", "lower_left", "lower_right", "upper_left", "upper_right"];
 				let choice = arrows[Math.floor(Math.random() * arrows.length)];
-				let money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				let money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					await msg.channel.send(`Created user account`);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				msg.channel.send(`No`);
 			}
@@ -344,7 +336,7 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
-				let member = utils.findMember(msg, suffix, true);
+				let member = msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				let info = await getWaifuInfo(member.id);
 				const embed = new Discord.RichEmbed()
@@ -368,18 +360,18 @@ module.exports = function(passthrough) {
 				let usertxt = args.slice(1).join(" ");
 				if (!args[0]) return msg.channel.send(`You need to provide an amount to claim the user with`);
 				if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a member you would like to claim`);
-				let member = utils.findMember(msg, usertxt);
+				let member = msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
 					getWaifuInfo(member.user.id),
 					getWaifuInfo(msg.author.id),
-					utils.get("SELECT * FROM money WHERE userID = ?", msg.author.id)
+					utils.sql.get("SELECT * FROM money WHERE userID = ?", msg.author.id)
 				]);
 				money = money.coins;
 				if (!money) {
 					money = 5000;
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, money]);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, money]);
 				}
 				let claim = 0;
 				if (args[0] == "all") {
@@ -394,10 +386,10 @@ module.exports = function(passthrough) {
 				if (memberInfo.price > claim) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction. You need ${memberInfo.price}`);
 				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(`${msg.author.username}, you can't claim your waifu twice over, silly. You can \`&invest <amount> <user>\` into them, however`);
 				await Promise.all([
-					utils.sql("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, member.user.id]),
-					utils.sql(`UPDATE money SET coins =? WHERE userID =?`, [money - claim, msg.author.id])
+					utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, member.user.id]),
+					utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money - claim, msg.author.id])
 				]);
-				utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
+				utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
@@ -418,7 +410,7 @@ module.exports = function(passthrough) {
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
 				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				await utils.sql("DELETE FROM waifu WHERE userID = ?", [msg.author.id]);
+				await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [msg.author.id]);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
 				info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
@@ -432,15 +424,15 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let args = suffix.split(" ");
-				let waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
-				let money = await utils.get("SELECT * FROM money WHERE userID =?", msg.author.id);
+				let waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
+				let money = await utils.sql.get("SELECT * FROM money WHERE userID =?", msg.author.id);
 				if (!money) {
-					await utils.sql("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					money = await utils.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
+					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
 				}
 				if (!waifu) {
-					await utils.sql("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
-					waifu = await utils.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
+					await utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
+					waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
 				}
 				if (waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`);
@@ -454,8 +446,8 @@ module.exports = function(passthrough) {
 					if (gift < 1) return msg.channel.send(`${msg.author.username}, you cannot gift less than 1`);
 					if (gift > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
 				}
-				await utils.sql("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + gift, msg.author.id]);
-				await utils.sql("UPDATE money SET coins =? WHERE userID =?", [money.coins - gift, msg.author.id]);
+				await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + gift, msg.author.id]);
+				await utils.sql.all("UPDATE money SET coins =? WHERE userID =?", [money.coins - gift, msg.author.id]);
 				let user = await client.fetchUser(waifu.waifuID);
 				msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
@@ -467,7 +459,7 @@ module.exports = function(passthrough) {
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				let all = await utils.sql("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT 10", client.user.id);
+				let all = await utils.sql.all("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT 10", client.user.id);
 				let users = [];
 				for (let row of all) {
 					for (let key of ["userID", "waifuID"]) {
