@@ -81,7 +81,7 @@ module.exports = function(passthrough) {
 		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ["yourself", "PLAYING"], ["despacito 2", "PLAYING"],
 		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
 		['music', 'LISTENING'], ['Spootify', 'LISTENING'],
-		['with Shodan', 'STREAMING'], [`audio on ${client.guilds.size} servers`],
+		['with Shodan', 'STREAMING'], [`Netflix for ∞ hours`],
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
