@@ -58,11 +58,10 @@ module.exports = (passthrough) => {
 	/**
 	 * Gets the 32×32 avatar URL of a user, useful for embed authors and footers
 	 */
-	Discord.User.prototype.smallAvatarURL = getSmallAvatar;
-	function getSmallAvatar() {
+	Discord.User.prototype.__defineGetter__('smallAvatarURL', function() {
 		if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
 		else return `https://cdn.discordapp.com/embed/avatars/${this.discriminator % 5}.png`;
-	}
+	});
 
 	/**
 	 * Finds a user in the client cache
@@ -169,12 +168,15 @@ module.exports = (passthrough) => {
 	/**
 	 * Gets the URL of any Discord emoji
 	 */
-	Discord.Emoji.prototype.url = getEmojiURL();
-	function getEmojiURL() {
-		let type;
-		if (this.animated) type = "gif";
+	Discord.Client.prototype.parseEmoji = getEmoji;
+	function getEmoji(emoji) {
+		let type, e;
+		e = Discord.Util.parseEmoji(emoji);
+		if (e == null) return null;
+		if (e.id == undefined) return null;
+		if (e.animated) type = "gif";
 		else type = "png";
-		return `https://cdn.discordapp.com/emojis/${this.id}.${type}`;
+		return { animated: e.animated, name: e.name, id: e.id, url: `https://cdn.discordapp.com/emojis/${e.id}.${type}` };
 	}
 
 	/**
@@ -224,29 +226,39 @@ module.exports = (passthrough) => {
 	 * @param {String} presence The user's presence string
 	 * @returns {String} The emoji that matches that presence
 	 */
-	Discord.User.prototype.presenceEmoji = getPresenceEmoji;
-	Discord.GuildMember.prototype.presenceEmoji = getPresenceEmoji;
-	function getPresenceEmoji() {
-		const presences = {
+	Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
+		let presences = {
 			online: "<:online:453823508200554508>",
 			idle: "<:idle:453823508028456971>",
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
 		return presences[this.presence.status];
-	}
+	});
+	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
+		let presences = {
+			online: "<:online:453823508200554508>",
+			idle: "<:idle:453823508028456971>",
+			dnd: "<:dnd:453823507864748044>",
+			offline: "<:invisible:453827513995755520>"
+		};
+		return presences[this.presence.status];
+	});
+
 
 	/**
 	 * Changes a presence type integer to a prefix string
 	 * @param {Number} type The user's presence integer
 	 * @returns {String} The prefix that matches the presence type
 	 */
-	Discord.User.prototype.presencePrefix = getPresencePrefix;
-	Discord.GuildMember.prototype.presencePrefix = getPresencePrefix;
-	function getPresencePrefix() {
-		const prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		return prefixes[this.presence.game.type];
-	}
+	});
+	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		return prefixes[this.presence.game.type];
+	});
 
 	/**
 	 * Creates a progress bar

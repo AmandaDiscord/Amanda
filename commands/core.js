@@ -27,7 +27,7 @@ module.exports = function(passthrough) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				const embed = new Discord.RichEmbed()
-				.addField(client.user.tag+" "+client.user.presenceEmoji(),
+				.addField(client.user.tag+" "+client.user.presenceEmoji,
 					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 					`**❯ Message Send:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 					`**❯ Bot Uptime:**\n${process.uptime().humanize("sec")}\n`+
@@ -83,7 +83,7 @@ module.exports = function(passthrough) {
 					client.fetchUser("176580265294954507")
 				]);
 				const embed = new Discord.RichEmbed()
-					.setAuthor("Amanda", client.user.smallAvatarURL())
+					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
 						`${c1.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
@@ -233,7 +233,7 @@ module.exports = function(passthrough) {
 					const embed = new Discord.RichEmbed().addField(`Help for ${cmd.aliases[0]}:`, `Usage: ${cmd.usage}\nDescription: ${cmd.description}\nAliases: [${cmd.aliases.join(", ")}]`).setColor('36393E')
 					msg.channel.send({embed});
 				} else {
-					const embed = new Discord.RichEmbed().setAuthor("Command Categories:").setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``).setFooter("Amanda help panel", client.user.smallAvatarURL()).setColor('36393E')
+					const embed = new Discord.RichEmbed().setAuthor("Command Categories:").setDescription(`❯ Core\n❯ Statistics\n❯ Gambling\n❯ Guild\n❯ Moderation\n❯ Interaction\n❯ Fun\n❯ Search\n❯ Images\n❯ Music\n\n:information_source: Typing \`&cmds <category>\` will display all commands in that category\nEx: \`&cmds core\``).setFooter("Amanda help panel", client.user.smallAvatarURL).setColor('36393E')
 					try {
 						await msg.author.send({embed});
 						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
