@@ -313,6 +313,7 @@ module.exports = function(passthrough) {
 					let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
 					let percentage = undefined;
 					if (strings == "320067006521147393 405208699313848330") percentage = 100;
+					if (strings == "158750488563679232 185938944460980224") percentage = 99999999999; // :hippo:
 					else {
 						let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 						percentage = parseInt("0x"+hash)%101;
