@@ -2,8 +2,11 @@ const util = require("util");
 let reactionMenus = {};
 
 module.exports = (passthrough) => {
-	let { Discord, client, db, utils } = passthrough;
+	let { Discord, client, db, utils, reloadEvent } = passthrough;
 	client.on("messageReactionAdd", reactionEvent);
+	reloadEvent.once(__filename, () => {
+		client.removeListener("messageReactionAdd", reactionEvent);
+	})
 
 	/**
 	 * Finds a member in a guild

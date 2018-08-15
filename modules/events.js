@@ -1,5 +1,5 @@
 module.exports = function(passthrough) {
-	let { Discord, client, config, utils, db, commands } = passthrough;
+	let { Discord, client, config, utils, db, commands, reloadEvent } = passthrough;
 	let stdin = process.stdin;
 	let prefixes = [];
 	let statusPrefix = "&";
@@ -13,10 +13,17 @@ module.exports = function(passthrough) {
 
 	client.on("message", manageMessage);
 	client.on("messageUpdate", manageEdit);
-	client.on("ready", manageReady);
+	client.once("ready", manageReady);
 	client.on("disconnect", manageDisconnect);
 	process.on("unhandledRejection", manageRejection);
 	stdin.on("data", manageStdin);
+	reloadEvent.once(__filename, () => {
+		client.removeListener("message", manageMessage);
+		client.removeListener("messageUpdate", manageEdit);
+		client.removeListener("disconnect", manageDisconnect);
+		process.removeListener("unhandledRejection", manageRejection);
+		stdin.removeListener("data", manageStdin);
+	})
 
 	async function manageStdin(input) {
 		input = input.toString();
