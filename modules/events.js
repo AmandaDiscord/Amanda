@@ -23,7 +23,7 @@ module.exports = function(passthrough) {
 		client.removeListener("disconnect", manageDisconnect);
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
-	})
+	});
 
 	async function manageStdin(input) {
 		input = input.toString();

@@ -86,8 +86,8 @@ module.exports = function(passthrough) {
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
-						`${c1.tag} <:HypeBadge:421764718580203530> <:NitroBadge:421774688507920406>\n`+
-						`${c2.tag} <:NitroBadge:421774688507920406>`)
+						`${c1.tag} <:bravery:479939311593324557> <:NitroBadge:421774688507920406>\n`+
+						`${c2.tag} <:brilliance:479939329104412672> <:NitroBadge:421774688507920406>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
 					.addField("Partners",
