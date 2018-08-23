@@ -361,14 +361,37 @@ module.exports = function(passthrough) {
 					} else {
 						ytdl.getInfo(args[1]).then(video => {
 							handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
-						}).catch(reason => {
-							manageYtdlGetInfoErrors(msg, reason, args[1]);
+						}).catch(async reason => {
+							args.shift();
+							let searchstring = args.join(" ");
+							try {
+								let videos = await youtube.searchVideos(searchstring, 10);
+								if (videos.length < 1) return msg.channel.send("No videos were found with those search terms");
+								let index = 0;
+								const embed = new Discord.RichEmbed()
+									.setAuthor("Song Selection")
+									.setDescription(videos.map(video => `**${++index}**. ${video.title}`).join("\n"))
+									.setFooter("Please provide a number 1-10 to select one of the search results")
+									.setColor("36393E")
+								let nmsg = await msg.channel.send({embed});
+								nmsg.reactionMenu([{ emoji: "❌", allowedUsers: [msg.author.id], remove: "message", actionType: "js", actionData: () => { return msg.channel.send("Selecion canceled") }}]);
+								let response;
+								try {
+									response = await msg.channel.awaitMessages(msg2 => msg2.content > 0 && msg2.content < 11, { maxMatches: 1, time: 20000, errors: ['time'] });
+								} catch(something) { return; }
+								nmsg.delete();
+								let videoIndex = parseInt(response.first().content);
+								let vid = await ytdl.getInfo(videos[videoIndex - 1].id);
+								handleVideo(vid, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+							} catch (error) {
+								manageYtdlGetInfoErrors(msg, error, args[1]);
+							}
 						});
 					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					callstop(msg, queue);
-					return msg.react("👌")
+					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send(`There aren't any songs queued`);
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0));
@@ -398,7 +421,7 @@ module.exports = function(passthrough) {
 						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
 						return msg.react("👌");
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0 or less than or equal to 5`);
-				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n") {
+				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					const embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
