@@ -371,18 +371,25 @@ module.exports = function(passthrough) {
 								const embed = new Discord.RichEmbed()
 									.setAuthor("Song Selection")
 									.setDescription(videos.map(video => `**${++index}**. ${video.title}`).join("\n"))
-									.setFooter("Please provide a number 1-10 to select one of the search results")
+									.setFooter("Please provide a number 1-10 to select one of the search results or cancel to cancel")
 									.setColor("36393E")
 								let nmsg = await msg.channel.send({embed});
-								nmsg.reactionMenu([{ emoji: "❌", allowedUsers: [msg.author.id], remove: "message", actionType: "js", actionData: () => { return msg.channel.send("Selecion canceled") }}]);
-								let response;
-								try {
-									response = await msg.channel.awaitMessages(msg2 => msg2.content > 0 && msg2.content < 11, { maxMatches: 1, time: 20000, errors: ['time'] });
-								} catch(something) { return; }
-								nmsg.delete();
-								let videoIndex = parseInt(response.first().content);
-								let vid = await ytdl.getInfo(videos[videoIndex - 1].id);
-								handleVideo(vid, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+								let collector = msg.channel.createMessageCollector(m => m.content > 0 && m.content < 11 && m.author.id == msg.author.id, { maxMatches: 1, time: 20000 });
+								let cancel = msg.channel.createMessageCollector(m => m.content.toLowerCase() == "cancel" && m.author.id == msg.author.id, { maxMatches: 1, time: 21000 });
+								let collected = false;
+								cancel.once("collect", () => { collector.stop(); cancel.stop(); nmsg.delete();});
+								collector.once("collect", async () => {
+									collected = true;
+									nmsg.delete();
+									let videoIndex = parseInt(collector.collected.first().content);
+									let vid = await ytdl.getInfo(videos[videoIndex - 1].id);
+									handleVideo(vid, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+									collector.stop();
+								});
+								collector.once("end", () => {
+									if (collected) return
+									else msg.channel.send("Selection cancelled");
+								});
 							} catch (error) {
 								manageYtdlGetInfoErrors(msg, error, args[1]);
 							}
