@@ -225,10 +225,9 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				let all = await utils.sql.all("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", client.user.id);
-				let index = 0;
 				const embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboards")
-					.setDescription(all.map(row => `${++index}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
+					.setDescription(all.map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
 					.setColor("F8E71C")
 				msg.channel.send({embed});
 			}

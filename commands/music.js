@@ -5,6 +5,7 @@ const YouTube = require('simple-youtube-api');
 const queues = new Map();
 const timeout = new Set();
 const crypto = require("crypto");
+const rp = require("request-promise");
 
 module.exports = function(passthrough) {
 	const { config, Discord, client, utils, reloadEvent } = passthrough;
@@ -362,37 +363,30 @@ module.exports = function(passthrough) {
 						ytdl.getInfo(args[1]).then(video => {
 							handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
 						}).catch(async reason => {
-							args.shift();
-							let searchstring = args.join(" ");
-							try {
-								let videos = await youtube.searchVideos(searchstring, 10);
-								if (videos.length < 1) return msg.channel.send("No videos were found with those search terms");
-								let index = 0;
-								const embed = new Discord.RichEmbed()
-									.setAuthor("Song Selection")
-									.setDescription(videos.map(video => `**${++index}**. ${video.title}`).join("\n"))
-									.setFooter("Please provide a number 1-10 to select one of the search results or cancel to cancel")
-									.setColor("36393E")
-								let nmsg = await msg.channel.send({embed});
-								let collector = msg.channel.createMessageCollector(m => m.content > 0 && m.content < 11 && m.author.id == msg.author.id, { maxMatches: 1, time: 20000 });
-								let cancel = msg.channel.createMessageCollector(m => m.content.toLowerCase() == "cancel" && m.author.id == msg.author.id, { maxMatches: 1, time: 21000 });
-								let collected = false;
-								cancel.once("collect", () => { collector.stop(); cancel.stop(); nmsg.delete();});
-								collector.once("collect", async () => {
-									collected = true;
-									nmsg.delete();
-									let videoIndex = parseInt(collector.collected.first().content);
-									let vid = await ytdl.getInfo(videos[videoIndex - 1].id);
-									handleVideo(vid, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
-									collector.stop();
-								});
-								collector.once("end", () => {
-									if (collected) return
-									else msg.channel.send("Selection cancelled");
-								});
-							} catch (error) {
-								manageYtdlGetInfoErrors(msg, error, args[1]);
-							}
+							let searchString = args.slice(1).join(" ");
+							msg.channel.sendTyping();
+							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${searchString}`));
+							if (!videos.length) return msg.channel.send("No videos were found with those search terms");
+							videos = videos.slice(0, 10);
+							let videoResults = videos.map((video, index) => `${index+1}. **${video.title}** (${prettySeconds(video.lengthSeconds)})`);
+							let embed = new Discord.RichEmbed()
+								.setTitle("Song selection")
+								.setDescription(videoResults.join("\n"))
+								.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
+								.setColor("36393E")
+							let selectMsg = await msg.channel.send({embed});
+							let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
+							collector.next.then(async msg => {
+								let videoIndex = parseInt(msg.content);
+								if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
+								ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
+									handleVideo(video, msg, voiceChannel, false, false, args[0].toLowerCase() == "insert");
+								}).catch(error => manageYtdlGetInfoErrors(msg, error, args[1]));
+								//selectMsg.edit(embed.setDescription("").setFooter("").setTitle("").addField("Song selected", videoResults[videoIndex-1]));
+								selectMsg.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
+							}).catch(() => {
+								selectMsg.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
+							});
 						});
 					}
 				} else if (args[0].toLowerCase() == "stop") {
