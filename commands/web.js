@@ -9,7 +9,6 @@ const apiDir = "web/api";
 const webHandlers = fs.readdirSync(path.join(__dirname, apiDir)).map(f => path.join(apiDir, f));
 const pageHandlers = [
 	{web: "/", local: "index.html"},
-	{web: "/about", local: "about.html"},
 	{web: "/dash", local: "dash/index.html"},
 	{web: "/dash/login", local: "dash/login.html"},
 	{web: "/dash/servers/[0-9]+", local: "dash/server.html"}
@@ -43,11 +42,32 @@ function toRange(data, req) {
 	return {result, headers, statusCode};
 }
 
+async function resolveTemplates(page) {
+    let promises = [];
+    let template;
+    let regex = /<!-- TEMPLATE (\S+?) -->/g;
+    while (template = regex.exec(page)) {
+        let templateName = template[1];
+        promises.push(new Promise(resolve => {
+            fs.readFile(path.join(__dirname, "web/templates", templateName+".html"), {encoding: "utf8"}, (err, content) => {
+                if (err) resolve(undefined);
+                else resolve({template: templateName, content: content});
+            });
+        }));
+    }
+    let results = await Promise.all(promises);
+    results.filter(r => r).forEach(result => {
+        page = page.replace("<!-- TEMPLATE "+result.template+" -->", result.content);
+    });
+    return page;
+}
+
 module.exports = function(passthrough) {
 	const { client, utils } = passthrough;
 
 	let routeHandlers = [];
 	delete require.cache[require.resolve("./web/util/extra.js")];
+	passthrough.resolveTemplates = resolveTemplates;
 	const extra = require("./web/util/extra.js")(passthrough);
 	passthrough.extra = extra;
 	webHandlers.forEach(h => {
@@ -118,23 +138,7 @@ module.exports = function(passthrough) {
 				let match = reqPath.match(rr);
 				if (match) {
 					fs.readFile(path.join(__dirname, "web/html", h.local), {encoding: "utf8"}, (err, page) => {
-						if (err) throw err;
-						let promises = [];
-						let template;
-						let regex = /<!-- TEMPLATE (\S+?) -->/g;
-						while (template = regex.exec(page)) {
-							let templateName = template[1];
-							promises.push(new Promise(resolve => {
-								fs.readFile(path.join(__dirname, "web/templates", templateName+".html"), {encoding: "utf8"}, (err, content) => {
-									if (err) resolve(undefined);
-									else resolve({template: templateName, content: content});
-								});
-							}));
-						}
-						Promise.all(promises).then(results => {
-							results.filter(r => r).forEach(result => {
-								page = page.replace("<!-- TEMPLATE "+result.template+" -->", result.content);
-							});
+						resolveTemplates(page).then(page => {
 							headers["Content-Length"] = Buffer.byteLength(page);
 							cf.log("Using pageHandler "+h.web+" ("+h.local+") to respond to "+reqPath, "spam");
 							res.writeHead(200, Object.assign({"Content-Type": mimeType(h.local)}, headers, globalHeaders));
