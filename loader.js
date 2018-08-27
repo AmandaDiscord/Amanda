@@ -41,6 +41,7 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 
 			try {
 				console.log(`Loading ${filename}`);
+				passthrough.reloadEvent.emit(filename);
 				delete require.cache[require.resolve(filename)];
 				let result = require(filename);
 				setImmediate(() => Object.assign(passthrough.commands, result(passthrough)));
