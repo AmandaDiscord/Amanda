@@ -22,7 +22,6 @@ router.once(__filename, () => {
 	router.removeListener("help", managehelp);
 	router.removeListener("command", file_help);
 });
-
 async function file_help(passthrough) {
 	let { Discord, client, msg, cmd, suffix } = passthrough;
 
@@ -114,8 +113,8 @@ async function file_help(passthrough) {
 			embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
 			return msg.channel.send({embed});
 		}
-		let str = cat.map(c => `${c.aliases[0]} ${c.usage}    [${c.aliases.join(", ")}]`).sort().join("\n");
-		embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command <usage>    [aliases]").setDescription(str).setColor("36393E")
+		let str = cat.map(c => `${c.aliases[0]}    [${c.aliases.join(", ")}]`).sort().join("\n");
+		embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command    [aliases]").setDescription(str).setColor("36393E")
 		try {
 			await msg.author.send({embed});
 			if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);

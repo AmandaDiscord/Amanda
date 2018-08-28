@@ -5,12 +5,21 @@ module.exports = function(passthrough) {
 
 	let prefixes = config.prefixes;
 
-	client.on("ready", manageReady);
+	client.once("ready", manageReady);
 	client.on("message", manageMessage);
 	client.on("messageUpdate", manageEdit);
 	client.on("disconnect", manageDisconnect);
+	client.on("error", manageError);
 	process.on("unhandledRejection", manageRejection);
 	process.stdin.on("data", manageStdin);
+	router.once(__filename, () => {
+		client.removeListener("message", manageMessage);
+		client.removeListener("messageUpdate", manageEdit);
+		client.removeListener("disconnect", manageDisconnect);
+		client.removeListener("error", manageError);
+		process.removeListener("unhandledRejection", manageRejection);
+		process.stdin.removeListener("data", manageStdin);
+	});
 
 	function manageReady() {
 		console.log(`Logged in as ${client.user.tag}`);
@@ -38,4 +47,7 @@ module.exports = function(passthrough) {
 		input = input.toString();
 		try { console.log(await utils.stringify(eval(input))); } catch (e) { console.log(e.stack); }
 	};
+	function manageError(reason) {
+		console.error(reason);
+	}
 }

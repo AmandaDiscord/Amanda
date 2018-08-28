@@ -1,9 +1,13 @@
 const util = require("util");
 let reactionMenus = {};
+let router = require("../router.js");
 
 module.exports = (passthrough) => {
-	let { Discord, client, utils } = passthrough;
+	let { Discord, client, db, utils } = passthrough;
 	client.on("messageReactionAdd", reactionEvent);
+	router.once(__filename, () => {
+		client.removeListener("messageReactionAdd", reactionEvent);
+	});
 
 	/**
 	 * Finds a member in a guild
@@ -91,6 +95,67 @@ module.exports = (passthrough) => {
 	}
 
 	/**
+	 * Checks if a user or guild has certain permission levels
+	 * @param {Object} DiscordObject An object of a user or guild
+	 * @param {String} Permission The permission to test if the Snowflake has
+	 * @returns {Boolean} If the Snowflake is allowed to use the provided string permission
+	 */
+	utils.hasPermission = async function() {
+		let args = [...arguments];
+		let thing, thingType, permissionType;
+		if (typeof(args[0]) == "object") {
+			thing = args[0].id;
+			if (args[0].constructor.name == "Guild") thingType = "server";
+			else thingType = "user";
+			permissionType = args[1];
+		} else {
+			[thing, thingType, permissionType] = args;
+		}
+		let result;
+		if (thingType == "user" || thingType == "member") {
+			result = await utils.sql.get(`SELECT ${permissionType} FROM UserPermissions WHERE userID = ?`, thing);
+		} else if (thingType == "server" || thingType == "guild") {
+			result = await utils.sql.get(`SELECT ${permissionType} FROM ServerPermissions WHERE serverID = ?`, thing);
+		}
+		if (result) result = Object.values(result)[0];
+		if (permissionType == "music") return true;
+		return !!result;
+	}
+
+	/**
+	 * Main interface for MySQL connection
+	 */
+	utils.sql = {
+		"all": function(string, prepared, connection, attempts) {
+			if (!attempts) attempts = 2;
+			if (!connection) connection = db;
+			if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
+			return new Promise((resolve, reject) => {
+				connection.execute(string, prepared).then(result => {
+					let rows = result[0];
+					resolve(rows);
+				}).catch(err => {
+					console.error(err);
+					attempts--;
+					if (attempts) utils.sql.all(string, prepared, connection, attempts).then(resolve).catch(reject);
+					else reject(err);
+				});
+			});
+		},
+		"get": async function(string, prepared, connection) {
+			return (await utils.sql.all(string, prepared, connection))[0];
+		}
+	}
+
+	/**
+	 * Gets the connection to the MySQL database
+	 * @returns {*} Database Connection
+	 */
+	utils.getConnection = function() {
+		return db.getConnection();
+	}
+
+	/**
 	 * Handles reactions as actions for the client to perform
 	 * @param {*} msg MessageResolvable
 	 * @param {Array} actions An array of objects of actions
@@ -172,7 +237,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status];
+		return presences[this.presence.status]
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -181,7 +246,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status];
+		return presences[this.presence.status]
 	});
 
 
@@ -192,10 +257,12 @@ module.exports = (passthrough) => {
 	 */
 	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		if (this.presence.game == null) return null;
 		return prefixes[this.presence.game.type];
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		if (this.presence.game == null) return null;
 		return prefixes[this.presence.game.type];
 	});
 
@@ -236,7 +303,7 @@ module.exports = (passthrough) => {
 				errorObject[e[0]] = e[1];
 			});
 			result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject));
-		} else result = "```js\n"+util.inspect(data)+"```";
+		} else result = "```js\n"+util.inspect(data, { depth: 1 })+"```";
 
 		if (result.length >= 2000) {
 			if (result.startsWith("```")) {

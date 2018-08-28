@@ -66,7 +66,7 @@ async function file_utility(passthrough) {
 		.addField(client.user.tag,
 			`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 			`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
-			`**❯ Bot Uptime:**\n${client.uptime.humanize("ms")} /\n${process.uptime().humanize("sec")}\n`+
+			`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
 			`**❯ RAM Usage:**\n${ram}MB`, true)
 		.addField("­",
 			`**❯ User Count:**\n${client.users.size} users\n`+
