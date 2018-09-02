@@ -1,9 +1,17 @@
 let router = require("../router.js");
 
 module.exports = function(passthrough) {
-	let { Discord, client, config, utils } = passthrough;
+	let { Discord, client, config, utils, db } = passthrough;
 
-	let prefixes = config.prefixes;
+	let prefixes = [];
+	let statusPrefix = "&";
+
+	if (config.dbl_key) {
+		const dbl = require("dblapi.js");
+		const poster = new dbl(config.dbl_key, client);
+		poster.once("posted", () => console.log("Server count posted"));
+		poster.on("error", reason => console.error(reason));
+	} else console.log("No DBL API key. Server count posting is disabled.");
 
 	client.once("ready", manageReady);
 	client.on("message", manageMessage);
@@ -22,7 +30,15 @@ module.exports = function(passthrough) {
 	});
 
 	function manageReady() {
-		console.log(`Logged in as ${client.user.tag}`);
+		console.log(`Successfully logged in as ${client.user.username}`);
+		process.title = client.user.username;
+		utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
+			prefixes = result.map(r => r.prefix);
+			statusPrefix = result.find(r => r.status).prefix;
+			console.log("Loaded "+prefixes.length+" prefixes");
+			update();
+			client.setInterval(update, 300000);
+});
 	}
 	function manageMessage(msg) {
 		if (msg.author.bot) return;
@@ -49,5 +65,16 @@ module.exports = function(passthrough) {
 	};
 	function manageError(reason) {
 		console.error(reason);
+	}
+
+	let presences = [
+		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ["yourself", "PLAYING"], ["despacito 2", "PLAYING"],
+		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
+		['music', 'LISTENING'], ['Spootify', 'LISTENING'],
+		['with Shodan', 'STREAMING'], [`Netflix for ∞ hours`],
+	];
+	function update() {
+		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
+		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	}
 }
