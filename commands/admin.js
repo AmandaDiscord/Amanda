@@ -4,19 +4,19 @@ let admin_info = {
 		description: "Evaluates arbitrary javascript in the bot process",
 		arguments: "<code>",
 		aliases: ["evaluate", "eval"],
-		category: "admin"
+		category: ["admin", "tools"]
 	},
 	"execute": {
 		description: "Performs a shell operation",
 		arguments: "<shell statement>",
 		aliases: ["execute", "exec"],
-		category: "admin"
+		category: ["admin", "tools"]
 	},
 	"award": {
 		description: "Awards a user discoins",
 		arguments: "<amount> <user>",
 		aliases: ["award"],
-		category: "admin"
+		category: ["admin", "gambling"]
 	}
 };
 

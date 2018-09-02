@@ -4,13 +4,13 @@ let help_info = {
 		description: "Your average help command",
 		arguments: "<command>",
 		aliases: ["help", "h"],
-		category: "help"
+		category: ["help"]
 	},
 	"commands": {
 		description: "Displays all of the commands in a category",
 		arguments: "<category>",
 		aliases: ["commands", "cmds"],
-		category: "help"
+		category: ["help"]
 	}
 }
 let commands = {};
@@ -31,14 +31,14 @@ async function file_help(passthrough) {
 			let args = suffix.split(" ");
 			let command = Object.values(commands).find(c => c.aliases.includes(args[0]));
 			if (command) {
-				embed = new Discord.RichEmbed().addField(`Help for ${command.aliases[0]}`, `Arguments: ${command.arguments}\nDescription: ${command.description}\nAliases: [${command.aliases.join(", ")}]`).setColor('36393E');
+				embed = new Discord.RichEmbed().addField(`Help for ${command.aliases[0]}`, `Arguments: ${command.arguments}\nDescription: ${command.description}\nAliases: [${command.aliases.join(", ")}]\nCategory: ${command.category.join("/")}`).setColor('36393E');
 				return msg.channel.send({embed});
 			} else {
 				embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
 				return msg.channel.send({embed});
 			}
 		} else {
-			let all = Object.values(commands).map(c => c.category);
+			let all = Object.values(commands).map(c => c.category[0]);
 			let filter = (value, index, self) => { return self.indexOf(value) == index; };
 			let cats = all.filter(filter).sort();
 			embed = new Discord.RichEmbed().setAuthor("Command Categories").setDescription(`❯ ${cats.join("\n❯ ")}\n\n𝓲 - typing \`&cmds <category>\` will show all cmds in that category`).setFooter("Amanda help panel", client.user.smallAvatarURL).setColor('36393E');
@@ -51,7 +51,7 @@ async function file_help(passthrough) {
 
 	else if (cmd == "commands" || cmd == "cmds") {
 		if (!suffix) return msg.channel.send(`${msg.author.username}, you must provide a command category as an argument`);
-		let cat = Object.values(commands).filter(c => c.category == suffix.toLowerCase());
+		let cat = Object.values(commands).filter(c => c.category[0] == suffix.toLowerCase());
 		let embed;
 		if (suffix.toLowerCase() == "music") {
 			embed = new Discord.RichEmbed()
@@ -113,11 +113,13 @@ async function file_help(passthrough) {
 			embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
 			return msg.channel.send({embed});
 		}
+
 		let str = cat.map(c => `${c.aliases[0]}    [${c.aliases.join(", ")}]`).sort().join("\n");
 		embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command    [aliases]").setDescription(str).setColor("36393E")
 		try {
 			await msg.author.send({embed});
 			if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+			return;
 		} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
 	}
 };

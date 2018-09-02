@@ -1,98 +1,98 @@
-const mined = new Set();
-const fs = require("fs");
-const Canvas = require("canvas-prebuilt");
-const util = require("util");
+let mined = new Set();
+let fs = require("fs");
+let Canvas = require("canvas-prebuilt");
+let util = require("util");
 let router = require("../router.js");
 let gambling_info = {
 	"dice": {
 		description: "Rolls two six sided die",
 		arguments: "undefined",
 		aliases: ["dice"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"slot": {
 		description: "Runs a random slot machine for a chance at Discoins",
 		arguments: "<amount>",
 		aliases: ["slot", "slots"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"flip": {
 		description: "Flips a coin",
 		arguments: "none",
 		aliases: ["flip"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"betflip": {
 		description: "Place a bet on a random flip for a chance of Discoins",
 		arguments: "<amount> <side - h/t>",
 		aliases: ["betflip", "bf"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"coins": {
 		description: "Returns the amount of Discoins you or another user has",
 		arguments: "<user>",
 		aliases: ["coins", "$"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"mine": {
 		description: "Mines for Discoins",
 		arguments: "none",
 		aliases: ["mine"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"leaderboard": {
 		description: "Gets the leaderboard for people with the most coins",
 		arguments: "none",
 		aliases: ["leaderboard", "lb"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"give": {
 		description: "Gives discoins to a user from your account",
 		arguments: "<amount> <user>",
 		aliases: ["give"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"wheel": {
 		description: "Runs a random wheel for a chance at gaining discoins",
 		arguments: "<amount>",
 		aliases: ["wheel"],
-		category: "gambling"
+		category: ["gambling"]
 	},
 	"waifu": {
 		description: "Gets the waifu information about yourself or a user",
 		arguments: "<user>",
 		aliases: ["waifu"],
-		category: "gambling"
+		category: ["gambling", "waifu"]
 	},
 	"claim": {
 		description: "Claims someone as a waifu. Requires Discoins",
 		arguments: "<amount> <user>",
 		aliases: ["claim"],
-		category: "gambling"
+		category: ["gambling", "waifu"]
 	},
 	"divorce": {
 		description: "Divorces a user",
 		arguments: "<reason>",
 		aliases: ["divorce"],
-		category: "gambling"
+		category: ["gambling", "waifu"]
 	},
 	"gift": {
 		description: "Gifts an amount of Discoins towards your waifu's price",
 		arguments: "<amount>",
 		aliases: ["gift"],
-		category: "gambling"
+		category: ["gambling", "waifu"]
 	},
 	"waifuleaderboard": {
 		description: "Displays the leaderboard of the top waifus",
 		arguments: "none",
 		aliases: ["waifuleaderboard", "waifulb"],
-		category: "gambling"
+		category: ["gambling", "waifu"]
 	},
 	"profile": {
 		description: "Gets the Amanda profile for a user",
 		arguments: "<user>",
 		aliases: ["profile"],
-		category: "gambling"
+		category: ["gambling"]
 	}
 }
 
@@ -486,7 +486,6 @@ async function file_gambling(passthrough) {
 		msg.channel.sendTyping();
 		let canvas = new Canvas(640, 314);
 		let ctx = canvas.getContext("2d", { alpha: false });
-		let pfpurl = member.user.displayAvatarURL;
 		let coinindex = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
 		let waifuindex = await utils.sql.all("SELECT * FROM waifu WHERE userID != ? ORDER BY price DESC", client.user.id).then(all => all.findIndex(obj => obj.waifuID == member.id) + 1);
 		let waifustring, moneystring;
@@ -495,7 +494,7 @@ async function file_gambling(passthrough) {
 		if (coinindex == 0) moneystring = "Not on discoin lb";
 		else moneystring = `#${coinindex} on discoin lb`;
 		Promise.all([
-			new Promise(resolve => require("request")(pfpurl, { encoding: null }, (e,r,b) => resolve(b))),
+			new Promise(resolve => require("request")(member.user.displayAvatarURL, { encoding: null }, (e,r,b) => resolve(b))),
 			util.promisify(fs.readFile)("./images/profile.png", { encoding: null })
 		]).then(async ([avatar, template]) => {
 			let templateI = new Canvas.Image();

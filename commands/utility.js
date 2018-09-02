@@ -5,43 +5,43 @@ let utility_info = {
 		description: "Displays the bot's latency to the Discord Gateway",
 		arguments: "none",
 		aliases: ["ping", "pong"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"statistics": {
 		description: "Gets more in depth statistics about the bot",
 		arguments: "none",
 		aliases: ["statistics", "stats"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"uptime": {
 		description: "Returns the amount of time since the bot process has started",
 		arguments: "none",
 		aliases: ["uptime"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"info": {
 		description: "Displays information about Amanda",
 		arguments: "none",
 		aliases: ["info", "inf"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"commits": {
 		description: "Gets the latest git commits to Amanda",
 		arguments: "none",
 		aliases: ["commits"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"privacy": {
 		description: "Details Amanda's privacy statement",
 		arguments: "none",
 		aliases: ["privacy"],
-		category: "utility"
+		category: ["utility"]
 	},
 	"invite": {
 		description: "Sends the bot invite link to you via DMs",
 		arguments: "none",
 		aliases: ["invite", "inv"],
-		category: "utility"
+		category: ["utility"]
 	}
 }
 
@@ -63,7 +63,7 @@ async function file_utility(passthrough) {
 		let ram = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 		let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 		let embed = new Discord.RichEmbed()
-		.addField(client.user.tag,
+		.addField("­",
 			`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 			`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 			`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
@@ -73,7 +73,7 @@ async function file_utility(passthrough) {
 			`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 			`**❯ Channel Count:**\n${client.channels.size} channels\n`+
 			`**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
-		.setFooter(`Requested by ${msg.author.username}`).setColor("36393E")
+		.setColor("36393E")
 		return nmsg.edit({embed});
 	}
 

@@ -303,7 +303,7 @@ module.exports = (passthrough) => {
 				errorObject[e[0]] = e[1];
 			});
 			result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject));
-		} else result = "```js\n"+util.inspect(data, { depth: 1 })+"```";
+		} else result = "```js\n"+util.inspect(data, { depth: 0 })+"```";
 
 		if (result.length >= 2000) {
 			if (result.startsWith("```")) {

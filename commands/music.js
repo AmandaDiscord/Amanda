@@ -13,13 +13,13 @@ let music_info = {
 		arguments: "none",
 		description: "Assign a login token for use on Amanda's web dashboard",
 		aliases: ["token", "musictoken", "webtoken"],
-		category: "music",
+		category: ["music"],
 	},
 	"music": {
 		arguments: "",
 		description: "See `&commands music` for help",
 		aliases: ["music", "m"],
-		category: "music",
+		category: ["music"],
 	}
 }
 

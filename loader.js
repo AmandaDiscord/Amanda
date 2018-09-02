@@ -21,6 +21,7 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 	pool.query("SELECT 1").then(() => {
 		console.log("Connected to MySQL database");
 		passthrough.db = pool;
+		passthrough.router = router;
 
 
 		for (let dir of commandDirs) {
