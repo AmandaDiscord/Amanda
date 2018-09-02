@@ -1,12 +1,13 @@
 const util = require("util");
 let reactionMenus = {};
+let router = require("../router.js");
 
 module.exports = (passthrough) => {
-	let { Discord, client, db, utils, reloadEvent } = passthrough;
+	let { Discord, client, db, utils } = passthrough;
 	client.on("messageReactionAdd", reactionEvent);
-	reloadEvent.once(__filename, () => {
+	router.once(__filename, () => {
 		client.removeListener("messageReactionAdd", reactionEvent);
-	})
+	});
 
 	/**
 	 * Finds a member in a guild
@@ -236,7 +237,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status];
+		return presences[this.presence.status]
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -245,7 +246,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status];
+		return presences[this.presence.status]
 	});
 
 
@@ -256,10 +257,12 @@ module.exports = (passthrough) => {
 	 */
 	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		if (this.presence.game == null) return null;
 		return prefixes[this.presence.game.type];
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		if (this.presence.game == null) return null;
 		return prefixes[this.presence.game.type];
 	});
 
@@ -300,7 +303,7 @@ module.exports = (passthrough) => {
 				errorObject[e[0]] = e[1];
 			});
 			result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject));
-		} else result = "```js\n"+util.inspect(data)+"```";
+		} else result = "```js\n"+util.inspect(data, { depth: 0 })+"```";
 
 		if (result.length >= 2000) {
 			if (result.startsWith("```")) {

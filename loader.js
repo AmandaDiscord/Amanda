@@ -2,6 +2,7 @@ const fs = require("fs");
 const pj = require("path").join;
 const http = require("http");
 const WebSocket = require("ws");
+const router = require("./router.js");
 
 const commandDirs = ["modules", "commands"];
 let watched = [];
@@ -17,10 +18,11 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 		database: "money",
 		connectionLimit: 5
 	});
-
 	pool.query("SELECT 1").then(() => {
 		console.log("Connected to MySQL database");
 		passthrough.db = pool;
+		passthrough.router = router;
+
 
 		for (let dir of commandDirs) {
 			fs.readdir(dir, (err, files) => {
@@ -30,26 +32,22 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 				});
 			});
 		}
-
+	
 		function loadFile(filename) {
 			if (!watched.includes(filename)) {
 				watched.push(filename);
-				fs.watchFile(filename, {interval: 2018}, () => {
-					loadFile(filename);
-				});
+				fs.watchFile(filename, { interval: 2018 }, () => { loadFile(filename); });
 			}
-
 			try {
-				console.log(`Loading ${filename}`);
-				passthrough.reloadEvent.emit(filename);
+				router.emit(filename);
 				delete require.cache[require.resolve(filename)];
 				let result = require(filename);
-				setImmediate(() => Object.assign(passthrough.commands, result(passthrough)));
-			} catch (e) {
-				console.log("Failed to load module "+filename+"\n"+e.stack);
-			}
+				if (typeof(result) == "function") result(passthrough);
+				else result;
+				console.log(`Loaded ${filename}`);
+			} catch (e) { console.log(`Failed to load ${filename} with error:\n${e.stack}`); }
 		}
-
+	
 		let port = process.env.PORT || 8080;
 		let server = http.createServer((req, res) => {
 			if (utils.server) utils.server(req, res);
@@ -59,15 +57,15 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 			}
 		});
 		server.listen(port);
-
+	
 		let wss = new WebSocket.Server({server});
 		wss.on("connection", ws => {
 			if (utils.ws) utils.ws(ws);
 		});
 
-		resolve();
+		resolve()
 	}).catch(err => {
 		console.log("Failed to connect to database\n", err);
-		reject(err);
+		reject();
 	});
 });
