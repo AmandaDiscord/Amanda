@@ -1,11 +1,11 @@
 const WebSocket = require("ws");
 
 module.exports = (passthrough) => {
-	const {client, utils, extra, router} = passthrough;
+	const {client, utils, extra, reloadEvent} = passthrough;
 
 	function addTemporaryListener(eventEmitter, event, callback) {
 		eventEmitter.on(event, callback);
-		router.once(__filename, () => eventEmitter.removeListener(event, callback));
+		reloadEvent.once(__filename, () => eventEmitter.removeListener(event, callback));
 	}
 
 	utils.ws = function(ws) {
@@ -82,7 +82,7 @@ module.exports = (passthrough) => {
 						token = data.token;
 						userID = userRow.userID;
 						wssend({event: "loggedin", userID: userRow.userID});
-						router.emit("music", "getQueues");
+						reloadEvent.emit("music", "getQueues");
 					});
 					break;
 				}
@@ -94,7 +94,7 @@ module.exports = (passthrough) => {
 
 		ws.on("error", console.log); //TODO
 
-		addTemporaryListener(router, "musicOut", musicOut);
+		addTemporaryListener(reloadEvent, "musicOut", musicOut);
 		function musicOut(event) {
 			if (event == "queues") {
 				let queue = arguments[1].get(serverID);
@@ -110,7 +110,7 @@ module.exports = (passthrough) => {
 		function disconnect() {
 			if (![WebSocket.CLOSING, WebSocket.CLOSED].includes(ws.readyState)) ws.close();
 			ws.removeAllListeners("message");
-			router.removeListener("musicOut", musicOut);
+			reloadEvent.removeListener("musicOut", musicOut);
 		}
 	}
 

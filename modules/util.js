@@ -1,11 +1,10 @@
 const util = require("util");
 let reactionMenus = {};
-let router = require("../router.js");
 
 module.exports = (passthrough) => {
-	let { Discord, client, db, utils } = passthrough;
+	let { Discord, client, db, utils, reloadEvent } = passthrough;
 	client.on("messageReactionAdd", reactionEvent);
-	router.once(__filename, () => {
+	reloadEvent.once(__filename, () => {
 		client.removeListener("messageReactionAdd", reactionEvent);
 	});
 
@@ -237,7 +236,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status]
+		return presences[this.presence.status];
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -246,7 +245,7 @@ module.exports = (passthrough) => {
 			dnd: "<:dnd:453823507864748044>",
 			offline: "<:invisible:453827513995755520>"
 		};
-		return presences[this.presence.status]
+		return presences[this.presence.status];
 	});
 
 
@@ -256,13 +255,13 @@ module.exports = (passthrough) => {
 	 * @returns {String} The prefix that matches the presence type
 	 */
 	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
-		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		if (this.presence.game == null) return null;
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		return prefixes[this.presence.game.type];
 	});
 	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
-		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		if (this.presence.game == null) return null;
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		return prefixes[this.presence.game.type];
 	});
 

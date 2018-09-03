@@ -1,7 +1,7 @@
 {
   "name": "amanda",
-  "version": "4.2.2",
-  "description": "A cutie-pie chat bot that only wants some love",
+  "version": "1.0.0",
+  "description": "A cutie-pie social bot to bring your members closer",
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
@@ -13,7 +13,6 @@
     "npm": "5.6.0"
   },
   "dependencies": {
-    "bufferutil": "^3.0.5",
     "canvas-prebuilt": "^1.6.5-prerelease.1",
     "dblapi.js": "^2.2.0",
     "discord.js": "^11.4.2",
@@ -24,13 +23,11 @@
     "mime": "^2.3.1",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",
-    "node-opus": "^0.2.9",
-    "opusscript": "^0.0.6",
+    "node-opus": "^0.3.0",
     "prism-media": "0.0.3",
-    "request": "^2.87.0",
+    "request": "^2.88.0",
     "request-promise": "^4.2.2",
-    "require-all": "^3.0.0",
     "simple-youtube-api": "^5.0.2",
-    "ytdl-core": "^0.20.4"
+    "ytdl-core": "^0.25.0"
   }
 }

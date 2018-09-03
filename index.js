@@ -1,5 +1,7 @@
 const Discord = require("discord.js");
-const client = new Discord.Client();
+const client = new Discord.Client({ disableEveryone: true });
 const config = process.env.is_heroku ? JSON.parse(process.env.config) : require("./config.json", "utf8");
 const utils = {};
-require("./loader.js")({ Discord, client, config, utils}).then(() => client.login(config.bot_token)).catch(error => console.error(error));
+const commands = {};
+let reloadEvent = new (require("events").EventEmitter)();
+require("./loader.js")({ Discord, client, config, utils, commands, reloadEvent }).then(() => { client.login(config.bot_token); });
