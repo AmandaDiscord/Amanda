@@ -71,7 +71,7 @@ module.exports = function(passthrough) {
 			usage: "",
 			description: "",
 			aliases: ["forcestatupdate"],
-			category: "dev",
+			category: "admin",
 			process: function(msg) {
 				sendStats(msg);
 			}
