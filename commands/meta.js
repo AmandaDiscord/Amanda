@@ -30,7 +30,7 @@ module.exports = function(passthrough) {
 
 	return {
 		"statistics": {
-			usage: "",
+			usage: "none",
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
@@ -54,7 +54,7 @@ module.exports = function(passthrough) {
 		},
 
 		"ping": {
-			usage: "",
+			usage: "none",
 			description: "Gets latency to Discord",
 			aliases: ["ping", "pong"],
 			category: "meta",
@@ -68,7 +68,7 @@ module.exports = function(passthrough) {
 		},
 
 		"forcestatupdate": {
-			usage: "",
+			usage: "none",
 			description: "",
 			aliases: ["forcestatupdate"],
 			category: "admin",
@@ -78,7 +78,7 @@ module.exports = function(passthrough) {
 		},
 
 		"invite": {
-			usage: "",
+			usage: "none",
 			description: "Sends the bot invite link to you via DMs",
 			aliases: ["invite", "inv"],
 			category: "meta",
@@ -94,7 +94,7 @@ module.exports = function(passthrough) {
 		},
 
 		"info": {
-			usage: "",
+			usage: "none",
 			description: "Displays information about Amanda",
 			aliases: ["info", "inf"],
 			category: "meta",
@@ -122,7 +122,7 @@ module.exports = function(passthrough) {
 		},
 
 		"commits": {
-			usage: "",
+			usage: "none",
 			description: "Gets the latest git commits to Amanda",
 			aliases: ["commits", "commit", "git"],
 			category: "meta",
@@ -141,7 +141,7 @@ module.exports = function(passthrough) {
 		},
 
 		"privacy": {
-			usage: "",
+			usage: "none",
 			description: "Details Amanda's privacy statement",
 			aliases: ["privacy"],
 			category: "meta",

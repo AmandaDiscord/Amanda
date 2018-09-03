@@ -27,6 +27,6 @@
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "simple-youtube-api": "^5.0.2",
-    "ytdl-core": "^0.25.0"
+    "ytdl-core": "^0.25.1"
   }
 }
