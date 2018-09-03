@@ -1,4 +1,4 @@
-const util = require("util");
+let util = require("util");
 let reactionMenus = {};
 
 module.exports = (passthrough) => {

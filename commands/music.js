@@ -1,13 +1,13 @@
-const ytdl = require("ytdl-core");
-const YouTube = require('simple-youtube-api');
-const queues = new Map();
-const timeout = new Set();
-const crypto = require("crypto");
-const rp = require("request-promise");
+let ytdl = require("ytdl-core");
+let YouTube = require('simple-youtube-api');
+let queues = new Map();
+let timeout = new Set();
+let crypto = require("crypto");
+let rp = require("request-promise");
 
 module.exports = function(passthrough) {
-	const { config, Discord, client, utils, reloadEvent } = passthrough;
-	const youtube = new YouTube(config.yt_api_key);
+	let { config, Discord, client, utils, reloadEvent } = passthrough;
+	let youtube = new YouTube(config.yt_api_key);
 
 	reloadEvent.on("music", musicCommandListener);
 	reloadEvent.once(__filename, () => {

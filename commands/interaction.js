@@ -236,26 +236,6 @@ module.exports = function(passthrough) {
 			}
 		},
 
-		"stab": {
-			usage: "<user>",
-			description: "Stabs someone",
-			aliases: ["stab"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to stab someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna stab`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to stab`);
-				if (member.user.id == msg.author.id) return msg.channel.send("Oh...");
-				if (member.user.id == client.user.id) return msg.channel.send(`<:rip:401656884525793291>`);
-				const embed = new Discord.RichEmbed()
-					.setDescription(`${msg.author.username} stabbed <@${member.user.id}>`)
-					.setColor("36393E")
-				msg.channel.send({embed});
-			}
-		},
-
 		"nom": {
 			usage: "<user>",
 			description: "noms someone",
