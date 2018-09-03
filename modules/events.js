@@ -51,7 +51,7 @@ module.exports = function(passthrough) {
 	}
 
 	function manageEdit(oldMessage, newMessage) {
-		if (newMessage.editedTimestamp && oldMessage.editedTimestamp != newMessage.editedTimestamp) manageMessage(newMessage);
+		manageMessage(newMessage);
 	}
 
 	function manageReady() {

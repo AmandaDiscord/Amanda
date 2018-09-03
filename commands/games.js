@@ -15,7 +15,7 @@ function newGame() {
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
 
-	function doQuestion(msg, authorName) {
+	async function doQuestion(msg, authorName) {
 		let id = msg.channel.id;
 		if (!authorName) authorName = msg.author.username;
 		if (games[id]) return msg.channel.send(`${authorName}, there's a game already in progress for this channel`);
@@ -51,56 +51,66 @@ module.exports = function(passthrough) {
 			let color = 3447003;
 			let reward = 0;
 			let difficulty = undefined;
-				switch(data.results[0].difficulty) {
-					case "easy":
-						color = 4249664;
-						reward = 100;
-						difficulty = "easy";
-						break;
-					case "medium":
-						color = 12632064;
-						reward = 250;
-						difficulty = "medium";
-						break;
-					case "hard":
-						color = 14164000;
-						reward = 500;
-						difficulty = "hard";
-						break;
+			switch(data.results[0].difficulty) {
+				case "easy":
+					color = 4249664;
+					reward = 100;
+					difficulty = "easy";
+				break;
+				case "medium":
+					color = 12632064;
+					reward = 250;
+					difficulty = "medium";
+				break;
+				case "hard":
+					color = 14164000;
+					reward = 500;
+					difficulty = "hard";
+				break;
+			}
+			let str = `A: *${a1}*\nB: *${a2}*`;
+			if (a3 && a4) str += `\nC: *${a3}*\nD: *${a4}*`;
+			let guessembed = new Discord.RichEmbed()
+				.setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\n${str}`))
+				.setColor(color)
+				.setFooter("You have 20 seconds and can only answer once")
+			msg.channel.send(guessembed);
+			let notallowed = [];
+			let won = false;
+			let collector = msg.channel.createMessageCollector((m => !m.author.bot), { time: 20000 });
+			collector.next.then(async msg => {
+				if (notallowed.includes(msg.author.id)) return;
+				let req = false;
+				if (msg.content.toLowerCase() == game.correctID) req = true;
+				else if (!letters.includes(msg.content.toLowerCase())) return;
+				else return notallowed.push(msg.author.id);
+				if (!req) return;
+				won = true;
+				let row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				if (!row) {
+					await utils.sql.all(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [msg.author.id, 5000]);
+					row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
+				}
+				await utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, msg.author.id]);
+				msg.author.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${msg.author.tag}**, please enable DMs so I can tell you your earnings`));
+				let resultembed = new Discord.RichEmbed()
 					.setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${msg.author.tag} won the game`))
 					.setColor(color)
-				}
-				let str = `A: *${a1}*\nB: *${a2}*`;
-				let guessembed = new Discord.RichEmbed()
-					.setDescription(entities.decodeHTML(`**${data.results[0].category}** (${difficulty})\n${data.results[0].question}\n${str}`))
-					.setColor(color)
-				msg.channel.send(guessembed).then(msg => {
-				let clocks = ["🕖", "🕗", "🕘", "🕙", "🕛"];
-				clocks.forEach((c,i) => {
-					setTimeout(() => {
-						let correctUsersStr = "";
-						msg.react(c);
-						if (i == clocks.length-1) {
-							if (game == undefined || game.running == false) return;
-							correctUsersStr = `**Correct Answers:**\n`;
-							let correct = Object.keys(game.answers).filter(k => game.correctID == game.answers[k]);
-							if (correct.length == 0) {
-								correctUsersStr = "Nobody got the answer right.";
-							} else {
-								if (correct.length > 6) {
-									correct.forEach(async function(item, index, array) {
-										correctUsersStr += `${client.users.get(item) ? client.users.get(item).username : item}, `;
-										let row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, item);
-										if (!row) {
-											await utils.sql.all(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [item, 5000]);
-											row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, item);
-										}
-										await utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, item]);
-										let user = await client.users.get(item)
 					.setFooter(`Click the reaction for another round.`)
-				let nmsg = await msg.channel.send(resultembed)
+				let nmsg = await msg.channel.send(resultembed);
 				nmsg.reactionMenu([{ emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => { doQuestion(msg, user.username); }}]);
 				return delete games[id];
+			}).catch(() => { return; });
+			collector.once("end", () => {
+				setTimeout(async () => {
+					if (won) return;
+					let resultembed = new Discord.RichEmbed()
+						.setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\nNo one guessed correctly`))
+						.setColor(color)
+						.setFooter(`Click the reaction for another round.`)
+					let nmsg = await msg.channel.send(resultembed);
+					nmsg.reactionMenu([{ emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => { doQuestion(msg, user.username); }}]);
+					return delete games[id];
 				}, 500);
 			});
 		});
