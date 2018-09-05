@@ -468,6 +468,54 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					callresume(msg, queue);
 					return msg.react("👌");
+				} else if (args[0].toLowerCase() == "stash") {
+					let stashes = await utils.sql.all("SELECT * FROM Stashes WHERE author = ?", msg.author.id);
+					stashes.forEach((s, i) => (s.index = i+1));
+					if (!args[1]) args[1] = "";
+					if (args[1].toLowerCase() == "play" || args[1].toLowerCase() == "pop") {
+						// Play
+						if (!voiceChannel) return msg.channel.send("You are not in a voice channel");
+						if (!args[2] || !stashes[args[2]-1]) return msg.channel.send("Please give me the number of the stash you want to play");
+						bulkPlaySongs(msg, voiceChannel, stashes[args[2]-1].songs.split("|"));
+						if (args[1].toLowerCase() == "pop") {
+							await utils.sql.all("DELETE FROM Stashes WHERE stashID = ?", stashes[args[2]-1].stashID);
+						}
+					} else if (args[1].toLowerCase() == "save") {
+						// Save
+						if (!queue) return msg.channel.send("There is nothing playing.");
+						let stashmsg = await msg.channel.send("Stashing queue, please wait...");
+						utils.sql.all(
+							"INSERT INTO Stashes VALUES (NULL, ?, ?, ?, ?)",
+							[msg.author.id, queue.songs.map(s => s.video.video_id).join("|"), queue.songs.reduce((p, c) => (p + parseInt(c.video.length_seconds)), 0), Date.now()]
+						).then(() => {
+							stashmsg.edit("Queue stashed successfully! Hit ⏹ to stop playing.");
+							stashmsg.reactionMenu([{emoji: "⏹", ignore: "total", actionType: "js", actionData: () => {
+								if (!queue) return;
+								queue.songs = [];
+								queue.connection.dispatcher.end();
+								reloadEvent.emit("musicOut", "queues", queues);
+							}}]);
+						}).catch(async error => {
+							stashmsg.edit(await utils.stringify(error));
+						});
+					} else {
+						// Display
+						if (stashes.length) {
+							let embed = new Discord.RichEmbed()
+							.setAuthor(msg.author.username+"'s queue stash", msg.author.smallAvatarURL)
+							.setDescription(stashes.map(s => {
+								let createdString = Math.floor((Date.now()-s.created)/1000/60/60/24);
+								if (createdString == 0) createdString = "today";
+								else if (createdString == 1) createdString = "yesterday";
+								else createdString += " days ago";
+								return `${s.index}. created ${createdString}, ${s.songs.split("|").length} songs, total length ${prettySeconds(s.length)}`;
+							}).join("\n"))
+							.setFooter(`Use "&music stash <play|pop> <number>" to send a stash to the queue.`);
+							msg.channel.send(embed);
+						} else {
+							msg.channel.send("No stashed queues. Use `&music stash save` to stop playing a queue and send it to the stash.");
+						}
+					}
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
