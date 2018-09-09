@@ -43,23 +43,23 @@ function toRange(data, req) {
 }
 
 async function resolveTemplates(page) {
-    let promises = [];
-    let template;
-    let regex = /<!-- TEMPLATE (\S+?) -->/g;
-    while (template = regex.exec(page)) {
-        let templateName = template[1];
-        promises.push(new Promise(resolve => {
-            fs.readFile(path.join(__dirname, "web/templates", templateName+".html"), {encoding: "utf8"}, (err, content) => {
-                if (err) resolve(undefined);
-                else resolve({template: templateName, content: content});
-            });
-        }));
-    }
-    let results = await Promise.all(promises);
-    results.filter(r => r).forEach(result => {
-        page = page.replace("<!-- TEMPLATE "+result.template+" -->", result.content);
-    });
-    return page;
+	let promises = [];
+	let template;
+	let regex = /<!-- TEMPLATE (\S+?) -->/g;
+	while (template = regex.exec(page)) {
+		let templateName = template[1];
+		promises.push(new Promise(resolve => {
+			fs.readFile(path.join(__dirname, "web/templates", templateName+".html"), {encoding: "utf8"}, (err, content) => {
+				if (err) resolve(undefined);
+				else resolve({template: templateName, content: content});
+			});
+		}));
+	}
+	let results = await Promise.all(promises);
+	results.filter(r => r).forEach(result => {
+		page = page.replace("<!-- TEMPLATE "+result.template+" -->", result.content);
+	});
+	return page;
 }
 
 module.exports = function(passthrough) {
@@ -77,6 +77,7 @@ module.exports = function(passthrough) {
 	console.log(`Loaded ${webHandlers.length} web API modules`);
 
 	utils.server = function(req, res) {
+		req.gmethod = req.method == "HEAD" ? "GET" : req.method;
 		let headers = {};
 		if (cacheControl.includes(req.url.split(".")[1])) headers["Cache-Control"] = "max-age=604800, public";
 		//console.log(">>> "+req.url+" "+req["user-agent"]);
@@ -94,7 +95,7 @@ module.exports = function(passthrough) {
 		let foundRoute = routeHandlers.find(h => {
 			let rr = new RegExp("^"+h.route+"$");
 			let match = reqPath.match(rr);
-			if (match && h.methods.includes(req.method)) {
+			if (match && h.methods.includes(req.gmethod)) {
 				new Promise(resolve => {
 					let fill = match.slice(1);
 					if (req.method == "POST" || req.method == "PATCH") {
@@ -142,9 +143,13 @@ module.exports = function(passthrough) {
 							headers["Content-Length"] = Buffer.byteLength(page);
 							cf.log("Using pageHandler "+h.web+" ("+h.local+") to respond to "+reqPath, "spam");
 							res.writeHead(200, Object.assign({"Content-Type": mimeType(h.local)}, headers, globalHeaders));
-							res.write(page, () => {
+							if (req.method == "HEAD") {
 								res.end();
-							});
+							} else {
+								res.write(page, () => {
+									res.end();
+								});
+							}
 						});
 					});
 					return true;
