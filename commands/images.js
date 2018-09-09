@@ -1,8 +1,8 @@
 let request = require("request");
 
 module.exports = function(passthrough) {
-	let { Discord, client } = passthrough;
-	
+	let { Discord, config, client } = passthrough;
+	let key = config.chewey_api_key;
 	return {
 		"cat": {
 			usage: "none",
@@ -11,7 +11,7 @@ module.exports = function(passthrough) {
 			category: "images",
 			process: function(msg) {
 				msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => {
-					request("https://api.chewey-bot.ga/cat", function(err, res, body) {
+					request("https://api.chewey-bot.ga/cat?auth="+key, function(err, res, body) {
 						if (err) return nmsg.edit(`Error... API returned nothing`);
 						let data;
 						try {
@@ -34,7 +34,7 @@ module.exports = function(passthrough) {
 			category: "images",
 			process: function(msg) {
 				msg.channel.send("<a:CatLoading:426263491385622539>").then(nmsg => {
-					request("https://api.chewey-bot.ga/dog", function(err, res, body) {
+					request("https://api.chewey-bot.ga/dog?auth="+key, function(err, res, body) {
 						if (err) return nmsg.edit("Error. The API returned nothing...");
 						let data;
 						try {
@@ -57,7 +57,7 @@ module.exports = function(passthrough) {
 			category: "images",
 			process: function(msg) {
 				msg.channel.send("<a:SpaceLoading:429061691633041419>").then(nmsg => {
-					request("https://api.chewey-bot.ga/space", function(err, res, body) {
+					request("https://api.chewey-bot.ga/space?auth="+key, function(err, res, body) {
 						if (err) return nmsg.edit("Error... API returned nothing");
 						let data;
 						try {
@@ -79,7 +79,7 @@ module.exports = function(passthrough) {
 			aliases: ["snek", "snake"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.chewey-bot.ga/snake", function(err, res, body) {
+				request("https://api.chewey-bot.ga/snake?auth="+key, function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					let data;
 					try {
@@ -102,7 +102,7 @@ module.exports = function(passthrough) {
 			aliases: ["birb", "bird"],
 			category: "images",
 			process: function(msg) {
-				request("https://api.chewey-bot.ga/birb", function(err, res, body) {
+				request("https://api.chewey-bot.ga/birb?auth="+key, function(err, res, body) {
 					if (err) return msg.channel.send(`There was an error:\n${err}`);
 					let data;
 					try {
