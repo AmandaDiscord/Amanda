@@ -52,7 +52,12 @@ a.navitem.active {
 	text-align: center;
 	text-decoration: none;
 	font-size: 32px;
-	margin: 80px 0px;
+	margin: 40px 0px;
+}
+
+.landing img[alt=icon] {
+	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
+	-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
 }
 
 .pinkbutton {
