@@ -156,17 +156,17 @@ module.exports = function(passthrough) {
 			}
 		},
 
-		"commands": {
-			usage: "<category>",
-			description: "Shows the command list from a specific category of commands",
-			aliases: ["commands", "cmds"],
+		"help": {
+			usage: "<command>",
+			description: "Your average help command",
+			aliases: ["help", "h", "commands", "cmds"],
 			category: "meta",
-			process: async function(msg, suffix) {
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you must provide a command category as an argument`);
-				let cat = Object.values(commands).filter(c => c.category == suffix.toLowerCase());
+			process: async function (msg, suffix) {
 				let embed;
-				if (suffix.toLowerCase() == "music") {
-					embed = new Discord.RichEmbed()
+				if (suffix) {
+					suffix = suffix.toLowerCase();
+					if (suffix == "music") {
+						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help [music, m]")
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
@@ -182,14 +182,9 @@ module.exports = function(passthrough) {
 						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
 						.setColor('36393E')
-					try {
-						await msg.author.send({embed});
-						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-						return;
-					} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
-				}
-				if (suffix.toLowerCase() == "playlist") {
-					embed = new Discord.RichEmbed()
+						send();
+					} else if (suffix.includes("playlist")) {
+						embed = new Discord.RichEmbed()
 						.setAuthor(`&music playlist: command help`)
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. "+
 							"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n"+
@@ -215,53 +210,66 @@ module.exports = function(passthrough) {
 						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.setColor('36393E')
-					try {
-						await msg.author.send({embed});
-						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-						return;
-					} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
-				}
-				if (!cat || cat.toString().length < 1 || suffix.toLowerCase() == "admin") {
-					embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, It looks like there isn't anything here but the almighty hipnotoad`).setColor('36393E')
-					return msg.channel.send({embed});
-				}
-
-				let str = cat.map(c => `${c.aliases[0]}    [${c.aliases.join(", ")}]`).sort().join("\n");
-				embed = new Discord.RichEmbed().setAuthor(`${suffix.toLowerCase()} command list`).setTitle("command    [aliases]").setDescription(str).setColor("36393E")
-				try {
-					await msg.author.send({embed});
-					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-					return;
-				} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
-			}
-		},
-
-		"help": {
-			usage: "<command>",
-			description: "Your average help command",
-			aliases: ["help", "h"],
-			category: "meta",
-			process: async function (msg, suffix) {
-				let embed;
-				if (suffix) {
-					let args = suffix.split(" ");
-					let command = Object.values(commands).find(c => c.aliases.includes(args[0]));
-					if (command) {
-						embed = new Discord.RichEmbed().addField(`Help for ${command.aliases[0]}`, `Arguments: ${command.usage}\nDescription: ${command.description}\nAliases: [${command.aliases.join(", ")}]\nCategory: ${command.category}`).setColor('36393E');
-						return msg.channel.send({embed});
+						send();
 					} else {
-						embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
-						return msg.channel.send({embed});
+						let command = Object.values(commands).find(c => c.aliases.includes(suffix));
+						if (command) {
+							embed = new Discord.RichEmbed()
+							.addField(`Help for ${command.aliases[0]}`,
+								`Arguments: ${command.usage}\n`+
+								`Description: ${command.description}\n`+
+								"Aliases: "+command.aliases.map(a => "`"+a+"`").join(", ")+"\n"+
+								`Category: ${command.category}`)
+							.setColor('36393E');
+							send();
+						} else {
+							let categoryCommands = Object.values(commands).filter(c => c.category == suffix);
+							let maxLength = categoryCommands.map(c => c.aliases[0].length).sort((a, b) => (b - a))[0];
+							if (categoryCommands.length) {
+								embed = new Discord.RichEmbed()
+								.setTitle("Command category: "+suffix)
+								.setDescription(
+									categoryCommands.map(c =>
+										"`"+c.aliases[0]+" ​".repeat(maxLength-c.aliases[0].length)+"` "+c.description // space + zwsp
+									).join("\n")+
+									"\n\nType `&help <command>` to see more information about a command.\nClick the reaction for a mobile-compatible view.")
+								.setColor("36393E")
+								send().then(dm => {
+									let mobileEmbed = new Discord.RichEmbed()
+									.setTitle("Command category: "+suffix)
+									.setDescription(categoryCommands.map(c => `**${c.aliases[0]}**\n${c.description}`).join("\n\n"))
+									.setColor("36393E")
+									dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
+								});
+							} else {
+								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
+								send();
+							}
+						}
 					}
 				} else {
 					let all = Object.values(commands).map(c => c.category);
-					let filter = (value, index, self) => { return self.indexOf(value) == index; };
+					let filter = (value, index, self) => { return self.indexOf(value) == index && value != "admin"; };
 					let cats = all.filter(filter).sort();
-					embed = new Discord.RichEmbed().setAuthor("Command Categories").setDescription(`❯ ${cats.join("\n❯ ")}\n\n𝓲 - typing \`&cmds <category>\` will show all cmds in that category`).setFooter("Amanda help panel", client.user.smallAvatarURL).setColor('36393E');
-					try {
-						await msg.author.send({embed});
-						if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-					} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
+					embed = new Discord.RichEmbed()
+					.setAuthor("Command Categories")
+					.setDescription(
+						`❯ ${cats.join("\n❯ ")}\n\n`+
+						"Type `&help <category>` to see all commands in that category.\n"+
+						"Type `&help <command>` to see more information about a command.")
+					.setColor('36393E');
+					send();
+				}
+				function send() {
+					return new Promise((resolve, reject) => {
+						msg.author.send({embed}).then(dm => {
+							if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+							resolve(dm);
+						}).catch(() => {
+							msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+							reject();
+						});
+					});
 				}
 			}
 		}
