@@ -355,7 +355,7 @@ module.exports = function(passthrough) {
 		},
 		"music": {
 			usage: "none",
-			description: "See `&commands music` for help",
+			description: "You're not supposed to see this",
 			aliases: ["music", "m"],
 			category: "music",
 			process: async function(msg, suffix) {
