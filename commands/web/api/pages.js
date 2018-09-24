@@ -25,6 +25,21 @@ module.exports = (passthrough) => {
 					content: page
 				}
 			}
+		},
+		{
+			route: "/images/back-tg.svg", methods: ["GET"], code: async ({params}) => {
+				let file = await util.promisify(fs.readFile)(pj(__dirname, "../html/images/back.svg"), {encoding: null});
+				extra.trackImageUsage(params.d);
+				let headers = {};
+				if (params.c == 1) headers["Cache-Control"] = "public, max-age=7200";
+				else headers["Cache-Control"] = "";
+				return {
+					statusCode: 200,
+					contentType: "image/svg+xml",
+					content: file,
+					headers: headers
+				}
+			}
 		}
 	]
 }

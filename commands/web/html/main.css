@@ -12,7 +12,7 @@ a, a:visited {
 }
 
 body {
-	background: url("/images/back.svg") no-repeat center center fixed;
+	background: url("/images/back-tg.svg?d=home&c=1") no-repeat center center fixed;
 	background-size: cover;
 	margin: 0px;
 }
