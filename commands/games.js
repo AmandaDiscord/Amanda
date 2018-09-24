@@ -13,7 +13,7 @@ function newGame() {
 }
 
 module.exports = function(passthrough) {
-	let { Discord, client, utils, reloadEvent } = passthrough;
+	let { Discord, client, utils } = passthrough;
 
 	async function doQuestion(msg, authorName) {
 		let id = msg.channel.id;
