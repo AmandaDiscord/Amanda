@@ -19,6 +19,7 @@
     "entities": "^1.1.1",
     "events": "^3.0.0",
     "ffmpeg-binaries": "^4.0.0",
+    "heapdump": "^0.3.9",
     "mime": "^2.3.1",
     "mysql": "^2.16.0",
     "mysql2": "^1.6.1",

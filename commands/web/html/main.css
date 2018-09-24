@@ -12,7 +12,7 @@ a, a:visited {
 }
 
 body {
-	background: url("/images/back.svg") no-repeat center center fixed;
+	background: url("/images/back-tg.svg?d=home&c=1") no-repeat center center fixed;
 	background-size: cover;
 	margin: 0px;
 }
@@ -52,7 +52,12 @@ a.navitem.active {
 	text-align: center;
 	text-decoration: none;
 	font-size: 32px;
-	margin: 80px 0px;
+	margin: 40px 0px;
+}
+
+.landing img[alt=icon] {
+	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
+	-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
 }
 
 .pinkbutton {
