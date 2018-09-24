@@ -156,6 +156,82 @@ module.exports = function(passthrough) {
 			}
 		},
 
+		"user": {
+			usage: "<user>",
+			description: "Provides information about a user",
+			aliases: ["user"],
+			category: "meta",
+			process: async function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(`Couldn't find that user`);
+				let embed = new Discord.RichEmbed().setColor("36393E");
+				embed.addField("User ID:", user.id);
+				let userCreatedTime = user.createdAt.toUTCString();
+				embed.addField("Account created at:", userCreatedTime);
+				if (member) {
+					let guildJoinedTime = member.joinedAt.toUTCString();
+					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
+				}
+				let status = user.presenceEmoji;
+				let game = "No activity set";
+				if (user.presence.game && user.presence.game.streaming) {
+					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
+					status = `<:streaming:454228675227942922>`;
+				} else if (user.presence.game) {
+					game = user.presencePrefix+" **"+user.presence.game.name+"**";
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
+					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
+					else if (user.presence.game.state) game += `\n${user.presence.game.state}`;
+				}
+				if (user.bot) status = "<:bot:412413027565174787>";
+				embed.setThumbnail(user.displayAvatarURL);
+				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
+				embed.setTitle(`${user.tag} ${status}`);
+				embed.setDescription(game);
+				msg.channel.send({embed});
+			}
+		},
+
+		"avatar": {
+			usage: "<user>",
+			description: "Gets a user's avatar",
+			aliases: ["avatar", "pfp"],
+			category: "meta",
+			process: function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(`Couldn't find that user`);
+				let embed = new Discord.RichEmbed()
+					.setImage(user.displayAvatarURL)
+					.setColor("36393E");
+				msg.channel.send({embed});
+			}
+		},
+
+		"wumbo": {
+			usage: "<emoji>",
+			description: "Makes an emoji bigger",
+			aliases: ["wumbo"],
+			category: "meta",
+			process: function(msg, suffix) {
+				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+				let emoji = client.parseEmoji(suffix);
+				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				let embed = new Discord.RichEmbed()
+					.setImage(emoji.url)
+					.setColor("36393E")
+				msg.channel.send({embed});
+			}
+		},
+
 		"help": {
 			usage: "<command>",
 			description: "Your average help command",

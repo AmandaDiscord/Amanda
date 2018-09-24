@@ -312,7 +312,7 @@ module.exports = function(passthrough) {
 
 	return {
 		"musictoken": {
-			usage: "",
+			usage: "none",
 			description: "Assign a login token for use on Amanda's web dashboard",
 			aliases: ["token", "musictoken", "webtoken"],
 			category: "music",
@@ -332,7 +332,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"music": {
-			usage: "",
+			usage: "none",
 			description: "See `&commands music` for help",
 			aliases: ["music", "m"],
 			category: "music",
