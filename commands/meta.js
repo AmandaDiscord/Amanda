@@ -241,7 +241,7 @@ module.exports = function(passthrough) {
 				let embed;
 				if (suffix) {
 					suffix = suffix.toLowerCase();
-					if (suffix == "music") {
+					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help [music, m]")
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
