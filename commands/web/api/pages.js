@@ -40,6 +40,18 @@ module.exports = (passthrough) => {
 					headers: headers
 				}
 			}
+		},
+		{
+			route: "/apple-touch-icon.png", methods: ["GET"], code: async () => {
+				return {
+					statusCode: 301,
+					contentType: "text/html",
+					content: "",
+					headers: {
+						"Location": "/images/apple-touch-icon.png"
+					}
+				}
+			}
 		}
 	]
 }
