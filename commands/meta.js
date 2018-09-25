@@ -83,7 +83,7 @@ module.exports = function(passthrough) {
 			aliases: ["invite", "inv"],
 			category: "meta",
 			process: async function(msg) {
-				const embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=0&scope=bot").setColor("36393E")
+				const embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
