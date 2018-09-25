@@ -78,7 +78,7 @@ module.exports = function(passthrough) {
 					}
 					let award = Math.floor(parseInt(args[0]));
 					utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + award, member.user.id]);
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`**${msg.author.tag}** has awarded ${award} Discoins to **${member.user.tag}**`)
 						.setColor("F8E71C")
 					msg.channel.send({embed});

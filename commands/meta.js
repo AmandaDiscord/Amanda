@@ -37,7 +37,7 @@ module.exports = function(passthrough) {
 			process: async function(msg) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 				.addField(client.user.tag+" "+client.user.presenceEmoji,
 					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
@@ -62,7 +62,7 @@ module.exports = function(passthrough) {
 				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array[Math.floor(Math.random() * array.length)];
 				let nmsg = await msg.channel.send(message);
-				const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
 				nmsg.edit({embed});
 			}
 		},
@@ -83,7 +83,7 @@ module.exports = function(passthrough) {
 			aliases: ["invite", "inv"],
 			category: "meta",
 			process: async function(msg) {
-				const embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
+				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
@@ -103,7 +103,7 @@ module.exports = function(passthrough) {
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
 				]);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
@@ -146,7 +146,7 @@ module.exports = function(passthrough) {
 			aliases: ["privacy"],
 			category: "meta",
 			process: async function(msg, suffix) {
-				const embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);

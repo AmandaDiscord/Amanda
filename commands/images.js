@@ -87,7 +87,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
 						.setFooter("Powered by api.chewey-bot.ga")
@@ -110,7 +110,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`Error while requesting an image of a snek\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
 						.setFooter("Powered by api.chewey-bot.ga")

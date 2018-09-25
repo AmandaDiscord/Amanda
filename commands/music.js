@@ -160,14 +160,11 @@ module.exports = function(passthrough) {
 		}
 		reloadEvent.emit("musicOut", "queues", queues);
 		const stream = ytdl(song.url);
-		console.log("Waiting for response");
 		stream.once("progress", () => {
-			console.log("Progress");
 			const dispatcher = queue.connection.playStream(stream);
 			dispatcher.once("start", async () => {
 				queue.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queues);
-				console.log("Dispatcher start");
 				let dispatcherEndCode = new Function();
 				function updateProgress() {
 					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
@@ -185,9 +182,7 @@ module.exports = function(passthrough) {
 					let updateProgressInterval = setInterval(() => {
 						updateProgress();
 					}, 5000);
-					//console.log("setTimeout dispatcher event ready");
 					dispatcherEndCode = () => {
-						//console.log("setTimeout dispatcher end");
 						clearInterval(updateProgressInterval);
 						updateProgress();
 					};
@@ -422,7 +417,7 @@ module.exports = function(passthrough) {
 						let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
 						body = first+"\n…\n"+last;
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 					.setAuthor(`Queue for ${msg.guild.name}`)
 					.setDescription(body+totalLength)
 					.setColor("36393E")
@@ -448,7 +443,7 @@ module.exports = function(passthrough) {
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0 or less than or equal to 5`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
 					.setColor("36393E")
@@ -474,7 +469,7 @@ module.exports = function(passthrough) {
 							let toAdd = `${index+1}. **${songss.title}** (${prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
 							if (body.length + toAdd.length < 2000) body += toAdd;
 						});
-						const embed = new Discord.RichEmbed()
+						let embed = new Discord.RichEmbed()
 						.setAuthor(`Related videos`)
 						.setDescription(body)
 						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)

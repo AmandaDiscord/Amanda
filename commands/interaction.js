@@ -41,7 +41,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -72,7 +72,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} kissed <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -103,7 +103,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} cuddled <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -134,7 +134,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} poked <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -165,7 +165,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} slapped <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -196,7 +196,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} booped <@${member.user.id}>`)
 						.setImage(data.img)
 						.setColor("36393E")
@@ -226,7 +226,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} patted <@${member.user.id}>`)
 						.setImage(data.url)
 						.setColor("36393E")
@@ -257,7 +257,7 @@ module.exports = function(passthrough) {
 					} catch (error) {
 						return msg.channel.send(`There was an error:\n${error}`);
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 						.setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
 						.setImage(data.img)
 						.setColor("36393E")
@@ -329,7 +329,7 @@ module.exports = function(passthrough) {
 				let member = msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				let info = await getWaifuInfo(member.id);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setAuthor(member.user.tag, member.user.smallAvatarURL)
 					.addField(`Price:`, info.price)
 					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
@@ -383,7 +383,7 @@ module.exports = function(passthrough) {
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim} <a:Discoin:422523472128901140>`)
 					.setColor("36393E")
 				msg.channel.send({embed});
@@ -461,7 +461,7 @@ module.exports = function(passthrough) {
 					let userObject = await client.fetchUser(userID);
 					userObjectMap.set(userID, userObject);
 				}));
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setTitle("Waifu leaderboard")
 					.setDescription(
 						all.map((row, index) =>
