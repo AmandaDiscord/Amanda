@@ -258,7 +258,7 @@ module.exports = function(passthrough) {
 						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
 						.setColor('36393E')
-						send();
+						send("dm");
 					} else if (suffix.includes("playlist")) {
 						embed = new Discord.RichEmbed()
 						.setAuthor(`&music playlist: command help`)
@@ -286,7 +286,7 @@ module.exports = function(passthrough) {
 						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.setColor('36393E')
-						send();
+						send("dm");
 					} else {
 						let command = Object.values(commands).find(c => c.aliases.includes(suffix));
 						if (command) {
@@ -297,7 +297,7 @@ module.exports = function(passthrough) {
 								"Aliases: "+command.aliases.map(a => "`"+a+"`").join(", ")+"\n"+
 								`Category: ${command.category}`)
 							.setColor('36393E');
-							send();
+							send("channel");
 						} else {
 							let categoryCommands = Object.values(commands).filter(c => c.category == suffix);
 							let maxLength = categoryCommands.map(c => c.aliases[0].length).sort((a, b) => (b - a))[0];
@@ -310,7 +310,7 @@ module.exports = function(passthrough) {
 									).join("\n")+
 									"\n\nType `&help <command>` to see more information about a command.\nClick the reaction for a mobile-compatible view.")
 								.setColor("36393E")
-								send().then(dm => {
+								send("dm").then(dm => {
 									let mobileEmbed = new Discord.RichEmbed()
 									.setTitle("Command category: "+suffix)
 									.setDescription(categoryCommands.map(c => `**${c.aliases[0]}**\n${c.description}`).join("\n\n"))
@@ -319,7 +319,7 @@ module.exports = function(passthrough) {
 								});
 							} else {
 								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
-								send();
+								send("channel");
 							}
 						}
 					}
@@ -334,12 +334,13 @@ module.exports = function(passthrough) {
 						"Type `&help <category>` to see all commands in that category.\n"+
 						"Type `&help <command>` to see more information about a command.")
 					.setColor('36393E');
-					send();
+					send("dm");
 				}
-				function send() {
+				function send(where) {
 					return new Promise((resolve, reject) => {
-						msg.author.send({embed}).then(dm => {
-							if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+						let target = where == "dm" ? msg.author : msg.channel;
+						target.send({embed}).then(dm => {
+							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 							resolve(dm);
 						}).catch(() => {
 							msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
