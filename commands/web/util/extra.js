@@ -11,13 +11,15 @@ module.exports = function ({utils, client}) {
 			"378773803225841668": ["399308090832453642", "493680834403106817"],
 			"405208699313848330": ["483504430365278209", "493673296508878848"]
 		};
-		client.channels.get(ids[client.user.id][0]).fetchMessage(ids[client.user.id][1]).then(msg => {
-			trackedMessage.msg = msg;
-			msg.content.split("\n").forEach(line => {
-				let values = line.split(": ");
-				trackedMessage.breakdown[values[0]] = values[1];
+		if (ids[client.user.id]) {
+			client.channels.get(ids[client.user.id][0]).fetchMessage(ids[client.user.id][1]).then(msg => {
+				trackedMessage.msg = msg;
+				msg.content.split("\n").forEach(line => {
+					let values = line.split(": ");
+					trackedMessage.breakdown[values[0]] = values[1];
+				});
 			});
-		});
+		}
 	});
 	const extra = {
 		salt: function(length = 32) {
