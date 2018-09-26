@@ -37,7 +37,7 @@ module.exports = function(passthrough) {
 			process: async function(msg) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 				.addField(client.user.tag+" "+client.user.presenceEmoji,
 					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
@@ -62,7 +62,7 @@ module.exports = function(passthrough) {
 				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array[Math.floor(Math.random() * array.length)];
 				let nmsg = await msg.channel.send(message);
-				const embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
 				nmsg.edit({embed});
 			}
 		},
@@ -83,7 +83,7 @@ module.exports = function(passthrough) {
 			aliases: ["invite", "inv"],
 			category: "meta",
 			process: async function(msg) {
-				const embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have administrator permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("http://amanda.discord-bots.ga/").setColor("36393E")
+				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
@@ -103,7 +103,7 @@ module.exports = function(passthrough) {
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
 				]);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
@@ -146,13 +146,89 @@ module.exports = function(passthrough) {
 			aliases: ["privacy"],
 			category: "meta",
 			process: async function(msg, suffix) {
-				const embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 				} catch (reason) {
 					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
 				}
+			}
+		},
+
+		"user": {
+			usage: "<user>",
+			description: "Provides information about a user",
+			aliases: ["user"],
+			category: "meta",
+			process: async function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(`Couldn't find that user`);
+				let embed = new Discord.RichEmbed().setColor("36393E");
+				embed.addField("User ID:", user.id);
+				let userCreatedTime = user.createdAt.toUTCString();
+				embed.addField("Account created at:", userCreatedTime);
+				if (member) {
+					let guildJoinedTime = member.joinedAt.toUTCString();
+					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
+				}
+				let status = user.presenceEmoji;
+				let game = "No activity set";
+				if (user.presence.game && user.presence.game.streaming) {
+					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
+					status = `<:streaming:454228675227942922>`;
+				} else if (user.presence.game) {
+					game = user.presencePrefix+" **"+user.presence.game.name+"**";
+					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
+					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
+					else if (user.presence.game.state) game += `\n${user.presence.game.state}`;
+				}
+				if (user.bot) status = "<:bot:412413027565174787>";
+				embed.setThumbnail(user.displayAvatarURL);
+				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
+				embed.setTitle(`${user.tag} ${status}`);
+				embed.setDescription(game);
+				msg.channel.send({embed});
+			}
+		},
+
+		"avatar": {
+			usage: "<user>",
+			description: "Gets a user's avatar",
+			aliases: ["avatar", "pfp"],
+			category: "meta",
+			process: function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(`Couldn't find that user`);
+				let embed = new Discord.RichEmbed()
+					.setImage(user.displayAvatarURL)
+					.setColor("36393E");
+				msg.channel.send({embed});
+			}
+		},
+
+		"wumbo": {
+			usage: "<emoji>",
+			description: "Makes an emoji bigger",
+			aliases: ["wumbo"],
+			category: "meta",
+			process: function(msg, suffix) {
+				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+				let emoji = client.parseEmoji(suffix);
+				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				let embed = new Discord.RichEmbed()
+					.setImage(emoji.url)
+					.setColor("36393E")
+				msg.channel.send({embed});
 			}
 		},
 
@@ -165,7 +241,7 @@ module.exports = function(passthrough) {
 				let embed;
 				if (suffix) {
 					suffix = suffix.toLowerCase();
-					if (suffix == "music") {
+					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help [music, m]")
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)

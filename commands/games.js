@@ -26,7 +26,7 @@ module.exports = function(passthrough) {
 			try {
 				data = JSON.parse(body);
 			} catch (error) {
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setDescription(`There was an error parsing the data returned by the api\n${error}`)
 					.setColor(14164000)
 				msg.channel.send({embed});

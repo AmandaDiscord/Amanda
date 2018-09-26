@@ -80,10 +80,10 @@ module.exports = function(passthrough) {
 	}
 
 	const presences = [
-		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ["yourself", "PLAYING"], ["despacito 2", "PLAYING"],
-		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'],
-		['music', 'LISTENING'], ['Spootify', 'LISTENING'],
-		['with Shodan', 'STREAMING'], [`Netflix for ∞ hours`],
+		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ['dead', 'PLAYING'],
+		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'], ['cute cat videos', 'WATCHING'],
+		['music', 'LISTENING'], ['Spotify', 'LISTENING'],
+		['Netflix for ∞ hours', 'STREAMING'],
 	];
 	const update = () => {
 		const [name, type] = presences[Math.floor(Math.random() * presences.length)];

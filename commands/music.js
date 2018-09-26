@@ -57,6 +57,7 @@ module.exports = function(passthrough) {
 		}
 		if (!queue.connection || !queue.connection.dispatcher) return;
 		queue.songs = [];
+		queue.auto = false;
 		queue.connection.dispatcher.end();
 		reloadEvent.emit("musicOut", "queues", queues);
 	}
@@ -85,7 +86,7 @@ module.exports = function(passthrough) {
 		let song = queue.songs[0];
 		return new Discord.RichEmbed().setColor("36393E")
 		.setDescription(`Now playing: **${song.title}**`)
-		.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher));
+		.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher)+(queue && queue.auto ? "\n\n**Auto mode on.**" : ""));
 	}
 
 	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
@@ -104,6 +105,7 @@ module.exports = function(passthrough) {
 				volume: 5,
 				playing: true,
 				skippable: false,
+				auto: false,
 				nowPlayingMsg: null,
 				generateReactions: function() {
 					this.nowPlayingMsg.reactionMenu([
@@ -158,14 +160,11 @@ module.exports = function(passthrough) {
 		}
 		reloadEvent.emit("musicOut", "queues", queues);
 		const stream = ytdl(song.url);
-		//console.log("Waiting for response");
 		stream.once("progress", () => {
-			//console.log("Progress");
 			const dispatcher = queue.connection.playStream(stream);
 			dispatcher.once("start", async () => {
 				queue.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queues);
-				//console.log("Dispatcher start");
 				let dispatcherEndCode = new Function();
 				function updateProgress() {
 					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
@@ -183,9 +182,7 @@ module.exports = function(passthrough) {
 					let updateProgressInterval = setInterval(() => {
 						updateProgress();
 					}, 5000);
-					//console.log("setTimeout dispatcher event ready");
 					dispatcherEndCode = () => {
-						//console.log("setTimeout dispatcher end");
 						clearInterval(updateProgressInterval);
 						updateProgress();
 					};
@@ -197,8 +194,28 @@ module.exports = function(passthrough) {
 					clearTimeout(npStartTimeout);
 					dispatcherEndCode();
 					queue.skippable = false;
-					queue.songs.shift();
-					play(msg, guild, queue.songs[0]);
+					if (queue.auto && queue.songs.length == 1) {
+						let related = queue.songs[0].video.related_videos.filter(v => v.title)[0];
+						if (related) {
+							let videoID = related.id;
+							ytdl.getInfo(videoID).then(video => {
+								const song = {
+									title: Discord.Util.escapeMarkdown(video.title),
+									url: video.video_url,
+									video: video
+								};
+								queue.songs.push(song);
+								con();
+							}).catch(reason => {
+								manageYtdlGetInfoErrors(msg, reason, args[1]);
+								con();
+							});
+						}
+					} else con();
+					function con() {
+						queue.songs.shift();
+						play(msg, guild, queue.songs[0]);
+					}
 				});
 			});
 			dispatcher.setVolumeLogarithmic(queue.volume / 5);
@@ -312,7 +329,7 @@ module.exports = function(passthrough) {
 
 	return {
 		"musictoken": {
-			usage: "",
+			usage: "none",
 			description: "Assign a login token for use on Amanda's web dashboard",
 			aliases: ["token", "musictoken", "webtoken"],
 			category: "music",
@@ -332,8 +349,8 @@ module.exports = function(passthrough) {
 			}
 		},
 		"music": {
-			usage: "",
-			description: "See `&commands music` for help",
+			usage: "none",
+			description: "You're not supposed to see this",
 			aliases: ["music", "m"],
 			category: "music",
 			process: async function(msg, suffix) {
@@ -400,7 +417,7 @@ module.exports = function(passthrough) {
 						let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
 						body = first+"\n…\n"+last;
 					}
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 					.setAuthor(`Queue for ${msg.guild.name}`)
 					.setDescription(body+totalLength)
 					.setColor("36393E")
@@ -409,6 +426,10 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					callskip(msg, queue);
 					return msg.react("👌");
+				} else if (args[0].toLowerCase() == "auto") {
+					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
+					queue.auto = !queue.auto;
+					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
 				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send('There is nothing playing.');
@@ -422,7 +443,7 @@ module.exports = function(passthrough) {
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0 or less than or equal to 5`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send('There is nothing playing.');
-					const embed = new Discord.RichEmbed()
+					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
 					.setColor("36393E")
@@ -448,7 +469,7 @@ module.exports = function(passthrough) {
 							let toAdd = `${index+1}. **${songss.title}** (${prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
 							if (body.length + toAdd.length < 2000) body += toAdd;
 						});
-						const embed = new Discord.RichEmbed()
+						let embed = new Discord.RichEmbed()
 						.setAuthor(`Related videos`)
 						.setDescription(body)
 						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)

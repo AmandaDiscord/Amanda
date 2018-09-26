@@ -162,7 +162,7 @@ module.exports = function(passthrough) {
 					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [member.user.id, 5000]);
 					target = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, member.user.id);
 				}
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setAuthor(`Coins for ${member.user.tag}`)
 					.setDescription(`${target.coins} Discoins <a:Discoin:422523472128901140>`)
 					.setColor("F8E71C")
@@ -184,7 +184,7 @@ module.exports = function(passthrough) {
 				}
 				if (mined.has(msg.author.id)) return msg.channel.send(`${msg.author.username}, you have already went mining within the past minute. Come back after it has been 1 minute.`);
 				let mine = Math.floor(Math.random() * (100 - 1) + 1);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.username} went mining and got ${mine} <a:Discoin:422523472128901140> :pick:**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
@@ -203,7 +203,7 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				let all = await utils.sql.all("SELECT * FROM money WHERE userID !=? ORDER BY coins DESC LIMIT 10", client.user.id);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboards")
 					.setDescription(all.map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
 					.setColor("F8E71C")
@@ -247,7 +247,7 @@ module.exports = function(passthrough) {
 				}
 				utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [author.coins - gift, msg.author.id]);
 				utils.sql.all(`UPDATE money SET coins =? WHERE userID=?`, [target.coins + gift, member.user.id]);
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.tag}** has given ${gift} Discoins to **${member.user.tag}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
