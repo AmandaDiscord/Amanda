@@ -1,5 +1,6 @@
 const bots = [
 	["405208699313848330", "&"],
+	["160105994217586689", ">"]
 ];
 
 module.exports = function(passthrough) {
