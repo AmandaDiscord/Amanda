@@ -188,20 +188,11 @@ module.exports = function(passthrough) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
-				request("http://api.shodanbot.com/interactions/boop", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} booped <@${member.user.id}>`)
-						.setImage(data.img)
-						.setColor("36393E")
-					msg.channel.send({embed});
-				})
+				let embed = new Discord.RichEmbed()
+					.setDescription(`${msg.author.username} booped <@${member.user.id}>`)
+					.setImage(`https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/boop/boop${Math.floor(Math.random() * (10 - 1) + 1)}.gif`)
+					.setColor("36393E")
+				msg.channel.send({embed});
 			}
 		},
 
@@ -249,20 +240,11 @@ module.exports = function(passthrough) {
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
 				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 				if (member.user.id == client.user.id) return msg.channel.send(`owie`);
-				request("http://api.shodanbot.com/interactions/nom", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
-						.setImage(data.img)
-						.setColor("36393E")
+				let embed = new Discord.RichEmbed()
+					.setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
+					.setImage(`https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/nom/nom${Math.floor(Math.random() * (10 - 1) + 1)}.gif`)
+					.setColor("36393E")
 					msg.channel.send({embed});
-				})
 			}
 		},
 
