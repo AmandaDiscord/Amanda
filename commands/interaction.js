@@ -273,6 +273,7 @@ module.exports = function(passthrough) {
 			category: "interaction",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
+				suffix = suffix.replace(/ +/g, " ");
 				let args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
 				let mem1 = msg.guild.findMember(msg, args[0]);
