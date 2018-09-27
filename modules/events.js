@@ -47,7 +47,21 @@ module.exports = function(passthrough) {
 				.setColor("B60000")
 				msg.channel.send({embed});
 			}
-		} else return;
+		} else {
+			if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
+				let username = msg.guild ? msg.guild.me.displayName : client.user.username;
+				let chat = msg.cleanContent.replace(new RegExp('@' + username + ',?'), '').trim();
+				msg.channel.sendTyping();
+				if (chat.toLowerCase().replace(/'s/gi, " is").includes(`what is your name`) || chat.toLowerCase().includes(`who are you`)) return setTimeout(() => { msg.channel.send(`I'm ${client.user.username}. It's very nice to meet you`); }, 3000);
+				if (chat.toLowerCase().includes(`how are you doing`)) return setTimeout(() => { msg.channel.send(`I'm doing pretty ok. How about you?`); }, 3000);
+				let data;
+				try {
+					let res = await (require("request-promise")(`https://some-random-api.ml/chatbot/?message=${chat}`));
+					data = JSON.parse(res);
+					msg.channel.send(data.response);
+				} catch (error) { msg.channel.send(error); };
+			} else return;
+		}
 	}
 
 	function manageEdit(oldMessage, newMessage) {
