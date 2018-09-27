@@ -121,7 +121,7 @@ module.exports = function(passthrough) {
 		"trivia": {
 			usage: "none",
 			description: "Play a game of trivia with other members and win Discoins",
-			aliases: ["trivia"],
+			aliases: ["trivia", "t"],
 			category: "games",
 			process: async function(msg) {
 				startGame(msg.channel);
