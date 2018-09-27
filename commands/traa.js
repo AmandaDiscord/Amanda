@@ -23,17 +23,14 @@ module.exports = function(passthrough) {
 	async function gifDetector(msg) {
 		for (let bot of bots) {
 			if (msg.author.id == bot[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
+				let existing = await utils.sql.all("SELECT * FROM GenderGifs INNER JOIN GenderGifCharacters ON GenderGifs.gifid = GenderGifCharacters.gifid WHERE url = ?", msg.embeds[0].image.url);
+				if (existing.length) return;
 				let callingMessage = [...msg.channel.messages.filter(m => m.content.startsWith(bot[1])).values()].slice(-1)[0];
 				let command;
 				if (callingMessage) {
 					command = callingMessage.content.match(/\w+/)[0];
 				}
-				let message = "";
-				let existing = await utils.sql.all("SELECT * FROM GenderGifs INNER JOIN GenderGifCharacters ON GenderGifs.gifid = GenderGifCharacters.gifid WHERE url = ?", msg.embeds[0].image.url);
-				if (existing.length) {
-					message = "\nThis GIF already exists as "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".";
-				}
-				client.users.get("176580265294954507").send("New "+command+" GIF from "+msg.author.username+":\n"+msg.embeds[0].image.url+message);
+				client.users.get("176580265294954507").send("New "+command+" GIF from "+msg.author.username+":\n"+msg.embeds[0].image.url);
 			}
 		}
 	}
@@ -52,20 +49,25 @@ module.exports = function(passthrough) {
 				let type = words[1];
 				let characters = words.slice(2);
 				let existing = await utils.sql.all("SELECT * FROM GenderGifs INNER JOIN GenderGifCharacters ON GenderGifs.gifid = GenderGifCharacters.gifid WHERE url = ?", url);
-				if (existing.length) {
-					let dmsg = await msg.channel.send("That GIF already exists with "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".");
-					dmsg.reactionMenu([{emoji: "🗑", ignore: "total", actionType: "js", actionData: async () => {
-						await utils.sql.all("DELETE FROM GenderGifs WHERE gifid = ?", existing[0].gifid);
-						msg.channel.send("Deleted.");
-					}}]);
-				} else {
+				new Promise(async resolve => {
+					if (existing.length) {
+						let dmsg = await msg.channel.send("That GIF already exists with "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".");
+						dmsg.reactionMenu([{emoji: "🗑", ignore: "total", actionType: "js", actionData: async () => {
+							await utils.sql.all("DELETE FROM GenderGifs WHERE gifid = ?", existing[0].gifid);
+							await msg.channel.send("Deleted. Replacing...");
+							resolve();
+						}}]);
+					} else if (type.length == 1) {
+						return msg.channel.send("Pretty sure you don't want to do that.");
+					} else resolve();
+				}).then(async () => {
 					let connection = await utils.getConnection();
 					await utils.sql.all("INSERT INTO GenderGifs VALUES (NULL, ?, ?)", [url, type], connection);
 					let gifid = (await utils.sql.get("SELECT last_insert_id() AS id", [], connection)).id;
 					connection.release();
 					await Promise.all(characters.map((c, i) => utils.sql.all("INSERT INTO GenderGifCharacters VALUES (NULL, ?, ?, ?)", [gifid, c, i])));
 					msg.channel.send("Done!");
-				}
+				});
 			}
 		}
 	}
