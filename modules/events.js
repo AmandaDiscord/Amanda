@@ -55,7 +55,7 @@ module.exports = function(passthrough) {
 				if (chat.toLowerCase().replace(/'s/gi, " is").includes(`what is your name`) || chat.toLowerCase().includes(`who are you`)) return setTimeout(() => { msg.channel.send(`I'm ${client.user.username}. It's very nice to meet you`); }, 3000);
 				if (chat.toLowerCase().includes(`how are you doing`)) return setTimeout(() => { msg.channel.send(`I'm doing pretty ok. How about you?`); }, 3000);
 				let owner = await client.fetchUser("320067006521147393");
-				if (chat.toLowerCase().includes("who made you") || chat.toLowerCase().replace(/'s/gi, " is").includes("who is your creator")) return setTimeout(() => msg.channel.send(`${owner.tag} did`), 1300);
+				if (chat.toLowerCase().includes("who made you") || chat.toLowerCase().replace(/'s/gi, " is").includes("who is your creator")) return setTimeout(() => msg.channel.send(`${owner.tag} made me`), 1300);
 				let data;
 				try {
 					let res = await (require("request-promise")(`https://some-random-api.ml/chatbot/?message=${chat}`));
