@@ -3,6 +3,7 @@ let util = require("util");
 let fs = require("fs");
 let crypto = require("crypto");
 let request = require("request");
+const rp = require("request-promise");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
 
 module.exports = function(passthrough) {
@@ -19,234 +20,7 @@ module.exports = function(passthrough) {
 		return { claimer, price, waifu };
 	}
 
-	return {
-		"hug": {
-			usage: "<user>",
-			description: "Hugs someone",
-			aliases: ["hug"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to hug someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna hug`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to hug`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`**Hugs ${msg.author.username} back** :heart:`);
-				request("https://nekos.life/api/v2/img/hug", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} hugged <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"kiss": {
-			usage: "<user>",
-			description: "Kisses someone",
-			aliases: ["kiss"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to kiss someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna kiss`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to kiss`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`**Kisses ${msg.author.username} back** :heart:`);
-				request("https://nekos.life/api/v2/img/kiss", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} kissed <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"cuddle": {
-			usage: "<user>",
-			description: "Cuddles someone",
-			aliases: ["cuddle"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to cuddle someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna cuddle`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to cuddle`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`**Cuddles ${msg.author.username} back** :heart:`);
-				request("https://nekos.life/api/v2/img/cuddle", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} cuddled <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"poke": {
-			usage: "<user>",
-			description: "Pokes someone",
-			aliases: ["poke"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to poke someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna poke`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to poke`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`Don't poke me ; ^ ;`);
-				request("https://nekos.life/api/v2/img/poke", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} poked <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"slap": {
-			usage: "<user>",
-			description: "Slaps someone",
-			aliases: ["slap"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to slap someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna slap`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to slap`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`**Slaps ${msg.author.username} back** That hurt me\n; ^ ;`);
-				request("https://nekos.life/api/v2/img/slap", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} slapped <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"boop": {
-			usage: "<user>",
-			description: "Boops someone",
-			aliases: ["boop"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to boop someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna boop`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to boop`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`Dun boop me ; ^ ;`);
-				let embed = new Discord.RichEmbed()
-					.setDescription(`${msg.author.username} booped <@${member.user.id}>`)
-					.setImage(`https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/boop/boop${Math.floor(Math.random() * (10 - 1) + 1)}.gif`)
-					.setColor("36393E")
-				msg.channel.send({embed});
-			}
-		},
-
-		"pat": {
-			usage: "<user>",
-			description: "Pats someone",
-			aliases: ["pat"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to pat someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna pat`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to pat`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`≥ w ≤`);
-				request("https://nekos.life/api/v2/img/pat", function(err, res, body) {
-					if (err) return msg.channel.send("Error... Api returned nothing");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) {
-						return msg.channel.send(`There was an error:\n${error}`);
-					}
-					let embed = new Discord.RichEmbed()
-						.setDescription(`${msg.author.username} patted <@${member.user.id}>`)
-						.setImage(data.url)
-						.setColor("36393E")
-						.setFooter("Powered by nekos.life")
-					msg.channel.send({embed});
-				})
-			}
-		},
-
-		"nom": {
-			usage: "<user>",
-			description: "noms someone",
-			aliases: ["nom"],
-			category: "interaction",
-			process: function(msg, suffix) {
-				if (msg.channel.type !== "text") return msg.channel.send("Why would you want to nom someone in DMs?");
-				if (!suffix) return msg.channel.send(`You have to tell me who you wanna nom`);
-				let member = msg.guild.findMember(msg, suffix);
-				if (member == null) return msg.channel.send("Couldn't find that user");
-				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to nom`);
-				if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-				if (member.user.id == client.user.id) return msg.channel.send(`owie`);
-				let embed = new Discord.RichEmbed()
-					.setDescription(`${msg.author.username} nommed <@${member.user.id}>`)
-					.setImage(`https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/nom/nom${Math.floor(Math.random() * (10 - 1) + 1)}.gif`)
-					.setColor("36393E")
-					msg.channel.send({embed});
-			}
-		},
+	let commands = {
 
 		"ship": {
 			usage: "<mention 1> <mention 2>",
@@ -472,5 +246,110 @@ module.exports = function(passthrough) {
 				msg.channel.send(`**${member.user.tag}** has been banned!`);
 			}
 		}
+	};
+
+	let interactionSources = [
+		{
+			name: "hug", // Command object key and text filler
+			description: "Hugs someone", // Command description
+			verb: "hugs", // x "verbed" @y in the command response
+			shortcut: "nekos.life", // nekos.life: use the command name as the endpoint
+			traaOverride: true, // don't set this true
+			amanda: name => `**Hugs ${name} back** :heart:` // Response when used on the bot itself
+		},{
+			name: "nom",
+			description: "Noms someone",
+			verb: "nommed",
+			shortcut: "durl", // Dynamic URL: call the function "url" and use its response as the GIF URL. Not async.
+			url: () => `https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/nom/nom${Math.floor(Math.random() * (10 - 1) + 1)}.gif`,
+			amanda: () => "owie"
+		},{
+			name: "kiss",
+			description: "Kisses someone",
+			verb: "kissed",
+			shortcut: "nekos.life",
+			amanda: name => `**Kisses ${name} back** :heart:`
+		},{
+			name: "cuddle",
+			description: "Cuddles someone",
+			verb: "cuddles",
+			shortcut: "nekos.life",
+			amanda: name => `**Cuddles ${name} back** :heart:`
+		},{
+			name: "poke",
+			description: "Pokes someone",
+			verb: "poked",
+			shortcut: "nekos.life",
+			amanda: () => `Don't poke me ; ^ ;`
+		},{
+			name: "slap",
+			description: "Slaps someone",
+			verb: "slapped",
+			shortcut: "nekos.life",
+			amanda: name => `**Slaps ${name} back** That hurt me ; ^ ;`
+		},{
+			name: "boop",
+			description: "Boops someone",
+			verb: "booped",
+			shortcut: "durl",
+			url: () => `https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/boop/boop${Math.floor(Math.random() * (10 - 1) + 1)}.gif`,
+			amanda: () => `Dun boop me ; ^ ;`
+		},{
+			name: "pat",
+			description: "Pats someone",
+			verb: "patted",
+			shortcut: "nekos.life",
+			amanda: name => `≥ w ≤`
+		}
+	];
+
+	for (let source of interactionSources) {
+		let newCommand = {
+			usage: "<user>",
+			description: source.description,
+			aliases: [source.name],
+			category: "interaction",
+			process: (msg, suffix) => doInteraction(msg, suffix, source)
+		}
+		commands[source.name] = newCommand;
 	}
+
+	function doInteraction(msg, suffix, source) {
+		let fetch;
+		if (source.fetch) {
+			fetch = source.fetch();
+		} else {
+			if (source.shortcut == "nekos.life") {
+				source.footer = "Powered by nekos.life";
+				fetch = new Promise((resolve, reject) => {
+					rp(`https://nekos.life/api/v2/img/${source.name}`).then(body => {
+						let data = JSON.parse(body);
+						resolve(data.url);
+					}).catch(reject);
+				});
+			} else if (source.shortcut == "durl") {
+				fetch = Promise.resolve(source.url());
+			} else {
+				fetch = Promise.reject("Shortcut didn't match a function.");
+			}
+		}
+		fetch.then(url => {
+			if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
+			if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
+			let member = msg.guild.findMember(msg, suffix);
+			if (member == null) return msg.channel.send("Couldn't find that user");
+			if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+			if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
+			let embed = new Discord.RichEmbed()
+			.setDescription(`${msg.author.username} ${source.verb} <@${member.user.id}>`)
+			.setImage(url)
+			.setColor("36393E")
+			if (source.footer) embed.setFooter(source.footer)
+			msg.channel.send(embed);
+		}).catch(error => {
+			msg.channel.send("There was an error: ```\n"+error+"```")
+		});
+	}
+
+	return commands;
 }
