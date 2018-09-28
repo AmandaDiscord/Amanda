@@ -299,7 +299,6 @@ module.exports = function(passthrough) {
 			description: "Pats someone",
 			verb: "patted",
 			shortcut: "nekos.life",
-			traaOverride: true,
 			amanda: name => `≥ w ≤`
 		}
 	];
@@ -315,61 +314,32 @@ module.exports = function(passthrough) {
 		commands[source.name] = newCommand;
 	}
 
-	const attempts = [
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (((gender = ? or gender = '*') and importance = 0) or ((gender = ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g1, g2]),
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (gender = ? or gender = '*')", [type, g2])
-	];
-
-	const genderMap = new Map([
-		["474711440607936512", "f"],
-		["474711440607936512", "m"],
-		["474711526247366667", "n"]
-	]);
-
-	async function doInteraction(msg, suffix, source) {
-		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
-		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
-		let member = msg.guild.findMember(msg, suffix);
-		if (member == null) return msg.channel.send("Couldn't find that user");
-		if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
-		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
+	function doInteraction(msg, suffix, source) {
 		let fetch;
-		let description = "";
-		if (source.traaOverride) {
-			let g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "*";
-			let g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "*";
-			//console.log(g1, g2);
-			let found = false;
-			let i = 0;
-			while (!found && i < attempts.length) {
-				let rows = await attempts[i](source.name, g1, g2);
-				if (rows.length) {
-					fetch = Promise.resolve(rows.shuffle()[0].url);
-					found = true;
-				}
-				i++;
-			}
-		}
-		if (!fetch) {
-			if (source.fetch) {
-				fetch = source.fetch();
+		if (source.fetch) {
+			fetch = source.fetch();
+		} else {
+			if (source.shortcut == "nekos.life") {
+				source.footer = "Powered by nekos.life";
+				fetch = new Promise((resolve, reject) => {
+					rp(`https://nekos.life/api/v2/img/${source.name}`).then(body => {
+						let data = JSON.parse(body);
+						resolve(data.url);
+					}).catch(reject);
+				});
+			} else if (source.shortcut == "durl") {
+				fetch = Promise.resolve(source.url());
 			} else {
-				if (source.shortcut == "nekos.life") {
-					source.footer = "Powered by nekos.life";
-					fetch = new Promise((resolve, reject) => {
-						rp(`https://nekos.life/api/v2/img/${source.name}`).then(body => {
-							let data = JSON.parse(body);
-							resolve(data.url);
-						}).catch(reject);
-					});
-				} else if (source.shortcut == "durl") {
-					fetch = Promise.resolve(source.url());
-				} else {
-					fetch = Promise.reject("Shortcut didn't match a function.");
-				}
+				fetch = Promise.reject("Shortcut didn't match a function.");
 			}
 		}
 		fetch.then(url => {
+			if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
+			if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
+			let member = msg.guild.findMember(msg, suffix);
+			if (member == null) return msg.channel.send("Couldn't find that user");
+			if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+			if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
 			let embed = new Discord.RichEmbed()
 			.setDescription(`${msg.author.username} ${source.verb} <@${member.user.id}>`)
 			.setImage(url)
