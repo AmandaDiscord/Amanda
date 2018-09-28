@@ -322,7 +322,7 @@ module.exports = function(passthrough) {
 
 	const genderMap = new Map([
 		["474711440607936512", "f"],
-		["474711440607936512", "m"],
+		["474711506551046155", "m"],
 		["474711526247366667", "n"]
 	]);
 
@@ -338,8 +338,8 @@ module.exports = function(passthrough) {
 		if (source.traaOverride) {
 			let g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_";
 			let g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_";
+			//console.log(msg.member.user.username, g1, member.user.username, g2);
 			if (g1 != "_" || g2 != "_") {
-				//console.log(g1, g2);
 				let found = false;
 				let i = 0;
 				while (!found && i < attempts.length) {
