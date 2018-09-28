@@ -154,6 +154,35 @@ module.exports = (passthrough) => {
 		return db.getConnection();
 	}
 
+	const startingCoins = 5000;
+	utils.coinsManager = {
+		"get": async function(userID) {
+			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
+			if (!row) {
+				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, startingCoins]);
+				row = await utils.coinsManager.get(userID);
+			}
+			return row.coins;
+		},
+		"set": async function(userID, value) {
+			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
+			if (row) {
+				await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID]);
+			} else {
+				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, value]);
+			}
+			return;
+		},
+		"award": async function(userID, value) {
+			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
+			if (row) {
+				await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID]);
+			} else {
+				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, startingCoins + value]);
+			}
+		}
+	}
+
 	/**
 	 * Handles reactions as actions for the client to perform
 	 * @param {*} msg MessageResolvable

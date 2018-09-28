@@ -79,8 +79,6 @@ module.exports = function(passthrough) {
 			clearTimeout(this.timer);
 			this.storage.remove(this);
 			// Check answers
-			let winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct);
-			//TODO: award coins
 			let coins =
 				this.difficulty == "easy"
 				? 200
@@ -89,6 +87,9 @@ module.exports = function(passthrough) {
 				: this.difficulty == "hard"
 				? 800
 				: 500 // excuse me what the fuck
+			// Award coins
+			let winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct);
+			winners.forEach(w => utils.coinsManager.award(w[0], coins));
 			// Send message
 			let embed = new Discord.RichEmbed()
 			.setTitle("Correct answer:")

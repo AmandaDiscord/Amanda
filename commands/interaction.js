@@ -113,13 +113,8 @@ module.exports = function(passthrough) {
 				let [memberInfo, myInfo, money] = await Promise.all([
 					getWaifuInfo(member.user.id),
 					getWaifuInfo(msg.author.id),
-					utils.sql.get("SELECT * FROM money WHERE userID = ?", msg.author.id)
+					utils.coinsManager.get(msg.author.id)
 				]);
-				money = money.coins;
-				if (!money) {
-					money = 5000;
-					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, money]);
-				}
 				let claim = 0;
 				if (args[0] == "all") {
 					if (!money) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to claim someone with!`);
@@ -134,7 +129,7 @@ module.exports = function(passthrough) {
 				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(`${msg.author.username}, you can't claim your waifu twice over, silly. You can \`&gift <amount>\` into them, however`);
 				await Promise.all([
 					utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, member.user.id]),
-					utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [money - claim, msg.author.id])
+					utils.coinsManager.award(msg.author.id, -claim)
 				]);
 				utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
@@ -172,11 +167,7 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let args = suffix.split(" ");
 				let waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
-				let money = await utils.sql.get("SELECT * FROM money WHERE userID =?", msg.author.id);
-				if (!money) {
-					await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [msg.author.id, 5000]);
-					money = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-				}
+				let money = await utils.coinsManager.get(msg.author.id);
 				if (!waifu) {
 					await utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
 					waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
@@ -185,16 +176,18 @@ module.exports = function(passthrough) {
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`);
 				let gift;
 				if (args[0] == "all") {
-					if (money.coins == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to gift!`);
-					gift = money.coins;
+					if (money == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to gift!`);
+					gift = money;
 				} else {
 					if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to gift`);
 					gift = Math.floor(parseInt(args[0]));
 					if (gift < 1) return msg.channel.send(`${msg.author.username}, you cannot gift less than 1`);
-					if (gift > money.coins) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
+					if (gift > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
 				}
-				await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + gift, msg.author.id]);
-				await utils.sql.all("UPDATE money SET coins =? WHERE userID =?", [money.coins - gift, msg.author.id]);
+				await Promise.all([
+					utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + gift, msg.author.id]),
+					utils.coinsManager.award(msg.author.id, -gift)
+				]);
 				let user = await client.fetchUser(waifu.waifuID);
 				msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
