@@ -310,7 +310,8 @@ module.exports = function(passthrough) {
 
 	const attempts = [
 		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g1, g2]),
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (gender like ? or gender = '*')", [type, g2])
+		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g2, g1]),
+		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (gender like ? or gender = '*')", [type, (g2 == "_" ? g1 : g2)])
 	];
 
 	const genderMap = new Map([

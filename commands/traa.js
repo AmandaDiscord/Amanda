@@ -6,6 +6,8 @@ const bots = [
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
 
+	let cadence = new utils.DMUser("176580265294954507");
+
 	Object.prototype.sp = function(properties) {
 		let list = properties.split(".");
 		let result = this;
@@ -21,17 +23,25 @@ module.exports = function(passthrough) {
 	});
 	client.on("message", gifDetector);
 	async function gifDetector(msg) {
-		for (let bot of bots) {
-			if (msg.author.id == bot[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
-				let existing = await utils.sql.all("SELECT * FROM GenderGifs INNER JOIN GenderGifCharacters ON GenderGifs.gifid = GenderGifCharacters.gifid WHERE url = ?", msg.embeds[0].image.url);
-				if (existing.length) return;
-				let callingMessage = [...msg.channel.messages.filter(m => m.content.startsWith(bot[1])).values()].slice(-1)[0];
-				let command;
-				if (callingMessage) {
-					command = callingMessage.content.match(/\w+/)[0];
-				}
-				client.users.get("176580265294954507").send("New "+command+" GIF from "+msg.author.username+":\n"+msg.embeds[0].image.url);
+		let botInfo;
+		for (let b of bots) {
+			if (msg.author.id == b[0]) botInfo = b;
+		}
+		if (!botInfo) return;
+		if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
+			let url = msg.embeds[0].image.url;
+			let callingMessage = [...msg.channel.messages.filter(m => m.content.startsWith(botInfo[1])).values()].slice(-1)[0];
+			let command;
+			if (callingMessage) {
+				command = callingMessage.content.match(/\w+/)[0];
+				if (command.toLowerCase() == "rule34") return; // I really don't need this in my life
 			}
+			let existing = await utils.sql.get("SELECT COUNT(*) AS count FROM GenderGifs WHERE url = ?", url);
+			if (existing.count) return; // skip if already exists
+			let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
+			if (backlog.some(r => r.url == url)) return; // skip if already in backlog
+			if (!backlog.length) cadence.send("New "+command+" GIF from "+msg.author.username+":\n"+url);
+			utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username]);
 		}
 	}
 
@@ -52,21 +62,38 @@ module.exports = function(passthrough) {
 				new Promise(async resolve => {
 					if (existing.length) {
 						let dmsg = await msg.channel.send("That GIF already exists with "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".");
-						dmsg.reactionMenu([{emoji: "🗑", ignore: "total", actionType: "js", actionData: async () => {
+						dmsg.reactionMenu([{emoji: "🗑", ignore: "total", allowedUsers: [msg.author.id], actionType: "js", actionData: async () => {
 							await utils.sql.all("DELETE FROM GenderGifs WHERE gifid = ?", existing[0].gifid);
 							await msg.channel.send("Deleted. Replacing...");
 							resolve();
 						}}]);
-					} else if (type.length == 1) {
+					} else if (type && type.length == 1) {
 						return msg.channel.send("Pretty sure you don't want to do that.");
 					} else resolve();
 				}).then(async () => {
-					let connection = await utils.getConnection();
-					await utils.sql.all("INSERT INTO GenderGifs VALUES (NULL, ?, ?)", [url, type], connection);
-					let gifid = (await utils.sql.get("SELECT last_insert_id() AS id", [], connection)).id;
-					connection.release();
-					await Promise.all(characters.map((c, i) => utils.sql.all("INSERT INTO GenderGifCharacters VALUES (NULL, ?, ?, ?)", [gifid, c, i])));
-					msg.channel.send("Done!");
+					if (characters.length) {
+						await Promise.all([
+							utils.sql.all("DELETE FROM GenderGifBacklog WHERE url = ?", url),
+							new Promise(async resolve => {
+								let connection = await utils.getConnection();
+								await utils.sql.all("INSERT INTO GenderGifs VALUES (NULL, ?, ?)", [url, type], connection);
+								let gifid = (await utils.sql.get("SELECT last_insert_id() AS id", [], connection)).id;
+								await Promise.all(characters.map((c, i) => utils.sql.all("INSERT INTO GenderGifCharacters VALUES (NULL, ?, ?, ?)", [gifid, c, i])));
+								connection.release();
+								resolve();
+							})
+						]);
+					} else {
+						await msg.channel.send("Note: deleting from backlog, not adding to storage.");
+						await utils.sql.all("DELETE FROM GenderGifBacklog WHERE url = ?", url);
+					}
+					let backlog = await utils.sql.all("SELECT * FROM GenderGifBacklog");
+					if (!backlog.length) { // entire backlog dealt with
+						await msg.channel.send("Done! Backlog empty.");
+					} else { // more images in backlog, send the next
+						await msg.channel.send(`Done! ${backlog.length} image${backlog.length == 1 ? "" : "s"} left.`);
+						cadence.send(`New ${backlog[0].type} GIF from ${backlog[0].author}:\n${backlog[0].url}`);
+					}
 				});
 			}
 		}
