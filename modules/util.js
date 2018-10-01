@@ -1,4 +1,5 @@
 let util = require("util");
+const events = require("events");
 let reactionMenus = {};
 
 module.exports = (passthrough) => {
@@ -182,6 +183,38 @@ module.exports = (passthrough) => {
 			}
 		}
 	}
+
+	class DMUser {
+		constructor(userID) {
+			this.userID = userID;
+			this.user = undefined;
+			this.events = new events.EventEmitter();
+			this.fetch();
+		}
+		fetch() {
+			new Promise(resolve => {
+				if (client.readyAt) resolve();
+				else client.once("ready", () => resolve());
+			}).then(() => {
+				client.fetchUser(this.userID).then(user => {
+					this.user = user;
+					this.events.emit("fetched");
+					this.events = undefined;
+				});
+			});
+		}
+		send() {
+			return new Promise(resolve => {
+				return new Promise(fetched => {
+					if (!this.user) this.events.once("fetched", () => fetched());
+					else fetched();
+				}).then(() => {
+					resolve(this.user.send(...arguments));
+				});
+			});
+		}
+	}
+	utils.DMUser = DMUser;
 
 	/**
 	 * Handles reactions as actions for the client to perform
