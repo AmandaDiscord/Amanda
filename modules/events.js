@@ -15,12 +15,14 @@ module.exports = function(passthrough) {
 	client.on("messageUpdate", manageEdit);
 	client.once("ready", manageReady);
 	client.on("disconnect", manageDisconnect);
+	client.on("error", manageError);
 	process.on("unhandledRejection", manageRejection);
 	stdin.on("data", manageStdin);
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", manageMessage);
 		client.removeListener("messageUpdate", manageEdit);
 		client.removeListener("disconnect", manageDisconnect);
+		client.removeListener("error", manageError);
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
 	});
@@ -85,6 +87,10 @@ module.exports = function(passthrough) {
 	function manageDisconnect(reason) {
 		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 		setTimeout(() => client.login(config.bot_token), 6000);
+	}
+
+	function manageError(reason) {
+		console.error(reason);
 	}
 
 	function manageRejection(reason) {
