@@ -1,8 +1,8 @@
 <!-- TEMPLATE predash -->
 <script>
 	let time = null;
-	let totalTime = null;
 	let queue = null;
+	let lastPte = 0;
 
 	function prettySeconds(seconds) {
 		let minutes = Math.floor(seconds / 60);
@@ -23,9 +23,12 @@
 	function updatePte() {
 		if (typeof(time) == "number" && q("#playTimeElapsed")) {
 			q("#playTimeElapsed").innerText = prettySeconds(Math.floor(time/1000));
-			q("#totalTime").innerText = prettySeconds(totalTime);
-			let percent = ((time/1000)/totalTime*100).toFixed(1);
-			q("#progressBar").style.background = `linear-gradient(to right, #3b88c3 ${percent}%, white ${percent}%)`;
+			if (queue.songs[0].source == "YouTube") {
+				q("#totalTime").innerText = prettySeconds(queue.songs[0].length_seconds);
+			} else if (queue.songs[0].source == "Frisky") {
+				q("#totalTime").innerText = "LIVE";
+			}
+			//q("#progressBar").style.background = `linear-gradient(to right, #3b88c3 ${percent}%, white ${percent}%)`;
 		}
 	}
 
@@ -37,7 +40,7 @@
 		let data = JSON.parse(event.data);
 		if (data.event == "queuesUpdate") {
 			queue = data.queue;
-			if (!queue) {
+			if (!queue || !queue.songs[0]) {
 				q("#nothingPlaying").style.display = "block";
 				q("#somethingPlaying").style.display = "none";
 			} else {
@@ -45,10 +48,29 @@
 				let display = q("#somethingPlaying");
 				display.style.display = "block";
 				q("#nowPlaying").innerText = "Now playing: "+queue.songs[0].title+(queue.playing ? "" : " (paused)");
-				q("#bigThumbnail").src = `https://i.ytimg.com/vi/${queue.songs[0].id}/hqdefault.jpg`
+				if (queue.songs[0].source == "YouTube") {
+					q("#bigThumbnail").src = `https://i.ytimg.com/vi/${queue.songs[0].id}/hqdefault.jpg`
+				} else if (queue.songs[0].source == "Frisky") {
+					q("#bigThumbnail").src = "/images/frisky.png";
+				}
 				time = queue.time || 0;
-				totalTime = queue.totalTime || 0;
+				lastPte = Date.now();
 				updatePte();
+				if (queue.songs[0].source == "YouTube") {
+					let totalTime = queue.songs[0].length_seconds;
+					q("#progressLine").style.transition = "none";
+					let progressRatio = ((time/1000)/totalTime);
+					q("#progressLine").style.transform = `scaleX(${progressRatio})`;
+					if (queue.playing && queue.skippable) {
+						q("#progressLine").style.transition = `${totalTime-queue.time/1000}s linear`;
+						setTimeout(() => {
+							q("#progressLine").style.transform = `scaleX(1)`;
+						});
+					}
+				} else if (queue.songs[0].source == "Frisky") {
+					q("#progressLine").style.transition = "none";
+					q("#progressLine").style.transform = "scaleX(1)";
+				}
 				if (queue.songs[1]) {
 					q("#upNextContainer").style.display = "block";
 					q("#upNextEmpty").style.display = "none";
@@ -73,9 +95,10 @@
 		if (!queue) return;
 		if (!queue.playing || !queue.skippable) return;
 		if (typeof(time) != "number") return;
-		time += 100;
+		time += Date.now()-lastPte;
+		lastPte = Date.now();
 		updatePte();
-	}, 100);
+	}, 1000);
 
 </script>
 <!-- TEMPLATE header -->
@@ -91,7 +114,7 @@
 			<div id="nowPlaying"></div>
 			<span id="progressContainer">
 				<span id="playTimeElapsed">0:00</span>
-				<span id="progressBar"></span>
+				<span id="progressBar"><span id="progressLine"></span></span>
 				<span id="totalTime">0:00</span>
 			</span>
 			<div id="buttonControlContainer">
@@ -113,9 +136,9 @@
 			<img>
 		</span>
 		<span>
-			<div class="queueSongTitle">xi - Agartha</div>
-			<div class="queueSongAuthor">Cool Music Makers™</div>
-			<div class="queueSongTime">2:48</div>
+			<div class="queueSongTitle">If you can see this without looking at the code, please contact someone from the <a href="/about">about page</a> with screenshots.</div>
+			<div class="queueSongAuthor">However, I'm going to assume that you <em>did</em> find this in the source code.</div>
+			<div class="queueSongTime">Please stop looking. There's nothing interesting here.</div>
 		</span>
 	</span>
 </div>

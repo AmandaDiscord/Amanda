@@ -11,12 +11,6 @@ module.exports = function(passthrough) {
 		poster.on("error", reason => console.error(reason));
 	} else console.log("No DBL API key. Server count posting is disabled.");
 
-	client.on("message", manageMessage);
-	client.on("messageUpdate", manageEdit);
-	client.once("ready", manageReady);
-	client.on("disconnect", manageDisconnect);
-	process.on("unhandledRejection", manageRejection);
-	stdin.on("data", manageStdin);
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", manageMessage);
 		client.removeListener("messageUpdate", manageEdit);
@@ -24,6 +18,12 @@ module.exports = function(passthrough) {
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
 	});
+	client.on("message", manageMessage);
+	client.on("messageUpdate", manageEdit);
+	client.once("ready", manageReady);
+	client.on("disconnect", manageDisconnect);
+	process.on("unhandledRejection", manageRejection);
+	stdin.on("data", manageStdin);
 
 	async function manageStdin(input) {
 		input = input.toString();
@@ -67,6 +67,7 @@ module.exports = function(passthrough) {
 	}
 
 	function manageEdit(oldMessage, newMessage) {
+		console.log(oldMessage.editedAt, newMessage.editedAt);
 		manageMessage(newMessage);
 	}
 

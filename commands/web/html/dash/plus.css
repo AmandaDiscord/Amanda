@@ -46,14 +46,25 @@
 	display: flex;
 	width: 600px;
 }
-#progressContainer span {
+#progressContainer > span {
 	margin: 4px;
-	font-family: "Noto Sans";
+	font-family: "Noto Sans","Liberation Mono",monospace;
 }
 #progressBar {
 	display: inline-block;
 	flex: 1;
 	border: 1px solid black;
+	position: relative;
+	background-color: white;
+}
+#progressLine {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 0;
+	bottom: 0;
+	background-color: #3b88c3;
+	transform-origin: top left 0;
 }
 
 #buttonControlContainer {

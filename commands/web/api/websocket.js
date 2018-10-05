@@ -48,18 +48,22 @@ module.exports = (passthrough) => {
 				skippable: queue.skippable,
 				volume: queue.volume,
 				time: queue.connection.dispatcher ? queue.connection.dispatcher.time : null,
-				totalTime: queue.songs[0] ? queue.songs[0].video.length_seconds : null,
 				songs: queue.songs.map(song => {
 					let newSong = {};
+					newSong.source = song.source;
 					newSong.title = song.title;
-					newSong.author = song.video.author.name;
-					newSong.url = song.url;
-					newSong.length_seconds = song.video.length_seconds;
-					newSong.id = song.video.video_id;
-					/*newSong.thumbnail_url = song.video.player_response.videoDetails.thumbnail.thumbnails
-						.sort((a, b) => (Math.abs(180-a.height) - Math.abs(180-b.height)))[0].url;
-					newSong.thumbnail_url_hq = song.video.player_response.videoDetails.thumbnail.thumbnails
-						.sort((a, b) => (b.height - a.height))[0].url;*/
+					if (song.source == "YouTube") {
+						newSong.author = song.video.author.name;
+						newSong.url = song.url;
+						newSong.length_seconds = song.video.length_seconds;
+						newSong.id = song.video.video_id;
+						/*newSong.thumbnail_url = song.video.player_response.videoDetails.thumbnail.thumbnails
+							.sort((a, b) => (Math.abs(180-a.height) - Math.abs(180-b.height)))[0].url;
+						newSong.thumbnail_url_hq = song.video.player_response.videoDetails.thumbnail.thumbnails
+							.sort((a, b) => (b.height - a.height))[0].url;*/
+					} else if (song.source == "Frisky") {
+						newSong.url = "https://friskyradio.com";
+					}
 					return newSong;
 				})
 			};
