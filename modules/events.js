@@ -67,7 +67,6 @@ module.exports = function(passthrough) {
 	}
 
 	function manageEdit(oldMessage, newMessage) {
-		console.log(oldMessage.editedAt, newMessage.editedAt);
 		manageMessage(newMessage);
 	}
 

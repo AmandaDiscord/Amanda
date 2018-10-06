@@ -350,7 +350,8 @@ module.exports = (passthrough) => {
 	 * @param {*} data Something to convert
 	 * @returns {String} The result of the conversion
 	 */
-	utils.stringify = async function(data) {
+	utils.stringify = async function(data, depth) {
+		if (!depth) depth = 0;
 		let result;
 		if (data === undefined) result = "(undefined)";
 		else if (data === null) result = "(null)";
@@ -364,7 +365,7 @@ module.exports = (passthrough) => {
 				errorObject[e[0]] = e[1];
 			});
 			result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject));
-		} else result = "```js\n"+util.inspect(data, { depth: 0 })+"```";
+		} else result = "```js\n"+util.inspect(data, { depth: depth })+"```";
 
 		if (result.length >= 2000) {
 			if (result.startsWith("```")) {

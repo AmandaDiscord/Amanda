@@ -2,6 +2,7 @@ const fs = require("fs");
 const pj = require("path").join;
 const http = require("http");
 const WebSocket = require("ws");
+const util = require("util");
 
 const commandDirs = ["modules", "commands"];
 let watched = [];
@@ -18,12 +19,12 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 		connectionLimit: 5
 	});
 
-	pool.query("SELECT 1").then(() => {
+	pool.query("SELECT 1").then(async () => {
 		console.log("Connected to MySQL database");
 		passthrough.db = pool;
 
 		for (let dir of commandDirs) {
-			fs.readdir(dir, (err, files) => {
+			await util.promisify(fs.readdir)(dir).then(files => {
 				files.filter(f => f.endsWith(".js")).forEach(f => {
 					let filename = pj(__dirname, dir, f);
 					loadFile(filename);

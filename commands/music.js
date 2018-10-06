@@ -785,6 +785,12 @@ module.exports = function(passthrough) {
 						.setColor("36393E")
 						msg.channel.send(embed);
 					}
+				} else if (args[0].toLowerCase() == "dump") {
+					let dump = queues.get(msg.guild.id);
+					[dump.songs, dump.connection.dispatcher].forEach(async d => {
+						let result = await utils.stringify(d, 1);
+						return msg.channel.send(result);
+					});
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
 			}
 		}

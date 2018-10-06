@@ -12,12 +12,20 @@ module.exports = function(passthrough) {
 				if (allowed) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
+					let depth = suffix.split("--depth:")[1]
+					if (!depth) {
+						depth = 0;
+					} else {
+						depth = Math.floor(parseInt(depth));
+						if (isNaN(depth)) depth = 0;
+						suffix = suffix.split("--depth:")[0];
+					}
 					try {
 						result = eval(suffix.replace(/client.token/g, `"${config.fake_token}"`));
 					} catch (e) {
 						result = e;
 					}
-					let output = await utils.stringify(result);
+					let output = await utils.stringify(result, depth);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
 					nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 				} else return;
