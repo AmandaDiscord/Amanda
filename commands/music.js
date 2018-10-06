@@ -359,6 +359,7 @@ module.exports = function(passthrough) {
 	}
 
 	function prettySeconds(seconds) {
+		if (isNaN(seconds)) return seconds;
 		let minutes = Math.floor(seconds / 60);
 		seconds = seconds % 60;
 		let hours = Math.floor(minutes / 60);
@@ -495,8 +496,11 @@ module.exports = function(passthrough) {
 					return msg.react("👌");
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send(`There aren't any songs queued`);
-					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.video.length_seconds)), 0));
-					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})`).join('\n');
+					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => {
+						if (c.video) (p+parseInt(c.video.length_seconds))
+						else "LIVE"
+					}, 0));
+					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.video ? songss.video.length_seconds: "LIVE")})`).join('\n');
 					if (body.length > 2000) {
 						let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
 						let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
