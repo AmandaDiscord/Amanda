@@ -465,7 +465,7 @@ module.exports = function(passthrough) {
 						}).catch(async reason => {
 							let searchString = args.slice(1).join(" ");
 							msg.channel.sendTyping();
-							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${searchString}`));
+							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
 							if (!videos.length) return msg.channel.send("No videos were found with those search terms");
 							videos = videos.slice(0, 10);
 							let videoResults = videos.map((video, index) => `${index+1}. **${video.title}** (${prettySeconds(video.lengthSeconds)})`);
