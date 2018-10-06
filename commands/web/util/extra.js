@@ -8,7 +8,6 @@ module.exports = function ({utils, client}) {
 	let trackedMessage = {msg: undefined, breakdown: {}, lastEdit: 0, editTimeout: setTimeout(new Function())};
 	client.once("ready", () => {
 		let ids = {
-			"378773803225841668": ["399308090832453642", "493680834403106817"],
 			"405208699313848330": ["483504430365278209", "493673296508878848"]
 		};
 		if (ids[client.user.id]) {

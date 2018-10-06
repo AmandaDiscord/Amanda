@@ -1,5 +1,6 @@
 let ytdl = require("ytdl-core");
 let YouTube = require('simple-youtube-api');
+const net = require("net");
 let queues = new Map();
 let timeout = new Set();
 let crypto = require("crypto");
@@ -64,7 +65,7 @@ module.exports = function(passthrough) {
 
 	function callpause(msg, queue) {
 		if (!queue.connection || !queue.connection.dispatcher) return;
-		if (queue && queue.playing) {
+		if (queue && queue.playing && queue.songs[0] && queue.songs[0].source == "YouTube") {
 			queue.playing = false;
 			queue.connection.dispatcher.pause();
 			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
@@ -89,15 +90,11 @@ module.exports = function(passthrough) {
 		.addField("­", songProgress(dispatcher, queue, !queue.connection.dispatcher)+(queue && queue.auto ? "\n\n**Auto mode on.**" : ""));
 	}
 
-	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
-		const queue = queues.get(msg.guild.id);
-		const song = {
-			title: Discord.Util.escapeMarkdown(video.title),
-			url: video.video_url,
-			video: video
-		};
-		if (!queue) {
-			const queueConstruct = {
+	async function initiateQueue(msg, voiceChannel) {
+		let queue = queues.get(msg.guild.id);
+		if (queue) return [queue, false];
+		else {
+			queue = {
 				textChannel: msg.channel,
 				voiceChannel: voiceChannel,
 				connection: null,
@@ -124,29 +121,34 @@ module.exports = function(passthrough) {
 					]);
 				}
 			};
-			queues.set(msg.guild.id, queueConstruct);
-			if (timeout.has(msg.guild.id)) return;
-			queueConstruct.songs.push(song);
-			timeout.add(msg.guild.id);
-			setTimeout(() => timeout.delete(msg.guild.id), 1000);
-			let connection;
 			try {
-				connection = await voiceChannel.join();
-				queueConstruct.connection = connection;
-				play(msg, msg.guild, queueConstruct.songs[0]);
+				let connection = await voiceChannel.join();
+				queue.connection = connection;
+				queues.set(msg.guild.id, queue);
+				return [queue, true];
 			} catch (error) {
-				queues.delete(msg.guild.id);
-				return msg.channel.send(`I could not join the voice channel: ${error}`);
+				msg.channel.send(`I could not join the voice channel: ${error}`);
+				return [null, false];
 			}
-		} else {
-			if (timeout.has(msg.guild.id) && !ignoreTimeout) return;
-			if (insert) queue.songs.splice(1, 0, song);
-			else queue.songs.push(song);
-			timeout.add(msg.guild.id);
-			setTimeout(() => timeout.delete(msg.guild.id), 1000)
-			if (playlist) return;
-			else return msg.react("👌");
 		}
+	}
+
+	async function handleVideo(video, msg, voiceChannel, ignoreTimeout, playlist, insert) {
+		let [queue, newQueue] = await initiateQueue(msg, voiceChannel);
+		if (!queue) return;
+		const song = {
+			title: Discord.Util.escapeMarkdown(video.title),
+			url: video.video_url,
+			video: video,
+			source: "YouTube"
+		};
+		if (timeout.has(msg.guild.id) && !ignoreTimeout) return;
+		if (insert) queue.songs.splice(1, 0, song);
+		else queue.songs.push(song);
+		timeout.add(msg.guild.id);
+		setTimeout(() => timeout.delete(msg.guild.id), 1000)
+		if (!playlist) msg.react("👌");
+		if (newQueue) play(msg, msg.guild, song);
 	}
 
 	function play(msg, guild, song) {
@@ -159,68 +161,121 @@ module.exports = function(passthrough) {
 			return msg.channel.send(`We've run out of songs`)
 		}
 		reloadEvent.emit("musicOut", "queues", queues);
-		const stream = ytdl(song.url);
-		stream.once("progress", () => {
-			const dispatcher = queue.connection.playStream(stream);
-			dispatcher.once("start", async () => {
-				queue.skippable = true;
-				reloadEvent.emit("musicOut", "queues", queues);
-				let dispatcherEndCode = new Function();
-				function updateProgress() {
-					if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
-					else return Promise.resolve();
-				}
-				if (!queue.nowPlayingMsg) {
-					await msg.channel.send(getNPEmbed(dispatcher, queue)).then(n => queue.nowPlayingMsg = n);
-					queue.generateReactions();
-				} else {
-					await updateProgress();
-				}
-				let npStartTimeout = setTimeout(() => {
-					if (!queue.songs[0] || !queue.connection.dispatcher) return;
-					updateProgress();
-					let updateProgressInterval = setInterval(() => {
+		if (song.source == "YouTube") {
+			const stream = ytdl(song.url);
+			stream.once("progress", () => {
+				const dispatcher = queue.connection.playStream(stream);
+				dispatcher.once("start", async () => {
+					queue.skippable = true;
+					reloadEvent.emit("musicOut", "queues", queues);
+					let dispatcherEndCode = new Function();
+					function updateProgress() {
+						if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
+						else return Promise.resolve();
+					}
+					if (!queue.nowPlayingMsg) {
+						await msg.channel.send(getNPEmbed(dispatcher, queue)).then(n => queue.nowPlayingMsg = n);
+						queue.generateReactions();
+					} else {
+						await updateProgress();
+					}
+					let npStartTimeout = setTimeout(() => {
+						if (!queue.songs[0] || !queue.connection.dispatcher) return;
 						updateProgress();
-					}, 5000);
-					dispatcherEndCode = () => {
-						clearInterval(updateProgressInterval);
-						updateProgress();
-					};
-				}, 5000-dispatcher.time%5000);
-				function handleError(error) { console.error(error) };
-				dispatcher.on('error', handleError);
-				dispatcher.once("end", () => {
-					dispatcher.removeListener("error", handleError);
-					clearTimeout(npStartTimeout);
-					dispatcherEndCode();
-					queue.skippable = false;
-					if (queue.auto && queue.songs.length == 1) {
-						let related = queue.songs[0].video.related_videos.filter(v => v.title)[0];
-						if (related) {
-							let videoID = related.id;
-							ytdl.getInfo(videoID).then(video => {
-								const song = {
-									title: Discord.Util.escapeMarkdown(video.title),
-									url: video.video_url,
-									video: video
-								};
-								queue.songs.push(song);
-								con();
-							}).catch(reason => {
-								manageYtdlGetInfoErrors(msg, reason, args[1]);
-								con();
-							});
+						let updateProgressInterval = setInterval(() => {
+							updateProgress();
+						}, 5000);
+						dispatcherEndCode = () => {
+							clearInterval(updateProgressInterval);
+							updateProgress();
+						};
+					}, 5000-dispatcher.time%5000);
+					function handleError(error) { console.error(error) };
+					dispatcher.on('error', handleError);
+					dispatcher.once("end", () => {
+						dispatcher.removeListener("error", handleError);
+						clearTimeout(npStartTimeout);
+						dispatcherEndCode();
+						queue.skippable = false;
+						if (queue.auto && queue.songs.length == 1) {
+							let related = queue.songs[0].video.related_videos.filter(v => v.title)[0];
+							if (related) {
+								let videoID = related.id;
+								ytdl.getInfo(videoID).then(video => {
+									const song = {
+										title: Discord.Util.escapeMarkdown(video.title),
+										url: video.video_url,
+										video: video,
+										source: "YouTube"
+									};
+									queue.songs.push(song);
+									con();
+								}).catch(reason => {
+									manageYtdlGetInfoErrors(msg, reason, args[1]);
+									con();
+								});
+							}
+						} else con();
+						function con() {
+							queue.songs.shift();
+							play(msg, guild, queue.songs[0]);
 						}
-					} else con();
-					function con() {
+					});
+				});
+				dispatcher.setVolumeLogarithmic(queue.volume / 5);
+				dispatcher.setBitrate("auto");
+			});
+		} else if (song.source == "Frisky") {
+			let host, path;
+			if (song.station == "frisky") {
+				host = "stream.friskyradio.com", path = "/frisky_mp3_hi";
+			} else if (song.station == "deep") {
+				host = "deep.friskyradio.com", path = "/friskydeep_aachi";
+			} else if (song.station == "chill") {
+				host = "chill.friskyradio.com", path = "/friskychill_mp3_hi";
+			}
+			let socket = new net.Socket();
+			socket.connect(80, host, () => {
+				socket.write(`GET ${path} HTTP/1.0\r\n\r\n`);
+				const dispatcher = queue.connection.playStream(socket);
+				dispatcher.setVolumeLogarithmic(queue.volume / 5);
+				dispatcher.setBitrate("auto");
+				dispatcher.once("start", async () => {
+					queue.skippable = true;
+					reloadEvent.emit("musicOut", "queues", queues);
+					let dispatcherEndCode = new Function();
+					function updateProgress() {
+						if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
+						else return Promise.resolve();
+					}
+					if (!queue.nowPlayingMsg) {
+						await msg.channel.send(getNPEmbed(dispatcher, queue)).then(n => queue.nowPlayingMsg = n);
+						queue.generateReactions();
+					} else {
+						await updateProgress();
+					}
+					let npStartTimeout = setTimeout(() => {
+						if (!queue.songs[0] || !queue.connection.dispatcher) return;
+						updateProgress();
+						let updateProgressInterval = setInterval(() => {
+							updateProgress();
+						}, 5000);
+						dispatcherEndCode = () => {
+							clearInterval(updateProgressInterval);
+							updateProgress();
+						};
+					}, 5000-dispatcher.time%5000);
+					dispatcher.once("end", () => {
+						clearTimeout(npStartTimeout);
+						dispatcherEndCode();
 						queue.songs.shift();
 						play(msg, guild, queue.songs[0]);
-					}
+					});
 				});
 			});
-			dispatcher.setVolumeLogarithmic(queue.volume / 5);
-			dispatcher.setBitrate("auto");
-		});
+		} else {
+			queue.textChannel.send("No source for current song.");
+		}
 	}
 
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
@@ -321,10 +376,17 @@ module.exports = function(passthrough) {
 
 	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
-		let max = queue.songs[0].video.length_seconds;
-		let current = Math.floor(dispatcher.time/1000);
-		if (current > max || done) current = max;
-		return `\`[ ${prettySeconds(current)} ${utils.progressBar(35, current, max, dispatcher.paused ? " [PAUSED] " : "")} ${prettySeconds(max)} ]\``;
+		if (queue.songs[0].source == "YouTube") {
+			let max = queue.songs[0].video.length_seconds;
+			let current = Math.floor(dispatcher.time/1000);
+			if (current > max || done) current = max;
+			return `\`[ ${prettySeconds(current)} ${utils.progressBar(35, current, max, dispatcher.paused ? " [PAUSED] " : "")} ${prettySeconds(max)} ]\``;
+		} else if (queue.songs[0].source == "Frisky") {
+			let current = Math.floor(dispatcher.time/1000);
+			return `\`[ ${prettySeconds(current)} ${"=".repeat(35)} LIVE ]\``;
+		} else {
+			return "Cannot render progress for source `"+queue.songs[0].source+"`.";
+		}
 	}
 
 	return {
@@ -346,6 +408,29 @@ module.exports = function(passthrough) {
 					`(Unless you wish to collaborate on a playlist with a trusted person, in which case make sure that you *really* trust them.)\n`+
 					`If you think somebody unscrupulous has gotten hold of this token, you can use this command again at any time to generate a new token and disable all previous ones.\n\n`+
 					`You can find the music dashboard at https://amandabot.ga/dash.`);
+			}
+		},
+		"frisky": {
+			usage: "[frisky|deep|chill]",
+			description: "Frisky radio",
+			aliases: ["frisky"],
+			category: "music",
+			process: async function(msg, suffix) {
+				const voiceChannel = msg.member.voiceChannel;
+				if (!voiceChannel) return msg.channel.send("Please join a voice channel first!");
+				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
+				let title = "Frisky Radio";
+				if (station != "frisky") title += ": "+station[0].toUpperCase()+station.slice(1);
+				const song = {
+					title: title,
+					station: station,
+					source: "Frisky"
+				}
+				let [queue, newQueue] = await initiateQueue(msg, voiceChannel);
+				if (!queue) return;
+				queue.songs.push(song);
+				if (newQueue) play(msg, msg.guild, song);
+				else msg.react("👌");
 			}
 		},
 		"music": {
@@ -380,7 +465,7 @@ module.exports = function(passthrough) {
 						}).catch(async reason => {
 							let searchString = args.slice(1).join(" ");
 							msg.channel.sendTyping();
-							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${searchString}`));
+							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
 							if (!videos.length) return msg.channel.send("No videos were found with those search terms");
 							videos = videos.slice(0, 10);
 							let videoResults = videos.map((video, index) => `${index+1}. **${video.title}** (${prettySeconds(video.lengthSeconds)})`);
@@ -700,6 +785,12 @@ module.exports = function(passthrough) {
 						.setColor("36393E")
 						msg.channel.send(embed);
 					}
+				} else if (args[0].toLowerCase() == "dump") {
+					let dump = queues.get(msg.guild.id);
+					[dump.songs, dump.connection.dispatcher].forEach(async d => {
+						let result = await utils.stringify(d, 1);
+						return msg.channel.send(result);
+					});
 				} else return msg.channel.send(`${msg.author.username}, That's not a valid action to do`);
 			}
 		}
