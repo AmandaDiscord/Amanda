@@ -193,6 +193,7 @@ module.exports = function(passthrough) {
 					function handleError(error) { console.error(error) };
 					dispatcher.on('error', handleError);
 					dispatcher.once("end", () => {
+						dispatcher.player.streamingData.pausedTime = 0;
 						dispatcher.removeListener("error", handleError);
 						clearTimeout(npStartTimeout);
 						dispatcherEndCode();
