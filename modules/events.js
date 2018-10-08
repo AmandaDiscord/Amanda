@@ -53,15 +53,15 @@ module.exports = function(passthrough) {
 				let username = msg.guild ? msg.guild.me.displayName : client.user.username;
 				let chat = msg.cleanContent.replace(new RegExp('@' + username + ',?'), '').trim();
 				msg.channel.sendTyping();
-				if (chat.toLowerCase().replace(/'s/gi, " is").includes(`what is your name`) || chat.toLowerCase().includes(`who are you`)) return setTimeout(() => { msg.channel.send(`I'm ${client.user.username}. It's very nice to meet you`); }, 3000);
-				if (chat.toLowerCase().includes(`how are you doing`)) return setTimeout(() => { msg.channel.send(`I'm doing pretty ok. How about you?`); }, 3000);
-				let owner = await client.fetchUser("320067006521147393");
-				if (chat.toLowerCase().includes("who made you") || chat.toLowerCase().replace(/'s/gi, " is").includes("who is your creator")) return setTimeout(() => msg.channel.send(`${owner.tag} made me`), 1300);
-				let data;
 				try {
-					let res = await (require("request-promise")(`https://some-random-api.ml/chatbot/?message=${encodeURIComponent(chat)}`));
-					data = JSON.parse(res);
-					msg.channel.send(data.response);
+					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
+						let data = JSON.parse(res);
+						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.auhtor.username);
+						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
+						if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no");
+						if (text == "IE=edge,chrome=1 (Answers.com)" && data.sp("output.0.actions.source.url")) text = "I believe you can find the answer here: "+data.output[0].actions.source.url
+						msg.channel.send(text);
+					});
 				} catch (error) { msg.channel.send(error); };
 			} else return;
 		}
