@@ -61,9 +61,9 @@ module.exports = (passthrough) => {
 		async destroy(id) {
 			let queue = this.storage.get(id);
 			if (!queue) return undefined;
-			await queue.nowPlayingMsg.clearReactions();
-			await queue.nowPlayingMsg.channel.send("We've run out of songs");
-			await queue.voiceChannel.leave();
+			queue.nowPlayingMsg.clearReactions();
+			queue.nowPlayingMsg.channel.send("We've run out of songs");
+			queue.voiceChannel.leave();
 			this.storage.delete(id);
 			void reloadEvent.emit("musicOut", "queues", this.queues);
 		}
