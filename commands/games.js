@@ -81,12 +81,12 @@ module.exports = function(passthrough) {
 			// Check answers
 			let coins =
 				this.difficulty == "easy"
-				? 200
+				? 100
 				: this.difficulty == "medium"
-				? 400
+				? 200
 				: this.difficulty == "hard"
-				? 800
-				: 500 // excuse me what the fuck
+				? 400
+				: 300 // excuse me what the fuck
 			// Award coins
 			let winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct);
 			winners.forEach(w => utils.coinsManager.award(w[0], coins));
