@@ -53,10 +53,11 @@ module.exports = function(passthrough) {
 				let username = msg.guild ? msg.guild.me.displayName : client.user.username;
 				let chat = msg.cleanContent.replace(new RegExp('@' + username + ',?'), '').trim();
 				msg.channel.sendTyping();
+				let owner = await client.fetchUser("320067006521147393");
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
-						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.auhtor.username);
+						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.auhtor.username).replace(/Pannous/gi, owner.username);
 						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
 						if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no");
 						if (text == "IE=edge,chrome=1 (Answers.com)" && data.sp("output.0.actions.source.url")) text = "I believe you can find the answer here: "+data.output[0].actions.source.url

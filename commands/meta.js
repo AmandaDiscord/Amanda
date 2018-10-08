@@ -111,11 +111,6 @@ module.exports = function(passthrough) {
 						`${c2.tag} <:brilliance:479939329104412672> <:NitroBadge:421774688507920406>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
-					.addField("Partners",
-						"axelgreavette <:HypeBadge:421764718580203530>, "+
-						"[SHODAN](http://shodanbot.com) <:bot:412413027565174787>, "+
-						"[Cadence](https://cadence.gq/) <:NitroBadge:421774688507920406>, "+
-						"[botrac4r](https://discordapp.com/oauth2/authorize?client_id=353703396483661824&scope=bot) <:bot:412413027565174787>")
 					.setColor("36393E");
 				msg.channel.send(embed);
 			}
