@@ -59,7 +59,7 @@ module.exports = function(passthrough) {
 				if (chat.toLowerCase().includes("who made you") || chat.toLowerCase().replace(/'s/gi, " is").includes("who is your creator")) return setTimeout(() => msg.channel.send(`${owner.tag} made me`), 1300);
 				let data;
 				try {
-					let res = await (require("request-promise")(`https://some-random-api.ml/chatbot/?message=${chat}`));
+					let res = await (require("request-promise")(`https://some-random-api.ml/chatbot/?message=${encodeURIComponent(chat)}`));
 					data = JSON.parse(res);
 					msg.channel.send(data.response);
 				} catch (error) { msg.channel.send(error); };
