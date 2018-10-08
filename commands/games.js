@@ -151,42 +151,4 @@ module.exports = function(passthrough) {
 		// Set up new game
 		new Game(channel, data);
 	}
-
-				/*
-				let collector = msg.channel.createMessageCollector((m => !m.author.bot), { time: 20000 });
-				collector.next.then(async msg => {
-					if (notallowed.includes(msg.author.id)) return;
-					let req = false;
-					if (msg.content.toLowerCase() == game.correctID) req = true;
-					else if (!letters.includes(msg.content.toLowerCase())) return;
-					else return notallowed.push(msg.author.id);
-					if (!req) return;
-					won = true;
-					let row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-					if (!row) {
-						await utils.sql.all(`INSERT INTO money (userID, coins) VALUES (?, ?)`, [msg.author.id, 5000]);
-						row = await utils.sql.get(`SELECT * FROM money WHERE userID =?`, msg.author.id);
-					}
-					await utils.sql.all(`UPDATE money SET coins =? WHERE userID =?`, [row.coins + reward, msg.author.id]);
-					msg.author.send(`You recieved ${reward} coins for guessing correctly on trivia`).catch(() => msg.channel.send(`**${msg.author.tag}**, please enable DMs so I can tell you your earnings`));
-					let resultembed = new Discord.RichEmbed()
-						.setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\n${msg.author.tag} won the game`))
-						.setColor(color)
-						.setFooter(`Click the reaction for another round.`)
-					let nmsg = await msg.channel.send(resultembed);
-					nmsg.reactionMenu([{ emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => { doQuestion(msg, user.username); }}]);
-					return delete games[id];
-				}).catch(() => { return; });
-				collector.once("end", () => {
-					setTimeout(async () => {
-						if (won) return;
-						let resultembed = new Discord.RichEmbed()
-							.setDescription(entities.decodeHTML(`**${game.correctID.toUpperCase()}:** ${game.answer}\n\nNo one guessed correctly`))
-							.setColor(color)
-							.setFooter(`Click the reaction for another round.`)
-						let nmsg = await msg.channel.send(resultembed);
-						nmsg.reactionMenu([{ emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => { doQuestion(msg, user.username); }}]);
-						return delete games[id];
-					}, 500);
-				});*/
 }

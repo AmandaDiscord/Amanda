@@ -1,7 +1,6 @@
 let ytdl = require("ytdl-core");
 let YouTube = require('simple-youtube-api');
 const net = require("net");
-let queues = new Map();
 let timeout = new Set();
 let crypto = require("crypto");
 let rp = require("request-promise");
@@ -9,6 +8,7 @@ let rp = require("request-promise");
 module.exports = function(passthrough) {
 	let { config, Discord, client, utils, reloadEvent } = passthrough;
 	let youtube = new YouTube(config.yt_api_key);
+	let manager = client.QueueManager;
 
 	reloadEvent.on("music", musicCommandListener);
 	reloadEvent.once(__filename, () => {
@@ -16,7 +16,7 @@ module.exports = function(passthrough) {
 	});
 	function musicCommandListener(action) {
 		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queues);
+			reloadEvent.emit("musicOut", "queues", manager.storage);
 		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
 			let [serverID, callback] = [...arguments].slice(1);
 			const actions = {
@@ -25,7 +25,7 @@ module.exports = function(passthrough) {
 				pause: callpause,
 				resume: callresume
 			};
-			let queue = queues.get(serverID);
+			let queue = manager.get(serverID);
 			if (!queue) return callback([400, "Server is not playing music"]);
 			if (actions[action]) {
 				let result = actions[action](undefined, queue);
@@ -48,7 +48,7 @@ module.exports = function(passthrough) {
 			else return "You cannot skip a song before the next has started! Wait a moment and try again.";
 		}
 		queue.connection.dispatcher.end();
-		reloadEvent.emit("musicOut", "queues", queues);
+		reloadEvent.emit("musicOut", "queues", manager.storage);
 	}
 
 	function callstop(msg, queue) {
@@ -60,7 +60,8 @@ module.exports = function(passthrough) {
 		queue.songs = [];
 		queue.auto = false;
 		queue.connection.dispatcher.end();
-		reloadEvent.emit("musicOut", "queues", queues);
+		manager.destroy(msg.guild.id);
+		reloadEvent.emit("musicOut", "queues", manager.storage);
 	}
 
 	function callpause(msg, queue) {
@@ -69,7 +70,7 @@ module.exports = function(passthrough) {
 			queue.playing = false;
 			queue.connection.dispatcher.pause();
 			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
-			reloadEvent.emit("musicOut", "queues", queues);
+			reloadEvent.emit("musicOut", "queues", manager.storage);
 		} else return;
 	}
 
@@ -79,7 +80,7 @@ module.exports = function(passthrough) {
 			queue.playing = true;
 			queue.connection.dispatcher.resume();
 			queue.nowPlayingMsg.edit(getNPEmbed(queue.connection.dispatcher, queue));
-			reloadEvent.emit("musicOut", "queues", queues);
+			reloadEvent.emit("musicOut", "queues", manager.storage);
 		} else return;
 	}
 
@@ -91,40 +92,30 @@ module.exports = function(passthrough) {
 	}
 
 	async function initiateQueue(msg, voiceChannel) {
-		let queue = queues.get(msg.guild.id);
+		let queue = manager.get(msg.guild.id);
 		if (queue) return [queue, false];
 		else {
-			queue = {
-				textChannel: msg.channel,
-				voiceChannel: voiceChannel,
-				connection: null,
-				songs: [],
-				volume: 5,
-				playing: true,
-				skippable: false,
-				auto: false,
-				nowPlayingMsg: null,
-				generateReactions: function() {
-					this.nowPlayingMsg.reactionMenu([
-						{ emoji: "⏯", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id), actionType: "js", actionData: (msg) => {
-							if (this.playing) callpause(msg, this);
-							else callresume(msg, this);
-						}},
-						{ emoji: "⏭", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id),  actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
-							if (callskip(msg, this)) {
-								if (this.songs.length == 2) messageReaction.remove();
-							}
-						}},
-						{ emoji: "⏹", remove: "all", allowedUsers: voiceChannel.members.map(m => m.id), ignore: "total", actionType: "js", actionData: (msg) => {
-							callstop(msg, this);
-						}}
-					]);
-				}
-			};
+			queue = manager.create(msg);
+			queue.textChannel = msg.channel; queue.voiceChannel = voiceChannel;
+			queue.generateReactions = function() {
+				this.nowPlayingMsg.reactionMenu([
+					{ emoji: "⏯", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id), actionType: "js", actionData: (msg) => {
+						if (this.playing) callpause(msg, this);
+						else callresume(msg, this);
+					}},
+					{ emoji: "⏭", remove: "user", allowedUsers: voiceChannel.members.map(m => m.id),  actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
+						if (callskip(msg, this)) {
+							if (this.songs.length == 2) messageReaction.remove();
+						}
+					}},
+					{ emoji: "⏹", remove: "all", allowedUsers: voiceChannel.members.map(m => m.id), ignore: "total", actionType: "js", actionData: (msg) => {
+						callstop(msg, this);
+					}}
+				]);
+			}
 			try {
 				let connection = await voiceChannel.join();
 				queue.connection = connection;
-				queues.set(msg.guild.id, queue);
 				return [queue, true];
 			} catch (error) {
 				msg.channel.send(`I could not join the voice channel: ${error}`);
@@ -152,22 +143,19 @@ module.exports = function(passthrough) {
 	}
 
 	function play(msg, guild, song) {
-		const queue = queues.get(guild.id);
+		const queue = manager.get(guild.id);
 		if (!song) {
-			queue.voiceChannel.leave();
-			queue.nowPlayingMsg.clearReactions();
-			queues.delete(guild.id);
-			reloadEvent.emit("musicOut", "queues", queues);
-			return msg.channel.send(`We've run out of songs`)
+			manager.destroy(guild.id);
+			return reloadEvent.emit("musicOut", "queues", manager.storage);
 		}
-		reloadEvent.emit("musicOut", "queues", queues);
+		reloadEvent.emit("musicOut", "queues", manager.storage);
 		if (song.source == "YouTube") {
 			const stream = ytdl(song.url);
 			stream.once("progress", () => {
 				const dispatcher = queue.connection.playStream(stream);
 				dispatcher.once("start", async () => {
 					queue.skippable = true;
-					reloadEvent.emit("musicOut", "queues", queues);
+					reloadEvent.emit("musicOut", "queues", manager.storage);
 					let dispatcherEndCode = new Function();
 					function updateProgress() {
 						if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
@@ -243,7 +231,7 @@ module.exports = function(passthrough) {
 				dispatcher.setBitrate("auto");
 				dispatcher.once("start", async () => {
 					queue.skippable = true;
-					reloadEvent.emit("musicOut", "queues", queues);
+					reloadEvent.emit("musicOut", "queues", manager.storage);
 					let dispatcherEndCode = new Function();
 					function updateProgress() {
 						if (queue.songs[0]) return queue.nowPlayingMsg.edit(getNPEmbed(dispatcher, queue));
@@ -448,7 +436,7 @@ module.exports = function(passthrough) {
 					return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing ${owner.tag}`);
 				}
 				let args = suffix.split(" ");
-				let queue = queues.get(msg.guild.id);
+				let queue = manager.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
@@ -601,7 +589,7 @@ module.exports = function(passthrough) {
 								if (!queue) return;
 								queue.songs = [];
 								queue.connection.dispatcher.end();
-								reloadEvent.emit("musicOut", "queues", queues);
+								reloadEvent.emit("musicOut", "queues", manager.storage);
 							}}]);
 						}).catch(async error => {
 							stashmsg.edit(await utils.stringify(error));
@@ -788,7 +776,7 @@ module.exports = function(passthrough) {
 						msg.channel.send(embed);
 					}
 				} else if (args[0].toLowerCase() == "dump") {
-					let dump = queues.get(msg.guild.id);
+					let dump = manager.get(msg.guild.id);
 					[dump.songs, dump.connection.dispatcher].forEach(async d => {
 						let result = await utils.stringify(d, 1);
 						return msg.channel.send(result);

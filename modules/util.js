@@ -4,10 +4,158 @@ let reactionMenus = {};
 
 module.exports = (passthrough) => {
 	let { Discord, client, db, utils, reloadEvent } = passthrough;
+
 	client.on("messageReactionAdd", reactionEvent);
 	reloadEvent.once(__filename, () => {
 		client.removeListener("messageReactionAdd", reactionEvent);
 	});
+
+
+
+	// Classes
+
+	/** Class representing a manager for Music queues */
+	class QueueStorage {
+		/**
+		 * Creates a new Music queue manager
+		 */
+		constructor() {
+			this.storage = new Map();
+		}
+		/**
+		 * Instantiates a queue object and sets it to the storage
+		 * @param {*} msg MessageResolvable
+		 * @returns {Object} A queue object
+		 */
+		create(msg) {
+			let queue = this.storage.get(msg.guild.id);
+			if (queue) return queue;
+			queue = {
+				textChannel: undefined,
+				voiceChannel: undefined,
+				connection: undefined,
+				songs: [],
+				volume: 5,
+				playing: true,
+				skippable: false,
+				auto: false,
+				nowPlayingMsg: undefined,
+				generateReactions: undefined
+			};
+			this.storage.set(msg.guild.id, queue);
+			return queue;
+		}
+		/**
+		 * Gets a queue by the ID provided
+		 * @param {String} id A Guild ID
+		 * @returns {Object} A queue object
+		 */
+		get(id) {
+			return this.storage.get(id);
+		}
+		/**
+		 * Destroys a queue by the ID provided
+		 * @param {String} id A Guild ID
+		 * @returns {void} void
+		 */
+		async destroy(id) {
+			let queue = this.storage.get(id);
+			if (!queue) return undefined;
+			await queue.nowPlayingMsg.clearReactions();
+			await queue.nowPlayingMsg.channel.send("We've run out of songs");
+			await queue.voiceChannel.leave();
+			this.storage.delete(id);
+			void reloadEvent.emit("musicOut", "queues", this.queues);
+		}
+	}
+
+	class DMUser {
+		constructor(userID) {
+			this.userID = userID;
+			this.user = undefined;
+			this.events = new events.EventEmitter();
+			this.fetch();
+		}
+		fetch() {
+			new Promise(resolve => {
+				if (client.readyAt) resolve();
+				else client.once("ready", () => resolve());
+			}).then(() => {
+				client.fetchUser(this.userID).then(user => {
+					this.user = user;
+					this.events.emit("fetched");
+					this.events = undefined;
+				});
+			});
+		}
+		send() {
+			return new Promise(resolve => {
+				return new Promise(fetched => {
+					if (!this.user) this.events.once("fetched", () => fetched());
+					else fetched();
+				}).then(() => {
+					resolve(this.user.send(...arguments));
+				});
+			});
+		}
+	}
+	utils.DMUser = DMUser;
+
+
+
+ // Client Prototypes
+
+	/**
+	 * Finds a user in the client cache
+	 * @param {*} msg MessageResolvable
+	 * @param {String} usertxt Text that contains user's display data to search them by
+	 * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
+	 * @returns {(User|null)} A user object or null if it couldn't find a user
+	 */
+	Discord.Client.prototype.findUser = function(msg, usertxt, self = false) {
+		usertxt = usertxt.toLowerCase();
+		if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
+		let matchFunctions = [];
+		matchFunctions = matchFunctions.concat([
+			user => user.id.includes(usertxt),
+			user => user.tag.toLowerCase() == usertxt,
+			user => user.username.toLowerCase() == usertxt,
+			user => user.username.toLowerCase().includes(usertxt)
+		]);
+		if (!usertxt) {
+			if (self) return msg.author;
+			else return null;
+		} else {
+			return client.users.get(usertxt) || matchFunctions.map(f => {
+				return client.users.find(u => f(u));
+			}).find(u => u) || null;
+		}
+	}
+
+	/**
+	 * Gets the URL of any Discord emoji
+	 * @param {String} emoji A string containing the Discord managed emoji
+	 * @returns {Object} An object with basic emoji properties
+	 */
+	Discord.Client.prototype.parseEmoji = getEmoji;
+	function getEmoji(emoji) {
+		let type, e;
+		e = Discord.Util.parseEmoji(emoji);
+		if (e == null) return null;
+		if (e.id == undefined) return null;
+		if (e.animated) type = "gif";
+		else type = "png";
+		return { animated: e.animated, name: e.name, id: e.id, url: `https://cdn.discordapp.com/emojis/${e.id}.${type}` };
+	}
+
+	/**
+	 * A Class to manage all of the Client's Music queues
+	 */
+	Discord.Client.prototype.QueueManager = new QueueStorage();
+
+
+
+ // Guild Prototypes
 
 	/**
 	 * Finds a member in a guild
@@ -39,6 +187,15 @@ module.exports = (passthrough) => {
 	}
 
 	/**
+	 * A Music queue for a guild managed by the client
+	 */
+	Discord.Guild.prototype.__defineGetter__('queue', function() { return client.QueueManager.get(this.id); });
+
+
+
+ // Channel Prototypes
+
+	/**
 	 * Sends a typing event to a channel that times out
 	 */
 	Discord.Channel.prototype.sendTyping = async function() {
@@ -59,6 +216,27 @@ module.exports = (passthrough) => {
 		});
 	}
 
+
+
+	// Message Prototypes
+	/**
+	 * Handles reactions as actions for the client to perform
+	 * @param {*} msg MessageResolvable
+	 * @param {Array} actions An array of objects of actions
+	 */
+	Discord.Message.prototype.reactionMenu = async function(actions) {
+		reactionMenus[this.id] = {
+			actions: actions
+		}
+		for (let a of actions) {
+			await this.react(a.emoji);
+		}
+	}
+
+
+
+	// User Prototypes
+
 	/**
 	 * Gets the 32×32 avatar URL of a user, useful for embed authors and footers
 	 */
@@ -68,31 +246,48 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Finds a user in the client cache
-	 * @param {*} msg MessageResolvable
-	 * @param {String} usertxt Text that contains user's display data to search them by
-	 * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
-	 * @returns {(User|null)} A user object or null if it couldn't find a user
+	 * Changes a presence string into an emoji
+	 * @param {String} presence The user's presence string
+	 * @returns {String} The emoji that matches that presence
 	 */
-	Discord.Client.prototype.findUser = function(msg, usertxt, self = false) {
-		usertxt = usertxt.toLowerCase();
-		if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
-		let matchFunctions = [];
-		matchFunctions = matchFunctions.concat([
-			user => user.id.includes(usertxt),
-			user => user.tag.toLowerCase() == usertxt,
-			user => user.username.toLowerCase() == usertxt,
-			user => user.username.toLowerCase().includes(usertxt)
-		]);
-		if (!usertxt) {
-			if (self) return msg.author;
-			else return null;
-		} else {
-			return client.users.get(usertxt) || matchFunctions.map(f => {
-				return client.users.find(u => f(u));
-			}).find(u => u) || null;
-		}
-	}
+	Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
+		let presences = {
+			online: "<:online:453823508200554508>",
+			idle: "<:idle:453823508028456971>",
+			dnd: "<:dnd:453823507864748044>",
+			offline: "<:invisible:453827513995755520>"
+		};
+		return presences[this.presence.status];
+	});
+	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
+		let presences = {
+			online: "<:online:453823508200554508>",
+			idle: "<:idle:453823508028456971>",
+			dnd: "<:dnd:453823507864748044>",
+			offline: "<:invisible:453827513995755520>"
+		};
+		return presences[this.presence.status];
+	});
+
+	/**
+	 * Changes a presence type integer to a prefix string
+	 * @param {Number} type The user's presence integer
+	 * @returns {String} The prefix that matches the presence type
+	 */
+	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
+		if (this.presence.game == null) return null;
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		return prefixes[this.presence.game.type];
+	});
+	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
+		if (this.presence.game == null) return null;
+		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		return prefixes[this.presence.game.type];
+	});
+
+
+
+	// MySQL Functions
 
 	/**
 	 * Checks if a user or guild has certain permission levels
@@ -184,65 +379,9 @@ module.exports = (passthrough) => {
 		}
 	}
 
-	class DMUser {
-		constructor(userID) {
-			this.userID = userID;
-			this.user = undefined;
-			this.events = new events.EventEmitter();
-			this.fetch();
-		}
-		fetch() {
-			new Promise(resolve => {
-				if (client.readyAt) resolve();
-				else client.once("ready", () => resolve());
-			}).then(() => {
-				client.fetchUser(this.userID).then(user => {
-					this.user = user;
-					this.events.emit("fetched");
-					this.events = undefined;
-				});
-			});
-		}
-		send() {
-			return new Promise(resolve => {
-				return new Promise(fetched => {
-					if (!this.user) this.events.once("fetched", () => fetched());
-					else fetched();
-				}).then(() => {
-					resolve(this.user.send(...arguments));
-				});
-			});
-		}
-	}
-	utils.DMUser = DMUser;
 
-	/**
-	 * Handles reactions as actions for the client to perform
-	 * @param {*} msg MessageResolvable
-	 * @param {Array} actions An array of objects of actions
-	 */
-	Discord.Message.prototype.reactionMenu = async function(actions) {
-		reactionMenus[this.id] = {
-			actions: actions
-		}
-		for (let a of actions) {
-			await this.react(a.emoji);
-		}
-	}
 
-	/**
-	 * Gets the URL of any Discord emoji
-	 */
-	Discord.Client.prototype.parseEmoji = getEmoji;
-	function getEmoji(emoji) {
-		let type, e;
-		e = Discord.Util.parseEmoji(emoji);
-		if (e == null) return null;
-		if (e.id == undefined) return null;
-		if (e.animated) type = "gif";
-		else type = "png";
-		return { animated: e.animated, name: e.name, id: e.id, url: `https://cdn.discordapp.com/emojis/${e.id}.${type}` };
-	}
+	// Misc Prototypes
 
 	/**
 	 * Shuffles an array psuedorandomly
@@ -284,48 +423,6 @@ module.exports = (passthrough) => {
 		if (secs > 0) timestr += secs + "s";
 		return timestr;
 	}
-
-
-	/**
-	 * Changes a presence string into an emoji
-	 * @param {String} presence The user's presence string
-	 * @returns {String} The emoji that matches that presence
-	 */
-	Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
-		let presences = {
-			online: "<:online:453823508200554508>",
-			idle: "<:idle:453823508028456971>",
-			dnd: "<:dnd:453823507864748044>",
-			offline: "<:invisible:453827513995755520>"
-		};
-		return presences[this.presence.status];
-	});
-	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
-		let presences = {
-			online: "<:online:453823508200554508>",
-			idle: "<:idle:453823508028456971>",
-			dnd: "<:dnd:453823507864748044>",
-			offline: "<:invisible:453827513995755520>"
-		};
-		return presences[this.presence.status];
-	});
-
-
-	/**
-	 * Changes a presence type integer to a prefix string
-	 * @param {Number} type The user's presence integer
-	 * @returns {String} The prefix that matches the presence type
-	 */
-	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
-		if (this.presence.game == null) return null;
-		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
-		return prefixes[this.presence.game.type];
-	});
-	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
-		if (this.presence.game == null) return null;
-		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
-		return prefixes[this.presence.game.type];
-	});
 
 	/**
 	 * Creates a progress bar
