@@ -378,6 +378,18 @@ module.exports = (passthrough) => {
 			}
 		}
 	}
+	utils.cooldownManager = async function(userID, command, info) {
+		let winChance = info.max;
+		let cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command]);
+		if (cooldown) {
+			winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now()-cooldown.date)/info.regen.time)*info.regen.amount));
+			let newValue = winChance - info.step;
+			utils.sql.all("UPDATE MoneyCooldown SET date = ?, value = ? WHERE userID = ? AND command = ?", [Date.now(), newValue, userID, command]);
+		} else {
+			utils.sql.all("INSERT INTO MoneyCooldown VALUES (NULL, ?, ?, ?, ?)", [userID, command, Date.now(), info.max - info.step]);
+		}
+		return winChance;
+	}
 
 
 

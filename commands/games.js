@@ -1,5 +1,6 @@
 const rp = require("request-promise");
 const entities = require("entities");
+const util = require("util");
 
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
@@ -74,22 +75,36 @@ module.exports = function(passthrough) {
 			this.receivedAnswers.set(msg.author.id, index);
 			//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`);
 		}
-		end() {
+		async end() {
 			// Clean up
 			clearTimeout(this.timer);
 			this.storage.remove(this);
 			// Check answers
 			let coins =
 				this.difficulty == "easy"
-				? 100
+				? 150
 				: this.difficulty == "medium"
-				? 200
+				? 250
 				: this.difficulty == "hard"
-				? 400
-				: 300 // excuse me what the fuck
+				? 500
+				: 400 // excuse me what the fuck
 			// Award coins
+			const cooldownInfo = {
+				max: 10,
+				min: 2,
+				step: 1,
+				regen: {
+					amount: 1,
+					time: 30*60*1000
+				}
+			};
 			let winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct);
-			winners.forEach(w => utils.coinsManager.award(w[0], coins));
+			await Promise.all(winners.map(async w => {
+				let cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo);
+				w.winnings = Math.floor(coins * 0.8 ** (10-cooldownValue));
+				w.text = `${coins} × 0.8^${(10-cooldownValue)} = ${w.winnings}`;
+				utils.coinsManager.award(w[0], w.winnings);
+			}));
 			// Send message
 			let embed = new Discord.RichEmbed()
 			.setTitle("Correct answer:")
@@ -97,14 +112,23 @@ module.exports = function(passthrough) {
 			.setColor(this.color)
 			.setFooter("Click the reaction for another round.")
 			if (winners.length) {
-				embed.addField("Winners", winners.map(w => `${client.users.get(w[0]).username} (+${coins} <a:Discoin:422523472128901140>)`).join("\n"));
+				embed.addField("Winners", winners.map(w => `${client.users.get(w[0]).username} (+${w.winnings} <a:Discoin:422523472128901140>)`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
 			this.channel.send(embed).then(msg => {
-				msg.reactionMenu([{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
-					startGame(this.channel);
-				}}]);
+				msg.reactionMenu([
+					{emoji: client.emojis.get("362741439211503616"), ignore: "that", actionType: "js", actionData: () => {
+						startGame(this.channel);
+					}},
+					{emoji: "🐞", ignore: "that", actionType: "js", actionData: async () => {
+						msg.channel.send(
+							(await utils.stringify(this))+" "+
+							(await utils.stringify(this.answers, 10))+" "+
+							(await utils.stringify(this.receivedAnswers, 10))
+						);
+					}}
+				]);
 			});
 		}
 	}

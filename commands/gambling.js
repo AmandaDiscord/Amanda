@@ -17,16 +17,31 @@ module.exports = function(passthrough) {
 				let money = await utils.coinsManager.get(msg.author.id);
 				msg.channel.sendTyping();
 				let args = suffix.split(" ");
-				let array = ['apple', 'cherries', 'watermelon', 'pear', 'heart', "strawberry"];
-				let slot1 = array[Math.floor(Math.random() * array.length)];
-				let slot2 = array[Math.floor(Math.random() * array.length)];
-				let slot3 = array[Math.floor(Math.random() * array.length)];
+				let array = ['apple', 'cherries', 'watermelon', 'pear', "strawberry"]; // plus heart, which is chosen seperately
+				const cooldownInfo = {
+					max: 23,
+					min: 10,
+					step: 1,
+					regen: {
+						amount: 1,
+						time: 3*60*1000
+					}
+				};
+				let winChance = await utils.cooldownManager(msg.author.id, "slot", cooldownInfo);
+				let slots = [];
+				for (let i = 0; i < 3; i++) {
+					if (Math.random() < winChance/100) {
+						slots[i] = "heart";
+					} else {
+						slots[i] = array[Math.floor(Math.random() * array.length)];
+					}
+				}
 				let canvas = new Canvas(601, 600);
 				let ctx = canvas.getContext("2d");
 				Promise.all([
-					util.promisify(fs.readFile)(`./images/emojis/${slot1}.png`),
-					util.promisify(fs.readFile)(`./images/emojis/${slot2}.png`),
-					util.promisify(fs.readFile)(`./images/emojis/${slot3}.png`),
+					util.promisify(fs.readFile)(`./images/emojis/${slots[0]}.png`),
+					util.promisify(fs.readFile)(`./images/emojis/${slots[1]}.png`),
+					util.promisify(fs.readFile)(`./images/emojis/${slots[2]}.png`),
 					util.promisify(fs.readFile)(`./images/slot.png`)
 				]).then(async ([image1, image2, image3, template]) => {
 					let templateI = new Canvas.Image();
@@ -62,25 +77,23 @@ module.exports = function(passthrough) {
 					}
 					let result = `**${msg.author.tag}**, `;
 					let winning;
-					if (slot1 == "heart" && slot1 == slot2 && slot2 == slot3) {
+					if (slots.every(s => s == "heart")) {
 						winning = bet * 30;
 						result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
-					} else if (slot1 == "heart" && slot1 == slot2 || slot1 == "heart" && slot1 == slot3) {
+					} else if (slots.filter(s => s == "heart").length == 2) {
 						winning = bet * 4;
 						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-					} else if (slot2 == "heart" && slot2 == slot3) {
-						winning = bet * 4;
-						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-					} else if (slot1 == "heart" || slot2 == "heart" || slot3 == "heart") {
+					} else if (slots.filter(s => s == "heart").length == 1) {
 						winning = Math.floor(bet * 1.25);
 						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
-					} else if (slot1 == slot2 && slot2 == slot3) {
+					} else if (slots.slice(1).every(s => s == slots[0])) {
 						winning = bet * 10;
 						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
 					} else {
 						winning = 0;
 						result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
 					}
+					//result += ` (heart chance: ${winChance})`;
 					utils.coinsManager.award(msg.author.id, winning-bet);
 					ctx.fillText(winning, 115, 540);
 					ctx.fillText(bet, 390, 540 );
@@ -124,12 +137,26 @@ module.exports = function(passthrough) {
 				}
 				if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
 				if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
-				let flip = Math.floor(Math.random() * (4 - 1) + 1);
-				if (args[1] == "h" && flip == 1 || args[1] == "t" && flip == 2) {
-					msg.channel.send(`You guessed it! you got ${bet * 2} <a:Discoin:422523472128901140>`);
+				const cooldownInfo = {
+					max: 60,
+					min: 36,
+					step: 3,
+					regen: {
+						amount: 1,
+						time: 60*1000
+					}
+				};
+				let winChance = await utils.cooldownManager(msg.author.id, "bf", cooldownInfo);
+				const strings = {
+					h: ["heads", "<:coinH:402219464348925954>"],
+					t: ["tails", "<:coinT:402219471693021196>"]
+				};
+				if (Math.random() < winChance/100) {
+					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} <a:Discoin:422523472128901140>`);
 					utils.coinsManager.award(msg.author.id, bet);
 				} else {
-					msg.channel.send(`Sorry but you didn't guess correctly. Better luck next time`);
+					let pick = args[1] == "h" ? "t" : "h";
+					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[pick][1]} I flipped ${strings[pick][0]}.\nSorry but you didn't guess correctly. Better luck next time.`);
 					utils.coinsManager.award(msg.author.id, -bet);
 				}
 			}
