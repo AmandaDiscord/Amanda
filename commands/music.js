@@ -223,6 +223,17 @@ module.exports = function(passthrough) {
 			} else if (song.station == "chill") {
 				host = "chill.friskyradio.com", path = "/friskychill_mp3_hi";
 			}
+			(function getEpisodeTitle() {
+				rp("https://www.friskyradio.com/api/v2/nowPlaying").then(body => {
+					let data = JSON.parse(body);
+					let item = data.data.items.find(i => i.station == song.station);
+					if (item) {
+						song.title = "Frisky Radio: "+item.episode.title;
+						if (song.station != "frisky") song.title += ` (${song.station[0].toUpperCase()+song.station.slice(1)}`;
+						setTimeout(getEpisodeTitle, new Date(item.episode.air_end).getTime()-Date.now()+3000);
+					}
+				});
+			})();
 			let socket = new net.Socket();
 			socket.connect(80, host, () => {
 				socket.write(`GET ${path} HTTP/1.0\r\n\r\n`);
@@ -410,7 +421,7 @@ module.exports = function(passthrough) {
 				if (!voiceChannel) return msg.channel.send("Please join a voice channel first!");
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let title = "Frisky Radio";
-				if (station != "frisky") title += ": "+station[0].toUpperCase()+station.slice(1);
+				if (station != "frisky") title += " ("+station[0].toUpperCase()+station.slice(1)+")";
 				const song = {
 					title: title,
 					station: station,
