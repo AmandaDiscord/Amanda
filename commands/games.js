@@ -56,7 +56,7 @@ module.exports = function(passthrough) {
 			.setTitle(`${entities.decodeHTML(api.category)} (${api.difficulty})`)
 			.setDescription("​\n"+entities.decodeHTML(api.question))
 			.setColor(this.color);
-			answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("")+"​", true)) //SC: zero-width space and em space
+			answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)} \n`).join("")+"​", true)) //SC: zero-width space and em space
 			embed.setFooter("To answer, type a letter in chat. You have 20 seconds.");
 			this.channel.send(embed);
 			// Setup timer
