@@ -247,8 +247,8 @@ module.exports = function(passthrough) {
 			description: "Hugs someone", // Command description
 			verb: "hugs", // x "verbed" @y in the command response
 			shortcut: "nekos.life", // nekos.life: use the command name as the endpoint
-			traaOverride: true, // don't set this true
-			amanda: name => `**Hugs ${name} back** :heart:` // Response when used on the bot itself
+			amanda: name => `**Hugs ${name} back** :heart:`, // Response when used on the bot itself
+			traaOverride: true // don't set this true for newly added types
 		},{
 			name: "nom",
 			description: "Noms someone",
@@ -261,13 +261,15 @@ module.exports = function(passthrough) {
 			description: "Kisses someone",
 			verb: "kissed",
 			shortcut: "nekos.life",
-			amanda: name => `**Kisses ${name} back** :heart:`
+			amanda: name => `**Kisses ${name} back** :heart:`,
+			traaOverride: true
 		},{
 			name: "cuddle",
 			description: "Cuddles someone",
 			verb: "cuddles",
 			shortcut: "nekos.life",
-			amanda: name => `**Cuddles ${name} back** :heart:`
+			amanda: name => `**Cuddles ${name} back** :heart:`,
+			traaOverride: true
 		},{
 			name: "poke",
 			description: "Pokes someone",
@@ -292,8 +294,8 @@ module.exports = function(passthrough) {
 			description: "Pats someone",
 			verb: "patted",
 			shortcut: "nekos.life",
-			traaOverride: true,
-			amanda: name => `≥ w ≤`
+			amanda: () => `≥ w ≤`,
+			traaOverride: true
 		}
 	];
 
