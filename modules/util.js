@@ -65,7 +65,7 @@ module.exports = (passthrough) => {
 			queue.nowPlayingMsg.channel.send("We've run out of songs");
 			queue.voiceChannel.leave();
 			this.storage.delete(id);
-			void reloadEvent.emit("musicOut", "queues", this.queues);
+			void reloadEvent.emit("musicOut", "queues", this.storage);
 		}
 	}
 
