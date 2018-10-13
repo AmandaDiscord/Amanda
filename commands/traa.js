@@ -31,11 +31,9 @@ module.exports = function(passthrough) {
 		if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
 			let url = msg.embeds[0].image.url;
 			let callingMessage = [...msg.channel.messages.filter(m => m.content.startsWith(botInfo[1])).values()].slice(-1)[0];
-			let command;
-			if (callingMessage) {
-				command = callingMessage.content.match(/\w+/)[0];
-				if (command.toLowerCase() == "rule34") return; // I really don't need this in my life
-			}
+			if (!callingMessage) return;
+			let command = callingMessage.content.match(/\w+/)[0];
+			if (!["boop", "cuddle", "hug", "kiss", "nom", "pat", "poke", "slap"].includes(command)) return;
 			let existing = await utils.sql.get("SELECT COUNT(*) AS count FROM GenderGifs WHERE url = ?", url);
 			if (existing.count) return; // skip if already exists
 			let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
