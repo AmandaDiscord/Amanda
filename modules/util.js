@@ -354,11 +354,11 @@ module.exports = (passthrough) => {
 	utils.coinsManager = {
 		"get": async function(userID) {
 			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
-			if (!row) {
+			if (row) return row.coins;
+			else {
 				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, startingCoins]);
-				row = await utils.coinsManager.get(userID);
+				return startingCoins;
 			}
-			return row.coins;
 		},
 		"set": async function(userID, value) {
 			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
