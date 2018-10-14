@@ -81,10 +81,10 @@ module.exports = function(passthrough) {
 				let award = Math.floor(parseInt(args[0]));
 				utils.coinsManager.award(member.id, award);
 				let embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.tag}** has awarded ${award} Discoins to **${member.user.tag}**`)
+					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				member.send(`**${msg.author.tag}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				member.send(`**${String(msg.author)}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

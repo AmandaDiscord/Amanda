@@ -71,7 +71,7 @@ module.exports = function(passthrough) {
 						let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 						percentage = parseInt("0x"+hash)%101;
 					}
-					msg.channel.send(`Aww. I'd rate ${mem1.user.tag} and ${mem2.user.tag} being together a ${percentage}%`,{files: [buffer]});
+					msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [buffer]});
 				});
 			}
 		},
@@ -87,7 +87,7 @@ module.exports = function(passthrough) {
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				let info = await getWaifuInfo(member.id);
 				let embed = new Discord.RichEmbed()
-					.setAuthor(member.user.tag, member.user.smallAvatarURL)
+					.setAuthor(member.displayTag, member.user.smallAvatarURL)
 					.addField(`Price:`, info.price)
 					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
 					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")
@@ -134,9 +134,9 @@ module.exports = function(passthrough) {
 				utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				member.user.send(`**${msg.author.tag}** has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM a **${member.user.tag}** about the transaction but they may have DMs from me disabled`));
+				member.user.send(`${String(msg.member)} has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM that member but they may have DMs disabled from me`));
 				let embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.tag}** has claimed **${member.user.tag}** for ${claim} <a:Discoin:422523472128901140>`)
+					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} <a:Discoin:422523472128901140>`)
 					.setColor("36393E")
 				msg.channel.send({embed});
 			}

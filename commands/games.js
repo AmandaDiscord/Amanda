@@ -112,7 +112,7 @@ module.exports = function(passthrough) {
 			.setColor(this.color)
 			.setFooter("Click the reaction for another round.")
 			if (winners.length) {
-				embed.addField("Winners", winners.map(w => `${client.users.get(w[0]).username} (+${w.winnings} <a:Discoin:422523472128901140>)`).join("\n"));
+				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} <a:Discoin:422523472128901140>)`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}

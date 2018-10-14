@@ -75,7 +75,7 @@ module.exports = function(passthrough) {
 						if (bet < 2) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 2`);
 						if (bet > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
 					}
-					let result = `**${msg.author.tag}**, `;
+					let result = "";
 					let winning;
 					if (slots.every(s => s == "heart")) {
 						winning = bet * 30;
@@ -173,7 +173,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
 				let money = await utils.coinsManager.get(member.id);
 				let embed = new Discord.RichEmbed()
-					.setAuthor(`Coins for ${member.user.tag}`)
+					.setAuthor(`Coins for ${member.displayTag}`)
 					.setDescription(`${money} Discoins <a:Discoin:422523472128901140>`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
@@ -244,10 +244,10 @@ module.exports = function(passthrough) {
 				utils.coinsManager.award(msg.author.id, -gift);
 				utils.coinsManager.award(member.id, gift);
 				let embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.tag}** has given ${gift} Discoins to **${member.user.tag}**`)
+					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				member.send(`**${msg.author.tag}** has given you ${gift} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				member.send(`${String(msg.author)} has given you ${gift} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

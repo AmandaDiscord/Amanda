@@ -285,6 +285,12 @@ module.exports = (passthrough) => {
 		return prefixes[this.presence.game.type];
 	});
 
+	/**
+	 * Gets a string in the format `${member.tag}` or `${member.tag} (${member.nickname})`
+	 */
+	Discord.GuildMember.prototype.__defineGetter__("displayTag", function() {
+		return this.nickname ? `${this.user.tag} (${this.nickname})` : this.user.tag;
+	});
 
 
 	// MySQL Functions
