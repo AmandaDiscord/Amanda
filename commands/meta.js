@@ -38,7 +38,7 @@ module.exports = function(passthrough) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 				let embed = new Discord.RichEmbed()
-				.addField(client.user.tag+" "+client.user.presenceEmoji,
+				.addField(client.user.tag+" <:online:453823508200554508>",
 					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
 					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 					`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
