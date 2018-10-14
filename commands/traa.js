@@ -22,24 +22,38 @@ module.exports = function(passthrough) {
 		client.removeListener("message", gifDetector);
 	});
 	client.on("message", gifDetector);
+
+	let prompts = [];
+
 	async function gifDetector(msg) {
-		let botInfo;
-		for (let b of bots) {
-			if (msg.author.id == b[0]) botInfo = b;
-		}
-		if (!botInfo) return;
-		if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
-			let url = msg.embeds[0].image.url;
-			let callingMessage = [...msg.channel.messages.filter(m => m.content.startsWith(botInfo[1])).values()].slice(-1)[0];
-			if (!callingMessage) return;
-			let command = callingMessage.content.match(/\w+/)[0];
+		if (!msg.author.bot) { // command
+			let botInfo;
+			for (let b of bots) {
+				if (msg.content.startsWith(b[1])) botInfo = b;
+			}
+			if (!botInfo) return;
+			let command = msg.content.match(/\w+/)[0];
 			if (!["boop", "cuddle", "hug", "kiss", "nom", "pat", "poke", "slap"].includes(command)) return;
-			let existing = await utils.sql.get("SELECT COUNT(*) AS count FROM GenderGifs WHERE url = ?", url);
-			if (existing.count) return; // skip if already exists
-			let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
-			if (backlog.some(r => r.url == url)) return; // skip if already in backlog
-			if (!backlog.length) cadence.send("New "+command+" GIF from "+msg.author.username+":\n"+url);
-			utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username]);
+			prompts.push({msg, botInfo, command});
+		} else { // response
+			if (!prompts.length) return;
+			let i = 0, ok = false;
+			while (i < prompts.length && !ok) {
+				if (prompts[i].botInfo[0] == msg.author.id) ok = true;
+				if (!ok) i++;
+			}
+			if (!ok) return;
+			let {botInfo, command} = prompts.splice(i, 1)[0];
+			if (!botInfo) return;
+			if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
+				let url = msg.embeds[0].image.url;
+				let existing = await utils.sql.get("SELECT * FROM GenderGifs WHERE url = ?", url);
+				if (existing) return; // skip if already exists
+				let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
+				if (backlog.some(r => r.url == url)) return; // skip if already in backlog
+				if (!backlog.length) cadence.send("New "+command+" GIF from "+msg.author.username+":\n"+url);
+				utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username]);
+			}
 		}
 	}
 
