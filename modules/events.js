@@ -68,8 +68,12 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	function manageEdit(oldMessage, newMessage) {
-		if (newMessage.editedTimestamp && oldMessage.editedTimestamp != newMessage.editedTimestamp) manageMessage(newMessage);
+	function manageEdit(oldMessage, data) {
+		if (data.content) {
+			let channel = client.channels.get(data.channel_id);
+			let message = new Discord.Message(channel, data, client);
+			manageMessage(message);
+		}
 	}
 
 	function manageReady() {

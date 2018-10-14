@@ -226,6 +226,7 @@ module.exports = (passthrough) => {
 	 */
 	Discord.Message.prototype.reactionMenu = async function(actions) {
 		reactionMenus[this.id] = {
+			message: this,
 			actions: actions
 		}
 		for (let a of actions) {
@@ -493,11 +494,12 @@ module.exports = (passthrough) => {
 	}
 
 	function reactionEvent(messageReaction, user) {
-		let msg = messageReaction.message;
+		let id = messageReaction.messageID;
 		let emoji = messageReaction.emoji;
 		if (user.id == client.user.id) return;
-		let menu = reactionMenus[msg.id];
+		let menu = reactionMenus[id];
 		if (!menu) return;
+		let msg = menu.message;
 		let action = menu.actions.find(a => a.emoji == emoji || (a.emoji.name == emoji.name && a.emoji.id == emoji.id));
 		if (!action) return;
 		if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {

@@ -172,7 +172,7 @@ module.exports = function(passthrough) {
 					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
 				}
 				let status = user.presenceEmoji;
-				let game = "No activity set";
+				let game = "";
 				if (user.presence.game && user.presence.game.streaming) {
 					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
@@ -187,7 +187,7 @@ module.exports = function(passthrough) {
 				embed.setThumbnail(user.displayAvatarURL);
 				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
 				embed.setTitle(`${user.tag} ${status}`);
-				embed.setDescription(game);
+				if (game) embed.setDescription(game);
 				msg.channel.send({embed});
 			}
 		},
