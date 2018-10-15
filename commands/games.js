@@ -23,15 +23,17 @@ module.exports = function(passthrough) {
 	let games = new GameStorage();
 
 	class Game {
-		constructor(channel, data) {
+		constructor(channel, data, category) {
 			let api = data.results[0];
 			// Storage
 			this.storage = games;
 			this.channel = channel;
 			this.storage.add(this);
+			// Category
+			if (category) this.category = category;
 			// Answers
-			let correctAnswer = api.correct_answer;
-			let wrongAnswers = api.incorrect_answers;
+			let correctAnswer = api.correct_answer.trim();
+			let wrongAnswers = api.incorrect_answers.map(a => a.trim());
 			this.answers = wrongAnswers
 				.map(answer => ({correct: false, answer}))
 				.concat([{correct: true, answer: correctAnswer}])
@@ -119,7 +121,7 @@ module.exports = function(passthrough) {
 			this.channel.send(embed).then(msg => {
 				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "that", actionType: "js", actionData: () => {
-						startGame(this.channel);
+						startGame(this.channel, {category: this.category});
 					}},
 					{emoji: "🐞", ignore: "that", actionType: "js", actionData: async () => {
 						msg.channel.send(
@@ -148,31 +150,67 @@ module.exports = function(passthrough) {
 			description: "Play a game of trivia with other members and win Discoins",
 			aliases: ["trivia", "t"],
 			category: "games",
-			process: async function(msg) {
-				startGame(msg.channel);
+			process: async function(msg, suffix) {
+				startGame(msg.channel, {suffix, msg});
 			}
 		}
 	}
 
-	async function startGame(channel) {
+	async function JSONHelper(body, channel) {
+		try {
+			if (body.startsWith("http")) body = await rp(body);
+			return [true, JSON.parse(body)];
+		} catch (e) {
+			let embed = new Discord.RichEmbed()
+			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
+			.setColor(0xdd1d1d)
+			return [false, channel.send({embed})];
+		}
+	}
+
+	async function startGame(channel, options = {}) {
+		// Select category
+		let category = options.category || null;
+		if (options.suffix) {
+			channel.sendTyping();
+			let body = await JSONHelper("https://opentdb.com/api_category.php", channel);
+			if (!body[0]) return;
+			let data = body[1];
+			if (options.suffix.includes("categor")) {
+				options.msg.author.send(
+					new Discord.RichEmbed()
+					.setTitle("Categories")
+					.setDescription(data.trivia_categories.map(c => c.name)
+					.join("\n")+"\n\n"+
+					"To select a category, use `&trivia <category name>`.")
+				).then(() => {
+					channel.send("I've sent you a DM with the list of categories.");
+				}).catch(() => {
+					channel.send("I tried to DM you a list of categories, but you may have DMs from me disabled.");
+				});
+				return;
+			} else {
+				let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix));
+				if (f.length == 0) {
+					return channel.send("Found no categories with that name. Use `&trivia categories` for the complete list of categories.");
+				} else if (f.length >= 2) {
+					return channel.send("There are multiple categories with that name: **"+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.");
+				} else {
+					category = f[0].id;
+				}
+			}
+		}
 		// Check games in progress
 		if (games.getChannel(channel)) return channel.send(`There's a game already in progress for this channel.`);
 		// Send typing
 		channel.sendTyping();
 		// Get new game data
-		let body = await rp("https://opentdb.com/api.php?amount=1");
+		let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel);
+		if (!body[0]) return;
+		let data = body[1];
 		// Error check new game data
-		let data;
-		try {
-			data = JSON.parse(body);
-		} catch (error) {
-			let embed = new Discord.RichEmbed()
-			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
-			.setColor(0xdd1d1d)
-			return channel.send({embed});
-		}
 		if (data.response_code != 0) return channel.send(`There was an error from the api`);
 		// Set up new game
-		new Game(channel, data);
+		new Game(channel, data, category);
 	}
 }
