@@ -222,13 +222,15 @@ module.exports = function(passthrough) {
 				host = "deep.friskyradio.com", path = "/friskydeep_aachi";
 			} else if (song.station == "chill") {
 				host = "chill.friskyradio.com", path = "/friskychill_mp3_hi";
+			} else {
+				throw new Error("song.station was "+song.station+", expected 'frisky', 'deep' or 'chill'");
 			}
 			(function getEpisodeTitle() {
 				rp("https://www.friskyradio.com/api/v2/nowPlaying").then(body => {
 					let data = JSON.parse(body);
 					let item = data.data.items.find(i => i.station == song.station);
-					if (item) {
-						song.title = "Frisky Radio: "+item.episode.title;
+					if (item && item.sp("episode.title")) {
+						song.title = "Frisky Radio: "+item.sp("episode.title");
 						if (song.station != "frisky") song.title += ` (${song.station[0].toUpperCase()+song.station.slice(1)}`;
 						setTimeout(getEpisodeTitle, new Date(item.episode.air_end).getTime()-Date.now()+3000);
 					}
@@ -466,16 +468,35 @@ module.exports = function(passthrough) {
 						}).catch(async reason => {
 							let searchString = args.slice(1).join(" ");
 							msg.channel.sendTyping();
-							let videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
-							if (!videos.length) return msg.channel.send("No videos were found with those search terms");
-							videos = videos.slice(0, 10);
-							let videoResults = videos.map((video, index) => `${index+1}. **${video.title}** (${prettySeconds(video.lengthSeconds)})`);
+							let videos;
+							let selectMsg;
+							async function editOrSend() {
+								if (selectMsg) return selectMsg.edit(...arguments);
+								else return selectMsg = await msg.channel.send(...arguments);
+							}
+							let i = 0;
+							while (!videos) {
+								i++;
+								try {
+									videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
+								} catch (e) {
+									if (i <= 3) {
+										await editOrSend(`Search failed. I'll try again: hold tight. (attempts: ${i})`);
+										await new Promise(resolve => setTimeout(() => resolve(), 2500));
+									} else {
+										return editOrSend("Couldn't reach Invidious. Try again later? ;-;");
+									}
+								}
+							}
+							if (!videos.length) return editOrSend("No videos were found with those search terms");
+							videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
+							let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${prettySeconds(video.lengthSeconds)})`);
 							let embed = new Discord.RichEmbed()
 								.setTitle("Song selection")
 								.setDescription(videoResults.join("\n"))
 								.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
 								.setColor("36393E")
-							let selectMsg = await msg.channel.send({embed});
+							await editOrSend({embed});
 							let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
 							collector.next.then(async msg => {
 								let videoIndex = parseInt(msg.content);

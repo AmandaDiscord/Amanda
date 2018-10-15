@@ -32,7 +32,7 @@ module.exports = function(passthrough) {
 				if (msg.content.startsWith(b[1])) botInfo = b;
 			}
 			if (!botInfo) return;
-			let command = msg.content.match(/\w+/)[0];
+			let command = (msg.content.match(/\w+/) || [])[0];
 			if (!["boop", "cuddle", "hug", "kiss", "nom", "pat", "poke", "slap"].includes(command)) return;
 			prompts.push({msg, botInfo, command});
 		} else { // response
