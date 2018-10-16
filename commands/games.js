@@ -5,6 +5,26 @@ const util = require("util");
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
 
+	const debugMessageStorage = new Map();
+	const debugMessageControl = {
+		setup: function(channel) {
+			if (channel.id) channel = channel.id;
+			if (!debugMessageStorage.has(channel)) debugMessageStorage.set(channel, []);
+			return channel;
+		},
+		add: function(channel, message) {
+			channel = this.setup(channel);
+			debugMessageStorage.get(channel).push(message);
+		},
+		deleteOld: function(channel, message) {
+			channel = this.setup(channel);
+			for (let message of debugMessageStorage.get(channel)) {
+				message.delete();
+			}
+			debugMessageStorage.get(channel).length = 0;
+		}
+	}
+
 	class GameStorage {
 		constructor() {
 			this.games = [];
@@ -128,7 +148,10 @@ module.exports = function(passthrough) {
 							(await utils.stringify(this))+" "+
 							(await utils.stringify(this.answers, 10))+" "+
 							(await utils.stringify(this.receivedAnswers, 10))
-						);
+						).then(msg => {
+							debugMessageControl.deleteOld(this.channel);
+							debugMessageControl.add(this.channel, msg);
+						});
 					}}
 				]);
 			});
