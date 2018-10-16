@@ -70,7 +70,8 @@ module.exports = function(passthrough) {
 	}
 
 	function manageEdit(oldMessage, data) {
-		if (data.content) {
+		if (data.constructor.name == "Message") manageMessage(data);
+		else if (data.content) {
 			let channel = client.channels.get(data.channel_id);
 			let message = new Discord.Message(channel, data, client);
 			manageMessage(message);
