@@ -9,17 +9,6 @@ let responses = ["That's not strange at all...", "W-What? Why?", "I find it stra
 module.exports = function(passthrough) {
 	let { Discord, client, utils } = passthrough;
 
-	async function getWaifuInfo(userID) {
-		let [meRow, claimerRow] = await Promise.all([
-			utils.sql.get("SELECT waifuID FROM waifu WHERE userID = ?", userID),
-			utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID)
-		]);
-		let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
-		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
-		let waifu = meRow ? await client.fetchUser(meRow.waifuID) : undefined;
-		return { claimer, price, waifu };
-	}
-
 	let commands = {
 
 		"ship": {
@@ -85,12 +74,13 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let member = msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
-				let info = await getWaifuInfo(member.id);
+				let info = await utils.getWaifuInfo(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(member.displayTag, member.user.smallAvatarURL)
 					.addField(`Price:`, info.price)
 					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
 					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")
+					.addField("Gifts", info.gifts.received.emojis || "(none)")
 					.setColor("36393E")
 				msg.channel.send({embed});
 			}
@@ -111,8 +101,8 @@ module.exports = function(passthrough) {
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
-					getWaifuInfo(member.user.id),
-					getWaifuInfo(msg.author.id),
+					utils.getWaifuInfo(member.user.id),
+					utils.getWaifuInfo(msg.author.id),
 					utils.coinsManager.get(msg.author.id)
 				]);
 				let claim = 0;
@@ -148,7 +138,7 @@ module.exports = function(passthrough) {
 			aliases: ["divorce"],
 			category: "interaction",
 			process: async function(msg, suffix) {
-				let info = await getWaifuInfo(msg.author.id);
+				let info = await utils.getWaifuInfo(msg.author.id);
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
 				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];

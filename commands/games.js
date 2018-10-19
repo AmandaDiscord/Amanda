@@ -183,7 +183,7 @@ module.exports = function(passthrough) {
 		try {
 			if (body.startsWith("http")) body = await rp(body);
 			return [true, JSON.parse(body)];
-		} catch (e) {
+		} catch (error) {
 			let embed = new Discord.RichEmbed()
 			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
 			.setColor(0xdd1d1d)

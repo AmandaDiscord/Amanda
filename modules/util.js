@@ -15,57 +15,10 @@ module.exports = (passthrough) => {
 	// Classes
 
 	/** Class representing a manager for Music queues */
-	class QueueStorage {
-		/**
-		 * Creates a new Music queue manager
-		 */
-		constructor() {
-			this.storage = new Map();
-		}
-		/**
-		 * Instantiates a queue object and sets it to the storage
-		 * @param {*} msg MessageResolvable
-		 * @returns {Object} A queue object
-		 */
-		create(msg) {
-			let queue = this.storage.get(msg.guild.id);
-			if (queue) return queue;
-			queue = {
-				textChannel: undefined,
-				voiceChannel: undefined,
-				connection: undefined,
-				songs: [],
-				volume: 5,
-				playing: true,
-				skippable: false,
-				auto: false,
-				nowPlayingMsg: undefined,
-				generateReactions: undefined
-			};
-			this.storage.set(msg.guild.id, queue);
-			return queue;
-		}
-		/**
-		 * Gets a queue by the ID provided
-		 * @param {String} id A Guild ID
-		 * @returns {Object} A queue object
-		 */
-		get(id) {
-			return this.storage.get(id);
-		}
-		/**
-		 * Destroys a queue by the ID provided
-		 * @param {String} id A Guild ID
-		 * @returns {void} void
-		 */
-		async destroy(id) {
-			let queue = this.storage.get(id);
-			if (!queue) return undefined;
-			queue.nowPlayingMsg.clearReactions();
-			queue.nowPlayingMsg.channel.send("We've run out of songs");
-			queue.voiceChannel.leave();
-			this.storage.delete(id);
-			void reloadEvent.emit("musicOut", "queues", this.storage);
+	utils.queueStorage = {
+		storage: new Discord.Collection(),
+		addQueue(queue) {
+			this.storage.set(queue.id, queue);
 		}
 	}
 
@@ -147,11 +100,6 @@ module.exports = (passthrough) => {
 		else type = "png";
 		return { animated: e.animated, name: e.name, id: e.id, url: `https://cdn.discordapp.com/emojis/${e.id}.${type}` };
 	}
-
-	/**
-	 * A Class to manage all of the Client's Music queues
-	 */
-	Discord.Client.prototype.QueueManager = new QueueStorage();
 
 
 
@@ -459,6 +407,39 @@ module.exports = (passthrough) => {
 			}
 		}
 		return result;
+	}
+
+	utils.getWaifuInfo = async function(userID) {
+		const emojiMap = {
+			"Flowers": "🌻",
+			"Cupcake": "<:cupcake:501568778891427840>",
+			"Thigh highs": "<:socks:501569760559890432>",
+			"Soft toy": "🐻",
+			"Fancy dinner": "🍝",
+			"Expensive pudding": "🍨",
+			"Trip to Timbuktu": "✈"
+		}
+		let [meRow, claimerRow, receivedGifts, sentGifts] = await Promise.all([
+			utils.sql.get("SELECT waifuID, price FROM waifu WHERE userID = ?", userID),
+			utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID),
+			utils.sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
+			utils.sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
+		]);
+		let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
+		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
+		let waifu = meRow ? await client.fetchUser(meRow.waifuID) : undefined;
+		let waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0;
+		let gifts = {
+			received: {
+				list: receivedGifts.map(g => g.type),
+				emojis: receivedGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+			},
+			sent: {
+				list: sentGifts.map(g => g.type),
+				emojis: sentGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+			}
+		}
+		return { claimer, price, waifu, waifuPrice, gifts };
 	}
 
 	/**
