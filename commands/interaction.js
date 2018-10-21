@@ -158,10 +158,7 @@ module.exports = function(passthrough) {
 				let args = suffix.split(" ");
 				let waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
 				let money = await utils.coinsManager.get(msg.author.id);
-				if (!waifu) {
-					await utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, null, null]);
-					waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
-				}
+				if (!waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
 				if (waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`);
 				let gift;
