@@ -346,6 +346,72 @@ module.exports = (passthrough) => {
 		return winChance;
 	}
 
+	utils.waifu = {
+		get: async function(userID, options) {
+			const emojiMap = {
+				"Flowers": "🌻",
+				"Cupcake": "<:cupcake:501568778891427840>",
+				"Thigh highs": "<:socks:501569760559890432>",
+				"Soft toy": "🐻",
+				"Fancy dinner": "🍝",
+				"Expensive pudding": "🍨",
+				"Trip to Timbuktu": "✈"
+			}
+			if (options) {
+				if (typeof options == "object") {
+					let { basic } = options;
+					if (basic) {
+						let info = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", userID);
+						return info;
+					}
+				}
+			}
+			let [meRow, claimerRow, receivedGifts, sentGifts] = await Promise.all([
+				utils.sql.get("SELECT waifuID, price FROM waifu WHERE userID = ?", userID),
+				utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID),
+				utils.sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
+				utils.sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
+			]);
+			let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
+			let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
+			let waifu = meRow ? await client.fetchUser(meRow.waifuID) : undefined;
+			let waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0;
+			let gifts = {
+				received: {
+					list: receivedGifts.map(g => g.type),
+					emojis: receivedGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+				},
+				sent: {
+					list: sentGifts.map(g => g.type),
+					emojis: sentGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+				}
+			}
+			return { claimer, price, waifu, waifuPrice, gifts };
+		},
+		bind: async function(claimer, claimed, price) {
+			await Promise.all([
+				utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [claimer, claimed]),
+				utils.coinsManager.award(claimer, -price)
+			]);
+			return utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [claimer, claimed, price]);
+		},
+		unbind: async function(user) {
+			await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [user]);
+			return undefined;
+		},
+		transact: async function(user, amount) {
+			let waifu = await this.get(user, { basic: true });
+			await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + amount, user]);
+			return undefined;
+		}
+	}
+	Object.defineProperty(utils.waifu, "all", {
+		get: async function() {
+			let all = await utils.sql.all("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT 10", client.user.id);
+			return all;
+		}
+	});
+
 
 
 	// Misc Prototypes
@@ -409,38 +475,6 @@ module.exports = (passthrough) => {
 		return result;
 	}
 
-	utils.getWaifuInfo = async function(userID) {
-		const emojiMap = {
-			"Flowers": "🌻",
-			"Cupcake": "<:cupcake:501568778891427840>",
-			"Thigh highs": "<:socks:501569760559890432>",
-			"Soft toy": "🐻",
-			"Fancy dinner": "🍝",
-			"Expensive pudding": "🍨",
-			"Trip to Timbuktu": "✈"
-		}
-		let [meRow, claimerRow, receivedGifts, sentGifts] = await Promise.all([
-			utils.sql.get("SELECT waifuID, price FROM waifu WHERE userID = ?", userID),
-			utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID),
-			utils.sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
-			utils.sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
-		]);
-		let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
-		let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
-		let waifu = meRow ? await client.fetchUser(meRow.waifuID) : undefined;
-		let waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0;
-		let gifts = {
-			received: {
-				list: receivedGifts.map(g => g.type),
-				emojis: receivedGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
-			},
-			sent: {
-				list: sentGifts.map(g => g.type),
-				emojis: sentGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
-			}
-		}
-		return { claimer, price, waifu, waifuPrice, gifts };
-	}
 
 	/**
 	 * Convert anything to a format suitable for sending as a Discord message.

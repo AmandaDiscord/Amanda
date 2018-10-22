@@ -74,7 +74,7 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let member = msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(`Couldn't find that user`);
-				let info = await utils.getWaifuInfo(member.id);
+				let info = await utils.waifu.get(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(member.displayTag, member.user.smallAvatarURL)
 					.addField(`Price:`, info.price)
@@ -101,8 +101,8 @@ module.exports = function(passthrough) {
 				if (!member) return msg.channel.send(`Couldn't find that user`);
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
-					utils.getWaifuInfo(member.user.id),
-					utils.getWaifuInfo(msg.author.id),
+					utils.waifu.get(member.user.id),
+					utils.waifu.get(msg.author.id),
 					utils.coinsManager.get(msg.author.id)
 				]);
 				let claim = 0;
@@ -117,11 +117,7 @@ module.exports = function(passthrough) {
 				}
 				if (memberInfo.price > claim) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction. You need ${memberInfo.price}`);
 				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(`${msg.author.username}, you can't claim your waifu twice over, silly. You can \`&gift <amount>\` into them, however`);
-				await Promise.all([
-					utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [msg.author.id, member.user.id]),
-					utils.coinsManager.award(msg.author.id, -claim)
-				]);
-				utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [msg.author.id, member.user.id, claim]);
+				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				member.user.send(`${String(msg.member)} has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(`I tried to DM that member but they may have DMs disabled from me`));
@@ -138,28 +134,28 @@ module.exports = function(passthrough) {
 			aliases: ["divorce"],
 			category: "interaction",
 			process: async function(msg, suffix) {
-				let info = await utils.getWaifuInfo(msg.author.id);
+				let info = await utils.waifu.get(msg.author.id);
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
 				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [msg.author.id]);
+				await utils.waifu.unbind(msg.author.id);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
 				info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
 		},
 
 		"gift": {
-			usage: "<amount> <user>",
+			usage: "<amount>",
 			description: "Gifts an amount of Discoins towards your waifu's price",
 			aliases: ["gift"],
 			category: "interaction",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let args = suffix.split(" ");
-				let waifu = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", msg.author.id);
+				let waifu = await utils.waifu.get(msg.author.id, { basic: true });
 				let money = await utils.coinsManager.get(msg.author.id);
 				if (!waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
-				if (waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
+				if (!waifu.waifuID == null) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`);
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`);
 				let gift;
 				if (args[0] == "all") {
@@ -171,10 +167,8 @@ module.exports = function(passthrough) {
 					if (gift < 1) return msg.channel.send(`${msg.author.username}, you cannot gift less than 1`);
 					if (gift > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that transaction`);
 				}
-				await Promise.all([
-					utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + gift, msg.author.id]),
-					utils.coinsManager.award(msg.author.id, -gift)
-				]);
+				await utils.waifu.transact(msg.author.id, gift);
+				await utils.coinsManager.award(msg.author.id, -gift);
 				let user = await client.fetchUser(waifu.waifuID);
 				msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
@@ -186,7 +180,7 @@ module.exports = function(passthrough) {
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "interaction",
 			process: async function(msg, suffix) {
-				let all = await utils.sql.all("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT 10", client.user.id);
+				let all = await utils.waifu.all;
 				let users = [];
 				for (let row of all) {
 					for (let key of ["userID", "waifuID"]) {

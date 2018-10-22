@@ -27,13 +27,13 @@ module.exports = function(passthrough) {
 
 	const commonActions = {
 		purchaseWaifuItem: [{type: "js", data: async function(msg, emoji, user, name) {
-			let info = await utils.getWaifuInfo(user.id);
+			let info = await utils.waifu.get(user.id);
 			if (!info.waifu) return msg.channel.send(user.username+", you don't have a waifu to send the gift to!");
 			let coins = await utils.coinsManager.get(user.id);
 			let gift = waifuGifts.find(g => g[0] == name);
 			if (coins < price[1]) return msg.channel.send(user.username+", you cannot afford that gift!");
 			utils.coinsManager.award(user.id, -gift[1]);
-			utils.sql.all("UPDATE waifu SET price = ? WHERE userID = ?", [info.waifuPrice + gift[2], user.id]);
+			utils.waifu.transact(user.id, gift[2]);
 			utils.sql.all("INSERT INTO WaifuGifts VALUES (NULL, ?, ?, ?)", [user.id, info.waifu.id, name]);
 			msg.channel.send("Purchased the "+name.toLowerCase()+"!");
 		}}]
