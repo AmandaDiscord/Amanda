@@ -15,15 +15,7 @@ module.exports = function(passthrough) {
 		"9": "<:bn_9:327896459292704769>"
 	}
 
-	const waifuGifts = [
-		["Flowers", 800],
-		["Cupcakes", 2000],
-		["Thigh highs", 5000],
-		["Soft toy", 20000],
-		["Fancy dinner", 40000],
-		["Expensive pudding", 50000],
-		["Trip to Timbuktu", 250000]
-	]
+	let messageMenus = [];
 
 	const commonActions = {
 		purchaseWaifuItem: [{type: "js", data: async function(msg, emoji, user, name) {
@@ -44,7 +36,7 @@ module.exports = function(passthrough) {
 			name: "Waifu gifts",
 			description: "Purchase gifts for your waifu",
 			actions: [{
-				type: "menu",
+				type: "reactionMenu",
 				data: [
 					{
 						name: "Flowers",
@@ -56,36 +48,55 @@ module.exports = function(passthrough) {
 						price: 2000,
 						description: "Yum! (+2100 value)",
 						actions: commonActions.purchaseWaifuItem
-					},{
-						name: "Thigh highs",
-						price: 5000,
-						description: "Loved by catgirls everywhere. (+5500 value)",
-						actions: commonActions.purchaseWaifuItem
-					},{
-						name: "Soft toy",
-						price: 20000,
-						description: "Something to snuggle up to. (+22500 value)",
-						actions: commonActions.purchaseWaifuItem
-					},{
-						name: "Fancy dinner",
-						price: 40000,
-						description: "Table for two, please. (+46000 value)",
-						actions: commonActions.purchaseWaifuItem
-					},{
-						name: "Expensive pudding",
-						price: 50000,
-						description: "Worth every penny. (+58000 value)",
-						actions: commonActions.purchaseWaifuItem
-					},{
-						name: "Trip to Timbuktu",
-						price: 250000,
-						description: "Don't forget your camera! (+300000 value)",
-						actions: commonActions.purchaseWaifuItem
 					}
+				]
+			}]
+		},
+		{
+			name: "Waifu gifts message menu",
+			description: "Electric Boogaloo",
+			actions: [{
+				type: "messageMenu",
+				data: [
+					[
+						{
+							name: "Page 1 item 1",
+							price: 800,
+							description: "blah",
+							actions: commonActions.purchaseWaifuItem
+						},{
+							name: "Page 1 item 2",
+							price: 800,
+							description: "blah",
+							actions: commonActions.purchaseWaifuItem
+						}
+					],
+					[
+						{
+							name: "Page 2 item 1",
+							price: 800,
+							description: "blah",
+							actions: commonActions.purchaseWaifuItem
+						},{
+							name: "Page 2 item 2",
+							price: 800,
+							description: "blah",
+							actions: commonActions.purchaseWaifuItem
+						}
+					]
 				]
 			}]
 		}
 	]
+
+	utils.addTemporaryListener(client, "message", __filename, msg => {
+		let menu = messageMenus.find(menu => menu.channel == msg.channel && menu.user == msg.author);
+		if (!menu) return;
+		let item = menu.page.find(item => item.name.toLowerCase() == msg.content.toLowerCase());
+		if (!item) return msg.channel.send("That item doesn't exist. Did you spell it correctly?");
+		messageMenus = messageMenus.filter(m => m != menu);
+		menu.actionManager(item, msg.content, msg.author);
+	});
 
 	let commands = {
 		"shop": {
@@ -94,51 +105,97 @@ module.exports = function(passthrough) {
 			aliases: ["shop", "store"],
 			category: "interaction",
 			process: async function(msg) {
+				messageMenus = messageMenus.filter(m => !(m.channel == msg.channel && m.user == msg.author));
 				let menu = paths;
+				let menuType = "reactionMenu";
 				let menuMsg;
 				let selectedIndex = null;
 				let alreadyReacted = [];
+				async function actionManager(item, emoji, user) {
+					for (let action of item.actions) {
+						if (action.type == "reactionMenu") {
+							menu = action.data;
+							menuType = "reactionMenu";
+							selectedIndex = null;
+							displayMenu();
+						} else if (action.type == "messageMenu") {
+							menu = action.data;
+							menuType = "messageMenu";
+							selectedIndex = 0;
+							messageMenus.push({channel: msg.channel, user: msg.author, page: menu[selectedIndex], actionManager});
+							displayMenu();
+						} else if (action.type == "js") {
+							let promise = action.data(msg, emoji, user, item);
+							if (promise.constructor.name == "Promise") await promise;
+						}
+					}
+				}
 				async function menuReactionManager(msg, emoji, user) {
-					let buttonIndex = parseInt(emoji.name.match(/\d+/)[0])-1;
-					if (!menu[buttonIndex]) return;
-					if (selectedIndex != buttonIndex) {
-						selectedIndex = buttonIndex;
+					if (["bn_ba", "bn_fo"].includes(emoji.name)) { // arrows
+						if (menuType != "messageMenu") return;
+						if (emoji.name == "bn_ba") {
+							selectedIndex--;
+							if (selectedIndex < 0) selectedIndex = menu.length-1;
+						} else if (emoji.name == "bn_fo") {
+							selectedIndex++;
+							if (selectedIndex >= menu.length) selectedIndex = 0;
+						}
+						messageMenus = messageMenus.filter(m => !(m.channel == msg.channel && m.user == user));
+						messageMenus.push({channel: msg.channel, user: user, page: menu[selectedIndex], actionManager});
 						displayMenu();
-					} else {
-						for (let action of menu[selectedIndex].actions) {
-							if (action.type == "menu") {
-								menu = action.data;
-								selectedIndex = null;
-								displayMenu();
-							} else if (action.type == "js") {
-								let promise = action.data(msg, emoji, user, menu[selectedIndex].name);
-								if (promise.constructor.name == "Promise") await promise;
-							}
+					} else { // numbers
+						if (menuType != "reactionMenu") return;
+						let buttonIndex = parseInt(emoji.name.match(/\d+/)[0])-1;
+						if (!menu[buttonIndex]) return;
+						if (selectedIndex != buttonIndex) {
+							selectedIndex = buttonIndex;
+							displayMenu();
+						} else {
+							return actionManager(menu[selectedIndex], emoji, user);
 						}
 					}
 				}
 				async function displayMenu() {
-					let items = [], prices = [], reactions = [];
-					menu.map((item, index) => {
-						items.push((selectedIndex == index ? "<:chevrons:501565146536345604> " : "<:bl:501565696132513792> ")+`${buttons[index+1]} ${item.name}`);
-						prices.push(item.price ? "<a:Discoin:422523472128901140> "+item.price : "Submenu");
-						if (!alreadyReacted.includes(buttons[index+1])) {
-							alreadyReacted.push(buttons[index+1]);
-							reactions.push(buttons[index+1]);
-						}
-					});
-					let embed = new Discord.RichEmbed()
-					.setTitle("Shop")
-					.addField("Item", items.join("\n"), true)
-					.addField("Price", prices.join("\n"), true)
-					.addField("Description", selectedIndex != null ? menu[selectedIndex].description : "(no item selected)", false);
+					let embed;
+					if (menuType == "reactionMenu") {
+						let items = [], prices = [], reactions = [];
+						menu.forEach((item, index) => {
+							items.push((selectedIndex == index ? "<:chevrons:501565146536345604> " : "<:bl:501565696132513792> ")+`${buttons[index+1]} ${item.name}`);
+							prices.push(item.price ? "<a:Discoin:422523472128901140> "+item.price : "Submenu");
+							if (!alreadyReacted.includes(buttons[index+1])) {
+								alreadyReacted.push(buttons[index+1]);
+								reactions.push(buttons[index+1]);
+							}
+						});
+						embed = new Discord.RichEmbed()
+						.setTitle("Shop")
+						.addField("Item", items.join("\n"), true)
+						.addField("Price", prices.join("\n"), true)
+						.addField("Description", selectedIndex != null ? menu[selectedIndex].description : "(no item selected)", false)
+						.setFooter("Click a reaction to highlight a menu item. Click again to accept.")
+					} else if (menuType == "messageMenu") {
+						embed = new Discord.RichEmbed()
+						let items = [], prices = [];
+						menu[selectedIndex].forEach(item => {
+							items.push(item.name);
+							prices.push(item.price ? "<a:Discoin:422523472128901140> "+item.price : "Submenu");
+						});
+						embed = new Discord.RichEmbed()
+						.setTitle(`Shop (page ${selectedIndex+1} of ${menu.length})`)
+						.addField("Item", items.join("\n"), true)
+						.addField("Price", prices.join("\n"), true)
+						.setFooter("Use the arrows to change pages. To select an item, type its name in chat.")
+					}
 					if (menuMsg) menuMsg.edit(embed);
 					else {
 						menuMsg = await msg.channel.send(embed);
-						let maxItemCount = (function searchSubpaths(menu) {
-							return [menu.length].concat(...menu.map(item => item.actions.filter(action => action.type == "menu").map(action => searchSubpaths(action.data)))).sort((a, b) => (b - a))[0];
-						}(menu));
-						let reactionMenu = Array(maxItemCount).fill().map((_, i) => ({emoji: client.emojis.get(client.parseEmoji(buttons[i+1]).id), allowedUsers: [msg.author.id], remove: "user", actionType: "js", actionData: menuReactionManager}));
+						let reactionMenu = ["<:bn_ba:328062456905728002>", "<:bn_fo:328724374465282049>"].map(b => ({emoji: client.emojis.get(client.parseEmoji(b).id), allowedUsers: [msg.author.id], remove: "user", actionType: "js", actionData: menuReactionManager}));
+						if (menuType == "reactionMenu") {
+							let maxItemCount = (function searchSubpaths(menu) {
+								return [menu.length].concat(...menu.map(item => item.actions.filter(action => action.type == "menu").map(action => searchSubpaths(action.data)))).sort((a, b) => (b - a))[0];
+							}(menu));
+							reactionMenu.push(...Array(maxItemCount).fill().map((_, i) => ({emoji: client.emojis.get(client.parseEmoji(buttons[i+1]).id), allowedUsers: [msg.author.id], remove: "user", actionType: "js", actionData: menuReactionManager})));
+						}
 						menuMsg.reactionMenu(reactionMenu);
 					}
 				}

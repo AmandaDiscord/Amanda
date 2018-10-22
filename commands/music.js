@@ -692,7 +692,11 @@ module.exports = function(passthrough) {
 					}
 				} else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
-					if (!playlistName) return msg.channel.send(`${msg.author.username}, You must name a playlist`);
+					if (playlistName == "show") {
+						let playlists = await utils.sql.all("SELECT * FROM Playlists");
+						return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setDescription(playlists.map(p => p.name).join("\n")));
+					}
+					if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 					let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
 					if (!playlistRow) {
 						if (args[2] == "create") {

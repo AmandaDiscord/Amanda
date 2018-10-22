@@ -10,7 +10,52 @@ module.exports = (passthrough) => {
 		client.removeListener("messageReactionAdd", reactionEvent);
 	});
 
+	// Constants
 
+	utils.waifuGifts = {
+		"Flowers": {
+			price: 800,
+			value: 800,
+			emoji: "🌻",
+			description: "What better way to show your affection?"
+		},
+		"Cupcake": {
+			price: 2000,
+			value: 2100,
+			emoji: "<:cupcake:501568778891427840>",
+			description: "Yum!"
+		},
+		"Thigh highs": {
+			price: 5000,
+			value: 5500,
+			emoji: "<:socks:501569760559890432>",
+			description: "Loved by catgirls everywhere."
+		},
+		"Soft toy": {
+			price: 20000,
+			value: 22500,
+			emoji: "🐻",
+			description: "Something to snuggle up to."
+		},
+		"Fancy dinner": {
+			price: 40000,
+			value: 46000,
+			emoji: "🍝",
+			description: "Table for two, please."
+		},
+		"Expensive pudding": {
+			price: 50000,
+			value: 58000,
+			emoji: "🍨",
+			description: "Worth every penny."
+		},
+		"Trip to Timbuktu": {
+			price: 250000,
+			value: 300000,
+			emoji: "✈",
+			description: "A moment to never forget."
+		}
+	}
 
 	// Classes
 
@@ -379,11 +424,11 @@ module.exports = (passthrough) => {
 			let gifts = {
 				received: {
 					list: receivedGifts.map(g => g.type),
-					emojis: receivedGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+					emojis: receivedGifts.map(g => utils.waifuGifts[g.type].emoji).join("").replace(/(.{10})/g, "$1\n").trim()
 				},
 				sent: {
 					list: sentGifts.map(g => g.type),
-					emojis: sentGifts.map(g => emojiMap[g.type]).join("").replace(/(.{10})/g, "$1\n").trim()
+					emojis: sentGifts.map(g => utils.waifuGifts[g.type].emoji).join("").replace(/(.{10})/g, "$1\n").trim()
 				}
 			}
 			return { claimer, price, waifu, waifuPrice, gifts };
@@ -412,7 +457,12 @@ module.exports = (passthrough) => {
 		}
 	});
 
-
+	utils.addTemporaryListener = function(target, name, filename, code) {
+		target.on(name, code);
+		reloadEvent.once(filename, () => {
+			target.removeListener(name, code);
+		});
+	}
 
 	// Misc Prototypes
 

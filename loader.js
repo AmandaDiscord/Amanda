@@ -19,7 +19,7 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 		connectionLimit: 5
 	});
 
-	pool.query("SELECT 1").then(async () => {
+	pool.query("SET NAMES 'utf8mb4'").then(() => pool.query("SET CHARACTER SET utf8mb4")).then(async () => {
 		console.log("Connected to MySQL database");
 		passthrough.db = pool;
 
