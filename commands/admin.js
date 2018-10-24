@@ -27,7 +27,7 @@ module.exports = function(passthrough) {
 					}
 					let output = await utils.stringify(result, depth);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
-					nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					return nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 				} else return;
 			}
 		},
@@ -57,7 +57,7 @@ module.exports = function(passthrough) {
 						else result = stdout;
 					}
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
-					nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					return nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 				});
 			}
 		},
@@ -84,7 +84,7 @@ module.exports = function(passthrough) {
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				member.send(`**${String(msg.author)}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				return member.send(`**${String(msg.author)}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

@@ -1,8 +1,5 @@
-let Canvas = require("canvas-prebuilt");
-let util = require("util");
-let fs = require("fs");
+let Jimp = require("jimp");
 let crypto = require("crypto");
-let request = require("request");
 const rp = require("request-promise");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
 
@@ -27,41 +24,32 @@ module.exports = function(passthrough) {
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
 				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
 				msg.channel.sendTyping();
-				let canvas = new Canvas(300, 100);
-				let ctx = canvas.getContext("2d");
-				Promise.all([
-					new Promise(resolve => request(mem1.user.displayAvatarURL, {encoding: null}, (e, r, b) => resolve(b))),
-					new Promise(resolve => request(mem2.user.displayAvatarURL, {encoding: null}, (e, r, b) => resolve(b))),
-					util.promisify(fs.readFile)("./images/emojis/heart.png", { encoding: null }),
-					util.promisify(fs.readFile)("./images/300x100.png", { encoding: null })
-				]).then(async ([avatar1, avatar2, emoji, template]) => {
-					let templateI = new Canvas.Image();
-					templateI.src = template;
-					ctx.drawImage(templateI, 0, 0, 300, 100);
-					let avatarI = new Canvas.Image();
-					avatarI.src = avatar1;
-					ctx.drawImage(avatarI, 0, 0, 100, 100);
-					let emojiI = new Canvas.Image();
-					emojiI.src = emoji;
-					ctx.drawImage(emojiI, 110, 10, 80, 80);
-					let avatarII = new Canvas.Image();
-					avatarII.src = avatar2;
-					ctx.drawImage(avatarII, 200, 0, 100, 100);
-					let buffer = canvas.toBuffer();
-					let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
-					let percentage = undefined;
+				let canvas = await Jimp.read("./images/300x100.png");
+				let pfp1 = await Jimp.read({ url: mem1.user.displayAvatarURL });
+				let pfp2 = await Jimp.read({ url: mem2.user.displayAvatarURL });
+				let heart = await Jimp.read("./images/emojis/heart.png");
+				
+				await pfp1.resize(100, 100);
+				await pfp2.resize(100, 100);
+				await heart.resize(80, 80);
 
-					/* Custom Percentages */
-					if (strings == "320067006521147393 405208699313848330") percentage = 100;
-					else if (strings == "158750488563679232 185938944460980224") percentage = 99999999999;
-					else if (strings == "439373663905513473 458823707175944194") percentage = 88888;
+				await canvas.composite(pfp1, 0, 0);
+				await canvas.composite(heart, 110, 10);
+				await canvas.composite(pfp2, 200, 0);
 
-					else {
-						let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
-						percentage = parseInt("0x"+hash)%101;
-					}
-					msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [buffer]});
-				});
+				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
+				let percentage = undefined;
+
+				/* Custom Percentages */
+				if (strings == "320067006521147393 405208699313848330") percentage = 100;
+				else if (strings == "158750488563679232 185938944460980224") percentage = 99999999999;
+				else if (strings == "439373663905513473 458823707175944194") percentage = 88888;
+				else {
+					let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
+					percentage = parseInt("0x"+hash)%101;
+				}
+				return msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [buffer]});
 			}
 		},
 
@@ -82,7 +70,7 @@ module.exports = function(passthrough) {
 					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")
 					.addField("Gifts", info.gifts.received.emojis || "(none)")
 					.setColor("36393E")
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -124,7 +112,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} <a:Discoin:422523472128901140>`)
 					.setColor("36393E")
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -140,7 +128,7 @@ module.exports = function(passthrough) {
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				await utils.waifu.unbind(msg.author.id);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
-				info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
+				return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
 		},
 
@@ -170,7 +158,7 @@ module.exports = function(passthrough) {
 				await utils.waifu.transact(msg.author.id, gift);
 				await utils.coinsManager.award(msg.author.id, -gift);
 				let user = await client.fetchUser(waifu.waifuID);
-				msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
+				return msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
 		},
 
@@ -200,7 +188,7 @@ module.exports = function(passthrough) {
 						).join("\n")
 					)
 					.setColor("F8E71C")
-				msg.channel.send(embed);
+				return msg.channel.send(embed);
 			}
 		},
 
@@ -217,7 +205,7 @@ module.exports = function(passthrough) {
 				if (member == null) return msg.channel.send(`Couldn't find that user`);
 				if (member.id == client.user.id) return msg.channel.send(`No u`);
 				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
-				msg.channel.send(`**${member.user.tag}** has been banned!`);
+				return msg.channel.send(`**${member.user.tag}** has been banned!`);
 			}
 		}
 	};
@@ -354,10 +342,8 @@ module.exports = function(passthrough) {
 			.setImage(url)
 			.setColor("36393E")
 			if (source.footer) embed.setFooter(source.footer)
-			msg.channel.send(embed);
-		}).catch(error => {
-			msg.channel.send("There was an error: ```\n"+error+"```")
-		});
+			return msg.channel.send(embed);
+		}).catch(error => { return msg.channel.send("There was an error: ```\n"+error+"```"); });
 	}
 
 	return commands;

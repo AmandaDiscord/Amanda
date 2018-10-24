@@ -1,7 +1,5 @@
 let mined = new Set();
-let fs = require("fs");
-let Canvas = require("canvas-prebuilt");
-let util = require("util");
+let Jimp = require("jimp");
 
 module.exports = function(passthrough) {
 	let { Discord, client, utils } = passthrough;
@@ -36,70 +34,59 @@ module.exports = function(passthrough) {
 						slots[i] = array[Math.floor(Math.random() * array.length)];
 					}
 				}
-				let canvas = new Canvas(601, 600);
-				let ctx = canvas.getContext("2d");
-				Promise.all([
-					util.promisify(fs.readFile)(`./images/emojis/${slots[0]}.png`),
-					util.promisify(fs.readFile)(`./images/emojis/${slots[1]}.png`),
-					util.promisify(fs.readFile)(`./images/emojis/${slots[2]}.png`),
-					util.promisify(fs.readFile)(`./images/slot.png`)
-				]).then(async ([image1, image2, image3, template]) => {
-					let templateI = new Canvas.Image();
-					templateI.src = template;
-					ctx.drawImage(templateI, 0, 0, 601, 600);
-					let imageI = new Canvas.Image();
-					imageI.src = image1;
-					ctx.drawImage(imageI, 120, 360, 85, 85); // 91, 320
-					let imageII = new Canvas.Image();
-					imageII.src = image2;
-					ctx.drawImage(imageII, 258, 360, 85, 85);
-					let imageIII = new Canvas.Image();
-					imageIII.src = image3;
-					ctx.drawImage(imageIII, 392, 360, 85, 85);
-					ctx.font = "20px 'Whitney'";
-					ctx.fillStyle = "white";
-					let buffer;
-					if (!args[0]) {
-						ctx.fillText("Nothing", 130, 540);
-						ctx.fillText("Nothing", 405, 540 );
-						buffer = canvas.toBuffer();
-						return msg.channel.send({files: [buffer]});
-					}
-					let bet;
-					if (args[0] == "all") {
-						if (money == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
-						bet = money;
-					} else {
-						if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid bet`);
-						bet = Math.floor(parseInt(args[0]));
-						if (bet < 2) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 2`);
-						if (bet > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
-					}
-					let result = "";
-					let winning;
-					if (slots.every(s => s == "heart")) {
-						winning = bet * 30;
-						result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
-					} else if (slots.filter(s => s == "heart").length == 2) {
-						winning = bet * 4;
-						result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
-					} else if (slots.filter(s => s == "heart").length == 1) {
-						winning = Math.floor(bet * 1.25);
-						result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
-					} else if (slots.slice(1).every(s => s == slots[0])) {
-						winning = bet * 10;
-						result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
-					} else {
-						winning = 0;
-						result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
-					}
-					//result += ` (heart chance: ${winChance})`;
-					utils.coinsManager.award(msg.author.id, winning-bet);
-					ctx.fillText(winning, 115, 540);
-					ctx.fillText(bet, 390, 540 );
-					buffer = canvas.toBuffer();
-					msg.channel.send(result, {files: [buffer]});
-				});
+				let font = await Jimp.loadFont(".fonts/Whitney-20.fnt");
+				let canvas = await Jimp.read("./images/slot.png");
+				let piece1 = await Jimp.read(`./images/emojis/${slots[0]}.png`);
+				let piece2 = await Jimp.read(`./images/emojis/${slots[1]}.png`);
+				let piece3 = await Jimp.read(`./images/emojis/${slots[2]}.png`);
+				await piece1.resize(85, 85);
+				await piece2.resize(85, 85);
+				await piece3.resize(85, 85);
+				
+				await canvas.composite(piece1, 120, 360);
+				await canvas.composite(piece2, 258, 360);
+				await canvas.composite(piece3, 392, 360);
+				
+				let buffer;
+				if (!args[0]) {
+					await canvas.print(font, 130, 523, "Nothing");
+					await canvas.print(font, 405, 523, "Nothing");
+					buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+					return msg.channel.send({ files: [buffer] });
+				}
+				let bet;
+				if (args[0] == "all") {
+					if (money == 0) return msg.channel.send(`${msg.author.username}, you don't have any <a:Discoin:422523472128901140> to bet with!`);
+					bet = money;
+				} else {
+					if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid bet`);
+					bet = Math.floor(parseInt(args[0]));
+					if (bet < 2) return msg.channel.send(`${msg.author.username}, you cannot make a bet less than 2`);
+					if (bet > money) return msg.channel.send(`${msg.author.username}, you don't have enough <a:Discoin:422523472128901140> to make that bet`);
+				}
+				let result = "";
+				let winning;
+				if (slots.every(s => s == "heart")) {
+					winning = bet * 30;
+					result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
+				} else if (slots.filter(s => s == "heart").length == 2) {
+					winning = bet * 4;
+					result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
+				} else if (slots.filter(s => s == "heart").length == 1) {
+					winning = Math.floor(bet * 1.25);
+					result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
+				} else if (slots.slice(1).every(s => s == slots[0])) {
+					winning = bet * 10;
+					result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
+				} else {
+					winning = 0;
+					result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
+				}
+				utils.coinsManager.award(msg.author.id, winning-bet);
+				await canvas.print(font, 115, 523, winning);
+				await canvas.print(font, 390, 523, bet);
+				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				return msg.channel.send(result, {files: [buffer]});
 			}
 		},
 
@@ -111,7 +98,7 @@ module.exports = function(passthrough) {
 			process: function(msg, suffix) {
 				let array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
 				let flip = array[Math.floor(Math.random() * array.length)];
-				msg.channel.send(`You flipped ${flip}`);
+				return msg.channel.send(`You flipped ${flip}`);
 			}
 		},
 
@@ -157,7 +144,7 @@ module.exports = function(passthrough) {
 				} else {
 					let pick = args[1] == "h" ? "t" : "h";
 					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[pick][1]} I flipped ${strings[pick][0]}.\nSorry but you didn't guess correctly. Better luck next time.`);
-					utils.coinsManager.award(msg.author.id, -bet);
+					return utils.coinsManager.award(msg.author.id, -bet);
 				}
 			}
 		},
@@ -176,7 +163,7 @@ module.exports = function(passthrough) {
 					.setAuthor(`Coins for ${member.displayTag}`)
 					.setDescription(`${money} Discoins <a:Discoin:422523472128901140>`)
 					.setColor("F8E71C")
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -195,9 +182,7 @@ module.exports = function(passthrough) {
 				msg.channel.send({embed});
 				utils.coinsManager.award(msg.author.id, mine);
 				mined.add(msg.author.id);
-				setTimeout(() => {
-					mined.delete(msg.author.id);
-				}, 60000);
+				return setTimeout(() => { mined.delete(msg.author.id); }, 60000);
 			}
 		},
 
@@ -212,7 +197,7 @@ module.exports = function(passthrough) {
 					.setAuthor("Leaderboards")
 					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
 					.setColor("F8E71C")
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -247,7 +232,7 @@ module.exports = function(passthrough) {
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				member.send(`${String(msg.author)} has given you ${gift} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				return member.send(`${String(msg.author)} has given you ${gift} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

@@ -1,6 +1,5 @@
 const rp = require("request-promise");
 const entities = require("entities");
-const util = require("util");
 
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
@@ -138,7 +137,7 @@ module.exports = function(passthrough) {
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
-			this.channel.send(embed).then(msg => {
+			return this.channel.send(embed).then(msg => {
 				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "that", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});

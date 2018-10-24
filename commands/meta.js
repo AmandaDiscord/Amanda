@@ -25,7 +25,7 @@ module.exports = function(passthrough) {
 		let uptime = process.uptime();
 		await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime]);
 		if (msg) msg.react("👌");
-		console.log("Sent stats.", new Date().toUTCString());
+		return console.log("Sent stats.", new Date().toUTCString());
 	}
 
 	return {
@@ -49,7 +49,7 @@ module.exports = function(passthrough) {
 					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
 					`**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
 				.setColor("36393E")
-				nmsg.edit({embed});
+				return nmsg.edit({embed});
 			}
 		},
 
@@ -63,7 +63,7 @@ module.exports = function(passthrough) {
 				let message = array[Math.floor(Math.random() * array.length)];
 				let nmsg = await msg.channel.send(message);
 				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
-				nmsg.edit({embed});
+				return nmsg.edit({embed});
 			}
 		},
 
@@ -87,9 +87,8 @@ module.exports = function(passthrough) {
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-				} catch (reason) {
-					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
-				}
+					return;
+				} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);}
 			}
 		},
 
@@ -112,7 +111,7 @@ module.exports = function(passthrough) {
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", "Visit Amanda's [website](https://amandabot.ga/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
 					.setColor("36393E");
-				msg.channel.send(embed);
+				return msg.channel.send(embed);
 			}
 		},
 
@@ -126,7 +125,7 @@ module.exports = function(passthrough) {
 				const limit = 5;
 				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
 				let data = JSON.parse(body);
-				msg.channel.send(new Discord.RichEmbed()
+				return msg.channel.send(new Discord.RichEmbed()
 					.setTitle("Git info")
 					.addField("Status", "On branch "+data.branch+", latest commit "+data.latestCommitHash)
 					.addField(`Commits (latest ${limit} entries)`, data.logString)
@@ -145,9 +144,8 @@ module.exports = function(passthrough) {
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
-				} catch (reason) {
-					return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
-				}
+					return;
+				} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
 			}
 		},
 
@@ -188,7 +186,7 @@ module.exports = function(passthrough) {
 				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
 				embed.setTitle(`${user.tag} ${status}`);
 				if (game) embed.setDescription(game);
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -207,7 +205,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
@@ -223,7 +221,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
-				msg.channel.send({embed});
+				return msg.channel.send({embed});
 			}
 		},
 
