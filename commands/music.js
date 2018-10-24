@@ -677,7 +677,7 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
 					if (!queue) return msg.channel.send("Nothing is currently playing.");
 					if (queue.resume()[0]) return msg.react("👌");
-				} else if (args[0].toLowerCase() == "stash") {
+				} /* else if (args[0].toLowerCase() == "stash") {
 					let stashes = await utils.sql.all("SELECT * FROM Stashes WHERE author = ?", msg.author.id);
 					stashes.forEach((s, i) => (s.index = i+1));
 					if (!args[1]) args[1] = "";
@@ -725,7 +725,7 @@ module.exports = function(passthrough) {
 							msg.channel.send("No stashed queues. Use `&music stash save` to stop playing a queue and send it to the stash.");
 						}
 					}
-				} else if (args[0].match(/^pl(aylists?)?$/)) {
+				} */ else if (args[0].match(/^pl(aylists?)?$/)) {
 					let playlistName = args[1];
 					if (playlistName == "show") {
 						let playlists = await utils.sql.all("SELECT * FROM Playlists");
