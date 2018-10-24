@@ -11,9 +11,10 @@ module.exports = function(passthrough) {
 	let queueStorage = utils.queueStorage;
 
 	class Song {
-		constructor(title, source) {
+		constructor(title, source, live) {
 			this.title = title;
 			this.source = source;
+			this.live = live;
 			this.streaming = false;
 		}
 		getStream() {
@@ -28,7 +29,7 @@ module.exports = function(passthrough) {
 	}
 	class YouTubeSong extends Song {
 		constructor(info, cache) {
-			super(info.title, "YouTube");
+			super(info.title, "YouTube", false);
 			this.url = info.video_url;
 			this.basic = {
 				id: info.video_id,
@@ -59,7 +60,7 @@ module.exports = function(passthrough) {
 
 	class FriskySong extends Song {
 		constructor(station) {
-			super("Frisky Radio", "Frisky");
+			super("Frisky Radio", "Frisky", true);
 			this.station = station;
 		}
 		async stream() {
@@ -130,7 +131,7 @@ module.exports = function(passthrough) {
 			if (this.songs.length == 1) {
 				if (this.connection) this.play();
 			} else {
-				song.deleteCache();
+				if (song.deleteCache) song.deleteCache();
 			}
 		}
 		getNPEmbed() {
@@ -235,14 +236,14 @@ module.exports = function(passthrough) {
 		}
 		pause() {
 			return this.queueAction(() => {
-				if (this.connection && this.connection.dispatcher && this.playing && this.songs.sp("0.source") == "YouTube") {
+				if (this.connection && this.connection.dispatcher && this.playing && !this.songs[0].live) {
 					this.playing = false;
 					this.connection.dispatcher.pause();
 					this.nowPlayingMsg.edit(this.getNPEmbed(this.connection.dispatcher, this));
 					return [true];
 				} else if (!this.playing) {
 					return [false, "Music is already paused."];
-				} else if (this.songs.sp("0.source") == "Frisky") {
+				} else if (this.songs[0].live) {
 					return [false, "Cannot pause live radio."];
 				} else {
 					return [false, "The current queue cannot be paused at this time."];
