@@ -25,50 +25,6 @@ module.exports = (passthrough) => {
 			}
 		}
 
-		function sendVoiceState(serverID, queue) {
-			wssend({
-				event: "voiceState",
-				serverID: serverID,
-				queue: queue
-			});
-		}
-
-		function queuesToObject(queues) {
-			let object = {};
-			for (let key of queues.keys()) {
-				let entry = queues.get(key);
-				object[key] = queueToObject(entry);
-			}
-			return object;
-		}
-
-		function queueToObject(queue) {
-			return {
-				playing: queue.playing,
-				skippable: queue.skippable,
-				volume: queue.volume,
-				time: queue.connection.dispatcher ? queue.connection.dispatcher.time : null,
-				songs: queue.songs.map(song => {
-					let newSong = {};
-					newSong.source = song.source;
-					newSong.title = song.title;
-					if (song.source == "YouTube") {
-						newSong.author = song.video.author.name;
-						newSong.url = song.url;
-						newSong.length_seconds = song.video.length_seconds;
-						newSong.id = song.video.video_id;
-						/*newSong.thumbnail_url = song.video.player_response.videoDetails.thumbnail.thumbnails
-							.sort((a, b) => (Math.abs(180-a.height) - Math.abs(180-b.height)))[0].url;
-						newSong.thumbnail_url_hq = song.video.player_response.videoDetails.thumbnail.thumbnails
-							.sort((a, b) => (b.height - a.height))[0].url;*/
-					} else if (song.source == "Frisky") {
-						newSong.url = "https://friskyradio.com";
-					}
-					return newSong;
-				})
-			};
-		}
-
 		ws.on("message", async function(body) {
 			let data;
 			try {
@@ -91,19 +47,21 @@ module.exports = (passthrough) => {
 					break;
 				}
 			} catch (e) {
-				//TODO
 				return disconnect();
 			}
 		});
 
-		ws.on("error", console.log); //TODO
+		ws.on("error", error => { //TODO
+			console.error("WebSocket encountered an error!");
+			console.error(error);
+		});
 
 		addTemporaryListener(reloadEvent, "musicOut", musicOut);
 		function musicOut(event) {
 			if (event == "queues") {
 				let queue = arguments[1].get(serverID);
 				if (!queue) wssend({event: "queuesUpdate", queue: null});
-				else wssend({event: "queuesUpdate", queue: queueToObject(queue)});
+				else wssend({event: "queuesUpdate", queue: queue.toObject()});
 			}
 		}
 

@@ -23,11 +23,7 @@
 	function updatePte() {
 		if (typeof(time) == "number" && q("#playTimeElapsed")) {
 			q("#playTimeElapsed").innerText = prettySeconds(Math.floor(time/1000));
-			if (queue.songs[0].source == "YouTube") {
-				q("#totalTime").innerText = prettySeconds(queue.songs[0].length_seconds);
-			} else if (queue.songs[0].source == "Frisky") {
-				q("#totalTime").innerText = "LIVE";
-			}
+			q("#totalTime").innerText = queue.songs[0].length;
 			//q("#progressBar").style.background = `linear-gradient(to right, #3b88c3 ${percent}%, white ${percent}%)`;
 		}
 	}
@@ -48,16 +44,12 @@
 				let display = q("#somethingPlaying");
 				display.style.display = "block";
 				q("#nowPlaying").innerText = "Now playing: "+queue.songs[0].title+(queue.playing ? "" : " (paused)");
-				if (queue.songs[0].source == "YouTube") {
-					q("#bigThumbnail").src = `https://i.ytimg.com/vi/${queue.songs[0].id}/hqdefault.jpg`
-				} else if (queue.songs[0].source == "Frisky") {
-					q("#bigThumbnail").src = "/images/frisky.png";
-				}
+				q("#bigThumbnail").src = queue.songs[0].thumbnailLarge;
 				time = queue.time || 0;
 				lastPte = Date.now();
 				updatePte();
-				if (queue.songs[0].source == "YouTube") {
-					let totalTime = queue.songs[0].length_seconds;
+				if (queue.songs[0].length != "LIVE") {
+					let totalTime = queue.songs[0].length;
 					q("#progressLine").style.transition = "none";
 					let progressRatio = ((time/1000)/totalTime);
 					q("#progressLine").style.transform = `scaleX(${progressRatio})`;
@@ -67,7 +59,7 @@
 							q("#progressLine").style.transform = `scaleX(1)`;
 						});
 					}
-				} else if (queue.songs[0].source == "Frisky") {
+				} else {
 					q("#progressLine").style.transition = "none";
 					q("#progressLine").style.transform = "scaleX(1)";
 				}
@@ -77,10 +69,10 @@
 					q("#upNextContainer").innerHTML = "";
 					for (let song of queue.songs.slice(1)) {
 						let ie = q("#queueItemStorage").children[0].cloneNode(true);
-						ie.children[0].children[0].src = `https://i.ytimg.com/vi/${song.id}/mqdefault.jpg`;
+						ie.children[0].children[0].src = song.thumbnailSmall;
 						ie.children[1].children[0].innerText = song.title;
 						ie.children[1].children[1].innerText = song.author;
-						ie.children[1].children[2].innerText = prettySeconds(song.length_seconds);
+						ie.children[1].children[2].innerText = song.length;
 						q("#upNextContainer").appendChild(ie);
 					}
 				} else {

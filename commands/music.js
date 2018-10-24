@@ -17,6 +17,16 @@ module.exports = function(passthrough) {
 			this.live = live;
 			this.streaming = false;
 		}
+		toObject() {
+			return Object.assign({
+				title: this.title,
+				source: this.source,
+				live: this.live
+			}, this.object());
+		}
+		object() {
+			// Intentionally empty. Subclasses should put additional properties for toObject here.
+		}
 		getStream() {
 			this.streaming = true;
 			return this.stream();
@@ -40,6 +50,20 @@ module.exports = function(passthrough) {
 			if (cache) this.info = info;
 			else this.info = null;
 		}
+		object() {
+			return {
+				basic: this.basic
+			}
+		}
+		toUnified() {
+			return {
+				title: this.title,
+				author: this.basic.author,
+				thumbnailSmall: `https://i.ytimg.com/vi/${this.basic.id}/mqdefault.jpg`,
+				thumbnailLarge: `https://i.ytimg.com/vi/${this.basic.id}/hqdefault.jpg`,
+				length: prettySeconds(this.basic.length_seconds)
+			}
+		}
 		deleteCache() {
 			this.info = null;
 		}
@@ -62,6 +86,20 @@ module.exports = function(passthrough) {
 		constructor(station) {
 			super("Frisky Radio", "Frisky", true);
 			this.station = station;
+		}
+		object() {
+			return {
+				station: this.station
+			}
+		}
+		toUnified() {
+			return {
+				title: this.title,
+				author: "Frisky Radio",
+				thumbnailSmall: "/images/frisky.png",
+				thumbnailLarge: "/images/frisky.png",
+				length: "LIVE"
+			}
 		}
 		async stream() {
 			let host, path;
@@ -104,7 +142,7 @@ module.exports = function(passthrough) {
 			this.skippable = false;
 			this.auto = false;
 			this.nowPlayingMsg = undefined;
-			this.queueStorage = utils.queueStorage;
+			this.queueStorage = queueStorage;
 			this.queueStorage.addQueue(this);
 			this.voiceChannel.join().then(connection => {
 				this.connection = connection;
@@ -113,6 +151,17 @@ module.exports = function(passthrough) {
 		}
 		get dispatcher() {
 			return this.connection.dispatcher || this._dispatcher;
+		}
+		toObject() {
+			return {
+				id: this.id,
+				songs: this.songs.map(s => s.toUnified()),
+				time: this.dispatcher.time,
+				playing: this.playing,
+				skippable: this.skippable,
+				auto: this.auto,
+				volume: this.volume,
+			}
 		}
 		dissolve() {
 			this.songs.length = 0;
@@ -166,7 +215,7 @@ module.exports = function(passthrough) {
 					if (web) return result[1];
 					else return this.textChannel.send(result[1]);
 				}
-				reloadEvent.emit("musicOut", "queues", queueStorage);
+				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
 				return result;
 			}
 		}
@@ -178,7 +227,7 @@ module.exports = function(passthrough) {
 				dispatcher.setVolumeLogarithmic(this.volume / 5);
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
-				reloadEvent.emit("musicOut", "queues", queueStorage);
+				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
 				let dispatcherEndCode = new Function();
 				let updateProgress = () => {
 					if (this.songs[0]) return this.nowPlayingMsg.edit(this.getNPEmbed());
@@ -288,32 +337,26 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	reloadEvent.on("music", musicCommandListener);
-	reloadEvent.once(__filename, () => {
-		reloadEvent.removeListener("music", musicCommandListener);
-	});
-	function musicCommandListener(action) {
+	utils.addTemporaryListener(reloadEvent, "music", __filename, function(action) {
 		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queueStorage);
-		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
-			let [serverID, callback] = [...arguments].slice(1);
-			const actions = {
-				skip: callskip,
-				stop: callstop,
-				pause: callpause,
-				resume: callresume
-			};
+			reloadEvent.emit("musicOut", "queues", queueStorage.storage);
+		} else if (action == "getQueue") {
+			let serverID = [...arguments][1];
+			if (!serverID) return;
 			let queue = queueStorage.storage.get(serverID);
+			if (!queue) return;
+			reloadEvent.emit("musicOut", "queue", queueStorage.storage.get(serverID));
+		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
 			if (!queue) return callback([400, "Server is not playing music"]);
-			if (actions[action]) {
-				let result = actions[action](undefined, queue);
-				if (result) callback([200, result]);
-				else callback([204, ""]);
-			} else {
-				callback([400, "Action does not exist"]);
-			}
+			let [serverID, callback] = [...arguments].slice(1);
+			let queue = queueStorage.storage.get(serverID);
+			let result = queue[action]();
+			if (result[0]) callback([200, result[1]]);
+			else callback([400, result[1]]);
+		} else {
+			callback([400, "Action does not exist"]);
 		}
-	}
+	});
 
 	async function handleSong(song, textChannel, voiceChannel) {
 		let queue = queueStorage.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
@@ -364,7 +407,7 @@ module.exports = function(passthrough) {
 						if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == total) {
 							lastEdit = Date.now();
 							editInProgress = true;
-							progressMessage.edit(getProgressMessage(batchNumber, batchProgress, batch.length)).then(() => {;
+							progressMessage.edit(getProgressMessage(batchNumber, batchProgress, batch.length)).then(() => {
 								editInProgress = false;
 							});
 						}
@@ -376,7 +419,7 @@ module.exports = function(passthrough) {
 				if (batches.length) nextBatch();
 				else {
 					videos.forEach(video => {
-						let queue = utils.queueStorage.storage.get(msg.guild.id);
+						let queue = queueStorage.storage.get(msg.guild.id);
 						let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
 						handleSong(song, msg.channel, voiceChannel);
 					});
@@ -659,7 +702,7 @@ module.exports = function(passthrough) {
 								if (!queue) return;
 								queue.songs = [];
 								queue.connection.dispatcher.end();
-								reloadEvent.emit("musicOut", "queues", manager.storage);
+								reloadEvent.emit("musicOut", "queues", queueStorage.storage);
 							}}]);
 						}).catch(async error => {
 							stashmsg.edit(await utils.stringify(error));
