@@ -464,18 +464,9 @@ module.exports = function(passthrough) {
 				const voiceChannel = msg.member.voiceChannel;
 				if (!voiceChannel) return msg.channel.send("Please join a voice channel first!");
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
-				let title = "Frisky Radio";
-				if (station != "frisky") title += " ("+station[0].toUpperCase()+station.slice(1)+")";
-				const song = {
-					title: title,
-					station: station,
-					source: "Frisky"
-				}
-				let [queue, newQueue] = await initiateQueue(msg, voiceChannel);
-				if (!queue) return;
-				queue.songs.push(song);
-				if (newQueue) play(msg, msg.guild, song);
-				else msg.react("👌");
+				let stream = new FriskySong(station);
+				handleSong(stream, msg.channel, voiceChannel);
+				return msg.react("👌");
 			}
 		},
 		"music": {
