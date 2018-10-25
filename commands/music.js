@@ -345,17 +345,15 @@ module.exports = function(passthrough) {
 			if (!serverID) return;
 			let queue = queueStorage.storage.get(serverID);
 			if (!queue) return;
-			reloadEvent.emit("musicOut", "queue", queueStorage.storage.get(serverID));
+			reloadEvent.emit("musicOut", "queue", queue);
 		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
-			if (!queue) return callback([400, "Server is not playing music"]);
 			let [serverID, callback] = [...arguments].slice(1);
 			let queue = queueStorage.storage.get(serverID);
+			if (!queue) return callback([400, "Server is not playing music"]);
 			let result = queue[action]();
 			if (result[0]) callback([200, result[1]]);
 			else callback([400, result[1]]);
-		} else {
-			callback([400, "Action does not exist"]);
-		}
+		} else { callback([400, "Action does not exist"]); }
 	});
 
 	async function handleSong(song, textChannel, voiceChannel) {

@@ -107,14 +107,34 @@ module.exports = function(passthrough) {
 		console.error(reason);
 	}
 
-	const presences = [
-		['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ['dead', 'PLAYING'],
-		['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'], ['cute cat videos', 'WATCHING'],
-		['music', 'LISTENING'], ['Spotify', 'LISTENING'],
-		['Netflix for ∞ hours', 'STREAMING'],
-	];
+	const presences = {
+		yearly: [
+			['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ['dead', 'PLAYING'],
+			['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'], ['cute cat videos', 'WATCHING'],
+			['music', 'LISTENING'], ['Spotify', 'LISTENING'],
+			['Netflix for ∞ hours', 'STREAMING']
+		],
+		halloween: [
+			["Silent Hill", "PLAYING"],
+			["scary movies", "WATCHING"], ["Halloween decor being hung", "WATCHING"],
+			["Thriller by M.J.", "LISTENING"], ["the screams of many", "LISTENING"],
+			["Halloween on Netflix", "STREAMING"]
+		],
+		christmas: [
+			["in the snow", "PLAYING"],
+			["Christmas carols", "LISTENING"],
+			["The Night before Christmas", "WATCHING"], ["snow fall", "WATCHING"]
+			["Christmas movies", "STREAMING"]
+		]
+	};
+
 	const update = () => {
-		const [name, type] = presences[Math.floor(Math.random() * presences.length)];
+		let now = new Date(Date.now()).toUTCString().toLowerCase();
+		let choice;
+		if (now.includes("oct")) choice = presences.halloween;
+		else if (now.includes("dec")) choice = presences.christmas;
+		else choice = presences.yearly;
+		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
 		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
 	};
 
