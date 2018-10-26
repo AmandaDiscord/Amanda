@@ -1,7 +1,7 @@
 let rp = require("request-promise");
 
 module.exports = function(passthrough) {
-	let { Discord, client, utils, commands, reloadEvent } = passthrough;
+	let { Discord, client, config, utils, commands, reloadEvent } = passthrough;
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
 	function sendStatsTimeoutFunction() {
@@ -109,7 +109,7 @@ module.exports = function(passthrough) {
 						`${c1.tag} <:bravery:479939311593324557> <:NitroBadge:421774688507920406>\n`+
 						`${c2.tag} <:brilliance:479939329104412672> <:NitroBadge:421774688507920406>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-					.addField("Links", "Visit Amanda's [website](https://amanda.discord-bots.ga/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)")
+					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)`)
 					.setColor("36393E");
 				return msg.channel.send(embed);
 			}

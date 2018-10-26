@@ -211,9 +211,18 @@ module.exports = function(passthrough) {
 		queueAction(code) {
 			return (web) => {
 				let result = code();
-				if (result[1]) {
-					if (web) return result[1];
-					else return this.textChannel.send(result[1]);
+				if (web) {
+					if (result[0]) { // no error
+						if (result[1]) { // output
+							return [200, result[1]];
+						} else { // no output
+							return [204, ""];
+						}
+					} else { // error
+						return [400, result[1] || ""];
+					}
+				} else {
+					if (result[1]) return this.textChannel.send(result[1]);
 				}
 				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
 				return result;
@@ -265,7 +274,7 @@ module.exports = function(passthrough) {
 								if (related) {
 									let videoID = related.id;
 									ytdl.getInfo(videoID).then(video => {
-										let song = new YouTubeSong(video, true);
+										let song = new YouTubeSong(video, true); //TODO: move this to the song object
 										this.addSong(song);
 										resolve();
 									}).catch(reason => {
@@ -283,7 +292,7 @@ module.exports = function(passthrough) {
 				});
 			});
 		}
-		pause() {
+		pause(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing && !this.songs[0].live) {
 					this.playing = false;
@@ -297,9 +306,9 @@ module.exports = function(passthrough) {
 				} else {
 					return [false, "The current queue cannot be paused at this time."];
 				}
-			})();
+			})(web);
 		}
-		resume() {
+		resume(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && !this.playing) {
 					this.playing = true;
@@ -311,9 +320,9 @@ module.exports = function(passthrough) {
 				} else {
 					return [false, "The current queue cannot be resumed at this time."];
 				}
-			})();
+			})(web);
 		}
-		skip() {
+		skip(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing) {
 					this.connection.dispatcher.end();
@@ -323,9 +332,9 @@ module.exports = function(passthrough) {
 				} else {
 					return [false, "The current queue cannot be skipped at this time."];
 				}
-			})();
+			})(web);
 		}
-		stop() {
+		stop(web) {
 			return this.queueAction(() => {
 				if (this.connection) {
 					this.dissolve();
@@ -333,7 +342,7 @@ module.exports = function(passthrough) {
 				} else {
 					return [false, "I have no idea why that didn't work."];
 				}
-			})();
+			})(web);
 		}
 	}
 
@@ -350,7 +359,7 @@ module.exports = function(passthrough) {
 			let [serverID, callback] = [...arguments].slice(1);
 			let queue = queueStorage.storage.get(serverID);
 			if (!queue) return callback([400, "Server is not playing music"]);
-			let result = queue[action]();
+			let result = queue[action](true);
 			if (result[0]) callback([200, result[1]]);
 			else callback([400, result[1]]);
 		} else { callback([400, "Action does not exist"]); }
@@ -463,7 +472,7 @@ module.exports = function(passthrough) {
 
 	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
-		if (queue.songs[0].source == "YouTube") {
+		if (queue.songs[0].source == "YouTube") { //TODO: move this to the song object
 			let max = queue.songs[0].basic.length_seconds;
 			let current = Math.floor(dispatcher.time/1000);
 			if (current > max || done) current = max;
@@ -494,7 +503,7 @@ module.exports = function(passthrough) {
 					`**Keep it secret!**\n`+
 					`(Unless you wish to collaborate on a playlist with a trusted person, in which case make sure that you *really* trust them.)\n`+
 					`If you think somebody unscrupulous has gotten hold of this token, you can use this command again at any time to generate a new token and disable all previous ones.\n\n`+
-					`You can find the music dashboard at https://amandabot.ga/dash.`);
+					`You can find the music dashboard at ${config.website_protocol}://${config.website_domain}/dash.`);
 			}
 		},
 		"frisky": {
@@ -529,10 +538,14 @@ module.exports = function(passthrough) {
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice cahnnel you are in`);
+					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice channel you are in`);
 					if (!permissions.has("SPEAK")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to speak in that voice channel`);
 					if (!args[1]) return msg.channel.send(`${msg.author.username}, please provide either a YouTube video link or some words for me to search for`);
 					args[1] = args[1].replace(/^<|>$/g, "");
+					{
+						let match = args[1].match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
+						if (match) args[1] = match[1];
+					}
 					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 						let playlist = await youtube.getPlaylist(args[1]);
 						let videos = await playlist.getVideos();
@@ -594,7 +607,7 @@ module.exports = function(passthrough) {
 					if (queue.stop(queue)[0]) return msg.react("👌");
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send("Nothing is currently playing.");
-					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0));
+					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0)); //TODO: move this to the song object
 					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.source == "YouTube" ? songss.basic.length_seconds: "LIVE")})`).join('\n');
 					if (body.length > 2000) {
 						let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
@@ -765,7 +778,7 @@ module.exports = function(passthrough) {
 					}
 					let action = args[2] || "";
 					if (action.toLowerCase() == "add") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, you do not own that playlist and cannot modify it.`);
 						let videoID = args[3];
 						if (!videoID) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link`);
 						ytdl.getInfo(videoID).then(async video => {
@@ -780,7 +793,7 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
 						});
 					} else if (action.toLowerCase() == "remove") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, you do not own that playlist and cannot modify it.`);
 						let index = parseInt(args[3]);
 						if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`);
 						index = index-1;
@@ -792,7 +805,7 @@ module.exports = function(passthrough) {
 						]);
 						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 					} else if (action.toLowerCase() == "move") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, you do not own that playlist and cannot modify it.`);
 						let from = parseInt(args[3]);
 						let to = parseInt(args[4]);
 						if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
@@ -828,7 +841,7 @@ module.exports = function(passthrough) {
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase()[0] == "s");
 					} else if (action.toLowerCase() == "import") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, You do not own that playlist and cannot modify it.`);
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, you do not own that playlist and cannot modify it.`);
 						if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 							let playlist = await youtube.getPlaylist(args[3]);
 							let videos = await playlist.getVideos();
@@ -868,6 +881,24 @@ module.exports = function(passthrough) {
 							await Promise.all(promises);
 							editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);
 						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
+					} else if (action.toLowerCase() == "delete") {
+						if (playlistRow.author != msg.author.id) return msg.channel.send(`${msg.author.username}, you do not own that playlist and cannot modify it.`);
+						(await msg.channel.send(new Discord.RichEmbed().setColor("dd1d1d").setDescription(
+							"This action will permanently delete the playlist `"+playlistRow.name+"`. "+
+							"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n"+
+							"You will not be able to undo this action.\n\n"+
+							"<:bn_del:331164186790854656> - confirm deletion\n"+
+							"<:bn_ti:327986149203116032> - ignore"
+						))).reactionMenu([
+							{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], ignore: "total", actionType: "js", actionData: async () => {
+								await Promise.all([
+									utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
+									utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
+								]);
+								msg.channel.send("Playlist deleted.");
+							}},
+							{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total"}
+						]);
 					} else {
 						let author = [];
 						if (client.users.get(playlistRow.author)) {
