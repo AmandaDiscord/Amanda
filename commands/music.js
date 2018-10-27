@@ -4,7 +4,7 @@ const net = require("net");
 let crypto = require("crypto");
 let rp = require("request-promise");
 
-const voiceEmptyDuration = 5000;
+const voiceEmptyDuration = 20000;
 
 module.exports = function(passthrough) {
 	let { config, Discord, client, utils, reloadEvent } = passthrough;
