@@ -1,9 +1,10 @@
 let ytdl = require("ytdl-core");
 let YouTube = require('simple-youtube-api');
 const net = require("net");
-let timeout = new Set();
 let crypto = require("crypto");
 let rp = require("request-promise");
+
+const voiceEmptyDuration = 5000;
 
 module.exports = function(passthrough) {
 	let { config, Discord, client, utils, reloadEvent } = passthrough;
@@ -132,7 +133,7 @@ module.exports = function(passthrough) {
 	class Queue {
 		constructor(textChannel, voiceChannel) {
 			this.textChannel = textChannel;
-			this.voiceChannel = voiceChannel;
+			this._voiceChannel = voiceChannel;
 			this.id = this.textChannel.guild.id;
 			this.connection = undefined;
 			this._dispatcher = undefined;
@@ -144,10 +145,14 @@ module.exports = function(passthrough) {
 			this.nowPlayingMsg = undefined;
 			this.queueStorage = queueStorage;
 			this.queueStorage.addQueue(this);
-			this.voiceChannel.join().then(connection => {
+			voiceChannel.join().then(connection => {
 				this.connection = connection;
 				if (this.songs.length) this.play();
 			});
+			this.voiceLeaveTimeout = setTimeout(new Function());
+		}
+		get voiceChannel() {
+			return this.connection ? this.connection.channel : this._voiceChannel;
 		}
 		get dispatcher() {
 			return this.connection.dispatcher || this._dispatcher;
@@ -166,6 +171,7 @@ module.exports = function(passthrough) {
 		dissolve() {
 			this.songs.length = 0;
 			this.auto = false;
+			clearTimeout(this.voiceLeaveTimeout);
 			if (this.connection.dispatcher) this.connection.dispatcher.end();
 			this.voiceChannel.leave();
 			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
@@ -183,6 +189,20 @@ module.exports = function(passthrough) {
 				if (song.deleteCache) song.deleteCache();
 			}
 		}
+		voiceStateUpdate(oldMember, newMember) {
+			let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
+			if (count == 0) {
+				if (this.voiceLeaveTimeout._called || !this.voiceLeaveTimeout._onTimeout) {
+					this.voiceLeaveTimeout = setTimeout(() => {
+						this.textChannel.send("Everyone left, so I have as well.");
+						this.dissolve()
+					}, voiceEmptyDuration);
+					this.textChannel.send("No users left in my voice channel. I will stop playing in "+voiceEmptyDuration/1000+" seconds if nobody rejoins.");
+				}
+			} else {
+				clearTimeout(this.voiceLeaveTimeout);
+			}
+		}
 		getNPEmbed() {
 			let song = this.songs[0];
 			return new Discord.RichEmbed().setColor("36393E")
@@ -191,7 +211,7 @@ module.exports = function(passthrough) {
 		}
 		generateReactions() {
 			if (this.nowPlayingMsg) this.nowPlayingMsg.reactionMenu([
-				{ emoji: "⏯", remove: "user", allowedUsers: this.voiceChannel.members.map(m => m.id), actionType: "js", actionData: (msg, emoji, user) => {
+				{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					if (this.playing) this.pause();
 					else this.resume();
@@ -202,7 +222,7 @@ module.exports = function(passthrough) {
 						if (this.songs.length == 2) messageReaction.remove();
 					}
 				}},
-				{ emoji: "⏹", remove: "all", allowedUsers: this.voiceChannel.members.map(m => m.id), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+				{ emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					this.stop();
 				}}
@@ -603,7 +623,10 @@ module.exports = function(passthrough) {
 					}
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
-					if (!queue) return msg.channel.send("Nothing is currently playing.");
+					if (!queue) {
+						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
+						else return msg.channel.send("Nothing is currently playing.");
+					}
 					if (queue.stop(queue)[0]) return msg.react("👌");
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send("Nothing is currently playing.");
@@ -897,7 +920,7 @@ module.exports = function(passthrough) {
 								]);
 								msg.channel.send("Playlist deleted.");
 							}},
-							{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total"}
+							{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled")}
 						]);
 					} else {
 						let author = [];

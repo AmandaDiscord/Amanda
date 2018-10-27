@@ -16,6 +16,7 @@ module.exports = function(passthrough) {
 		client.removeListener("messageUpdate", manageEdit);
 		client.removeListener("disconnect", manageDisconnect);
 		client.removeListener("error", manageError);
+		client.removeListener("voiceStateUpdate", manageVoiceStateUpdate);
 		process.removeListener("unhandledRejection", manageRejection);
 		stdin.removeListener("data", manageStdin);
 	});
@@ -23,6 +24,7 @@ module.exports = function(passthrough) {
 	client.on("messageUpdate", manageEdit);
 	client.once("ready", manageReady);
 	client.on("disconnect", manageDisconnect);
+	client.on("voiceStateUpdate", manageVoiceStateUpdate);
 	process.on("unhandledRejection", manageRejection);
 	stdin.on("data", manageStdin);
 
@@ -52,6 +54,7 @@ module.exports = function(passthrough) {
 			if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
 				let username = msg.guild ? msg.guild.me.displayName : client.user.username;
 				let chat = msg.cleanContent.replace(new RegExp('@' + username + ',?'), '').trim();
+				if (!chat) return;
 				msg.channel.sendTyping();
 				let owner = await client.fetchUser("320067006521147393");
 				try {
@@ -105,6 +108,14 @@ module.exports = function(passthrough) {
 			if (reason.code == 50013) return;
 		}
 		console.error(reason);
+	}
+
+	function manageVoiceStateUpdate(oldMember, newMember) {
+		if (newMember.id == client.user.id) return;
+		let channel = oldMember.voiceChannel || newMember.voiceChannel;
+		let queue = utils.queueStorage.storage.get(channel.guild.id);
+		if (!queue) return;
+		queue.voiceStateUpdate(oldMember, newMember);
 	}
 
 	const presences = {
