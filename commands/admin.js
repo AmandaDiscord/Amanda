@@ -68,7 +68,7 @@ module.exports = function(passthrough) {
 			aliases: ["award"],
 			category: "admin",
 			process: async function(msg, suffix) {
-				let allowed = utils.hasPermission(msg.author, "eval");
+				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.sendNopeMessage();
 				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
 				let args = suffix.split(" ");
