@@ -49,7 +49,7 @@
 				lastPte = Date.now();
 				updatePte();
 				if (queue.songs[0].length != "LIVE") {
-					let totalTime = queue.songs[0].length;
+					let totalTime = queue.songs[0].lengthSeconds;
 					q("#progressLine").style.transition = "none";
 					let progressRatio = ((time/1000)/totalTime);
 					q("#progressLine").style.transform = `scaleX(${progressRatio})`;

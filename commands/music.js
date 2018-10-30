@@ -62,7 +62,8 @@ module.exports = function(passthrough) {
 				author: this.basic.author,
 				thumbnailSmall: `https://i.ytimg.com/vi/${this.basic.id}/mqdefault.jpg`,
 				thumbnailLarge: `https://i.ytimg.com/vi/${this.basic.id}/hqdefault.jpg`,
-				length: prettySeconds(this.basic.length_seconds)
+				length: prettySeconds(this.basic.length_seconds),
+				lengthSeconds: this.basic.length_seconds
 			}
 		}
 		deleteCache() {
