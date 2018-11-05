@@ -32,6 +32,9 @@ module.exports = function(passthrough) {
 			this.streaming = true;
 			return this.stream();
 		}
+		related() {
+			return [];
+		}
 	}
 
 	async function YTSongObjectFromURL(url, cache) {
@@ -73,14 +76,18 @@ module.exports = function(passthrough) {
 			if (this.info) return ytdl.downloadFromInfo(this.info);
 			else return ytdl.getInfo(this.basic.id).then(() => ytdl(this.url));
 		}
-		getInfo(cache) {
-			if (this.info) return Promise.resolve(info);
+		getInfo(cache, force) {
+			if (this.info || force) return Promise.resolve(this.info);
 			else {
-				return ytdl.getInfo(this.basic.id).then(() => {
+				return ytdl.getInfo(this.basic.id).then(info => {
 					if (cache) this.info = info;
-					return Promise.resolve();
+					return info;
 				});
 			}
+		}
+		async related() {
+			await this.getInfo(true);
+			return this.info.related_videos.filter(v => v.title).slice(0, 10);
 		}
 	}
 
@@ -181,8 +188,17 @@ module.exports = function(passthrough) {
 		destroy() {
 			this.queueStorage.storage.delete(this.id);
 		}
-		addSong(song, position) {
-			if (position == null) this.songs.push(song);
+		addSong(song, insert) {
+			let position; // the actual position to insert into, `undefined` to push
+			if (insert == undefined) { // no insert? just push
+				position = undefined;
+			} else if (typeof(insert) == "number") { // number? insert into that point
+				position = insert;
+			} else if (typeof(insert) == "boolean") { // boolean?
+				if (insert) position = 1; // if insert is true, insert
+				else position = undefined; // otherwise, push
+			}
+			if (position == undefined) this.songs.push(song);
 			else this.songs.splice(position, 0, song);
 			if (this.songs.length == 1) {
 				if (this.connection) this.play();
@@ -386,9 +402,9 @@ module.exports = function(passthrough) {
 		} else { callback([400, "Action does not exist"]); }
 	});
 
-	async function handleSong(song, textChannel, voiceChannel) {
+	async function handleSong(song, textChannel, voiceChannel, insert) {
 		let queue = queueStorage.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
-		queue.addSong(song);
+		queue.addSong(song, insert);
 	}
 
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
@@ -533,6 +549,7 @@ module.exports = function(passthrough) {
 			aliases: ["frisky"],
 			category: "music",
 			process: async function(msg, suffix) {
+				if (msg.channel.type == "dm") return msg.channel.send(`${msg.author.username}, you cannot use this command in DMs`);
 				const voiceChannel = msg.member.voiceChannel;
 				if (!voiceChannel) return msg.channel.send("Please join a voice channel first!");
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
@@ -556,7 +573,7 @@ module.exports = function(passthrough) {
 				let args = suffix.split(" ");
 				let queue = queueStorage.storage.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
-				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p") {
+				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
 					if (!voiceChannel) return msg.channel.send(`**${msg.author.username}**, you are currently not in a voice channel`);
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
 					if (!permissions.has("CONNECT")) return msg.channel.send(`**${msg.author.username}**, I don't have permissions to connect to the voice channel you are in`);
@@ -574,7 +591,8 @@ module.exports = function(passthrough) {
 					} else {
 						ytdl.getInfo(args[1]).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel);
+							handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
+							return msg.react("👌");
 						}).catch(async reason => {
 							let searchString = args.slice(1).join(" ");
 							msg.channel.sendTyping();
@@ -613,10 +631,11 @@ module.exports = function(passthrough) {
 								if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
 								ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
 									let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-									handleSong(song, msg.channel, voiceChannel);
+									handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
 								}).catch(error => manageYtdlGetInfoErrors(msg, error, args[1]));
 								//selectMsg.edit(embed.setDescription("").setFooter("").setTitle("").addField("Song selected", videoResults[videoIndex-1]));
 								selectMsg.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
+								return msg.react("👌");
 							}).catch(() => {
 								selectMsg.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
 							});
@@ -677,27 +696,32 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send('There is nothing playing.');
 					let mode = args[1];
 					let index = parseInt(args[2])-1;
-					let related = queue.songs[0].video.related_videos.filter(v => v.title).slice(0, 10);
+					let related = await queue.songs[0].related();
 					if (related[index] && mode && ["p", "i"].includes(mode[0])) {
 						let videoID = related[index].id;
 						ytdl.getInfo(videoID).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel);
+							handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
+							msg.react("👌");
 						}).catch(reason => {
 							manageYtdlGetInfoErrors(msg, reason, args[1]);
 						});
 					} else {
-						let body = "";
-						related.forEach((songss, index) => {
-							let toAdd = `${index+1}. **${songss.title}** (${prettySeconds(songss.video.length_seconds)})\n *— ${songss.author}*\n`;
-							if (body.length + toAdd.length < 2000) body += toAdd;
-						});
-						let embed = new Discord.RichEmbed()
-						.setAuthor(`Related videos`)
-						.setDescription(body)
-						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
-						.setColor("36393E")
-						return msg.channel.send(embed);
+						if (related.length) {
+							let body = "";
+							related.forEach((songss, index) => {
+								let toAdd = `${index+1}. **${songss.title}** (${prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
+								if (body.length + toAdd.length < 2000) body += toAdd;
+							});
+							let embed = new Discord.RichEmbed()
+							.setAuthor(`Related videos`)
+							.setDescription(body)
+							.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
+							.setColor("36393E")
+							return msg.channel.send(embed);
+						} else {
+							return msg.channel.send("No related songs available.");
+						}
 					}
 				} else if (args[0].toLowerCase() == "shuffle") {
 					if (!msg.member.voiceChannel) return msg.channel.send('You are not in a voice channel');
