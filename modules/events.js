@@ -113,7 +113,7 @@ module.exports = function(passthrough) {
 	function manageVoiceStateUpdate(oldMember, newMember) {
 		if (newMember.id == client.user.id) return;
 		let channel = oldMember.voiceChannel || newMember.voiceChannel;
-		if (!channel) return;
+		if (!channel || !channel.guild) return;
 		let queue = utils.queueStorage.storage.get(channel.guild.id);
 		if (!queue) return;
 		queue.voiceStateUpdate(oldMember, newMember);
