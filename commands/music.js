@@ -235,9 +235,7 @@ module.exports = function(passthrough) {
 				}},
 				{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
-					if (this.skip()[0]) {
-						if (this.songs.length == 2) messageReaction.remove();
-					}
+					this.skip();
 				}},
 				{ emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
