@@ -474,11 +474,11 @@ module.exports = function(passthrough) {
 		if (channel.channel) channel = channel.channel;
 		let idString = id ? ` (id: ${id})` : "";
 		if (reason.message && reason.message.startsWith("No video id found:")) {
-			return channel.send(`${msg.author.username}, that is not a valid YouTube video.`+idString);
+			return channel.send(`that is not a valid YouTube video.`+idString);
 		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
-			return channel.send(`${msg.author.username}, that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`+idString)
+			return channel.send(`that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`+idString)
 		} else if (reason.message && (reason.message.startsWith("The uploader has not made this video available in your country") || reason.message.includes("not available"))) {
-			return channel.send(`${msg.author.username}, that video is not available.`+idString);
+			return channel.send(`that video is not available.`+idString);
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
