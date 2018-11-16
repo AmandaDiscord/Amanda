@@ -218,13 +218,13 @@ module.exports = function(passthrough) {
 				let authorCoins = await utils.coinsManager.get(msg.author.id);
 				let gift;
 				if (args[0] == "all") {
-					if (authorCoins == 0) return msg.channel.send(utils.lang.inputBankruptGeneric(msg));
+					if (authorCoins == 0) return msg.channel.send(utils.lang.externalBankruptGeneric(msg));
 					gift = authorCoins;
 				} else {
 					if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "gift"));
 					gift = Math.floor(parseInt(args[0]));
 					if (gift < 1) return msg.channel.send(utils.lang.inputSmallMoney(msg, "gift", 1));
-					if (gift > authorCoins) return msg.channel.send(utils.lang.inputBankruptGeneric(msg));
+					if (gift > authorCoins) return msg.channel.send(utils.lang.externalBankruptGeneric(msg));
 				}
 				utils.coinsManager.award(msg.author.id, -gift);
 				utils.coinsManager.award(member.id, gift);

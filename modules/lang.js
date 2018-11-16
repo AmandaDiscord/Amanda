@@ -13,11 +13,11 @@ module.exports = (passthrough) => {
 	utils.lang = {
 		// Whole command
 		commandDMOnly: msg => authorString(msg, "this command can only be used in DMs."),
-		commandGuildOnly: msg => authorString(msg, "this commands does not work in DMs."),
+		commandGuildOnly: msg => authorString(msg, "this command does not work in DMs."),
 
 		// Bad input
-		inputNoUser: msg => authorString(msg, "you need to provide a user."),
-		inputBadUser: msg => authorString(msg, "that's not a user."),
+		inputNoUser: msg => authorString(msg, "that's not a valid user."),
+		inputBadUser: msg => authorString(msg, "that's not a valid user."),
 		inputBadMoney: (msg, type) => authorString(msg, `that's not a valid ${type}.`),
 		inputSmallMoney: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`),
 		inputDoubleClaim: msg => authorstring(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
