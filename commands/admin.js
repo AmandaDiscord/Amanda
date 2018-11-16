@@ -70,14 +70,14 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.sendNopeMessage();
-				if (msg.channel.type == "dm") return msg.channel.send(`You cannot use this command in DMs`);
+				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
 				let args = suffix.split(" ");
-				if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to award and then a user`);
-				if (isNaN(args[0])) return msg.channel.send(`${msg.author.username}, that is not a valid amount to award`);
+				if (!args[0]) return msg.channel.send(utils.lang.inputNoUser(msg));
+				if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "amount to award"));
 				let usertxt = suffix.slice(args[0].length + 1);
-				if (!usertxt) return msg.channel.send(`${msg.author.username}, you need to provide a user to award`);
+				if (!usertxt) return msg.channel.send(utils.lang.inputNoUser(msg));
 				let member = msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send("Could not find that user");
+				if (member == null) return msg.channel.send(utils.lang.inputBadUser(msg));
 				let award = Math.floor(parseInt(args[0]));
 				utils.coinsManager.award(member.id, award);
 				let embed = new Discord.RichEmbed()

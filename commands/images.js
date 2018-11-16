@@ -16,7 +16,7 @@ module.exports = function(passthrough) {
 					let data;
 					try {
 						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(`Uh oh. There was an error while requesting an image of a cat...\n${error}`); }
+					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
 					let embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
@@ -37,7 +37,7 @@ module.exports = function(passthrough) {
 					let data;
 					try {
 						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(`Error while requesting an image of a dog.\n${error}`); }
+					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
 					let embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
@@ -58,7 +58,7 @@ module.exports = function(passthrough) {
 					let data;
 					try {
 						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(`Error while requesting a space image\n${error}`); }
+					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
 					let embed = new Discord.RichEmbed()
 						.setImage(data.data)
 						.setColor('36393E')
@@ -78,7 +78,7 @@ module.exports = function(passthrough) {
 				let data;
 				try {
 					data = JSON.parse(body);
-				} catch (error) { return msg.channel.send(`Error while requesting an image of a snek\n${error}`); }
+				} catch (error) { return msg.channel.send(utils.lang.apiImageError(error)); }
 				let embed = new Discord.RichEmbed()
 					.setImage(data.data)
 					.setColor('36393E')
@@ -97,7 +97,7 @@ module.exports = function(passthrough) {
 				let data;
 				try {
 					data = JSON.parse(body);
-				} catch (error) { return msg.channel.send(`Error while requesting an image of a snek\n${error}`); }
+				} catch (error) { return msg.channel.send(utils.lang.apiImageError(error)); }
 				let embed = new Discord.RichEmbed()
 					.setImage(data.data)
 					.setColor('36393E')
@@ -117,7 +117,7 @@ module.exports = function(passthrough) {
 					let data;
 					try {
 						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(`Error while requesting an image of a neko\n${error}`); }
+					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
 					let embed = new Discord.RichEmbed()
 						.setImage(data.url)
 						.setColor('36393E')
