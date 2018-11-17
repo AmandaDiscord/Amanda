@@ -236,28 +236,35 @@ module.exports = function(passthrough) {
 					suffix = suffix.toLowerCase();
 					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
-						.setAuthor("&music: command help [music, m]")
+						.setAuthor("&music: command help (aliases: music, m)")
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`now`, `Show the current song.\n\`&music now\``)
+						.addField(`pause`, `Pause playback.\n\`&music pause\``)
+						.addField(`resume`, `Resume playback. (Unpause.)\n\`&music resume\``)
 						.addField(`related [play|insert] [index]`,
 							"Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n"+
 							"`&music related` (shows related songs)\n"+
 							"`&music rel play 8` (adds related song #8 to the end of the queue)")
+						.addField("auto", "Enable or disable auto mode.\n"+
+							"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n"+
+							"`&music auto`")
 						.addField(`queue`, `Shows the current queue.\n\`&music queue\``)
 						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
-						.addField(`playlist`, `Manage playlists. Try \`&cmds playlist\` for more info.`)
+						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
 						send("dm");
 					} else if (suffix.includes("playlist")) {
 						embed = new Discord.RichEmbed()
-						.setAuthor(`&music playlist: command help`)
+						.setAuthor(`&music playlist: command help (aliases: playlist, playlists, pl)`)
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. "+
 							"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n"+
-							"Note that using `add`, `remove`, `move` and `import` require you to be the owner (creator) of a playlist.")
+							"Note that using `add`, `remove`, `move`, `import` and `delete` require you to be the owner (creator) of a playlist.")
+						.addField("show", "Show a list of all playlists.\n`&music playlist show`")
+						.addField("(just a playlist name)", "List all songs in a playlist.\n`&music playlist xi`")
 						.addField("play [start] [end]", "Play a playlist.\n"+
 							"Optionally, specify values for start and end to play specific songs from a playlist. "+
 							"Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\n"+
@@ -265,8 +272,8 @@ module.exports = function(passthrough) {
 							"`&music playlist xi play 32` (plays item #32 from the playlist)\n"+
 							"`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\n"+
 							"`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)")
-						.addField("shuffle [start] [end]", "Play the songs from a playlist in a random order. Works exactly like `play`.\n`&music playlist xi shuffle`")
-						.addField("add <url>", "Add a song to playlist. Specify a URL the same as `&music play`.\n"+
+						.addField("shuffle [start] [end]", "Play the songs from a playlist, but shuffle them into a random order before queuing them. Works exactly like `play`.\n`&music playlist xi shuffle`")
+						.addField("add <url>", "Add a song to a playlist. Specify a URL the same as `&music play`.\n"+
 							"`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`")
 						.addField("remove <index>", "Remove a song from a playlist.\n"+
 							"`index` is the index of the item to be removed.\n"+
@@ -276,8 +283,12 @@ module.exports = function(passthrough) {
 							"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. "+
 							"If you don't understand what this means, try it out yourself.\n"+
 							"`&music playlist xi move 12 13`")
+						.addField("find", "Find specific items in a playlist.\n"+
+							"Provide some text to search for, and matching songs will be shown.\n"+
+							"`&music playlist undertale find hopes and dreams`")
 						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n"+
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
+						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
 						.setColor('36393E')
 						send("dm");
 					} else {
