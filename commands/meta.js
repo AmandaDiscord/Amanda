@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 					return;
-				} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);}
+				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));}
 			}
 		},
 
@@ -143,9 +143,9 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
-					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+					if (msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
 					return;
-				} catch (reason) { return msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`); }
+				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg)); }
 			}
 		},
 
@@ -201,7 +201,7 @@ module.exports = function(passthrough) {
 					member = msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else user = client.findUser(msg, suffix, true);
-				if (!user) return msg.channel.send(`Couldn't find that user`);
+				if (!user) return msg.channel.send(utils.lang.inputBadUser(msg));
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
@@ -215,9 +215,9 @@ module.exports = function(passthrough) {
 			aliases: ["wumbo"],
 			category: "meta",
 			process: function(msg, suffix) {
-				if (!suffix) return msg.channel.send(`${msg.author.username}, please provide an emoji as a proper argument`);
+				if (!suffix) return msg.channel.send(utils.lang.inputNoEmoji(msg));
 				let emoji = client.parseEmoji(suffix);
-				if (emoji == null) return msg.channel.send(`${msg.author.username}, that is not a valid emoji`);
+				if (emoji == null) return msg.channel.send(utils.lang.inputNoEmoji(msg));
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
@@ -344,10 +344,10 @@ module.exports = function(passthrough) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
 						target.send({embed}).then(dm => {
-							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
+							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
 							resolve(dm);
 						}).catch(() => {
-							msg.channel.send(`${msg.author.username}, you must allow me to DM you for this command to work.`);
+							msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));
 							reject();
 						});
 					});

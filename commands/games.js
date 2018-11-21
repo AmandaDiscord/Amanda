@@ -178,7 +178,7 @@ module.exports = function(passthrough) {
 				).then(() => {
 					channel.send("I've sent you a DM with the list of categories.");
 				}).catch(() => {
-					channel.send("I tried to DM you a list of categories, but you may have DMs from me disabled.");
+					channel.send(utils.lang.permissionAuthorDMBlocked(msg));
 				});
 				return;
 			} else {
