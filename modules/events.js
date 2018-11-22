@@ -134,10 +134,15 @@ module.exports = function(passthrough) {
 			["Thriller by M.J.", "LISTENING"], ["the screams of many", "LISTENING"],
 			["Halloween on Netflix", "STREAMING"]
 		],
+		thanksgiving: [
+			["in the leaves", "PLAYING"],
+			["people give thanks", "LISTENING"],
+			["my family eat a feast", "WATCHING"]
+		],
 		christmas: [
 			["in the snow", "PLAYING"],
 			["Christmas carols", "LISTENING"],
-			["The Night before Christmas", "WATCHING"], ["snow fall", "WATCHING"]
+			["The Night before Christmas", "WATCHING"], ["snow fall", "WATCHING"],
 			["Christmas movies", "STREAMING"]
 		]
 	};
@@ -145,8 +150,12 @@ module.exports = function(passthrough) {
 	const update = () => {
 		let now = new Date(Date.now()).toUTCString().toLowerCase();
 		let choice;
-		if (now.includes("oct")) choice = presences.halloween;
+		if (now.includes("9 oct")) choice = [["happy age++, Cadence <3", "STREAMING"]]
+		else if (now.includes("oct")) choice = presences.halloween;
+		else if (now.includes("22 nov")) choice = presences.thanksgiving;
 		else if (now.includes("dec")) choice = presences.christmas;
+		else if (now.includes("1 jan")) choice = [["new years resolutions", "LISTENING"]];
+		else if (now.includes("16 jan")) choice = [["at my owner's bday party", "PLAYING"]];
 		else choice = presences.yearly;
 		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
 		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
