@@ -45,6 +45,8 @@ module.exports = function(passthrough) {
 				if (strings == "320067006521147393 405208699313848330") percentage = 100;
 				else if (strings == "158750488563679232 185938944460980224") percentage = 99999999999;
 				else if (strings == "439373663905513473 458823707175944194") percentage = 88888;
+				else if (strings == "270993297114267649 320067006521147393") percentage = 100;
+				else if (strings == "312450203678539787 501820319481200650") percentage = 9999;
 				else {
 					let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 					percentage = parseInt("0x"+hash)%101;
