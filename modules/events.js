@@ -35,7 +35,7 @@ module.exports = function(passthrough) {
 
 	async function manageMessage(msg) {
 		if (msg.author.bot) return;
-		if (msg.content.toLowerCase().includes("hey amanda")) return msg.channel.send("What do you want <:angerycat:515725957005574180>");
+		if (msg.content.toLowerCase() == "hey amanda") return msg.channel.send("What do you want <:angerycat:515725957005574180>");
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) return;
 		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
