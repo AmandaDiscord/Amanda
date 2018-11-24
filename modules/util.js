@@ -67,6 +67,9 @@ module.exports = (passthrough) => {
 		}
 	}
 
+	/**
+	 * I honestly have no clue what this does except fetch a user and send a message
+	 */
 	class DMUser {
 		constructor(userID) {
 			this.userID = userID;
@@ -182,7 +185,7 @@ module.exports = (passthrough) => {
 	/**
 	 * A Music queue for a guild managed by the client
 	 */
-	Discord.Guild.prototype.__defineGetter__('queue', function() { return client.QueueManager.get(this.id); });
+	Discord.Guild.prototype.__defineGetter__('queue', function() { return utils.queueStorage.storage.get(this.id); });
 
 
 
@@ -197,7 +200,6 @@ module.exports = (passthrough) => {
 
 	/**
 	 * Sends a denying message to a text channel
-	 * @param {*} msg MessageResolvable
 	 * @returns {Promise} MessageResolvable
 	 */
 	Discord.Channel.prototype.sendNopeMessage = function() {
@@ -214,7 +216,6 @@ module.exports = (passthrough) => {
 	// Message Prototypes
 	/**
 	 * Handles reactions as actions for the client to perform
-	 * @param {*} msg MessageResolvable
 	 * @param {Array} actions An array of objects of actions
 	 */
 	Discord.Message.prototype.reactionMenu = async function(actions) {
@@ -240,9 +241,8 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Changes a presence string into an emoji
-	 * @param {String} presence The user's presence string
-	 * @returns {String} The emoji that matches that presence
+	 * Gets a User's status indicator as an emoji
+	 * @returns {String} The emoji that matches that status
 	 */
 	Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -253,6 +253,10 @@ module.exports = (passthrough) => {
 		};
 		return presences[this.presence.status];
 	});
+	/**
+	 * Gets a Member's status indicator as an emoji
+	 * @returns {String} The emoji that matches that status
+	 */
 	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
 			online: "<:online:453823508200554508>",
@@ -264,8 +268,7 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Changes a presence type integer to a prefix string
-	 * @param {Number} type The user's presence integer
+	 * Gets a User's presence prefix
 	 * @returns {String} The prefix that matches the presence type
 	 */
 	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
@@ -273,6 +276,10 @@ module.exports = (passthrough) => {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		return prefixes[this.presence.game.type];
 	});
+	/**
+	 * Gets a Member's presence prefix
+	 * @returns {String} The prefix that matches the presence type
+	 */
 	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
 		if (this.presence.game == null) return null;
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
@@ -280,7 +287,7 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Gets a string in the format `${member.tag}` or `${member.tag} (${member.nickname})`
+	 * Gets a string in the format `${member.user.tag}` or `${member.user.tag} (${member.nickname})`
 	 */
 	Discord.GuildMember.prototype.__defineGetter__("displayTag", function() {
 		return this.nickname ? `${this.user.tag} (${this.nickname})` : this.user.tag;
@@ -321,6 +328,11 @@ module.exports = (passthrough) => {
 	 * Main interface for MySQL connection
 	 */
 	utils.sql = {
+		/**
+		 * Executes an SQL statement
+		 * @param {String} statement The SQL statement
+		 * @param {Array} prepared An array of values that coresponds with the SQL statement
+		 */
 		"all": function(string, prepared, connection, attempts) {
 			if (!attempts) attempts = 2;
 			if (!connection) connection = db;
@@ -337,6 +349,11 @@ module.exports = (passthrough) => {
 				});
 			});
 		},
+		/**
+		 * Gets a row based on the SQL statement
+		 * @param {String} statement The SQL statement
+		 * @param {Array} prepared An array of values that coresponds with the SQL statement
+		 */
 		"get": async function(string, prepared, connection) {
 			return (await utils.sql.all(string, prepared, connection))[0];
 		}
@@ -529,6 +546,7 @@ module.exports = (passthrough) => {
 	/**
 	 * Convert anything to a format suitable for sending as a Discord message.
 	 * @param {*} data Something to convert
+	 * @param {Number} depth The depth of the stringification
 	 * @returns {String} The result of the conversion
 	 */
 	utils.stringify = async function(data, depth) {
