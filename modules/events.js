@@ -45,13 +45,41 @@ module.exports = function(passthrough) {
 			try {
 				await cmd.process(msg, suffix);
 			} catch (e) {
-				let channel = client.channels.get("512869106089852949");
-				if (channel) channel.send(`Error at ${msg.guild?`Guild ${msg.guild.name} - GuildID: ${msg.guild.id}`:`DM channel with ${msg.author.tag}`} - ChannelID: ${msg.channel.id} - AuthorID: ${msg.author.id} - AuthorTag: ${msg.author.tag} - MessageID: ${msg.id} - Command: ${cmd.aliases[0]}\n`+(await utils.stringify(e)));
+				// Report to original channel
 				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
-				const embed = new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 				.setDescription(msgTxt)
-				.setColor("B60000")
+				.setColor("dd2d2d")
 				msg.channel.send({embed});
+				// Report to #amanda-error-log
+				let reportChannel = client.channels.get("497161350934560778");
+				if (reportChannel) {
+					embed.setTitle("Command error occurred.");
+					let details = [
+						["User", msg.author.tag],
+						["User ID", msg.author.id],
+						["Bot", msg.author.bot ? "Yes" : "No"]
+					];
+					if (msg.guild) {
+						details = details.concat([
+							["Guild", msg.guild.name],
+							["Guild ID", msg.guild.id],
+							["Channel", "#"+msg.channel.name],
+							["Channel ID", msg.channel.id]
+						]);
+					} else {
+						details = details.concat([
+							["DM", "Yes"]
+						]);
+					}
+					let maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0);
+					let detailsString = details.map(row =>
+						"`"+row[0]+" ​".repeat(maxLength-row[0].length)+"` "+row[1] //SC: space + zwsp, wide space
+					).join("\n");
+					embed.addField("Details", detailsString);
+					embed.addField("Message content", "```\n"+msg.content.replace(/`/g, "ˋ")+"```"); //SC: IPA modifier grave U+02CB
+					reportChannel.send(embed);
+				}
 			}
 		} else {
 			if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
