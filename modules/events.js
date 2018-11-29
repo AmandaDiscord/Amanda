@@ -46,7 +46,7 @@ module.exports = function(passthrough) {
 				await cmd.process(msg, suffix);
 			} catch (e) {
 				let channel = client.channels.get("512869106089852949");
-				if (channel) channel.send(`Error at guild ${msg.guild.name} -- ${msg.guild.id}\n`+(await utils.stringify(e)));
+				if (channel) channel.send(`Error at ${msg.guild?`Guild ${msg.guild.name} - GuildID: ${msg.guild.id}`:`DM channel with ${msg.author.tag}`} - ChannelID: ${msg.channel.id} - AuthorID: ${msg.author.id} - AuthorTag: ${msg.author.tag} - MessageID: ${msg.id} - Command: ${cmd.aliases[0]}\n`+(await utils.stringify(e)));
 				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
 				const embed = new Discord.RichEmbed()
 				.setDescription(msgTxt)
