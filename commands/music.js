@@ -583,9 +583,17 @@ module.exports = function(passthrough) {
 						if (match) args[1] = match[1];
 					}
 					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-						let playlist = await youtube.getPlaylist(args[1]);
-						let videos = await playlist.getVideos();
-						bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
+						if (args[1].includes("?list=WL")) {
+							return msg.channel.send(`${msg.author.username}, your Watch Later playlist is private, so I can't read it. Give me a public playlist instead.`);
+						} else {
+							try {
+								let playlist = await youtube.getPlaylist(args[1]);
+								let videos = await playlist.getVideos();
+								bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
+							} catch (e) {
+								return msg.channel.send(`${msg.author.username}, I couldn't read that playlist. Maybe you typed an invalid URL, or maybe the playlist hasn't been set public.`);
+							}
+						}
 					} else {
 						ytdl.getInfo(args[1]).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
