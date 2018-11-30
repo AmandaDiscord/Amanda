@@ -52,7 +52,7 @@ module.exports = function(passthrough) {
 				.setColor("dd2d2d")
 				msg.channel.send({embed});
 				// Report to #amanda-error-log
-				let reportChannel = client.channels.get("497161350934560778");
+				let reportChannel = client.channels.get("512869106089852949") || client.channels.get("497161350934560778");
 				if (reportChannel) {
 					embed.setTitle("Command error occurred.");
 					let details = [
