@@ -29,7 +29,7 @@ module.exports = (passthrough) => {
 		externalBankruptGeneric: msg => authorString(msg, "you don't have that many Discoins."),
 		externalBankruptBet: msg => authorString(msg, "you don't have enough Discoins to make that bet."),
 		externalBankruptClaim: msg => authorString(msg, "you don't have enough Discoins to claim that person."),
-		externalMiningCooldown: msg => authorString(msg, "you've already been mining within the last minute. Come back after 1 minute."),
+		externalDailyCooldown: msg => authorString(msg, "you've already claimed your daily coins. Come back later"),
 
 		// Bad API response
 		apiImageError: error => "API did not return an image.```\n"+error+"```",
