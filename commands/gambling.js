@@ -1,4 +1,4 @@
-let mined = new Set();
+let claimed = new Set();
 let Jimp = require("jimp");
 
 module.exports = function(passthrough) {
@@ -167,22 +167,22 @@ module.exports = function(passthrough) {
 			}
 		},
 
-		"mine": {
+		"daily": {
 			usage: "none",
-			description: "Mines for Discoins",
-			aliases: ["mine"],
+			description: "A daily command that gives a random amount of Discoins",
+			aliases: ["daily"],
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
-				if (mined.has(msg.author.id)) return msg.channel.send(utils.lang.externalMiningCooldown(msg));
-				let mine = Math.floor(Math.random() * (100 - 1) + 1);
+				if (claimed.has(msg.author.id)) return msg.channel.send(utils.lang.externalMiningCooldown(msg));
+				let claim = Math.floor(Math.random() * (1000 - 500) + 500);
 				let embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.username} went mining and got ${mine} <a:Discoin:422523472128901140> :pick:**`)
+					.setDescription(`**${msg.author.username} claimed their daily and got ${claim} <a:Discoin:422523472128901140>**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				utils.coinsManager.award(msg.author.id, mine);
-				mined.add(msg.author.id);
-				return setTimeout(() => { mined.delete(msg.author.id); }, 60000);
+				utils.coinsManager.award(msg.author.id, claim);
+				claimed.add(msg.author.id);
+				return setTimeout(() => { claimed.delete(msg.author.id); }, 86400000);
 			}
 		},
 
