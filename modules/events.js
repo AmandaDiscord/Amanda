@@ -94,6 +94,7 @@ module.exports = function(passthrough) {
 				if (!chat) return;
 				msg.channel.sendTyping();
 				let owner = await client.fetchUser("320067006521147393");
+				if (chat.toLowerCase().startsWith("say")) return;
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
