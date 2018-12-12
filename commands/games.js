@@ -119,7 +119,7 @@ module.exports = function(passthrough) {
 			}
 			return this.channel.send(embed).then(msg => {
 				msg.reactionMenu([
-					{emoji: client.emojis.get("362741439211503616"), ignore: "that", actionType: "js", actionData: () => {
+					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
 					}}
 				]);

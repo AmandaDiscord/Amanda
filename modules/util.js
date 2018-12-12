@@ -211,21 +211,34 @@ module.exports = (passthrough) => {
 		});
 	}
 
-
+	class ReactionMenu {
+		constructor(message, actions) {
+			this.message = message;
+			this.actions = actions;
+			reactionMenus[this.message.id] = this;
+			this.promise = this.react();
+		}
+		async react() {
+			for (let a of this.actions) {
+				await this.message.react(a.emoji);
+			}
+		}
+		destroy(remove) {
+			delete reactionMenus[this.message.id];
+			if (remove) {
+				this.message.clearReactions();
+			}
+		}
+	}
 
 	// Message Prototypes
 	/**
 	 * Handles reactions as actions for the client to perform
 	 * @param {Array} actions An array of objects of actions
 	 */
-	Discord.Message.prototype.reactionMenu = async function(actions) {
-		reactionMenus[this.id] = {
-			message: this,
-			actions: actions
-		}
-		for (let a of actions) {
-			await this.react(a.emoji);
-		}
+	Discord.Message.prototype.reactionMenu = function(actions) {
+		let message = this;
+		return new ReactionMenu(message, actions);
 	}
 
 
@@ -611,7 +624,7 @@ module.exports = (passthrough) => {
 			menu.actions.forEach(a => a.actionType = "none");
 			break;
 		case "total":
-			delete reactionMenus[msg.id];
+			menu.destroy(true);
 			break;
 		}
 		switch (action.remove) {
@@ -625,7 +638,7 @@ module.exports = (passthrough) => {
 			msg.clearReactions();
 			break;
 		case "message":
-			delete reactionMenus[msg.id];
+			menu.destroy(false);
 			msg.delete();
 			break;
 		}

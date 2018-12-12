@@ -151,6 +151,7 @@ module.exports = function(passthrough) {
 			this.skippable = false;
 			this.auto = false;
 			this.nowPlayingMsg = undefined;
+			this.reactionMenu = undefined;
 			this.queueStorage = queueStorage;
 			this.queueStorage.addQueue(this);
 			voiceChannel.join().then(connection => {
@@ -182,7 +183,7 @@ module.exports = function(passthrough) {
 			clearTimeout(this.voiceLeaveTimeout);
 			if (this.connection.dispatcher) this.connection.dispatcher.end();
 			this.voiceChannel.leave();
-			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
+			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
 		}
 		destroy() {
@@ -227,7 +228,8 @@ module.exports = function(passthrough) {
 			.addField("­", songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
 		}
 		generateReactions() {
-			if (this.nowPlayingMsg) this.nowPlayingMsg.reactionMenu([
+			if (this.reactionMenu) this.reactionMenu.destroy(true);
+			if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
 				{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					if (this.playing) this.pause();
@@ -695,7 +697,6 @@ module.exports = function(passthrough) {
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
 					.setColor("36393E")
 					let n = await msg.channel.send(embed);
-					queue.nowPlayingMsg.clearReactions();
 					queue.nowPlayingMsg = n;
 					queue.generateReactions();
 				} else if ("related".startsWith(args[0].toLowerCase())) {
