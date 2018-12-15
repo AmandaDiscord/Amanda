@@ -133,12 +133,12 @@ module.exports = function(passthrough) {
 	}
 
 	function manageDisconnect(reason) {
-		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
+		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 		setTimeout(() => client.login(config.bot_token), 6000);
 	}
 
 	function manageError(reason) {
-		console.error(reason);
+		if (reason) console.error(reason);
 	}
 
 	function manageRejection(reason) {
@@ -146,8 +146,10 @@ module.exports = function(passthrough) {
 			if (reason.code == 10008) return;
 			if (reason.code == 50013) return;
 		}
-		console.error(reason);
+		if (reason) console.error(reason);
+		else console.log("There was an error but no reason");
 	}
+	utils.manageError = manageRejection;
 
 	function manageVoiceStateUpdate(oldMember, newMember) {
 		if (newMember.id == client.user.id) return;

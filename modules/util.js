@@ -223,9 +223,16 @@ module.exports = (passthrough) => {
 			message: this,
 			actions: actions
 		}
+		let promises = [];
 		for (let a of actions) {
-			await this.react(a.emoji);
+			try {
+				let value = await this.react(a.emoji);
+				promises.push(value);
+			} catch (reason) {
+				utils.manageError(reason)
+			}
 		}
+		return promises;
 	}
 
 
@@ -574,6 +581,18 @@ module.exports = (passthrough) => {
 			}
 		}
 		return result;
+	}
+
+	utils.addMusicLogEntry = function(guild, entry) {
+		if (!guild.musicLog) guild.musicLog = [];
+		guild.musicLog.unshift(entry);
+		if (guild.musicLog.length > 15) guild.musicLog.pop();
+	}
+
+	utils.getSixTime = function(when, seperator) {
+		let d = new Date(when || Date.now());
+		if (!seperator) seperator = "";
+		return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0");
 	}
 
 	function reactionEvent(messageReaction, user) {

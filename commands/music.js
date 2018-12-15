@@ -552,8 +552,7 @@ module.exports = function(passthrough) {
 				if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new FriskySong(station);
-				handleSong(stream, msg.channel, voiceChannel);
-				return msg.react("👌");
+				return handleSong(stream, msg.channel, voiceChannel);
 			}
 		},
 		"music": {
@@ -597,8 +596,7 @@ module.exports = function(passthrough) {
 					} else {
 						ytdl.getInfo(args[1]).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-							return msg.react("👌");
+							return handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
 						}).catch(async reason => {
 							let searchString = args.slice(1).join(" ");
 							msg.channel.sendTyping();
@@ -632,16 +630,15 @@ module.exports = function(passthrough) {
 								.setColor("36393E")
 							await editOrSend({embed});
 							let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
-							collector.next.then(async msg => {
-								let videoIndex = parseInt(msg.content);
+							collector.next.then(async newmsg => {
+								let videoIndex = parseInt(newmsg.content);
 								if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
 								ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
 									let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-									handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-								}).catch(error => manageYtdlGetInfoErrors(msg, error, args[1]));
+									handleSong(song, newmsg.channel, voiceChannel, args[0][0] == "i");
+								}).catch(error => manageYtdlGetInfoErrors(newmsg, error, args[1]));
 								//selectMsg.edit(embed.setDescription("").setFooter("").setTitle("").addField("Song selected", videoResults[videoIndex-1]));
 								selectMsg.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
-								return msg.react("👌");
 							}).catch(() => {
 								selectMsg.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
 							});
@@ -653,7 +650,7 @@ module.exports = function(passthrough) {
 						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
 						else return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
 					}
-					if (queue.stop(queue)[0]) return msg.react("👌");
+					if (queue.stop(queue)[0]) return;
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0)); //TODO: move this to the song object
@@ -671,7 +668,7 @@ module.exports = function(passthrough) {
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
 					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.skip()[0]) return msg.react("👌");
+					if (queue.skip()[0]) return;
 				} else if (args[0].toLowerCase() == "auto") {
 					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
@@ -686,7 +683,6 @@ module.exports = function(passthrough) {
 					if (setv >= 1 && setv <= 5) {
 						queue.volume = setv;
 						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
-						return msg.react("👌");
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
@@ -707,8 +703,7 @@ module.exports = function(passthrough) {
 						let videoID = related[index].id;
 						ytdl.getInfo(videoID).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
-							msg.react("👌");
+							return handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
 						}).catch(reason => {
 							manageYtdlGetInfoErrors(msg, reason, args[1]);
 						});
@@ -733,15 +728,15 @@ module.exports = function(passthrough) {
 					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
-					return msg.react("👌");
+					return;
 				} else if (args[0].toLowerCase() == "pause") {
 					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.pause()[0]) return msg.react("👌");
+					if (queue.pause()[0]) return;
 				} else if (args[0].toLowerCase() == "resume") {
 					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.resume()[0]) return msg.react("👌");
+					if (queue.resume()[0]) return;
 				} /* else if (args[0].toLowerCase() == "stash") {
 					let stashes = await utils.sql.all("SELECT * FROM Stashes WHERE author = ?", msg.author.id);
 					stashes.forEach((s, i) => (s.index = i+1));
