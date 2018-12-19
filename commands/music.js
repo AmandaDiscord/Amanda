@@ -223,9 +223,11 @@ module.exports = function(passthrough) {
 		}
 		getNPEmbed() {
 			let song = this.songs[0];
-			return new Discord.RichEmbed().setColor("36393E")
+			let embed = new Discord.RichEmbed().setColor("36393E")
 			.setDescription(`Now playing: **${song.title}**`)
-			.addField("­", songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
+			.addField("­",songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
+			if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
+			return embed;
 		}
 		generateReactions() {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);

@@ -122,7 +122,7 @@ module.exports = (passthrough) => {
 		}
 		async react() {
 			for (let a of this.actions) {
-				await this.react(a.emoji).catch(() => "No Permissions");
+				await this.message.react(a.emoji).catch(new Function());
 			}
 		}
 		destroy(remove) {
@@ -254,7 +254,7 @@ module.exports = (passthrough) => {
 	 * Handles reactions as actions for the Discord.Client to perform
 	 * @param {Array} actions An Array of Objects of actions
 	 */
-	Discord.Message.prototype.reactionMenu = async function(actions) {
+	Discord.Message.prototype.reactionMenu = function(actions) {
 		let message = this;
 		return new ReactionMenu(message, actions);
 	}
