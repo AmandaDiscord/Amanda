@@ -122,13 +122,19 @@ module.exports = (passthrough) => {
 		}
 		async react() {
 			for (let a of this.actions) {
-				await this.message.react(a.emoji).catch(new Function());
+				a.messageReaction = await this.message.react(a.emoji).catch(new Function());
 			}
 		}
 		destroy(remove) {
 			delete reactionMenus[this.message.id];
 			if (remove) {
-				this.message.clearReactions();
+				if (this.message.channel.type == "text") {
+					this.message.clearReactions().catch(new Function());
+				} else if (this.message.channel.type == "dm") {
+					this.actions.forEach(a => {
+						if (a.messageReaction) a.messageReaction.remove().catch(new Function());
+					});
+				}
 			}
 		}
 	}
