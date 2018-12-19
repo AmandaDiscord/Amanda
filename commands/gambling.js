@@ -175,7 +175,7 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
 				if (claimed.has(msg.author.id)) return msg.channel.send(utils.lang.externalDailyCooldown(msg));
-				let claim = Math.floor(Math.random() * (1000 - 500) + 500);
+				let claim = Math.floor(Math.random() * (500 - 100) + 100);
 				let embed = new Discord.RichEmbed()
 					.setDescription(`**${msg.author.username} claimed their daily and got ${claim} <a:Discoin:422523472128901140>**`)
 					.setColor("F8E71C")
