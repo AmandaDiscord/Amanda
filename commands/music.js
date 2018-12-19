@@ -183,6 +183,7 @@ module.exports = function(passthrough) {
 			if (this.connection.dispatcher) this.connection.dispatcher.end();
 			this.voiceChannel.leave();
 			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
+			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
 		}
 		destroy() {
@@ -227,7 +228,8 @@ module.exports = function(passthrough) {
 			.addField("­", songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
 		}
 		generateReactions() {
-			if (this.nowPlayingMsg) this.nowPlayingMsg.reactionMenu([
+			if (this.reactionMenu) this.reactionMenu.destroy(true);
+			if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
 				{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					if (this.playing) this.pause();

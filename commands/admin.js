@@ -27,7 +27,9 @@ module.exports = function(passthrough) {
 					}
 					let output = await utils.stringify(result, depth);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
-					return nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					setTimeout(() => menu.destroy(true), 5*60*1000);
+					return;
 				} else return;
 			}
 		},
@@ -57,7 +59,9 @@ module.exports = function(passthrough) {
 						else result = stdout;
 					}
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
-					return nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					setTimeout(() => menu.destroy(true), 5*60*1000);
+					return;
 				});
 			}
 		},

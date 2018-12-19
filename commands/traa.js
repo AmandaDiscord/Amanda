@@ -74,11 +74,12 @@ module.exports = function(passthrough) {
 				new Promise(async resolve => {
 					if (existing.length) {
 						let dmsg = await msg.channel.send("That GIF already exists with "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".");
-						dmsg.reactionMenu([{emoji: "🗑", ignore: "total", allowedUsers: [msg.author.id], actionType: "js", actionData: async () => {
+						let menu = dmsg.reactionMenu([{emoji: "🗑", ignore: "total", allowedUsers: [msg.author.id], actionType: "js", actionData: async () => {
 							await utils.sql.all("DELETE FROM GenderGifs WHERE gifid = ?", existing[0].gifid);
 							await msg.channel.send("Deleted. Replacing...");
 							resolve();
 						}}]);
+						setTimeout(() => menu.destroy(true), 5*60*1000);
 					} else if (type && type.length == 1) {
 						return msg.channel.send("Pretty sure you don't want to do that.");
 					} else resolve();

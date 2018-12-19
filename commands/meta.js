@@ -319,7 +319,8 @@ module.exports = function(passthrough) {
 									.setTitle("Command category: "+suffix)
 									.setDescription(categoryCommands.map(c => `**${c.aliases[0]}**\n${c.description}`).join("\n\n"))
 									.setColor("36393E")
-									dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
+									let menu = dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
+									setTimeout(() => menu.destroy(true), 5*60*1000);
 								});
 							} else {
 								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");

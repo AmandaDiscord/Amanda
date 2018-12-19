@@ -1,9 +1,10 @@
-let util = require("util");
+const util = require("util");
 const events = require("events");
+const Discord = require("discord.js");
 let reactionMenus = {};
 
 module.exports = (passthrough) => {
-	let { Discord, client, db, utils, reloadEvent } = passthrough;
+	let { client, db, utils, reloadEvent } = passthrough;
 
 	client.on("messageReactionAdd", reactionEvent);
 	reloadEvent.once(__filename, () => {
@@ -59,7 +60,7 @@ module.exports = (passthrough) => {
 
 	// Classes
 
-	/** Class representing a manager for Music queues */
+	/** Class representing a manager for music queues */
 	utils.queueStorage = {
 		storage: new Discord.Collection(),
 		addQueue(queue) {
@@ -68,7 +69,8 @@ module.exports = (passthrough) => {
 	}
 
 	/**
-	 * I honestly have no clue what this does except fetch a user and send a message
+	 * Fetches a Discord.User then queues messages to be sent to them
+	 * @param {String} userID A Discord.User ID
 	 */
 	class DMUser {
 		constructor(userID) {
@@ -90,28 +92,57 @@ module.exports = (passthrough) => {
 			});
 		}
 		send() {
-			return new Promise(resolve => {
+			return new Promise((resolve, reject) => {
 				return new Promise(fetched => {
-					if (!this.user) this.events.once("fetched", () => fetched());
+					if (!this.user) this.events.once("fetched", fetched);
 					else fetched();
 				}).then(() => {
-					resolve(this.user.send(...arguments));
+					try {
+						this.user.send(...arguments).then(resolve);
+					} catch (reason) {
+						reject(`${this.user.tag} cannot recieve messsages from this client`);
+					}
 				});
 			});
 		}
 	}
 	utils.DMUser = DMUser;
 
+	/**
+	 * Class that initiates a Discord.Message reaction menu
+	 * @param {Discord.Message} message A Discord.Message
+	 * @param {Array} actions An Array of Objects containing action data
+	 */
+	class ReactionMenu {
+		constructor(message, actions) {
+			this.message = message;
+			this.actions = actions;
+			reactionMenus[this.message.id] = this;
+			this.promise = this.react();
+		}
+		async react() {
+			for (let a of this.actions) {
+				await this.react(a.emoji).catch(() => "No Permissions");
+			}
+		}
+		destroy(remove) {
+			delete reactionMenus[this.message.id];
+			if (remove) {
+				this.message.clearReactions();
+			}
+		}
+	}
+
 
 
  // Client Prototypes
 
 	/**
-	 * Finds a user in the client cache
-	 * @param {*} msg MessageResolvable
-	 * @param {String} usertxt Text that contains user's display data to search them by
-	 * @param {Boolean} self If the function should return <MessageResolvable>.author if no usertxt is provided
-	 * @returns {(User|null)} A user object or null if it couldn't find a user
+	 * Gets a Discord.User Object from the Discord.Client cache
+	 * @param {Discord.Message} msg A Discord.Message
+	 * @param {String} usertxt A String that contains Discord.User data to search by
+	 * @param {Boolean} self If the Function should return Discord.Message.author if no usertxt parameter is provided
+	 * @returns {(Discord.User|null)} A Discord.User Object or null if it couldn't return a Discord.User
 	 */
 	Discord.Client.prototype.findUser = function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
@@ -134,12 +165,11 @@ module.exports = (passthrough) => {
 	}
 
 	/**
-	 * Gets the URL of any Discord emoji
-	 * @param {String} emoji A string containing the Discord managed emoji
-	 * @returns {Object} An object with basic emoji properties
+	 * Gets more data from a Discord.Emoji based on metadata
+	 * @param {String} emoji A String containing the Discord.Emoji metadata
+	 * @returns {Object} An Object with enhanced Discord.Emoji properties
 	 */
-	Discord.Client.prototype.parseEmoji = getEmoji;
-	function getEmoji(emoji) {
+	Discord.Client.prototype.parseEmoji = function(emoji) {
 		let type, e;
 		e = Discord.Util.parseEmoji(emoji);
 		if (e == null) return null;
@@ -154,11 +184,11 @@ module.exports = (passthrough) => {
  // Guild Prototypes
 
 	/**
-	 * Finds a member in a guild
-	 * @param {*} msg MessageResolvable
-	 * @param {String} usertxt Text that contains user's display data to search them by
-	 * @param {Boolean} self If the function should return <MessageResolvable>.member if no usertxt is provided
-	 * @returns {(Member|null)} A member object or null if it couldn't find a member
+	 * Gets a Discord.GuildMember from the Discord.Guild.members Object
+	 * @param {Discord.Message} msg A Discord.Message
+	 * @param {String} usertxt A String that contains Discord.GuildMember data to search by
+	 * @param {Boolean} self If the Function should return Discord.Message.member if no usertxt parameter is provided
+	 * @returns {(Discord.GuildMember|null)} A Discord.GuildMember Object or null if it couldn't return a Discord.GuildMember
 	 */
 	Discord.Guild.prototype.findMember = function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
@@ -183,7 +213,7 @@ module.exports = (passthrough) => {
 	}
 
 	/**
-	 * A Music queue for a guild managed by the client
+	 * A music queue for a Discord.Guild managed by the Discord.Client
 	 */
 	Discord.Guild.prototype.__defineGetter__('queue', function() { return utils.queueStorage.storage.get(this.id); });
 
@@ -192,22 +222,28 @@ module.exports = (passthrough) => {
  // Channel Prototypes
 
 	/**
-	 * Sends a typing event to a channel that times out
+	 * Sends a typing event to a text based Discord.Channel that automatically times out
+	 * @returns {Promise}
 	 */
-	Discord.Channel.prototype.sendTyping = async function() {
-		if (this.startTyping) await this.client.rest.methods.sendTyping(this.id);
+	Discord.Channel.prototype.sendTyping = function() {
+		if (this.startTyping) return this.client.rest.methods.sendTyping(this.id);
+		else return Promise.reject("Channel is not a text channel, cannot sendTyping");
 	}
 
 	/**
-	 * Sends a denying message to a text channel
-	 * @returns {Promise} MessageResolvable
+	 * Sends a denying Discord.Message to a text based Discord.Channel
+	 * @returns {Promise<Discord.Message>} A Discord.Message
 	 */
 	Discord.Channel.prototype.sendNopeMessage = function() {
-		return new Promise(async resolve => {
+		return new Promise(async (resolve, reject) => {
 			let nope = [["No.", 300], ["Nice try.", 1000], ["How about no?", 1550], [`Don't even try it.`, 3000]];
 			let [no, time] = nope[Math.floor(Math.random() * nope.length)];
-			await this.sendTyping();
-			setTimeout(() => { resolve(this.send(no)); }, time);
+			try {
+				await this.sendTyping();
+				setTimeout(() => { resolve(this.send(no)); }, time);
+			} catch (reason) {
+				reject(reason);
+			}
 		});
 	}
 
@@ -215,24 +251,12 @@ module.exports = (passthrough) => {
 
 	// Message Prototypes
 	/**
-	 * Handles reactions as actions for the client to perform
-	 * @param {Array} actions An array of objects of actions
+	 * Handles reactions as actions for the Discord.Client to perform
+	 * @param {Array} actions An Array of Objects of actions
 	 */
 	Discord.Message.prototype.reactionMenu = async function(actions) {
-		reactionMenus[this.id] = {
-			message: this,
-			actions: actions
-		}
-		let promises = [];
-		for (let a of actions) {
-			try {
-				let value = await this.react(a.emoji);
-				promises.push(value);
-			} catch (reason) {
-				utils.manageError(reason)
-			}
-		}
-		return promises;
+		let message = this;
+		return new ReactionMenu(message, actions);
 	}
 
 
@@ -240,7 +264,7 @@ module.exports = (passthrough) => {
 	// User Prototypes
 
 	/**
-	 * Gets the 32×32 avatar URL of a user, useful for embed authors and footers
+	 * Gets a 32×32 avatar URL of a Discord.User, useful for Discord.RichEmbed author and footer fields
 	 */
 	Discord.User.prototype.__defineGetter__('smallAvatarURL', function() {
 		if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
@@ -248,8 +272,8 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Gets a User's status indicator as an emoji
-	 * @returns {String} The emoji that matches that status
+	 * Gets a Discord.User status indicator as an emoji
+	 * @returns {String} The Discord.Emoji String that matches that status
 	 */
 	Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -261,8 +285,8 @@ module.exports = (passthrough) => {
 		return presences[this.presence.status];
 	});
 	/**
-	 * Gets a Member's status indicator as an emoji
-	 * @returns {String} The emoji that matches that status
+	 * Gets a Discord.GuildMember status indicator as an emoji
+	 * @returns {String} The Discord.Emoji String that matches that status
 	 */
 	Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		let presences = {
@@ -275,7 +299,7 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Gets a User's presence prefix
+	 * Gets a Discord.User presence prefix
 	 * @returns {String} The prefix that matches the presence type
 	 */
 	Discord.User.prototype.__defineGetter__("presencePrefix", function() {
@@ -284,7 +308,7 @@ module.exports = (passthrough) => {
 		return prefixes[this.presence.game.type];
 	});
 	/**
-	 * Gets a Member's presence prefix
+	 * Gets a Discord.GuildMember presence prefix
 	 * @returns {String} The prefix that matches the presence type
 	 */
 	Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
@@ -294,7 +318,7 @@ module.exports = (passthrough) => {
 	});
 
 	/**
-	 * Gets a string in the format `${member.user.tag}` or `${member.user.tag} (${member.nickname})`
+	 * A string in the format `${Discord.GuildMember.user.tag}` or `${Discord.GuildMember.user.tag} (${Discord.GuildMember.nickname})`
 	 */
 	Discord.GuildMember.prototype.__defineGetter__("displayTag", function() {
 		return this.nickname ? `${this.user.tag} (${this.nickname})` : this.user.tag;
@@ -305,9 +329,9 @@ module.exports = (passthrough) => {
 
 	/**
 	 * Checks if a user or guild has certain permission levels
-	 * @param {Object} DiscordObject An object of a user or guild
+	 * @param {(Discord.User|Discord.Guild)} Object An Object of a Discord.User or Discord.Guild
 	 * @param {String} Permission The permission to test if the Snowflake has
-	 * @returns {Boolean} If the Snowflake is allowed to use the provided string permission
+	 * @returns {Boolean} If the Snowflake is allowed to use the provided String permission
 	 */
 	utils.hasPermission = async function() {
 		let args = [...arguments];
@@ -368,7 +392,7 @@ module.exports = (passthrough) => {
 
 	/**
 	 * Gets the connection to the MySQL database
-	 * @returns {*} Database Connection
+	 * @returns {Promise<Object>} Database Connection
 	 */
 	utils.getConnection = function() {
 		return db.getConnection();
@@ -491,8 +515,8 @@ module.exports = (passthrough) => {
 	// Misc Prototypes
 
 	/**
-	 * Shuffles an array psuedorandomly
-	 * @returns {Array} An array which has been psuedorandomly shuffled
+	 * Shuffles an Array psuedorandomly
+	 * @returns {Array} An Array which has been psuedorandomly shuffled
 	 */
 	Array.prototype.shuffle = function() {
 		let old = [...this];
@@ -505,9 +529,9 @@ module.exports = (passthrough) => {
 	}
 
 	/**
-	 * Humanizes a number to a time string based on input
+	 * Humanizes a Number to a time String based on input
 	 * @param {string} format What format the number is in; sec or ms
-	 * @returns {string} A humanized string of time
+	 * @returns {string} A humanized String of time
 	 */
 	Number.prototype.humanize = function(format) {
 		let msec;
@@ -551,7 +575,7 @@ module.exports = (passthrough) => {
 
 
 	/**
-	 * Convert anything to a format suitable for sending as a Discord message.
+	 * Convert anything to a format suitable for sending as a Discord.Message.
 	 * @param {*} data Something to convert
 	 * @param {Number} depth The depth of the stringification
 	 * @returns {String} The result of the conversion
@@ -630,7 +654,7 @@ module.exports = (passthrough) => {
 			menu.actions.forEach(a => a.actionType = "none");
 			break;
 		case "total":
-			delete reactionMenus[msg.id];
+			menu.destroy(true);
 			break;
 		}
 		switch (action.remove) {
@@ -644,7 +668,7 @@ module.exports = (passthrough) => {
 			msg.clearReactions();
 			break;
 		case "message":
-			delete reactionMenus[msg.id];
+			menu.destroy(true);
 			msg.delete();
 			break;
 		}
