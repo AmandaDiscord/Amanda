@@ -21,7 +21,7 @@
     "jimp": "^0.5.6",
     "mime": "^2.4.0",
     "mysql2": "^1.6.4",
-    "node-opus": "^0.3.0",
+    "node-opus": "^0.3.1",
     "prism-media": "0.0.3",
     "request": "^2.88.0",
     "request-promise": "^4.2.2",
