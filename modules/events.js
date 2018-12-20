@@ -2,7 +2,7 @@ module.exports = function(passthrough) {
 	let { Discord, client, config, utils, db, commands, reloadEvent } = passthrough;
 	let stdin = process.stdin;
 	let prefixes = [];
-	let statusPrefix = "&";
+	let statusPrefix = "%";
 
 	if (config.dbl_key) {
 		const dbl = require("dblapi.js");
@@ -34,6 +34,10 @@ module.exports = function(passthrough) {
 	}
 
 	async function manageMessage(msg) {
+		if (msg.guild) {
+			let check = await utils.sql.get("SELECT * FROM premium WHERE guildID =?", msg.guild.id);
+			if (!check) return;
+		}
 		if (msg.author.bot) return;
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) {
