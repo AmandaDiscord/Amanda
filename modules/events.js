@@ -2,7 +2,7 @@ module.exports = function(passthrough) {
 	let { Discord, client, config, utils, db, commands, reloadEvent } = passthrough;
 	let stdin = process.stdin;
 	let prefixes = [];
-	let statusPrefix = "%";
+	let statusPrefix = "&";
 
 	if (config.dbl_key) {
 		const dbl = require("dblapi.js");
@@ -34,9 +34,11 @@ module.exports = function(passthrough) {
 	}
 
 	async function manageMessage(msg) {
-		if (msg.guild) {
-			let check = await utils.sql.get("SELECT * FROM premium WHERE guildID =?", msg.guild.id);
-			if (!check) return;
+		if (client.user.id == "525452137581510676") {
+			if (msg.guild) {
+				let check = await utils.sql.get("SELECT * FROM premium WHERE guildID =?", msg.guild.id);
+				if (!check) return;
+			}
 		}
 		if (msg.author.bot) return;
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
@@ -55,6 +57,10 @@ module.exports = function(passthrough) {
 			try {
 				await cmd.process(msg, suffix);
 			} catch (e) {
+				if (e && e.code) {
+					if (e.code == 10008) return;
+					if (e.code == 50013) return;
+				}
 				// Report to original channel
 				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
 				let embed = new Discord.RichEmbed()
