@@ -34,12 +34,6 @@ module.exports = function(passthrough) {
 	}
 
 	async function manageMessage(msg) {
-		if (client.user.id == "525452137581510676") {
-			if (msg.guild) {
-				let check = await utils.sql.get("SELECT * FROM premium WHERE guildID =?", msg.guild.id);
-				if (!check) return;
-			}
-		}
 		if (msg.author.bot) return;
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) {
