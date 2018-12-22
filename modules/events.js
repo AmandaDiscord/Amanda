@@ -171,6 +171,12 @@ module.exports = function(passthrough) {
 			['music', 'LISTENING'], ['Spotify', 'LISTENING'],
 			['Netflix for ∞ hours', 'STREAMING']
 		],
+		newYears: [
+			["with sparklers", "PLAYING"],
+			["a fireworks show", "WATCHING"], ["Times Square", "WATCHING"], ["the countdown", "WATCHING"],
+			["The Final Countdown", "LISTENING"],
+			["fire snakes", "STREAMING"]
+		],
 		halloween: [
 			["Silent Hill", "PLAYING"],
 			["scary movies", "WATCHING"], ["Halloween decor being hung", "WATCHING"],
@@ -197,8 +203,9 @@ module.exports = function(passthrough) {
 		else if (now.includes("oct")) choice = presences.halloween;
 		else if (now.includes("22 nov")) choice = presences.thanksgiving;
 		else if (now.includes("25 dec")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
+		else if (now.includes("31 dec")) choice = presences.newYears;
 		else if (now.includes("dec")) choice = presences.christmas;
-		else if (now.includes("1 jan")) choice = [["new years resolutions", "LISTENING"]];
+		else if (now.includes("1 jan")) choice = presences.newYears;
 		else if (now.includes("16 jan")) choice = [["at my owner's bday party", "PLAYING"]];
 		else choice = presences.yearly;
 		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
