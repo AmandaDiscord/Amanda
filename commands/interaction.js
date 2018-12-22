@@ -110,9 +110,9 @@ module.exports = function(passthrough) {
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				member.user.send(`${String(msg.member)} has claimed you for ${claim} <a:Discoin:422523472128901140> ${face}`).catch(() => msg.channel.send(utils.lang.permissionOtherDMBlocked()));
+				member.user.send(`${String(msg.member)} has claimed you for ${claim} ${utils.lang.emojiDiscoin} ${face}`).catch(() => msg.channel.send(utils.lang.permissionOtherDMBlocked()));
 				let embed = new Discord.RichEmbed()
-					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} <a:Discoin:422523472128901140>`)
+					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${utils.lang.emojiDiscoin}`)
 					.setColor("36393E")
 				return msg.channel.send({embed});
 			}
@@ -185,7 +185,7 @@ module.exports = function(passthrough) {
 					.setTitle("Waifu leaderboard")
 					.setDescription(
 						all.map((row, index) =>
-							`${index+1}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} <a:Discoin:422523472128901140>`
+							`${index+1}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${utils.lang.emojiDiscoin}`
 						).join("\n")
 					)
 					.setColor("F8E71C")

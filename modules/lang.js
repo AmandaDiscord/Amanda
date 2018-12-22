@@ -29,7 +29,8 @@ module.exports = (passthrough) => {
 		externalBankruptGeneric: msg => authorString(msg, "you don't have that many Discoins."),
 		externalBankruptBet: msg => authorString(msg, "you don't have enough Discoins to make that bet."),
 		externalBankruptClaim: msg => authorString(msg, "you don't have enough Discoins to claim that person."),
-		externalDailyCooldown: msg => authorString(msg, "you've already claimed your daily coins. Come back later"),
+		externalDailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${utils.lang.emojiDiscoin}**\nCome back in ${timeRemaining} for more coins!`,
+		externalDailyCooldown: (msg, timeRemaining) => authorString(msg, `your daily coins will refresh in ${timeRemaining}.`),
 
 		// Bad API response
 		apiImageError: error => "API did not return an image.```\n"+error+"```",
@@ -54,6 +55,9 @@ module.exports = (passthrough) => {
 
 		// Generic
 		genericIndexOutOfRange: msg => authorString(msg, "that index is out of range."),
-		genericInvalidAction: msg => authorString(msg, "that is not a valid action.")
+		genericInvalidAction: msg => authorString(msg, "that is not a valid action."),
+
+		// Custom emoji strings
+		emojiDiscoin: "<a:Discoin:422523472128901140>"
 	}
 }

@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				return member.send(`**${String(msg.author)}** has awarded you ${award} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				return member.send(`**${String(msg.author)}** has awarded you ${award} ${utils.lang.emojiDiscoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

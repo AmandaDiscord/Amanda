@@ -1,5 +1,6 @@
-let claimed = new Set();
-let Jimp = require("jimp");
+const dailyCooldownHours = 20;
+const dailyCooldownTime = dailyCooldownHours*60*60*1000;
+const Jimp = require("jimp");
 
 module.exports = function(passthrough) {
 	let { Discord, client, utils } = passthrough;
@@ -68,19 +69,19 @@ module.exports = function(passthrough) {
 				let winning;
 				if (slots.every(s => s == "heart")) {
 					winning = bet * 30;
-					result += `WOAH! Triple :heart: You won ${bet * 30} <a:Discoin:422523472128901140>`;
+					result += `WOAH! Triple :heart: You won ${bet * 30} ${utils.lang.emojiDiscoin}`;
 				} else if (slots.filter(s => s == "heart").length == 2) {
 					winning = bet * 4;
-					result += `Wow! Double :heart: You won ${bet * 4} <a:Discoin:422523472128901140>`;
+					result += `Wow! Double :heart: You won ${bet * 4} ${utils.lang.emojiDiscoin}`;
 				} else if (slots.filter(s => s == "heart").length == 1) {
 					winning = Math.floor(bet * 1.25);
-					result += `A single :heart: You won ${Math.floor(bet * 1.25)} <a:Discoin:422523472128901140>`;
+					result += `A single :heart: You won ${Math.floor(bet * 1.25)} ${utils.lang.emojiDiscoin}`;
 				} else if (slots.slice(1).every(s => s == slots[0])) {
 					winning = bet * 10;
-					result += `A triple. You won ${bet * 10} <a:Discoin:422523472128901140>`;
+					result += `A triple. You won ${bet * 10} ${utils.lang.emojiDiscoin}`;
 				} else {
 					winning = 0;
-					result += `Sorry. You didn't get a match. You lost ${bet} <a:Discoin:422523472128901140>`;
+					result += `Sorry. You didn't get a match. You lost ${bet} ${utils.lang.emojiDiscoin}`;
 				}
 				utils.coinsManager.award(msg.author.id, winning-bet);
 				await canvas.print(font, 115, 523, winning);
@@ -139,7 +140,7 @@ module.exports = function(passthrough) {
 					t: ["tails", "<:coinT:402219471693021196>"]
 				};
 				if (Math.random() < winChance/100) {
-					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} <a:Discoin:422523472128901140>`);
+					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${utils.lang.emojiDiscoin}`);
 					utils.coinsManager.award(msg.author.id, bet);
 				} else {
 					let pick = args[1] == "h" ? "t" : "h";
@@ -161,7 +162,7 @@ module.exports = function(passthrough) {
 				let money = await utils.coinsManager.get(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(`Coins for ${member.displayTag}`)
-					.setDescription(`${money} Discoins <a:Discoin:422523472128901140>`)
+					.setDescription(`${money} Discoins ${utils.lang.emojiDiscoin}`)
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
 			}
@@ -174,15 +175,19 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
-				if (claimed.has(msg.author.id)) return msg.channel.send(utils.lang.externalDailyCooldown(msg));
-				let claim = Math.floor(Math.random() * (500 - 100) + 100);
-				let embed = new Discord.RichEmbed()
-					.setDescription(`**${msg.author.username} claimed their daily and got ${claim} <a:Discoin:422523472128901140>**`)
-					.setColor("F8E71C")
-				msg.channel.send({embed});
-				utils.coinsManager.award(msg.author.id, claim);
-				claimed.add(msg.author.id);
-				return setTimeout(() => { claimed.delete(msg.author.id); }, 86400000);
+				let row = await utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id);
+				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
+					let amount = Math.floor(Math.random() * (500 - 100) + 100);
+					let embed = new Discord.RichEmbed()
+						.setDescription(utils.lang.externalDailyClaimed(msg, amount, dailyCooldownHours+" hours"))
+						.setColor("F8E71C")
+					msg.channel.send(embed);
+					utils.coinsManager.award(msg.author.id, amount);
+					utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()]);
+				} else {
+					let timeRemaining = (row.lastClaim-Date.now()+dailyCooldownTime).humanize("ms");
+					msg.channel.send(utils.lang.externalDailyCooldown(msg, timeRemaining));
+				}
 			}
 		},
 
@@ -195,7 +200,7 @@ module.exports = function(passthrough) {
 				let all = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT 20", client.user.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboard")
-					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} <a:Discoin:422523472128901140>`).join("\n"))
+					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${utils.lang.emojiDiscoin}`).join("\n"))
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
 			}
@@ -232,7 +237,7 @@ module.exports = function(passthrough) {
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				return member.send(`${String(msg.author)} has given you ${gift} <a:Discoin:422523472128901140>`).catch(() => msg.channel.send(utils.lang.permissionOtherDMBlocked(msg)));
+				return member.send(`${String(msg.author)} has given you ${gift} ${utils.lang.emojiDiscoin}`).catch(() => msg.channel.send(utils.lang.permissionOtherDMBlocked(msg)));
 			}
 		}
 	}
