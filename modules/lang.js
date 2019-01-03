@@ -20,7 +20,7 @@ module.exports = (passthrough) => {
 		inputBadUser: msg => authorString(msg, "that's not a valid user."),
 		inputBadMoney: (msg, type) => authorString(msg, `that's not a valid ${type}.`),
 		inputSmallMoney: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`),
-		inputDoubleClaim: msg => authorstring(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
+		inputDoubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
 		inputNoEmoji: msg => authorString(msg, "you need to provide an emoji."),
 		inputPlayableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
 		inputYouTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
