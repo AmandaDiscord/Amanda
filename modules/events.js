@@ -197,16 +197,16 @@ module.exports = function(passthrough) {
 	};
 
 	const update = () => {
-		let now = new Date().toUTCString().toLowerCase();
+		let now = new Date().toJSON();
 		let choice;
-		if (now.includes("9 oct")) choice = [["happy age++, Cadence <3", "STREAMING"]]
-		else if (now.includes("oct")) choice = presences.halloween;
-		else if (now.includes("22 nov")) choice = presences.thanksgiving;
-		else if (now.includes("25 dec")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
-		else if (now.includes("31 dec")) choice = presences.newYears;
-		else if (now.includes("dec")) choice = presences.christmas;
-		else if (now.includes("1 jan")) choice = presences.newYears;
-		else if (now.includes("16 jan")) choice = [["at my owner's bday party", "PLAYING"]];
+		if (now.includes("-10-09")) choice = [["happy age++, Cadence <3", "STREAMING"]]
+		else if (now.includes("-10-")) choice = presences.halloween;
+		else if (now.includes("-11-22")) choice = presences.thanksgiving;
+		else if (now.includes("-12-25")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
+		else if (now.includes("-12-31")) choice = presences.newYears;
+		else if (now.includes("-12-")) choice = presences.christmas;
+		else if (now.includes("-01-01")) choice = presences.newYears;
+		else if (now.includes("-01-16")) choice = [["at my owner's bday party", "PLAYING"]];
 		else choice = presences.yearly;
 		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
 		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
