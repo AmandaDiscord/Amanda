@@ -412,6 +412,7 @@ module.exports = function(passthrough) {
 		const useBatchLimit = 50;
 		const batchSize = 30;
 
+		let oldVideoIDs = videoIDs;
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
 		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
 		from = Math.max(from, 1);
@@ -420,6 +421,7 @@ module.exports = function(passthrough) {
 		if (shuffle) {
 			videoIDs = videoIDs.shuffle();
 		}
+		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
 		if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
 		let progress = 0;
 		let total = videoIDs.length;
@@ -434,19 +436,14 @@ module.exports = function(passthrough) {
 			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})`;
 		}
 		let videos = [];
-		function reject({reason, id}) {
-			manageYtdlGetInfoErrors(msg, reason, id).then(() => {
-				msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
-			});
-		}
 		let batchNumber = 0;
 		(function nextBatch() {
 			let batch = batches.shift();
 			batchNumber++;
 			let batchProgress = 0;
-			Promise.all(batch.map(videoID => {
-				return new Promise((resolve, reject) => {
-					ytdl.getInfo(videoID).then(info => {
+			let promise = Promise.all(batch.map(videoID => {
+				return ytdl.getInfo(videoID).then(info => {
+					if (progress >= 0) {
 						progress++;
 						batchProgress++;
 						if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == total) {
@@ -456,10 +453,17 @@ module.exports = function(passthrough) {
 								editInProgress = false;
 							});
 						}
-						resolve(info);
-					}).catch(reason => reject({reason, id: videoID}));
+						return info;
+					}
+				}).catch(reason => Promise.reject({reason, id: videoID}))
+			}));
+			promise.catch(error => {
+				progress = -1;
+				manageYtdlGetInfoErrors(msg, error.reason, error.id, oldVideoIDs.indexOf(error.id)+1).then(() => {
+					msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
 				});
-			})).then(batchVideos => {
+			});
+			promise.then(batchVideos => {
 				videos.push(...batchVideos);
 				if (batches.length) nextBatch();
 				else {
@@ -469,19 +473,24 @@ module.exports = function(passthrough) {
 						handleSong(song, msg.channel, voiceChannel);
 					});
 				}
-			}).catch(reject);
+			});
 		})();
 	}
 
-	function manageYtdlGetInfoErrors(channel, reason, id) {
+	function manageYtdlGetInfoErrors(channel, reason, id, item) {
 		if (channel.channel) channel = channel.channel;
-		let idString = id ? ` (id: ${id})` : "";
-		if (reason.message && reason.message.startsWith("No video id found:")) {
-			return channel.send(`that is not a valid YouTube video.`+idString);
-		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
-			return channel.send(`that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`+idString)
-		} else if (reason.message && (reason.message.startsWith("The uploader has not made this video available in your country") || reason.message.includes("not available"))) {
-			return channel.send(`that video is not available.`+idString);
+		let idString = id ? ` (index: ${item}, id: ${id})` : "";
+		if (!reason || !reason.message) {
+			return channel.send("An unknown error occurred."+idString);
+		} if (reason.message && reason.message.startsWith("No video id found:")) {
+			return channel.send(`That is not a valid YouTube video.`+idString);
+		} else if (reason.message && (
+				reason.message.includes("who has blocked it in your country")
+			|| reason.message.includes("This video is unavailable")
+			|| reason.message.includes("The uploader has not made this video available in your country")
+			|| reason.message.includes("copyright infringement")
+		)) {
+			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement.`+idString);
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
