@@ -72,9 +72,8 @@ module.exports = function(passthrough) {
 		deleteCache() {
 			this.info = null;
 		}
-		async stream() {
-			if (this.info) return ytdl.downloadFromInfo(this.info);
-			else return ytdl.getInfo(this.basic.id).then(() => ytdl(this.url));
+		stream() {
+			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 5e6}));
 		}
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
