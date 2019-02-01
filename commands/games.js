@@ -250,12 +250,13 @@ module.exports = function(passthrough) {
 			}
 		},
 		"minesweeper": {
-			usage: "none",
+			usage: "<raw>",
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
-			process: function(msg) {
+			process: function(msg, suffix) {
 				let string = sweeper();
+				if (suffix.toLowerCase() == "r" || suffix.toLowerCase() == "raw") return msg.channel.send(string);
 				let embed = new Discord.RichEmbed().setColor("36393E").setDescription(string);
 				msg.channel.send(embed);
 			}
