@@ -363,7 +363,7 @@ module.exports = function(passthrough) {
 				} else if (this.songs[0].live) {
 					return [false, "Cannot pause live radio."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("paused")];
+					return [false, client.lang.voiceCannotAction("paused")];
 				}
 			})(web);
 		}
@@ -377,7 +377,7 @@ module.exports = function(passthrough) {
 				} else if (this.playing) {
 					return [false, "Music is not paused."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("resumed")];
+					return [false, client.lang.voiceCannotAction("resumed")];
 				}
 			})(web);
 		}
@@ -389,7 +389,7 @@ module.exports = function(passthrough) {
 				} else if (!this.playing) {
 					return [false, "You cannot skip while music is paused. Resume, then skip."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("skipped")];
+					return [false, client.lang.voiceCannotAction("skipped")];
 				}
 			})(web);
 		}
@@ -443,7 +443,7 @@ module.exports = function(passthrough) {
 			videoIDs = videoIDs.shuffle();
 		}
 		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
-		if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+		if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 		let progress = 0;
 		let total = videoIDs.length;
 		let lastEdit = 0;
@@ -580,9 +580,9 @@ module.exports = function(passthrough) {
 			aliases: ["frisky"],
 			category: "music",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				const voiceChannel = msg.member.voiceChannel;
-				if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+				if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new FriskySong(station);
 				return handleSong(stream, msg.channel, voiceChannel);
@@ -594,7 +594,7 @@ module.exports = function(passthrough) {
 			aliases: ["music", "m"],
 			category: "music",
 			process: async function(msg, suffix) {
-				if (msg.channel.type != "text") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type != "text") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
 				if (!allowed) {
 					let owner = await client.fetchUser("320067006521147393")
@@ -604,11 +604,11 @@ module.exports = function(passthrough) {
 				let queue = queueStorage.storage.get(msg.guild.id);
 				const voiceChannel = msg.member.voiceChannel;
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
-					if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+					if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(utils.lang.permissionVoiceJoin(msg));
-					if (!permissions.has("SPEAK")) return msg.channel.send(utils.lang.permissionVoiceSpeak(msg));
-					if (!args[1]) return msg.channel.send(utils.lang.inputPlayableRequired(msg));
+					if (!permissions.has("CONNECT")) return msg.channel.send(client.lang.permissionVoiceJoin(msg));
+					if (!permissions.has("SPEAK")) return msg.channel.send(client.lang.permissionVoiceSpeak(msg));
+					if (!args[1]) return msg.channel.send(client.lang.input.music.playableRequired(msg));
 					args[1] = args[1].replace(/^<|>$/g, "");
 					{
 						let match = args[1].match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
@@ -678,14 +678,14 @@ module.exports = function(passthrough) {
 						});
 					}
 				} else if (args[0].toLowerCase() == "stop") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					if (!queue) {
 						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
-						else return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+						else return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					}
 					if (queue.stop(queue)[0]) return;
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0)); //TODO: move this to the song object
 					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.source == "YouTube" ? songss.basic.length_seconds: "LIVE")})`).join('\n');
 					if (body.length > 2000) {
@@ -699,17 +699,17 @@ module.exports = function(passthrough) {
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					if (queue.skip()[0]) return;
 				} else if (args[0].toLowerCase() == "auto") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.auto = !queue.auto;
 					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
 				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
 					let setv = Math.floor(parseInt(args[1]));
 					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
@@ -718,7 +718,7 @@ module.exports = function(passthrough) {
 						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
 					} else return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
@@ -728,7 +728,7 @@ module.exports = function(passthrough) {
 					queue.nowPlayingMsg = n;
 					queue.generateReactions();
 				} else if ("related".startsWith(args[0].toLowerCase())) {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let mode = args[1];
 					let index = parseInt(args[2])-1;
 					let related = await queue.songs[0].related();
@@ -758,17 +758,17 @@ module.exports = function(passthrough) {
 						}
 					}
 				} else if (args[0].toLowerCase() == "shuffle") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
 					return;
 				} else if (args[0].toLowerCase() == "pause") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					if (queue.pause()[0]) return;
 				} else if (args[0].toLowerCase() == "resume") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					if (queue.resume()[0]) return;
 				} /* else if (args[0].toLowerCase() == "stash") {
 					let stashes = await utils.sql.all("SELECT * FROM Stashes WHERE author = ?", msg.author.id);
@@ -860,11 +860,11 @@ module.exports = function(passthrough) {
 					}
 					let action = args[2] || "";
 					if (action.toLowerCase() == "add") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						let videoID = args[3];
 						if (!videoID) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link`);
 						ytdl.getInfo(videoID).then(async video => {
-							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(utils.lang.playlistDuplicateItem(msg));
+							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(client.lang.playlistDuplicateItem(msg));
 							await Promise.all([
 								utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
 								utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
@@ -875,11 +875,11 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
 						});
 					} else if (action.toLowerCase() == "remove") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						let index = parseInt(args[3]);
 						if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`);
 						index = index-1;
-						if (!orderedSongs[index]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[index]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
 						let toRemove = orderedSongs[index];
 						await Promise.all([
 							utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
@@ -887,13 +887,13 @@ module.exports = function(passthrough) {
 						]);
 						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 					} else if (action.toLowerCase() == "move") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						let from = parseInt(args[3]);
 						let to = parseInt(args[4]);
 						if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
 						from--; to--;
-						if (!orderedSongs[from]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
-						if (!orderedSongs[to]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[from]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[to]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
 						let fromRow = orderedSongs[from], toRow = orderedSongs[to];
 						if (from < to) {
 							await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
@@ -923,7 +923,7 @@ module.exports = function(passthrough) {
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase()[0] == "s");
 					} else if (action.toLowerCase() == "import") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 							let playlist = await youtube.getPlaylist(args[3]);
 							let videos = await playlist.getVideos();
@@ -964,7 +964,7 @@ module.exports = function(passthrough) {
 							editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);
 						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 					} else if (action.toLowerCase() == "delete") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						(await msg.channel.send(new Discord.RichEmbed().setColor("dd1d1d").setDescription(
 							"This action will permanently delete the playlist `"+playlistRow.name+"`. "+
 							"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n"+
@@ -1003,7 +1003,7 @@ module.exports = function(passthrough) {
 						.setColor("36393E")
 						msg.channel.send(embed);
 					}
-				} else return msg.channel.send(utils.lang.genericInvalidAction(msg));
+				} else return msg.channel.send(client.lang.genericInvalidAction(msg));
 			}
 		}
 	}

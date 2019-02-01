@@ -12,7 +12,7 @@ module.exports = function(passthrough) {
 			aliases: ["slot", "slots"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let money = await utils.coinsManager.get(msg.author.id);
 				msg.channel.sendTyping();
 				let args = suffix.split(" ");
@@ -57,31 +57,31 @@ module.exports = function(passthrough) {
 				}
 				let bet;
 				if (args[0] == "all") {
-					if (money == 0) return msg.channel.send(utils.lang.externalBankruptBet(msg));
+					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					bet = money;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "bet"));
+					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
 					bet = Math.floor(parseInt(args[0]));
-					if (bet < 2) return msg.channel.send(utils.lang.inputSmallMoney(msg, "bet", 2));
-					if (bet > money) return msg.channel.send(utils.lang.externalBankruptBet(msg));
+					if (bet < 2) return msg.channel.send(client.lang.input.money.small(msg, "bet", 2));
+					if (bet > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
 				let result = "";
 				let winning;
 				if (slots.every(s => s == "heart")) {
 					winning = bet * 30;
-					result += `WOAH! Triple :heart: You won ${bet * 30} ${utils.lang.emojiDiscoin}`;
+					result += `WOAH! Triple :heart: You won ${bet * 30} ${client.lang.emoji.discoin}`;
 				} else if (slots.filter(s => s == "heart").length == 2) {
 					winning = bet * 4;
-					result += `Wow! Double :heart: You won ${bet * 4} ${utils.lang.emojiDiscoin}`;
+					result += `Wow! Double :heart: You won ${bet * 4} ${client.lang.emoji.discoin}`;
 				} else if (slots.filter(s => s == "heart").length == 1) {
 					winning = Math.floor(bet * 1.25);
-					result += `A single :heart: You won ${Math.floor(bet * 1.25)} ${utils.lang.emojiDiscoin}`;
+					result += `A single :heart: You won ${Math.floor(bet * 1.25)} ${client.lang.emoji.discoin}`;
 				} else if (slots.slice(1).every(s => s == slots[0])) {
 					winning = bet * 10;
-					result += `A triple. You won ${bet * 10} ${utils.lang.emojiDiscoin}`;
+					result += `A triple. You won ${bet * 10} ${client.lang.emoji.discoin}`;
 				} else {
 					winning = 0;
-					result += `Sorry. You didn't get a match. You lost ${bet} ${utils.lang.emojiDiscoin}`;
+					result += `Sorry. You didn't get a match. You lost ${bet} ${client.lang.emoji.discoin}`;
 				}
 				utils.coinsManager.award(msg.author.id, winning-bet);
 				await canvas.print(font, 115, 523, winning);
@@ -109,19 +109,19 @@ module.exports = function(passthrough) {
 			aliases: ["betflip", "bf"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				let money = await utils.coinsManager.get(msg.author.id);
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you need to provide a bet and a side to bet on`);
 				let bet;
 				if (args[0] == "all") {
-					if (money == 0) return msg.channel.send(utils.lang.externalBankruptBet(msg));
+					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					bet = money;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "bet"));
+					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
 					bet = Math.floor(parseInt(args[0]));
-					if (bet < 1) return msg.channel.send(utils.lang.inputSmallMoney(msg, "bet", 1));
-					if (bet > money) return msg.channel.send(utils.lang.externalBankruptBet(msg));
+					if (bet < 1) return msg.channel.send(client.lang.input.money.small(msg, "bet", 1));
+					if (bet > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
 				if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
 				if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
@@ -140,7 +140,7 @@ module.exports = function(passthrough) {
 					t: ["tails", "<:coinT:402219471693021196>"]
 				};
 				if (Math.random() < winChance/100) {
-					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${utils.lang.emojiDiscoin}`);
+					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${client.lang.emoji.discoin}`);
 					utils.coinsManager.award(msg.author.id, bet);
 				} else {
 					let pick = args[1] == "h" ? "t" : "h";
@@ -156,13 +156,13 @@ module.exports = function(passthrough) {
 			aliases: ["coins", "$"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let member = msg.guild.findMember(msg, suffix, true);
-				if (member == null) return msg.channel.send(utils.lang.inputNoUser(msg));
+				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let money = await utils.coinsManager.get(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(`Coins for ${member.displayTag}`)
-					.setDescription(`${money} Discoins ${utils.lang.emojiDiscoin}`)
+					.setDescription(`${money} Discoins ${client.lang.emoji.discoin}`)
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
 			}
@@ -174,19 +174,19 @@ module.exports = function(passthrough) {
 			aliases: ["daily"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let row = await utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id);
 				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
 					let amount = Math.floor(Math.random() * (500 - 100) + 100);
 					let embed = new Discord.RichEmbed()
-						.setDescription(utils.lang.externalDailyClaimed(msg, amount, dailyCooldownHours+" hours"))
+						.setDescription(client.lang.external.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
 						.setColor("F8E71C")
 					msg.channel.send(embed);
 					utils.coinsManager.award(msg.author.id, amount);
 					utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()]);
 				} else {
 					let timeRemaining = (row.lastClaim-Date.now()+dailyCooldownTime).humanize("ms");
-					msg.channel.send(utils.lang.externalDailyCooldown(msg, timeRemaining));
+					msg.channel.send(client.lang.external.dailyCooldown(msg, timeRemaining));
 				}
 			}
 		},
@@ -200,7 +200,7 @@ module.exports = function(passthrough) {
 				let all = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT 20", client.user.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboard")
-					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${utils.lang.emojiDiscoin}`).join("\n"))
+					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${client.lang.emoji.discoin}`).join("\n"))
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
 			}
@@ -212,24 +212,24 @@ module.exports = function(passthrough) {
 			aliases: ["give"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
 				let usertxt = suffix.slice(args[0].length + 1);
-				if (!usertxt) return msg.channel.send(utils.lang.inputNoUser(msg));
+				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let member = msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send(utils.lang.inputBadUser(msg));
+				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
 				let authorCoins = await utils.coinsManager.get(msg.author.id);
 				let gift;
 				if (args[0] == "all") {
-					if (authorCoins == 0) return msg.channel.send(utils.lang.externalBankruptGeneric(msg));
+					if (authorCoins == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					gift = authorCoins;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "gift"));
+					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
 					gift = Math.floor(parseInt(args[0]));
-					if (gift < 1) return msg.channel.send(utils.lang.inputSmallMoney(msg, "gift", 1));
-					if (gift > authorCoins) return msg.channel.send(utils.lang.externalBankruptGeneric(msg));
+					if (gift < 1) return msg.channel.send(client.lang.input.money.small(msg, "gift", 1));
+					if (gift > authorCoins) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
 				utils.coinsManager.award(msg.author.id, -gift);
 				utils.coinsManager.award(member.id, gift);
@@ -237,7 +237,7 @@ module.exports = function(passthrough) {
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				return member.send(`${String(msg.author)} has given you ${gift} ${utils.lang.emojiDiscoin}`).catch(() => msg.channel.send(utils.lang.permissionOtherDMBlocked(msg)));
+				return member.send(`${String(msg.author)} has given you ${gift} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked(msg)));
 			}
 		}
 	}

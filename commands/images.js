@@ -16,7 +16,7 @@ module.exports = function(passthrough) {
 		let data;
 		try {
 			data = JSON.parse(body);
-		} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
+		} catch (error) { return nmsg.edit(client.lang.apiError(error)); }
 		let img;
 		if (host == "chewey") img = data.data;
 		else if (host == "nekos") img = data.url;

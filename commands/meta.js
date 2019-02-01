@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 					return;
-				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));}
+				} catch (reason) { return msg.channel.send(client.lang.dm.failed(msg));}
 			}
 		},
 
@@ -143,9 +143,9 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
-					if (msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
+					if (msg.channel.type != "dm") msg.channel.send(client.lang.dm.success(msg));
 					return;
-				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg)); }
+				} catch (reason) { return msg.channel.send(client.lang.dm.failed(msg)); }
 			}
 		},
 
@@ -201,7 +201,7 @@ module.exports = function(passthrough) {
 					member = msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else user = client.findUser(msg, suffix, true);
-				if (!user) return msg.channel.send(utils.lang.inputBadUser(msg));
+				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
@@ -215,9 +215,9 @@ module.exports = function(passthrough) {
 			aliases: ["wumbo"],
 			category: "meta",
 			process: function(msg, suffix) {
-				if (!suffix) return msg.channel.send(utils.lang.inputNoEmoji(msg));
+				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "emoji"));
 				let emoji = client.parseEmoji(suffix);
-				if (emoji == null) return msg.channel.send(utils.lang.inputNoEmoji(msg));
+				if (emoji == null) return msg.channel.send(client.lang.input.invalid(msg, "emoji"));
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
@@ -345,10 +345,10 @@ module.exports = function(passthrough) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
 						target.send({embed}).then(dm => {
-							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
+							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(client.lang.dm.success(msg));
 							resolve(dm);
 						}).catch(() => {
-							msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));
+							msg.channel.send(client.lang.dm.failed(msg));
 							reject();
 						});
 					});

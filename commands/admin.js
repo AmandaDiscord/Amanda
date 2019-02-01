@@ -74,21 +74,21 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.sendNopeMessage();
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
-				if (!args[0]) return msg.channel.send(utils.lang.inputNoUser(msg));
-				if (isNaN(args[0])) return msg.channel.send(utils.lang.inputBadMoney(msg, "amount to award"));
+				if (!args[0]) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
 				let usertxt = suffix.slice(args[0].length + 1);
-				if (!usertxt) return msg.channel.send(utils.lang.inputNoUser(msg));
+				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let member = msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send(utils.lang.inputBadUser(msg));
+				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let award = Math.floor(parseInt(args[0]));
 				utils.coinsManager.award(member.id, award);
 				let embed = new Discord.RichEmbed()
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				return member.send(`**${String(msg.author)}** has awarded you ${award} ${utils.lang.emojiDiscoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				return member.send(`**${String(msg.author)}** has awarded you ${award} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	}

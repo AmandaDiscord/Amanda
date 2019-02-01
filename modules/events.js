@@ -62,7 +62,7 @@ module.exports = function(passthrough) {
 				.setColor("dd2d2d")
 				msg.channel.send({embed});
 				// Report to #amanda-error-log
-				let reportChannel = client.channels.get("512869106089852949") || client.channels.get("497161350934560778");
+				let reportChannel = client.channels.get("512869106089852949");
 				if (reportChannel) {
 					embed.setTitle("Command error occurred.");
 					let details = [
@@ -102,7 +102,7 @@ module.exports = function(passthrough) {
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
-						if (!data.sp("output.0.actions")) return msg.channel.send("Unfortunately, my speech API is currently having a bad time. Try again in a while? :3");
+						if (!data.sp("output.0.actions")) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?");
 						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, owner.username);
 						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
 						if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no");

@@ -1,5 +1,6 @@
 const rp = require("request-promise");
 const entities = require("entities");
+const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
 
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
@@ -123,7 +124,7 @@ module.exports = function(passthrough) {
 			.setColor(this.color)
 			.setFooter("Click the reaction for another round.")
 			if (winners.length) {
-				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${utils.lang.emojiDiscoin})`).join("\n"));
+				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${client.lang.emoji.discoin})`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
@@ -136,6 +137,98 @@ module.exports = function(passthrough) {
 			});
 		}
 	}
+
+
+	function sweeper() {
+		let width = 9,
+				total = width * width,
+				bombs = 10,
+				rows = [],
+				board = [],
+				pieceWhite = "⬜",
+				pieceBomb = "💣",
+				str = "";
+
+		// Place board
+		let placed = 0;
+		while (placed < total) {
+			board[placed] = pieceWhite;
+			placed++;
+		}
+
+		// Place bombs
+		let bombsPlaced = 0;
+		let placement = () => {
+			let index = Math.floor(Math.random() * (total - 1) + 1);
+			if (board[index] == pieceBomb) placement();
+			else board[index] = pieceBomb;
+		}
+		while (bombsPlaced < bombs) {
+			placement();
+			bombsPlaced++;
+		}
+
+
+		// Create rows
+		let currow = 1;
+		board.forEach((item, index) => {
+			i = index+1;
+			if (!rows[currow-1]) rows[currow-1] = [];
+			rows[currow-1].push(item);
+			if (i%9 == 0) currow++;
+		});
+
+		// Generate numbers
+		rows.forEach((row, index) => {
+			row.forEach((item, iindex) => {
+				if (item == pieceBomb) {
+					let uprow = rows[index-1];
+					let downrow = rows[index+1];
+					let num = (it) => { if (it != undefined && typeof it == "number") return true; else return false; };
+					let undef = (it) => { return it == undefined };
+					if (uprow) {
+						if (num(uprow[iindex-1])) uprow[iindex-1]++;
+						else if (!undef(uprow[iindex-1])) uprow[iindex-1] = 1;
+
+						if (num(uprow[iindex])) uprow[iindex]++;
+						else if (!undef(uprow[iindex])) uprow[iindex] = 1;
+
+						if (num(uprow[iindex+1])) uprow[iindex+1]++;
+						else if (!undef(uprow[iindex+1])) uprow[iindex+1] = 1;
+					}
+
+					if (num(row[iindex-1])) row[iindex-1]++;
+					else if (!undef(row[iindex-1])) row[iindex-1] = 1;
+
+					if (num(row[iindex+1])) row[iindex+1]++;
+					else if (!undef(row[iindex+1])) row[iindex+1] = 1;
+
+					if (downrow) {
+						if (num(downrow[iindex-1])) downrow[iindex-1]++;
+						else if (!undef(downrow[iindex-1])) downrow[iindex-1] = 1;
+
+						if (num(downrow[iindex])) downrow[iindex]++;
+						else if (!undef(downrow[iindex])) downrow[iindex] = 1;
+
+						if (num(downrow[iindex+1])) downrow[iindex+1]++;
+						else if (!undef(downrow[iindex+1])) downrow[iindex+1] = 1;
+					}
+				}
+			});
+		});
+
+		// Create a string to send
+		rows.forEach(row => {
+			row.forEach(item => {
+				if (typeof item == "number") it = numbers[item-1];
+				else it = item;
+				str += `||${it}||`;
+			});
+			str += "\n";
+		});
+		return str;
+	}
+
 
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", answerDetector);
@@ -154,6 +247,17 @@ module.exports = function(passthrough) {
 			category: "games",
 			process: async function(msg, suffix) {
 				startGame(msg.channel, {suffix, msg});
+			}
+		},
+		"minesweeper": {
+			usage: "none",
+			description: "Starts a game of minesweeper using the Discord spoiler system",
+			aliases: ["minesweeper", "ms"],
+			category: "games",
+			process: function(msg) {
+				let string = sweeper();
+				let embed = new Discord.RichEmbed().setColor("36393E").setDescription(string);
+				msg.channel.send(embed);
 			}
 		}
 	}
@@ -188,7 +292,7 @@ module.exports = function(passthrough) {
 				).then(() => {
 					channel.send("I've sent you a DM with the list of categories.");
 				}).catch(() => {
-					channel.send(utils.lang.permissionAuthorDMBlocked(msg));
+					channel.send(client.lang.dm.failed(msg));
 				});
 				return;
 			} else {
