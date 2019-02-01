@@ -11,6 +11,12 @@ module.exports = function(passthrough) {
 	let youtube = new YouTube(config.yt_api_key);
 	let queueStorage = utils.queueStorage;
 
+	/**
+	 * A class meant to only be extended. Contains basic information for audio streams
+	 * @param {String} title The title of the audio
+	 * @param {String} source Where the audio stream is coming from
+	 * @param {boolean} live If the audio is being streamed live
+	 */
 	class Song {
 		constructor(title, source, live) {
 			this.title = title;
@@ -18,6 +24,9 @@ module.exports = function(passthrough) {
 			this.live = live;
 			this.streaming = false;
 		}
+		/**
+		 * A method to create basic data stored in this class instance
+		 */
 		toObject() {
 			return Object.assign({
 				title: this.title,
@@ -25,13 +34,25 @@ module.exports = function(passthrough) {
 				live: this.live
 			}, this.object());
 		}
+		/**
+		 * A method to get the basic information assigned from this.toObject();
+		 * @returns {Object} Basic information about this class instance
+		 */
 		object() {
 			// Intentionally empty. Subclasses should put additional properties for toObject here.
 		}
+		/**
+		 * A method to return the audio stream linked to this class instance
+		 * @returns {Stream} A data stream related to the audio of this class instance
+		 */
 		getStream() {
 			this.streaming = true;
 			return this.stream();
 		}
+		/**
+		 * A method to return related audio clips to that of this class instance
+		 * @returns {Array} An Array of related content
+		 */
 		related() {
 			return [];
 		}
@@ -73,7 +94,7 @@ module.exports = function(passthrough) {
 			this.info = null;
 		}
 		stream() {
-			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 5e6}));
+			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 20e6}));
 		}
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);

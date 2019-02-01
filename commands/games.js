@@ -4,29 +4,32 @@ const entities = require("entities");
 module.exports = function(passthrough) {
 	let { Discord, client, utils, reloadEvent } = passthrough;
 
-	class GameStorage {
-		constructor() {
-			this.games = [];
-		}
-		add(game) {
+	let games = {
+		games: [],
+		add: function(game) {
 			this.games.push(game);
-		}
-		getChannel(channel) {
+		},
+		getChannel: function(channel) {
 			return this.games.find(g => g.channel == channel);
-		}
-		remove(game) {
+		},
+		remove: function(game) {
 			this.games = this.games.filter(g => g != game);
 		}
 	}
 
-	let games = new GameStorage();
-
-	class Game {
+	/**
+	 * A class representing a game of trivia in a guild
+	 * @param {Discord.Channel} channel A Discord managed channel object
+	 * @param {Object} data A JSON response from OpenTDB
+	 * @param {String} category The category of the trivia question linked to this class instance
+	 */
+	class TriviaGame {
 		constructor(channel, data, category) {
 			let api = data.results[0];
 			// Storage
 			this.storage = games;
 			this.channel = channel;
+			this.type = "trivia";
 			this.storage.add(this);
 			// Category
 			if (category) this.category = category;
@@ -65,6 +68,10 @@ module.exports = function(passthrough) {
 			// Prepare to receive answers
 			this.receivedAnswers = new Map();
 		}
+		/**
+		 * A method to add an answer regarding the trivia question linked to this class instance
+		 * @param {Discord.Message} msg A Discord managed message object
+		 */
 		addAnswer(msg) {
 			// Check answer is a single letter
 			if (msg.content.length != 1) return;
@@ -76,6 +83,9 @@ module.exports = function(passthrough) {
 			this.receivedAnswers.set(msg.author.id, index);
 			//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`);
 		}
+		/**
+		 * A method to end the current game linked to this class instance
+		 */
 		async end() {
 			// Clean up
 			clearTimeout(this.timer);
@@ -203,6 +213,6 @@ module.exports = function(passthrough) {
 		// Error check new game data
 		if (data.response_code != 0) return channel.send(`There was an error from the api`);
 		// Set up new game
-		new Game(channel, data, category);
+		new TriviaGame(channel, data, category);
 	}
 }
