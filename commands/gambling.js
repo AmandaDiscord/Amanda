@@ -179,14 +179,14 @@ module.exports = function(passthrough) {
 				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
 					let amount = Math.floor(Math.random() * (500 - 100) + 100);
 					let embed = new Discord.RichEmbed()
-						.setDescription(client.lang.external.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
+						.setDescription(client.lang.external.money.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
 						.setColor("F8E71C")
 					msg.channel.send(embed);
 					utils.coinsManager.award(msg.author.id, amount);
 					utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()]);
 				} else {
 					let timeRemaining = (row.lastClaim-Date.now()+dailyCooldownTime).humanize("ms");
-					msg.channel.send(client.lang.external.dailyCooldown(msg, timeRemaining));
+					msg.channel.send(client.lang.external.money.dailyCooldown(msg, timeRemaining));
 				}
 			}
 		},
