@@ -94,7 +94,7 @@ module.exports = function(passthrough) {
 			this.info = null;
 		}
 		stream() {
-			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 20e6}));
+			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 10e6}));
 		}
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
@@ -200,8 +200,8 @@ module.exports = function(passthrough) {
 			this.songs.length = 0;
 			this.auto = false;
 			clearTimeout(this.voiceLeaveTimeout);
-			if (this.connection.dispatcher) this.connection.dispatcher.end();
-			this.voiceChannel.leave();
+			if (this.connection && this.connection.dispatcher) this.connection.dispatcher.end();
+			if (this.voiceChannel) this.voiceChannel.leave();
 			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
