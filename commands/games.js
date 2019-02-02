@@ -139,20 +139,31 @@ module.exports = function(passthrough) {
 	}
 
 
-	function sweeper(difficulty) {
+	function sweeper(difficulty, size) {
 		let width = 8,
-				total = width * width,
+				bombs = 6,
+				total = undefined,
 				rows = [],
 				board = [],
 				pieceWhite = "⬜",
 				pieceBomb = "💣",
-				str = "";
-		let bombs = 6;
+				str = "",
+				error = false;
 
 		if (difficulty) {
+			if (difficulty == "easy") bombs = 6;
 			if (difficulty == "medium") bombs = 8;
 			if (difficulty == "expert") bombs = 10;
 		}
+
+		if (size) {
+			let num;
+			if (size < 4) num = 8, error = true;
+			else if (size > 14) num = 8, error = true;
+			else num = size;
+			width = num;
+		}
+		total = width * width;
 
 		// Place board
 		let placed = 0;
@@ -249,7 +260,7 @@ module.exports = function(passthrough) {
 			});
 			str += "\n";
 		});
-		return str;
+		return { text: str, size: width, bombs: bombs, error: error };
 	}
 
 
@@ -273,17 +284,30 @@ module.exports = function(passthrough) {
 			}
 		},
 		"minesweeper": {
-			usage: "<easy|medium|expert> [--raw]",
+			usage: "<easy|medium|expert> [--raw] [--size:x]",
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
 			process: function(msg, suffix) {
-				let string = sweeper();
+				let size = 8, difficulty = "easy";
+				let string, title;
 				let sfx = suffix.toLowerCase();
-				if (sfx.includes("medium")) string = sweeper("medium");
-				else if (sfx.includes("expert")) string = sweeper("expert");
-				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(string);
-				let embed = new Discord.RichEmbed().setColor("36393E").setDescription(string);
+				
+				if (sfx.includes("--size:")) {
+					let tsize = sfx.split("--size:")[1].substring().split(" ")[0];
+					if (isNaN(tsize)) size = 8;
+					else size = Math.floor(Number(tsize));
+				}
+
+				if (sfx.includes("medium")) difficulty = "medium";
+				else if (sfx.includes("expert")) difficulty = "expert";
+
+				string = sweeper(difficulty, size);
+				
+				title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`;
+				if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
+				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
+				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
 				msg.channel.send(embed);
 			}
 		}
