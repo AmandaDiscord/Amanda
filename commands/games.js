@@ -139,15 +139,20 @@ module.exports = function(passthrough) {
 	}
 
 
-	function sweeper() {
-		let width = 9,
+	function sweeper(difficulty) {
+		let width = 8,
 				total = width * width,
-				bombs = 10,
 				rows = [],
 				board = [],
 				pieceWhite = "⬜",
 				pieceBomb = "💣",
 				str = "";
+		let bombs = 6;
+
+		if (difficulty) {
+			if (difficulty == "medium") bombs = 8;
+			if (difficulty == "expert") bombs = 10;
+		}
 
 		// Place board
 		let placed = 0;
@@ -175,7 +180,7 @@ module.exports = function(passthrough) {
 			i = index+1;
 			if (!rows[currow-1]) rows[currow-1] = [];
 			rows[currow-1].push(item);
-			if (i%9 == 0) currow++;
+			if (i%width == 0) currow++;
 		});
 
 		// Generate numbers
@@ -184,34 +189,52 @@ module.exports = function(passthrough) {
 				if (item == pieceBomb) {
 					let uprow = rows[index-1];
 					let downrow = rows[index+1];
-					let num = (it) => { if (it != undefined && typeof it == "number") return true; else return false; };
+					let num = (it) => { return typeof it == "number" };
+					let bmb = (it) => { return it == pieceBomb };
 					let undef = (it) => { return it == undefined };
+
 					if (uprow) {
-						if (num(uprow[iindex-1])) uprow[iindex-1]++;
-						else if (!undef(uprow[iindex-1])) uprow[iindex-1] = 1;
+						if (!bmb(uprow[iindex-1])) {
+							if (num(uprow[iindex-1])) uprow[iindex-1]++;
+							else if (!undef(uprow[iindex-1])) uprow[iindex-1] = 1;
+						}
 
-						if (num(uprow[iindex])) uprow[iindex]++;
-						else if (!undef(uprow[iindex])) uprow[iindex] = 1;
+						if (!bmb(uprow[iindex])) {
+							if (num(uprow[iindex])) uprow[iindex]++;
+							else if (!undef(uprow[iindex])) uprow[iindex] = 1;
+						}
 
-						if (num(uprow[iindex+1])) uprow[iindex+1]++;
-						else if (!undef(uprow[iindex+1])) uprow[iindex+1] = 1;
+						if (!bmb(uprow[iindex+1])) {
+							if (num(uprow[iindex+1])) uprow[iindex+1]++;
+							else if (!undef(uprow[iindex+1])) uprow[iindex+1] = 1;
+						}
 					}
 
-					if (num(row[iindex-1])) row[iindex-1]++;
-					else if (!undef(row[iindex-1])) row[iindex-1] = 1;
+					if (!bmb(row[iindex])) {
+						if (num(row[iindex-1])) row[iindex-1]++;
+						else if (!undef(row[iindex-1])) row[iindex-1] = 1;
+					}
 
-					if (num(row[iindex+1])) row[iindex+1]++;
-					else if (!undef(row[iindex+1])) row[iindex+1] = 1;
+					if (!bmb(row[iindex+1])) {
+						if (num(row[iindex+1])) row[iindex+1]++;
+						else if (!undef(row[iindex+1])) row[iindex+1] = 1;
+					}
 
 					if (downrow) {
-						if (num(downrow[iindex-1])) downrow[iindex-1]++;
-						else if (!undef(downrow[iindex-1])) downrow[iindex-1] = 1;
+						if (!bmb(downrow[iindex-1])) {
+							if (num(downrow[iindex-1])) downrow[iindex-1]++;
+							else if (!undef(downrow[iindex-1])) downrow[iindex-1] = 1;
+						}
 
-						if (num(downrow[iindex])) downrow[iindex]++;
-						else if (!undef(downrow[iindex])) downrow[iindex] = 1;
+						if (!bmb(downrow[iindex])) {
+							if (num(downrow[iindex])) downrow[iindex]++;
+							else if (!undef(downrow[iindex])) downrow[iindex] = 1;
+						}
 
-						if (num(downrow[iindex+1])) downrow[iindex+1]++;
-						else if (!undef(downrow[iindex+1])) downrow[iindex+1] = 1;
+						if (!bmb(downrow[iindex+1])) {
+							if (num(downrow[iindex+1])) downrow[iindex+1]++;
+							else if (!undef(downrow[iindex+1])) downrow[iindex+1] = 1;
+						}
 					}
 				}
 			});
@@ -250,13 +273,16 @@ module.exports = function(passthrough) {
 			}
 		},
 		"minesweeper": {
-			usage: "<raw>",
+			usage: "<easy|medium|expert> [--raw]",
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
 			process: function(msg, suffix) {
 				let string = sweeper();
-				if (suffix.toLowerCase() == "r" || suffix.toLowerCase() == "raw") return msg.channel.send(string);
+				let sfx = suffix.toLowerCase();
+				if (sfx.includes("medium")) string = sweeper("medium");
+				else if (sfx.includes("expert")) string = sweeper("expert");
+				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(string);
 				let embed = new Discord.RichEmbed().setColor("36393E").setDescription(string);
 				msg.channel.send(embed);
 			}
