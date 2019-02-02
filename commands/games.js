@@ -210,7 +210,7 @@ module.exports = function(passthrough) {
 						}
 					}
 
-					if (!bmb(row[iindex])) {
+					if (!bmb(row[iindex-1])) {
 						if (num(row[iindex-1])) row[iindex-1]++;
 						else if (!undef(row[iindex-1])) row[iindex-1] = 1;
 					}
