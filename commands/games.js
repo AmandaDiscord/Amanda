@@ -153,7 +153,7 @@ module.exports = function(passthrough) {
 		if (difficulty) {
 			if (difficulty == "easy") bombs = 6;
 			if (difficulty == "medium") bombs = 8;
-			if (difficulty == "expert") bombs = 10;
+			if (difficulty == "hard") bombs = 10;
 		}
 
 		if (size) {
@@ -284,7 +284,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"minesweeper": {
-			usage: "<easy|medium|expert> [--raw] [--size:x]",
+			usage: "<easy|medium|hard> [--raw] [--size:x]",
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
@@ -292,7 +292,7 @@ module.exports = function(passthrough) {
 				let size = 8, difficulty = "easy";
 				let string, title;
 				let sfx = suffix.toLowerCase();
-				
+
 				if (sfx.includes("--size:")) {
 					let tsize = sfx.split("--size:")[1].substring().split(" ")[0];
 					if (isNaN(tsize)) size = 8;
@@ -300,7 +300,7 @@ module.exports = function(passthrough) {
 				}
 
 				if (sfx.includes("medium")) difficulty = "medium";
-				else if (sfx.includes("expert")) difficulty = "expert";
+				else if (sfx.includes("hard")) difficulty = "hard";
 
 				string = sweeper(difficulty, size);
 				

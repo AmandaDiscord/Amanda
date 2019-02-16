@@ -208,6 +208,16 @@ module.exports = function(passthrough) {
 				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
 				return msg.channel.send(`**${member.user.tag}** has been banned!`);
 			}
+		},
+
+		"iloveyou": {
+			usage: "none",
+			description: "I love you",
+			aliases: ["iloveyou", "ily"],
+			category: "interaction",
+			process: function(msg) {
+				return msg.channel.send("You are my dearest person on Earth. You always touch my heart with the warmth of your passionate affection like a thousand summers. You are, to me, like a precious stone that is exotic and special in my heart. I love you");
+			}
 		}
 	};
 
