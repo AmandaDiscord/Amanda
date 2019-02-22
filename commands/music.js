@@ -94,7 +94,7 @@ module.exports = function(passthrough) {
 			this.info = null;
 		}
 		stream() {
-			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info, {highWaterMark: 10e6}));
+			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info));
 		}
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
