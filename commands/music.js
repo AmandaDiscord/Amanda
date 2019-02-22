@@ -1,4 +1,5 @@
 let ytdl = require("ytdl-core");
+let ytdlDiscord = require("ytdl-core-discord");
 let YouTube = require('simple-youtube-api');
 const net = require("net");
 let crypto = require("crypto");
@@ -23,6 +24,7 @@ module.exports = function(passthrough) {
 			this.source = source;
 			this.live = live;
 			this.streaming = false;
+			this.connectionPlayFunction = "playStream";
 		}
 		/**
 		 * A method to create basic data stored in this class instance
@@ -65,6 +67,7 @@ module.exports = function(passthrough) {
 	class YouTubeSong extends Song {
 		constructor(info, cache) {
 			super(info.title, "YouTube", false);
+			this.connectionPlayFunction = "playOpusStream";
 			this.url = info.video_url;
 			this.basic = {
 				id: info.video_id,
@@ -94,7 +97,7 @@ module.exports = function(passthrough) {
 			this.info = null;
 		}
 		stream() {
-			return this.getInfo(true).then(info => ytdl.downloadFromInfo(info));
+			return this.getInfo(true).then(info => ytdlDiscord.downloadFromInfo(info));
 		}
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
@@ -289,7 +292,7 @@ module.exports = function(passthrough) {
 		}
 		async play() {
 			let stream = await this.songs[0].getStream();
-			const dispatcher = this.connection.playStream(stream);
+			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
 				dispatcher.setVolumeLogarithmic(this.volume / 5);

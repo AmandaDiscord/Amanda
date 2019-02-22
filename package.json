@@ -17,7 +17,6 @@
     "discord.js": "github:cloudrac3r/discord.js#amanda",
     "entities": "^1.1.1",
     "events": "^3.0.0",
-    "ffmpeg-binaries": "^4.0.0",
     "jimp": "^0.5.6",
     "mime": "^2.4.0",
     "mysql2": "^1.6.4",
@@ -27,6 +26,7 @@
     "request-promise": "^4.2.2",
     "simple-youtube-api": "^5.1.1",
     "uws": "^99.0.0",
-    "ytdl-core": "^0.25.2"
+    "ytdl-core": "^0.25.2",
+    "ytdl-core-discord": "github:cloudrac3r/ytdl-core-discord"
   }
 }
