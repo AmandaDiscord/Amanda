@@ -85,7 +85,7 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				let usertxt = args.slice(1).join(" ");
-				if (!args[0]) return msg.channel.send(`You need to provide an amount to claim the user with`);
+				if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send("The correct format is `&claim <amount> <user>`. Amount comes first, user comes last.");
 				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let member = msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(client.lang.input.invalid(msg, "user"));
@@ -101,11 +101,11 @@ module.exports = function(passthrough) {
 					claim = money;
 				} else {
 					claim = Math.floor(parseInt(args[0]));
-					if (isNaN(claim)) return msg.channel.send(client.lang.input.money.insufficient(msg));
+					if (isNaN(claim)) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					if (claim < 1) return msg.channel.send(client.lang.input.money.small(msg, "claim", 1));
 					if (claim > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
-				if (memberInfo.price > claim) return msg.channel.send(client.lang.external.money.insufficient(msg));
+				if (memberInfo.price >= claim) return msg.channel.send(client.lang.input.waifu.claimedByOther(msg, memberInfo.price+1));
 				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(client.lang.input.waifu.doubleClaim(msg));
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
@@ -291,15 +291,17 @@ module.exports = function(passthrough) {
 	}
 
 	const attempts = [
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g1, g2]),
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g2, g1]),
-		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifs inner join GenderGifCharacters on GenderGifs.gifid = GenderGifCharacters.gifid where type = ? and (gender like ? or gender = '*')", [type, (g2 == "_" ? g1 : g2)])
+		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g1, g2]),
+		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g2, g1]),
+		(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (gender like ? or gender = '*')", [type, (g2 == "_" ? g1 : g2)])
 	];
 
 	const genderMap = new Map([
 		["474711440607936512", "f"],
 		["474711506551046155", "m"],
-		["474711526247366667", "n"]
+		["474711526247366667", "n"],
+		["316829871206563840", "f"],
+		["316829948616638465", "m"]
 	]);
 
 	async function doInteraction(msg, suffix, source) {

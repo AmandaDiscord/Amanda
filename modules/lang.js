@@ -28,6 +28,7 @@ module.exports = (passthrough) => {
 				small: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`)
 			},
 			waifu: {
+				claimedByOther: (msg, price) => authorString(msg, `this person has already been claimed by somebody else, for a higher price. You'll need to spend at least ${price} Discoins to steal them.`),
 				doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
 			},
 			music: {
