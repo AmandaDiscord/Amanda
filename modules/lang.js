@@ -46,9 +46,10 @@ module.exports = (passthrough) => {
 		},
 
 		// Voice
-		voiceMustJoin: msg => authorString(msg, "you must join a voice channel first."),
+		voiceMustJoin: msg => authorString(msg, "you need to join a voice channel to do that."),
 		voiceNothingPlaying: msg => authorString(msg, "nothing is currently playing."),
 		voiceCannotAction: action => `The current queue cannot be ${action} at this time.`,
+		voiceChannelWaiting: msg => authorString(msg, "you need to join a voice channel to do that. Waiting for you to connect..."),
 
 		// Playlists
 		playlistNotOwned: msg => authorString(msg, "you do not own that playlist and so cannot modify it."),

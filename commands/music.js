@@ -446,6 +446,7 @@ module.exports = function(passthrough) {
 			videoIDs = videoIDs.shuffle();
 		}
 		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
+		if (!voiceChannel) voiceChannel = await detectVoiceChannel(msg, true);
 		if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 		let progress = 0;
 		let total = videoIDs.length;
@@ -556,6 +557,39 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	let voiceStateCallbacks = [];
+	function voiceStateUpdate(oldMember, newMember) {
+		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
+		let callback = voiceStateCallbacks.find(o => o.alive && o.userID == newMember.user.id && o.guildID == newMember.voiceChannel.guild.id);
+		if (callback) callback(newMember);
+	}
+	client.on("voiceStateUpdate", voiceStateUpdate);
+	reloadEvent.on(__filename, () => client.removeListener("voiceStateUpdate", voiceStateUpdate));
+	async function detectVoiceChannel(msg, wait) {
+		if (msg.member.voiceChannel) return msg.member.voiceChannel;
+		if (!wait) return null;
+		let voiceWaitMsg = await msg.channel.send(client.lang.voiceChannelWaiting(msg));
+		return new Promise(resolve => {
+			let callback = function(member) {
+				if (!callback.alive) return;
+				callback.alive = false;
+				voiceWaitMsg.delete();
+				resolve(member.voiceChannel);
+			}
+			callback.alive = true;
+			callback.userID = msg.author.id;
+			callback.guildID = msg.guild.id;
+			voiceStateCallbacks.push(callback);
+			setTimeout(() => {
+				if (callback.alive) {
+					voiceWaitMsg.edit(client.lang.voiceMustJoin(msg));
+					callback.alive = false;
+					resolve(null);
+				}
+			}, 30000);
+		});
+	}
+
 	return {
 		"musictoken": {
 			usage: "none",
@@ -605,7 +639,12 @@ module.exports = function(passthrough) {
 				}
 				let args = suffix.split(" ");
 				let queue = queueStorage.storage.get(msg.guild.id);
-				const voiceChannel = msg.member.voiceChannel;
+				const allowedSubcommands = ["q", "queue", "n", "now", "pl", "playlist", "playlists"];
+				let voiceChannel = await detectVoiceChannel(msg, !allowedSubcommands.includes(args[0].toLowerCase()));
+				if (!voiceChannel && !allowedSubcommands.includes(args[0].toLowerCase())) {
+					msg.channel.send(client.lang.voiceMustJoin(msg));
+					return;
+				}
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
 					if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
