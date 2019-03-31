@@ -237,7 +237,7 @@ module.exports = function(passthrough) {
 					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help (aliases: music, m)")
-						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
+						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`now`, `Show the current song.\n\`&music now\``)
 						.addField(`pause`, `Pause playback.\n\`&music pause\``)
