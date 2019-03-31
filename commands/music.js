@@ -339,7 +339,7 @@ module.exports = function(passthrough) {
 										this.addSong(song);
 										resolve();
 									}).catch(reason => {
-										manageYtdlGetInfoErrors(this.textChannel, reason, input);
+										manageYtdlGetInfoErrors(this.textChannel, reason);
 										resolve();
 									});
 								}
