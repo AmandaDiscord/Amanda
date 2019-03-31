@@ -253,7 +253,6 @@ module.exports = function(passthrough) {
 						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
-						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
 						send("dm");

@@ -169,7 +169,6 @@ module.exports = function(passthrough) {
 			this.connection = undefined;
 			this._dispatcher = undefined;
 			this.songs = [];
-			this.volume = 5;
 			this.playing = true;
 			this.skippable = false;
 			this.auto = false;
@@ -295,7 +294,6 @@ module.exports = function(passthrough) {
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
-				dispatcher.setVolumeLogarithmic(this.volume / 5);
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
@@ -710,16 +708,6 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.auto = !queue.auto;
 					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
-				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
-					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
-					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					let setv = Math.floor(parseInt(args[1]));
-					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
-					if (setv >= 1 && setv <= 5) {
-						queue.volume = setv;
-						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
-					} else return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
