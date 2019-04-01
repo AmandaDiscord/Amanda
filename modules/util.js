@@ -60,6 +60,43 @@ module.exports = (passthrough) => {
 
 	// Classes
 
+	/**
+	 * An object-oriented improvement upon setTimeout
+	 */
+	utils.BetterTimeout = class BetterTimeout {
+		/**
+		 * A better version of global#setTimeout
+		 * @param {Function} callback Function to execute when the timer expires
+		 * @param {Number} delay Time in milliseconds to set the timer for
+		 * @constructor
+		 */
+		constructor(callback, delay) {
+			this.callback = callback;
+			this.delay = delay;
+			if (this.callback) {
+				this.isActive = true;
+				this.timeout = setTimeout(this.callback, this.delay);
+			} else {
+				this.isActive = false;
+				this.timeout = null;
+			}
+		}
+		/**
+		 * Trigger the timeout early. It won't execute again.
+		 */
+		triggerNow() {
+			this.clear();
+			this.callback();
+		}
+		/**
+		 * Clear the timeout. It won't execute at all.
+		 */
+		clear() {
+			this.isActive = false;
+			clearTimeout(this.timeout);
+		}
+  }
+
 	/** Class representing a manager for music queues */
 	utils.queueStorage = {
 		storage: new Discord.Collection(),

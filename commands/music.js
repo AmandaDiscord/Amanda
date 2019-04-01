@@ -258,7 +258,7 @@ module.exports = function(passthrough) {
 				this.connection = connection;
 				if (this.songs.length) this.play();
 			});
-			this.voiceLeaveTimeout = setTimeout(new Function());
+			this.voiceLeaveTimeout = new utils.BetterTimeout();
 		}
 		/**
 		 * A getter for a Queue's connected voice channel
@@ -296,7 +296,7 @@ module.exports = function(passthrough) {
 		dissolve() {
 			this.songs.length = 0;
 			this.auto = false;
-			clearTimeout(this.voiceLeaveTimeout);
+			this.voiceLeaveTimeout.clear();
 			if (this.connection && this.connection.dispatcher) this.connection.dispatcher.end();
 			if (this.voiceChannel) this.voiceChannel.leave();
 			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
@@ -341,15 +341,15 @@ module.exports = function(passthrough) {
 		voiceStateUpdate(oldMember, newMember) {
 			let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
 			if (count == 0) {
-				if (this.voiceLeaveTimeout._called || !this.voiceLeaveTimeout._onTimeout) {
-					this.voiceLeaveTimeout = setTimeout(() => {
+				if (!this.voiceLeaveTimeout.isActive) {
+					this.voiceLeaveTimeout = new utils.BetterTimeout(() => {
 						this.textChannel.send("Everyone left, so I have as well.");
-						this.dissolve()
+						this.dissolve();
 					}, voiceEmptyDuration);
 					this.textChannel.send("No users left in my voice channel. I will stop playing in "+voiceEmptyDuration/1000+" seconds if nobody rejoins.");
 				}
 			} else {
-				clearTimeout(this.voiceLeaveTimeout);
+				this.voiceLeaveTimeout.clear();
 			}
 		}
 		/**
@@ -380,8 +380,9 @@ module.exports = function(passthrough) {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					this.skip();
 				}},
-				{ emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+				{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
+					msg.clearReactions();
 					this.stop();
 				}}
 			]);
@@ -809,7 +810,6 @@ module.exports = function(passthrough) {
 	 * @param {String} userID 
 	 * @param {Discord.Guild} guild A Discord managed guild object
 	 * @param {Number} timeoutMs A duration in ms
-	 * @constructor
 	 */
 	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
 		return new Promise(resolve => {
