@@ -1,9 +1,13 @@
-let rp = require("request-promise");
+const rp = require("request-promise");
+const Discord = require("discord.js");
 
 module.exports = function(passthrough) {
-	let { Discord, client, config, utils, commands, reloadEvent } = passthrough;
+	let { client, config, utils, commands, reloadEvent } = passthrough;
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
+	/**
+	 * Sends client statistics to the database in an interval
+	 */
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
@@ -13,6 +17,10 @@ module.exports = function(passthrough) {
 		clearTimeout(sendStatsTimeout);
 	});
 
+	/**
+	 * A function to send stats to the database
+	 * @param {Discord.Message} msg A Discord managed message object
+	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();

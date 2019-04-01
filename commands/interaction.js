@@ -1,5 +1,5 @@
-let Jimp = require("jimp");
-let crypto = require("crypto");
+const Jimp = require("jimp");
+const crypto = require("crypto");
 const rp = require("request-promise");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
 
