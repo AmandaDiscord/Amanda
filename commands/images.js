@@ -1,9 +1,19 @@
-let rp = require("request-promise");
+const rp = require("request-promise");
+const Discord = require("discord.js");
 
 module.exports = function(passthrough) {
-	let { Discord, config, client } = passthrough;
+	let { config, client } = passthrough;
 	let key = config.chewey_api_key;
 
+	/**
+	 * A function to send an image to a text channel
+	 * @param {String} host Where the image is coming from
+	 * @param {String} path The path to the api endpoint
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {String} emoji An escpaed emoji
+	 * @param {String} footer What the footer of the message embed should say
+	 * @returns {Promise<Discord.Message>}
+	 */
 	async function sendImage(host, path, msg, emoji, footer) {
 		let url;
 		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;

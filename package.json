@@ -17,7 +17,7 @@
     "discord.js": "github:cloudrac3r/discord.js#amanda",
     "entities": "^1.1.2",
     "events": "^3.0.0",
-    "jimp": "^0.6.0",
+    "jimp": "^0.6.1",
     "mime": "^2.4.0",
     "mysql2": "^1.6.5",
     "node-opus": "^0.3.1",

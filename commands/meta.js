@@ -1,9 +1,13 @@
-let rp = require("request-promise");
+const rp = require("request-promise");
+const Discord = require("discord.js");
 
 module.exports = function(passthrough) {
-	let { Discord, client, config, utils, commands, reloadEvent } = passthrough;
+	let { client, config, utils, commands, reloadEvent } = passthrough;
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
+	/**
+	 * Sends client statistics to the database in an interval
+	 */
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
@@ -13,6 +17,10 @@ module.exports = function(passthrough) {
 		clearTimeout(sendStatsTimeout);
 	});
 
+	/**
+	 * A function to send stats to the database
+	 * @param {Discord.Message} msg A Discord managed message object
+	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();
@@ -237,7 +245,7 @@ module.exports = function(passthrough) {
 					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help (aliases: music, m)")
-						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
+						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`now`, `Show the current song.\n\`&music now\``)
 						.addField(`pause`, `Pause playback.\n\`&music pause\``)
@@ -253,7 +261,6 @@ module.exports = function(passthrough) {
 						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
-						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
 						send("dm");

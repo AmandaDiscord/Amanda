@@ -48,12 +48,13 @@ module.exports = function(passthrough) {
 				await canvas.composite(piece2, 258, 360);
 				await canvas.composite(piece3, 392, 360);
 
-				let buffer;
+				let buffer, image;
 				if (!args[0]) {
 					await canvas.print(font, 130, 523, "Nothing");
 					await canvas.print(font, 405, 523, "Nothing");
 					buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-					return msg.channel.send({ files: [buffer] });
+					image = new Discord.Attachment(buffer, "slot.png");
+					return msg.channel.send({ files: [image] });
 				}
 				let bet;
 				if (args[0] == "all") {
@@ -87,7 +88,8 @@ module.exports = function(passthrough) {
 				await canvas.print(font, 115, 523, winning);
 				await canvas.print(font, 390, 523, bet);
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-				return msg.channel.send(result, {files: [buffer]});
+				image = new Discord.Attachment(buffer, "slot.png");
+				return msg.channel.send(result, {files: [image]});
 			}
 		},
 

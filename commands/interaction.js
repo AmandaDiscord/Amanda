@@ -1,5 +1,5 @@
-let Jimp = require("jimp");
-let crypto = require("crypto");
+const Jimp = require("jimp");
+const crypto = require("crypto");
 const rp = require("request-promise");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
 
@@ -38,6 +38,7 @@ module.exports = function(passthrough) {
 				await canvas.composite(pfp2, 200, 0);
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				let image = new Discord.Attachment(buffer, `ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g,"")+".png");
 				let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
 				let percentage = undefined;
 
@@ -51,7 +52,7 @@ module.exports = function(passthrough) {
 					let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6);
 					percentage = parseInt("0x"+hash)%101;
 				}
-				return msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [buffer]});
+				return msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [image]});
 			}
 		},
 

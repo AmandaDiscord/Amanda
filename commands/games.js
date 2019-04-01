@@ -1,33 +1,52 @@
 const rp = require("request-promise");
 const entities = require("entities");
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
+const Discord = require("discord.js");
 
 module.exports = function(passthrough) {
-	let { Discord, client, utils, reloadEvent } = passthrough;
+	let { client, utils, reloadEvent } = passthrough;
 
 	let games = {
 		games: [],
+		/**
+		 * Adds a game to storage
+		 * @param {*} game An instance of any local game
+		 * @returns {Number} The new length of the games Array
+		 */
 		add: function(game) {
 			this.games.push(game);
 		},
+		/**
+		 * Gets a game Object based on the channel parameter
+		 * @param {Discord.TextChannel} channel A Discord managed text channel
+		 * @returns {*} An instance of any local game
+		 */
 		getChannel: function(channel) {
 			return this.games.find(g => g.channel == channel);
 		},
+		/**
+		 * Removes a game from this' game Array
+		 * @param {*} game An instance of any local game
+		 * @returns {Array} The new games Array
+		 */
 		remove: function(game) {
 			this.games = this.games.filter(g => g != game);
 		}
 	}
 
 	/**
-	 * A class representing a game of trivia in a guild
-	 * @param {Discord.Channel} channel A Discord managed channel object
-	 * @param {Object} data A JSON response from OpenTDB
-	 * @param {String} category The category of the trivia question linked to this class instance
+	 * A class representing a local game of trivia
 	 */
 	class TriviaGame {
+		/**
+		 * Create a new trivia game
+		 * @param {Discord.Channel} channel A Discord managed channel object
+		 * @param {Object} data A JSON response from OpenTDB
+		 * @param {String} category The category of the trivia question linked to this class instance
+		 * @constructor
+		 */
 		constructor(channel, data, category) {
 			let api = data.results[0];
-			// Storage
 			this.storage = games;
 			this.channel = channel;
 			this.type = "trivia";
@@ -139,6 +158,12 @@ module.exports = function(passthrough) {
 	}
 
 
+	/**
+	 * A function to create a board of mine sweeper using Discord spoilers
+	 * @param {String} difficulty How difficult the game should be
+	 * @param {Number} size The size of the board
+	 * @returns {Object} An Object containing data returned by this function
+	 */
 	function sweeper(difficulty, size) {
 		let width = 8,
 				bombs = 6,

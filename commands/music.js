@@ -1,12 +1,12 @@
-let ytdl = require("ytdl-core");
-let ytdlDiscord = require("ytdl-core-discord");
-let YouTube = require('simple-youtube-api');
+const ytdl = require("ytdl-core");
+const ytdlDiscord = require("ytdl-core-discord");
+const YouTube = require('simple-youtube-api');
 const net = require("net");
-let crypto = require("crypto");
-let rp = require("request-promise");
+const crypto = require("crypto");
+const rp = require("request-promise");
 const Discord = require("discord.js");
 
-const voiceEmptyDuration = 20000;
+let voiceEmptyDuration = 20000;
 
 module.exports = function(passthrough) {
 	let { config, client, utils, reloadEvent } = passthrough;
@@ -14,12 +14,16 @@ module.exports = function(passthrough) {
 	let queueStorage = utils.queueStorage;
 
 	/**
-	 * A class meant to only be extended. Contains basic information for audio streams
-	 * @param {String} title The title of the audio
-	 * @param {String} source Where the audio stream is coming from
-	 * @param {boolean} live If the audio is being streamed live
+	 * A class representing a local song
 	 */
 	class Song {
+		/**
+		 * Create a new Song
+		 * @param {String} title The title of the song
+		 * @param {String} source Where the song is coming from
+		 * @param {Boolean} live If this class instance is a live stream
+		 * @constructor
+		 */
 		constructor(title, source, live) {
 			this.title = title;
 			this.source = source;
@@ -29,6 +33,7 @@ module.exports = function(passthrough) {
 		}
 		/**
 		 * A method to create basic data stored in this class instance
+		 * @returns {Object} The Object assigned to this' object method
 		 */
 		toObject() {
 			return Object.assign({
@@ -38,7 +43,7 @@ module.exports = function(passthrough) {
 			}, this.object());
 		}
 		/**
-		 * A method to get the basic information assigned from this.toObject();
+		 * A method to get the basic information assigned from this' toObject method
 		 * @returns {Object} Basic information about this class instance
 		 */
 		object() {
@@ -46,7 +51,7 @@ module.exports = function(passthrough) {
 		}
 		/**
 		 * A method to return the audio stream linked to this class instance
-		 * @returns {Stream} A data stream related to the audio of this class instance
+		 * @returns {*} A data stream related to the audio of this class instance
 		 */
 		getStream() {
 			this.streaming = true;
@@ -61,11 +66,28 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * Gets a YouTube song from a URL
+	 * @param {String} url A url to fetch
+	 * @param {Boolean} cache If the information should be cached in a new YouTubeSong class instance
+	 * @returns {Promise<YouTubeSong} A new YouTubeSong
+	 */
 	async function YTSongObjectFromURL(url, cache) {
 		let info = await ytdl.getInfo(url);
 		return new YouTubeSong(info, cache);
 	}
+
+	/**
+	 * A class representing a local YouTube song
+	 * @extends {Song}
+	 */
 	class YouTubeSong extends Song {
+		/**
+		 * Create a new YouTube song
+		 * @param {Object} info Information to store in this class instance
+		 * @param {Boolean} cache If the info parameter should be cached in this class instance
+		 * @constructor
+		 */
 		constructor(info, cache) {
 			super(info.title, "YouTube", false);
 			this.connectionPlayFunction = "playOpusStream";
@@ -79,11 +101,19 @@ module.exports = function(passthrough) {
 			if (cache) this.info = info;
 			else this.info = null;
 		}
+		/**
+		 * Returns this class instance's basic information as an object
+		 * @returns {Object} An object containing this class instance's basic information
+		 */
 		object() {
 			return {
 				basic: this.basic
 			}
 		}
+		/**
+		 * Returns information about this class instance in a unified format
+		 * @returns {Object} Information about this class instance
+		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -94,12 +124,26 @@ module.exports = function(passthrough) {
 				lengthSeconds: this.basic.length_seconds
 			}
 		}
+		/**
+		 * Deletes everything cached in this class instance
+		 * @returns {null} null
+		 */
 		deleteCache() {
 			this.info = null;
 		}
+		/**
+		 * Gets a stream of this class instance from YouTube
+		 * @returns {Promise<Object>} This class instance's YouTube information
+		 */
 		stream() {
 			return this.getInfo(true).then(info => ytdlDiscord.downloadFromInfo(info));
 		}
+		/**
+		 * A function to get the information about this class instance from YouTube
+		 * @param {Boolean} cache If the information fetched should be cached in this class instance
+		 * @param {Boolean} force If this function should skip fetching from YouTube and resolve this class instance's info
+		 * @returns {Promise<Object>} Information about this class instance
+		 */
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
 			else {
@@ -109,22 +153,43 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
+		/**
+		 * Gets related songs to this class instance
+		 * @returns {Promise<Array>} An array of song objects
+		 */
 		async related() {
 			await this.getInfo(true);
 			return this.info.related_videos.filter(v => v.title).slice(0, 10);
 		}
 	}
 
+	/**
+	 * A class representing a local Frisky song
+	 * @extends {Song}
+	 */
 	class FriskySong extends Song {
+		/**
+		 * Create a new Frisky Song
+		 * @param {String} station The desired Frisky station
+		 * @constructor
+		 */
 		constructor(station) {
 			super("Frisky Radio", "Frisky", true);
 			this.station = station;
 		}
+		/**
+		 * Returns this class instance's station as an object
+		 * @returns {Object} An object containing this class instance's station
+		 */
 		object() {
 			return {
 				station: this.station
 			}
 		}
+		/**
+		 * Returns information about this class instance in a unified format
+		 * @returns {Object} Information about this class instance
+		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -134,6 +199,10 @@ module.exports = function(passthrough) {
 				length: "LIVE"
 			}
 		}
+		/**
+		 * A function to get a steam from Frisky
+		 * @returns {Promise<net.Socket>} A Socket stream
+		 */
 		async stream() {
 			let host, path;
 			if (this.station == "frisky") {
@@ -162,7 +231,16 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * A class representing a local music queue for a guild
+	 */
 	class Queue {
+		/**
+		 * Create a new Queue
+		 * @param {Discord.TextChannel} textChannel A Discord managed text channel
+		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel
+		 * @constructor
+		 */
 		constructor(textChannel, voiceChannel) {
 			this.textChannel = textChannel;
 			this._voiceChannel = voiceChannel;
@@ -170,7 +248,6 @@ module.exports = function(passthrough) {
 			this.connection = undefined;
 			this._dispatcher = undefined;
 			this.songs = [];
-			this.volume = 5;
 			this.playing = true;
 			this.skippable = false;
 			this.auto = false;
@@ -183,12 +260,24 @@ module.exports = function(passthrough) {
 			});
 			this.voiceLeaveTimeout = setTimeout(new Function());
 		}
+		/**
+		 * A getter for a Queue's connected voice channel
+		 * @returns {Discord.VoiceChannel} A Discord Managed voice channel
+		 */
 		get voiceChannel() {
 			return this.connection ? this.connection.channel : this._voiceChannel;
 		}
+		/**
+		 * A getter for a Queue's connection dispatcher
+		 * @returns {Discord.VoiceConnection.dispatcher} A Discord managed voice connection dispatcher
+		 */
 		get dispatcher() {
 			return this.connection.dispatcher || this._dispatcher;
 		}
+		/**
+		 * Converts data stored by this class instance to an Object
+		 * @returns {Object} An Object of information about this class instance
+		 */
 		toObject() {
 			return {
 				id: this.id,
@@ -200,6 +289,10 @@ module.exports = function(passthrough) {
 				volume: this.volume,
 			}
 		}
+		/**
+		 * Terminates this class instance locally and remotely
+		 * @returns {void} void
+		 */
 		dissolve() {
 			this.songs.length = 0;
 			this.auto = false;
@@ -210,9 +303,18 @@ module.exports = function(passthrough) {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
 		}
+		/**
+		 * Terminates this class instance locally
+		 */
 		destroy() {
 			this.queueStorage.storage.delete(this.id);
 		}
+		/**
+		 * Adds a song to this class instance's storage
+		 * @param {Song} song A remote song converted locally
+		 * @param {Boolean} insert If this song should be inserted at the beginning of the queue instead of the end
+		 * @returns {void} void
+		 */
 		addSong(song, insert) {
 			let position; // the actual position to insert into, `undefined` to push
 			if (insert == undefined) { // no insert? just push
@@ -231,6 +333,11 @@ module.exports = function(passthrough) {
 				if (song.deleteCache) song.deleteCache();
 			}
 		}
+		/**
+		 * A function to handle a member's voice status update event
+		 * @param {Discord.GuildMember} oldMember The member before the update
+		 * @param {Discord.GuildMember} newMember The member after the update
+		 */
 		voiceStateUpdate(oldMember, newMember) {
 			let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
 			if (count == 0) {
@@ -245,6 +352,10 @@ module.exports = function(passthrough) {
 				clearTimeout(this.voiceLeaveTimeout);
 			}
 		}
+		/**
+		 * A function to create an embed for the song which is currently playing
+		 * @returns {Discord.RichEmbed} A Discord managed rich embed
+		 */
 		getNPEmbed() {
 			let song = this.songs[0];
 			let embed = new Discord.RichEmbed().setColor("36393E")
@@ -253,6 +364,10 @@ module.exports = function(passthrough) {
 			if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
 			return embed;
 		}
+		/**
+		 * A function to generate reactions for the now playing message
+		 * @returns {void} void
+		 */
 		generateReactions() {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
@@ -271,6 +386,10 @@ module.exports = function(passthrough) {
 				}}
 			]);
 		}
+		/**
+		 * A function to perform an action against this class instance
+		 * @param {*} code Code
+		 */
 		queueAction(code) {
 			return (web) => {
 				let result = code();
@@ -291,12 +410,15 @@ module.exports = function(passthrough) {
 				return result;
 			}
 		}
+		/**
+		 * A function to begin playing the songs linked to this class instance in a Discord managed voice channel
+		 * @returns {Promise<void>} void
+		 */
 		async play() {
 			let stream = await this.songs[0].getStream();
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
-				dispatcher.setVolumeLogarithmic(this.volume / 5);
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
@@ -341,7 +463,7 @@ module.exports = function(passthrough) {
 										this.addSong(song);
 										resolve();
 									}).catch(reason => {
-										manageYtdlGetInfoErrors(this.textChannel, reason, args[1]);
+										manageYtdlGetInfoErrors(this.textChannel, reason);
 										resolve();
 									});
 								}
@@ -355,6 +477,11 @@ module.exports = function(passthrough) {
 				});
 			});
 		}
+		/**
+		 * A function to pause whatever song is currently playing in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		pause(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing && !this.songs[0].live) {
@@ -371,6 +498,11 @@ module.exports = function(passthrough) {
 				}
 			})(web);
 		}
+		/**
+		 * A function to resume whatever song is currently paused in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		resume(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && !this.playing) {
@@ -385,6 +517,11 @@ module.exports = function(passthrough) {
 				}
 			})(web);
 		}
+		/**
+		 * A function to skip whatever song is currently playing in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		skip(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing) {
@@ -397,6 +534,11 @@ module.exports = function(passthrough) {
 				}
 			})(web);
 		}
+		/**
+		 * A function to destroy this class instance which can be called by a user
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		stop(web) {
 			return this.queueAction(() => {
 				if (this.connection) {
@@ -433,6 +575,16 @@ module.exports = function(passthrough) {
 		queue.addSong(song, insert);
 	}
 
+	/**
+	 * A function to bulk add songs to a queue and play them
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
+	 * @param {Array} videoIDs An array of video IDs to enque
+	 * @param {String} startString An index in which to start enqueing from
+	 * @param {String} endString An index in which to stop enqueing from
+	 * @param {Boolean} shuffle If the videos should be enqued in a psudeo-random order
+	 * @returns {Promise<void>} void
+	 */
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
 		const useBatchLimit = 50;
 		const batchSize = 30;
@@ -503,6 +655,14 @@ module.exports = function(passthrough) {
 		})();
 	}
 
+	/**
+	 * A function to manage errors returned by YTDL
+	 * @param {Discord.Channel} channel A Discord managed channel object
+	 * @param {Object} reason An error object
+	 * @param {String} id A YouTube song ID
+	 * @param {Number} item Index from operation
+	 * @returns {Promise<void>} void
+	 */
 	function manageYtdlGetInfoErrors(channel, reason, id, item) {
 		if (channel.channel) channel = channel.channel;
 		let idString = id ? ` (index: ${item}, id: ${id})` : "";
@@ -526,6 +686,11 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * Converts seconds into a pretty HH:MM:SS format
+	 * @param {Number} seconds A duration in seconds
+	 * @returns {String} A pretty string of a duration
+	 */
 	function prettySeconds(seconds) {
 		if (isNaN(seconds)) return seconds;
 		let minutes = Math.floor(seconds / 60);
@@ -543,6 +708,13 @@ module.exports = function(passthrough) {
 		return output.join(":");
 	}
 
+	/**
+	 * A function to create a bar displaying progress of the song currently playing
+	 * @param {Discord.VoiceConnection.dispatcher} dispatcher A Discord managed dispatcher
+	 * @param {Queue} queue A local managed queue
+	 * @param {Boolean} done If the song is finished
+	 * @returns {String} A bar of progress
+	 */
 	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
 		if (queue.songs[0].source == "YouTube") { //TODO: move this to the song object
@@ -670,6 +842,98 @@ module.exports = function(passthrough) {
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
 
+	/**
+	 * A function to search YouTube
+	 * @param {String} input User input; Could be a url or string of search terms
+	 * @param {Discord.Message} message A Discord managed Message object
+	 * @param {String} firstWord The first word in the input string
+	 * @param {Boolean} intoPlaylist If this function is being called from the playlist sub command
+	 * @returns {Promise<YouTubeSong>} A local YouTubeSong class instance
+	 */
+	function searchYoutube(input, message, firstWord, intoPlaylist) {
+		return new Promise(async resolve => {
+			input = input.replace(/^<|>$/g, "");
+			{
+				let match = input.match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
+				if (match) input = match[1];
+			}
+			if (firstWord.match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+				if (intoPlaylist) {
+					message.channel.send(`${message.author.username}, please use \`&music playlist <name> import <url>\` to import a playlist.`);
+					return resolve(null);
+				}
+				if (firstWord.includes("?list=WL")) {
+					message.channel.send(`${message.author.username}, your Watch Later playlist is private, so I can't read it. Give me a public playlist instead.`);
+					return resolve(null);
+				} else {
+					try {
+						let playlist = await youtube.getPlaylist(firstWord);
+						let videos = await playlist.getVideos();
+						return resolve(videos);
+					} catch (e) {
+						message.channel.send(`${message.author.username}, I couldn't read that playlist. Maybe you typed an invalid URL, or maybe the playlist hasn't been set public.`);
+						return resolve(null);
+					}
+				}
+			} else {
+				ytdl.getInfo(input).then(video => {
+					let song = new YouTubeSong(video, !intoPlaylist && (!message.guild.queue || message.guild.queue.songs.length <= 1));
+					resolve(song);
+				}).catch(async () => {
+					message.channel.sendTyping();
+					let videos, selectmessage;
+					async function editOrSend() {
+						if (selectmessage) return selectmessage.edit(...arguments);
+						else return selectmessage = await message.channel.send(...arguments);
+					}
+					let i = 0;
+					while (!videos) {
+						i++;
+						try {
+							videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`));
+						} catch (e) {
+							if (i <= 3) {
+								await editOrSend(`Search failed. I'll try again: hold tight. (attempts: ${i})`);
+								await new Promise(rs => setTimeout(() => rs(), 2500));
+							} else {
+								editOrSend("Couldn't reach Invidious. Try again later? ;-;");
+								return resolve(null);
+							}
+						}
+					}
+					if (!videos.length) {
+						editOrSend("No videos were found with those search terms");
+						return resolve(null);
+					}
+					videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
+					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${prettySeconds(video.lengthSeconds)})`);
+					let embed = new Discord.RichEmbed()
+						.setTitle("Song selection")
+						.setDescription(videoResults.join("\n"))
+						.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
+						.setColor("36393E")
+					await editOrSend({embed});
+					let collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), {maxMatches: 1, time: 60000});
+					collector.next.then(async newmessage => {
+						let videoIndex = parseInt(newmessage.content);
+						if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
+						ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
+							let song = new YouTubeSong(video, !message.guild.queue || message.guild.queue.songs.length <= 1);
+							resolve(song);
+						}).catch(error => {
+							manageYtdlGetInfoErrors(newmessage, error);
+							resolve(null);
+						});
+						selectmessage.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
+					}).catch(() => {
+						selectmessage.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
+						resolve(null);
+					});
+				});
+			}
+		});
+	}
+
 	return {
 		"musictoken": {
 			usage: "none",
@@ -731,74 +995,10 @@ module.exports = function(passthrough) {
 					if (!permissions.has("CONNECT")) return msg.channel.send(client.lang.permissionVoiceJoin(msg));
 					if (!permissions.has("SPEAK")) return msg.channel.send(client.lang.permissionVoiceSpeak(msg));
 					if (!args[1]) return msg.channel.send(client.lang.input.music.playableRequired(msg));
-					args[1] = args[1].replace(/^<|>$/g, "");
-					{
-						let match = args[1].match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
-						if (match) args[1] = match[1];
-					}
-					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-						if (args[1].includes("?list=WL")) {
-							return msg.channel.send(`${msg.author.username}, your Watch Later playlist is private, so I can't read it. Give me a public playlist instead.`);
-						} else {
-							try {
-								let playlist = await youtube.getPlaylist(args[1]);
-								let videos = await playlist.getVideos();
-								bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
-							} catch (e) {
-								return msg.channel.send(`${msg.author.username}, I couldn't read that playlist. Maybe you typed an invalid URL, or maybe the playlist hasn't been set public.`);
-							}
-						}
-					} else {
-						ytdl.getInfo(args[1]).then(video => {
-							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							return handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-						}).catch(async reason => {
-							let searchString = args.slice(1).join(" ");
-							msg.channel.sendTyping();
-							let videos;
-							let selectMsg;
-							async function editOrSend() {
-								if (selectMsg) return selectMsg.edit(...arguments);
-								else return selectMsg = await msg.channel.send(...arguments);
-							}
-							let i = 0;
-							while (!videos) {
-								i++;
-								try {
-									videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
-								} catch (e) {
-									if (i <= 3) {
-										await editOrSend(`Search failed. I'll try again: hold tight. (attempts: ${i})`);
-										await new Promise(resolve => setTimeout(() => resolve(), 2500));
-									} else {
-										return editOrSend("Couldn't reach Invidious. Try again later? ;-;");
-									}
-								}
-							}
-							if (!videos.length) return editOrSend("No videos were found with those search terms");
-							videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
-							let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${prettySeconds(video.lengthSeconds)})`);
-							let embed = new Discord.RichEmbed()
-								.setTitle("Song selection")
-								.setDescription(videoResults.join("\n"))
-								.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
-								.setColor("36393E")
-							await editOrSend({embed});
-							let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
-							collector.next.then(async newmsg => {
-								let videoIndex = parseInt(newmsg.content);
-								if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
-								ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
-									let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-									handleSong(song, newmsg.channel, voiceChannel, args[0][0] == "i");
-								}).catch(error => manageYtdlGetInfoErrors(newmsg, error, args[1]));
-								//selectMsg.edit(embed.setDescription("").setFooter("").setTitle("").addField("Song selected", videoResults[videoIndex-1]));
-								selectMsg.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
-							}).catch(() => {
-								selectMsg.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
-							});
-						});
-					}
+					let result = await searchYoutube(args.slice(1).join(" "), msg, args[1]);
+					if (result == null) return;
+					if (result.constructor.name == "Array") bulkPlaySongs(msg, voiceChannel, result.map(video => video.id), args[2], args[3]);
+					else return handleSong(result, msg.channel, voiceChannel, args[0][0] == "i");
 				} else if (args[0].toLowerCase() == "stop") {
 					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					if (!queue) {
@@ -829,16 +1029,6 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.auto = !queue.auto;
 					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
-				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
-					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
-					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					let setv = Math.floor(parseInt(args[1]));
-					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
-					if (setv >= 1 && setv <= 5) {
-						queue.volume = setv;
-						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
-					} else return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
 					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
@@ -944,7 +1134,7 @@ module.exports = function(passthrough) {
 					let playlistName = args[1];
 					if (playlistName == "show") {
 						let playlists = await utils.sql.all("SELECT * FROM Playlists");
-						return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setDescription(playlists.map(p => p.name).join("\n")));
+						return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n")));
 					}
 					if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 					let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
@@ -983,8 +1173,11 @@ module.exports = function(passthrough) {
 					let action = args[2] || "";
 					if (action.toLowerCase() == "add") {
 						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
-						let videoID = args[3];
-						if (!videoID) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link`);
+						let videoID;
+						if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
+						let result = await searchYoutube(args.slice(3).join(" "), msg, args[3], true);
+						if (result != null) videoID = result.basic.id;
+						else return;
 						ytdl.getInfo(videoID).then(async video => {
 							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(client.lang.playlistDuplicateItem(msg));
 							await Promise.all([
@@ -1087,19 +1280,22 @@ module.exports = function(passthrough) {
 						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 					} else if (action.toLowerCase() == "delete") {
 						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
-						(await msg.channel.send(new Discord.RichEmbed().setColor("dd1d1d").setDescription(
+						let deletePromptEmbed = new Discord.RichEmbed().setColor("dd1d1d").setDescription(
 							"This action will permanently delete the playlist `"+playlistRow.name+"`. "+
 							"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n"+
 							"You will not be able to undo this action.\n\n"+
 							"<:bn_del:331164186790854656> - confirm deletion\n"+
 							"<:bn_ti:327986149203116032> - ignore"
-						))).reactionMenu([
-							{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], ignore: "total", actionType: "js", actionData: async () => {
+						);
+						let message = await msg.channel.send(deletePromptEmbed)
+						message.reactionMenu([
+							{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 								await Promise.all([
 									utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 									utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 								]);
-								msg.channel.send("Playlist deleted.");
+								deletePromptEmbed.setDescription("Playlist deleted.");
+								message.edit(deletePromptEmbed);
 							}},
 							{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled")}
 						]);
