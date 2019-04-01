@@ -4,11 +4,12 @@ let YouTube = require('simple-youtube-api');
 const net = require("net");
 let crypto = require("crypto");
 let rp = require("request-promise");
+const Discord = require("discord.js");
 
 const voiceEmptyDuration = 20000;
 
 module.exports = function(passthrough) {
-	let { config, Discord, client, utils, reloadEvent } = passthrough;
+	let { config, client, utils, reloadEvent } = passthrough;
 	let youtube = new YouTube(config.yt_api_key);
 	let queueStorage = utils.queueStorage;
 
@@ -557,37 +558,116 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	let voiceStateCallbacks = [];
-	function voiceStateUpdate(oldMember, newMember) {
-		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
-		let callback = voiceStateCallbacks.find(o => o.alive && o.userID == newMember.user.id && o.guildID == newMember.voiceChannel.guild.id);
-		if (callback) callback(newMember);
+	/**
+	 * A manager for voice state callbacks
+	 */
+	const voiceStateCallbackManager = {
+		callbacks: [],
+		/**
+		 * Gets all callbacks matching a given userID and guild
+		 * @param {String} userID A Discord managed user ID
+		 * @param {Discord.Guild} guild A Discord managed guild object
+		 * @returns {Array} An array of callbacks
+		 */
+		getAll: function(userID, guild) {
+			return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
+		}
 	}
+
+	/**
+	 * A class representing a remote user voice state callback
+	 */
+	class VoiceStateCallback {
+		/**
+		 * Create a new voice state callback. Other pending copies will be cancelled.
+		 * @param {String} userID A Discord managed user ID
+		 * @param {Discord.Guild} guild A Discord managed guild object
+		 * @param {Number} timeoutMs A duration in ms
+		 * @param {*} callback Callback code
+		 * @constructor
+		 */
+		constructor(userID, guild, timeoutMs, callback) {
+			this.userID = userID;
+			this.guild = guild;
+			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
+			this.callback = callback;
+			this.active = true;
+			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
+			this.add();
+		}
+		/**
+		 * Registers this object in the list of pending callbacks
+		 */
+		add() {
+			voiceStateCallbackManager.callbacks.push(this);
+		}
+		/**
+		 * Removes this object from the list of pending callbacks
+		 * Will not callback null, nor set inactive.
+		 */
+		remove() {
+			let index = voiceStateCallbackManager.callbacks.indexOf(this);
+			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+		}
+		/**
+		 * Called by voiceStateUpdate to trigger the callback and remove the object from the list of pending callbacks
+		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
+		 */
+		trigger(voiceChannel) {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(voiceChannel);
+			}
+		}
+		/**
+		 * Called when this times out
+		 */
+		cancel() {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(null);
+			}
+		}
+	}
+
+	/**
+	 * A Promise wrapper for the local VoiceStateCallback class
+	 * @param {String} userID 
+	 * @param {Discord.Guild} guild A Discord managed guild object
+	 * @param {Number} timeoutMs A duration in ms
+	 * @constructor
+	 */
+	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
+		return new Promise(resolve => {
+			new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel));
+		});
+	}
+
 	client.on("voiceStateUpdate", voiceStateUpdate);
 	reloadEvent.on(__filename, () => client.removeListener("voiceStateUpdate", voiceStateUpdate));
+	/**
+	 * Handles Member voice status updates
+	 * @param {Discord.GuildMember} oldMember Member before update
+	 * @param {Discord.GuildMember} newMember Member after update
+	 */
+	function voiceStateUpdate(oldMember, newMember) {
+		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
+		voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(o => o.trigger(newMember.voiceChannel));
+	}
+	
+	/**
+	 * A function to detect if a member has joined a voice channel
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {Boolean} wait A boolean on if the client should wait for a member
+	 * @returns {Promise<?Discord.VoiceChannel>} The voice channel that the member's in (or just joined), or null if no channel
+	 */
 	async function detectVoiceChannel(msg, wait) {
 		if (msg.member.voiceChannel) return msg.member.voiceChannel;
 		if (!wait) return null;
 		let voiceWaitMsg = await msg.channel.send(client.lang.voiceChannelWaiting(msg));
-		return new Promise(resolve => {
-			let callback = function(member) {
-				if (!callback.alive) return;
-				callback.alive = false;
-				voiceWaitMsg.delete();
-				resolve(member.voiceChannel);
-			}
-			callback.alive = true;
-			callback.userID = msg.author.id;
-			callback.guildID = msg.guild.id;
-			voiceStateCallbacks.push(callback);
-			setTimeout(() => {
-				if (callback.alive) {
-					voiceWaitMsg.edit(client.lang.voiceMustJoin(msg));
-					callback.alive = false;
-					resolve(null);
-				}
-			}, 30000);
-		});
+		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
 
 	return {
