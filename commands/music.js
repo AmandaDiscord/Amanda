@@ -5,9 +5,13 @@ const net = require("net");
 const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
+require("../types.js");
 
 let voiceEmptyDuration = 20000;
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
 	let { config, client, utils, reloadEvent } = passthrough;
 	let youtube = new YouTube(config.yt_api_key);
