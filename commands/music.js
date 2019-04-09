@@ -65,7 +65,7 @@ module.exports = function(passthrough) {
 		 * A method to return related audio clips to that of this class instance
 		 * @returns {Array} An Array of related content
 		 */
-		related() {
+		async related() {
 			return [];
 		}
 	}
@@ -163,7 +163,7 @@ module.exports = function(passthrough) {
 		 */
 		async related() {
 			await this.getInfo(true);
-			return this.info.related_videos.filter(v => v.title).slice(0, 10);
+			return this.info.related_videos.filter(v => v.title && v.length_seconds > 0).slice(0, 10);
 		}
 	}
 
@@ -251,6 +251,7 @@ module.exports = function(passthrough) {
 			this.id = this.textChannel.guild.id;
 			this.connection = undefined;
 			this._dispatcher = undefined;
+			this.playedSongs = new Set();
 			this.songs = [];
 			this.playing = true;
 			this.skippable = false;
@@ -420,6 +421,7 @@ module.exports = function(passthrough) {
 		 * @returns {Promise<void>} void
 		 */
 		async play() {
+			if (this.songs[0].basic && this.songs[0].basic.id) this.playedSongs.add(this.songs[0].basic.id);
 			let stream = await this.songs[0].getStream();
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
@@ -459,11 +461,10 @@ module.exports = function(passthrough) {
 					this.skippable = false;
 					new Promise(resolve => {
 						if (this.auto && this.songs.length == 1) {
-							this.songs[0].getInfo(false).then(info => {
-								let related = info.related_videos.filter(v => v.title)[0];
-								if (related) {
-									let videoID = related.id;
-									ytdl.getInfo(videoID).then(video => {
+							this.songs[0].related().then(related => {
+								related = related.filter(v => !this.playedSongs.has(v.id));
+								if (related[0]) {
+									ytdl.getInfo(related[0].id).then(video => {
 										let song = new YouTubeSong(video, true); //TODO: move this to the song object
 										this.addSong(song);
 										resolve();
@@ -471,6 +472,8 @@ module.exports = function(passthrough) {
 										manageYtdlGetInfoErrors(this.textChannel, reason);
 										resolve();
 									});
+								} else {
+									this.textChannel.send("Auto mode was on, but I ran out of related songs to play.");
 								}
 							});
 						} else resolve();
