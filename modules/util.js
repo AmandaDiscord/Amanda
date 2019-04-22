@@ -204,6 +204,7 @@ module.exports = (passthrough) => {
 			if (this.users.get(usertxt)) return this.users.get(usertxt);
 			let list = [];
 			matchFunctions.forEach(i => this.users.filter(u => i(u)).forEach(us => { if (!list.includes(us) && list.length < 10) list.push(us) }));
+			if (list.length == 1) return list[0];
 			let embed = new Discord.RichEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i+1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
 			let selectmessage = await msg.channel.send(embed);
 			let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
@@ -264,6 +265,7 @@ module.exports = (passthrough) => {
 			if (this.members.get(usertxt)) return this.members.get(usertxt);
 			let list = [];
 			matchFunctions.forEach(i => this.members.filter(m => i(m)).forEach(mem => { if (!list.includes(mem) && list.length < 10) list.push(mem) }));
+			if (list.length == 1) return list[0];
 			let embed = new Discord.RichEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i+1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
 			let selectmessage = await msg.channel.send(embed);
 			let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
