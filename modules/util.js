@@ -211,7 +211,8 @@ module.exports = (passthrough) => {
 			return await collector.next.then(newmessage => {
 				let index = parseInt(newmessage.content);
 				if (!index || !list[index-1]) return null;
-				selectmessage.edit(embed.setTitle("User selection").setDescription(`${index} - ${list[index-1].tag}`).setFooter(""));
+				selectmessage.delete();
+				newmessage.delete();
 				return list[index-1];
 			}).catch(() => {
 				selectmessage.edit(embed.setTitle("User selection cancelled").setDescription("").setFooter(""));
@@ -272,7 +273,8 @@ module.exports = (passthrough) => {
 			return await collector.next.then(newmessage => {
 				let index = parseInt(newmessage.content);
 				if (!index || !list[index-1]) return null;
-				selectmessage.edit(embed.setTitle("Member selection").setDescription(`${index} - ${list[index-1].user.tag}`).setFooter(""));
+				selectmessage.delete();
+				newmessage.delete();
 				return list[index-1];
 			}).catch(() => {
 				selectmessage.edit(embed.setTitle("Member selection cancelled").setDescription("").setFooter(""));
