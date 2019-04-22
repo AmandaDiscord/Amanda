@@ -80,7 +80,7 @@ module.exports = function(passthrough) {
 				if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-				let member = msg.guild.findMember(msg, usertxt);
+				let member = await msg.guild.findMember(msg, usertxt);
 				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let award = Math.floor(parseInt(args[0]));
 				utils.coinsManager.award(member.id, award);

@@ -159,7 +159,7 @@ module.exports = function(passthrough) {
 			category: "gambling",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
-				let member = msg.guild.findMember(msg, suffix, true);
+				let member = await msg.guild.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let money = await utils.coinsManager.get(member.id);
 				let embed = new Discord.RichEmbed()
@@ -219,7 +219,7 @@ module.exports = function(passthrough) {
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-				let member = msg.guild.findMember(msg, usertxt);
+				let member = await msg.guild.findMember(msg, usertxt);
 				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
 				let authorCoins = await utils.coinsManager.get(msg.author.id);

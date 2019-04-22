@@ -18,8 +18,8 @@ module.exports = function(passthrough) {
 				suffix = suffix.replace(/ +/g, " ");
 				let args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
-				let mem1 = msg.guild.findMember(msg, args[0]);
-				let mem2 = msg.guild.findMember(msg, args[1]);
+				let mem1 = await msg.guild.findMember(msg, args[0]);
+				let mem2 = await msg.guild.findMember(msg, args[1]);
 				if (mem1 == null) return msg.channel.send(`The first member provided was not found`);
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
 				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
@@ -63,7 +63,7 @@ module.exports = function(passthrough) {
 			category: "interaction",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
-				let member = msg.guild.findMember(msg, suffix, true);
+				let member = await msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let info = await utils.waifu.get(member.id);
 				let embed = new Discord.RichEmbed()
@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 				let usertxt = args.slice(1).join(" ");
 				if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send("The correct format is `&claim <amount> <user>`. Amount comes first, user comes last.");
 				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-				let member = msg.guild.findMember(msg, usertxt);
+				let member = await msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
@@ -199,11 +199,11 @@ module.exports = function(passthrough) {
 			description: "Beans a user",
 			aliases: ["bean"],
 			category: "interaction",
-			process: function(msg, suffix) {
+			process: async function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let member;
-				member = msg.guild.findMember(msg, suffix, true);
+				member = await msg.guild.findMember(msg, suffix, true);
 				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				if (member.id == client.user.id) return msg.channel.send(`No u`);
 				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
@@ -308,7 +308,7 @@ module.exports = function(passthrough) {
 	async function doInteraction(msg, suffix, source) {
 		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
-		let member = msg.guild.findMember(msg, suffix);
+		let member = await msg.guild.findMember(msg, suffix);
 		if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 		if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
 		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));

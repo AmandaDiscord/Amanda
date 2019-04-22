@@ -185,9 +185,9 @@ module.exports = (passthrough) => {
 	 * @param {Discord.Message} msg A Discord.Message
 	 * @param {String} usertxt A String that contains Discord.User data to search by
 	 * @param {Boolean} self If the Function should return Discord.Message.author if no usertxt parameter is provided
-	 * @returns {(Discord.User|null)} A Discord.User Object or null if it couldn't return a Discord.User
+	 * @returns {Promise<(Discord.User|null)>} A Discord.User Object or null if it couldn't return a Discord.User
 	 */
-	Discord.Client.prototype.findUser = function(msg, usertxt, self = false) {
+	Discord.Client.prototype.findUser = async function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
 		if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
 		let matchFunctions = [];
@@ -201,9 +201,21 @@ module.exports = (passthrough) => {
 			if (self) return msg.author;
 			else return null;
 		} else {
-			return client.users.get(usertxt) || matchFunctions.map(f => {
-				return client.users.find(u => f(u));
-			}).find(u => u) || null;
+			if (this.users.get(usertxt)) return this.users.get(usertxt);
+			let list = [];
+			matchFunctions.forEach(i => this.users.filter(u => i(u)).forEach(us => { if (!list.includes(us) && list.length < 10) list.push(us) }));
+			let embed = new Discord.RichEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i+1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+			let selectmessage = await msg.channel.send(embed);
+			let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
+			return await collector.next.then(newmessage => {
+				let index = parseInt(newmessage.content);
+				if (!index || !list[index-1]) return null;
+				selectmessage.edit(embed.setTitle("User selection").setDescription(`${index} - ${list[index-1].tag}`).setFooter(""));
+				return list[index-1];
+			}).catch(() => {
+				selectmessage.edit(embed.setTitle("User selection cancelled").setDescription("").setFooter(""));
+				return null;
+			});
 		}
 	}
 
@@ -231,9 +243,9 @@ module.exports = (passthrough) => {
 	 * @param {Discord.Message} msg A Discord.Message
 	 * @param {String} usertxt A String that contains Discord.GuildMember data to search by
 	 * @param {Boolean} self If the Function should return Discord.Message.member if no usertxt parameter is provided
-	 * @returns {(Discord.GuildMember|null)} A Discord.GuildMember Object or null if it couldn't return a Discord.GuildMember
+	 * @returns {Promise<(Discord.GuildMember|null)>} A Discord.GuildMember Object or null if it couldn't return a Discord.GuildMember
 	 */
-	Discord.Guild.prototype.findMember = function(msg, usertxt, self = false) {
+	Discord.Guild.prototype.findMember = async function(msg, usertxt, self = false) {
 		usertxt = usertxt.toLowerCase();
 		if (/<@!?(\d+)>/.exec(usertxt)) usertxt = /<@!?(\d+)>/.exec(usertxt)[1];
 		let matchFunctions = [];
@@ -249,9 +261,21 @@ module.exports = (passthrough) => {
 			if (self) return msg.member;
 			else return null;
 		} else {
-			return this.members.get(usertxt) || matchFunctions.map(f => {
-				return this.members.find(m => f(m));
-			}).find(m => m) || null;
+			if (this.members.get(usertxt)) return this.members.get(usertxt);
+			let list = [];
+			matchFunctions.forEach(i => this.members.filter(m => i(m)).forEach(mem => { if (!list.includes(mem) && list.length < 10) list.push(mem) }));
+			let embed = new Discord.RichEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i+1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E");
+			let selectmessage = await msg.channel.send(embed);
+			let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
+			return await collector.next.then(newmessage => {
+				let index = parseInt(newmessage.content);
+				if (!index || !list[index-1]) return null;
+				selectmessage.edit(embed.setTitle("Member selection").setDescription(`${index} - ${list[index-1].user.tag}`).setFooter(""));
+				return list[index-1];
+			}).catch(() => {
+				selectmessage.edit(embed.setTitle("Member selection cancelled").setDescription("").setFooter(""));
+				return null;
+			});
 		}
 	}
 

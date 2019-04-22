@@ -165,9 +165,9 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = msg.guild.findMember(msg, suffix, true);
+					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
-				} else user = client.findUser(msg, suffix, true);
+				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(`Couldn't find that user`);
 				let embed = new Discord.RichEmbed().setColor("36393E");
 				embed.addField("User ID:", user.id);
@@ -203,12 +203,12 @@ module.exports = function(passthrough) {
 			description: "Gets a user's avatar",
 			aliases: ["avatar", "pfp"],
 			category: "meta",
-			process: function(msg, suffix) {
+			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = msg.guild.findMember(msg, suffix, true);
+					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
-				} else user = client.findUser(msg, suffix, true);
+				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
