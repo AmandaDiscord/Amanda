@@ -4,13 +4,6 @@ module.exports = function(passthrough) {
 	let prefixes = [];
 	let statusPrefix = "&";
 
-	if (config.dbl_key) {
-		const dbl = require("dblapi.js");
-		const poster = new dbl(config.dbl_key, client);
-		poster.once("posted", () => console.log("Server count posted"));
-		poster.on("error", reason => console.error(reason));
-	} else console.log("No DBL API key. Server count posting is disabled.");
-
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", manageMessage);
 		client.removeListener("messageUpdate", manageEdit);
