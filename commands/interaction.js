@@ -170,7 +170,16 @@ module.exports = function(passthrough) {
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "interaction",
 			process: async function(msg, suffix) {
-				let all = await utils.waifu.all;
+				let amount = 10;
+				if (suffix) {
+					let num = Number(suffix);
+					if (num < 1) num = 1;
+					if (num > 50) num = 50;
+					if (isNaN(num)) amount = 10;
+					else amount = Math.floor(num)*10;
+				}
+				let all = await utils.sql.all("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT ?", [client.user.id, amount]);
+				if (amount > 10) all = all.slice(amount-10, amount);
 				let users = [];
 				for (let row of all) {
 					for (let key of ["userID", "waifuID"]) {
@@ -186,9 +195,10 @@ module.exports = function(passthrough) {
 					.setTitle("Waifu leaderboard")
 					.setDescription(
 						all.map((row, index) =>
-							`${index+1}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${client.lang.emoji.discoin}`
+							`${index+amount-9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${client.lang.emoji.discoin}`
 						).join("\n")
 					)
+					.setFooter(`Page ${amount/10}`)
 					.setColor("F8E71C")
 				return msg.channel.send(embed);
 			}

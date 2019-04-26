@@ -202,6 +202,8 @@ module.exports = function(passthrough) {
 				let amount = 10;
 				if (suffix) {
 					let num = Number(suffix);
+					if (num < 1) num = 1;
+					if (num > 50) num = 50;
 					if (isNaN(num)) amount = 10;
 					else amount = Math.floor(num)*10;
 				}
@@ -209,7 +211,7 @@ module.exports = function(passthrough) {
 				if (amount > 10) all = all.slice(amount-10, amount);
 				let embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboard")
-					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).map((row, index) => `${amount>10?index+amount-9:index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${client.lang.emoji.discoin}`).join("\n"))
+					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).map((row, index) => `${index+amount-9}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${client.lang.emoji.discoin}`).join("\n"))
 					.setFooter(`Page ${amount/10}`)
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
