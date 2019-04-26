@@ -199,10 +199,18 @@ module.exports = function(passthrough) {
 			aliases: ["leaderboard", "lb"],
 			category: "gambling",
 			process: async function(msg, suffix) {
-				let all = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT 20", client.user.id);
+				let amount = 10;
+				if (suffix) {
+					let num = Number(suffix);
+					if (isNaN(num)) amount = 10;
+					else amount = Math.floor(num)*10;
+				}
+				let all = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT ?", [client.user.id, amount]);
+				if (amount > 10) all = all.slice(amount-10, amount);
 				let embed = new Discord.RichEmbed()
 					.setAuthor("Leaderboard")
-					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).slice(0, 10).map((row, index) => `${index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${client.lang.emoji.discoin}`).join("\n"))
+					.setDescription(all.filter(row => !(client.users.get(row.userID) && client.users.get(row.userID).bot)).map((row, index) => `${amount>10?index+amount-9:index+1}. ${client.users.get(row.userID) ? client.users.get(row.userID).tag : row.userID} :: ${row.coins} ${client.lang.emoji.discoin}`).join("\n"))
+					.setFooter(`Page ${amount/10}`)
 					.setColor("F8E71C")
 				return msg.channel.send({embed});
 			}
