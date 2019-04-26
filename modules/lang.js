@@ -66,7 +66,8 @@ module.exports = (passthrough) => {
 
 		// Custom emoji strings
 		emoji: {
-			discoin: "<a:Discoin:422523472128901140>"
+			discoin: "<a:Discoin:422523472128901140>",
+			bot: "<:bot:412413027565174787>"
 		},
 	}
 }
