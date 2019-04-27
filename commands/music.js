@@ -947,7 +947,10 @@ module.exports = function(passthrough) {
 			description: "Assign a login token for use on Amanda's web dashboard",
 			aliases: ["token", "musictoken", "webtoken"],
 			category: "music",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				if (msg.channel.type == "text") return msg.channel.send(`Please use this command in a DM.`);
 				await utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
 				let hash = crypto.createHash("sha256").update(""+Math.random()).digest("hex");
@@ -967,6 +970,10 @@ module.exports = function(passthrough) {
 			description: "Frisky radio",
 			aliases: ["frisky"],
 			category: "music",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				const voiceChannel = msg.member.voiceChannel;
@@ -981,6 +988,10 @@ module.exports = function(passthrough) {
 			description: "You're not supposed to see this",
 			aliases: ["music", "m"],
 			category: "music",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);

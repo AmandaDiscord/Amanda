@@ -2,7 +2,11 @@ const rp = require("request-promise");
 const entities = require("entities");
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
 const Discord = require("discord.js");
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
 	let { client, utils, reloadEvent } = passthrough;
 
@@ -10,7 +14,7 @@ module.exports = function(passthrough) {
 		games: [],
 		/**
 		 * Adds a game to storage
-		 * @param {*} game An instance of any local game
+		 * @param {TriviaGame} game An instance of any local game
 		 * @returns {Number} The new length of the games Array
 		 */
 		add: function(game) {
@@ -19,14 +23,14 @@ module.exports = function(passthrough) {
 		/**
 		 * Gets a game Object based on the channel parameter
 		 * @param {Discord.TextChannel} channel A Discord managed text channel
-		 * @returns {*} An instance of any local game
+		 * @returns {TriviaGame} An instance of any local game
 		 */
 		getChannel: function(channel) {
 			return this.games.find(g => g.channel == channel);
 		},
 		/**
 		 * Removes a game from this' game Array
-		 * @param {*} game An instance of any local game
+		 * @param {TriviaGame} game An instance of any local game
 		 * @returns {Array} The new games Array
 		 */
 		remove: function(game) {
@@ -304,6 +308,10 @@ module.exports = function(passthrough) {
 			description: "Play a game of trivia with other members and win Discoins",
 			aliases: ["trivia", "t"],
 			category: "games",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				startGame(msg.channel, {suffix, msg});
 			}
@@ -313,6 +321,10 @@ module.exports = function(passthrough) {
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: function(msg, suffix) {
 				let size = 8, difficulty = "easy";
 				let string, title;
@@ -338,6 +350,11 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * A handler for data returned by an API
+	 * @param {String} body
+	 * @param {Discord.Channel} channel
+	 */
 	async function JSONHelper(body, channel) {
 		try {
 			if (body.startsWith("http")) body = await rp(body);
@@ -350,6 +367,13 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * A manager to start a trivia game
+	 * @param {Discord.Channel} channel
+	 * @param {Object} options
+	 * @param {String} options.suffix
+	 * @param {Discord.Message} options.msg
+	 */
 	async function startGame(channel, options = {}) {
 		// Select category
 		let category = options.category || null;

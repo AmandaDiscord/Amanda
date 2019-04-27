@@ -1,10 +1,15 @@
 const Jimp = require("jimp");
 const crypto = require("crypto");
 const rp = require("request-promise");
+const Discord = require("discord.js");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, utils } = passthrough;
+	let { client, utils } = passthrough;
 
 	let commands = {
 
@@ -13,6 +18,10 @@ module.exports = function(passthrough) {
 			description: "Ships two people",
 			aliases: ["ship"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				suffix = suffix.replace(/ +/g, " ");
@@ -61,6 +70,10 @@ module.exports = function(passthrough) {
 			description: "Gets the waifu information about yourself or a user",
 			aliases: ["waifu"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let member = await msg.guild.findMember(msg, suffix, true);
@@ -82,6 +95,10 @@ module.exports = function(passthrough) {
 			description: "Claims someone as a waifu. Requires Discoins",
 			aliases: ["claim"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
@@ -124,6 +141,10 @@ module.exports = function(passthrough) {
 			description: "Divorces a user",
 			aliases: ["divorce"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let info = await utils.waifu.get(msg.author.id);
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
@@ -140,6 +161,10 @@ module.exports = function(passthrough) {
 			description: "Gifts an amount of Discoins towards your waifu's price",
 			aliases: ["gift"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
@@ -169,6 +194,10 @@ module.exports = function(passthrough) {
 			description: "Displays the leaderboard of the top waifus",
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let amount = 10;
 				if (suffix) {
@@ -209,6 +238,10 @@ module.exports = function(passthrough) {
 			description: "Beans a user",
 			aliases: ["bean"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "user"));
@@ -226,6 +259,10 @@ module.exports = function(passthrough) {
 			description: "I love you",
 			aliases: ["iloveyou", "ily"],
 			category: "interaction",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: function(msg) {
 				return msg.channel.send("You are my dearest person on Earth. You always touch my heart with the warmth of your passionate affection like a thousand summers. You are, to me, like a precious stone that is exotic and special in my heart. I love you");
 			}
@@ -315,6 +352,11 @@ module.exports = function(passthrough) {
 		["316829948616638465", "m"]
 	]);
 
+	/**
+	 * @param {Discord.Message} msg
+	 * @param {String} suffix
+	 * @param {Object} source
+	 */
 	async function doInteraction(msg, suffix, source) {
 		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);

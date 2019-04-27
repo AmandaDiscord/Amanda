@@ -1,9 +1,14 @@
 const dailyCooldownHours = 20;
 const dailyCooldownTime = dailyCooldownHours*60*60*1000;
 const Jimp = require("jimp");
+const Discord = require("discord.js");
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, utils } = passthrough;
+	let { client, utils } = passthrough;
 
 	return {
 		"slot": {
@@ -11,6 +16,10 @@ module.exports = function(passthrough) {
 			description: "Runs a random slot machine for a chance at Discoins",
 			aliases: ["slot", "slots"],
 			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let money = await utils.coinsManager.get(msg.author.id);
@@ -98,7 +107,10 @@ module.exports = function(passthrough) {
 			description: "Flips a coin",
 			aliases: ["flip"],
 			category: "gambling",
-			process: function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: function(msg) {
 				let array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
 				let flip = array[Math.floor(Math.random() * array.length)];
 				return msg.channel.send(`You flipped ${flip}`);
@@ -110,6 +122,10 @@ module.exports = function(passthrough) {
 			description: "Place a bet on a random flip for a chance of Discoins",
 			aliases: ["betflip", "bf"],
 			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
@@ -157,6 +173,10 @@ module.exports = function(passthrough) {
 			description: "Returns the amount of Discoins you or another user has",
 			aliases: ["coins", "$"],
 			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let member = await msg.guild.findMember(msg, suffix, true);
@@ -175,7 +195,10 @@ module.exports = function(passthrough) {
 			description: "A daily command that gives a random amount of Discoins",
 			aliases: ["daily"],
 			category: "gambling",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let row = await utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id);
 				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
@@ -198,6 +221,10 @@ module.exports = function(passthrough) {
 			description: "Gets the leaderboard for people with the most coins",
 			aliases: ["leaderboard", "lb"],
 			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let amount = 10;
 				if (suffix) {
@@ -223,6 +250,10 @@ module.exports = function(passthrough) {
 			description: "Gives discoins to a user from your account",
 			aliases: ["give"],
 			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");

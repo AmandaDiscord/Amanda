@@ -1,5 +1,11 @@
+const Discord = require("discord.js");
+require("../types.js");
+
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, db, utils, commands, config } = passthrough;
+	let { client, db, utils, commands, config } = passthrough;
 
 	return {
 		"evaluate": {
@@ -7,6 +13,10 @@ module.exports = function(passthrough) {
 			description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 			aliases: ["evaluate", "eval"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function (msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (allowed) {
@@ -39,6 +49,10 @@ module.exports = function(passthrough) {
 			description: "Executes a shell operation",
 			aliases: ["execute", "exec"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function (msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return;
@@ -71,6 +85,10 @@ module.exports = function(passthrough) {
 			description: "Awards a specific user ",
 			aliases: ["award"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.sendNopeMessage();

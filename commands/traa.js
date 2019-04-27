@@ -1,10 +1,15 @@
+const Discord = require("discord.js");
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
 ];
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, utils, reloadEvent } = passthrough;
+	let { client, utils, reloadEvent } = passthrough;
 
 	let cadence = new utils.DMUser("176580265294954507");
 
@@ -25,6 +30,10 @@ module.exports = function(passthrough) {
 
 	let prompts = [];
 
+	/**
+	 * Detects a gif from another bot
+	 * @param {Discord.Message} msg
+	 */
 	async function gifDetector(msg) {
 		if (!msg.author.bot) { // command
 			let botInfo;
@@ -63,14 +72,18 @@ module.exports = function(passthrough) {
 			description: "Store a GIF in the database",
 			aliases: ["storegif"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
+				let allowed = await utils.hasPermission(msg.author, "eval");
+				if (!allowed) return msg.channel.send("not you");
 				if (suffix == "") {
 					let row = await utils.sql.get("SELECT * FROM GenderGifBacklog");
 					if (row) return msg.channel.send(`First GIF in backlog: ${row.type} from ${row.author}:\n${row.url}`);
 					else return msg.channel.send("Backlog empty!");
 				}
-				let allowed = await utils.hasPermission(msg.author, "eval");
-				if (!allowed) return msg.channel.send("not you");
 				let url = suffix.split("`")[1];
 				let words = suffix.split("`")[2].split(" ");
 				let type = words[1];

@@ -1,6 +1,10 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
 	let { client, config, utils, commands, reloadEvent } = passthrough;
 
@@ -42,6 +46,9 @@ module.exports = function(passthrough) {
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
@@ -66,6 +73,9 @@ module.exports = function(passthrough) {
 			description: "Gets latency to Discord",
 			aliases: ["ping", "pong"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function (msg) {
 				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array[Math.floor(Math.random() * array.length)];
@@ -80,6 +90,9 @@ module.exports = function(passthrough) {
 			description: "",
 			aliases: ["forcestatupdate"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
 				sendStats(msg);
 			}
@@ -90,6 +103,9 @@ module.exports = function(passthrough) {
 			description: "Sends the bot invite link to you via DMs",
 			aliases: ["invite", "inv"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
 				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
 				try {
@@ -105,7 +121,10 @@ module.exports = function(passthrough) {
 			description: "Displays information about Amanda",
 			aliases: ["info", "inf"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				let [c1, c2] = await Promise.all([
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
@@ -128,7 +147,10 @@ module.exports = function(passthrough) {
 			description: "Gets the latest git commits to Amanda",
 			aliases: ["commits", "commit", "git"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				msg.channel.sendTyping();
 				const limit = 5;
 				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
@@ -147,7 +169,10 @@ module.exports = function(passthrough) {
 			description: "Details Amanda's privacy statement",
 			aliases: ["privacy"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
@@ -162,6 +187,10 @@ module.exports = function(passthrough) {
 			description: "Provides information about a user",
 			aliases: ["user"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
@@ -203,6 +232,10 @@ module.exports = function(passthrough) {
 			description: "Gets a user's avatar",
 			aliases: ["avatar", "pfp"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
@@ -222,6 +255,10 @@ module.exports = function(passthrough) {
 			description: "Makes an emoji bigger",
 			aliases: ["wumbo"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: function(msg, suffix) {
 				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "emoji"));
 				let emoji = client.parseEmoji(suffix);
@@ -238,6 +275,10 @@ module.exports = function(passthrough) {
 			description: "Your average help command",
 			aliases: ["help", "h", "commands", "cmds"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function (msg, suffix) {
 				let embed;
 				if (suffix) {
