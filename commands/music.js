@@ -461,12 +461,19 @@ module.exports = function(passthrough) {
 					this.skippable = false;
 					new Promise(resolve => {
 						if (this.auto && this.songs.length == 1) {
+							console.log("Queue ended, auto on, will add new item from related");
 							this.songs[0].related().then(related => {
+								console.log("Initial related list", related);
 								related = related.filter(v => !this.playedSongs.has(v.id));
+								console.log("Filtered related list", related);
 								if (related[0]) {
+									console.log("Will get info for ID "+related[0].id);
 									ytdl.getInfo(related[0].id).then(video => {
+										console.log("Got info");
 										let song = new YouTubeSong(video, true); //TODO: move this to the song object
+										console.log("Created new YouTubeSong");
 										this.addSong(song);
+										console.log("Added to queue");
 										resolve();
 									}).catch(reason => {
 										manageYtdlGetInfoErrors(this.textChannel, reason);
