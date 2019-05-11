@@ -422,7 +422,37 @@ module.exports = function(passthrough) {
 		 */
 		async play() {
 			if (this.songs[0].basic && this.songs[0].basic.id) this.playedSongs.add(this.songs[0].basic.id);
-			let stream = await this.songs[0].getStream();
+			let streams = await this.songs[0].getStream();
+			let stream = streams[0];
+			streams[1].on("error", async err => {
+				if (err.message == "Status code: 403") {
+					console.log("We got the classic 403 signature base64 thingy.");
+					if (!this.songs[0].failures) this.songs[0].failures = 1;
+					else this.songs[0].failures++;
+					if (this.songs[0].failures <= 3) {
+						console.log(`Automatically retrying. (retry ${this.songs[0].failures})`);
+						this.songs[0].info = undefined;
+						setTimeout(() => {
+							this.play();
+						}, 1000);
+						return;
+					}
+				}
+				let embed = new Discord.RichEmbed()
+				.setDescription(
+					"Some error occurred and has been logged to console. Chances are that this won't happen a second time.\n"+
+					"Press <:cbn_tick:378414422219161601> to try again.\n"+
+					"If you keep seeing this, [please tell us about it in the support server.](https://discord.gg/zhthQjH)"
+				)
+				.setColor("#36393F")
+				let retryMessage = await this.textChannel.send(embed);
+				retryMessage.reactionMenu([
+					{emoji: client.emojis.get(client.parseEmoji("<:cbn_tick:378414422219161601>").id), remove: "all", ignore: "total", actionType: "js", actionData: () => {
+						this.songs[0].info = undefined;
+						this.play();
+					}}
+				]);
+			});
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
