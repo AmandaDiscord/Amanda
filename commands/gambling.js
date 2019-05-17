@@ -274,8 +274,8 @@ module.exports = function(passthrough) {
 					if (authorCoins == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					gift = authorCoins;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
 					gift = Math.floor(parseInt(args[0]));
+					if (isNaN(gift)) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
 					if (gift < 1) return msg.channel.send(client.lang.input.money.small(msg, "gift", 1));
 					if (gift > authorCoins) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
