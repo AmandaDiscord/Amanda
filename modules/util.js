@@ -588,6 +588,13 @@ module.exports = (passthrough) => {
 	// Misc Prototypes
 
 	/**
+	 * Get a random entry from an array.
+	 */
+	Array.prototype.random = function() {
+		return this[Math.floor(Math.random()*this.length)];
+	}
+
+	/**
 	 * Shuffles an Array psuedorandomly
 	 * @returns {Array} An Array which has been psuedorandomly shuffled
 	 */

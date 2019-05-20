@@ -56,8 +56,8 @@ a.navitem.active {
 }
 
 .landing img[alt=icon] {
-	mask-image: linear-gradient(to left, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
-	-webkit-mask-image: linear-gradient(to left, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
+	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
+	-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
 	width: 256px;
 }
 
