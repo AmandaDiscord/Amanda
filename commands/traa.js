@@ -54,13 +54,21 @@ module.exports = function(passthrough) {
 			if (!ok) return;
 			let {botInfo, command} = prompts.splice(i, 1)[0];
 			if (!botInfo) return;
+			
 			if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
 				let url = msg.embeds[0].image.url;
+
 				let existing = await utils.sql.get("SELECT * FROM GenderGifsV2 WHERE url = ?", url);
 				if (existing) return; // skip if already exists
+
+				let blacklist = await utils.sql.get("SELECT url FROM GenderGifBlacklist WHERE url = ?", url);
+				if (blacklist) return; // skip if in blacklist
+
 				let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
 				if (backlog.some(r => r.url == url)) return; // skip if already in backlog
+
 				if (!backlog.length) cadence.send("New "+command+" GIF from "+msg.author.username+":\n"+url);
+
 				utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username]);
 			}
 		}
