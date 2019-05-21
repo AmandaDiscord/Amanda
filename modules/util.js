@@ -1,6 +1,5 @@
 const util = require("util");
 const Discord = require("discord.js");
-let reactionMenus = {};
 const startingCoins = 5000;
 require("../types.js");
 
@@ -219,46 +218,4 @@ let utils = {
 	}
 }
 
-/**
- * Class that initiates a Discord.Message reaction menu
- */
-class ReactionMenu {
-	/**
-	 * Create a new ReactionMenu
-	 * @param {Discord.Message} message
-	 * @param {Array} actions
-	 */
-	constructor(message, actions) {
-		this.message = message;
-		this.actions = actions;
-		reactionMenus[this.message.id] = this;
-		this.promise = this.react();
-	}
-	async react() {
-		for (let a of this.actions) {
-			a.messageReaction = await this.message.react(a.emoji).catch(new Function());
-		}
-	}
-	destroy(remove) {
-		delete reactionMenus[this.message.id];
-		if (remove) {
-			if (this.message.channel.type == "text") {
-				this.message.clearReactions().catch(new Function());
-			} else if (this.message.channel.type == "dm") {
-				this.actions.forEach(a => {
-					if (a.messageReaction) a.messageReaction.remove().catch(new Function());
-				});
-			}
-		}
-	}
-}
 module.exports = utils;
-
-/**
- * Handles reactions as actions for the Discord.Client to perform
- * @param {Array} actions An Array of Objects of actions
- */
-Discord.Message.prototype.reactionMenu = function(actions) {
-	let message = this;
-	return new ReactionMenu(message, actions);
-}
