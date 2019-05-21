@@ -3,10 +3,14 @@ const pj = require("path").join;
 const http = require("http");
 const WebSocket = require("ws");
 const util = require("util");
+require("./types.js");
 
 const commandDirs = ["modules", "commands"];
 let watched = [];
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = passthrough => new Promise((resolve, reject) => {
 	let { config, utils } = passthrough;
 
@@ -42,7 +46,7 @@ module.exports = passthrough => new Promise((resolve, reject) => {
 				passthrough.reloadEvent.emit(filename);
 				delete require.cache[require.resolve(filename)];
 				let result = require(filename);
-				setImmediate(() => Object.assign(passthrough.commands, result(passthrough)));
+				if (typeof result == "function") setImmediate(() => Object.assign(passthrough.commands, result(passthrough)));
 				console.log(`Loaded ${filename}`);
 			} catch (e) { console.log(`Failed to load ${filename}\n${e.stack}`); }
 		}
