@@ -219,3 +219,7 @@ let utils = {
 }
 
 module.exports = utils;
+
+Discord.Guild.prototype.__defineGetter__("queue", function() {
+	return utils.queueStorage.storage.get(this.id);
+});
