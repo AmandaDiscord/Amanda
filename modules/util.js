@@ -123,7 +123,7 @@ let utils = {
 			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 			if (row) return row.coins;
 			else {
-				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, startingCoins]);
+				await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins]);
 				return startingCoins;
 			}
 		},
@@ -132,7 +132,7 @@ let utils = {
 			if (row) {
 				await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID]);
 			} else {
-				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, value]);
+				await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value]);
 			}
 			return;
 		},
@@ -141,7 +141,7 @@ let utils = {
 			if (row) {
 				await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID]);
 			} else {
-				await utils.sql.all("INSERT INTO money VALUES (?, ?)", [userID, startingCoins + value]);
+				await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value]);
 			}
 		}
 	},
