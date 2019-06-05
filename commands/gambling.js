@@ -131,6 +131,11 @@ module.exports = function(passthrough) {
 				let args = suffix.split(" ");
 				let money = await utils.coinsManager.get(msg.author.id);
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you need to provide a bet and a side to bet on`);
+				if (args[0] == "h" || args[0] == "t") {
+					let t = args[0];
+					args[0] = args[1];
+					args[1] = t;
+				}
 				let bet;
 				if (args[0] == "all") {
 					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
@@ -141,7 +146,11 @@ module.exports = function(passthrough) {
 					if (bet < 1) return msg.channel.send(client.lang.input.money.small(msg, "bet", 1));
 					if (bet > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
-				if (!args[1]) return msg.channel.send(`${msg.author.username}, you need to provide a side to bet on. Valid sides are h or t`);
+				let selfChosenSide = false;
+				if (!args[1]) {
+					args[1] = Math.random() < 0.5 ? "h" : "t";
+					selfChosenSide = true;
+				}
 				if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`);
 				const cooldownInfo = {
 					max: 60,
@@ -158,11 +167,17 @@ module.exports = function(passthrough) {
 					t: ["tails", "<:coinT:402219471693021196>"]
 				};
 				if (Math.random() < winChance/100) {
-					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${client.lang.emoji.discoin}`);
+					msg.channel.send(
+						(!selfChosenSide ? "" : "You didn't choose a side, so I picked one for you: "+strings[args[1]][0]+".\n")+
+						`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${client.lang.emoji.discoin}`
+					);
 					utils.coinsManager.award(msg.author.id, bet);
 				} else {
 					let pick = args[1] == "h" ? "t" : "h";
-					msg.channel.send(`You guessed ${strings[args[1]][0]}.\n${strings[pick][1]} I flipped ${strings[pick][0]}.\nSorry but you didn't guess correctly. Better luck next time.`);
+					msg.channel.send(
+						(!selfChosenSide ? "" : "You didn't choose a side, so I picked one for you: "+strings[args[1]][0]+".\n")+
+						`You guessed ${strings[args[1]][0]}.\n${strings[pick][1]} I flipped ${strings[pick][0]}.\nSorry but you didn't guess correctly. Better luck next time.`
+					);
 					return utils.coinsManager.award(msg.author.id, -bet);
 				}
 			}
@@ -234,7 +249,7 @@ module.exports = function(passthrough) {
 					if (!isNaN(inputnum)) pagenum = inputnum;
 				}
 				let offset = (pagenum-1)*pagesize;
-				let all = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC LIMIT ? OFFSET ?", [client.user.id, pagesize, offset]);
+				let all = await utils.sql.all("SELECT userID, coins FROM money WHERE userID != ? ORDER BY coins DESC LIMIT ? OFFSET ?", [client.user.id, pagesize, offset]);
 				let embed = new Discord.RichEmbed()
 				.setAuthor("Leaderboard")
 				.setDescription(all.map((row, index) => {
