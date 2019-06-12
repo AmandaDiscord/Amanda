@@ -143,6 +143,7 @@ class ReactionMenu {
 	utils.settings = {
 		get: async function(ID) {
 			let st = await utils.sql.get("SELECT * FROM settings WHERE userID =? OR guildID =?", [ID, ID]);
+			if (!st) return false;
 			return { waifuAlert: st.waifuAlert, gamblingAlert: st.gamblingAlert };
 		},
 		set: async function(ID, type, setting, value) {
