@@ -300,6 +300,10 @@ module.exports = function(passthrough) {
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
+				let memsettings = await utils.settings.get(member.id);
+				let guildsettings = await utils.settings.get(msg.guild.id);
+				if (memsettings && memsettings.gamblingAlert == 0) return;
+				if (guildsettings && guildsettings.gamblingAlert == 0) return;
 				return member.send(`${String(msg.author)} has given you ${gift} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked(msg)));
 			}
 		}

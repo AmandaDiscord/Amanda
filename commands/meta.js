@@ -1,5 +1,6 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
+const Jimp = require("jimp");
 require("../types.js");
 
 /**
@@ -133,8 +134,8 @@ module.exports = function(passthrough) {
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
-						`${c1.tag} <:bravery:479939311593324557> <:NitroBadge:421774688507920406>\n`+
-						`${c2.tag} <:brilliance:479939329104412672> <:NitroBadge:421774688507920406>`)
+						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>\n`+
+						`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)`)
 					.setColor("36393E");
@@ -267,6 +268,87 @@ module.exports = function(passthrough) {
 					.setImage(emoji.url)
 					.setColor("36393E")
 				return msg.channel.send({embed});
+			}
+		},
+
+		"profile": {
+			usage: "<user>",
+			description: "Get profile information about someone",
+			aliases: ["profile"],
+			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
+			process: async function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = await msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = await client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				let money = await utils.coinsManager.get(msg.author.id);
+				let index = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
+				msg.channel.sendTyping();
+				let font = await Jimp.loadFont(".fonts/Whitney-25.fnt");
+				let font2 = await Jimp.loadFont(".fonts/Whitney-20.fnt");
+				let canvas = await Jimp.read("./images/profile.png");
+				let avatar = await Jimp.read(user.avatarURL);
+				await avatar.resize(76, 76);
+
+				await canvas.composite(avatar, 52, 47);
+
+				await canvas.print(font, 205, 70, user.tag);
+				await canvas.print(font, 52, 130, "Discoins:");
+				await canvas.print(font2, 52, 160, `${money}`);
+				await canvas.print(font2, 52, 250, `Position on Leaderboard: ${index}`);
+
+				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				image = new Discord.Attachment(buffer, "profile.png");
+				return msg.channel.send({files: [image]});
+			}
+		},
+
+		"settings": {
+			usage: "<self|server> <view|settings name> <true or false>",
+			description: "Modify settings Amanda will use for yourself or server wide",
+			aliases: ["settings"],
+			category: "configuration",
+			process: async function(msg, suffix) {
+				let args = suffix.split(" ");
+				if (msg.channel.type == "dm") {
+					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
+				}
+				if (args[0].toLowerCase() == "self") {
+					if (args[1].toLowerCase() == "view") {
+						let memsettings = await utils.settings.get(msg.author.id);
+						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
+						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.author.tag}`, msg.author.smallAvatarURL).setDescription(`Waifu Alerts: ${memsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${memsettings.gamblingAlert != 0} - Messages for gambling related things`));
+					}
+					if (args[1] == "waifuAlert") {
+						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
+						await utils.settings.set(msg.author.id, "user", "waifuAlert", args[2]=="true"?1:0);
+					} else if (args[1] == "gamblingAlert") {
+						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
+						await utils.settings.set(msg.author.id, "user", "gamblingAlert", args[2]=="true"?1:0);
+					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
+					return msg.channel.send(`${msg.author.tag}, you have successfully modified your ${args[1]} setting to ${args[2]}`);
+				} else if (args[0].toLowerCase() == "server") {
+					if (args[1].toLowerCase() == "view") {
+						let guildsettings = await utils.settings.get(msg.guild.id);
+						if (!guildsettings) return msg.channel.send(`${msg.author.tag}, it looks this server hasn't set any settings. ${msg.member.hasPermission("MANAGE_GUILD")?"Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims someone or divorces from someone.\ngamblingAlert are DM messages when someone gives someone Discoins": ""}`);
+						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.guild.name}`, msg.guild.iconURL).setDescription(`Waifu Alerts: ${guildsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${guildsettings.gamblingAlert != 0} - Messages for gambling related things`));
+					}
+					if (!msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(`${msg.author.tag}, you must have the manage server permission to modify a server's Amanda settings`);
+					if (args[1] == "waifuAlert") {
+						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
+						await utils.settings.set(msg.guild.id, "guild", "waifuAlert", args[2]=="true"?1:0);
+					} else if (args[1] == "gamblingAlert") {
+						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
+						await utils.settings.set(msg.guild.id, "guild", "gamblingAlert", args[2]=="true"?1:0);
+					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
+					return msg.channel.send(`${msg.author.tag}, you have successfully modified ${msg.guild.name}'s ${args[1]} setting to ${args[2]}`);
+				} else return msg.channel.send(`${msg.author.username}, that is not a valid operant. Valid operants are self and server`);
 			}
 		},
 

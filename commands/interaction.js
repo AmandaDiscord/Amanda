@@ -128,11 +128,15 @@ module.exports = function(passthrough) {
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces[Math.floor(Math.random() * faces.length)];
-				member.user.send(`${String(msg.member)} has claimed you for ${claim} ${client.lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked()));
 				let embed = new Discord.RichEmbed()
 					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${client.lang.emoji.discoin}`)
 					.setColor("36393E")
-				return msg.channel.send({embed});
+				msg.channel.send({embed});
+				let memsettings = await utils.settings.get(member.id);
+				let guildsettings = await utils.settings.get(msg.guild.id);
+				if (memsettings && memsettings.waifuAlert == 0) return;
+				if (guildsettings && guildsettings.waifuAlert == 0) return;
+				return member.user.send(`${String(msg.member)} has claimed you for ${claim} ${client.lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked()));
 			}
 		},
 
@@ -152,6 +156,10 @@ module.exports = function(passthrough) {
 				let face = faces[Math.floor(Math.random() * faces.length)];
 				await utils.waifu.unbind(msg.author.id);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
+				let memsettings = await utils.settings.get(utils.waifu.id);
+				let guildsettings = await utils.settings.get(msg.guild.id);
+				if (memsettings && memsettings.waifuAlert == 0) return;
+				if (guildsettings && guildsettings.waifuAlert == 0) return;
 				return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
 		},

@@ -140,6 +140,26 @@ class ReactionMenu {
 	}
 	utils.DMUser = DMUser;
 
+	utils.settings = {
+		get: async function(ID) {
+			let st = await utils.sql.get("SELECT * FROM settings WHERE userID =? OR guildID =?", [ID, ID]);
+			return { waifuAlert: st.waifuAlert, gamblingAlert: st.gamblingAlert };
+		},
+		set: async function(ID, type, setting, value) {
+			let st = await utils.settings.get(ID);
+			if (type == "user") {
+				if (!st) await utils.sql.all("INSERT INTO settings (userID, waifuAlert, gamblingAlert) VALUES (?, ?, ?)", [ID, 0, 0]);
+				if (setting == "waifuAlert") return await utils.sql.all("UPDATE settings SET waifuAlert =? WHERE userID =?", [value, ID]);
+				if (setting == "gamblingAlert") return await utils.sql.all("UPDATE settings SET gamblingAlert =? WHERE userID =?", value, ID);
+			}
+			if (type == "guild") {
+				if (!st) await utils.sql.all("INSERT INTO settings (guildID, waifuAlert, gamblingAlert) VALUES (?, ?, ?)", [ID, 0, 0]);
+				if (setting == "waifuAlert") return await utils.sql.all("UPDATE settings SET waifuAlert =? WHERE guildID =?", [value, ID]);
+				if (setting == "gamblingAlert") return await utils.sql.all("UPDATE settings SET gamblingAlert =? WHERE guildID =?", value, ID);
+			}
+		}
+	}
+
 	utils.waifu = {
 		get: async function(userID, options) {
 			const emojiMap = {
