@@ -230,7 +230,7 @@ module.exports = function(passthrough) {
 			let socket = new net.Socket();
 			return new Promise(resolve => socket.connect(80, host, () => {
 				socket.write(`GET ${path} HTTP/1.0\r\n\r\n`);
-				resolve(socket);
+				resolve([socket, socket]);
 			}));
 		}
 	}

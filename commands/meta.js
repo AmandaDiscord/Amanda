@@ -99,6 +99,20 @@ module.exports = function(passthrough) {
 			}
 		},
 
+		"restartnotify": {
+			usage: "none",
+			description: "",
+			aliases: ["restartnotify"],
+			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
+				await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id]);
+				msg.react("✅");
+			}
+		},
+
 		"invite": {
 			usage: "none",
 			description: "Sends the bot invite link to you via DMs",

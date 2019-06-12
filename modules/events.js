@@ -127,6 +127,12 @@ module.exports = function(passthrough) {
 			update();
 			client.setInterval(update, 300000);
 		});
+		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
+			result.forEach(row => {
+				client.channels.get(row.channelID).send("<@"+row.mentionID+"> Restarted! Uptime: "+process.uptime().humanize("sec"));
+			});
+			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id]);
+		});
 	}
 
 	function manageDisconnect(reason) {
