@@ -29,14 +29,7 @@ module.exports = function(passthrough) {
 	async function manageMessage(msg) {
 		if (msg.author.bot) return;
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
-		if (!prefix) {
-			if (msg.guild) {
-				let d = await utils.sql.get("SELECT * FROM prefixes WHERE serverID =?", msg.guild.id);
-				if (!d) return;
-				prefix = d.prefix;
-				if (!msg.content.startsWith(prefix)) return;
-			} else return;
-		}
+		if (!prefix) return;
 		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
 		let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
 		let cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));

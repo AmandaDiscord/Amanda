@@ -334,7 +334,7 @@ module.exports = function(passthrough) {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
 				}
 				if (args[0].toLowerCase() == "self") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view your settings, use ${config.prefixes[0]}settings self view`);
+					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view your settings, use &settings self view`);
 					if (args[1].toLowerCase() == "view") {
 						let memsettings = await utils.settings.get(msg.author.id);
 						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
@@ -349,7 +349,7 @@ module.exports = function(passthrough) {
 					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
 					return msg.channel.send(`${msg.author.tag}, you have successfully modified your ${args[1]} setting to ${args[2]}`);
 				} else if (args[0].toLowerCase() == "server") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view this server's settings, use ${config.prefixes[0]}settings server view`);
+					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view this server's settings, use &settings server view`);
 					if (args[1].toLowerCase() == "view") {
 						let guildsettings = await utils.settings.get(msg.guild.id);
 						if (!guildsettings) return msg.channel.send(`${msg.author.tag}, it looks this server hasn't set any settings. ${msg.member.hasPermission("MANAGE_GUILD")?"Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims someone or divorces from someone.\ngamblingAlert are DM messages when someone gives someone Discoins": ""}`);
