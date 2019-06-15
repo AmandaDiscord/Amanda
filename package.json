@@ -19,7 +19,7 @@
     "jimp": "0.x",
     "mime": "^2.4.4",
     "mysql2": "^1.6.5",
-    "opusscript": "0.0.6",
+    "node-opus": "0.x",
     "prism-media": "^1.0.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
