@@ -324,7 +324,7 @@ module.exports = function(passthrough) {
 		},
 
 		"settings": {
-			usage: "<self|server> <view|settings name> <true or false>",
+			usage: "<self|server> <view|setting name> <value>",
 			description: "Modify settings Amanda will use for yourself or server wide",
 			aliases: ["settings"],
 			category: "configuration",
@@ -333,38 +333,115 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
 				}
-				if (args[0].toLowerCase() == "self") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view your settings, use &settings self view`);
-					if (args[1].toLowerCase() == "view") {
+
+				const settings = {
+					"waifualert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"gamblingalert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"prefix": {
+						type: "string",
+						default: "[unset]",
+						scope: ["server"]
+					}
+				}
+
+				const tableNames = {self: "SettingsSelf", server: "SettingsGuild"};
+
+				let scope = args[0].toLowerCase();
+				if (!["self", "server"].includes(scope)) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `scope` was incorrect, it must be either `self` or `server`."
+				);
+				let tableName = tableNames[scope];
+				let keyID = scope == "self" ? msg.author.id : msg.guild.id;
+
+				let settingName = args[1] ? args[1].toLowerCase() : "";
+				if (args[1] == "view") {
+					return msg.channel.send("view placeholder, ping Cadence#3263 if you see this in prod");
+					/*if (args[1].toLowerCase() == "view") {
 						let memsettings = await utils.settings.get(msg.author.id);
 						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
 						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.author.tag}`, msg.author.smallAvatarURL).setDescription(`Waifu Alerts: ${memsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${memsettings.gamblingAlert != 0} - Messages for gambling related things`));
+					}*/
+				}
+
+				if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(
+					`You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.`
+				);
+
+				let setting = settings[settingName];
+				if (!setting) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `name` was incorrect, it must be one of: "
+					+Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => "`"+k+"`").join(", ")
+				);
+				if (!setting.scope.includes(scope)) return msg.channel.send("The setting `"+settingName+"` is not valid for the scope `"+scope+"`.");
+
+				let value = args[2];
+				if (value == undefined) {
+					let row = await utils.sql.get("SELECT value FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					if (scope == "server") {
+						value = row ? row.value : setting.default;
+						if (setting.type == "boolean") {
+							value = !!+value;
+						}
+						if (row) {
+							return msg.channel.send("Current value of `"+settingName+"` is `"+value+"`. This value was set for the server.");
+						} else {
+							return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.");
+						}
+					} else if (scope == "self") {
+						let serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName]);
+						let values = [
+							setting.default,
+							serverRow ? serverRow.value : null,
+							row ? row.value : null
+						];
+						if (setting.type == "boolean") {
+							values = values.map(v => v != null ? !!+v : v);
+						}
+						let finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]");
+						return msg.channel.send(
+							"Default value: "+values[0]+"\n"
+							+"Server value: "+(values[1] != null ? values[1] : "[unset]")+"\n"
+							+"Your value: "+(values[2] != null ? values[2] : "[unset]")+"\n"
+							+"Computed value: "+finalValue
+						);
 					}
-					if (args[1] == "waifuAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
-						await utils.settings.set(msg.author.id, "user", "waifuAlert", args[2]=="true"?1:0);
-					} else if (args[1] == "gamblingAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
-						await utils.settings.set(msg.author.id, "user", "gamblingAlert", args[2]=="true"?1:0);
-					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
-					return msg.channel.send(`${msg.author.tag}, you have successfully modified your ${args[1]} setting to ${args[2]}`);
-				} else if (args[0].toLowerCase() == "server") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view this server's settings, use &settings server view`);
-					if (args[1].toLowerCase() == "view") {
-						let guildsettings = await utils.settings.get(msg.guild.id);
-						if (!guildsettings) return msg.channel.send(`${msg.author.tag}, it looks this server hasn't set any settings. ${msg.member.hasPermission("MANAGE_GUILD")?"Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims someone or divorces from someone.\ngamblingAlert are DM messages when someone gives someone Discoins": ""}`);
-						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.guild.name}`, msg.guild.iconURL).setDescription(`Waifu Alerts: ${guildsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${guildsettings.gamblingAlert != 0} - Messages for gambling related things`));
-					}
-					if (!msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(`${msg.author.tag}, you must have the manage server permission to modify a server's Amanda settings`);
-					if (args[1] == "waifuAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
-						await utils.settings.set(msg.guild.id, "guild", "waifuAlert", args[2]=="true"?1:0);
-					} else if (args[1] == "gamblingAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
-						await utils.settings.set(msg.guild.id, "guild", "gamblingAlert", args[2]=="true"?1:0);
-					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
-					return msg.channel.send(`${msg.author.tag}, you have successfully modified ${msg.guild.name}'s ${args[1]} setting to ${args[2]}`);
-				} else return msg.channel.send(`${msg.author.username}, that is not a valid operant. Valid operants are self and server`);
+				}
+				value = value.toLowerCase();
+				
+				if (value === "null") {
+					await utils.sql.all("DELETE FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					return msg.channel.send("Setting deleted.");
+				}
+
+				if (setting.type == "boolean") {
+					let value = args[2].toLowerCase();
+					if (!["true", "false"].includes(value)) return msg.channel.send(
+						"Command syntax is `&settings <scope> <name> <value>`. "
+						+"The setting `"+settingName+"` is a boolean, and so your `"+value+"` must be either `true` or `false`."
+					);
+					let value_result = args[2] == "true" ? "1" : "0";
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else if (setting.type == "string") {
+					let value = args[2].toLowerCase();
+					if (value.length > 50) return msg.channel.send("That setting value is too long. It must not be more than 50 characters.");
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else {
+					throw new Error("Invalid reference data type for setting `"+settingName+"`");
+				}
 			}
 		},
 
