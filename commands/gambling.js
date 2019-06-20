@@ -70,8 +70,8 @@ module.exports = function(passthrough) {
 					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					bet = money;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
-					bet = Math.floor(parseInt(args[0]));
+					bet = Math.floor(Number(args[0]));
+					if (isNaN(bet)) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
 					if (bet < 2) return msg.channel.send(client.lang.input.money.small(msg, "bet", 2));
 					if (bet > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
@@ -141,8 +141,8 @@ module.exports = function(passthrough) {
 					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					bet = money;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
-					bet = Math.floor(parseInt(args[0]));
+					bet = Math.floor(Number(args[0]));
+					if (isNaN(bet)) return msg.channel.send(client.lang.input.invalid(msg, "bet"));
 					if (bet < 1) return msg.channel.send(client.lang.input.money.small(msg, "bet", 1));
 					if (bet > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
@@ -305,6 +305,23 @@ module.exports = function(passthrough) {
 				if (memsettings && memsettings.gamblingAlert == 0) return;
 				if (guildsettings && guildsettings.gamblingAlert == 0) return;
 				return member.send(`${String(msg.author)} has given you ${gift} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked(msg)));
+			}
+		},
+
+		"wheel": {
+			usage: "amount",
+			description: "A Wheel of Fortune for a chance at making more Discoins",
+			aliases: ["wheel", "wof"],
+			category: "gambling",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
+			async process(msg, suffix) {
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				let money = await utils.coinsManager.get(msg.author.id);
+				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide an amount to spin the wheel with`);
+				return msg.channel.send(`Developer was too lazy to even add a random emoji. Maybe check back tomorrow.`);
 			}
 		}
 	}

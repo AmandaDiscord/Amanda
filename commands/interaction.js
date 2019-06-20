@@ -33,7 +33,7 @@ module.exports = function(passthrough) {
 				if (mem2 == null) return msg.channel.send(`The second member provided was not found`);
 				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
 				msg.channel.sendTyping();
-				let canvas = await Jimp.read("./images/300x100.png");
+				let canvas = await Jimp.read("./images/transparent/300x100.png");
 				let pfp1 = await Jimp.read({ url: mem1.user.displayAvatarURL });
 				let pfp2 = await Jimp.read({ url: mem2.user.displayAvatarURL });
 				let heart = await Jimp.read("./images/emojis/heart.png");
@@ -215,7 +215,7 @@ module.exports = function(passthrough) {
 					if (isNaN(num)) amount = 10;
 					else amount = Math.floor(num)*10;
 				}
-				let all = await utils.sql.all("SELECT * FROM waifu WHERE userID !=? ORDER BY price DESC LIMIT ?", [client.user.id, amount]);
+				let all = await utils.sql.all("SELECT * FROM waifu ORDER BY price DESC LIMIT ?", amount);
 				if (amount > 10) all = all.slice(amount-10, amount);
 				let users = [];
 				for (let row of all) {

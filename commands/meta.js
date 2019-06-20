@@ -301,21 +301,38 @@ module.exports = function(passthrough) {
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-				let money = await utils.coinsManager.get(msg.author.id);
-				let index = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
+				let badge;
+				if (await utils.hasPermission(user, "owner")) badge = await Jimp.read("./images/badges/Developer.png");
+				else if (await utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id)) badge = await Jimp.read("./images/badges/Donator.png");
+				else badge = await Jimp.read("./images/36393E.png");
+				let money = await utils.coinsManager.get(user.id);
+				let info = await utils.waifu.get(user.id);
+				let heart;
+				if (info.waifu && info.waifu.id) {
+					if (info.claimer && info.claimer.id == info.waifu.id) heart = await Jimp.read("./images/emojis/pixel-heart.png");
+					else heart = await Jimp.read("./images/emojis/pixel-heart-broken.png");
+				} else if (user.id == client.user.id) heart = await Jimp.read("./images/emojis/pixel-heart.png");
+				else heart = await Jimp.read("./images/emojis/pixel-heart-broken.png");
 				msg.channel.sendTyping();
 				let font = await Jimp.loadFont(".fonts/Whitney-25.fnt");
-				let font2 = await Jimp.loadFont(".fonts/Whitney-20.fnt");
-				let canvas = await Jimp.read("./images/profile.png");
+				let font2 = await Jimp.loadFont(".fonts/profile/Whitney-20-aaa.fnt");
+				let canvas = await Jimp.read("./images/defaultbg.png");
 				let avatar = await Jimp.read(user.avatarURL);
-				await avatar.resize(76, 76);
+				let profile = await Jimp.read("./images/profile.png");
 
-				await canvas.composite(avatar, 52, 47);
+				await canvas.resize(800, 500);
+				await badge.resize(50, 50);
+				await avatar.resize(111, 111);
 
-				await canvas.print(font, 205, 70, user.tag);
-				await canvas.print(font, 52, 130, "Discoins:");
-				await canvas.print(font2, 52, 160, `${money}`);
-				await canvas.print(font2, 52, 250, `Position on Leaderboard: ${index}`);
+				await canvas.composite(avatar, 32, 85);
+				await canvas.composite(profile, 0, 0);
+				await canvas.composite(badge, 166, 113);
+
+				await canvas.print(font, 508, 72, user.username);
+				await canvas.print(font2, 508, 104, `#${user.discriminator}`);
+				await canvas.print(font2, 550, 163, money);
+				await canvas.composite(heart, 508, 207);
+				await canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu?info.waifu.tag:"Nobody, yet");
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
 				image = new Discord.Attachment(buffer, "profile.png");
