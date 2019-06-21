@@ -118,7 +118,7 @@ module.exports = function(passthrough) {
 					if (!money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					claim = money;
 				} else {
-					claim = Math.floor(parseInt(args[0]));
+					claim = Math.floor(Number(args[0]));
 					if (isNaN(claim)) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					if (claim < 1) return msg.channel.send(client.lang.input.money.small(msg, "claim", 1));
 					if (claim > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
@@ -127,7 +127,7 @@ module.exports = function(passthrough) {
 				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(client.lang.input.waifu.doubleClaim(msg));
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
-				let face = faces[Math.floor(Math.random() * faces.length)];
+				let face = faces.random()
 				let embed = new Discord.RichEmbed()
 					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${client.lang.emoji.discoin}`)
 					.setColor("36393E")
@@ -153,7 +153,7 @@ module.exports = function(passthrough) {
 				let info = await utils.waifu.get(msg.author.id);
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
 				let faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"];
-				let face = faces[Math.floor(Math.random() * faces.length)];
+				let face = faces.random();
 				await utils.waifu.unbind(msg.author.id);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
 				let memsettings = await utils.settings.get(utils.waifu.id);
@@ -185,8 +185,8 @@ module.exports = function(passthrough) {
 					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					gift = money;
 				} else {
-					if (isNaN(args[0])) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
-					gift = Math.floor(parseInt(args[0]));
+					gift = Math.floor(Number(args[0]));
+					if (isNaN(gift)) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
 					if (gift < 1) return msg.channel.send(client.lang.input.money.small(msg, "gift", 1));
 					if (gift > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
 				}
@@ -370,7 +370,7 @@ module.exports = function(passthrough) {
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
 		let member = await msg.guild.findMember(msg, suffix);
 		if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-		if (member.user.id == msg.author.id) return msg.channel.send(responses[Math.floor(Math.random() * responses.length)]);
+		if (member.user.id == msg.author.id) return msg.channel.send(responses.random());
 		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
 		let fetch;
 		let description = "";

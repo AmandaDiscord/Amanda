@@ -41,7 +41,7 @@ module.exports = function(passthrough) {
 					if (Math.random() < winChance/100) {
 						slots[i] = "heart";
 					} else {
-						slots[i] = array[Math.floor(Math.random() * array.length)];
+						slots[i] = array.random();
 					}
 				}
 				let font = await Jimp.loadFont(".fonts/Whitney-20.fnt");
@@ -112,7 +112,7 @@ module.exports = function(passthrough) {
 			 */
 			process: function(msg) {
 				let array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
-				let flip = array[Math.floor(Math.random() * array.length)];
+				let flip = array.random()
 				return msg.channel.send(`You flipped ${flip}`);
 			}
 		},
@@ -289,7 +289,7 @@ module.exports = function(passthrough) {
 					if (authorCoins == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
 					gift = authorCoins;
 				} else {
-					gift = Math.floor(parseInt(args[0]));
+					gift = Math.floor(Number(args[0]));
 					if (isNaN(gift)) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
 					if (gift < 1) return msg.channel.send(client.lang.input.money.small(msg, "gift", 1));
 					if (gift > authorCoins) return msg.channel.send(client.lang.external.money.insufficient(msg));
@@ -321,7 +321,44 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let money = await utils.coinsManager.get(msg.author.id);
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide an amount to spin the wheel with`);
-				return msg.channel.send(`Developer was too lazy to even add a random emoji. Maybe check back tomorrow.`);
+				let amount;
+				if (suffix == "all") {
+					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
+					amount = money;
+				} else {
+					amount = Math.floor(Number(suffix));
+					if (isNaN(amount)) return msg.channel.send(client.lang.input.invalid(msg, "amount"));
+					if (amount < 2) return msg.channel.send(client.lang.input.money.small(msg, "amount", 2));
+					if (amount > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
+				}
+				msg.channel.sendTyping();
+
+				let choices = ["0.1", "0.2", "0.3", "0.5", "1.2", "1.5", "1.7", "2.4"];
+				let choice = choices.random();
+				let coords;
+				if (choice == "0.1") coords = [-125, 185, 230];
+				else if (choice == "0.2") coords = [-50, 185, 200];
+				else if (choice == "0.3") coords = [-80, 210, 250];
+				else if (choice == "0.5") coords = [80, 230, 250];
+				else if (choice == "1.2") coords = [8, 253, 233];
+				else if (choice == "1.5") coords = [14, 208, 187];
+				else if (choice == "1.7") coords = [-18, 230, 187];
+				else if (choice == "2.4") coords = [50, 245, 200];
+
+				let canvas = await Jimp.read("./images/wheel.png");
+				let arrow = await Jimp.read("./images/emojis/triangle.png");
+
+				let [rotation, x, y] = coords;
+
+				await arrow.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR);
+				await arrow.rotate(rotation);
+
+				await canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY);
+
+				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				image = new Discord.Attachment(buffer, "wheel.png");
+				await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount));
+				return msg.channel.send(`${msg.author.tag} bet ${amount} discoins and got ${Math.round(amount * Number(choice))} back ${client.lang.emoji.discoin}`, {files: [image]});
 			}
 		}
 	}

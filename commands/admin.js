@@ -26,7 +26,7 @@ module.exports = function(passthrough) {
 					if (!depth) {
 						depth = 0;
 					} else {
-						depth = Math.floor(parseInt(depth));
+						depth = Math.floor(Number(depth));
 						if (isNaN(depth)) depth = 0;
 						suffix = suffix.split("--depth:")[0];
 					}
@@ -95,7 +95,7 @@ module.exports = function(passthrough) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				if (!args[0]) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
-				let award = Math.floor(parseInt(args[0]));
+				let award = Math.floor(Number(args[0]));
 				if (isNaN(award)) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
