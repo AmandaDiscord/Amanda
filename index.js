@@ -5,4 +5,7 @@ const utils = require("./modules/util.js");
 require("./modules/prototypes.js");
 const commands = {};
 let reloadEvent = new (require("events").EventEmitter)();
-require("./loader.js")({ Discord, client, config, utils, commands, reloadEvent }).then(() => { client.login(config.bot_token); });
+require("./loader.js")({ Discord, client, config, utils, commands, reloadEvent }).then(() => {
+	console.log("Loading complete. Attempting to login");
+	client.login(config.bot_token);
+});

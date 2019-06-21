@@ -128,7 +128,12 @@ module.exports = function(passthrough) {
 		});
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(row => {
-				client.channels.get(row.channelID).send("<@"+row.mentionID+"> Restarted! Uptime: "+process.uptime().humanize("sec"));
+				let channel = client.channels.get(row.channelID);
+				if (!channel) {
+					let user = client.users.get(row.mentionID);
+					if (!user) console.log(`Could not notify ${row.mentionID}`);
+					else user.send("Restarted! Uptime: "+process.uptime().humanize("sec"));
+				} else channel.send("<@"+row.mentionID+"> Restarted! Uptime: "+process.uptime().humanize("sec"));
 			});
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id]);
 		});
