@@ -151,8 +151,23 @@ module.exports = function(passthrough) {
 						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>\n`+
 						`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nWanna donate? Check out her [Patreon](https://www.patreon.com/papiophidian)`)
+					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nWanna donate? Check out her [Patreon](https://www.patreon.com/papiophidian) or make a 1 time donation through [PayPal](https://paypal.me/papiophidian).`)
 					.setColor("36393E");
+				return msg.channel.send(embed);
+			}
+		},
+
+		"donate": {
+			usage: "none",
+			description: "Get information on how to donate",
+			aliases: ["donate", "patreon"],
+			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: function(msg) {
+				let embed = new Discord.RichEmbed().setColor("36393E").setTitle("Thinking of donating? :heart:")
+				.setDescription("I'm excited that you're possibly interested in supporting my creators. If you're interested in making monthly donations, you may at [Patreon](https://www.patreon.com/papiophidian) or If you're interested in a one time donation, you can donate through [PayPal](https://paypal.me/papiophidian)\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my [Support Server](https://discord.gg/zhthQjH) and get a distinguishing donor badge on &profile");
 				return msg.channel.send(embed);
 			}
 		},
@@ -345,6 +360,10 @@ module.exports = function(passthrough) {
 			description: "Modify settings Amanda will use for yourself or server wide",
 			aliases: ["settings"],
 			category: "configuration",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let args = suffix.split(" ");
 				if (msg.channel.type == "dm") {

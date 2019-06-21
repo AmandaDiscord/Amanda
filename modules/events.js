@@ -172,8 +172,11 @@ module.exports = function(passthrough) {
 	 */
 	async function manageMemberUpdate(oldMember, newMember) {
 		if (newMember.guild.id != "475599038536744960") return;
-		if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1]);
-		else if (oldMember.roles.get("475599593879371796") && !newMember.roles.get("475599593879371796")) await utils.sql.all("DELETE FROM Premium WHERE userID =?", newMember.id);
+		if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) {
+			let row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id);
+			if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1]);
+			else return;
+		}
 		else return;
 	}
 
