@@ -216,7 +216,7 @@ module.exports = function(passthrough) {
 			process: async function(msg) {
 				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let row = await utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id);
-				let donor = await utils.sql.all("SELECT * FROM Premium WHERE userID =?", msg.author.id);
+				let donor = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id);
 				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
 					let amount;
 					if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500)+1;
