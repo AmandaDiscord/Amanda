@@ -388,16 +388,17 @@ module.exports = function(passthrough) {
 				])
 
 				avatar.resize(111, 111);
-
+				
 				let heartType = getHeartType(user, info)
 				let heart = images.get("heart-"+heartType)
-
+				
 				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
+				let badgeImage = images.get(badge).resize(50, 50)
 
 				let canvas = images.get("canvas")
 				canvas.composite(avatar, 32, 85);
 				canvas.composite(images.get("profile"), 0, 0);
-				canvas.composite(images.get(badge), 166, 113);
+				canvas.composite(badgeImage, 166, 113);
 
 
 				let font = images.get("font")
