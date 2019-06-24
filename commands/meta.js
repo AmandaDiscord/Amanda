@@ -22,6 +22,49 @@ module.exports = function(passthrough) {
 		clearTimeout(sendStatsTimeout);
 	});
 
+	class JIMPStorage {
+		constructor() {
+			this.store = new Map()
+		}
+		save(name, type, value) {
+			if (type == "file") {
+				let promise = Jimp.read(value)
+				this.savePromise(name, promise)
+			} else if (type == "font") {
+				let promise = Jimp.loadFont(value)
+				this.savePromise(name, promise)
+			}
+		}
+		savePromise(name, promise) {
+			this.store.set(name, promise)
+			promise.then(result => {
+				this.store.set(name, result)
+			})
+		}
+		get(name) {
+			let value = this.store.get(name)
+			if (value instanceof Promise) return value
+			else return Promise.resolve(value)
+		}
+		getAll(names) {
+			let result = new Map()
+			return Promise.all(names.map(name =>
+				this.get(name).then(value => result.set(name, value))
+			)).then(() => result)
+		}
+	}
+
+	let profileStorage = new JIMPStorage()
+	profileStorage.save("canvas", "file", "./images/defaultbg.png")
+	profileStorage.save("profile", "file", "./images/profile.png")
+	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt")
+	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
+	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
+	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
+	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
+	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
+	profileStorage.save("badge-none", "file", "./images/36393E.png")
+
 	/**
 	 * A function to send stats to the database
 	 * @param {Discord.Message} msg A Discord managed message object
@@ -39,6 +82,22 @@ module.exports = function(passthrough) {
 		await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime]);
 		if (msg) msg.react("👌");
 		return console.log("Sent stats.", new Date().toUTCString());
+	}
+
+	function getHeartType(user, info) {
+		// Full hearts for Amanda! Amanda loves everyone.
+		if (user.id == client.user.id) return "full";
+		// User doesn't love anyone. Sad.
+		if (!info.waifu) return "broken";
+		// Full heart if user loves Amanda.
+		if (info.waifu.id == client.user.id) return "full";
+		// User isn't loved by anyone. Oh dear...
+		if (!info.claimer) return "broken";
+		// If we get here, then the user both loves and is loved back, but not by Amanda.
+		// User is loved back by the same person
+		if (info.waifu.id == info.claimer.id) return "full";
+		// So the user must be loved by someone else.
+		return "broken";
 	}
 
 	return {
@@ -316,38 +375,38 @@ module.exports = function(passthrough) {
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
-				let badge;
-				if (await utils.hasPermission(user, "owner")) badge = await Jimp.read("./images/badges/Developer.png");
-				else if (await utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id)) badge = await Jimp.read("./images/badges/Donator.png");
-				else badge = await Jimp.read("./images/36393E.png");
-				let money = await utils.coinsManager.get(user.id);
-				let info = await utils.waifu.get(user.id);
-				let heart;
-				if (info.waifu && info.waifu.id) {
-					if (info.claimer && info.claimer.id == info.waifu.id) heart = await Jimp.read("./images/emojis/pixel-heart.png");
-					else heart = await Jimp.read("./images/emojis/pixel-heart-broken.png");
-				} else if (user.id == client.user.id) heart = await Jimp.read("./images/emojis/pixel-heart.png");
-				else heart = await Jimp.read("./images/emojis/pixel-heart-broken.png");
-				msg.channel.sendTyping();
-				let font = await Jimp.loadFont(".fonts/Whitney-25.fnt");
-				let font2 = await Jimp.loadFont(".fonts/profile/Whitney-20-aaa.fnt");
-				let canvas = await Jimp.read("./images/defaultbg.png");
-				let avatar = await Jimp.read(user.avatarURL);
-				let profile = await Jimp.read("./images/profile.png");
 
-				await canvas.resize(800, 500);
-				await badge.resize(50, 50);
-				await avatar.resize(111, 111);
+				msg.channel.sendTyping()
 
-				await canvas.composite(avatar, 32, 85);
-				await canvas.composite(profile, 0, 0);
-				await canvas.composite(badge, 166, 113);
+				let [isOwner, isPremium, money, info, avatar, images] = await Promise.all([
+					utils.hasPermission(user, "owner"),
+					utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
+					utils.coinsManager.get(user.id),
+					utils.waifu.get(user.id),
+					Jimp.read(user.sizedAvatarURL(128)),
+					profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none"])
+				])
 
-				await canvas.print(font, 508, 72, user.username);
-				await canvas.print(font2, 508, 104, `#${user.discriminator}`);
-				await canvas.print(font2, 550, 163, money);
-				await canvas.composite(heart, 508, 207);
-				await canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu?info.waifu.tag:"Nobody, yet");
+				avatar.resize(111, 111);
+
+				let heartType = getHeartType(user, info)
+				let heart = images.get("heart-"+heartType)
+
+				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
+
+				let canvas = images.get("canvas")
+				canvas.composite(avatar, 32, 85);
+				canvas.composite(images.get("profile"), 0, 0);
+				canvas.composite(images.get(badge), 166, 113);
+
+
+				let font = images.get("font")
+				let font2 = images.get("font2")
+				canvas.print(font, 508, 72, user.username);
+				canvas.print(font2, 508, 104, `#${user.discriminator}`);
+				canvas.print(font2, 550, 163, money);
+				canvas.composite(heart, 508, 207);
+				canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu?info.waifu.tag:"Nobody, yet");
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
 				image = new Discord.Attachment(buffer, "profile.png");

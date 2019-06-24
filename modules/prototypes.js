@@ -146,6 +146,11 @@ Discord.User.prototype.__defineGetter__('smallAvatarURL', function() {
 	else return `https://cdn.discordapp.com/embed/avatars/${this.discriminator % 5}.png`;
 });
 
+Discord.User.prototype.sizedAvatarURL = function(size = 128, preferredFormat = "png") {
+	if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.${preferredFormat}?size=${size}`;
+	else return this.displayAvatarURL;
+}
+
 /**
  * A Discord.User status indicator as an emoji
  */
