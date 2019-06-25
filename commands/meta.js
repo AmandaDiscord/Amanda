@@ -64,6 +64,7 @@ module.exports = function(passthrough) {
 	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
 	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
 	profileStorage.save("badge-none", "file", "./images/36393E.png")
+	profileStorage.get("badge-none").then(badge => badge.resize(50, 50))
 
 	/**
 	 * A function to send stats to the database
@@ -393,9 +394,9 @@ module.exports = function(passthrough) {
 				let heart = images.get("heart-"+heartType)
 				
 				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
-				let badgeImage = images.get(badge).resize(50, 50)
+				let badgeImage = images.get(badge)
 
-				let canvas = images.get("canvas")
+				let canvas = images.get("canvas").clone()
 				canvas.composite(avatar, 32, 85);
 				canvas.composite(images.get("profile"), 0, 0);
 				canvas.composite(badgeImage, 166, 113);
