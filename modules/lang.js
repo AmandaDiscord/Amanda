@@ -5,6 +5,10 @@ let langResultCache;
 module.exports = (passthrough) => {
 	let { client } = passthrough;
 
+	/**
+	 * @param {Discord.Message} msg
+	 * @param {String} sentence
+	 */
 	function authorString(msg, sentence) {
 		if (msg) return msg.author.username+", "+sentence;
 		else return sentence[0].toUpperCase()+sentence.slice(1);
@@ -12,9 +16,6 @@ module.exports = (passthrough) => {
 
 	if (!langResultCache) {
 
-		/**
-		 * A collection of strings which purpose is to unify messages returned by the client
-		 */
 		var lang = {
 			apiError: error => "API did not return any data.```\n"+error+"```",
 

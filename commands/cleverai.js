@@ -170,5 +170,5 @@ module.exports = function(passthrough) {
 				msg.channel.send(clever_message);
 			}
 		}
-	})
+	});
 }

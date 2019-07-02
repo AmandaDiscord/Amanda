@@ -16,14 +16,10 @@ module.exports = (passthrough) => {
 
 	if (!utilsResultCache) {
 		var utils = {
-			/**
-			 * Main interface for MySQL connection
-			 */
 			sql: {
 				/**
-				 * Executes an SQL statement
-				 * @param {String} statement The SQL statement
-				 * @param {Array} prepared An array of values that coresponds with the SQL statement
+				 * @param {String} statement
+				 * @param {Array<any>} prepared
 				 */
 				"all": function(string, prepared, connection, attempts) {
 					if (!attempts) attempts = 2;
@@ -42,28 +38,23 @@ module.exports = (passthrough) => {
 					});
 				},
 				/**
-				 * Gets a row based on the SQL statement
-				 * @param {String} statement The SQL statement
-				 * @param {Array} prepared An array of values that coresponds with the SQL statement
+				 * @param {String} statement
+				 * @param {Array<any>} prepared
 				 */
 				"get": async function(string, prepared, connection) {
 					return (await utils.sql.all(string, prepared, connection))[0];
 				}
 			},
-
 			/**
-			 * Gets the connection to the MySQL database
-			 * @returns {Promise<Object>} Database Connection
+			 * @returns {Promise<any>}
 			 */
 			getConnection: function() {
 				return db.getConnection();
 			},
-
-			/**
-			 * Fetches a Discord.User then queues messages to be sent to them
-			 * @param {String} userID A Discord.User ID
-			 */
 			DMUser: class DMUser {
+				/**
+				 * @param {Discord.Snowflake} userID
+				 */
 				constructor(userID) {
 					this.userID = userID;
 					this.user = undefined;
@@ -97,13 +88,21 @@ module.exports = (passthrough) => {
 					});
 				}
 			},
-
 			settings: {
+				/**
+				 * @param {Discord.Snowflake} ID
+				 */
 				get: async function(ID) {
 					let st = await utils.sql.get("SELECT * FROM settings WHERE userID =? OR guildID =?", [ID, ID]);
 					if (!st) return false;
 					return { waifuAlert: st.waifuAlert, gamblingAlert: st.gamblingAlert };
 				},
+				/**
+				 * @param {Discord.Snowflake} ID
+				 * @param {String} type
+				 * @param {String} setting
+				 * @param {any} value
+				 */
 				set: async function(ID, type, setting, value) {
 					let st = await utils.settings.get(ID);
 					if (type == "user") {
@@ -118,8 +117,12 @@ module.exports = (passthrough) => {
 					}
 				}
 			},
-
 			waifu: {
+				/**
+				 * @param {Discord.Snowflake} userID
+				 * @param {Object} options
+				 * @param {Boolean} options.basic
+				 */
 				get: async function(userID, options) {
 					const emojiMap = {
 						"Flowers": "🌻",
@@ -161,6 +164,11 @@ module.exports = (passthrough) => {
 					}
 					return { claimer, price, waifu, waifuPrice, gifts };
 				},
+				/**
+				 * @param {Discord.Snowflake} claimer
+				 * @param {Discord.Snowflake} claimed
+				 * @param {Number} price
+				 */
 				bind: async function(claimer, claimed, price) {
 					await Promise.all([
 						utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [claimer, claimed]),
@@ -168,17 +176,31 @@ module.exports = (passthrough) => {
 					]);
 					return utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [claimer, claimed, price]);
 				},
+				/**
+				 * @param {Discord.Snowflake} user
+				 * @returns {Promise<undefined>}
+				 */
 				unbind: async function(user) {
 					await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [user]);
 					return undefined;
 				},
+				/**
+				 * @param {Discord.Snowflake} user
+				 * @param {Number} amount
+				 * @returns {Promise<undefined>}
+				 */
 				transact: async function(user, amount) {
 					let waifu = await this.get(user, { basic: true });
 					await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + amount, user]);
 					return undefined;
 				}
 			},
-
+			/**
+			 * @param {events.EventEmitter} target
+			 * @param {String} name
+			 * @param {String} filename
+			 * @param {Function} code
+			 */
 			addTemporaryListener: function(target, name, filename, code) {
 				console.log("added event "+name)
 				target.on(name, code);
@@ -187,8 +209,11 @@ module.exports = (passthrough) => {
 					console.log("removed event "+ name);
 				});
 			},
-
 			coinsManager: {
+				/**
+				 * @param {Discord.Snowflake} userID
+				 * @returns {Promise<Number>}
+				 */
 				"get": async function(userID) {
 					let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 					if (row) return row.coins;
@@ -197,6 +222,10 @@ module.exports = (passthrough) => {
 						return startingCoins;
 					}
 				},
+				/**
+				 * @param {Discord.Snowflake} userID
+				 * @param {Number} value
+				 */
 				"set": async function(userID, value) {
 					let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 					if (row) {
@@ -206,6 +235,10 @@ module.exports = (passthrough) => {
 					}
 					return;
 				},
+				/**
+				 * @param {Discord.Snowflake} userID
+				 * @param {Number} value
+				 */
 				"award": async function(userID, value) {
 					let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 					if (row) {
@@ -215,7 +248,6 @@ module.exports = (passthrough) => {
 					}
 				}
 			},
-
 			waifuGifts: {
 				"Flowers": {
 					price: 800,
@@ -260,14 +292,10 @@ module.exports = (passthrough) => {
 					description: "A moment to never forget."
 				}
 			},
-			/**
-			 * An object-oriented improvement upon setTimeout
-			 */
 			BetterTimeout: class BetterTimeout {
 				/**
-				 * A better version of global#setTimeout
-				 * @param {Function} callback Function to execute when the timer expires
-				 * @param {Number} delay Time in milliseconds to set the timer for
+				 * @param {Function} callback
+				 * @param {Number} delay
 				 * @constructor
 				 */
 				constructor(callback, delay) {
@@ -281,26 +309,17 @@ module.exports = (passthrough) => {
 						this.timeout = null;
 					}
 				}
-				/**
-				 * Trigger the timeout early. It won't execute again.
-				 */
 				triggerNow() {
 					this.clear();
 					this.callback();
 				}
-				/**
-				 * Clear the timeout. It won't execute at all.
-				 */
 				clear() {
 					this.isActive = false;
 					clearTimeout(this.timeout);
 				}
 			},
 			/**
-			 * Checks if a user or guild has certain permission levels
-			 * @param {(Discord.User|Discord.Guild)} Object An Object of a Discord.User or Discord.Guild
-			 * @param {String} Permission The permission to test if the Snowflake has
-			 * @returns {Boolean} If the Snowflake is allowed to use the provided String permission
+			 * @returns {Boolean}
 			 */
 			hasPermission: async function() {
 				let args = [...arguments];
@@ -323,6 +342,17 @@ module.exports = (passthrough) => {
 				if (permissionType == "music") return true;
 				return !!result;
 			},
+			/**
+			 * @param {Discord.Snowflake} userID
+			 * @param {String} command
+			 * @param {Object} info
+			 * @param {Number} info.max
+			 * @param {Number} info.min
+			 * @param {Object} info.regen
+			 * @param {Number} info.regen.time
+			 * @param {Number} info.regen.amount
+			 * @param {Number} info.step
+			 */
 			cooldownManager: async function(userID, command, info) {
 				let winChance = info.max;
 				let cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command]);
@@ -336,7 +366,10 @@ module.exports = (passthrough) => {
 				return winChance;
 			},
 			/**
-			 * Creates a progress bar
+			 * @param {Number} length
+			 * @param {Number} value
+			 * @param {Number} max
+			 * @param {String} text
 			 */
 			progressBar: function(length, value, max, text) {
 				if (!text) text = "";
@@ -353,10 +386,9 @@ module.exports = (passthrough) => {
 				return "​" + result; // zwsp + result
 			},
 			/**
-			 * Convert anything to a format suitable for sending as a Discord.Message.
-			 * @param {*} data Something to convert
-			 * @param {Number} depth The depth of the stringification
-			 * @returns {String} The result of the conversion
+			 * @param {any} data
+			 * @param {Number} depth
+			 * @returns {String}
 			 */
 			stringify: async function(data, depth) {
 				if (!depth) depth = 0;
@@ -384,11 +416,19 @@ module.exports = (passthrough) => {
 				}
 				return result;
 			},
+			/**
+			 * @param {Discord.Guild} guild
+			 * @param {any} entry
+			 */
 			addMusicLogEntry: function(guild, entry) {
 				if (!guild.musicLog) guild.musicLog = [];
 				guild.musicLog.unshift(entry);
 				if (guild.musicLog.length > 15) guild.musicLog.pop();
 			},
+			/**
+			 * @param {Date} when
+			 * @param {String} seperator
+			 */
 			getSixTime: function(when, seperator) {
 				let d = new Date(when || Date.now());
 				if (!seperator) seperator = "";

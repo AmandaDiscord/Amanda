@@ -370,7 +370,7 @@ module.exports = function(passthrough) {
 	/**
 	 * @param {Discord.Message} msg
 	 * @param {String} suffix
-	 * @param {Object} source
+	 * @param {any} source
 	 */
 	async function doInteraction(msg, suffix, source) {
 		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);

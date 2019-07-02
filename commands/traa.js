@@ -17,6 +17,9 @@ module.exports = function(passthrough) {
 
 	let cadence = new utils.DMUser("176580265294954507");
 
+	/**
+	 * @param {String} properties
+	 */
 	Object.prototype.sp = function(properties) {
 		let list = properties.split(".");
 		let result = this;
@@ -27,15 +30,11 @@ module.exports = function(passthrough) {
 		return result;
 	}
 
-	reloadEvent.once(__filename, () => {
-		client.removeListener("message", gifDetector);
-	});
-	client.on("message", gifDetector);
+	utils.addTemporaryListener(client, "message", path.basename(__filename), gifDetector);
 
 	let prompts = [];
 
 	/**
-	 * Detects a gif from another bot
 	 * @param {Discord.Message} msg
 	 */
 	async function gifDetector(msg) {

@@ -29,7 +29,7 @@ module.exports = function(passthrough) {
 				if (allowed) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
-					let depth = suffix.split("--depth:")[1]
+					let depth = suffix.split("--depth:")[1];
 					if (!depth) {
 						depth = 0;
 					} else {
@@ -116,5 +116,5 @@ module.exports = function(passthrough) {
 				return member.send(`**${String(msg.author)}** has awarded you ${award} ${lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
-	})
+	});
 }

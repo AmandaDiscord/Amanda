@@ -17,9 +17,6 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), lang);
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
-	/**
-	 * Sends client statistics to the database in an interval
-	 */
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
@@ -31,51 +28,71 @@ module.exports = function(passthrough) {
 
 	class JIMPStorage {
 		constructor() {
-			this.store = new Map()
+			/**
+			 * @type {Map<String, any>}
+			 */
+			this.store = new Map();
 		}
+		/**
+		 * @param {String} name
+		 * @param {String} type
+		 * @param {String} value
+		 */
 		save(name, type, value) {
 			if (type == "file") {
-				let promise = Jimp.read(value)
-				this.savePromise(name, promise)
+				let promise = Jimp.read(value);
+				this.savePromise(name, promise);
 			} else if (type == "font") {
-				let promise = Jimp.loadFont(value)
-				this.savePromise(name, promise)
+				let promise = Jimp.loadFont(value);
+				this.savePromise(name, promise);
 			}
 		}
+		/**
+		 * @param {String} name
+		 * @param {Promise<Jimp>} promise
+		 * @returns {Promise<Jimp>}
+		 */
 		savePromise(name, promise) {
-			this.store.set(name, promise)
+			this.store.set(name, promise);
 			promise.then(result => {
-				this.store.set(name, result)
-			})
+				this.store.set(name, result);
+			});
 		}
+		/**
+		 * @param {String} name
+		 * @returns {Promise<Jimp>}
+		 */
 		get(name) {
-			let value = this.store.get(name)
-			if (value instanceof Promise) return value
-			else return Promise.resolve(value)
+			let value = this.store.get(name);
+			if (value instanceof Promise) return value;
+			else return Promise.resolve(value);
 		}
+		/**
+		 * @param {Array<String>} names
+		 * @returns {Array<Jimp>}
+		 */
 		getAll(names) {
-			let result = new Map()
+			let result = new Map();
 			return Promise.all(names.map(name =>
 				this.get(name).then(value => result.set(name, value))
-			)).then(() => result)
+			)).then(() => result);
 		}
 	}
 
-	let profileStorage = new JIMPStorage()
-	profileStorage.save("canvas", "file", "./images/defaultbg.png")
-	profileStorage.save("profile", "file", "./images/profile.png")
-	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt")
-	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
-	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
-	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
-	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
-	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-	profileStorage.save("badge-none", "file", "./images/36393E.png")
-	profileStorage.get("badge-none").then(badge => badge.resize(50, 50))
+	let profileStorage = new JIMPStorage();
+	profileStorage.save("canvas", "file", "./images/defaultbg.png");
+	profileStorage.save("profile", "file", "./images/profile.png");
+	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt");
+	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt");
+	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png");
+	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png");
+	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png");
+	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png");
+	profileStorage.save("badge-none", "file", "./images/36393E.png");
+	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
 
 	/**
-	 * A function to send stats to the database
-	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {Discord.Message} msg
 	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
@@ -135,7 +152,6 @@ module.exports = function(passthrough) {
 				return nmsg.edit({embed});
 			}
 		},
-
 		"ping": {
 			usage: "none",
 			description: "Gets latency to Discord",
@@ -152,7 +168,6 @@ module.exports = function(passthrough) {
 				return nmsg.edit({embed});
 			}
 		},
-
 		"forcestatupdate": {
 			usage: "none",
 			description: "",
@@ -165,7 +180,6 @@ module.exports = function(passthrough) {
 				sendStats(msg);
 			}
 		},
-
 		"restartnotify": {
 			usage: "none",
 			description: "",
@@ -179,7 +193,6 @@ module.exports = function(passthrough) {
 				msg.react("✅");
 			}
 		},
-
 		"invite": {
 			usage: "none",
 			description: "Sends the bot invite link to you via DMs",
@@ -197,7 +210,6 @@ module.exports = function(passthrough) {
 				} catch (reason) { return msg.channel.send(lang.dm.failed(msg));}
 			}
 		},
-
 		"info": {
 			usage: "none",
 			description: "Displays information about Amanda",
@@ -223,7 +235,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(embed);
 			}
 		},
-
 		"donate": {
 			usage: "none",
 			description: "Get information on how to donate",
@@ -238,7 +249,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(embed);
 			}
 		},
-
 		"commits": {
 			usage: "none",
 			description: "Gets the latest git commits to Amanda",
@@ -260,7 +270,6 @@ module.exports = function(passthrough) {
 				);
 			}
 		},
-
 		"privacy": {
 			usage: "none",
 			description: "Details Amanda's privacy statement",
@@ -278,7 +287,6 @@ module.exports = function(passthrough) {
 				} catch (reason) { return msg.channel.send(lang.dm.failed(msg)); }
 			}
 		},
-
 		"user": {
 			usage: "<user>",
 			description: "Provides information about a user",
@@ -323,7 +331,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"avatar": {
 			usage: "<user>",
 			description: "Gets a user's avatar",
@@ -346,7 +353,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"wumbo": {
 			usage: "<emoji>",
 			description: "Makes an emoji bigger",
@@ -366,7 +372,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"profile": {
 			usage: "<user>",
 			description: "Get profile information about someone",
@@ -422,7 +427,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({files: [image]});
 			}
 		},
-
 		"settings": {
 			usage: "<self|server> <view|settings name> <true or false>",
 			description: "Modify settings Amanda will use for yourself or server wide",
@@ -471,7 +475,6 @@ module.exports = function(passthrough) {
 				} else return msg.channel.send(`${msg.author.username}, that is not a valid operant. Valid operants are self and server`);
 			}
 		},
-
 		"help": {
 			usage: "<command>",
 			description: "Your average help command",
@@ -605,5 +608,5 @@ module.exports = function(passthrough) {
 				}
 			}
 		}
-	})
+	});
 }

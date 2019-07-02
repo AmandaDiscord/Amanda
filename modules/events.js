@@ -9,18 +9,17 @@ let lastAttemptedLogins = []
  */
 module.exports = function(passthrough) {
 	let { client, config, commands, reloadEvent, reloader, reactionMenus, queueManager } = passthrough;
-	let stdin = process.stdin;
 	let prefixes = [];
 	let statusPrefix = "&";
 	let starting = true;
 	if (client.readyAt != null) starting = false;
 
-	let utils = require("./utilities.js")(passthrough)
-	reloader.useSync("./modules/utilities.js", utils)
+	let utils = require("./utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
-	if (!starting) manageReady()
-	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
+	utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage);
+	if (!starting) manageReady();
+	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
 	utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent);
 
 	utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (oldMessage, data) => {
@@ -34,18 +33,18 @@ module.exports = function(passthrough) {
 
 	utils.addTemporaryListener(client, "disconnect", path.basename(__filename), (reason) => {
 		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
-		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`)
-		lastAttemptedLogins.push(Date.now())
+		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`);
+		lastAttemptedLogins.push(Date.now());
 		new Promise(resolve => {
 			if (lastAttemptedLogins.length >= 3) {
-				let oldest = lastAttemptedLogins.shift()
-				let timePassed = Date.now()-oldest
-				let timeout = 30000
-				if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed)
+				let oldest = lastAttemptedLogins.shift();
+				let timePassed = Date.now()-oldest;
+				let timeout = 30000;
+				if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed);
 			}
 			return resolve()
 		}).then(() => {
-			client.login(config.bot_token)
+			client.login(config.bot_token);
 		})
 	})
 
@@ -70,25 +69,7 @@ module.exports = function(passthrough) {
 			else return;
 		}
 		else return;
-	})
-
-	/*reloadEvent.once(__filename, () => {
-		client.removeListener("message", manageMessage);
-		client.removeListener("messageUpdate", manageEdit);
-		client.removeListener("disconnect", manageDisconnect);
-		client.removeListener("error", manageError);
-		client.removeListener("voiceStateUpdate", manageVoiceStateUpdate);
-		process.removeListener("unhandledRejection", manageRejection);
-		stdin.removeListener("data", manageStdin);
 	});
-	client.on("message", manageMessage);
-	client.on("messageUpdate", manageEdit);
-	client.once("ready", manageReady);
-	client.on("disconnect", manageDisconnect);
-	client.on("voiceStateUpdate", manageVoiceStateUpdate);
-	client.on("guildMemberUpdate", manageMemberUpdate);
-	process.on("unhandledRejection", manageRejection);
-	stdin.on("data", manageStdin);*/
 
 	/**
 	 * @param {Discord.Message} msg
@@ -209,22 +190,17 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * Handles reactions as actions for the Discord.Client to perform
-	 * @param {Array} actions An Array of Objects of actions
+	 * @param {Array<any>} actions
 	 */
 	Discord.Message.prototype.reactionMenu = function(actions) {
 		let message = this;
 		return new ReactionMenu(message, actions);
 	}
 
-	/**
-	 * Class that initiates a Discord.Message reaction menu
-	 */
 	class ReactionMenu {
 		/**
-		 * Create a new ReactionMenu
 		 * @param {Discord.Message} message
-		 * @param {Array} actions
+		 * @param {Array<any>} actions
 		 */
 		constructor(message, actions) {
 			this.message = message;
@@ -251,6 +227,10 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * @param {Discord.MessageReaction} messageReaction
+	 * @param {Discord.User} user
+	 */
 	function reactionEvent(messageReaction, user) {
 		let id = messageReaction.messageID;
 		let emoji = messageReaction.emoji;

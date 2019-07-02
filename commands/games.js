@@ -42,8 +42,8 @@ module.exports = function(passthrough) {
 
 	class TriviaGame {
 		/**
-		 * @param {Discord.Channel} channel
-		 * @param {Object} data
+		 * @param {Discord.TextChannel} channel
+		 * @param {any} data
 		 * @param {String} category
 		 * @constructor
 		 */
@@ -159,7 +159,7 @@ module.exports = function(passthrough) {
 	/**
 	 * @param {String} difficulty "easy", "medium" or "hard"
 	 * @param {Number} size 4-14 inclusive
-	 * @returns {Object}
+	 * @returns {any}
 	 */
 	function sweeper(difficulty, size) {
 		let width = 8,
@@ -345,7 +345,7 @@ module.exports = function(passthrough) {
 
 	/**
 	 * @param {String} body
-	 * @param {Discord.Channel} channel
+	 * @param {Discord.TextChannel} channel
 	 */
 	async function JSONHelper(body, channel) {
 		try {
@@ -360,7 +360,7 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * @param {Discord.Channel} channel
+	 * @param {Discord.TextChannel} channel
 	 * @param {Object} options
 	 * @param {String} options.suffix
 	 * @param {Discord.Message} options.msg

@@ -3,7 +3,7 @@ const dailyCooldownTime = dailyCooldownHours*60*60*1000;
 const Jimp = require("jimp");
 const Discord = require("discord.js");
 require("../types.js");
-const path = require("path")
+const path = require("path");
 
 /**
  * @param {PassthroughType} passthrough
@@ -119,7 +119,7 @@ module.exports = function(passthrough) {
 			 */
 			process: function(msg) {
 				let array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
-				let flip = array.random()
+				let flip = array.random();
 				return msg.channel.send(`You flipped ${flip}`);
 			}
 		},

@@ -1,7 +1,7 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
 require("../types.js");
-const path = require("path")
+const path = require("path");
 
 /**
  * @param {PassthroughType} passthrough
@@ -14,11 +14,11 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), lang);
 
 	/**
-	 * @param {String} host Where the image is coming from
-	 * @param {String} path The API endpoint
+	 * @param {String} host
+	 * @param {String} path
 	 * @param {Discord.Message} msg
-	 * @param {String} emoji The loading animation emoji
-	 * @param {String} footer Embed footer text
+	 * @param {String} emoji
+	 * @param {String} footer
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
