@@ -5,6 +5,7 @@ const net = require("net");
 const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
+const path = require("path");
 require("../types.js");
 
 let voiceEmptyDuration = 20000;
@@ -13,9 +14,10 @@ let voiceEmptyDuration = 20000;
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, utils, reloadEvent } = passthrough;
+	let { config, client, reloadEvent, reloader, commands, queueManager } = passthrough;
 	let youtube = new YouTube(config.yt_api_key);
-	let queueStorage = utils.queueStorage;
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
 
 	/**
 	 * A class representing a local song
@@ -257,8 +259,8 @@ module.exports = function(passthrough) {
 			this.skippable = false;
 			this.auto = false;
 			this.nowPlayingMsg = undefined;
-			this.queueStorage = queueStorage;
-			this.queueStorage.addQueue(this);
+			this.queueManager = queueManager;
+			this.queueManager.addQueue(this);
 			voiceChannel.join().then(connection => {
 				this.connection = connection;
 				if (this.songs.length) this.play();
@@ -312,7 +314,7 @@ module.exports = function(passthrough) {
 		 * Terminates this class instance locally
 		 */
 		destroy() {
-			this.queueStorage.storage.delete(this.id);
+			this.queueManager.storage.delete(this.id);
 		}
 		/**
 		 * Adds a song to this class instance's storage
@@ -412,7 +414,7 @@ module.exports = function(passthrough) {
 				} else {
 					if (result[1]) return this.textChannel.send(result[1]);
 				}
-				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
+				reloadEvent.emit("musicOut", "queues", queueManager.storage);
 				return result;
 			}
 		}
@@ -458,7 +460,7 @@ module.exports = function(passthrough) {
 			dispatcher.once("start", async () => {
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
-				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
+				reloadEvent.emit("musicOut", "queues", queueManager.storage);
 				let dispatcherEndCode = new Function();
 				let updateProgress = () => {
 					if (this.songs[0]) return this.nowPlayingMsg.edit(this.getNPEmbed());
@@ -591,16 +593,16 @@ module.exports = function(passthrough) {
 
 	utils.addTemporaryListener(reloadEvent, "music", __filename, function(action) {
 		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queueStorage.storage);
+			reloadEvent.emit("musicOut", "queues", queueManager.storage);
 		} else if (action == "getQueue") {
 			let serverID = [...arguments][1];
 			if (!serverID) return;
-			let queue = queueStorage.storage.get(serverID);
+			let queue = queueManager.storage.get(serverID);
 			if (!queue) return;
 			reloadEvent.emit("musicOut", "queue", queue);
 		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
 			let [serverID, callback] = [...arguments].slice(1);
-			let queue = queueStorage.storage.get(serverID);
+			let queue = queueManager.storage.get(serverID);
 			if (!queue) return callback([400, "Server is not playing music"]);
 			let result = queue[action](true);
 			if (result[0]) callback([200, result[1]]);
@@ -609,7 +611,7 @@ module.exports = function(passthrough) {
 	});
 
 	async function handleSong(song, textChannel, voiceChannel, insert) {
-		let queue = queueStorage.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
+		let queue = queueManager.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
 		queue.addSong(song, insert);
 	}
 
@@ -684,7 +686,7 @@ module.exports = function(passthrough) {
 				if (batches.length) nextBatch();
 				else {
 					videos.forEach(video => {
-						let queue = queueStorage.storage.get(msg.guild.id);
+						let queue = queueManager.storage.get(msg.guild.id);
 						let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
 						handleSong(song, msg.channel, voiceChannel);
 					});
@@ -971,7 +973,7 @@ module.exports = function(passthrough) {
 		});
 	}
 
-	return {
+	Object.assign(commands, {
 		"musictoken": {
 			usage: "none",
 			description: "Assign a login token for use on Amanda's web dashboard",
@@ -1030,7 +1032,7 @@ module.exports = function(passthrough) {
 					return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing ${owner.tag}`);
 				}
 				let args = suffix.split(" ");
-				let queue = queueStorage.storage.get(msg.guild.id);
+				let queue = queueManager.storage.get(msg.guild.id);
 				const allowedSubcommands = ["q", "queue", "n", "now", "pl", "playlist", "playlists"];
 				let voiceChannel = await detectVoiceChannel(msg, !allowedSubcommands.includes(args[0].toLowerCase()));
 				if (!voiceChannel && !allowedSubcommands.includes(args[0].toLowerCase())) {
@@ -1155,7 +1157,7 @@ module.exports = function(passthrough) {
 								if (!queue) return;
 								queue.songs = [];
 								queue.connection.dispatcher.end();
-								reloadEvent.emit("musicOut", "queues", queueStorage.storage);
+								reloadEvent.emit("musicOut", "queues", queueManager.storage);
 							}}]);
 						}).catch(async error => {
 							stashmsg.edit(await utils.stringify(error));
@@ -1372,5 +1374,5 @@ module.exports = function(passthrough) {
 				} else return msg.channel.send(client.lang.genericInvalidAction(msg));
 			}
 		}
-	}
+	})
 }

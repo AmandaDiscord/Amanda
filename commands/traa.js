@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const path = require("path");
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
@@ -9,7 +10,10 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils, reloadEvent } = passthrough;
+	let { client, reloadEvent, reloader, commands } = passthrough;
+
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
 
 	let cadence = new utils.DMUser("176580265294954507");
 
@@ -74,7 +78,7 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	return {
+	Object.assign(commands, {
 		"storegif": {
 			usage: "<\`gif url\`> <type> <gender> [gender] [...]",
 			description: "Store a GIF in the database",
@@ -139,5 +143,5 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
-	}
+	})
 }

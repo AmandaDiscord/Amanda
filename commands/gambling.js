@@ -3,14 +3,18 @@ const dailyCooldownTime = dailyCooldownHours*60*60*1000;
 const Jimp = require("jimp");
 const Discord = require("discord.js");
 require("../types.js");
+const path = require("path")
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils } = passthrough;
+	let { client, commands, reloader } = passthrough;
 
-	return {
+	let utils = require("../modules/utilities.js")(passthrough)
+	reloader.useSync(path.basename(__filename), utils)
+
+	Object.assign(commands, {
 		"slot": {
 			usage: "<amount>",
 			description: "Runs a random slot machine for a chance at Discoins",
@@ -364,5 +368,5 @@ module.exports = function(passthrough) {
 				return msg.channel.send(`${msg.author.tag} bet ${amount} discoins and got ${Math.round(amount * Number(choice))} back ${client.lang.emoji.discoin}`, {files: [image]});
 			}
 		}
-	}
+	})
 }

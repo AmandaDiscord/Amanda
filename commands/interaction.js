@@ -2,6 +2,7 @@ const Jimp = require("jimp");
 const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
+const path = require("path");
 let responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"];
 require("../types.js");
 
@@ -9,9 +10,12 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils } = passthrough;
+	let { client, commands, reloader } = passthrough;
 
-	let commands = {
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
+
+	let cmds = {
 
 		"ship": {
 			usage: "<mention 1> <mention 2>",
@@ -420,5 +424,5 @@ module.exports = function(passthrough) {
 		}).catch(error => { return msg.channel.send("There was an error: ```\n"+error+"```"); });
 	}
 
-	return commands;
+	Object.assign(commands, cmds);
 }

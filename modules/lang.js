@@ -1,5 +1,7 @@
+const Discord = require("discord.js")
+
 module.exports = (passthrough) => {
-	let { Discord, client } = passthrough;
+	let { client } = passthrough;
 
 	function authorString(msg, sentence) {
 		if (msg) return msg.author.username+", "+sentence;

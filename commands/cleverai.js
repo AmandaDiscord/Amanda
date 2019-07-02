@@ -1,3 +1,4 @@
+const path = require("path");
 require("../types.js");
 
 const responses = {
@@ -118,9 +119,12 @@ let userHistory = {};
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, db, utils, commands, config } = passthrough;
+	let { client, commands, config, reloader } = passthrough;
 
-	return {
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
+
+	Object.assign(commands, {
 		"cleverai": {
 			usage: "<a very witty question>",
 			description: "Ask me the answer to life's greatest questions. "+
@@ -166,5 +170,5 @@ module.exports = function(passthrough) {
 				msg.channel.send(clever_message);
 			}
 		}
-	}
+	})
 }

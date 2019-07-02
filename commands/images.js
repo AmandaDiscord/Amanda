@@ -6,16 +6,15 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client } = passthrough;
+	let { config, client, commands } = passthrough;
 	let key = config.chewey_api_key;
 
 	/**
-	 * A function to send an image to a text channel
 	 * @param {String} host Where the image is coming from
-	 * @param {String} path The path to the api endpoint
-	 * @param {Discord.Message} msg A Discord managed message object
-	 * @param {String} emoji An escpaed emoji
-	 * @param {String} footer What the footer of the message embed should say
+	 * @param {String} path The API endpoint
+	 * @param {Discord.Message} msg
+	 * @param {String} emoji The loading animation emoji
+	 * @param {String} footer Embed footer text
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
@@ -42,7 +41,7 @@ module.exports = function(passthrough) {
 		return nmsg.edit({embed});
 	}
 
-	return {
+	Object.assign(commands, {
 		"cat": {
 			usage: "none",
 			description: "Returns an image of a cute cat",
@@ -120,5 +119,5 @@ module.exports = function(passthrough) {
 				return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life");
 			}
 		}
-	}
+	});
 }

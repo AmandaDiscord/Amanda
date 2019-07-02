@@ -1,13 +1,17 @@
 const Discord = require("discord.js");
 require("../types.js");
+const path = require("path");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, db, utils, commands, config } = passthrough;
+	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager } = passthrough;
 
-	return {
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
+
+	Object.assign(commands, {
 		"evaluate": {
 			usage: "<code>",
 			description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
@@ -109,5 +113,5 @@ module.exports = function(passthrough) {
 				return member.send(`**${String(msg.author)}** has awarded you ${award} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
-	}
+	})
 }

@@ -2,51 +2,46 @@ const rp = require("request-promise");
 const entities = require("entities");
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
 const Discord = require("discord.js");
+const path = require("path");
 require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils, reloadEvent } = passthrough;
+	let { client, reloadEvent, commands, reloader } = passthrough;
+
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
 
 	let games = {
 		games: [],
 		/**
-		 * Adds a game to storage
-		 * @param {TriviaGame} game An instance of any local game
-		 * @returns {Number} The new length of the games Array
+		 * @param {TriviaGame} games
 		 */
 		add: function(game) {
 			this.games.push(game);
 		},
 		/**
-		 * Gets a game Object based on the channel parameter
-		 * @param {Discord.TextChannel} channel A Discord managed text channel
-		 * @returns {TriviaGame} An instance of any local game
+		 * @param {Discord.TextChannel} channel
+		 * @returns {TriviaGame}
 		 */
 		getChannel: function(channel) {
 			return this.games.find(g => g.channel == channel);
 		},
 		/**
-		 * Removes a game from this' game Array
-		 * @param {TriviaGame} game An instance of any local game
-		 * @returns {Array} The new games Array
+		 * @param {TriviaGame} game
 		 */
 		remove: function(game) {
 			this.games = this.games.filter(g => g != game);
 		}
 	}
 
-	/**
-	 * A class representing a local game of trivia
-	 */
 	class TriviaGame {
 		/**
-		 * Create a new trivia game
-		 * @param {Discord.Channel} channel A Discord managed channel object
-		 * @param {Object} data A JSON response from OpenTDB
-		 * @param {String} category The category of the trivia question linked to this class instance
+		 * @param {Discord.Channel} channel
+		 * @param {Object} data
+		 * @param {String} category
 		 * @constructor
 		 */
 		constructor(channel, data, category) {
@@ -93,8 +88,7 @@ module.exports = function(passthrough) {
 			this.receivedAnswers = new Map();
 		}
 		/**
-		 * A method to add an answer regarding the trivia question linked to this class instance
-		 * @param {Discord.Message} msg A Discord managed message object
+		 * @param {Discord.Message} msg
 		 */
 		addAnswer(msg) {
 			// Check answer is a single letter
@@ -107,9 +101,6 @@ module.exports = function(passthrough) {
 			this.receivedAnswers.set(msg.author.id, index);
 			//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`);
 		}
-		/**
-		 * A method to end the current game linked to this class instance
-		 */
 		async end() {
 			// Clean up
 			clearTimeout(this.timer);
@@ -163,10 +154,9 @@ module.exports = function(passthrough) {
 
 
 	/**
-	 * A function to create a board of mine sweeper using Discord spoilers
-	 * @param {String} difficulty How difficult the game should be
-	 * @param {Number} size The size of the board
-	 * @returns {Object} An Object containing data returned by this function
+	 * @param {String} difficulty "easy", "medium" or "hard"
+	 * @param {Number} size 4-14 inclusive
+	 * @returns {Object}
 	 */
 	function sweeper(difficulty, size) {
 		let width = 8,
@@ -302,7 +292,7 @@ module.exports = function(passthrough) {
 		if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
 	}
 
-	return {
+	Object.assign(commands, {
 		"trivia": {
 			usage: "none",
 			description: "Play a game of trivia with other members and win Discoins",
@@ -348,10 +338,9 @@ module.exports = function(passthrough) {
 				msg.channel.send(embed);
 			}
 		}
-	}
+	});
 
 	/**
-	 * A handler for data returned by an API
 	 * @param {String} body
 	 * @param {Discord.Channel} channel
 	 */
@@ -368,7 +357,6 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * A manager to start a trivia game
 	 * @param {Discord.Channel} channel
 	 * @param {Object} options
 	 * @param {String} options.suffix

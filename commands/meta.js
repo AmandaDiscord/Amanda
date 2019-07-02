@@ -1,13 +1,17 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
+const path = require("path");
 require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, config, utils, commands, reloadEvent } = passthrough;
+	let { client, config, commands, reloadEvent, reloader } = passthrough;
+
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync(path.basename(__filename), utils);
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
 	/**
@@ -101,7 +105,7 @@ module.exports = function(passthrough) {
 		return "broken";
 	}
 
-	return {
+	Object.assign(commands, {
 		"statistics": {
 			usage: "none",
 			description: "Displays detailed statistics",
@@ -598,5 +602,5 @@ module.exports = function(passthrough) {
 				}
 			}
 		}
-	}
+	})
 }
