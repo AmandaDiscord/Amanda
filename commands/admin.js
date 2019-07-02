@@ -11,6 +11,9 @@ module.exports = function(passthrough) {
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync(path.basename(__filename), utils);
 
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync(path.basename(__filename), lang);
+
 	Object.assign(commands, {
 		"evaluate": {
 			usage: "<code>",
@@ -96,21 +99,21 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.sendNopeMessage();
-				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
-				if (!args[0]) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
+				if (!args[0]) return msg.channel.send(lang.input.invalid(msg, "amount to award"));
 				let award = Math.floor(Number(args[0]));
-				if (isNaN(award)) return msg.channel.send(client.lang.input.invalid(msg, "amount to award"));
+				if (isNaN(award)) return msg.channel.send(lang.input.invalid(msg, "amount to award"));
 				let usertxt = suffix.slice(args[0].length + 1);
-				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member = await msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
 				utils.coinsManager.award(member.id, award);
 				let embed = new Discord.RichEmbed()
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				return member.send(`**${String(msg.author)}** has awarded you ${award} ${client.lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
+				return member.send(`**${String(msg.author)}** has awarded you ${award} ${lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}
 	})

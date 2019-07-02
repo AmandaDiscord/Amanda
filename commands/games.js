@@ -14,6 +14,9 @@ module.exports = function(passthrough) {
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync(path.basename(__filename), utils);
 
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync(path.basename(__filename), lang);
+
 	let games = {
 		games: [],
 		/**
@@ -138,7 +141,7 @@ module.exports = function(passthrough) {
 			.setColor(this.color)
 			.setFooter("Click the reaction for another round.")
 			if (winners.length) {
-				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${client.lang.emoji.discoin})`).join("\n"));
+				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${lang.emoji.discoin})`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
@@ -380,7 +383,7 @@ module.exports = function(passthrough) {
 				).then(() => {
 					channel.send("I've sent you a DM with the list of categories.");
 				}).catch(() => {
-					channel.send(client.lang.dm.failed(msg));
+					channel.send(lang.dm.failed(msg));
 				});
 				return;
 			} else {

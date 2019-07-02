@@ -19,7 +19,7 @@ module.exports = function(passthrough) {
 	reloader.useSync("./modules/utilities.js", utils)
 
 	utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
-	if (client.readyAt != null) manageReady()
+	if (!starting) manageReady()
 	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
 	utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent);
 
@@ -170,10 +170,11 @@ module.exports = function(passthrough) {
 	}
 
 	async function manageReady() {
-		await utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
+		utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 			prefixes = result.map(r => r.prefix);
 			statusPrefix = result.find(r => r.status).prefix;
 			console.log("Loaded "+prefixes.length+" prefixes");
+			if (starting) client.emit("prefixes", prefixes)
 		});
 		if (starting) {
 			console.log(`Successfully logged in as ${client.user.username}`);

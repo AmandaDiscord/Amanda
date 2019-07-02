@@ -13,11 +13,8 @@ module.exports = function(passthrough) {
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync(path.basename(__filename), utils);
 
-	let cli = repl.start({prompt: "> ", eval: customEval, writer: s => s})
-
-	Object.assign(cli.context, passthrough, {Discord})
-
-	cli.on("exit", () => process.exit())
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync(path.basename(__filename), lang);
 
 	async function customEval(input, context, filename, callback) {
 		let depth = 0
@@ -31,8 +28,16 @@ module.exports = function(passthrough) {
 		let output = util.inspect(result, false, depth, true)
 		return callback(undefined, output)
 	}
-
+	
 	reloadEvent.once(path.basename(__filename), () => {
 		process.exit()
+	})
+	
+	client.once("prefixes", () => {
+		let cli = repl.start({prompt: "> ", eval: customEval, writer: s => s})
+
+		Object.assign(cli.context, passthrough, {Discord})
+		
+		cli.on("exit", () => process.exit())
 	})
 }

@@ -15,6 +15,9 @@ module.exports = function(passthrough) {
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync(path.basename(__filename), utils);
 
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync(path.basename(__filename), lang);
+
 	let cmds = {
 
 		"ship": {
@@ -27,7 +30,7 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				suffix = suffix.replace(/ +/g, " ");
 				let args = suffix.split(" ");
 				if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`);
@@ -79,9 +82,9 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let member = await msg.guild.findMember(msg, suffix, true);
-				if (!member) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let info = await utils.waifu.get(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(member.displayTag, member.user.smallAvatarURL)
@@ -104,13 +107,13 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				let usertxt = args.slice(1).join(" ");
 				if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send("The correct format is `&claim <amount> <user>`. Amount comes first, user comes last.");
-				if (!usertxt) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member = await msg.guild.findMember(msg, usertxt);
-				if (!member) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
 				let [memberInfo, myInfo, money] = await Promise.all([
 					utils.waifu.get(member.user.id),
@@ -119,28 +122,28 @@ module.exports = function(passthrough) {
 				]);
 				let claim = 0;
 				if (args[0] == "all") {
-					if (!money) return msg.channel.send(client.lang.external.money.insufficient(msg));
+					if (!money) return msg.channel.send(lang.external.money.insufficient(msg));
 					claim = money;
 				} else {
 					claim = Math.floor(Number(args[0]));
-					if (isNaN(claim)) return msg.channel.send(client.lang.external.money.insufficient(msg));
-					if (claim < 1) return msg.channel.send(client.lang.input.money.small(msg, "claim", 1));
-					if (claim > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
+					if (isNaN(claim)) return msg.channel.send(lang.external.money.insufficient(msg));
+					if (claim < 1) return msg.channel.send(lang.input.money.small(msg, "claim", 1));
+					if (claim > money) return msg.channel.send(lang.external.money.insufficient(msg));
 				}
-				if (memberInfo.price >= claim) return msg.channel.send(client.lang.input.waifu.claimedByOther(msg, memberInfo.price+1));
-				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(client.lang.input.waifu.doubleClaim(msg));
+				if (memberInfo.price >= claim) return msg.channel.send(lang.input.waifu.claimedByOther(msg, memberInfo.price+1));
+				if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(lang.input.waifu.doubleClaim(msg));
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces.random()
 				let embed = new Discord.RichEmbed()
-					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${client.lang.emoji.discoin}`)
+					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${lang.emoji.discoin}`)
 					.setColor("36393E")
 				msg.channel.send({embed});
 				let memsettings = await utils.settings.get(member.id);
 				let guildsettings = await utils.settings.get(msg.guild.id);
 				if (memsettings && memsettings.waifuAlert == 0) return;
 				if (guildsettings && guildsettings.waifuAlert == 0) return;
-				return member.user.send(`${String(msg.member)} has claimed you for ${claim} ${client.lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(client.lang.permissionOtherDMBlocked()));
+				return member.user.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()));
 			}
 		},
 
@@ -178,7 +181,7 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				let waifu = await utils.waifu.get(msg.author.id, { basic: true });
 				let money = await utils.coinsManager.get(msg.author.id);
@@ -186,13 +189,13 @@ module.exports = function(passthrough) {
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`);
 				let gift;
 				if (args[0] == "all") {
-					if (money == 0) return msg.channel.send(client.lang.external.money.insufficient(msg));
+					if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg));
 					gift = money;
 				} else {
 					gift = Math.floor(Number(args[0]));
-					if (isNaN(gift)) return msg.channel.send(client.lang.input.invalid(msg, "gift"));
-					if (gift < 1) return msg.channel.send(client.lang.input.money.small(msg, "gift", 1));
-					if (gift > money) return msg.channel.send(client.lang.external.money.insufficient(msg));
+					if (isNaN(gift)) return msg.channel.send(lang.input.invalid(msg, "gift"));
+					if (gift < 1) return msg.channel.send(lang.input.money.small(msg, "gift", 1));
+					if (gift > money) return msg.channel.send(lang.external.money.insufficient(msg));
 				}
 				await utils.waifu.transact(msg.author.id, gift);
 				await utils.coinsManager.award(msg.author.id, -gift);
@@ -236,7 +239,7 @@ module.exports = function(passthrough) {
 					.setTitle("Waifu leaderboard")
 					.setDescription(
 						all.map((row, index) =>
-							`${index+amount-9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${client.lang.emoji.discoin}`
+							`${index+amount-9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${lang.emoji.discoin}`
 						).join("\n")
 					)
 					.setFooter(`Page ${amount/10}`)
@@ -256,10 +259,10 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
-				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member;
 				member = await msg.guild.findMember(msg, suffix, true);
-				if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
 				if (member.id == client.user.id) return msg.channel.send(`No u`);
 				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
 				return msg.channel.send(`**${member.user.tag}** has been banned!`);
@@ -373,7 +376,7 @@ module.exports = function(passthrough) {
 		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
 		let member = await msg.guild.findMember(msg, suffix);
-		if (member == null) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+		if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
 		if (member.user.id == msg.author.id) return msg.channel.send(responses.random());
 		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
 		let fetch;

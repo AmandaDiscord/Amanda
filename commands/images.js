@@ -1,13 +1,17 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
 require("../types.js");
+const path = require("path")
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, commands } = passthrough;
+	let { config, client, commands, reloader } = passthrough;
 	let key = config.chewey_api_key;
+
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync(path.basename(__filename), lang);
 
 	/**
 	 * @param {String} host Where the image is coming from
@@ -29,7 +33,7 @@ module.exports = function(passthrough) {
 		let data;
 		try {
 			data = JSON.parse(body);
-		} catch (error) { return nmsg.edit(client.lang.apiError(error)); }
+		} catch (error) { return nmsg.edit(lang.apiError(error)); }
 		let img;
 		if (host == "chewey") img = data.data;
 		else if (host == "nekos") img = data.url;
