@@ -984,7 +984,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
-					.addField("­", queue.connection?songProgress(queue.connection.dispatcher, queue):0)
+					.addField("­", queue.connection?songProgress(queue.connection.dispatcher, queue):"0:00")
 					.setColor("36393E")
 					let n = await msg.channel.send(embed);
 					queue.nowPlayingMsg.clearReactions();
