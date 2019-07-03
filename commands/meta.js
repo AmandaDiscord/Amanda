@@ -2,6 +2,7 @@ const rp = require("request-promise");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
+const simpleGit = require("simple-git")(__dirname);
 
 require("../types.js");
 
@@ -261,12 +262,40 @@ module.exports = function(passthrough) {
 			process: async function(msg) {
 				msg.channel.sendTyping();
 				const limit = 5;
-				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
-				let data = JSON.parse(body);
+				const authorNameMap = {
+					"Cadence Fish": "Cadence",
+					"Papi": "PapiOphidian"
+				};
+				let res = await new Promise((r) => {
+					simpleGit.status((err, status) => {
+						simpleGit.log({"--no-decorate": null}, (err, log) => {
+							Promise.all(Array(limit).fill().map((_, i) => new Promise(resolve => {
+								simpleGit.diffSummary([log.all[i+1].hash, log.all[i].hash], (err, diff) => {
+									resolve(diff);
+								});
+							}))).then(diffs => {
+								let result = {branch: status.current, latestCommitHash: log.latest.hash.slice(0, 7), logString:
+								log.all.slice(0, limit).map((line, index) => {
+									let date = new Date(line.date);
+									let dateString = date.toDateString()+" @ "+date.toTimeString().split(":").slice(0, 2).join(":");
+									let diff =
+										diffs[index].files.length+" files changed, "+
+										diffs[index].insertions+" insertions, "+
+										diffs[index].deletions+" deletions.";
+										return ""+
+													"`» "+line.hash.slice(0, 7)+": "+dateString+" — "+(authorNameMap[line.author_name] || "Unknown")+"`\n"+
+													"`» "+diff+"`\n"+
+													line.message;
+								}).join("\n\n")};
+								r(result)
+							});
+						});
+					});
+				});
 				return msg.channel.send(new Discord.RichEmbed()
 					.setTitle("Git info")
-					.addField("Status", "On branch "+data.branch+", latest commit "+data.latestCommitHash)
-					.addField(`Commits (latest ${limit} entries)`, data.logString)
+					.addField("Status", "On branch "+res.branch+", latest commit "+res.latestCommitHash)
+					.addField(`Commits (latest ${limit} entries)`, res.logString)
 					.setColor("36393E")
 				);
 			}

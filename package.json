@@ -23,6 +23,7 @@
     "prism-media": "^1.0.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
+    "simple-git": "^1.117.0",
     "simple-youtube-api": "^5.2.0",
     "ytdl-core": "^0.29.2",
     "ytdl-core-discord": "github:cloudrac3r/ytdl-core-discord"
