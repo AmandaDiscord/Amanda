@@ -422,7 +422,8 @@ module.exports = function(passthrough) {
 						updateProgress();
 					};
 				}, 5000-dispatcher.time%5000);
-				dispatcher.on('error', console.error);
+				function handleError (error) { console.error(error); }
+				dispatcher.on('error', handleError);
 				dispatcher.once("end", () => {
 					dispatcher.player.streamingData.pausedTime = 0;
 					dispatcher.removeListener("error", handleError);
@@ -521,7 +522,7 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	utils.addTemporaryListener(reloadEvent, "music", __filename, function(action) {
+	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
 		if (action == "getQueues") {
 			reloadEvent.emit("musicOut", "queues", queueManager.storage);
 		} else if (action == "getQueue") {
@@ -769,13 +770,13 @@ module.exports = function(passthrough) {
 	}
 
 	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), voiceStateUpdate);
-	/**
-	 * @param {Discord.GuildMember} oldMember
-	 * @param {Discord.GuildMember} newMember
-	 */
 	function voiceStateUpdate(oldMember, newMember) {
-		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
-		voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(o => o.trigger(newMember.voiceChannel));
+		if (newMember.id == client.user.id) return;
+		let channel = oldMember.voiceChannel || newMember.voiceChannel;
+		if (!channel || !channel.guild) return;
+		let queue = queueManager.storage.get(channel.guild.id);
+		if (!queue) return;
+		queue.voiceStateUpdate(oldMember, newMember);
 	}
 	
 	/**
