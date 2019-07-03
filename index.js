@@ -1,8 +1,8 @@
 const Discord = require("discord.js");
 const mysql = require("mysql2/promise");
-const config = require("./config.json");
 const hotreload = require("./hotreload.js");
 
+const config = require("./config.json");
 const client = new Discord.Client({disableEveryone: true});
 
 let db = mysql.createPool({
@@ -15,10 +15,17 @@ let db = mysql.createPool({
 
 const commands = {};
 let reactionMenus = {};
+
 let queueManager = {
 	storage: new Discord.Collection(),
 	addQueue(queue) {
 		this.storage.set(queue.id, queue);
+	}
+};
+let gameManager = {
+	storage: new Discord.Collection(),
+	addGame: function(game) {
+		this.storage.set(game.id, game);
 	}
 };
 
@@ -26,14 +33,14 @@ let queueManager = {
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
 		db.query("SET CHARACTER SET utf8mb4")
-	])
+	]);
 
 	let reloader = new hotreload();
-	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, reactionMenus, queueManager}
+	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, reactionMenus, queueManager, gameManager};
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",
-	])
+	]);
 	reloader.watchAndLoad([
 		"./modules/prototypes.js",
 		"./modules/events.js",
@@ -48,7 +55,7 @@ let queueManager = {
 		"./commands/meta.js",
 		"./commands/music.js",
 		"./commands/traa.js"
-	])
+	]);
 
 	client.login(config.bot_token);
 

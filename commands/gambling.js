@@ -1,9 +1,11 @@
-const dailyCooldownHours = 20;
-const dailyCooldownTime = dailyCooldownHours*60*60*1000;
 const Jimp = require("jimp");
 const Discord = require("discord.js");
-require("../types.js");
 const path = require("path");
+
+require("../types.js");
+
+const dailyCooldownHours = 20;
+const dailyCooldownTime = dailyCooldownHours*60*60*1000;
 
 /**
  * @param {PassthroughType} passthrough
@@ -11,10 +13,10 @@ const path = require("path");
 module.exports = function(passthrough) {
 	let { client, commands, reloader } = passthrough;
 
-	let utils = require("../modules/utilities.js")(passthrough)
-	reloader.useSync(path.basename(__filename), utils)
-
+	let utils = require("../modules/utilities.js")(passthrough);
 	let lang = require("../modules/lang.js")(passthrough);
+
+	reloader.useSync(path.basename(__filename), utils);
 	reloader.useSync(path.basename(__filename), lang);
 
 	Object.assign(commands, {
@@ -108,7 +110,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(result, {files: [image]});
 			}
 		},
-
 		"flip": {
 			usage: "none",
 			description: "Flips a coin",
@@ -123,7 +124,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(`You flipped ${flip}`);
 			}
 		},
-
 		"betflip": {
 			usage: "<amount> <side (h or t)>",
 			description: "Place a bet on a random flip for a chance of Discoins",
@@ -189,7 +189,6 @@ module.exports = function(passthrough) {
 				}
 			}
 		},
-
 		"coins": {
 			usage: "<user>",
 			description: "Returns the amount of Discoins you or another user has",
@@ -211,7 +210,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"daily": {
 			usage: "none",
 			description: "A daily command that gives a random amount of Discoins",
@@ -240,7 +238,6 @@ module.exports = function(passthrough) {
 				}
 			}
 		},
-
 		"leaderboard": {
 			usage: "none",
 			description: "Gets the leaderboard for people with the most coins",
@@ -274,7 +271,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"give": {
 			usage: "<amount> <user>",
 			description: "Gives discoins to a user from your account",
@@ -317,7 +313,6 @@ module.exports = function(passthrough) {
 				return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked(msg)));
 			}
 		},
-
 		"wheel": {
 			usage: "amount",
 			description: "A Wheel of Fortune for a chance at making more Discoins",
@@ -371,5 +366,5 @@ module.exports = function(passthrough) {
 				return msg.channel.send(`${msg.author.tag} bet ${amount} discoins and got ${Math.round(amount * Number(choice))} back ${lang.emoji.discoin}`, {files: [image]});
 			}
 		}
-	})
+	});
 }

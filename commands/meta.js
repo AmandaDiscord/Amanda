@@ -2,6 +2,7 @@ const rp = require("request-promise");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
+
 require("../types.js");
 
 /**
@@ -11,10 +12,10 @@ module.exports = function(passthrough) {
 	let { client, config, commands, reloadEvent, reloader } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
-
 	let lang = require("../modules/lang.js")(passthrough);
+
 	reloader.useSync(path.basename(__filename), lang);
+	reloader.useSync(path.basename(__filename), utils);
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
 	function sendStatsTimeoutFunction() {

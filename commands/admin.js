@@ -1,17 +1,18 @@
 const Discord = require("discord.js");
-require("../types.js");
 const path = require("path");
+
+require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager } = passthrough;
+	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
-
 	let lang = require("../modules/lang.js")(passthrough);
+
+	reloader.useSync(path.basename(__filename), utils);
 	reloader.useSync(path.basename(__filename), lang);
 
 	Object.assign(commands, {
@@ -50,7 +51,6 @@ module.exports = function(passthrough) {
 				} else return;
 			}
 		},
-
 		"execute": {
 			usage: "<code>",
 			description: "Executes a shell operation",
@@ -86,7 +86,6 @@ module.exports = function(passthrough) {
 				});
 			}
 		},
-
 		"award": {
 			usage: "<amount> <user>",
 			description: "Awards a specific user ",

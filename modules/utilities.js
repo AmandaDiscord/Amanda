@@ -1,11 +1,11 @@
 const Discord = require("discord.js");
 const events = require("events");
-require("../types.js");
 const util = require("util");
 const path = require("path");
 
-const startingCoins = 5000
+require("../types.js");
 
+const startingCoins = 5000
 let utilsResultCache;
 
 /**
@@ -16,41 +16,6 @@ module.exports = (passthrough) => {
 
 	if (!utilsResultCache) {
 		var utils = {
-			sql: {
-				/**
-				 * @param {String} statement
-				 * @param {Array<any>} prepared
-				 */
-				"all": function(string, prepared, connection, attempts) {
-					if (!attempts) attempts = 2;
-					if (!connection) connection = db;
-					if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
-					return new Promise((resolve, reject) => {
-						connection.execute(string, prepared).then(result => {
-							let rows = result[0];
-							resolve(rows);
-						}).catch(err => {
-							console.error(err);
-							attempts--;
-							if (attempts) utils.sql.all(string, prepared, connection, attempts).then(resolve).catch(reject);
-							else reject(err);
-						});
-					});
-				},
-				/**
-				 * @param {String} statement
-				 * @param {Array<any>} prepared
-				 */
-				"get": async function(string, prepared, connection) {
-					return (await utils.sql.all(string, prepared, connection))[0];
-				}
-			},
-			/**
-			 * @returns {Promise<any>}
-			 */
-			getConnection: function() {
-				return db.getConnection();
-			},
 			DMUser: class DMUser {
 				/**
 				 * @param {Discord.Snowflake} userID
@@ -87,6 +52,67 @@ module.exports = (passthrough) => {
 						});
 					});
 				}
+			},
+			BetterTimeout: class BetterTimeout {
+				/**
+				 * @param {Function} callback
+				 * @param {Number} delay
+				 * @constructor
+				 */
+				constructor(callback, delay) {
+					this.callback = callback;
+					this.delay = delay;
+					if (this.callback) {
+						this.isActive = true;
+						this.timeout = setTimeout(this.callback, this.delay);
+					} else {
+						this.isActive = false;
+						this.timeout = null;
+					}
+				}
+				triggerNow() {
+					this.clear();
+					this.callback();
+				}
+				clear() {
+					this.isActive = false;
+					clearTimeout(this.timeout);
+				}
+			},
+			sql: {
+				/**
+				 * @param {String} statement
+				 * @param {Array<any>} prepared
+				 */
+				"all": function(string, prepared, connection, attempts) {
+					if (!attempts) attempts = 2;
+					if (!connection) connection = db;
+					if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
+					return new Promise((resolve, reject) => {
+						connection.execute(string, prepared).then(result => {
+							let rows = result[0];
+							resolve(rows);
+						}).catch(err => {
+							console.error(err);
+							attempts--;
+							if (attempts) utils.sql.all(string, prepared, connection, attempts).then(resolve).catch(reject);
+							else reject(err);
+						});
+					});
+				},
+				/**
+				 * @param {String} statement
+				 * @param {Array<any>} prepared
+				 */
+				"get": async function(string, prepared, connection) {
+					return (await utils.sql.all(string, prepared, connection))[0];
+				}
+			},
+			/**
+			 * @returns {Promise<any>}
+			 */
+			getConnection: function() {
+				return db.getConnection();
 			},
 			settings: {
 				/**
@@ -195,20 +221,6 @@ module.exports = (passthrough) => {
 					return undefined;
 				}
 			},
-			/**
-			 * @param {events.EventEmitter} target
-			 * @param {String} name
-			 * @param {String} filename
-			 * @param {Function} code
-			 */
-			addTemporaryListener: function(target, name, filename, code) {
-				console.log("added event "+name)
-				target.on(name, code);
-				reloadEvent.once(filename, () => {
-					target.removeListener(name, code);
-					console.log("removed event "+ name);
-				});
-			},
 			coinsManager: {
 				/**
 				 * @param {Discord.Snowflake} userID
@@ -292,31 +304,19 @@ module.exports = (passthrough) => {
 					description: "A moment to never forget."
 				}
 			},
-			BetterTimeout: class BetterTimeout {
-				/**
-				 * @param {Function} callback
-				 * @param {Number} delay
-				 * @constructor
-				 */
-				constructor(callback, delay) {
-					this.callback = callback;
-					this.delay = delay;
-					if (this.callback) {
-						this.isActive = true;
-						this.timeout = setTimeout(this.callback, this.delay);
-					} else {
-						this.isActive = false;
-						this.timeout = null;
-					}
-				}
-				triggerNow() {
-					this.clear();
-					this.callback();
-				}
-				clear() {
-					this.isActive = false;
-					clearTimeout(this.timeout);
-				}
+			/**
+			 * @param {events.EventEmitter} target
+			 * @param {String} name
+			 * @param {String} filename
+			 * @param {Function} code
+			 */
+			addTemporaryListener: function(target, name, filename, code) {
+				console.log("added event "+name);
+				target.on(name, code);
+				reloadEvent.once(filename, () => {
+					target.removeListener(name, code);
+					console.log("removed event "+ name);
+				});
 			},
 			/**
 			 * @returns {Boolean}
@@ -406,7 +406,7 @@ module.exports = (passthrough) => {
 					});
 					result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject));
 				} else result = "```js\n"+util.inspect(data, { depth: depth })+"```";
-		
+
 				if (result.length >= 2000) {
 					if (result.startsWith("```")) {
 						result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")+"…```";
@@ -440,10 +440,10 @@ module.exports = (passthrough) => {
 			return queueManager.storage.get(this.id);
 		});
 
-		utilsResultCache = utils
+		utilsResultCache = utils;
 	} else {
-		var utils = utilsResultCache
+		var utils = utilsResultCache;
 	}
 
-	return utils
+	return utils;
 }

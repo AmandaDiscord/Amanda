@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
 const path = require("path");
+
 require("../types.js");
 
 let voiceEmptyDuration = 20000;
@@ -15,13 +16,14 @@ let voiceEmptyDuration = 20000;
  */
 module.exports = function(passthrough) {
 	let { config, client, reloadEvent, reloader, commands, queueManager } = passthrough;
+
 	let youtube = new YouTube(config.yt_api_key);
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
-
 	let lang = require("../modules/lang.js")(passthrough);
+
 	reloader.useSync(path.basename(__filename), lang);
+	reloader.useSync(path.basename(__filename), utils);
 
 	class Song {
 		/**
@@ -521,25 +523,48 @@ module.exports = function(passthrough) {
 			})(web);
 		}
 	}
-
-	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
-		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queueManager.storage);
-		} else if (action == "getQueue") {
-			let serverID = [...arguments][1];
-			if (!serverID) return;
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return;
-			reloadEvent.emit("musicOut", "queue", queue);
-		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
-			let [serverID, callback] = [...arguments].slice(1);
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return callback([400, "Server is not playing music"]);
-			let result = queue[action](true);
-			if (result[0]) callback([200, result[1]]);
-			else callback([400, result[1]]);
-		} else { callback([400, "Action does not exist"]); }
-	});
+	class VoiceStateCallback {
+		/**
+		 * @param {Discord.Snowflake} userID
+		 * @param {Discord.Guild} guild
+		 * @param {Number} timeoutMs
+		 * @param {Function} callback
+		 * @constructor
+		 */
+		constructor(userID, guild, timeoutMs, callback) {
+			this.userID = userID;
+			this.guild = guild;
+			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
+			this.callback = callback;
+			this.active = true;
+			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
+			this.add();
+		}
+		add() {
+			voiceStateCallbackManager.callbacks.push(this);
+		}
+		remove() {
+			let index = voiceStateCallbackManager.callbacks.indexOf(this);
+			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+		}
+		/**
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 */
+		trigger(voiceChannel) {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(voiceChannel);
+			}
+		}
+		cancel() {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(null);
+			}
+		}
+	}
 
 	/**
 	 * @param {(Song|YouTubeSong|FriskySong)} song
@@ -551,7 +576,6 @@ module.exports = function(passthrough) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
 		queue.addSong(song, insert);
 	}
-
 	/**
 	 * @param {Discord.Message} msg
 	 * @param {Discord.VoiceChannel} voiceChannel
@@ -630,7 +654,6 @@ module.exports = function(passthrough) {
 			});
 		})();
 	}
-
 	/**
 	 * @param {Discord.TextChannel} channel
 	 * @param {Object} reason
@@ -661,7 +684,6 @@ module.exports = function(passthrough) {
 			});
 		}
 	}
-
 	/**
 	 * @param {Number} seconds
 	 */
@@ -681,7 +703,6 @@ module.exports = function(passthrough) {
 		output.push(seconds.toString().padStart(2, "0"));
 		return output.join(":");
 	}
-
 	/**
 	 * @param {Discord.StreamDispatcher} dispatcher
 	 * @param {Queue} queue
@@ -702,7 +723,6 @@ module.exports = function(passthrough) {
 			return "Cannot render progress for source `"+queue.songs[0].source+"`.";
 		}
 	}
-
 	const voiceStateCallbackManager = {
 		callbacks: [],
 		/**
@@ -714,50 +734,6 @@ module.exports = function(passthrough) {
 			return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
 		}
 	}
-
-	class VoiceStateCallback {
-		/**
-		 * @param {Discord.Snowflake} userID
-		 * @param {Discord.Guild} guild
-		 * @param {Number} timeoutMs
-		 * @param {Function} callback
-		 * @constructor
-		 */
-		constructor(userID, guild, timeoutMs, callback) {
-			this.userID = userID;
-			this.guild = guild;
-			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
-			this.callback = callback;
-			this.active = true;
-			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
-			this.add();
-		}
-		add() {
-			voiceStateCallbackManager.callbacks.push(this);
-		}
-		remove() {
-			let index = voiceStateCallbackManager.callbacks.indexOf(this);
-			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
-		}
-		/**
-		 * @param {Discord.VoiceChannel} voiceChannel
-		 */
-		trigger(voiceChannel) {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(voiceChannel);
-			}
-		}
-		cancel() {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(null);
-			}
-		}
-	}
-
 	/**
 	 * @param {Discord.Snowflake} userID
 	 * @param {Discord.Guild} guild
@@ -778,7 +754,24 @@ module.exports = function(passthrough) {
 		if (!queue) return;
 		queue.voiceStateUpdate(oldMember, newMember);
 	}
-	
+	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
+		if (action == "getQueues") {
+			reloadEvent.emit("musicOut", "queues", queueManager.storage);
+		} else if (action == "getQueue") {
+			let serverID = [...arguments][1];
+			if (!serverID) return;
+			let queue = queueManager.storage.get(serverID);
+			if (!queue) return;
+			reloadEvent.emit("musicOut", "queue", queue);
+		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
+			let [serverID, callback] = [...arguments].slice(1);
+			let queue = queueManager.storage.get(serverID);
+			if (!queue) return callback([400, "Server is not playing music"]);
+			let result = queue[action](true);
+			if (result[0]) callback([200, result[1]]);
+			else callback([400, result[1]]);
+		} else { callback([400, "Action does not exist"]); }
+	});
 	/**
 	 * @param {Discord.Message} msg
 	 * @param {Boolean} wait
@@ -790,7 +783,6 @@ module.exports = function(passthrough) {
 		let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
-
 	/**
 	 * @param {String} input
 	 * @param {Discord.Message} message

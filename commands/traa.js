@@ -1,10 +1,12 @@
 const Discord = require("discord.js");
 const path = require("path");
+
+require("../types.js");
+
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
 ];
-require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
@@ -16,6 +18,7 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), utils);
 
 	let cadence = new utils.DMUser("176580265294954507");
+	let prompts = [];
 
 	/**
 	 * @param {String} properties
@@ -31,8 +34,6 @@ module.exports = function(passthrough) {
 	}
 
 	utils.addTemporaryListener(client, "message", path.basename(__filename), gifDetector);
-
-	let prompts = [];
 
 	/**
 	 * @param {Discord.Message} msg
@@ -142,5 +143,5 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
-	})
+	});
 }
