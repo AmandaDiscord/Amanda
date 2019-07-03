@@ -539,7 +539,7 @@ module.exports = function(passthrough) {
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
-						send("dm");
+						send("dm").catch(() => send("channel"));
 					} else if (suffix.includes("playlist")) {
 						embed = new Discord.RichEmbed()
 						.setAuthor(`&music playlist: command help (aliases: playlist, playlists, pl)`)
@@ -573,7 +573,7 @@ module.exports = function(passthrough) {
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
 						.setColor('36393E')
-						send("dm");
+						send("dm").catch(() => send("channel"));
 					} else {
 						let command = Object.values(commands).find(c => c.aliases.includes(suffix));
 						if (command) {
@@ -604,7 +604,7 @@ module.exports = function(passthrough) {
 									.setColor("36393E")
 									let menu = dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
 									setTimeout(() => menu.destroy(true), 5*60*1000);
-								});
+								}).catch(() => send("channel"));
 							} else {
 								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
 								send("channel");
@@ -622,7 +622,7 @@ module.exports = function(passthrough) {
 						"Type `&help <category>` to see all commands in that category.\n"+
 						"Type `&help <command>` to see more information about a command.")
 					.setColor('36393E');
-					send("dm");
+					send("dm").catch(() => send("channel"));
 				}
 				function send(where) {
 					return new Promise((resolve, reject) => {
@@ -630,10 +630,7 @@ module.exports = function(passthrough) {
 						target.send({embed}).then(dm => {
 							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
 							resolve(dm);
-						}).catch(() => {
-							msg.channel.send(lang.dm.failed(msg));
-							reject();
-						});
+						}).catch(reject)
 					});
 				}
 			}
