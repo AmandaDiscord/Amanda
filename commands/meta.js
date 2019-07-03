@@ -22,7 +22,7 @@ module.exports = function(passthrough) {
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
 
-	reloadEvent.once(__filename, () => {
+	reloadEvent.once(path.basename(__filename), () => {
 		clearTimeout(sendStatsTimeout);
 	});
 

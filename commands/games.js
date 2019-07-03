@@ -285,11 +285,7 @@ module.exports = function(passthrough) {
 		return { text: str, size: width, bombs: bombs, error: error };
 	}
 
-
-	reloadEvent.once(__filename, () => {
-		client.removeListener("message", answerDetector);
-	});
-	client.on("message", answerDetector);
+	utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector);
 	async function answerDetector(msg) {
 		let game = games.getChannel(msg.channel);
 		if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
