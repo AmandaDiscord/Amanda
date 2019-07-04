@@ -136,7 +136,6 @@ module.exports = function(passthrough) {
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
-						console.log(data)
 						if (!data.sp("output.0.actions")) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?");
 						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, owner.username);
 						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
