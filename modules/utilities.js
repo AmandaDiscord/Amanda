@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const events = require("events");
 const util = require("util");
+const Jimp = require("jimp");
 const path = require("path");
 
 require("../types.js");
@@ -79,6 +80,58 @@ module.exports = (passthrough) => {
 					clearTimeout(this.timeout);
 				}
 			},
+			JIMPStorage: class JIMPStorage {
+				constructor() {
+					/**
+					 * @type {Map<String, any>}
+					 */
+					this.store = new Map();
+				}
+				/**
+				 * @param {String} name
+				 * @param {String} type
+				 * @param {String} value
+				 */
+				save(name, type, value) {
+					if (type == "file") {
+						let promise = Jimp.read(value);
+						this.savePromise(name, promise);
+					} else if (type == "font") {
+						let promise = Jimp.loadFont(value);
+						this.savePromise(name, promise);
+					}
+				}
+				/**
+				 * @param {String} name
+				 * @param {Promise<Jimp>} promise
+				 * @returns {Promise<Jimp>}
+				 */
+				savePromise(name, promise) {
+					this.store.set(name, promise);
+					promise.then(result => {
+						this.store.set(name, result);
+					});
+				}
+				/**
+				 * @param {String} name
+				 * @returns {Promise<Jimp>}
+				 */
+				get(name) {
+					let value = this.store.get(name);
+					if (value instanceof Promise) return value;
+					else return Promise.resolve(value);
+				}
+				/**
+				 * @param {Array<String>} names
+				 * @returns {Promise<Map<String, Jimp>>}
+				 */
+				getAll(names) {
+					let result = new Map();
+					return Promise.all(names.map(name =>
+						this.get(name).then(value => result.set(name, value))
+					)).then(() => result);
+				}
+			},
 			sql: {
 				/**
 				 * @param {String} statement
@@ -109,7 +162,7 @@ module.exports = (passthrough) => {
 				}
 			},
 			/**
-			 * @returns {Promise<any>}
+			 * @returns {any}
 			 */
 			getConnection: function() {
 				return db.getConnection();
@@ -319,7 +372,7 @@ module.exports = (passthrough) => {
 				});
 			},
 			/**
-			 * @returns {Boolean}
+			 * @returns {Promise<Boolean>}
 			 */
 			hasPermission: async function() {
 				let args = [...arguments];
@@ -348,10 +401,10 @@ module.exports = (passthrough) => {
 			 * @param {Object} info
 			 * @param {Number} info.max
 			 * @param {Number} info.min
+			 * @param {Number} info.step
 			 * @param {Object} info.regen
 			 * @param {Number} info.regen.time
 			 * @param {Number} info.regen.amount
-			 * @param {Number} info.step
 			 */
 			cooldownManager: async function(userID, command, info) {
 				let winChance = info.max;
@@ -436,8 +489,9 @@ module.exports = (passthrough) => {
 			}
 		}
 
-		Discord.Guild.prototype.__defineGetter__("queue", function() {
-			return queueManager.storage.get(this.id);
+		Object.defineProperty(Discord.Guild.prototype, "queue", {
+			get: function() { return queueManager.storage.get(this.id); },
+			configurable: true
 		});
 
 		utilsResultCache = utils;

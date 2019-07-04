@@ -1,8 +1,9 @@
 const Discord = require("discord.js");
 const path = require("path");
+
 require("../types.js");
 
-let lastAttemptedLogins = []
+let lastAttemptedLogins = [];
 
 /**
  * @param {PassthroughType} passthrough
@@ -21,7 +22,6 @@ module.exports = function(passthrough) {
 	if (!starting) manageReady();
 	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
 	utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent);
-
 	utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (oldMessage, data) => {
 		if (data.constructor.name == "Message") manageMessage(data);
 		else if (data.content) {
@@ -29,8 +29,7 @@ module.exports = function(passthrough) {
 			let message = new Discord.Message(channel, data, client);
 			manageMessage(message);
 		}
-	})
-
+	});
 	utils.addTemporaryListener(client, "disconnect", path.basename(__filename), (reason) => {
 		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
 		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`);
@@ -45,13 +44,11 @@ module.exports = function(passthrough) {
 			return resolve()
 		}).then(() => {
 			client.login(config.bot_token);
-		})
-	})
-
+		});
+	});
 	utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 		if (reason) console.error(reason);
-	})
-
+	});
 	utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 		if (reason && reason.code) {
 			if (reason.code == 10008) return;
@@ -59,8 +56,7 @@ module.exports = function(passthrough) {
 		}
 		if (reason) console.error(reason);
 		else console.log("There was an error but no reason");
-	})
-
+	});
 	utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
 		if (newMember.guild.id != "475599038536744960") return;
 		if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) {
@@ -173,19 +169,6 @@ module.exports = function(passthrough) {
 			update();
 			client.setInterval(update, 300000);
 		}
-	}
-
-	/**
-	 * @param {Discord.GuildMember} oldMember
-	 * @param {Discord.GuildMember} newMember
-	 */
-	function manageVoiceStateUpdate(oldMember, newMember) {
-		if (newMember.id == client.user.id) return;
-		let channel = oldMember.voiceChannel || newMember.voiceChannel;
-		if (!channel || !channel.guild) return;
-		let queue = queueManager.storage.get(channel.guild.id);
-		if (!queue) return;
-		queue.voiceStateUpdate(oldMember, newMember);
 	}
 
 	/**

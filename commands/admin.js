@@ -30,13 +30,13 @@ module.exports = function(passthrough) {
 				if (allowed) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
-					let depth = suffix.split("--depth:")[1];
-					if (!depth) {
-						depth = 0;
-					} else {
+					let depth = suffix.split("--depth:")[1]
+					depth?depth=depth.substring().split(" ")[0]:undefined;
+					if (!depth) depth = 0;
+					else {
 						depth = Math.floor(Number(depth));
 						if (isNaN(depth)) depth = 0;
-						suffix = suffix.split("--depth:")[0];
+						suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring().split(" ")[0]}`, "");
 					}
 					try {
 						result = eval(suffix.replace(/client.token/g, `"${config.fake_token}"`));
@@ -46,8 +46,7 @@ module.exports = function(passthrough) {
 					let output = await utils.stringify(result, depth);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
 					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
-					setTimeout(() => menu.destroy(true), 5*60*1000);
-					return;
+					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				} else return;
 			}
 		},
@@ -64,25 +63,18 @@ module.exports = function(passthrough) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return;
 				if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly");
-				await msg.channel.sendTyping();
+				msg.channel.sendTyping();
 				require("child_process").exec(suffix, async (error, stdout, stderr) => {
 					let result = "Output too large";
-					if (error) {
-						if (error.toString("utf8").length >= 2000) result = error.toString("utf8").slice(0, 1998)+"…";
-						else result = error;
-					}
-					if (stderr) {
-						if (stderr.toString("utf8").length >= 2000) result = stderr.toString("utf8").slice(0, 1998)+"…";
-						else result = stderr;
-					}
-					if (stdout) {
-						if (stdout.toString("utf8").length >= 2000) result = stdout.toString("utf8").slice(0, 1998)+"…";
-						else result = stdout;
-					}
+					if (error) result = error;
+					else if (stdout) result = stdout;
+					else if (stderr) result = stderr;
+					else result = "No output";
+					result = result.toString("utf8");
+					if (result.length >= 2000) result = result.slice(0, 1995)+"…";
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
 					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
-					setTimeout(() => menu.destroy(true), 5*60*1000);
-					return;
+					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				});
 			}
 		},
@@ -106,7 +98,7 @@ module.exports = function(passthrough) {
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member = await msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				utils.coinsManager.award(member.id, award);
 				let embed = new Discord.RichEmbed()
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)

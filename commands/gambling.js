@@ -19,6 +19,20 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), utils);
 	reloader.useSync(path.basename(__filename), lang);
 
+	let imageStorage = new utils.JIMPStorage();
+	imageStorage.save("font", "font", ".fonts/Whitney-20.fnt");
+	imageStorage.save("slot-canvas", "file", "./images/slot.png");
+	imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png");
+	imageStorage.save("emoji-cherries", "file", "./images/emojis/cherries.png");
+	imageStorage.save("emoji-heart", "file", "./images/emojis/heart.png");
+	imageStorage.save("emoji-pear", "file", "./images/emojis/pear.png");
+	imageStorage.save("emoji-strawberry", "file", "./images/emojis/strawberry.png");
+	imageStorage.save("emoji-watermelon", "file", "./images/emojis/watermelon.png");
+	imageStorage.save("wheel-canvas", "file", "./images/wheel.png");
+	imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png");
+	["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach( i => imageStorage.get(`emoji-${i}`).then(image => image.resize(85, 85)));
+	imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR));
+
 	Object.assign(commands, {
 		"slot": {
 			usage: "<amount>",
@@ -31,7 +45,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let money = await utils.coinsManager.get(msg.author.id);
 				msg.channel.sendTyping();
 				let args = suffix.split(" ");
 				let array = ['apple', 'cherries', 'watermelon', 'pear', "strawberry"]; // plus heart, which is chosen seperately
@@ -44,7 +57,11 @@ module.exports = function(passthrough) {
 						time: 3*60*1000
 					}
 				};
-				let winChance = await utils.cooldownManager(msg.author.id, "slot", cooldownInfo);
+				let [money, winChance, images] = await Promise.all([
+					utils.coinsManager.get(msg.author.id),
+					utils.cooldownManager(msg.author.id, "slot", cooldownInfo),
+					imageStorage.getAll(["slot-canvas", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"])
+				]);
 				let slots = [];
 				for (let i = 0; i < 3; i++) {
 					if (Math.random() < winChance/100) {
@@ -53,23 +70,21 @@ module.exports = function(passthrough) {
 						slots[i] = array.random();
 					}
 				}
-				let font = await Jimp.loadFont(".fonts/Whitney-20.fnt");
-				let canvas = await Jimp.read("./images/slot.png");
-				let piece1 = await Jimp.read(`./images/emojis/${slots[0]}.png`);
-				let piece2 = await Jimp.read(`./images/emojis/${slots[1]}.png`);
-				let piece3 = await Jimp.read(`./images/emojis/${slots[2]}.png`);
-				await piece1.resize(85, 85);
-				await piece2.resize(85, 85);
-				await piece3.resize(85, 85);
 
-				await canvas.composite(piece1, 120, 360);
-				await canvas.composite(piece2, 258, 360);
-				await canvas.composite(piece3, 392, 360);
+				let canvas = images.get("slot-canvas").clone();
+				let pieces = [];
+				slots.forEach(i => pieces.push(images.get(`emoji-${i}`)));
+
+				canvas.composite(pieces[0], 120, 360);
+				canvas.composite(pieces[1], 258, 360);
+				canvas.composite(pieces[2], 392, 360);
+
+				let font = images.get("font");
 
 				let buffer, image;
 				if (!args[0]) {
-					await canvas.print(font, 130, 523, "Nothing");
-					await canvas.print(font, 405, 523, "Nothing");
+					canvas.print(font, 130, 523, "Nothing");
+					canvas.print(font, 405, 523, "Nothing");
 					buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
 					image = new Discord.Attachment(buffer, "slot.png");
 					return msg.channel.send({ files: [image] });
@@ -84,27 +99,27 @@ module.exports = function(passthrough) {
 					if (bet < 2) return msg.channel.send(lang.input.money.small(msg, "bet", 2));
 					if (bet > money) return msg.channel.send(lang.external.money.insufficient(msg));
 				}
-				let result = "";
+				let result;
 				let winning;
 				if (slots.every(s => s == "heart")) {
 					winning = bet * 30;
-					result += `WOAH! Triple :heart: You won ${bet * 30} ${lang.emoji.discoin}`;
+					result = `WOAH! Triple :heart: You won ${bet * 30} ${lang.emoji.discoin}`;
 				} else if (slots.filter(s => s == "heart").length == 2) {
 					winning = bet * 4;
-					result += `Wow! Double :heart: You won ${bet * 4} ${lang.emoji.discoin}`;
+					result = `Wow! Double :heart: You won ${bet * 4} ${lang.emoji.discoin}`;
 				} else if (slots.filter(s => s == "heart").length == 1) {
 					winning = Math.floor(bet * 1.25);
-					result += `A single :heart: You won ${Math.floor(bet * 1.25)} ${lang.emoji.discoin}`;
+					result = `A single :heart: You won ${Math.floor(bet * 1.25)} ${lang.emoji.discoin}`;
 				} else if (slots.slice(1).every(s => s == slots[0])) {
 					winning = bet * 10;
-					result += `A triple. You won ${bet * 10} ${lang.emoji.discoin}`;
+					result = `A triple. You won ${bet * 10} ${lang.emoji.discoin}`;
 				} else {
 					winning = 0;
-					result += `Sorry. You didn't get a match. You lost ${bet} ${lang.emoji.discoin}`;
+					result = `Sorry. You didn't get a match. You lost ${bet} ${lang.emoji.discoin}`;
 				}
 				utils.coinsManager.award(msg.author.id, winning-bet);
-				await canvas.print(font, 115, 523, winning);
-				await canvas.print(font, 390, 523, bet);
+				canvas.print(font, 115, 523, winning);
+				canvas.print(font, 390, 523, bet);
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
 				image = new Discord.Attachment(buffer, "slot.png");
 				return msg.channel.send(result, {files: [image]});
@@ -119,8 +134,7 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: function(msg) {
-				let array = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'];
-				let flip = array.random();
+				let flip = ['heads <:coinH:402219464348925954>', 'tails <:coinT:402219471693021196>'].random();
 				return msg.channel.send(`You flipped ${flip}`);
 			}
 		},
@@ -201,7 +215,7 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let member = await msg.guild.findMember(msg, suffix, true);
-				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let money = await utils.coinsManager.get(member.id);
 				let embed = new Discord.RichEmbed()
 					.setAuthor(`Coins for ${member.displayTag}`)
@@ -220,8 +234,10 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let row = await utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id);
-				let donor = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id);
+				let [row, donor] = await Promise.all([
+					utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
+					utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+				]);
 				if (!row || row.lastClaim+dailyCooldownTime < Date.now()) {
 					let amount;
 					if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500)+1;
@@ -287,9 +303,13 @@ module.exports = function(passthrough) {
 				let usertxt = suffix.slice(args[0].length + 1);
 				if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member = await msg.guild.findMember(msg, usertxt);
-				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
-				let authorCoins = await utils.coinsManager.get(msg.author.id);
+				let [authorCoins, memsettings, guildsettings] = await Promise.all([
+					utils.coinsManager.get(msg.author.id),
+					utils.settings.get(member.id),
+					utils.settings.get(msg.guild.id)
+				]);
 				let gift;
 				if (args[0] == "all") {
 					if (authorCoins == 0) return msg.channel.send(lang.external.money.insufficient(msg));
@@ -306,8 +326,6 @@ module.exports = function(passthrough) {
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send({embed});
-				let memsettings = await utils.settings.get(member.id);
-				let guildsettings = await utils.settings.get(msg.guild.id);
 				if (memsettings && memsettings.gamblingAlert == 0) return;
 				if (guildsettings && guildsettings.gamblingAlert == 0) return;
 				return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked(msg)));
@@ -324,7 +342,13 @@ module.exports = function(passthrough) {
 			 */
 			async process(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let money = await utils.coinsManager.get(msg.author.id);
+				msg.channel.sendTyping();
+				let [money, canv, triangle] = await Promise.all([
+					utils.coinsManager.get(msg.author.id),
+					imageStorage.get("wheel-canvas"),
+					imageStorage.get("emoji-triangle")
+				]);
+
 				if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide an amount to spin the wheel with`);
 				let amount;
 				if (suffix == "all") {
@@ -336,7 +360,6 @@ module.exports = function(passthrough) {
 					if (amount < 2) return msg.channel.send(lang.input.money.small(msg, "amount", 2));
 					if (amount > money) return msg.channel.send(lang.external.money.insufficient(msg));
 				}
-				msg.channel.sendTyping();
 
 				let choices = ["0.1", "0.2", "0.3", "0.5", "1.2", "1.5", "1.7", "2.4"];
 				let choice = choices.random();
@@ -350,15 +373,14 @@ module.exports = function(passthrough) {
 				else if (choice == "1.7") coords = [-18, 230, 187];
 				else if (choice == "2.4") coords = [50, 245, 200];
 
-				let canvas = await Jimp.read("./images/wheel.png");
-				let arrow = await Jimp.read("./images/emojis/triangle.png");
+				let canvas = canv.clone();
+				let arrow = triangle.clone();
 
 				let [rotation, x, y] = coords;
 
-				await arrow.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR);
-				await arrow.rotate(rotation);
+				arrow.rotate(rotation);
 
-				await canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY);
+				canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY);
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
 				image = new Discord.Attachment(buffer, "wheel.png");

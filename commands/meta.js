@@ -28,60 +28,7 @@ module.exports = function(passthrough) {
 		clearTimeout(sendStatsTimeout);
 	});
 
-	class JIMPStorage {
-		constructor() {
-			/**
-			 * @type {Map<String, any>}
-			 */
-			this.store = new Map();
-		}
-		/**
-		 * @param {String} name
-		 * @param {String} type
-		 * @param {String} value
-		 */
-		save(name, type, value) {
-			if (type == "file") {
-				let promise = Jimp.read(value);
-				this.savePromise(name, promise);
-			} else if (type == "font") {
-				let promise = Jimp.loadFont(value);
-				this.savePromise(name, promise);
-			}
-		}
-		/**
-		 * @param {String} name
-		 * @param {Promise<Jimp>} promise
-		 * @returns {Promise<Jimp>}
-		 */
-		savePromise(name, promise) {
-			this.store.set(name, promise);
-			promise.then(result => {
-				this.store.set(name, result);
-			});
-		}
-		/**
-		 * @param {String} name
-		 * @returns {Promise<Jimp>}
-		 */
-		get(name) {
-			let value = this.store.get(name);
-			if (value instanceof Promise) return value;
-			else return Promise.resolve(value);
-		}
-		/**
-		 * @param {Array<String>} names
-		 * @returns {Array<Jimp>}
-		 */
-		getAll(names) {
-			let result = new Map();
-			return Promise.all(names.map(name =>
-				this.get(name).then(value => result.set(name, value))
-			)).then(() => result);
-		}
-	}
-
-	let profileStorage = new JIMPStorage();
+	let profileStorage = new utils.JIMPStorage();
 	profileStorage.save("canvas", "file", "./images/defaultbg.png");
 	profileStorage.save("profile", "file", "./images/profile.png");
 	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt");

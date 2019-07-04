@@ -257,7 +257,7 @@ module.exports = function(passthrough) {
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member;
 				member = await msg.guild.findMember(msg, suffix, true);
-				if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
+				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				if (member.id == client.user.id) return msg.channel.send(`No u`);
 				if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`);
 				return msg.channel.send(`**${member.user.tag}** has been banned!`);
@@ -378,7 +378,7 @@ module.exports = function(passthrough) {
 		if (msg.channel.type !== "text") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
 		let member = await msg.guild.findMember(msg, suffix);
-		if (member == null) return msg.channel.send(lang.input.invalid(msg, "user"));
+		if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 		if (member.user.id == msg.author.id) return msg.channel.send(responses.random());
 		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
 		let fetch;

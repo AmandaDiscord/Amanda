@@ -129,32 +129,46 @@ Discord.Channel.prototype.sendNopeMessage = function() {
 
 
 // User Prototypes
-Discord.User.prototype.__defineGetter__('smallAvatarURL', function() {
-	if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
-	else return `https://cdn.discordapp.com/embed/avatars/${this.discriminator % 5}.png`;
+Object.defineProperties(Discord.User.prototype, {
+	smallAvatarURL: {
+		get: function() {
+			if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.png?size=32`;
+			else return `https://cdn.discordapp.com/embed/avatars/${this.discriminator % 5}.png`;
+		},
+		configurable: true
+	},
+	presenceEmoji: {
+		get: getPresenceEmoji,
+		configurable: true
+	},
+	presencePrefix: {
+		get: getPresencePrefix,
+		configurable: true
+	}
 });
+
 Discord.User.prototype.sizedAvatarURL = function(size = 128, preferredFormat = "png") {
 	if (this.avatar) return `https://cdn.discordapp.com/avatars/${this.id}/${this.avatar}.${preferredFormat}?size=${size}`;
 	else return this.displayAvatarURL;
 }
-Discord.User.prototype.__defineGetter__("presenceEmoji", function() {
-	let presences = {
-		online: "<:online:453823508200554508>",
-		idle: "<:idle:453823508028456971>",
-		dnd: "<:dnd:453823507864748044>",
-		offline: "<:invisible:453827513995755520>"
-	};
-	return presences[this.presence.status];
-});
-Discord.User.prototype.__defineGetter__("presencePrefix", function() {
-	if (this.presence.game == null) return null;
-	let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
-	return prefixes[this.presence.game.type];
-});
 
 
 // GuildMember Prototypes
-Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
+Object.defineProperties(Discord.GuildMember.prototype, {
+	presenceEmoji: {
+		get: getPresenceEmoji,
+		configurable: true
+	},
+	presencePrefix: {
+		get: getPresencePrefix,
+		configurable: true
+	},
+	displayTag: {
+		get: function() { return this.nickname ? `${this.user.tag} (${this.nickname})` : this.user.tag },
+		configurable: true
+	}
+});
+function getPresenceEmoji () {
 	let presences = {
 		online: "<:online:453823508200554508>",
 		idle: "<:idle:453823508028456971>",
@@ -162,15 +176,12 @@ Discord.GuildMember.prototype.__defineGetter__("presenceEmoji", function() {
 		offline: "<:invisible:453827513995755520>"
 	};
 	return presences[this.presence.status];
-});
-Discord.GuildMember.prototype.__defineGetter__("presencePrefix", function() {
+}
+function getPresencePrefix() {
 	if (this.presence.game == null) return null;
 	let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 	return prefixes[this.presence.game.type];
-});
-Discord.GuildMember.prototype.__defineGetter__("displayTag", function() {
-	return this.nickname ? `${this.user.tag} (${this.nickname})` : this.user.tag;
-});
+}
 
 
 
