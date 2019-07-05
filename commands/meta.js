@@ -10,7 +10,7 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, config, commands, reloadEvent, reloader } = passthrough;
+	let { client, config, commands, reloadEvent, reloader, gameManager, queueManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
 	let lang = require("../modules/lang.js")(passthrough);
@@ -19,30 +19,11 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), utils);
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
+	console.log(`added Timeout sendStatsTimeout`);
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
-
-	reloadEvent.once(path.basename(__filename), () => {
-		clearTimeout(sendStatsTimeout);
-	});
-
-	let profileStorage = new utils.JIMPStorage();
-	profileStorage.save("canvas", "file", "./images/defaultbg.png");
-	profileStorage.save("profile", "file", "./images/profile.png");
-	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt");
-	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt");
-	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png");
-	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png");
-	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png");
-	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png");
-	profileStorage.save("badge-none", "file", "./images/36393E.png");
-	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
-
-	/**
-	 * @param {Discord.Message} msg
-	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();
@@ -57,6 +38,36 @@ module.exports = function(passthrough) {
 		if (msg) msg.react("👌");
 		return console.log("Sent stats.", new Date().toUTCString());
 	}
+
+	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)));
+	console.log(`added Timeout dailyTimeout`);
+	function setDailyStatsTimeout() {
+		setDailyStats();
+		dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24);
+	}
+	function setDailyStats() {
+		queueManager.songsPlayed = 0;
+		gameManager.gamesPlayed = 0;
+	}
+
+	reloadEvent.once(path.basename(__filename), () => {
+		clearTimeout(sendStatsTimeout);
+		console.log(`removed Timeout sendStatsTimeout`);
+		clearTimeout(setDailyStatsTimeout);
+		console.log(`removed Timeout setDailyStatsTimeout`);
+	});
+
+	let profileStorage = new utils.JIMPStorage();
+	profileStorage.save("canvas", "file", "./images/defaultbg.png");
+	profileStorage.save("profile", "file", "./images/profile.png");
+	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt");
+	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt");
+	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png");
+	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png");
+	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png");
+	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png");
+	profileStorage.save("badge-none", "file", "./images/36393E.png");
+	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
 
 	function getHeartType(user, info) {
 		// Full hearts for Amanda! Amanda loves everyone.
@@ -76,29 +87,52 @@ module.exports = function(passthrough) {
 
 	Object.assign(commands, {
 		"statistics": {
-			usage: "none",
+			usage: "<music, games>",
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
 			/**
 			 * @param {Discord.Message} msg
+			 * @param {String} suffix
 			 */
-			process: async function(msg) {
+			process: async function(msg, suffix) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
-				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				let embed = new Discord.RichEmbed()
-				.addField(client.user.tag+" <:online:453823508200554508>",
-					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
-					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
-					`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
-					`**❯ RAM Usage:**\n${ramUsage}MB`, true)
-				.addField("­",
-					`**❯ User Count:**\n${client.users.size} users\n`+
-					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
-					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
-					`**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
-				.setColor("36393E")
-				return nmsg.edit({embed});
+				let embed = new Discord.RichEmbed().setColor("36393E");
+				if (!suffix) return defaultStats();
+				if (suffix.toLowerCase() == "music") {
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
+						`**❯ Songs Playing:**\n${queueManager.storage.size} songs`, true)
+					.addField("­",
+						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
+						`**❯ Users Listening:**\n${client.guilds.reduce((acc, cur) => acc+cur.queue?cur.queue.voiceChannel.members.filter(m => m.user && !m.user.bot).size:0, 0)}`, true)
+					return msg.channel.send({embed});
+				}
+				else if (suffix.toLowerCase() == "games") {
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
+						`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
+					.addField("­",
+						`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)}`, true)
+					return msg.channel.send({embed});
+				} else return defaultStats();
+				async function defaultStats() {
+					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
+						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
+						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
+						`**❯ RAM Usage:**\n${ramUsage}MB`, true)
+					.addField("­",
+						`**❯ User Count:**\n${client.users.size} users\n`+
+						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
+						`**❯ Channel Count:**\n${client.channels.size} channels\n`+
+						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections`, true)
+					return nmsg.edit({embed});
+				}
 			}
 		},
 		"ping": {

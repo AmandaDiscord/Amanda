@@ -399,6 +399,7 @@ module.exports = function(passthrough) {
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
+				queueManager.songsPlayed++;
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queueManager.storage);

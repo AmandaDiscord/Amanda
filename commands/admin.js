@@ -63,7 +63,7 @@ module.exports = function(passthrough) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return;
 				if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly");
-				msg.channel.sendTyping();
+				await msg.channel.sendTyping();
 				require("child_process").exec(suffix, async (error, stdout, stderr) => {
 					let result = "Output too large";
 					if (error) result = error;

@@ -116,6 +116,7 @@ module.exports = function(passthrough) {
 		async end() {
 			// Clean up
 			clearTimeout(this.timer);
+			gameManager.gamesPlayed++;
 			this.destroy();
 			// Check answers
 			let coins =

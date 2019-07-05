@@ -18,12 +18,14 @@ let reactionMenus = {};
 
 let queueManager = {
 	storage: new Discord.Collection(),
+	songsPlayed: 0,
 	addQueue(queue) {
 		this.storage.set(queue.id, queue);
 	}
 };
 let gameManager = {
 	storage: new Discord.Collection(),
+	gamesPlayed: 0,
 	addGame: function(game) {
 		this.storage.set(game.id, game);
 	}

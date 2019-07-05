@@ -15,8 +15,10 @@
  * @property {import("events").EventEmitter} reloadEvent
  * @property {Object} queueManager
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} queueManager.storage
+ * @property {Number} queueManager.songsPlayed
  * @property {Function} queueManager.addQueue
  * @property {Object} gameManager
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} gameManager.storage
+ * @property {Number} gameManager.gamesPlayed
  * @property {Function} gameManager.addGame
  */
