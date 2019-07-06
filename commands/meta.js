@@ -106,7 +106,7 @@ module.exports = function(passthrough) {
 						`**❯ Songs Playing:**\n${queueManager.storage.size} songs`, true)
 					.addField("­",
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
-						`**❯ Users Listening:**\n${client.guilds.reduce((acc, cur) => acc+cur.queue?cur.queue.voiceChannel.members.filter(m => m.user && !m.user.bot).size:0, 0)}`, true)
+						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)}`, true)
 					return msg.channel.send({embed});
 				}
 				else if (suffix.toLowerCase() == "games") {
