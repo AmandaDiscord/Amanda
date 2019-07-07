@@ -1,28 +1,27 @@
 const Discord = require("discord.js");
 const path = require("path");
+
 require("../types.js");
 
-let lastAttemptedLogins = []
+let lastAttemptedLogins = [];
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
 	let { client, config, commands, reloadEvent, reloader, reactionMenus, queueManager } = passthrough;
-	let stdin = process.stdin;
 	let prefixes = [];
 	let statusPrefix = "&";
 	let starting = true;
 	if (client.readyAt != null) starting = false;
 
-	let utils = require("./utilities.js")(passthrough)
-	reloader.useSync("./modules/utilities.js", utils)
+	let utils = require("./utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
-	if (!starting) manageReady()
-	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
+	utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage);
+	if (!starting) manageReady();
+	else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
 	utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent);
-
 	utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (oldMessage, data) => {
 		if (data.constructor.name == "Message") manageMessage(data);
 		else if (data.content) {
@@ -30,29 +29,26 @@ module.exports = function(passthrough) {
 			let message = new Discord.Message(channel, data, client);
 			manageMessage(message);
 		}
-	})
-
+	});
 	utils.addTemporaryListener(client, "disconnect", path.basename(__filename), (reason) => {
 		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
-		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`)
-		lastAttemptedLogins.push(Date.now())
+		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`);
+		lastAttemptedLogins.push(Date.now());
 		new Promise(resolve => {
 			if (lastAttemptedLogins.length >= 3) {
-				let oldest = lastAttemptedLogins.shift()
-				let timePassed = Date.now()-oldest
-				let timeout = 30000
-				if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed)
+				let oldest = lastAttemptedLogins.shift();
+				let timePassed = Date.now()-oldest;
+				let timeout = 30000;
+				if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed);
 			}
 			return resolve()
 		}).then(() => {
-			client.login(config.bot_token)
-		})
-	})
-
+			client.login(config.bot_token);
+		});
+	});
 	utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 		if (reason) console.error(reason);
-	})
-
+	});
 	utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 		if (reason && reason.code) {
 			if (reason.code == 10008) return;
@@ -60,8 +56,7 @@ module.exports = function(passthrough) {
 		}
 		if (reason) console.error(reason);
 		else console.log("There was an error but no reason");
-	})
-
+	});
 	utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
 		if (newMember.guild.id != "475599038536744960") return;
 		if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) {
@@ -70,25 +65,7 @@ module.exports = function(passthrough) {
 			else return;
 		}
 		else return;
-	})
-
-	/*reloadEvent.once(__filename, () => {
-		client.removeListener("message", manageMessage);
-		client.removeListener("messageUpdate", manageEdit);
-		client.removeListener("disconnect", manageDisconnect);
-		client.removeListener("error", manageError);
-		client.removeListener("voiceStateUpdate", manageVoiceStateUpdate);
-		process.removeListener("unhandledRejection", manageRejection);
-		stdin.removeListener("data", manageStdin);
 	});
-	client.on("message", manageMessage);
-	client.on("messageUpdate", manageEdit);
-	client.once("ready", manageReady);
-	client.on("disconnect", manageDisconnect);
-	client.on("voiceStateUpdate", manageVoiceStateUpdate);
-	client.on("guildMemberUpdate", manageMemberUpdate);
-	process.on("unhandledRejection", manageRejection);
-	stdin.on("data", manageStdin);*/
 
 	/**
 	 * @param {Discord.Message} msg
@@ -155,7 +132,6 @@ module.exports = function(passthrough) {
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
-						console.log(data)
 						if (!utils.sp(data, "output.0.actions")) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?");
 						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, owner.username);
 						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
@@ -196,35 +172,17 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * @param {Discord.GuildMember} oldMember
-	 * @param {Discord.GuildMember} newMember
-	 */
-	function manageVoiceStateUpdate(oldMember, newMember) {
-		if (newMember.id == client.user.id) return;
-		let channel = oldMember.voiceChannel || newMember.voiceChannel;
-		if (!channel || !channel.guild) return;
-		let queue = queueManager.storage.get(channel.guild.id);
-		if (!queue) return;
-		queue.voiceStateUpdate(oldMember, newMember);
-	}
-
-	/**
-	 * Handles reactions as actions for the Discord.Client to perform
-	 * @param {Array} actions An Array of Objects of actions
+	 * @param {Array<any>} actions
 	 */
 	Discord.Message.prototype.reactionMenu = function(actions) {
 		let message = this;
 		return new ReactionMenu(message, actions);
 	}
 
-	/**
-	 * Class that initiates a Discord.Message reaction menu
-	 */
 	class ReactionMenu {
 		/**
-		 * Create a new ReactionMenu
 		 * @param {Discord.Message} message
-		 * @param {Array} actions
+		 * @param {Array<any>} actions
 		 */
 		constructor(message, actions) {
 			this.message = message;
@@ -251,6 +209,10 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * @param {Discord.MessageReaction} messageReaction
+	 * @param {Discord.User} user
+	 */
 	function reactionEvent(messageReaction, user) {
 		let id = messageReaction.messageID;
 		let emoji = messageReaction.emoji;

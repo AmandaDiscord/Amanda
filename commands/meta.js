@@ -2,81 +2,28 @@ const rp = require("request-promise");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
+const simpleGit = require("simple-git")(__dirname);
+
 require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, config, commands, reloadEvent, reloader } = passthrough;
+	let { client, config, commands, reloadEvent, reloader, gameManager, queueManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
+	let lang = require("../modules/lang.js")(passthrough);
+
+	reloader.useSync(path.basename(__filename), lang);
 	reloader.useSync(path.basename(__filename), utils);
 
-	let lang = require("../modules/lang.js")(passthrough);
-	reloader.useSync(path.basename(__filename), lang);
-
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
-	/**
-	 * Sends client statistics to the database in an interval
-	 */
+	console.log(`added Timeout sendStatsTimeout`);
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
-
-	reloadEvent.once(__filename, () => {
-		clearTimeout(sendStatsTimeout);
-	});
-
-	class JIMPStorage {
-		constructor() {
-			this.store = new Map()
-		}
-		save(name, type, value) {
-			if (type == "file") {
-				let promise = Jimp.read(value)
-				this.savePromise(name, promise)
-			} else if (type == "font") {
-				let promise = Jimp.loadFont(value)
-				this.savePromise(name, promise)
-			}
-		}
-		savePromise(name, promise) {
-			this.store.set(name, promise)
-			promise.then(result => {
-				this.store.set(name, result)
-			})
-		}
-		get(name) {
-			let value = this.store.get(name)
-			if (value instanceof Promise) return value
-			else return Promise.resolve(value)
-		}
-		getAll(names) {
-			let result = new Map()
-			return Promise.all(names.map(name =>
-				this.get(name).then(value => result.set(name, value))
-			)).then(() => result)
-		}
-	}
-
-	let profileStorage = new JIMPStorage()
-	profileStorage.save("canvas", "file", "./images/defaultbg.png")
-	profileStorage.save("profile", "file", "./images/profile.png")
-	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt")
-	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
-	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
-	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
-	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
-	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-	profileStorage.save("badge-none", "file", "./images/36393E.png")
-	profileStorage.get("badge-none").then(badge => badge.resize(50, 50))
-
-	/**
-	 * A function to send stats to the database
-	 * @param {Discord.Message} msg A Discord managed message object
-	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();
@@ -91,6 +38,36 @@ module.exports = function(passthrough) {
 		if (msg) msg.react("👌");
 		return console.log("Sent stats.", new Date().toUTCString());
 	}
+
+	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)));
+	console.log(`added Timeout dailyTimeout`);
+	function setDailyStatsTimeout() {
+		setDailyStats();
+		dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24);
+	}
+	function setDailyStats() {
+		queueManager.songsPlayed = 0;
+		gameManager.gamesPlayed = 0;
+	}
+
+	reloadEvent.once(path.basename(__filename), () => {
+		clearTimeout(sendStatsTimeout);
+		console.log(`removed Timeout sendStatsTimeout`);
+		clearTimeout(setDailyStatsTimeout);
+		console.log(`removed Timeout setDailyStatsTimeout`);
+	});
+
+	let profileStorage = new utils.JIMPStorage();
+	profileStorage.save("canvas", "file", "./images/defaultbg.png");
+	profileStorage.save("profile", "file", "./images/profile.png");
+	profileStorage.save("font", "font", ".fonts/Whitney-25.fnt");
+	profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt");
+	profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png");
+	profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png");
+	profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png");
+	profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png");
+	profileStorage.save("badge-none", "file", "./images/36393E.png");
+	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
 
 	function getHeartType(user, info) {
 		// Full hearts for Amanda! Amanda loves everyone.
@@ -110,32 +87,54 @@ module.exports = function(passthrough) {
 
 	Object.assign(commands, {
 		"statistics": {
-			usage: "none",
+			usage: "<music, games>",
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
 			/**
 			 * @param {Discord.Message} msg
+			 * @param {String} suffix
 			 */
-			process: async function(msg) {
+			process: async function(msg, suffix) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
-				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
-				let embed = new Discord.RichEmbed()
-				.addField(client.user.tag+" <:online:453823508200554508>",
-					`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
-					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
-					`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
-					`**❯ RAM Usage:**\n${ramUsage}MB`, true)
-				.addField("­",
-					`**❯ User Count:**\n${client.users.size} users\n`+
-					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
-					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
-					`**❯ Voice Connections:**\n${client.voiceConnections.size}`, true)
-				.setColor("36393E")
-				return nmsg.edit({embed});
+				let embed = new Discord.RichEmbed().setColor("36393E");
+				if (!suffix) return defaultStats();
+				if (suffix.toLowerCase() == "music") {
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
+						`**❯ Songs Playing:**\n${queueManager.storage.size} songs`, true)
+					.addField("­",
+						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
+						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)}`, true)
+					return msg.channel.send({embed});
+				}
+				else if (suffix.toLowerCase() == "games") {
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
+						`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
+					.addField("­",
+						`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)}`, true)
+					return msg.channel.send({embed});
+				} else return defaultStats();
+				async function defaultStats() {
+					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
+					embed
+					.addField(`${client.user.tag} <:online:453823508200554508>`,
+						`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
+						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
+						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
+						`**❯ RAM Usage:**\n${ramUsage}MB`, true)
+					.addField("­",
+						`**❯ User Count:**\n${client.users.size} users\n`+
+						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
+						`**❯ Channel Count:**\n${client.channels.size} channels\n`+
+						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections`, true)
+					return nmsg.edit({embed});
+				}
 			}
 		},
-
 		"ping": {
 			usage: "none",
 			description: "Gets latency to Discord",
@@ -152,7 +151,6 @@ module.exports = function(passthrough) {
 				return nmsg.edit({embed});
 			}
 		},
-
 		"forcestatupdate": {
 			usage: "none",
 			description: "",
@@ -165,7 +163,6 @@ module.exports = function(passthrough) {
 				sendStats(msg);
 			}
 		},
-
 		"restartnotify": {
 			usage: "none",
 			description: "",
@@ -179,7 +176,6 @@ module.exports = function(passthrough) {
 				msg.react("✅");
 			}
 		},
-
 		"invite": {
 			usage: "none",
 			description: "Sends the bot invite link to you via DMs",
@@ -197,7 +193,6 @@ module.exports = function(passthrough) {
 				} catch (reason) { return msg.channel.send(lang.dm.failed(msg));}
 			}
 		},
-
 		"info": {
 			usage: "none",
 			description: "Displays information about Amanda",
@@ -223,7 +218,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(embed);
 			}
 		},
-
 		"donate": {
 			usage: "none",
 			description: "Get information on how to donate",
@@ -238,7 +232,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send(embed);
 			}
 		},
-
 		"commits": {
 			usage: "none",
 			description: "Gets the latest git commits to Amanda",
@@ -250,17 +243,44 @@ module.exports = function(passthrough) {
 			process: async function(msg) {
 				msg.channel.sendTyping();
 				const limit = 5;
-				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
-				let data = JSON.parse(body);
+				const authorNameMap = {
+					"Cadence Fish": "Cadence",
+					"Papi": "PapiOphidian"
+				};
+				let res = await new Promise((r) => {
+					simpleGit.status((err, status) => {
+						simpleGit.log({"--no-decorate": null}, (err, log) => {
+							Promise.all(Array(limit).fill().map((_, i) => new Promise(resolve => {
+								simpleGit.diffSummary([log.all[i+1].hash, log.all[i].hash], (err, diff) => {
+									resolve(diff);
+								});
+							}))).then(diffs => {
+								let result = {branch: status.current, latestCommitHash: log.latest.hash.slice(0, 7), logString:
+								log.all.slice(0, limit).map((line, index) => {
+									let date = new Date(line.date);
+									let dateString = date.toDateString()+" @ "+date.toTimeString().split(":").slice(0, 2).join(":");
+									let diff =
+										diffs[index].files.length+" files changed, "+
+										diffs[index].insertions+" insertions, "+
+										diffs[index].deletions+" deletions.";
+										return ""+
+													"`» "+line.hash.slice(0, 7)+": "+dateString+" — "+(authorNameMap[line.author_name] || "Unknown")+"`\n"+
+													"`» "+diff+"`\n"+
+													line.message;
+								}).join("\n\n")};
+								r(result)
+							});
+						});
+					});
+				});
 				return msg.channel.send(new Discord.RichEmbed()
 					.setTitle("Git info")
-					.addField("Status", "On branch "+data.branch+", latest commit "+data.latestCommitHash)
-					.addField(`Commits (latest ${limit} entries)`, data.logString)
+					.addField("Status", "On branch "+res.branch+", latest commit "+res.latestCommitHash)
+					.addField(`Commits (latest ${limit} entries)`, res.logString)
 					.setColor("36393E")
 				);
 			}
 		},
-
 		"privacy": {
 			usage: "none",
 			description: "Details Amanda's privacy statement",
@@ -278,7 +298,6 @@ module.exports = function(passthrough) {
 				} catch (reason) { return msg.channel.send(lang.dm.failed(msg)); }
 			}
 		},
-
 		"user": {
 			usage: "<user>",
 			description: "Provides information about a user",
@@ -323,7 +342,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"avatar": {
 			usage: "<user>",
 			description: "Gets a user's avatar",
@@ -346,7 +364,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"wumbo": {
 			usage: "<emoji>",
 			description: "Makes an emoji bigger",
@@ -366,7 +383,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({embed});
 			}
 		},
-
 		"profile": {
 			usage: "<user>",
 			description: "Get profile information about someone",
@@ -422,7 +438,6 @@ module.exports = function(passthrough) {
 				return msg.channel.send({files: [image]});
 			}
 		},
-
 		"settings": {
 			usage: "<self|server> <view|settings name> <true or false>",
 			description: "Modify settings Amanda will use for yourself or server wide",
@@ -471,7 +486,6 @@ module.exports = function(passthrough) {
 				} else return msg.channel.send(`${msg.author.username}, that is not a valid operant. Valid operants are self and server`);
 			}
 		},
-
 		"help": {
 			usage: "<command>",
 			description: "Your average help command",
@@ -506,7 +520,7 @@ module.exports = function(passthrough) {
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
-						send("dm");
+						send("dm").catch(() => send("channel"));
 					} else if (suffix.includes("playlist")) {
 						embed = new Discord.RichEmbed()
 						.setAuthor(`&music playlist: command help (aliases: playlist, playlists, pl)`)
@@ -540,7 +554,7 @@ module.exports = function(passthrough) {
 							"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
 						.setColor('36393E')
-						send("dm");
+						send("dm").catch(() => send("channel"));
 					} else {
 						let command = Object.values(commands).find(c => c.aliases.includes(suffix));
 						if (command) {
@@ -571,7 +585,7 @@ module.exports = function(passthrough) {
 									.setColor("36393E")
 									let menu = dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
 									setTimeout(() => menu.destroy(true), 5*60*1000);
-								});
+								}).catch(() => send("channel"));
 							} else {
 								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
 								send("channel");
@@ -589,7 +603,7 @@ module.exports = function(passthrough) {
 						"Type `&help <category>` to see all commands in that category.\n"+
 						"Type `&help <command>` to see more information about a command.")
 					.setColor('36393E');
-					send("dm");
+					send("dm").catch(() => send("channel"));
 				}
 				function send(where) {
 					return new Promise((resolve, reject) => {
@@ -597,13 +611,10 @@ module.exports = function(passthrough) {
 						target.send({embed}).then(dm => {
 							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
 							resolve(dm);
-						}).catch(() => {
-							msg.channel.send(lang.dm.failed(msg));
-							reject();
-						});
+						}).catch(reject)
 					});
 				}
 			}
 		}
-	})
+	});
 }

@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
 const path = require("path");
+
 require("../types.js");
 
 let voiceEmptyDuration = 20000;
@@ -15,23 +16,20 @@ let voiceEmptyDuration = 20000;
  */
 module.exports = function(passthrough) {
 	let { config, client, reloadEvent, reloader, commands, queueManager } = passthrough;
+
 	let youtube = new YouTube(config.yt_api_key);
 
 	let utils = require("../modules/utilities.js")(passthrough);
+	let lang = require("../modules/lang.js")(passthrough);
+
+	reloader.useSync(path.basename(__filename), lang);
 	reloader.useSync(path.basename(__filename), utils);
 
-	let lang = require("../modules/lang.js")(passthrough);
-	reloader.useSync(path.basename(__filename), lang);
-
-	/**
-	 * A class representing a local song
-	 */
 	class Song {
 		/**
-		 * Create a new Song
-		 * @param {String} title The title of the song
-		 * @param {String} source Where the song is coming from
-		 * @param {Boolean} live If this class instance is a live stream
+		 * @param {String} title
+		 * @param {String} source
+		 * @param {Boolean} live
 		 * @constructor
 		 */
 		constructor(title, source, live) {
@@ -42,8 +40,7 @@ module.exports = function(passthrough) {
 			this.connectionPlayFunction = "playStream";
 		}
 		/**
-		 * A method to create basic data stored in this class instance
-		 * @returns {Object} The Object assigned to this' object method
+		 * @returns {any}
 		 */
 		toObject() {
 			return Object.assign({
@@ -53,23 +50,20 @@ module.exports = function(passthrough) {
 			}, this.object());
 		}
 		/**
-		 * A method to get the basic information assigned from this' toObject method
-		 * @returns {Object} Basic information about this class instance
+		 * @returns {any}
 		 */
 		object() {
 			// Intentionally empty. Subclasses should put additional properties for toObject here.
 		}
 		/**
-		 * A method to return the audio stream linked to this class instance
-		 * @returns {*} A data stream related to the audio of this class instance
+		 * @returns {any}
 		 */
 		getStream() {
 			this.streaming = true;
 			return this.stream();
 		}
 		/**
-		 * A method to return related audio clips to that of this class instance
-		 * @returns {Array} An Array of related content
+		 * @returns {Array<any>}
 		 */
 		async related() {
 			return [];
@@ -77,25 +71,19 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * Gets a YouTube song from a URL
-	 * @param {String} url A url to fetch
-	 * @param {Boolean} cache If the information should be cached in a new YouTubeSong class instance
-	 * @returns {Promise<YouTubeSong} A new YouTubeSong
+	 * @param {String} url
+	 * @param {Boolean} cache
+	 * @returns {Promise<YouTubeSong}
 	 */
 	async function YTSongObjectFromURL(url, cache) {
 		let info = await ytdl.getInfo(url);
 		return new YouTubeSong(info, cache);
 	}
 
-	/**
-	 * A class representing a local YouTube song
-	 * @extends {Song}
-	 */
 	class YouTubeSong extends Song {
 		/**
-		 * Create a new YouTube song
-		 * @param {Object} info Information to store in this class instance
-		 * @param {Boolean} cache If the info parameter should be cached in this class instance
+		 * @param {ytdl.videoInfo} info
+		 * @param {Boolean} cache
 		 * @constructor
 		 */
 		constructor(info, cache) {
@@ -111,19 +99,11 @@ module.exports = function(passthrough) {
 			if (cache) this.info = info;
 			else this.info = null;
 		}
-		/**
-		 * Returns this class instance's basic information as an object
-		 * @returns {Object} An object containing this class instance's basic information
-		 */
 		object() {
 			return {
 				basic: this.basic
 			}
 		}
-		/**
-		 * Returns information about this class instance in a unified format
-		 * @returns {Object} Information about this class instance
-		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -134,25 +114,18 @@ module.exports = function(passthrough) {
 				lengthSeconds: this.basic.length_seconds
 			}
 		}
-		/**
-		 * Deletes everything cached in this class instance
-		 * @returns {null} null
-		 */
 		deleteCache() {
 			this.info = null;
 		}
 		/**
-		 * Gets a stream of this class instance from YouTube
-		 * @returns {Promise<Object>} This class instance's YouTube information
+		 * @returns {Promise<any>}
 		 */
 		stream() {
 			return this.getInfo(true).then(info => ytdlDiscord.downloadFromInfo(info));
 		}
 		/**
-		 * A function to get the information about this class instance from YouTube
-		 * @param {Boolean} cache If the information fetched should be cached in this class instance
-		 * @param {Boolean} force If this function should skip fetching from YouTube and resolve this class instance's info
-		 * @returns {Promise<Object>} Information about this class instance
+		 * @param {Boolean} cache
+		 * @param {Boolean} force
 		 */
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
@@ -163,43 +136,26 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
-		/**
-		 * Gets related songs to this class instance
-		 * @returns {Promise<Array>} An array of song objects
-		 */
 		async related() {
 			await this.getInfo(true);
 			return this.info.related_videos.filter(v => v.title && v.length_seconds > 0).slice(0, 10);
 		}
 	}
 
-	/**
-	 * A class representing a local Frisky song
-	 * @extends {Song}
-	 */
 	class FriskySong extends Song {
 		/**
-		 * Create a new Frisky Song
-		 * @param {String} station The desired Frisky station
+		 * @param {String} station
 		 * @constructor
 		 */
 		constructor(station) {
 			super("Frisky Radio", "Frisky", true);
 			this.station = station;
 		}
-		/**
-		 * Returns this class instance's station as an object
-		 * @returns {Object} An object containing this class instance's station
-		 */
 		object() {
 			return {
 				station: this.station
 			}
 		}
-		/**
-		 * Returns information about this class instance in a unified format
-		 * @returns {Object} Information about this class instance
-		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -210,8 +166,7 @@ module.exports = function(passthrough) {
 			}
 		}
 		/**
-		 * A function to get a steam from Frisky
-		 * @returns {Promise<net.Socket>} A Socket stream
+		 * @returns {Promise<Array<net.Socket>>}
 		 */
 		async stream() {
 			let host, path;
@@ -241,14 +196,10 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	/**
-	 * A class representing a local music queue for a guild
-	 */
 	class Queue {
 		/**
-		 * Create a new Queue
-		 * @param {Discord.TextChannel} textChannel A Discord managed text channel
-		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @constructor
 		 */
 		constructor(textChannel, voiceChannel) {
@@ -256,8 +207,17 @@ module.exports = function(passthrough) {
 			this._voiceChannel = voiceChannel;
 			this.id = this.textChannel.guild.id;
 			this.connection = undefined;
+			/**
+			 * @type {Discord.StreamDispatcher}
+			 */
 			this._dispatcher = undefined;
+			/**
+			 * @type {Set<String>}
+			 */
 			this.playedSongs = new Set();
+			/**
+			 * @type {Array<(Song|YouTubeSong|FriskySong)>}
+			 */
 			this.songs = [];
 			this.playing = true;
 			this.skippable = false;
@@ -272,23 +232,17 @@ module.exports = function(passthrough) {
 			this.voiceLeaveTimeout = new utils.BetterTimeout();
 		}
 		/**
-		 * A getter for a Queue's connected voice channel
-		 * @returns {Discord.VoiceChannel} A Discord Managed voice channel
+		 * @returns {Discord.VoiceChannel}
 		 */
 		get voiceChannel() {
 			return this.connection ? this.connection.channel : this._voiceChannel;
 		}
 		/**
-		 * A getter for a Queue's connection dispatcher
-		 * @returns {Discord.VoiceConnection.dispatcher} A Discord managed voice connection dispatcher
+		 * @returns {Discord.StreamDispatcher}
 		 */
 		get dispatcher() {
 			return this.connection.dispatcher || this._dispatcher;
 		}
-		/**
-		 * Converts data stored by this class instance to an Object
-		 * @returns {Object} An Object of information about this class instance
-		 */
 		toObject() {
 			return {
 				id: this.id,
@@ -300,10 +254,6 @@ module.exports = function(passthrough) {
 				volume: this.volume,
 			}
 		}
-		/**
-		 * Terminates this class instance locally and remotely
-		 * @returns {void} void
-		 */
 		dissolve() {
 			this.songs.length = 0;
 			this.auto = false;
@@ -314,17 +264,12 @@ module.exports = function(passthrough) {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
 		}
-		/**
-		 * Terminates this class instance locally
-		 */
 		destroy() {
 			this.queueManager.storage.delete(this.id);
 		}
 		/**
-		 * Adds a song to this class instance's storage
-		 * @param {Song} song A remote song converted locally
-		 * @param {Boolean} insert If this song should be inserted at the beginning of the queue instead of the end
-		 * @returns {void} void
+		 * @param {(Song|YouTubeSong|FriskySong)} song
+		 * @param {Boolean} insert
 		 */
 		addSong(song, insert) {
 			let position; // the actual position to insert into, `undefined` to push
@@ -345,9 +290,8 @@ module.exports = function(passthrough) {
 			}
 		}
 		/**
-		 * A function to handle a member's voice status update event
-		 * @param {Discord.GuildMember} oldMember The member before the update
-		 * @param {Discord.GuildMember} newMember The member after the update
+		 * @param {Discord.GuildMember} oldMember
+		 * @param {Discord.GuildMember} newMember
 		 */
 		voiceStateUpdate(oldMember, newMember) {
 			let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
@@ -363,10 +307,6 @@ module.exports = function(passthrough) {
 				this.voiceLeaveTimeout.clear();
 			}
 		}
-		/**
-		 * A function to create an embed for the song which is currently playing
-		 * @returns {Discord.RichEmbed} A Discord managed rich embed
-		 */
 		getNPEmbed() {
 			let song = this.songs[0];
 			let embed = new Discord.RichEmbed().setColor("36393E")
@@ -375,10 +315,6 @@ module.exports = function(passthrough) {
 			if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
 			return embed;
 		}
-		/**
-		 * A function to generate reactions for the now playing message
-		 * @returns {void} void
-		 */
 		generateReactions() {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
@@ -399,8 +335,7 @@ module.exports = function(passthrough) {
 			]);
 		}
 		/**
-		 * A function to perform an action against this class instance
-		 * @param {*} code Code
+		 * @param {Function} code
 		 */
 		queueAction(code) {
 			return (web) => {
@@ -423,7 +358,6 @@ module.exports = function(passthrough) {
 			}
 		}
 		/**
-		 * A function to begin playing the songs linked to this class instance in a Discord managed voice channel
 		 * @returns {Promise<void>} void
 		 */
 		async play() {
@@ -459,9 +393,13 @@ module.exports = function(passthrough) {
 					}}
 				]);
 			});
+			/**
+			 * @type {Discord.StreamDispatcher}
+			 */
 			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
+				queueManager.songsPlayed++;
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queueManager.storage);
@@ -487,7 +425,7 @@ module.exports = function(passthrough) {
 						updateProgress();
 					};
 				}, 5000-dispatcher.time%5000);
-				function handleError(error) { console.error(error) };
+				function handleError (error) { console.error(error); }
 				dispatcher.on('error', handleError);
 				dispatcher.once("end", () => {
 					dispatcher.player.streamingData.pausedTime = 0;
@@ -522,9 +460,7 @@ module.exports = function(passthrough) {
 			});
 		}
 		/**
-		 * A function to pause whatever song is currently playing in this class instance
-		 * @param {*} web Web
-		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 * @returns {Array<any>}
 		 */
 		pause(web) {
 			return this.queueAction(() => {
@@ -543,9 +479,7 @@ module.exports = function(passthrough) {
 			})(web);
 		}
 		/**
-		 * A function to resume whatever song is currently paused in this class instance
-		 * @param {*} web Web
-		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 * @returns {Array<any>}
 		 */
 		resume(web) {
 			return this.queueAction(() => {
@@ -562,9 +496,7 @@ module.exports = function(passthrough) {
 			})(web);
 		}
 		/**
-		 * A function to skip whatever song is currently playing in this class instance
-		 * @param {*} web Web
-		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 * @returns {Array<any>}
 		 */
 		skip(web) {
 			return this.queueAction(() => {
@@ -579,9 +511,7 @@ module.exports = function(passthrough) {
 			})(web);
 		}
 		/**
-		 * A function to destroy this class instance which can be called by a user
-		 * @param {*} web Web
-		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 * @returns {Array<any>}
 		 */
 		stop(web) {
 			return this.queueAction(() => {
@@ -594,40 +524,67 @@ module.exports = function(passthrough) {
 			})(web);
 		}
 	}
+	class VoiceStateCallback {
+		/**
+		 * @param {Discord.Snowflake} userID
+		 * @param {Discord.Guild} guild
+		 * @param {Number} timeoutMs
+		 * @param {Function} callback
+		 * @constructor
+		 */
+		constructor(userID, guild, timeoutMs, callback) {
+			this.userID = userID;
+			this.guild = guild;
+			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
+			this.callback = callback;
+			this.active = true;
+			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
+			this.add();
+		}
+		add() {
+			voiceStateCallbackManager.callbacks.push(this);
+		}
+		remove() {
+			let index = voiceStateCallbackManager.callbacks.indexOf(this);
+			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+		}
+		/**
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 */
+		trigger(voiceChannel) {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(voiceChannel);
+			}
+		}
+		cancel() {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(null);
+			}
+		}
+	}
 
-	utils.addTemporaryListener(reloadEvent, "music", __filename, function(action) {
-		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queueManager.storage);
-		} else if (action == "getQueue") {
-			let serverID = [...arguments][1];
-			if (!serverID) return;
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return;
-			reloadEvent.emit("musicOut", "queue", queue);
-		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
-			let [serverID, callback] = [...arguments].slice(1);
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return callback([400, "Server is not playing music"]);
-			let result = queue[action](true);
-			if (result[0]) callback([200, result[1]]);
-			else callback([400, result[1]]);
-		} else { callback([400, "Action does not exist"]); }
-	});
-
+	/**
+	 * @param {(Song|YouTubeSong|FriskySong)} song
+	 * @param {Discord.TextChannel} textChannel
+	 * @param {Dscord.VoiceChannel} voiceChannel
+	 * @param {Boolean} insert
+	 */
 	async function handleSong(song, textChannel, voiceChannel, insert) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new Queue(textChannel, voiceChannel);
 		queue.addSong(song, insert);
 	}
-
 	/**
-	 * A function to bulk add songs to a queue and play them
-	 * @param {Discord.Message} msg A Discord managed message object
-	 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
-	 * @param {Array} videoIDs An array of video IDs to enque
-	 * @param {String} startString An index in which to start enqueing from
-	 * @param {String} endString An index in which to stop enqueing from
-	 * @param {Boolean} shuffle If the videos should be enqued in a psudeo-random order
-	 * @returns {Promise<void>} void
+	 * @param {Discord.Message} msg
+	 * @param {Discord.VoiceChannel} voiceChannel
+	 * @param {Array<String>} videoIDs
+	 * @param {String} startString
+	 * @param {String} endString
+	 * @param {Boolean} shuffle
+	 * @returns {Promise<void>}
 	 */
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
 		const useBatchLimit = 50;
@@ -698,14 +655,13 @@ module.exports = function(passthrough) {
 			});
 		})();
 	}
-
 	/**
-	 * A function to manage errors returned by YTDL
-	 * @param {Discord.Channel} channel A Discord managed channel object
-	 * @param {Object} reason An error object
-	 * @param {String} id A YouTube song ID
-	 * @param {Number} item Index from operation
-	 * @returns {Promise<void>} void
+	 * @param {Discord.TextChannel} channel
+	 * @param {Object} reason
+	 * @param {String} reason.message
+	 * @param {String} id
+	 * @param {Number} item
+	 * @returns {Promise<Discord.Message>}
 	 */
 	function manageYtdlGetInfoErrors(channel, reason, id, item) {
 		if (channel.channel) channel = channel.channel;
@@ -729,11 +685,8 @@ module.exports = function(passthrough) {
 			});
 		}
 	}
-
 	/**
-	 * Converts seconds into a pretty HH:MM:SS format
-	 * @param {Number} seconds A duration in seconds
-	 * @returns {String} A pretty string of a duration
+	 * @param {Number} seconds
 	 */
 	function prettySeconds(seconds) {
 		if (isNaN(seconds)) return seconds;
@@ -751,13 +704,11 @@ module.exports = function(passthrough) {
 		output.push(seconds.toString().padStart(2, "0"));
 		return output.join(":");
 	}
-
 	/**
-	 * A function to create a bar displaying progress of the song currently playing
-	 * @param {Discord.VoiceConnection.dispatcher} dispatcher A Discord managed dispatcher
-	 * @param {Queue} queue A local managed queue
-	 * @param {Boolean} done If the song is finished
-	 * @returns {String} A bar of progress
+	 * @param {Discord.StreamDispatcher} dispatcher
+	 * @param {Queue} queue
+	 * @param {Boolean} done
+	 * @returns {String}
 	 */
 	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
@@ -773,86 +724,21 @@ module.exports = function(passthrough) {
 			return "Cannot render progress for source `"+queue.songs[0].source+"`.";
 		}
 	}
-
-	/**
-	 * A manager for voice state callbacks
-	 */
 	const voiceStateCallbackManager = {
 		callbacks: [],
 		/**
-		 * Gets all callbacks matching a given userID and guild
-		 * @param {String} userID A Discord managed user ID
-		 * @param {Discord.Guild} guild A Discord managed guild object
-		 * @returns {Array} An array of callbacks
+		 * @param {Discord.Snowflake} userID
+		 * @param {Discord.Guild} guild
+		 * @returns {Array<VoiceStateCallback>}
 		 */
 		getAll: function(userID, guild) {
 			return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
 		}
 	}
-
 	/**
-	 * A class representing a remote user voice state callback
-	 */
-	class VoiceStateCallback {
-		/**
-		 * Create a new voice state callback. Other pending copies will be cancelled.
-		 * @param {String} userID A Discord managed user ID
-		 * @param {Discord.Guild} guild A Discord managed guild object
-		 * @param {Number} timeoutMs A duration in ms
-		 * @param {*} callback Callback code
-		 * @constructor
-		 */
-		constructor(userID, guild, timeoutMs, callback) {
-			this.userID = userID;
-			this.guild = guild;
-			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
-			this.callback = callback;
-			this.active = true;
-			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
-			this.add();
-		}
-		/**
-		 * Registers this object in the list of pending callbacks
-		 */
-		add() {
-			voiceStateCallbackManager.callbacks.push(this);
-		}
-		/**
-		 * Removes this object from the list of pending callbacks
-		 * Will not callback null, nor set inactive.
-		 */
-		remove() {
-			let index = voiceStateCallbackManager.callbacks.indexOf(this);
-			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
-		}
-		/**
-		 * Called by voiceStateUpdate to trigger the callback and remove the object from the list of pending callbacks
-		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
-		 */
-		trigger(voiceChannel) {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(voiceChannel);
-			}
-		}
-		/**
-		 * Called when this times out
-		 */
-		cancel() {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(null);
-			}
-		}
-	}
-
-	/**
-	 * A Promise wrapper for the local VoiceStateCallback class
-	 * @param {String} userID 
-	 * @param {Discord.Guild} guild A Discord managed guild object
-	 * @param {Number} timeoutMs A duration in ms
+	 * @param {Discord.Snowflake} userID
+	 * @param {Discord.Guild} guild
+	 * @param {Number} timeoutMs
 	 */
 	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
 		return new Promise(resolve => {
@@ -860,23 +746,37 @@ module.exports = function(passthrough) {
 		});
 	}
 
-	client.on("voiceStateUpdate", voiceStateUpdate);
-	reloadEvent.on(__filename, () => client.removeListener("voiceStateUpdate", voiceStateUpdate));
-	/**
-	 * Handles Member voice status updates
-	 * @param {Discord.GuildMember} oldMember Member before update
-	 * @param {Discord.GuildMember} newMember Member after update
-	 */
+	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), voiceStateUpdate);
 	function voiceStateUpdate(oldMember, newMember) {
-		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
-		voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(o => o.trigger(newMember.voiceChannel));
+		if (newMember.id == client.user.id) return;
+		let channel = oldMember.voiceChannel || newMember.voiceChannel;
+		if (!channel || !channel.guild) return;
+		let queue = queueManager.storage.get(channel.guild.id);
+		if (!queue) return;
+		queue.voiceStateUpdate(oldMember, newMember);
 	}
-	
+	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
+		if (action == "getQueues") {
+			reloadEvent.emit("musicOut", "queues", queueManager.storage);
+		} else if (action == "getQueue") {
+			let serverID = [...arguments][1];
+			if (!serverID) return;
+			let queue = queueManager.storage.get(serverID);
+			if (!queue) return;
+			reloadEvent.emit("musicOut", "queue", queue);
+		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
+			let [serverID, callback] = [...arguments].slice(1);
+			let queue = queueManager.storage.get(serverID);
+			if (!queue) return callback([400, "Server is not playing music"]);
+			let result = queue[action](true);
+			if (result[0]) callback([200, result[1]]);
+			else callback([400, result[1]]);
+		} else { callback([400, "Action does not exist"]); }
+	});
 	/**
-	 * A function to detect if a member has joined a voice channel
-	 * @param {Discord.Message} msg A Discord managed message object
-	 * @param {Boolean} wait A boolean on if the client should wait for a member
-	 * @returns {Promise<?Discord.VoiceChannel>} The voice channel that the member's in (or just joined), or null if no channel
+	 * @param {Discord.Message} msg
+	 * @param {Boolean} wait
+	 * @returns {Promise<(Discord.VoiceChannel|null)>}
 	 */
 	async function detectVoiceChannel(msg, wait) {
 		if (msg.member.voiceChannel) return msg.member.voiceChannel;
@@ -884,14 +784,12 @@ module.exports = function(passthrough) {
 		let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
-
 	/**
-	 * A function to search YouTube
-	 * @param {String} input User input; Could be a url or string of search terms
-	 * @param {Discord.Message} message A Discord managed Message object
-	 * @param {String} firstWord The first word in the input string
-	 * @param {Boolean} intoPlaylist If this function is being called from the playlist sub command
-	 * @returns {Promise<YouTubeSong>} A local YouTubeSong class instance
+	 * @param {String} input
+	 * @param {Discord.Message} message
+	 * @param {String} firstWord
+	 * @param {Boolean} intoPlaylist
+	 * @returns {Promise<YouTubeSong>}
 	 */
 	function searchYoutube(input, message, firstWord, intoPlaylist) {
 		return new Promise(async resolve => {
@@ -1091,7 +989,7 @@ module.exports = function(passthrough) {
 					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
-					.addField("­", songProgress(queue.connection.dispatcher, queue))
+					.addField("­", queue.connection?songProgress(queue.connection.dispatcher, queue):"0:00")
 					.setColor("36393E")
 					let n = await msg.channel.send(embed);
 					queue.nowPlayingMsg.clearReactions();

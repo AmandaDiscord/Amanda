@@ -1,4 +1,5 @@
 const path = require("path");
+
 require("../types.js");
 
 const responses = {
@@ -82,11 +83,9 @@ const responses = {
 		"Aww, I think you look really cute. :3"
 	],
 }
-
 const bored = [
 	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit."
 ]
-
 const intent = {
 	"question": [
 		"question", "ask"
@@ -112,7 +111,6 @@ const intent = {
 }
 
 const flat = [].concat(...Object.values(responses));
-
 let userHistory = {};
 
 /**
@@ -122,6 +120,7 @@ module.exports = function(passthrough) {
 	let { client, commands, config, reloader } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
+	
 	reloader.useSync(path.basename(__filename), utils);
 
 	Object.assign(commands, {
@@ -170,5 +169,5 @@ module.exports = function(passthrough) {
 				msg.channel.send(clever_message);
 			}
 		}
-	})
+	});
 }

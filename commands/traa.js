@@ -1,10 +1,12 @@
 const Discord = require("discord.js");
 const path = require("path");
+
+require("../types.js");
+
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
 ];
-require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
@@ -16,16 +18,11 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), utils);
 
 	let cadence = new utils.DMUser("176580265294954507");
-
-	reloadEvent.once(__filename, () => {
-		client.removeListener("message", gifDetector);
-	});
-	client.on("message", gifDetector);
-
 	let prompts = [];
 
+	utils.addTemporaryListener(client, "message", path.basename(__filename), gifDetector);
+
 	/**
-	 * Detects a gif from another bot
 	 * @param {Discord.Message} msg
 	 */
 	async function gifDetector(msg) {
@@ -133,5 +130,5 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
-	})
+	});
 }

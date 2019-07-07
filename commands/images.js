@@ -1,7 +1,8 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
+const path = require("path");
+
 require("../types.js");
-const path = require("path")
 
 /**
  * @param {PassthroughType} passthrough
@@ -14,11 +15,11 @@ module.exports = function(passthrough) {
 	reloader.useSync(path.basename(__filename), lang);
 
 	/**
-	 * @param {String} host Where the image is coming from
-	 * @param {String} path The API endpoint
+	 * @param {String} host
+	 * @param {String} path
 	 * @param {Discord.Message} msg
-	 * @param {String} emoji The loading animation emoji
-	 * @param {String} footer Embed footer text
+	 * @param {String} emoji
+	 * @param {String} footer
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
@@ -58,7 +59,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"dog": {
 			usage: "none",
 			description: "Returns an image of a cute doggo",
@@ -71,7 +71,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"space": {
 			usage: "none",
 			description: "Returns an image of space",
@@ -84,7 +83,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"snek": {
 			usage: "none",
 			description: "Returns an image of a snek",
@@ -97,7 +95,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"birb": {
 			usage: "none",
 			description: "Returns an image of a birb",
@@ -110,7 +107,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"neko": {
 			usage: "none",
 			description: "Returns an image of a neko (ฅ’ω’ฅ)",
