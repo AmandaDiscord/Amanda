@@ -1,0 +1,23 @@
+doctype html
+html
+	include includes/head.pug
+		title Select server | Amanda
+	
+	body
+		include includes/nav.pug
+		+nav("dash")
+
+		div.spaced-title
+			div= user.tag
+			div Select a server
+			a(href="/logout").no-underline Log out
+
+		div.guilds
+			for guild in guilds
+				a(href="/dash/server/"+guild.id)
+					if guild.icon
+						img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
+					else
+						//div.letter-icon= guild.name[0].toUpperCase()
+						div.letter-icon= guild.nameAcronym
+					div.name= guild.name

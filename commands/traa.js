@@ -17,16 +17,6 @@ module.exports = function(passthrough) {
 
 	let cadence = new utils.DMUser("176580265294954507");
 
-	Object.prototype.sp = function(properties) {
-		let list = properties.split(".");
-		let result = this;
-		list.forEach(p => {
-			if (result) result = result[p];
-			else result = undefined;
-		});
-		return result;
-	}
-
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", gifDetector);
 	});
@@ -59,7 +49,7 @@ module.exports = function(passthrough) {
 			let {botInfo, command} = prompts.splice(i, 1)[0];
 			if (!botInfo) return;
 			
-			if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
+			if (msg.author.id == botInfo[0] && utils.sp(msg, "embeds.0.type") == "rich" && utils.sp(msg, "embeds.0.image.url")) {
 				let url = msg.embeds[0].image.url;
 
 				let existing = await utils.sql.get("SELECT * FROM GenderGifsV2 WHERE url = ?", url);

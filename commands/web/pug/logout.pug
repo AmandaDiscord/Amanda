@@ -1,0 +1,20 @@
+doctype html
+html
+	include includes/head.pug
+		title Log out | Amanda
+
+	body
+		include includes/nav.pug
+		+nav("dash")
+
+		div.title
+			div Log out
+
+		if message
+			div.message
+				div= message
+
+		form(method="post" action="/logout")
+			div.login-container
+				input(name="csrftoken" type="hidden")
+				input(type="submit" value="Log out")

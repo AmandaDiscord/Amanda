@@ -33,6 +33,7 @@ let queueManager = {
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",
+		"./modules/validator.js"
 	])
 	reloader.watchAndLoad([
 		"./modules/prototypes.js",
@@ -47,7 +48,8 @@ let queueManager = {
 		"./commands/interaction.js",
 		"./commands/meta.js",
 		"./commands/music.js",
-		"./commands/traa.js"
+		"./commands/traa.js",
+		"./commands/web/server.js"
 	])
 
 	client.login(config.bot_token);

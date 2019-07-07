@@ -228,8 +228,8 @@ module.exports = function(passthrough) {
 			try {
 				let data = JSON.parse(body);
 				let item = data.data.items.find(i => i.station == song.station);
-				if (item && item.sp("episode.title")) {
-					song.title = "Frisky Radio: "+item.sp("episode.title");
+				if (item && utils.sp(item, "episode.title")) {
+					song.title = "Frisky Radio: "+utils.sp(item, "episode.title");
 					if (song.station != "frisky") song.title += ` (${song.station[0].toUpperCase()+song.station.slice(1)}`;
 				}
 			} catch (e) {}
@@ -987,9 +987,13 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
+				return msg.channel.send(
+					"The music controls website is currently under construction. "
+					+"Check back again later, or join the support server to get an announcement as soon as it's available: https://discord.gg/zhthQjH"
+				);
 				if (msg.channel.type == "text") return msg.channel.send(`Please use this command in a DM.`);
 				await utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
-				let hash = crypto.createHash("sha256").update(""+Math.random()).digest("hex");
+				let hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
 				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?)", [msg.author.id, hash]);
 				msg.channel.send(
 					`Music login token created!\n`+
