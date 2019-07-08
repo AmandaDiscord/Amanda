@@ -42,7 +42,9 @@ let gameManager = {
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",
-		"./modules/validator.js"
+		"./modules/validator.js",
+		"./commands/music/songtypes.js",
+		"./commands/music/queue.js"
 	])
 	reloader.watchAndLoad([
 		"./modules/prototypes.js",
@@ -56,7 +58,7 @@ let gameManager = {
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music.js",
+		"./commands/music/music.js",
 		"./commands/traa.js",
 		"./commands/web/server.js"
 	])
