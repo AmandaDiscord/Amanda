@@ -13,13 +13,13 @@ module.exports = function(passthrough) {
 	let { client, config, commands, reloadEvent, reloader, gameManager, queueManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	reloader.useSync(path.basename(__filename), lang);
-	reloader.useSync(path.basename(__filename), utils);
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/lang.js", lang);
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
-	console.log(`added Timeout sendStatsTimeout`);
+	console.log(`added timeout sendStatsTimeout`);
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
@@ -40,7 +40,7 @@ module.exports = function(passthrough) {
 	}
 
 	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)));
-	console.log(`added Timeout dailyTimeout`);
+	console.log(`added timeout dailyTimeout`);
 	function setDailyStatsTimeout() {
 		setDailyStats();
 		dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24);

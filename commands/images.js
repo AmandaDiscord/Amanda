@@ -12,7 +12,7 @@ module.exports = function(passthrough) {
 	let key = config.chewey_api_key;
 
 	let lang = require("../modules/lang.js")(passthrough);
-	reloader.useSync(path.basename(__filename), lang);
+	reloader.useSync("./modules/lang.js", lang);
 
 	/**
 	 * @param {String} host

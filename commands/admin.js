@@ -10,10 +10,10 @@ module.exports = function(passthrough) {
 	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	reloader.useSync(path.basename(__filename), utils);
-	reloader.useSync(path.basename(__filename), lang);
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", lang);
 
 	Object.assign(commands, {
 		"evaluate": {

@@ -15,7 +15,7 @@ module.exports = function(passthrough) {
 	let { client, reloadEvent, reloader, commands } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	let cadence = new utils.DMUser("176580265294954507");
 	let prompts = [];

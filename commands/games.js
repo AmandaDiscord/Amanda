@@ -24,10 +24,10 @@ module.exports = function(passthrough) {
 	let { client, reloadEvent, commands, reloader, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	reloader.useSync(path.basename(__filename), lang);
-	reloader.useSync(path.basename(__filename), utils);
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/lang.js", lang);
 
 	class Game {
 		/**

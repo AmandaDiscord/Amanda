@@ -59,6 +59,10 @@ module.exports = class Reloader {
 	 */
 	useSync(filename, object) {
 		filename = localPath(filename)
+		if (!this.watchers.has(filename)) throw new Error(
+			`Reloader: asked to keep object in sync with ${filename}, `
+			+`but that file is not being watched.`
+		)
 		this.syncers.push({filename, object})
 		return this
 	}

@@ -120,8 +120,7 @@ module.exports = function(passthrough) {
 	let { client, commands, config, reloader } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	
-	reloader.useSync(path.basename(__filename), utils);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	Object.assign(commands, {
 		"cleverai": {

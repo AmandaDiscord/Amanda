@@ -4,7 +4,7 @@ module.exports = function(passthrough) {
 	let {reloader} = passthrough
 
 	let utils = require("../../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	return {
 		/**

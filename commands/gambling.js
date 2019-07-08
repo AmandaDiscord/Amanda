@@ -14,10 +14,10 @@ module.exports = function(passthrough) {
 	let { client, commands, reloader } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
+	
 	let lang = require("../modules/lang.js")(passthrough);
-
-	reloader.useSync(path.basename(__filename), utils);
-	reloader.useSync(path.basename(__filename), lang);
+	reloader.useSync("./modules/lang.js", lang);
 
 	let imageStorage = new utils.JIMPStorage();
 	imageStorage.save("font", "font", ".fonts/Whitney-20.fnt");

@@ -10,10 +10,10 @@ module.exports = (passthrough) => {
 	const {config, client, extra, reloadEvent, reloader, resolveTemplates, pugCache} = passthrough;
 
 	let utils = require("../../../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	let validators = require("../../../modules/validator.js")()
-	reloader.useSync(path.basename(__filename), validators)
+	reloader.useSync("./modules/validator.js", validators)
 
 	// Cache users to make sure they'll show up on the about page
 	new utils.DMUser("176580265294954507")

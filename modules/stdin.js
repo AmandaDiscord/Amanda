@@ -12,10 +12,10 @@ module.exports = function(passthrough) {
 	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync(path.basename(__filename), utils);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	let lang = require("../modules/lang.js")(passthrough);
-	reloader.useSync(path.basename(__filename), lang);
+	reloader.useSync("./modules/lang.js", lang);
 
 	async function customEval(input, context, filename, callback) {
 		let depth = 0;
