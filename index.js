@@ -6,7 +6,7 @@ const config = require("./config.json");
 const client = new Discord.Client({disableEveryone: true});
 
 let db = mysql.createPool({
-	host: "cadence.gq",
+	host: config.mysql_domain,
 	user: "amanda",
 	password: config.mysql_password,
 	database: "money",
