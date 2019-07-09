@@ -382,27 +382,13 @@ module.exports = (passthrough) => {
 				});
 			},
 			/**
+			 * @param {Discord.User} user
+			 * @param {String} permission
 			 * @returns {Promise<Boolean>}
 			 */
-			hasPermission: async function() {
-				let args = [...arguments];
-				let thing, thingType, permissionType;
-				if (typeof(args[0]) == "object") {
-					thing = args[0].id;
-					if (args[0].constructor.name == "Guild") thingType = "server";
-					else thingType = "user";
-					permissionType = args[1];
-				} else {
-					[thing, thingType, permissionType] = args;
-				}
-				let result;
-				if (thingType == "user" || thingType == "member") {
-					result = await utils.sql.get(`SELECT ${permissionType} FROM UserPermissions WHERE userID = ?`, thing);
-				} else if (thingType == "server" || thingType == "guild") {
-					result = await utils.sql.get(`SELECT ${permissionType} FROM ServerPermissions WHERE serverID = ?`, thing);
-				}
+			hasPermission: async function(user, permission) {
+				let result = await utils.sql.get(`SELECT ${permission} FROM UserPermissions WHERE userID = ?`, user.id);
 				if (result) result = Object.values(result)[0];
-				if (permissionType == "music") return true;
 				return !!result;
 			},
 			/**
