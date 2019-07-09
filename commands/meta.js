@@ -350,7 +350,7 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let permissions;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
-				if (!permissions.has("EMBED_LINKS")) return msg.channel.send(lang.permissionDeniedGeneric("embed links"));
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(lang.permissionDeniedGeneric("embed links"));
 				let user, member;
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
