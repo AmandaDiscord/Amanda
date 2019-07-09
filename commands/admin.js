@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const path = require("path");
 
 require("../types.js");
 
@@ -15,7 +14,7 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", lang);
 
-	Object.assign(commands, {
+	commands.assign({
 		"evaluate": {
 			usage: "<code>",
 			description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",

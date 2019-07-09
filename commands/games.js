@@ -39,6 +39,7 @@ module.exports = function(passthrough) {
 			this.type = type;
 			this.manager = gameManager;
 			this.id = channel.id;
+			this.permissions = channel.permissionsFor(client.user);
 		}
 		init() {
 			this.manager.addGame(this);
@@ -93,7 +94,10 @@ module.exports = function(passthrough) {
 				.setColor(this.color);
 			answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)} \n`).join("")+"​", true)) //SC: zero-width space and em space
 			embed.setFooter("To answer, type a letter in chat. You have 20 seconds.");
-			this.channel.send(embed);
+			let content;
+			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer.text}`;
+			else content = embed;
+			this.channel.send(content);
 			// Setup timer
 			this.timer = setTimeout(() => this.end(), 20000);
 			// Prepare to receive answers
@@ -149,13 +153,17 @@ module.exports = function(passthrough) {
 				.setTitle("Correct answer:")
 				.setDescription(this.correctAnswer)
 				.setColor(this.color)
-				.setFooter("Click the reaction for another round.");
 			if (winners.length) {
 				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${lang.emoji.discoin})`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
-			return this.channel.send(embed).then(msg => {
+			if (this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
+			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
+			let content;
+			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer?embed.footer.text:""}`;
+			else content = embed;
+			return this.channel.send(content).then(msg => {
 				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
@@ -173,10 +181,14 @@ module.exports = function(passthrough) {
 			if (body.startsWith("http")) body = await rp(body);
 			return [true, JSON.parse(body)];
 		} catch (error) {
+			let permissions = channel.permissionsFor(client.user);
 			let embed = new Discord.RichEmbed()
 			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
 			.setColor(0xdd1d1d)
-			return [false, channel.send({embed})];
+			let content;
+			if (!permissions.has("EMBED_LINKS")) content = embed.description;
+			else content = embed;
+			return [false, channel.send(content)];
 		}
 	}
 	/**
@@ -365,7 +377,7 @@ module.exports = function(passthrough) {
 		return { text: str, size: width, bombs: bombs, error: error };
 	}
 
-	Object.assign(commands, {
+	commands.assign({
 		"trivia": {
 			usage: "none",
 			description: "Play a game of trivia with other members and win Discoins",
@@ -392,6 +404,8 @@ module.exports = function(passthrough) {
 				let size = 8, difficulty = "easy";
 				let string, title;
 				let sfx = suffix.toLowerCase();
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 
 				if (sfx.includes("--size:")) {
 					let tsize = sfx.split("--size:")[1].substring().split(" ")[0];
@@ -406,9 +420,12 @@ module.exports = function(passthrough) {
 				
 				title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`;
 				if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
-				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
-				msg.channel.send(embed);
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `${title}\n${string.text}`;
+				else content = embed;
+				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
+				msg.channel.send(content);
 			}
 		}
 	});

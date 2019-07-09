@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const mysql = require("mysql2/promise");
 const hotreload = require("./hotreload.js");
+const commandstore = require("./commandstore.js");
 
 const config = require("./config.json");
 const client = new Discord.Client({disableEveryone: true});
@@ -13,7 +14,7 @@ let db = mysql.createPool({
 	connectionLimit: 5
 });
 
-const commands = {};
+let commands = new commandstore()
 let reactionMenus = {};
 
 let queueManager = {

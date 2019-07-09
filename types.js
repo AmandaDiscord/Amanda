@@ -9,7 +9,7 @@
  * @property {String} config.website_protocol
  * @property {String} config.website_domain
  * @property {import("discord.js").Client} client
- * @property {any} commands
+ * @property {import("./commandstore")} commands
  * @property {import("mysql2/promise").PromisePool} db
  * @property {import("./hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent

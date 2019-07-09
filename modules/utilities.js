@@ -17,16 +17,6 @@ module.exports = (passthrough) => {
 
 	if (!utilsResultCache) {
 		var utils = {
-			sp: function(object, properties) {
-				let list = properties.split(".");
-				let result = this;
-				list.forEach(p => {
-					if (result) result = result[p];
-					else result = undefined;
-				});
-				return result;
-			},
-			
 			DMUser: class DMUser {
 				/**
 				 * @param {Discord.Snowflake} userID
@@ -496,6 +486,15 @@ module.exports = (passthrough) => {
 				let d = new Date(when || Date.now());
 				if (!seperator) seperator = "";
 				return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0");
+			},
+			sp: function(object, properties) {
+				let list = properties.split(".");
+				let result = this;
+				list.forEach(p => {
+					if (result) result = result[p];
+					else result = undefined;
+				});
+				return result;
 			}
 		}
 

@@ -20,10 +20,10 @@ module.exports = function(passthrough) {
 	let youtube = new YouTube(config.yt_api_key);
 
 	let utils = require("../modules/utilities.js")(passthrough);
-	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
-	reloader.useSync(path.basename(__filename), lang);
-	reloader.useSync(path.basename(__filename), utils);
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", lang);
 
 	class Song {
 		/**
@@ -875,7 +875,7 @@ module.exports = function(passthrough) {
 		});
 	}
 
-	Object.assign(commands, {
+	commands.assign({
 		"musictoken": {
 			usage: "none",
 			description: "Assign a login token for use on Amanda's web dashboard",
@@ -932,6 +932,7 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type != "text") return msg.channel.send(lang.command.guildOnly(msg));
+				if (!msg.channel.permissionsFor(client.user).has("EMBED_LINKS")) return msg.channel.send(lang.permissionDeniedGeneric("embed links"));
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
 				if (!allowed) {
 					let owner = await client.fetchUser("320067006521147393")

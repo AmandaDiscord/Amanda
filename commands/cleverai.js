@@ -1,5 +1,3 @@
-const path = require("path");
-
 require("../types.js");
 
 const responses = {
@@ -122,7 +120,7 @@ module.exports = function(passthrough) {
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
 
-	Object.assign(commands, {
+	commands.assign({
 		"cleverai": {
 			usage: "<a very witty question>",
 			description: "Ask me the answer to life's greatest questions. "+
