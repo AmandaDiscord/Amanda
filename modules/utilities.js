@@ -4,6 +4,7 @@ const util = require("util");
 const Jimp = require("jimp");
 const path = require("path");
 
+//@ts-ignore
 require("../types.js");
 
 const startingCoins = 5000
@@ -113,8 +114,7 @@ module.exports = (passthrough) => {
 				}
 				/**
 				 * @param {String} name
-				 * @param {Promise<Jimp>} promise
-				 * @returns {Promise<Jimp>}
+				 * @param {Promise} promise
 				 */
 				savePromise(name, promise) {
 					this.store.set(name, promise);
@@ -145,10 +145,9 @@ module.exports = (passthrough) => {
 			sql: {
 				/**
 				 * @param {String} statement
-				 * @param {Array<any>} prepared
+				 * @param {(any[]|any)} prepared
 				 */
-				"all": function(string, prepared, connection, attempts) {
-					if (!attempts) attempts = 2;
+				"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 					if (!connection) connection = db;
 					if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
 					return new Promise((resolve, reject) => {
@@ -165,9 +164,9 @@ module.exports = (passthrough) => {
 				},
 				/**
 				 * @param {String} statement
-				 * @param {Array<any>} prepared
+				 * @param {(any[]|any)} prepared
 				 */
-				"get": async function(string, prepared, connection) {
+				"get": async function(string, prepared = undefined, connection = undefined) {
 					return (await utils.sql.all(string, prepared, connection))[0];
 				}
 			},
@@ -371,7 +370,7 @@ module.exports = (passthrough) => {
 			 * @param {events.EventEmitter} target
 			 * @param {String} name
 			 * @param {String} filename
-			 * @param {Function} code
+			 * @param {any} code
 			 */
 			addTemporaryListener: function(target, name, filename, code) {
 				console.log("added event "+name);
@@ -451,17 +450,16 @@ module.exports = (passthrough) => {
 			/**
 			 * @param {any} data
 			 * @param {Number} depth
-			 * @returns {String}
+			 * @returns {Promise<String>}
 			 */
-			stringify: async function(data, depth) {
-				if (!depth) depth = 0;
+			stringify: async function(data, depth = 0) {
 				let result;
 				if (data === undefined) result = "(undefined)";
 				else if (data === null) result = "(null)";
 				else if (typeof(data) == "function") result = "(function)";
 				else if (typeof(data) == "string") result = `"${data}"`;
 				else if (typeof(data) == "number") result = data.toString();
-				else if (data.constructor && data.constructor.name == "Promise") result = utils.stringify(await data);
+				else if (data.constructor && data.constructor.name == "Promise") result = await utils.stringify(data);
 				else if (data.constructor && data.constructor.name.toLowerCase().includes("error")) {
 					let errorObject = {};
 					Object.entries(data).forEach(e => {
@@ -479,15 +477,7 @@ module.exports = (passthrough) => {
 				}
 				return result;
 			},
-			/**
-			 * @param {Discord.Guild} guild
-			 * @param {any} entry
-			 */
-			addMusicLogEntry: function(guild, entry) {
-				if (!guild.musicLog) guild.musicLog = [];
-				guild.musicLog.unshift(entry);
-				if (guild.musicLog.length > 15) guild.musicLog.pop();
-			},
+
 			/**
 			 * @param {Date} when
 			 * @param {String} seperator
@@ -506,6 +496,7 @@ module.exports = (passthrough) => {
 
 		utilsResultCache = utils;
 	} else {
+		//@ts-ignore
 		var utils = utilsResultCache;
 	}
 

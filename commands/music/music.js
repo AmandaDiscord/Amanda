@@ -6,6 +6,7 @@ const rp = require("request-promise");
 const Discord = require("discord.js");
 const path = require("path");
 
+//@ts-ignore
 require("../../types.js");
 
 let voiceEmptyDuration = 20000;
@@ -34,10 +35,10 @@ module.exports = function(passthrough) {
 	/**
 	 * @param {Song} song
 	 * @param {Discord.TextChannel} textChannel
-	 * @param {Dscord.VoiceChannel} voiceChannel
+	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Boolean} insert
 	 */
-	async function handleSong(song, textChannel, voiceChannel, insert) {
+	async function handleSong(song, textChannel, voiceChannel, insert = undefined) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
 		queue.addSong(song, insert);
 	}
@@ -48,9 +49,9 @@ module.exports = function(passthrough) {
 	 * @param {String} startString
 	 * @param {String} endString
 	 * @param {Boolean} shuffle
-	 * @returns {Promise<void>}
+	 * @returns {Promise}
 	 */
-	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
+	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle = false) {
 		const useBatchLimit = 50;
 		const batchSize = 30;
 
@@ -245,7 +246,7 @@ module.exports = function(passthrough) {
 			let result = queue[action](true);
 			if (result[0]) callback([200, result[1]]);
 			else callback([400, result[1]]);
-		} else { callback([400, "Action does not exist"]); }
+		}
 	});
 	/**
 	 * @param {Discord.Message} msg
@@ -422,8 +423,8 @@ module.exports = function(passthrough) {
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
 					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin(msg));
-					if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak(msg));
+					if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin());
+					if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak());
 					if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 					let result = await searchYoutube(args.slice(1).join(" "), msg, args[1]);
 					if (result == null) return;

@@ -35,12 +35,18 @@ module.exports = passthrough => {
 		/**
 		 * @returns {any}
 		 */
+		stream() {
+			// Intentionally empty.
+		}
+		/**
+		 * @returns {any}
+		 */
 		getStream() {
 			this.streaming = true;
 			return this.stream();
 		}
 		/**
-		 * @returns {Array<any>}
+		 * @returns {Promise<Array<any>>}
 		 */
 		async related() {
 			return [];
@@ -61,7 +67,7 @@ module.exports = passthrough => {
 				id: info.video_id,
 				title: info.title,
 				author: info.author.name,
-				length_seconds: info.length_seconds
+				length_seconds: +info.length_seconds
 			}
 			if (cache) this.info = info;
 			else this.info = null;
@@ -94,7 +100,7 @@ module.exports = passthrough => {
 		 * @param {Boolean} cache
 		 * @param {Boolean} force
 		 */
-		getInfo(cache, force) {
+		getInfo(cache, force = undefined) {
 			if (this.info || force) return Promise.resolve(this.info);
 			else {
 				return ytdl.getInfo(this.basic.id).then(info => {
@@ -103,9 +109,12 @@ module.exports = passthrough => {
 				});
 			}
 		}
+		/**
+		 * @returns {Promise<Array<any>>}
+		 */
 		async related() {
 			await this.getInfo(true);
-			return this.info.related_videos.filter(v => v.title && v.length_seconds > 0).slice(0, 10);
+			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10);
 		}
 	}
 

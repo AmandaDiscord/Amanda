@@ -82,6 +82,7 @@ module.exports = (passthrough) => {
 
 		langResultCache = lang
 	} else {
+		//@ts-ignore
 		var lang = langResultCache
 	}
 
