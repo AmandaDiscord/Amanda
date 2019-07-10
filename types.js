@@ -21,4 +21,5 @@
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} gameManager.storage
  * @property {Number} gameManager.gamesPlayed
  * @property {Function} gameManager.addGame
+ * @property {import("simple-youtube-api")} youtube
  */
