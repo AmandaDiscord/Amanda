@@ -1,9 +1,18 @@
-let rp = require("request-promise");
+const rp = require("request-promise");
+const Discord = require("discord.js");
+const Jimp = require("jimp");
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, config, utils, commands, reloadEvent } = passthrough;
+	let { client, config, utils, commands, reloadEvent } = passthrough;
 
 	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
+	/**
+	 * Sends client statistics to the database in an interval
+	 */
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
@@ -13,6 +22,10 @@ module.exports = function(passthrough) {
 		clearTimeout(sendStatsTimeout);
 	});
 
+	/**
+	 * A function to send stats to the database
+	 * @param {Discord.Message} msg A Discord managed message object
+	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();
@@ -34,6 +47,9 @@ module.exports = function(passthrough) {
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
@@ -58,6 +74,9 @@ module.exports = function(passthrough) {
 			description: "Gets latency to Discord",
 			aliases: ["ping", "pong"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function (msg) {
 				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array[Math.floor(Math.random() * array.length)];
@@ -72,8 +91,25 @@ module.exports = function(passthrough) {
 			description: "",
 			aliases: ["forcestatupdate"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
 				sendStats(msg);
+			}
+		},
+
+		"restartnotify": {
+			usage: "none",
+			description: "",
+			aliases: ["restartnotify"],
+			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
+				await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id]);
+				msg.react("✅");
 			}
 		},
 
@@ -82,13 +118,16 @@ module.exports = function(passthrough) {
 			description: "Sends the bot invite link to you via DMs",
 			aliases: ["invite", "inv"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
 				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
 				try {
 					await msg.author.send({embed});
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 					return;
-				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));}
+				} catch (reason) { return msg.channel.send(client.lang.dm.failed(msg));}
 			}
 		},
 
@@ -97,7 +136,10 @@ module.exports = function(passthrough) {
 			description: "Displays information about Amanda",
 			aliases: ["info", "inf"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				let [c1, c2] = await Promise.all([
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
@@ -106,10 +148,10 @@ module.exports = function(passthrough) {
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
-						`${c1.tag} <:bravery:479939311593324557> <:NitroBadge:421774688507920406>\n`+
-						`${c2.tag} <:brilliance:479939329104412672> <:NitroBadge:421774688507920406>`)
+						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>\n`+
+						`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nYou can also visit her listing sites at [Discord Bot List](https://discordbots.org/bot/405208699313848330) or on [Discord Bots](https://bots.discord.pw/bots/405208699313848330)`)
+					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)`)
 					.setColor("36393E");
 				return msg.channel.send(embed);
 			}
@@ -120,7 +162,10 @@ module.exports = function(passthrough) {
 			description: "Gets the latest git commits to Amanda",
 			aliases: ["commits", "commit", "git"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				msg.channel.sendTyping();
 				const limit = 5;
 				let body = await rp("https://cadence.gq/api/amandacommits?limit="+limit);
@@ -139,13 +184,16 @@ module.exports = function(passthrough) {
 			description: "Details Amanda's privacy statement",
 			aliases: ["privacy"],
 			category: "meta",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send({embed});
-					if (msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
+					if (msg.channel.type != "dm") msg.channel.send(client.lang.dm.success(msg));
 					return;
-				} catch (reason) { return msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg)); }
+				} catch (reason) { return msg.channel.send(client.lang.dm.failed(msg)); }
 			}
 		},
 
@@ -154,12 +202,16 @@ module.exports = function(passthrough) {
 			description: "Provides information about a user",
 			aliases: ["user"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = msg.guild.findMember(msg, suffix, true);
+					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
-				} else user = client.findUser(msg, suffix, true);
+				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(`Couldn't find that user`);
 				let embed = new Discord.RichEmbed().setColor("36393E");
 				embed.addField("User ID:", user.id);
@@ -195,13 +247,17 @@ module.exports = function(passthrough) {
 			description: "Gets a user's avatar",
 			aliases: ["avatar", "pfp"],
 			category: "meta",
-			process: function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
+			process: async function(msg, suffix) {
 				let user, member;
 				if (msg.channel.type == "text") {
-					member = msg.guild.findMember(msg, suffix, true);
+					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
-				} else user = client.findUser(msg, suffix, true);
-				if (!user) return msg.channel.send(utils.lang.inputBadUser(msg));
+				} else user = await client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
@@ -214,14 +270,178 @@ module.exports = function(passthrough) {
 			description: "Makes an emoji bigger",
 			aliases: ["wumbo"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: function(msg, suffix) {
-				if (!suffix) return msg.channel.send(utils.lang.inputNoEmoji(msg));
+				if (!suffix) return msg.channel.send(client.lang.input.invalid(msg, "emoji"));
 				let emoji = client.parseEmoji(suffix);
-				if (emoji == null) return msg.channel.send(utils.lang.inputNoEmoji(msg));
+				if (emoji == null) return msg.channel.send(client.lang.input.invalid(msg, "emoji"));
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
 				return msg.channel.send({embed});
+			}
+		},
+
+		"profile": {
+			usage: "<user>",
+			description: "Get profile information about someone",
+			aliases: ["profile"],
+			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
+			process: async function(msg, suffix) {
+				let user, member;
+				if (msg.channel.type == "text") {
+					member = await msg.guild.findMember(msg, suffix, true);
+					if (member) user = member.user;
+				} else user = await client.findUser(msg, suffix, true);
+				if (!user) return msg.channel.send(client.lang.input.invalid(msg, "user"));
+				let money = await utils.coinsManager.get(msg.author.id);
+				let index = await utils.sql.all("SELECT * FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id).then(all => all.findIndex(obj => obj.userID == member.id) + 1);
+				msg.channel.sendTyping();
+				let font = await Jimp.loadFont(".fonts/Whitney-25.fnt");
+				let font2 = await Jimp.loadFont(".fonts/Whitney-20.fnt");
+				let canvas = await Jimp.read("./images/profile.png");
+				let avatar = await Jimp.read(user.avatarURL);
+				await avatar.resize(76, 76);
+
+				await canvas.composite(avatar, 52, 47);
+
+				await canvas.print(font, 205, 70, user.tag);
+				await canvas.print(font, 52, 130, "Discoins:");
+				await canvas.print(font2, 52, 160, `${money}`);
+				await canvas.print(font2, 52, 250, `Position on Leaderboard: ${index}`);
+
+				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
+				image = new Discord.Attachment(buffer, "profile.png");
+				return msg.channel.send({files: [image]});
+			}
+		},
+
+		"settings": {
+			usage: "<self|server> <view|setting name> <value>",
+			description: "Modify settings Amanda will use for yourself or server wide",
+			aliases: ["settings"],
+			category: "configuration",
+			process: async function(msg, suffix) {
+				let args = suffix.split(" ");
+				if (msg.channel.type == "dm") {
+					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
+				}
+
+				const settings = {
+					"waifualert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"gamblingalert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"prefix": {
+						type: "string",
+						default: "[unset]",
+						scope: ["server"]
+					}
+				}
+
+				const tableNames = {self: "SettingsSelf", server: "SettingsGuild"};
+
+				let scope = args[0].toLowerCase();
+				if (!["self", "server"].includes(scope)) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `scope` was incorrect, it must be either `self` or `server`."
+				);
+				let tableName = tableNames[scope];
+				let keyID = scope == "self" ? msg.author.id : msg.guild.id;
+
+				let settingName = args[1] ? args[1].toLowerCase() : "";
+				if (args[1] == "view") {
+					return msg.channel.send("view placeholder, ping Cadence#3263 if you see this in prod");
+					/*if (args[1].toLowerCase() == "view") {
+						let memsettings = await utils.settings.get(msg.author.id);
+						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
+						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.author.tag}`, msg.author.smallAvatarURL).setDescription(`Waifu Alerts: ${memsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${memsettings.gamblingAlert != 0} - Messages for gambling related things`));
+					}*/
+				}
+
+				if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(
+					`You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.`
+				);
+
+				let setting = settings[settingName];
+				if (!setting) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `name` was incorrect, it must be one of: "
+					+Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => "`"+k+"`").join(", ")
+				);
+				if (!setting.scope.includes(scope)) return msg.channel.send("The setting `"+settingName+"` is not valid for the scope `"+scope+"`.");
+
+				let value = args[2];
+				if (value == undefined) {
+					let row = await utils.sql.get("SELECT value FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					if (scope == "server") {
+						value = row ? row.value : setting.default;
+						if (setting.type == "boolean") {
+							value = !!+value;
+						}
+						if (row) {
+							return msg.channel.send("Current value of `"+settingName+"` is `"+value+"`. This value was set for the server.");
+						} else {
+							return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.");
+						}
+					} else if (scope == "self") {
+						let serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName]);
+						let values = [
+							setting.default,
+							serverRow ? serverRow.value : null,
+							row ? row.value : null
+						];
+						if (setting.type == "boolean") {
+							values = values.map(v => v != null ? !!+v : v);
+						}
+						let finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]");
+						return msg.channel.send(
+							"Default value: "+values[0]+"\n"
+							+"Server value: "+(values[1] != null ? values[1] : "[unset]")+"\n"
+							+"Your value: "+(values[2] != null ? values[2] : "[unset]")+"\n"
+							+"Computed value: "+finalValue
+						);
+					}
+				}
+				value = value.toLowerCase();
+				
+				if (value === "null") {
+					await utils.sql.all("DELETE FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					return msg.channel.send("Setting deleted.");
+				}
+
+				if (setting.type == "boolean") {
+					let value = args[2].toLowerCase();
+					if (!["true", "false"].includes(value)) return msg.channel.send(
+						"Command syntax is `&settings <scope> <name> <value>`. "
+						+"The setting `"+settingName+"` is a boolean, and so your `"+value+"` must be either `true` or `false`."
+					);
+					let value_result = args[2] == "true" ? "1" : "0";
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else if (setting.type == "string") {
+					let value = args[2].toLowerCase();
+					if (value.length > 50) return msg.channel.send("That setting value is too long. It must not be more than 50 characters.");
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else {
+					throw new Error("Invalid reference data type for setting `"+settingName+"`");
+				}
 			}
 		},
 
@@ -230,6 +450,10 @@ module.exports = function(passthrough) {
 			description: "Your average help command",
 			aliases: ["help", "h", "commands", "cmds"],
 			category: "meta",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function (msg, suffix) {
 				let embed;
 				if (suffix) {
@@ -237,7 +461,7 @@ module.exports = function(passthrough) {
 					if (suffix == "music" || suffix == "m") {
 						embed = new Discord.RichEmbed()
 						.setAuthor("&music: command help (aliases: music, m)")
-						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito 2\``)
+						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
 						.addField(`now`, `Show the current song.\n\`&music now\``)
 						.addField(`pause`, `Pause playback.\n\`&music pause\``)
@@ -253,7 +477,6 @@ module.exports = function(passthrough) {
 						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
-						.addField(`volume <amount>`, `Set the music volume. Must be a whole number from 0 to 5. Default volume is 5.\n\`&music volume 3\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
 						.setColor('36393E')
 						send("dm");
@@ -345,10 +568,10 @@ module.exports = function(passthrough) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
 						target.send({embed}).then(dm => {
-							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(utils.lang.successDM(msg));
+							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(client.lang.dm.success(msg));
 							resolve(dm);
 						}).catch(() => {
-							msg.channel.send(utils.lang.permissionAuthorDMBlocked(msg));
+							msg.channel.send(client.lang.dm.failed(msg));
 							reject();
 						});
 					});

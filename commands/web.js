@@ -161,7 +161,7 @@ module.exports = function(passthrough) {
 				// If THAT fails, try reading the html directory for a matching file
 				let filename = path.join(__dirname, "web/html", reqPath);
 				fs.stat(filename, (err, stats) => {
-					if (err) {
+					if (err || stats.isDirectory()) {
 						cf.log("Couldn't handle request for "+reqPath, "warning");
 						res.writeHead(404, Object.assign({"Content-Type": "text/plain"}, globalHeaders));
 						res.write("404 Not Found");
@@ -169,7 +169,7 @@ module.exports = function(passthrough) {
 						return;
 					}
 					//console.log(stats);
-					if (stats.size < 50*10**6 || req.headers["Range"]) { //TODO: remove range check
+					if (stats.size < 5*10**6 || req.headers["Range"]) { //TODO: remove range check
 						cf.log("Using file directly for "+reqPath+" (read)", "spam");
 						fs.readFile(filename, {encoding: null}, (err, content) => {
 							if (err) throw err;

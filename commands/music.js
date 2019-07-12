@@ -1,23 +1,44 @@
-let ytdl = require("ytdl-core");
-let YouTube = require('simple-youtube-api');
+const ytdl = require("ytdl-core");
+const ytdlDiscord = require("ytdl-core-discord");
+const YouTube = require('simple-youtube-api');
 const net = require("net");
-let crypto = require("crypto");
-let rp = require("request-promise");
+const crypto = require("crypto");
+const rp = require("request-promise");
+const Discord = require("discord.js");
+require("../types.js");
 
-const voiceEmptyDuration = 20000;
+let voiceEmptyDuration = 20000;
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { config, Discord, client, utils, reloadEvent } = passthrough;
+	let { config, client, utils, reloadEvent } = passthrough;
 	let youtube = new YouTube(config.yt_api_key);
 	let queueStorage = utils.queueStorage;
 
+	/**
+	 * A class representing a local song
+	 */
 	class Song {
+		/**
+		 * Create a new Song
+		 * @param {String} title The title of the song
+		 * @param {String} source Where the song is coming from
+		 * @param {Boolean} live If this class instance is a live stream
+		 * @constructor
+		 */
 		constructor(title, source, live) {
 			this.title = title;
 			this.source = source;
 			this.live = live;
 			this.streaming = false;
+			this.connectionPlayFunction = "playStream";
 		}
+		/**
+		 * A method to create basic data stored in this class instance
+		 * @returns {Object} The Object assigned to this' object method
+		 */
 		toObject() {
 			return Object.assign({
 				title: this.title,
@@ -25,25 +46,55 @@ module.exports = function(passthrough) {
 				live: this.live
 			}, this.object());
 		}
+		/**
+		 * A method to get the basic information assigned from this' toObject method
+		 * @returns {Object} Basic information about this class instance
+		 */
 		object() {
 			// Intentionally empty. Subclasses should put additional properties for toObject here.
 		}
+		/**
+		 * A method to return the audio stream linked to this class instance
+		 * @returns {*} A data stream related to the audio of this class instance
+		 */
 		getStream() {
 			this.streaming = true;
 			return this.stream();
 		}
-		related() {
+		/**
+		 * A method to return related audio clips to that of this class instance
+		 * @returns {Array} An Array of related content
+		 */
+		async related() {
 			return [];
 		}
 	}
 
+	/**
+	 * Gets a YouTube song from a URL
+	 * @param {String} url A url to fetch
+	 * @param {Boolean} cache If the information should be cached in a new YouTubeSong class instance
+	 * @returns {Promise<YouTubeSong} A new YouTubeSong
+	 */
 	async function YTSongObjectFromURL(url, cache) {
 		let info = await ytdl.getInfo(url);
 		return new YouTubeSong(info, cache);
 	}
+
+	/**
+	 * A class representing a local YouTube song
+	 * @extends {Song}
+	 */
 	class YouTubeSong extends Song {
+		/**
+		 * Create a new YouTube song
+		 * @param {Object} info Information to store in this class instance
+		 * @param {Boolean} cache If the info parameter should be cached in this class instance
+		 * @constructor
+		 */
 		constructor(info, cache) {
 			super(info.title, "YouTube", false);
+			this.connectionPlayFunction = "playOpusStream";
 			this.url = info.video_url;
 			this.basic = {
 				id: info.video_id,
@@ -54,11 +105,19 @@ module.exports = function(passthrough) {
 			if (cache) this.info = info;
 			else this.info = null;
 		}
+		/**
+		 * Returns this class instance's basic information as an object
+		 * @returns {Object} An object containing this class instance's basic information
+		 */
 		object() {
 			return {
 				basic: this.basic
 			}
 		}
+		/**
+		 * Returns information about this class instance in a unified format
+		 * @returns {Object} Information about this class instance
+		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -69,13 +128,26 @@ module.exports = function(passthrough) {
 				lengthSeconds: this.basic.length_seconds
 			}
 		}
+		/**
+		 * Deletes everything cached in this class instance
+		 * @returns {null} null
+		 */
 		deleteCache() {
 			this.info = null;
 		}
-		async stream() {
-			if (this.info) return ytdl.downloadFromInfo(this.info);
-			else return ytdl.getInfo(this.basic.id).then(() => ytdl(this.url));
+		/**
+		 * Gets a stream of this class instance from YouTube
+		 * @returns {Promise<Object>} This class instance's YouTube information
+		 */
+		stream() {
+			return this.getInfo(true).then(info => ytdlDiscord.downloadFromInfo(info));
 		}
+		/**
+		 * A function to get the information about this class instance from YouTube
+		 * @param {Boolean} cache If the information fetched should be cached in this class instance
+		 * @param {Boolean} force If this function should skip fetching from YouTube and resolve this class instance's info
+		 * @returns {Promise<Object>} Information about this class instance
+		 */
 		getInfo(cache, force) {
 			if (this.info || force) return Promise.resolve(this.info);
 			else {
@@ -85,22 +157,43 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
+		/**
+		 * Gets related songs to this class instance
+		 * @returns {Promise<Array>} An array of song objects
+		 */
 		async related() {
 			await this.getInfo(true);
-			return this.info.related_videos.filter(v => v.title).slice(0, 10);
+			return this.info.related_videos.filter(v => v.title && v.length_seconds > 0).slice(0, 10);
 		}
 	}
 
+	/**
+	 * A class representing a local Frisky song
+	 * @extends {Song}
+	 */
 	class FriskySong extends Song {
+		/**
+		 * Create a new Frisky Song
+		 * @param {String} station The desired Frisky station
+		 * @constructor
+		 */
 		constructor(station) {
 			super("Frisky Radio", "Frisky", true);
 			this.station = station;
 		}
+		/**
+		 * Returns this class instance's station as an object
+		 * @returns {Object} An object containing this class instance's station
+		 */
 		object() {
 			return {
 				station: this.station
 			}
 		}
+		/**
+		 * Returns information about this class instance in a unified format
+		 * @returns {Object} Information about this class instance
+		 */
 		toUnified() {
 			return {
 				title: this.title,
@@ -110,6 +203,10 @@ module.exports = function(passthrough) {
 				length: "LIVE"
 			}
 		}
+		/**
+		 * A function to get a steam from Frisky
+		 * @returns {Promise<net.Socket>} A Socket stream
+		 */
 		async stream() {
 			let host, path;
 			if (this.station == "frisky") {
@@ -133,20 +230,29 @@ module.exports = function(passthrough) {
 			let socket = new net.Socket();
 			return new Promise(resolve => socket.connect(80, host, () => {
 				socket.write(`GET ${path} HTTP/1.0\r\n\r\n`);
-				resolve(socket);
+				resolve([socket, socket]);
 			}));
 		}
 	}
 
+	/**
+	 * A class representing a local music queue for a guild
+	 */
 	class Queue {
+		/**
+		 * Create a new Queue
+		 * @param {Discord.TextChannel} textChannel A Discord managed text channel
+		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel
+		 * @constructor
+		 */
 		constructor(textChannel, voiceChannel) {
 			this.textChannel = textChannel;
 			this._voiceChannel = voiceChannel;
 			this.id = this.textChannel.guild.id;
 			this.connection = undefined;
 			this._dispatcher = undefined;
+			this.playedSongs = new Set();
 			this.songs = [];
-			this.volume = 5;
 			this.playing = true;
 			this.skippable = false;
 			this.auto = false;
@@ -158,14 +264,26 @@ module.exports = function(passthrough) {
 				this.connection = connection;
 				if (this.songs.length) this.play();
 			});
-			this.voiceLeaveTimeout = setTimeout(new Function());
+			this.voiceLeaveTimeout = new utils.BetterTimeout();
 		}
+		/**
+		 * A getter for a Queue's connected voice channel
+		 * @returns {Discord.VoiceChannel} A Discord Managed voice channel
+		 */
 		get voiceChannel() {
 			return this.connection ? this.connection.channel : this._voiceChannel;
 		}
+		/**
+		 * A getter for a Queue's connection dispatcher
+		 * @returns {Discord.VoiceConnection.dispatcher} A Discord managed voice connection dispatcher
+		 */
 		get dispatcher() {
 			return this.connection.dispatcher || this._dispatcher;
 		}
+		/**
+		 * Converts data stored by this class instance to an Object
+		 * @returns {Object} An Object of information about this class instance
+		 */
 		toObject() {
 			return {
 				id: this.id,
@@ -177,18 +295,32 @@ module.exports = function(passthrough) {
 				volume: this.volume,
 			}
 		}
+		/**
+		 * Terminates this class instance locally and remotely
+		 * @returns {void} void
+		 */
 		dissolve() {
 			this.songs.length = 0;
 			this.auto = false;
-			clearTimeout(this.voiceLeaveTimeout);
-			if (this.connection.dispatcher) this.connection.dispatcher.end();
-			this.voiceChannel.leave();
+			this.voiceLeaveTimeout.clear();
+			if (this.connection && this.connection.dispatcher) this.connection.dispatcher.end();
+			if (this.voiceChannel) this.voiceChannel.leave();
+			if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			this.destroy();
 		}
+		/**
+		 * Terminates this class instance locally
+		 */
 		destroy() {
 			this.queueStorage.storage.delete(this.id);
 		}
+		/**
+		 * Adds a song to this class instance's storage
+		 * @param {Song} song A remote song converted locally
+		 * @param {Boolean} insert If this song should be inserted at the beginning of the queue instead of the end
+		 * @returns {void} void
+		 */
 		addSong(song, insert) {
 			let position; // the actual position to insert into, `undefined` to push
 			if (insert == undefined) { // no insert? just push
@@ -207,26 +339,41 @@ module.exports = function(passthrough) {
 				if (song.deleteCache) song.deleteCache();
 			}
 		}
+		/**
+		 * A function to handle a member's voice status update event
+		 * @param {Discord.GuildMember} oldMember The member before the update
+		 * @param {Discord.GuildMember} newMember The member after the update
+		 */
 		voiceStateUpdate(oldMember, newMember) {
 			let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
 			if (count == 0) {
-				if (this.voiceLeaveTimeout._called || !this.voiceLeaveTimeout._onTimeout) {
-					this.voiceLeaveTimeout = setTimeout(() => {
+				if (!this.voiceLeaveTimeout.isActive) {
+					this.voiceLeaveTimeout = new utils.BetterTimeout(() => {
 						this.textChannel.send("Everyone left, so I have as well.");
-						this.dissolve()
+						this.dissolve();
 					}, voiceEmptyDuration);
 					this.textChannel.send("No users left in my voice channel. I will stop playing in "+voiceEmptyDuration/1000+" seconds if nobody rejoins.");
 				}
 			} else {
-				clearTimeout(this.voiceLeaveTimeout);
+				this.voiceLeaveTimeout.clear();
 			}
 		}
+		/**
+		 * A function to create an embed for the song which is currently playing
+		 * @returns {Discord.RichEmbed} A Discord managed rich embed
+		 */
 		getNPEmbed() {
 			let song = this.songs[0];
-			return new Discord.RichEmbed().setColor("36393E")
+			let embed = new Discord.RichEmbed().setColor("36393E")
 			.setDescription(`Now playing: **${song.title}**`)
-			.addField("­", songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
+			.addField("­",songProgress(this.dispatcher, this, !this.connection.dispatcher)+(this.auto ? "\n\n**Auto mode on.**" : ""));
+			if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
+			return embed;
 		}
+		/**
+		 * A function to generate reactions for the now playing message
+		 * @returns {void} void
+		 */
 		generateReactions() {
 			if (this.reactionMenu) this.reactionMenu.destroy(true);
 			if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
@@ -239,12 +386,17 @@ module.exports = function(passthrough) {
 					if (!this.voiceChannel.members.has(user.id)) return;
 					this.skip();
 				}},
-				{ emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+				{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 					if (!this.voiceChannel.members.has(user.id)) return;
+					msg.clearReactions();
 					this.stop();
 				}}
 			]);
 		}
+		/**
+		 * A function to perform an action against this class instance
+		 * @param {*} code Code
+		 */
 		queueAction(code) {
 			return (web) => {
 				let result = code();
@@ -265,12 +417,46 @@ module.exports = function(passthrough) {
 				return result;
 			}
 		}
+		/**
+		 * A function to begin playing the songs linked to this class instance in a Discord managed voice channel
+		 * @returns {Promise<void>} void
+		 */
 		async play() {
-			let stream = await this.songs[0].getStream();
-			const dispatcher = this.connection.playStream(stream);
+			if (this.songs[0].basic && this.songs[0].basic.id) this.playedSongs.add(this.songs[0].basic.id);
+			let streams = await this.songs[0].getStream();
+			let stream = streams[0];
+			streams[1].on("error", async err => {
+				if (err.message == "Status code: 403") {
+					console.log("We got the classic 403 signature base64 thingy.");
+					if (!this.songs[0].failures) this.songs[0].failures = 1;
+					else this.songs[0].failures++;
+					if (this.songs[0].failures <= 3) {
+						console.log(`Automatically retrying. (retry ${this.songs[0].failures})`);
+						this.songs[0].info = undefined;
+						setTimeout(() => {
+							this.play();
+						}, 1000);
+						return;
+					}
+				}
+				let embed = new Discord.RichEmbed()
+				.setDescription(
+					"Some error occurred and has been logged to console. Chances are that this won't happen a second time.\n"+
+					"Press <:cbn_tick:378414422219161601> to try again.\n"+
+					"If you keep seeing this, [please tell us about it in the support server.](https://discord.gg/zhthQjH)"
+				)
+				.setColor("#36393F")
+				let retryMessage = await this.textChannel.send(embed);
+				retryMessage.reactionMenu([
+					{emoji: client.emojis.get(client.parseEmoji("<:cbn_tick:378414422219161601>").id), remove: "all", ignore: "total", actionType: "js", actionData: () => {
+						this.songs[0].info = undefined;
+						this.play();
+					}}
+				]);
+			});
+			const dispatcher = this.connection[this.songs[0].connectionPlayFunction](stream);
 			this._dispatcher = dispatcher;
 			dispatcher.once("start", async () => {
-				dispatcher.setVolumeLogarithmic(this.volume / 5);
 				dispatcher.setBitrate("auto");
 				this.skippable = true;
 				reloadEvent.emit("musicOut", "queues", queueStorage.storage);
@@ -306,18 +492,19 @@ module.exports = function(passthrough) {
 					this.skippable = false;
 					new Promise(resolve => {
 						if (this.auto && this.songs.length == 1) {
-							this.songs[0].getInfo(false).then(info => {
-								let related = info.related_videos.filter(v => v.title)[0];
-								if (related) {
-									let videoID = related.id;
-									ytdl.getInfo(videoID).then(video => {
+							this.songs[0].related().then(related => {
+								related = related.filter(v => !this.playedSongs.has(v.id));
+								if (related[0]) {
+									ytdl.getInfo(related[0].id).then(video => {
 										let song = new YouTubeSong(video, true); //TODO: move this to the song object
 										this.addSong(song);
 										resolve();
 									}).catch(reason => {
-										manageYtdlGetInfoErrors(this.textChannel, reason, args[1]);
+										manageYtdlGetInfoErrors(this.textChannel, reason);
 										resolve();
 									});
+								} else {
+									this.textChannel.send("Auto mode was on, but I ran out of related songs to play.");
 								}
 							});
 						} else resolve();
@@ -329,6 +516,11 @@ module.exports = function(passthrough) {
 				});
 			});
 		}
+		/**
+		 * A function to pause whatever song is currently playing in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		pause(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing && !this.songs[0].live) {
@@ -341,10 +533,15 @@ module.exports = function(passthrough) {
 				} else if (this.songs[0].live) {
 					return [false, "Cannot pause live radio."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("paused")];
+					return [false, client.lang.voiceCannotAction("paused")];
 				}
 			})(web);
 		}
+		/**
+		 * A function to resume whatever song is currently paused in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		resume(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && !this.playing) {
@@ -355,10 +552,15 @@ module.exports = function(passthrough) {
 				} else if (this.playing) {
 					return [false, "Music is not paused."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("resumed")];
+					return [false, client.lang.voiceCannotAction("resumed")];
 				}
 			})(web);
 		}
+		/**
+		 * A function to skip whatever song is currently playing in this class instance
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		skip(web) {
 			return this.queueAction(() => {
 				if (this.connection && this.connection.dispatcher && this.playing) {
@@ -367,10 +569,15 @@ module.exports = function(passthrough) {
 				} else if (!this.playing) {
 					return [false, "You cannot skip while music is paused. Resume, then skip."];
 				} else {
-					return [false, utils.lang.voiceCannotAction("skipped")];
+					return [false, client.lang.voiceCannotAction("skipped")];
 				}
 			})(web);
 		}
+		/**
+		 * A function to destroy this class instance which can be called by a user
+		 * @param {*} web Web
+		 * @returns {Array} An Array containing a Boolean and a message if applicable
+		 */
 		stop(web) {
 			return this.queueAction(() => {
 				if (this.connection) {
@@ -407,10 +614,21 @@ module.exports = function(passthrough) {
 		queue.addSong(song, insert);
 	}
 
+	/**
+	 * A function to bulk add songs to a queue and play them
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
+	 * @param {Array} videoIDs An array of video IDs to enque
+	 * @param {String} startString An index in which to start enqueing from
+	 * @param {String} endString An index in which to stop enqueing from
+	 * @param {Boolean} shuffle If the videos should be enqued in a psudeo-random order
+	 * @returns {Promise<void>} void
+	 */
 	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle) {
 		const useBatchLimit = 50;
 		const batchSize = 30;
 
+		let oldVideoIDs = videoIDs;
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
 		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
 		from = Math.max(from, 1);
@@ -419,7 +637,9 @@ module.exports = function(passthrough) {
 		if (shuffle) {
 			videoIDs = videoIDs.shuffle();
 		}
-		if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
+		if (!voiceChannel) voiceChannel = await detectVoiceChannel(msg, true);
+		if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 		let progress = 0;
 		let total = videoIDs.length;
 		let lastEdit = 0;
@@ -433,19 +653,14 @@ module.exports = function(passthrough) {
 			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})`;
 		}
 		let videos = [];
-		function reject({reason, id}) {
-			manageYtdlGetInfoErrors(msg, reason, id).then(() => {
-				msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
-			});
-		}
 		let batchNumber = 0;
 		(function nextBatch() {
 			let batch = batches.shift();
 			batchNumber++;
 			let batchProgress = 0;
-			Promise.all(batch.map(videoID => {
-				return new Promise((resolve, reject) => {
-					ytdl.getInfo(videoID).then(info => {
+			let promise = Promise.all(batch.map(videoID => {
+				return ytdl.getInfo(videoID).then(info => {
+					if (progress >= 0) {
 						progress++;
 						batchProgress++;
 						if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == total) {
@@ -455,10 +670,17 @@ module.exports = function(passthrough) {
 								editInProgress = false;
 							});
 						}
-						resolve(info);
-					}).catch(reason => reject({reason, id: videoID}));
+						return info;
+					}
+				}).catch(reason => Promise.reject({reason, id: videoID}))
+			}));
+			promise.catch(error => {
+				progress = -1;
+				manageYtdlGetInfoErrors(msg, error.reason, error.id, oldVideoIDs.indexOf(error.id)+1).then(() => {
+					msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
 				});
-			})).then(batchVideos => {
+			});
+			promise.then(batchVideos => {
 				videos.push(...batchVideos);
 				if (batches.length) nextBatch();
 				else {
@@ -468,19 +690,32 @@ module.exports = function(passthrough) {
 						handleSong(song, msg.channel, voiceChannel);
 					});
 				}
-			}).catch(reject);
+			});
 		})();
 	}
 
-	function manageYtdlGetInfoErrors(channel, reason, id) {
+	/**
+	 * A function to manage errors returned by YTDL
+	 * @param {Discord.Channel} channel A Discord managed channel object
+	 * @param {Object} reason An error object
+	 * @param {String} id A YouTube song ID
+	 * @param {Number} item Index from operation
+	 * @returns {Promise<void>} void
+	 */
+	function manageYtdlGetInfoErrors(channel, reason, id, item) {
 		if (channel.channel) channel = channel.channel;
-		let idString = id ? ` (id: ${id})` : "";
-		if (reason.message && reason.message.startsWith("No video id found:")) {
-			return channel.send(`that is not a valid YouTube video.`+idString);
-		} else if (reason.message && reason.message.includes("who has blocked it in your country")) {
-			return channel.send(`that video contains content from overly eager copyright enforcers, who have blocked me from streaming it.`+idString)
-		} else if (reason.message && (reason.message.startsWith("The uploader has not made this video available in your country") || reason.message.includes("not available"))) {
-			return channel.send(`that video is not available.`+idString);
+		let idString = id ? ` (index: ${item}, id: ${id})` : "";
+		if (!reason || !reason.message) {
+			return channel.send("An unknown error occurred."+idString);
+		} if (reason.message && reason.message.startsWith("No video id found:")) {
+			return channel.send(`That is not a valid YouTube video.`+idString);
+		} else if (reason.message && (
+				reason.message.includes("who has blocked it in your country")
+			|| reason.message.includes("This video is unavailable")
+			|| reason.message.includes("The uploader has not made this video available in your country")
+			|| reason.message.includes("copyright infringement")
+		)) {
+			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement.`+idString);
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
@@ -490,6 +725,11 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * Converts seconds into a pretty HH:MM:SS format
+	 * @param {Number} seconds A duration in seconds
+	 * @returns {String} A pretty string of a duration
+	 */
 	function prettySeconds(seconds) {
 		if (isNaN(seconds)) return seconds;
 		let minutes = Math.floor(seconds / 60);
@@ -507,6 +747,13 @@ module.exports = function(passthrough) {
 		return output.join(":");
 	}
 
+	/**
+	 * A function to create a bar displaying progress of the song currently playing
+	 * @param {Discord.VoiceConnection.dispatcher} dispatcher A Discord managed dispatcher
+	 * @param {Queue} queue A local managed queue
+	 * @param {Boolean} done If the song is finished
+	 * @returns {String} A bar of progress
+	 */
 	function songProgress(dispatcher, queue, done) {
 		if (!queue.songs.length) return "0:00/0:00";
 		if (queue.songs[0].source == "YouTube") { //TODO: move this to the song object
@@ -522,13 +769,219 @@ module.exports = function(passthrough) {
 		}
 	}
 
+	/**
+	 * A manager for voice state callbacks
+	 */
+	const voiceStateCallbackManager = {
+		callbacks: [],
+		/**
+		 * Gets all callbacks matching a given userID and guild
+		 * @param {String} userID A Discord managed user ID
+		 * @param {Discord.Guild} guild A Discord managed guild object
+		 * @returns {Array} An array of callbacks
+		 */
+		getAll: function(userID, guild) {
+			return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
+		}
+	}
+
+	/**
+	 * A class representing a remote user voice state callback
+	 */
+	class VoiceStateCallback {
+		/**
+		 * Create a new voice state callback. Other pending copies will be cancelled.
+		 * @param {String} userID A Discord managed user ID
+		 * @param {Discord.Guild} guild A Discord managed guild object
+		 * @param {Number} timeoutMs A duration in ms
+		 * @param {*} callback Callback code
+		 * @constructor
+		 */
+		constructor(userID, guild, timeoutMs, callback) {
+			this.userID = userID;
+			this.guild = guild;
+			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
+			this.callback = callback;
+			this.active = true;
+			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
+			this.add();
+		}
+		/**
+		 * Registers this object in the list of pending callbacks
+		 */
+		add() {
+			voiceStateCallbackManager.callbacks.push(this);
+		}
+		/**
+		 * Removes this object from the list of pending callbacks
+		 * Will not callback null, nor set inactive.
+		 */
+		remove() {
+			let index = voiceStateCallbackManager.callbacks.indexOf(this);
+			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+		}
+		/**
+		 * Called by voiceStateUpdate to trigger the callback and remove the object from the list of pending callbacks
+		 * @param {Discord.VoiceChannel} voiceChannel A Discord managed voice channel object
+		 */
+		trigger(voiceChannel) {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(voiceChannel);
+			}
+		}
+		/**
+		 * Called when this times out
+		 */
+		cancel() {
+			if (this.active) {
+				this.active = false;
+				this.remove();
+				this.callback(null);
+			}
+		}
+	}
+
+	/**
+	 * A Promise wrapper for the local VoiceStateCallback class
+	 * @param {String} userID 
+	 * @param {Discord.Guild} guild A Discord managed guild object
+	 * @param {Number} timeoutMs A duration in ms
+	 */
+	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
+		return new Promise(resolve => {
+			new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel));
+		});
+	}
+
+	client.on("voiceStateUpdate", voiceStateUpdate);
+	reloadEvent.on(__filename, () => client.removeListener("voiceStateUpdate", voiceStateUpdate));
+	/**
+	 * Handles Member voice status updates
+	 * @param {Discord.GuildMember} oldMember Member before update
+	 * @param {Discord.GuildMember} newMember Member after update
+	 */
+	function voiceStateUpdate(oldMember, newMember) {
+		if (!(newMember && newMember.voiceChannel && newMember.voiceChannel.guild && newMember.user.id != client.user.id)) return;
+		voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(o => o.trigger(newMember.voiceChannel));
+	}
+	
+	/**
+	 * A function to detect if a member has joined a voice channel
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {Boolean} wait A boolean on if the client should wait for a member
+	 * @returns {Promise<?Discord.VoiceChannel>} The voice channel that the member's in (or just joined), or null if no channel
+	 */
+	async function detectVoiceChannel(msg, wait) {
+		if (msg.member.voiceChannel) return msg.member.voiceChannel;
+		if (!wait) return null;
+		let voiceWaitMsg = await msg.channel.send(client.lang.voiceChannelWaiting(msg));
+		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
+	}
+
+	/**
+	 * A function to search YouTube
+	 * @param {String} input User input; Could be a url or string of search terms
+	 * @param {Discord.Message} message A Discord managed Message object
+	 * @param {String} firstWord The first word in the input string
+	 * @param {Boolean} intoPlaylist If this function is being called from the playlist sub command
+	 * @returns {Promise<YouTubeSong>} A local YouTubeSong class instance
+	 */
+	function searchYoutube(input, message, firstWord, intoPlaylist) {
+		return new Promise(async resolve => {
+			input = input.replace(/^<|>$/g, "");
+			{
+				let match = input.match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
+				if (match) input = match[1];
+			}
+			if (firstWord.match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+				if (intoPlaylist) {
+					message.channel.send(`${message.author.username}, please use \`&music playlist <name> import <url>\` to import a playlist.`);
+					return resolve(null);
+				}
+				if (firstWord.includes("?list=WL")) {
+					message.channel.send(`${message.author.username}, your Watch Later playlist is private, so I can't read it. Give me a public playlist instead.`);
+					return resolve(null);
+				} else {
+					try {
+						let playlist = await youtube.getPlaylist(firstWord);
+						let videos = await playlist.getVideos();
+						return resolve(videos);
+					} catch (e) {
+						message.channel.send(`${message.author.username}, I couldn't read that playlist. Maybe you typed an invalid URL, or maybe the playlist hasn't been set public.`);
+						return resolve(null);
+					}
+				}
+			} else {
+				ytdl.getInfo(input).then(video => {
+					let song = new YouTubeSong(video, !intoPlaylist && (!message.guild.queue || message.guild.queue.songs.length <= 1));
+					resolve(song);
+				}).catch(async () => {
+					message.channel.sendTyping();
+					let videos, selectmessage;
+					async function editOrSend() {
+						if (selectmessage) return selectmessage.edit(...arguments);
+						else return selectmessage = await message.channel.send(...arguments);
+					}
+					let i = 0;
+					while (!videos) {
+						i++;
+						try {
+							videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`));
+						} catch (e) {
+							if (i <= 3) {
+								await editOrSend(`Search failed. I'll try again: hold tight. (attempts: ${i})`);
+								await new Promise(rs => setTimeout(() => rs(), 2500));
+							} else {
+								editOrSend("Couldn't reach Invidious. Try again later? ;-;");
+								return resolve(null);
+							}
+						}
+					}
+					if (!videos.length) {
+						editOrSend("No videos were found with those search terms");
+						return resolve(null);
+					}
+					videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
+					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${prettySeconds(video.lengthSeconds)})`);
+					let embed = new Discord.RichEmbed()
+						.setTitle("Song selection")
+						.setDescription(videoResults.join("\n"))
+						.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
+						.setColor("36393E")
+					await editOrSend({embed});
+					let collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), {maxMatches: 1, time: 60000});
+					collector.next.then(async newmessage => {
+						let videoIndex = parseInt(newmessage.content);
+						if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
+						ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
+							let song = new YouTubeSong(video, !message.guild.queue || message.guild.queue.songs.length <= 1);
+							resolve(song);
+						}).catch(error => {
+							manageYtdlGetInfoErrors(newmessage, error);
+							resolve(null);
+						});
+						selectmessage.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
+					}).catch(() => {
+						selectmessage.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
+						resolve(null);
+					});
+				});
+			}
+		});
+	}
+
 	return {
 		"musictoken": {
 			usage: "none",
 			description: "Assign a login token for use on Amanda's web dashboard",
 			aliases: ["token", "musictoken", "webtoken"],
 			category: "music",
-			process: async function(msg, suffix) {
+			/**
+			 * @param {Discord.Message} msg
+			 */
+			process: async function(msg) {
 				if (msg.channel.type == "text") return msg.channel.send(`Please use this command in a DM.`);
 				await utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
 				let hash = crypto.createHash("sha256").update(""+Math.random()).digest("hex");
@@ -548,14 +1001,17 @@ module.exports = function(passthrough) {
 			description: "Frisky radio",
 			aliases: ["frisky"],
 			category: "music",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type == "dm") return msg.channel.send(client.lang.command.guildOnly(msg));
 				const voiceChannel = msg.member.voiceChannel;
-				if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+				if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new FriskySong(station);
-				handleSong(stream, msg.channel, voiceChannel);
-				return msg.react("👌");
+				return handleSong(stream, msg.channel, voiceChannel);
 			}
 		},
 		"music": {
@@ -563,8 +1019,12 @@ module.exports = function(passthrough) {
 			description: "You're not supposed to see this",
 			aliases: ["music", "m"],
 			category: "music",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type != "text") return msg.channel.send(utils.lang.commandGuildOnly(msg));
+				if (msg.channel.type != "text") return msg.channel.send(client.lang.command.guildOnly(msg));
 				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
 				if (!allowed) {
 					let owner = await client.fetchUser("320067006521147393")
@@ -572,92 +1032,31 @@ module.exports = function(passthrough) {
 				}
 				let args = suffix.split(" ");
 				let queue = queueStorage.storage.get(msg.guild.id);
-				const voiceChannel = msg.member.voiceChannel;
+				const allowedSubcommands = ["q", "queue", "n", "now", "pl", "playlist", "playlists"];
+				let voiceChannel = await detectVoiceChannel(msg, !allowedSubcommands.includes(args[0].toLowerCase()));
+				if (!voiceChannel && !allowedSubcommands.includes(args[0].toLowerCase())) {
+					msg.channel.send(client.lang.voiceMustJoin(msg));
+					return;
+				}
 				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
-					if (!voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+					if (!voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(utils.lang.permissionVoiceJoin(msg));
-					if (!permissions.has("SPEAK")) return msg.channel.send(utils.lang.permissionVoiceSpeak(msg));
-					if (!args[1]) return msg.channel.send(utils.lang.inputPlayableRequired(msg));
-					args[1] = args[1].replace(/^<|>$/g, "");
-					{
-						let match = args[1].match("cadence\.(?:gq|moe)/cloudtube/video/([\\w-]+)");
-						if (match) args[1] = match[1];
-					}
-					if (args[1].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-						if (args[1].includes("?list=WL")) {
-							return msg.channel.send(`${msg.author.username}, your Watch Later playlist is private, so I can't read it. Give me a public playlist instead.`);
-						} else {
-							try {
-								let playlist = await youtube.getPlaylist(args[1]);
-								let videos = await playlist.getVideos();
-								bulkPlaySongs(msg, voiceChannel, videos.map(video => video.id), args[2], args[3]);
-							} catch (e) {
-								return msg.channel.send(`${msg.author.username}, I couldn't read that playlist. Maybe you typed an invalid URL, or maybe the playlist hasn't been set public.`);
-							}
-						}
-					} else {
-						ytdl.getInfo(args[1]).then(video => {
-							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-							return msg.react("👌");
-						}).catch(async reason => {
-							let searchString = args.slice(1).join(" ");
-							msg.channel.sendTyping();
-							let videos;
-							let selectMsg;
-							async function editOrSend() {
-								if (selectMsg) return selectMsg.edit(...arguments);
-								else return selectMsg = await msg.channel.send(...arguments);
-							}
-							let i = 0;
-							while (!videos) {
-								i++;
-								try {
-									videos = JSON.parse(await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(searchString)}`));
-								} catch (e) {
-									if (i <= 3) {
-										await editOrSend(`Search failed. I'll try again: hold tight. (attempts: ${i})`);
-										await new Promise(resolve => setTimeout(() => resolve(), 2500));
-									} else {
-										return editOrSend("Couldn't reach Invidious. Try again later? ;-;");
-									}
-								}
-							}
-							if (!videos.length) return editOrSend("No videos were found with those search terms");
-							videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
-							let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${prettySeconds(video.lengthSeconds)})`);
-							let embed = new Discord.RichEmbed()
-								.setTitle("Song selection")
-								.setDescription(videoResults.join("\n"))
-								.setFooter(`Type a number from 1-${videos.length} to queue that item.`)
-								.setColor("36393E")
-							await editOrSend({embed});
-							let collector = msg.channel.createMessageCollector((m => m.author.id == msg.author.id), {maxMatches: 1, time: 60000});
-							collector.next.then(async msg => {
-								let videoIndex = parseInt(msg.content);
-								if (!videoIndex || !videos[videoIndex-1]) return Promise.reject();
-								ytdl.getInfo(videos[videoIndex-1].videoId).then(video => {
-									let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-									handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-								}).catch(error => manageYtdlGetInfoErrors(msg, error, args[1]));
-								//selectMsg.edit(embed.setDescription("").setFooter("").setTitle("").addField("Song selected", videoResults[videoIndex-1]));
-								selectMsg.edit(embed.setDescription("» "+videoResults[videoIndex-1]).setFooter(""));
-								return msg.react("👌");
-							}).catch(() => {
-								selectMsg.edit(embed.setTitle("Song selection cancelled").setDescription("").setFooter(""));
-							});
-						});
-					}
+					if (!permissions.has("CONNECT")) return msg.channel.send(client.lang.permissionVoiceJoin(msg));
+					if (!permissions.has("SPEAK")) return msg.channel.send(client.lang.permissionVoiceSpeak(msg));
+					if (!args[1]) return msg.channel.send(client.lang.input.music.playableRequired(msg));
+					let result = await searchYoutube(args.slice(1).join(" "), msg, args[1]);
+					if (result == null) return;
+					if (result.constructor.name == "Array") bulkPlaySongs(msg, voiceChannel, result.map(video => video.id), args[2], args[3]);
+					else return handleSong(result, msg.channel, voiceChannel, args[0][0] == "i");
 				} else if (args[0].toLowerCase() == "stop") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
 					if (!queue) {
 						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
-						else return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+						else return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					}
-					if (queue.stop(queue)[0]) return msg.react("👌");
+					if (queue.stop(queue)[0]) return;
 				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let totalLength = "\nTotal length: "+prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0)); //TODO: move this to the song object
 					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${prettySeconds(songss.source == "YouTube" ? songss.basic.length_seconds: "LIVE")})`).join('\n');
 					if (body.length > 2000) {
@@ -671,27 +1070,16 @@ module.exports = function(passthrough) {
 					.setColor("36393E")
 					return msg.channel.send({embed});
 				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.skip()[0]) return msg.react("👌");
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
+					if (queue.skip()[0]) return;
 				} else if (args[0].toLowerCase() == "auto") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.auto = !queue.auto;
 					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
-				} else if (args[0].toLowerCase() == "volume" || args[0].toLowerCase() == "v") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (!args[1]) return msg.channel.send(`The current volume is: **${queue.volume}**`);
-					let setv = Math.floor(parseInt(args[1]));
-					if (isNaN(setv)) return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
-					if (setv >= 1 && setv <= 5) {
-						queue.volume = setv;
-						queue.connection.dispatcher.setVolumeLogarithmic(setv / 5);
-						return msg.react("👌");
-					} else return msg.channel.send(`${msg.author.username}, you must provide a number between 1 and 5.`);
 				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let embed = new Discord.RichEmbed()
 					.setDescription(`Now playing: **${queue.songs[0].title}**`)
 					.addField("­", songProgress(queue.connection.dispatcher, queue))
@@ -700,7 +1088,7 @@ module.exports = function(passthrough) {
 					queue.nowPlayingMsg = n;
 					queue.generateReactions();
 				} else if ("related".startsWith(args[0].toLowerCase())) {
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					let mode = args[1];
 					let index = parseInt(args[2])-1;
 					let related = await queue.songs[0].related();
@@ -708,8 +1096,7 @@ module.exports = function(passthrough) {
 						let videoID = related[index].id;
 						ytdl.getInfo(videoID).then(video => {
 							let song = new YouTubeSong(video, !queue || queue.songs.length <= 1);
-							handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
-							msg.react("👌");
+							return handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
 						}).catch(reason => {
 							manageYtdlGetInfoErrors(msg, reason, args[1]);
 						});
@@ -731,18 +1118,18 @@ module.exports = function(passthrough) {
 						}
 					}
 				} else if (args[0].toLowerCase() == "shuffle") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
 					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
-					return msg.react("👌");
+					return;
 				} else if (args[0].toLowerCase() == "pause") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.pause()[0]) return msg.react("👌");
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
+					if (queue.pause()[0]) return;
 				} else if (args[0].toLowerCase() == "resume") {
-					if (!msg.member.voiceChannel) return msg.channel.send(utils.lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(utils.lang.voiceNothingPlaying(msg));
-					if (queue.resume()[0]) return msg.react("👌");
+					if (!msg.member.voiceChannel) return msg.channel.send(client.lang.voiceMustJoin(msg));
+					if (!queue) return msg.channel.send(client.lang.voiceNothingPlaying(msg));
+					if (queue.resume()[0]) return;
 				} /* else if (args[0].toLowerCase() == "stash") {
 					let stashes = await utils.sql.all("SELECT * FROM Stashes WHERE author = ?", msg.author.id);
 					stashes.forEach((s, i) => (s.index = i+1));
@@ -795,7 +1182,7 @@ module.exports = function(passthrough) {
 					let playlistName = args[1];
 					if (playlistName == "show") {
 						let playlists = await utils.sql.all("SELECT * FROM Playlists");
-						return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setDescription(playlists.map(p => p.name).join("\n")));
+						return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n")));
 					}
 					if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 					let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
@@ -833,11 +1220,14 @@ module.exports = function(passthrough) {
 					}
 					let action = args[2] || "";
 					if (action.toLowerCase() == "add") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
-						let videoID = args[3];
-						if (!videoID) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link`);
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
+						let videoID;
+						if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
+						let result = await searchYoutube(args.slice(3).join(" "), msg, args[3], true);
+						if (result != null) videoID = result.basic.id;
+						else return;
 						ytdl.getInfo(videoID).then(async video => {
-							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(utils.lang.playlistDuplicateItem(msg));
+							if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(client.lang.playlistDuplicateItem(msg));
 							await Promise.all([
 								utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
 								utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
@@ -848,11 +1238,11 @@ module.exports = function(passthrough) {
 							return msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
 						});
 					} else if (action.toLowerCase() == "remove") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						let index = parseInt(args[3]);
 						if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`);
 						index = index-1;
-						if (!orderedSongs[index]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[index]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
 						let toRemove = orderedSongs[index];
 						await Promise.all([
 							utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
@@ -860,13 +1250,13 @@ module.exports = function(passthrough) {
 						]);
 						return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 					} else if (action.toLowerCase() == "move") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						let from = parseInt(args[3]);
 						let to = parseInt(args[4]);
 						if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
 						from--; to--;
-						if (!orderedSongs[from]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
-						if (!orderedSongs[to]) return msg.channel.send(utils.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[from]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
+						if (!orderedSongs[to]) return msg.channel.send(client.lang.genericIndexOutOfRange(msg));
 						let fromRow = orderedSongs[from], toRow = orderedSongs[to];
 						if (from < to) {
 							await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]); // update row before item
@@ -896,7 +1286,7 @@ module.exports = function(passthrough) {
 					} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 						bulkPlaySongs(msg, voiceChannel, orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase()[0] == "s");
 					} else if (action.toLowerCase() == "import") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
 						if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 							let playlist = await youtube.getPlaylist(args[3]);
 							let videos = await playlist.getVideos();
@@ -937,20 +1327,23 @@ module.exports = function(passthrough) {
 							editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);
 						} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 					} else if (action.toLowerCase() == "delete") {
-						if (playlistRow.author != msg.author.id) return msg.channel.send(utils.lang.playlistNotOwned(msg));
-						(await msg.channel.send(new Discord.RichEmbed().setColor("dd1d1d").setDescription(
+						if (playlistRow.author != msg.author.id) return msg.channel.send(client.lang.playlistNotOwned(msg));
+						let deletePromptEmbed = new Discord.RichEmbed().setColor("dd1d1d").setDescription(
 							"This action will permanently delete the playlist `"+playlistRow.name+"`. "+
 							"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n"+
 							"You will not be able to undo this action.\n\n"+
 							"<:bn_del:331164186790854656> - confirm deletion\n"+
 							"<:bn_ti:327986149203116032> - ignore"
-						))).reactionMenu([
-							{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], ignore: "total", actionType: "js", actionData: async () => {
+						);
+						let message = await msg.channel.send(deletePromptEmbed)
+						message.reactionMenu([
+							{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 								await Promise.all([
 									utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 									utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 								]);
-								msg.channel.send("Playlist deleted.");
+								deletePromptEmbed.setDescription("Playlist deleted.");
+								message.edit(deletePromptEmbed);
 							}},
 							{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled")}
 						]);
@@ -976,7 +1369,7 @@ module.exports = function(passthrough) {
 						.setColor("36393E")
 						msg.channel.send(embed);
 					}
-				} else return msg.channel.send(utils.lang.genericInvalidAction(msg));
+				} else return msg.channel.send(client.lang.genericInvalidAction(msg));
 			}
 		}
 	}

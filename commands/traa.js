@@ -1,10 +1,15 @@
+const Discord = require("discord.js");
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
 ];
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, client, utils, reloadEvent } = passthrough;
+	let { client, utils, reloadEvent } = passthrough;
 
 	let cadence = new utils.DMUser("176580265294954507");
 
@@ -25,6 +30,10 @@ module.exports = function(passthrough) {
 
 	let prompts = [];
 
+	/**
+	 * Detects a gif from another bot
+	 * @param {Discord.Message} msg
+	 */
 	async function gifDetector(msg) {
 		if (!msg.author.bot) { // command
 			let botInfo;
@@ -45,13 +54,21 @@ module.exports = function(passthrough) {
 			if (!ok) return;
 			let {botInfo, command} = prompts.splice(i, 1)[0];
 			if (!botInfo) return;
+			
 			if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
 				let url = msg.embeds[0].image.url;
-				let existing = await utils.sql.get("SELECT * FROM GenderGifs WHERE url = ?", url);
+
+				let existing = await utils.sql.get("SELECT * FROM GenderGifsV2 WHERE url = ?", url);
 				if (existing) return; // skip if already exists
+
+				let blacklist = await utils.sql.get("SELECT url FROM GenderGifBlacklist WHERE url = ?", url);
+				if (blacklist) return; // skip if in blacklist
+
 				let backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog");
 				if (backlog.some(r => r.url == url)) return; // skip if already in backlog
+
 				if (!backlog.length) cadence.send("New "+command+" GIF from "+msg.author.username+":\n"+url);
+
 				utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username]);
 			}
 		}
@@ -63,19 +80,28 @@ module.exports = function(passthrough) {
 			description: "Store a GIF in the database",
 			aliases: ["storegif"],
 			category: "admin",
+			/**
+			 * @param {Discord.Message} msg
+			 * @param {String} suffix
+			 */
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.send("not you");
+				if (suffix == "") {
+					let row = await utils.sql.get("SELECT * FROM GenderGifBacklog");
+					if (row) return msg.channel.send(`First GIF in backlog: ${row.type} from ${row.author}:\n${row.url}`);
+					else return msg.channel.send("Backlog empty!");
+				}
 				let url = suffix.split("`")[1];
 				let words = suffix.split("`")[2].split(" ");
 				let type = words[1];
 				let characters = words.slice(2);
-				let existing = await utils.sql.all("SELECT * FROM GenderGifs INNER JOIN GenderGifCharacters ON GenderGifs.gifid = GenderGifCharacters.gifid WHERE url = ?", url);
+				let existing = await utils.sql.all("SELECT * FROM GenderGifsV2 INNER JOIN GenderGifCharacters ON GenderGifsV2.gifid = GenderGifCharacters.gifid WHERE url = ?", url);
 				new Promise(async resolve => {
 					if (existing.length) {
 						let dmsg = await msg.channel.send("That GIF already exists with "+existing.sort((a, b) => (a - b)).map(e => "`"+e.gender+"`").join(", ")+".");
 						let menu = dmsg.reactionMenu([{emoji: "🗑", ignore: "total", allowedUsers: [msg.author.id], actionType: "js", actionData: async () => {
-							await utils.sql.all("DELETE FROM GenderGifs WHERE gifid = ?", existing[0].gifid);
+							await utils.sql.all("DELETE FROM GenderGifsV2 WHERE gifid = ?", existing[0].gifid);
 							await msg.channel.send("Deleted. Replacing...");
 							resolve();
 						}}]);
@@ -89,7 +115,7 @@ module.exports = function(passthrough) {
 							utils.sql.all("DELETE FROM GenderGifBacklog WHERE url = ?", url),
 							new Promise(async resolve => {
 								let connection = await utils.getConnection();
-								await utils.sql.all("INSERT INTO GenderGifs VALUES (NULL, ?, ?)", [url, type], connection);
+								await utils.sql.all("INSERT INTO GenderGifsV2 VALUES (NULL, ?, ?)", [url, type], connection);
 								let gifid = (await utils.sql.get("SELECT last_insert_id() AS id", [], connection)).id;
 								await Promise.all(characters.map((c, i) => utils.sql.all("INSERT INTO GenderGifCharacters VALUES (NULL, ?, ?, ?)", [gifid, c, i])));
 								connection.release();
@@ -98,7 +124,10 @@ module.exports = function(passthrough) {
 						]);
 					} else {
 						await msg.channel.send("Note: deleting from backlog, not adding to storage.");
-						await utils.sql.all("DELETE FROM GenderGifBacklog WHERE url = ?", url);
+						await Promise.all([
+							utils.sql.all("DELETE FROM GenderGifBacklog WHERE url = ?", url),
+							utils.sql.all("INSERT INTO GenderGifBlacklist VALUES (NULL, ?)", url)
+						]);
 					}
 					let backlog = await utils.sql.all("SELECT * FROM GenderGifBacklog");
 					if (!backlog.length) { // entire backlog dealt with

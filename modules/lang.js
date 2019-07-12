@@ -1,46 +1,55 @@
-let util = require("util");
-const events = require("events");
-let reactionMenus = {};
-
 module.exports = (passthrough) => {
-	let { utils } = passthrough;
+	let { Discord, client } = passthrough;
 
 	function authorString(msg, sentence) {
 		if (msg) return msg.author.username+", "+sentence;
 		else return sentence[0].toUpperCase()+sentence.slice(1);
 	}
 
-	utils.lang = {
-		// Whole command
-		commandDMOnly: msg => authorString(msg, "this command can only be used in DMs."),
-		commandGuildOnly: msg => authorString(msg, "this command does not work in DMs."),
+	/**
+	 * A collection of strings which purpose is to unify messages returned by the client
+	 */
+	Discord.Client.prototype.lang = {
+		apiError: error => "API did not return any data.```\n"+error+"```",
 
-		// Bad input
-		inputNoUser: msg => authorString(msg, "that's not a valid user."),
-		inputBadUser: msg => authorString(msg, "that's not a valid user."),
-		inputBadMoney: (msg, type) => authorString(msg, `that's not a valid ${type}.`),
-		inputSmallMoney: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`),
-		inputDoubleClaim: msg => authorstring(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
-		inputNoEmoji: msg => authorString(msg, "you need to provide an emoji."),
-		inputPlayableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
-		inputYouTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
+		dm: {
+			success: msg => authorString(msg, "I sent you a DM."),
+			failed: msg => authorString(msg, "you must allow me to DM you for that command to work. Either you've blocked me, or you need to turn on DMs in this server.")
+		},
 
-		// Bad externals
-		externalBankruptGeneric: msg => authorString(msg, "you don't have that many Discoins."),
-		externalBankruptBet: msg => authorString(msg, "you don't have enough Discoins to make that bet."),
-		externalBankruptClaim: msg => authorString(msg, "you don't have enough Discoins to claim that person."),
-		externalDailyCooldown: msg => authorString(msg, "you've already claimed your daily coins. Come back later"),
+		command: {
+			dmOnly: msg => authorString(msg, "this command can only be used in DMs."),
+			guildOnly: msg => authorString(msg, "this command does not work in DMs.")
+		},
 
-		// Bad API response
-		apiImageError: error => "API did not return an image.```\n"+error+"```",
+		input: {
+			invalid: (msg, type) => authorString(msg, `that's not a valid ${type}`),
+			money: {
+				small: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`)
+			},
+			waifu: {
+				claimedByOther: (msg, price) => authorString(msg, `this person has already been claimed by somebody else, for a higher price. You'll need to spend at least ${price} Discoins to steal them.`),
+				doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
+			},
+			music: {
+				playableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
+				youTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
+			}
+		},
 
-		// Success
-		successDM: msg => authorString(msg, "I sent you a DM."),
+		external: {
+			money: {
+				insufficient: (msg, string) => authorString(msg, `you don't have that many Discoins${string ? " "+string : "."}`),
+				dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${client.lang.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
+				dailyCooldown: (msg, timeRemaining) => authorString(msg, `your daily coins will refresh in ${timeRemaining}.`)
+			}
+		},
 
 		// Voice
-		voiceMustJoin: msg => authorString(msg, "you must join a voice channel first."),
+		voiceMustJoin: msg => authorString(msg, "you need to join a voice channel to do that."),
 		voiceNothingPlaying: msg => authorString(msg, "nothing is currently playing."),
 		voiceCannotAction: action => `The current queue cannot be ${action} at this time.`,
+		voiceChannelWaiting: msg => authorString(msg, "you need to join a voice channel to do that. Waiting for you to connect..."),
 
 		// Playlists
 		playlistNotOwned: msg => authorString(msg, "you do not own that playlist and so cannot modify it."),
@@ -49,11 +58,16 @@ module.exports = (passthrough) => {
 		// Permissions
 		permissionVoiceJoin: () => "I don't have permission to join your voice channel.",
 		permissionVoiceSpeak: () => "I don't have permission to speak in your voice channel.",
-		permissionAuthorDMBlocked: msg => authorString(msg, "you must allow me to DM you for that command to work. Either you've blocked me, or you need to turn on DMs in this server."),
 		permissionOtherDMBlocked: () => "I couldn't DM that person. Maybe they've blocked me, or maybe they need to turn on DMs in a shared server.",
 
 		// Generic
 		genericIndexOutOfRange: msg => authorString(msg, "that index is out of range."),
-		genericInvalidAction: msg => authorString(msg, "that is not a valid action.")
+		genericInvalidAction: msg => authorString(msg, "that is not a valid action."),
+
+		// Custom emoji strings
+		emoji: {
+			discoin: "<a:Discoin:422523472128901140>",
+			bot: "<:bot:412413027565174787>"
+		},
 	}
 }

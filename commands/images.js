@@ -1,8 +1,46 @@
-let rp = require("request-promise");
+const rp = require("request-promise");
+const Discord = require("discord.js");
+require("../types.js");
 
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = function(passthrough) {
-	let { Discord, config, client } = passthrough;
+	let { config, client } = passthrough;
 	let key = config.chewey_api_key;
+
+	/**
+	 * A function to send an image to a text channel
+	 * @param {String} host Where the image is coming from
+	 * @param {String} path The path to the api endpoint
+	 * @param {Discord.Message} msg A Discord managed message object
+	 * @param {String} emoji An escpaed emoji
+	 * @param {String} footer What the footer of the message embed should say
+	 * @returns {Promise<Discord.Message>}
+	 */
+	async function sendImage(host, path, msg, emoji, footer) {
+		let url;
+		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;
+		else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`;
+		else return Promise.reject("Host provided not supported");
+		let [nmsg, body] = await Promise.all([
+			msg.channel.send(emoji),
+			rp(url)
+		]);
+		let data;
+		try {
+			data = JSON.parse(body);
+		} catch (error) { return nmsg.edit(client.lang.apiError(error)); }
+		let img;
+		if (host == "chewey") img = data.data;
+		else if (host == "nekos") img = data.url;
+		else img = undefined; // excuse me what
+		let embed = new Discord.RichEmbed()
+			.setImage(img)
+			.setColor('36393E')
+			.setFooter(footer)
+		return nmsg.edit({embed});
+	}
 
 	return {
 		"cat": {
@@ -10,19 +48,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a cute cat",
 			aliases: ["cat"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
-				msg.channel.send("<a:CatLoading:426263491385622539>").then(async nmsg => {
-					let body = await rp(`https://api.chewey-bot.ga/cat?auth=${key}`);
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
-					let embed = new Discord.RichEmbed()
-						.setImage(data.data)
-						.setColor('36393E')
-						.setFooter("Powered by api.chewey-bot.ga")
-					return nmsg.edit({embed});
-				});
+				return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
 
@@ -31,19 +61,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a cute doggo",
 			aliases: ["dog", "doggo"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
-				msg.channel.send("<a:CatLoading:426263491385622539>").then(async nmsg => {
-					let body = await rp(`https://api.chewey-bot.ga/dog?auth=${key}`);
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
-					let embed = new Discord.RichEmbed()
-						.setImage(data.data)
-						.setColor('36393E')
-						.setFooter("Powered by api.chewey-bot.ga")
-					return nmsg.edit({embed});
-				});
+				return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
 
@@ -52,19 +74,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of space",
 			aliases: ["space"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
-				msg.channel.send("<a:SpaceLoading:429061691633041419>").then(async nmsg => {
-					let body = await rp(`https://api.chewey-bot.ga/space?auth=${key}`);
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
-					let embed = new Discord.RichEmbed()
-						.setImage(data.data)
-						.setColor('36393E')
-						.setFooter("Powered by api.chewey-bot.ga")
-					return nmsg.edit({embed});
-				});
+				return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.ga");
 			}
 		},
 
@@ -73,17 +87,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a snek",
 			aliases: ["snek", "snake"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
-				let body = await rp(`https://api.chewey-bot.ga/snake?auth=${key}`);
-				let data;
-				try {
-					data = JSON.parse(body);
-				} catch (error) { return msg.channel.send(utils.lang.apiImageError(error)); }
-				let embed = new Discord.RichEmbed()
-					.setImage(data.data)
-					.setColor('36393E')
-					.setFooter("Powered by api.chewey-bot.ga")
-				return msg.channel.send({embed});
+				return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
 
@@ -92,17 +100,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a birb",
 			aliases: ["birb", "bird"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: async function(msg) {
-				let body = await rp(`https://api.chewey-bot.ga/birb?auth=${key}`);
-				let data;
-				try {
-					data = JSON.parse(body);
-				} catch (error) { return msg.channel.send(utils.lang.apiImageError(error)); }
-				let embed = new Discord.RichEmbed()
-					.setImage(data.data)
-					.setColor('36393E')
-					.setFooter("Powered by api.chewey-bot.ga")
-				return msg.channel.send({embed});
+				return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
 
@@ -111,19 +113,11 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a neko (ฅ’ω’ฅ)",
 			aliases: ["neko"],
 			category: "images",
+			/**
+			 * @param {Discord.Message} msg
+			 */
 			process: function(msg) {
-				msg.channel.send("<a:NekoSway:461420549990776832>").then(async nmsg => {
-					let body = await rp("https://nekos.life/api/v2/img/neko");
-					let data;
-					try {
-						data = JSON.parse(body);
-					} catch (error) { return nmsg.edit(utils.lang.apiImageError(error)); }
-					let embed = new Discord.RichEmbed()
-						.setImage(data.url)
-						.setColor('36393E')
-						.setFooter("Powered by nekos.life")
-					return nmsg.edit({embed});
-				});
+				return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life");
 			}
 		}
 	}

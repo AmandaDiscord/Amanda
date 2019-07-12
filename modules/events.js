@@ -4,13 +4,6 @@ module.exports = function(passthrough) {
 	let prefixes = [];
 	let statusPrefix = "&";
 
-	if (config.dbl_key) {
-		const dbl = require("dblapi.js");
-		const poster = new dbl(config.dbl_key, client);
-		poster.once("posted", () => console.log("Server count posted"));
-		poster.on("error", reason => console.error(reason));
-	} else console.log("No DBL API key. Server count posting is disabled.");
-
 	reloadEvent.once(__filename, () => {
 		client.removeListener("message", manageMessage);
 		client.removeListener("messageUpdate", manageEdit);
@@ -36,14 +29,7 @@ module.exports = function(passthrough) {
 	async function manageMessage(msg) {
 		if (msg.author.bot) return;
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
-		if (!prefix) {
-			if (msg.guild) {
-				let d = await utils.sql.get("SELECT * FROM prefixes WHERE serverID =?", msg.guild.id);
-				if (!d) return;
-				prefix = d.prefix;
-				if (!msg.content.startsWith(prefix)) return;
-			} else return;
-		}
+		if (!prefix) return;
 		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
 		let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
 		let cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));
@@ -51,6 +37,10 @@ module.exports = function(passthrough) {
 			try {
 				await cmd.process(msg, suffix);
 			} catch (e) {
+				if (e && e.code) {
+					if (e.code == 10008) return;
+					if (e.code == 50013) return;
+				}
 				// Report to original channel
 				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
 				let embed = new Discord.RichEmbed()
@@ -58,7 +48,7 @@ module.exports = function(passthrough) {
 				.setColor("dd2d2d")
 				msg.channel.send({embed});
 				// Report to #amanda-error-log
-				let reportChannel = client.channels.get("512869106089852949") || client.channels.get("497161350934560778");
+				let reportChannel = client.channels.get("512869106089852949");
 				if (reportChannel) {
 					embed.setTitle("Command error occurred.");
 					let details = [
@@ -98,7 +88,7 @@ module.exports = function(passthrough) {
 				try {
 					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 						let data = JSON.parse(res);
-						if (!data.sp("output.0.actions")) return msg.channel.send("Unfortunately, my speech API is currently having a bad time. Try again in a while? :3");
+						if (!data.sp("output.0.actions")) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?");
 						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, owner.username);
 						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
 						if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no");
@@ -130,15 +120,21 @@ module.exports = function(passthrough) {
 			update();
 			client.setInterval(update, 300000);
 		});
+		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
+			result.forEach(row => {
+				client.channels.get(row.channelID).send("<@"+row.mentionID+"> Restarted! Uptime: "+process.uptime().humanize("sec"));
+			});
+			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id]);
+		});
 	}
 
 	function manageDisconnect(reason) {
-		console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
+		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}\n\nReconnecting in 6sec`);
 		setTimeout(() => client.login(config.bot_token), 6000);
 	}
 
 	function manageError(reason) {
-		console.error(reason);
+		if (reason) console.error(reason);
 	}
 
 	function manageRejection(reason) {
@@ -146,8 +142,10 @@ module.exports = function(passthrough) {
 			if (reason.code == 10008) return;
 			if (reason.code == 50013) return;
 		}
-		console.error(reason);
+		if (reason) console.error(reason);
+		else console.log("There was an error but no reason");
 	}
+	utils.manageError = manageRejection;
 
 	function manageVoiceStateUpdate(oldMember, newMember) {
 		if (newMember.id == client.user.id) return;
@@ -164,6 +162,12 @@ module.exports = function(passthrough) {
 			['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'], ['cute cat videos', 'WATCHING'],
 			['music', 'LISTENING'], ['Spotify', 'LISTENING'],
 			['Netflix for ∞ hours', 'STREAMING']
+		],
+		newYears: [
+			["with sparklers", "PLAYING"],
+			["a fireworks show", "WATCHING"], ["Times Square", "WATCHING"], ["the countdown", "WATCHING"],
+			["The Final Countdown", "LISTENING"],
+			["fire snakes", "STREAMING"]
 		],
 		halloween: [
 			["Silent Hill", "PLAYING"],
@@ -185,15 +189,16 @@ module.exports = function(passthrough) {
 	};
 
 	const update = () => {
-		let now = new Date().toUTCString().toLowerCase();
+		let now = new Date().toJSON();
 		let choice;
-		if (now.includes("9 oct")) choice = [["happy age++, Cadence <3", "STREAMING"]]
-		else if (now.includes("oct")) choice = presences.halloween;
-		else if (now.includes("22 nov")) choice = presences.thanksgiving;
-		else if (now.includes("25 dec")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
-		else if (now.includes("dec")) choice = presences.christmas;
-		else if (now.includes("1 jan")) choice = [["new years resolutions", "LISTENING"]];
-		else if (now.includes("16 jan")) choice = [["at my owner's bday party", "PLAYING"]];
+		if (now.includes("-10-09")) choice = [["happy age++, Cadence <3", "STREAMING"]]
+		else if (now.includes("-10-")) choice = presences.halloween;
+		else if (now.includes("-11-22")) choice = presences.thanksgiving;
+		else if (now.includes("-12-25")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
+		else if (now.includes("-12-31")) choice = presences.newYears;
+		else if (now.includes("-12-")) choice = presences.christmas;
+		else if (now.includes("-01-01")) choice = presences.newYears;
+		else if (now.includes("-01-16")) choice = [["at my owner's bday party", "PLAYING"]];
 		else choice = presences.yearly;
 		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
 		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
