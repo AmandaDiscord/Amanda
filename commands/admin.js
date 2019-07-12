@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const rp = require("request-promise");
 
 require("../types.js");
 

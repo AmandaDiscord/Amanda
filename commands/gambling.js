@@ -319,11 +319,11 @@ module.exports = function(passthrough) {
 				if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let member = await msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
-				if (member.user.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
+				if (member.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`);
 				let [authorCoins, memsettings, guildsettings] = await Promise.all([
 					utils.coinsManager.get(msg.author.id),
-					utils.settings.get(member.id),
-					utils.settings.get(msg.guild.id)
+					utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [member.id, "gamblingalert"]),
+					utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "gamblingalert"])
 				]);
 				let gift;
 				if (args[0] == "all") {
@@ -344,8 +344,11 @@ module.exports = function(passthrough) {
 				if (!permissions.has("EMBED_LINKS")) content = embed.description;
 				else content = embed;
 				msg.channel.send(content);
-				if (memsettings && memsettings.gamblingAlert == 0) return;
-				if (guildsettings && guildsettings.gamblingAlert == 0) return;
+				if (memsettings && memsettings.value == 0) return;
+				if (guildsettings && guildsettings.value == 0) {
+					if (memsettings && memsettings.value == 1) return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked(msg)));
+					else return;
+				}
 				return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked(msg)));
 			}
 		},

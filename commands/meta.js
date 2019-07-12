@@ -1,4 +1,6 @@
 const rp = require("request-promise");
+const bs = require("buffer-signature");
+const fs = require("fs");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
@@ -449,7 +451,7 @@ module.exports = function(passthrough) {
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(lang.input.invalid(msg, "user"));
-				msg.channel.sendTyping()
+				msg.channel.sendTyping();
 
 				let [isOwner, isPremium, money, info, avatar, images] = await Promise.all([
 					utils.hasPermission(user, "owner"),
@@ -458,24 +460,31 @@ module.exports = function(passthrough) {
 					utils.waifu.get(user.id),
 					Jimp.read(user.sizedAvatarURL(128)),
 					profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none"])
-				])
+				]);
 
 				avatar.resize(111, 111);
 				
-				let heartType = getHeartType(user, info)
-				let heart = images.get("heart-"+heartType)
+				let heartType = getHeartType(user, info);
+				let heart = images.get("heart-"+heartType);
 				
-				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
-				let badgeImage = images.get(badge)
+				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none";
+				let badgeImage = images.get(badge);
+				let canvas;
 
-				let canvas = images.get("canvas").clone()
+				if (isOwner||isPremium) {
+					try {
+						canvas = await Jimp.read(`./images/backgrounds/${user.id}.png`);
+					} catch (e) {
+						canvas = images.get("canvas").clone();
+					}
+				} else canvas = images.get("canvas").clone();
 				canvas.composite(avatar, 32, 85);
 				canvas.composite(images.get("profile"), 0, 0);
 				canvas.composite(badgeImage, 166, 113);
 
 
-				let font = images.get("font")
-				let font2 = images.get("font2")
+				let font = images.get("font");
+				let font2 = images.get("font2");
 				canvas.print(font, 508, 72, user.username);
 				canvas.print(font2, 508, 104, `#${user.discriminator}`);
 				canvas.print(font2, 550, 163, money);
@@ -498,7 +507,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				let args = suffix.split(" ");
-				let embed, permissions, content;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "dm") {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
@@ -519,6 +527,11 @@ module.exports = function(passthrough) {
 						type: "string",
 						default: "[unset]",
 						scope: ["server"]
+					},
+					"profilebackground": {
+						type: "string",
+						default: "[unset] (Recommended to be a 800x500px png/jpeg)",
+						scope: "self"
 					}
 				}
 
@@ -534,12 +547,9 @@ module.exports = function(passthrough) {
 
 				let settingName = args[1] ? args[1].toLowerCase() : "";
 				if (args[1] == "view") {
-					return msg.channel.send("view placeholder, ping Cadence#3263 if you see this in prod");
-					/*if (args[1].toLowerCase() == "view") {
-						let memsettings = await utils.settings.get(msg.author.id);
-						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
-						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.author.tag}`, msg.author.smallAvatarURL).setDescription(`Waifu Alerts: ${memsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${memsettings.gamblingAlert != 0} - Messages for gambling related things`));
-					}*/
+					let all = await utils.sql.all("SELECT * FROM "+tableName+" WHERE keyID =?", keyID);
+					if (all.length == 0) return msg.channel.send(`There are no settings set for scope ${scope}`);
+					return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"));
 				}
 
 				if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(
@@ -589,8 +599,38 @@ module.exports = function(passthrough) {
 				value = value.toLowerCase();
 				
 				if (value === "null") {
+					if (settingName == "profilebackground") {
+						try {
+							await fs.promises.unlink(`./images/backgrounds/${msg.author.id}.png`);
+						} catch (e) {
+							return msg.channel.send("You didn't have a profile background image. No action was taken.");
+						}
+					}
 					await utils.sql.all("DELETE FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
 					return msg.channel.send("Setting deleted.");
+				}
+
+				if (settingName == "profilebackground") {
+					await msg.channel.sendTyping();
+					let [isEval, isPremium] = await Promise.all([
+						utils.hasPermission(msg.author, "owner"),
+						utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+					]);
+					if (!isEval || !isPremium) return msg.channel.send("You must be a donor to modify this setting.");
+					let data;
+					try {
+						data = await rp(value, { encoding: null });
+					} catch (e) {
+						return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.");
+					}
+					let type = bs.identify(data);
+					if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may not set a background which is not a PNG or a JPEG");
+					let image = await Jimp.read(value);
+					image.cover(800, 500);
+					let buffer = await image.getBufferAsync(Jimp.MIME_PNG);
+					await fs.promises.writeFile(`./images/backgrounds/${msg.author.id}.png`, buffer);
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, 1]);
+					return msg.channel.send("Setting updated.");
 				}
 
 				if (setting.type == "boolean") {

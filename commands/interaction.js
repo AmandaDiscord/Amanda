@@ -120,10 +120,12 @@ module.exports = function(passthrough) {
 				let member = await msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly");
-				let [memberInfo, myInfo, money] = await Promise.all([
+				let [memberInfo, myInfo, money, memsettings, guildsettings] = await Promise.all([
 					utils.waifu.get(member.user.id),
 					utils.waifu.get(msg.author.id),
-					utils.coinsManager.get(msg.author.id)
+					utils.coinsManager.get(msg.author.id),
+					utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [member.id, "waifualert"]),
+					utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
 				]);
 				let claim = 0;
 				if (args[0] == "all") {
@@ -147,11 +149,12 @@ module.exports = function(passthrough) {
 				if (!permissions.has("EMBED_LINKS")) content = embed.description;
 				else content = embed;
 				msg.channel.send(content);
-				let memsettings = await utils.settings.get(member.id);
-				let guildsettings = await utils.settings.get(msg.guild.id);
-				if (memsettings && memsettings.waifuAlert == 0) return;
-				if (guildsettings && guildsettings.waifuAlert == 0) return;
-				return member.user.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()));
+				if (memsettings && memsettings.value == 0) return;
+				if (guildsettings && guildsettings.value == 0) {
+					if (memsettings && memsettings.value == 1) return member.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()));
+					else return;
+				}
+				return member.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()));
 			}
 		},
 		"divorce": {
@@ -171,9 +174,13 @@ module.exports = function(passthrough) {
 				await utils.waifu.unbind(msg.author.id);
 				msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`);
 				let memsettings = await utils.settings.get(utils.waifu.id);
-				let guildsettings = await utils.settings.get(msg.guild.id);
-				if (memsettings && memsettings.waifuAlert == 0) return;
-				if (guildsettings && guildsettings.waifuAlert == 0) return;
+				let guildsettings;
+				if (msg.guild) memsettings = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"]);
+				if (memsettings && memsettings.value == 0) return;
+				if (guildsettings && guildsettings.value == 0) {
+					if (memsettings && memsettings.value == 1) return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
+					else return;
+				}
 				return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`));
 			}
 		},
