@@ -1,37 +1,28 @@
 const Discord = require("discord.js");
+const path = require("path");
+
+require("../types.js");
+
 const bots = [
 	["405208699313848330", "&"],
 	["160105994217586689", ">"]
 ];
-require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils, reloadEvent } = passthrough;
+	let { client, reloadEvent, reloader, commands } = passthrough;
+
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
 
 	let cadence = new utils.DMUser("176580265294954507");
-
-	Object.prototype.sp = function(properties) {
-		let list = properties.split(".");
-		let result = this;
-		list.forEach(p => {
-			if (result) result = result[p];
-			else result = undefined;
-		});
-		return result;
-	}
-
-	reloadEvent.once(__filename, () => {
-		client.removeListener("message", gifDetector);
-	});
-	client.on("message", gifDetector);
-
 	let prompts = [];
 
+	utils.addTemporaryListener(client, "message", path.basename(__filename), gifDetector);
+
 	/**
-	 * Detects a gif from another bot
 	 * @param {Discord.Message} msg
 	 */
 	async function gifDetector(msg) {
@@ -55,7 +46,7 @@ module.exports = function(passthrough) {
 			let {botInfo, command} = prompts.splice(i, 1)[0];
 			if (!botInfo) return;
 			
-			if (msg.author.id == botInfo[0] && msg.sp("embeds.0.type") == "rich" && msg.sp("embeds.0.image.url")) {
+			if (msg.author.id == botInfo[0] && utils.sp(msg, "embeds.0.type") == "rich" && utils.sp(msg, "embeds.0.image.url")) {
 				let url = msg.embeds[0].image.url;
 
 				let existing = await utils.sql.get("SELECT * FROM GenderGifsV2 WHERE url = ?", url);
@@ -74,7 +65,7 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	return {
+	commands.assign({
 		"storegif": {
 			usage: "<\`gif url\`> <type> <gender> [gender] [...]",
 			description: "Store a GIF in the database",
@@ -139,5 +130,5 @@ module.exports = function(passthrough) {
 				});
 			}
 		}
-	}
+	});
 }

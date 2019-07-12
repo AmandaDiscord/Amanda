@@ -1,0 +1,11 @@
+mixin nav(highlight, url)
+	nav#topnav
+		a(href="/" class=highlight=="home" ? "active" : "").navitem Home
+		a(href="/about" class=highlight=="about" ? "active" : "").navitem About
+		a(href="/dash" class=highlight=="dash" ? "active" : "").navitem Dashboard
+		if block
+			a(href=url).navitem.active
+				block
+
+noscript
+	| Please enable JavaScript. This website won't work without it. We promise there's no trackers, ads, or other evil things.

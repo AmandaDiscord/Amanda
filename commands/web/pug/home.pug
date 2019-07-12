@@ -1,0 +1,20 @@
+doctype html
+html
+	include includes/head.pug
+		title Home | Amanda
+	
+	body
+		include includes/nav.pug
+		+nav("home")
+
+		div.landing
+			img(src="/images/amanda.png").landing-image
+			p Amanda#8293
+			p
+				| A qt music bot made for qts:
+				| <br>Amanda can play music, games, manage an economy, and so much more.
+				| <br>But most importantly: cat pictures.
+				| <br>Let there be cats! ༼ つ ◕ヮ◕ ༽つ
+			div
+				a(href="https://discord-bots.ga/amanda").pinkbutton Add Amanda
+				a(href="https://discord.gg/zhthQjH").pinkbutton Join our server

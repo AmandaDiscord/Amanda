@@ -1,25 +1,29 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
+
 require("../types.js");
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client } = passthrough;
+	let { config, client, commands, reloader } = passthrough;
 	let key = config.chewey_api_key;
 
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/lang.js", lang);
+
 	/**
-	 * A function to send an image to a text channel
-	 * @param {String} host Where the image is coming from
-	 * @param {String} path The path to the api endpoint
-	 * @param {Discord.Message} msg A Discord managed message object
-	 * @param {String} emoji An escpaed emoji
-	 * @param {String} footer What the footer of the message embed should say
+	 * @param {String} host
+	 * @param {String} path
+	 * @param {Discord.Message} msg
+	 * @param {String} emoji
+	 * @param {String} footer
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
-		let url;
+		let url, permissions;
+		if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;
 		else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`;
 		else return Promise.reject("Host provided not supported");
@@ -30,7 +34,7 @@ module.exports = function(passthrough) {
 		let data;
 		try {
 			data = JSON.parse(body);
-		} catch (error) { return nmsg.edit(client.lang.apiError(error)); }
+		} catch (error) { return nmsg.edit(lang.apiError(error)); }
 		let img;
 		if (host == "chewey") img = data.data;
 		else if (host == "nekos") img = data.url;
@@ -39,10 +43,13 @@ module.exports = function(passthrough) {
 			.setImage(img)
 			.setColor('36393E')
 			.setFooter(footer)
-		return nmsg.edit({embed});
+		let content;
+		if (permissions && !permissions.has("EMBED_LINKS")) content = `${img} - ${footer}`;
+		else content = embed;
+		return nmsg.edit(content);
 	}
 
-	return {
+	commands.assign({
 		"cat": {
 			usage: "none",
 			description: "Returns an image of a cute cat",
@@ -55,7 +62,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"dog": {
 			usage: "none",
 			description: "Returns an image of a cute doggo",
@@ -68,7 +74,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"space": {
 			usage: "none",
 			description: "Returns an image of space",
@@ -81,7 +86,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"snek": {
 			usage: "none",
 			description: "Returns an image of a snek",
@@ -94,7 +98,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"birb": {
 			usage: "none",
 			description: "Returns an image of a birb",
@@ -107,7 +110,6 @@ module.exports = function(passthrough) {
 				return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
 		},
-
 		"neko": {
 			usage: "none",
 			description: "Returns an image of a neko (ฅ’ω’ฅ)",
@@ -120,5 +122,5 @@ module.exports = function(passthrough) {
 				return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life");
 			}
 		}
-	}
+	});
 }

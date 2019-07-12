@@ -8,7 +8,7 @@ module.exports = (passthrough) => {
 		reloadEvent.once(__filename, () => eventEmitter.removeListener(event, callback));
 	}
 
-	utils.ws = function(ws) {
+	/*utils.ws = function(ws) {
 		let token = "";
 		let userID = "";
 		let guilds = [];
@@ -74,7 +74,7 @@ module.exports = (passthrough) => {
 			ws.removeAllListeners("message");
 			reloadEvent.removeListener("musicOut", musicOut);
 		}
-	}
+	}*/
 
 	return [];
 }

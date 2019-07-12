@@ -1,0 +1,222 @@
+@font-face
+	font-family: Whitney
+	src: url("/images/whitney.ttf")
+
+*, input
+	font-family: Whitney, sans-serif
+
+body
+	background: url("/images/back.svg") no-repeat center center fixed
+	background-size: cover
+	margin: 0px
+	font-size: 16px
+	color: #282828
+
+noscript
+	text-align: center
+	padding: 16px
+	display: block
+	background: #a00000
+	color: #fff
+
+a, a:visited
+	color: inherit
+
+code
+	font-family: "Noto Mono", monospace
+	background-color: white
+	padding: 1px 3px
+
+h1
+	color: #222
+	text-align: center
+
+nav
+	background-color: #333
+	display: flex
+
+	a.navitem
+		color: #ddd
+		display: inline-block
+		padding: 14px
+		text-decoration: none
+		transition: background-color 0.2s ease-out
+
+		&:hover
+			background-color: #444
+			
+		&.active
+			background: linear-gradient(to top, white 3px, #444 3px)
+			color: white
+
+a.no-underline
+	text-decoration: none
+
+.landing
+	color: #111
+	text-align: center
+	text-decoration: none
+	margin: 40px 0px
+
+	p
+		font-size: 32px
+
+	img.landing-image
+		mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0))
+		-webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0))
+		width: 256px
+
+.pinkbutton
+	padding: 16px 32px
+	text-decoration: none
+	display: inline-block
+	margin: 4px 2px
+	transition: 0.2s ease-out
+	transition-property: color, background-color
+	background-color: white
+	color: black
+	border: 2px solid #de56a9
+
+	&:hover
+		background-color: #de56a9
+		color: white
+
+@mixin box
+	border: 5px solid #222
+	padding: 16px
+	background-color: rgba(255, 255, 255, 0.6)
+
+@mixin fatbox
+	@include box
+	margin: 16px
+
+@mixin flex-center($hor: true, $vert: true)
+	display: flex
+	@if $hor
+		justify-content: center
+	@if $vert
+		align-items: center
+
+.title
+	@include flex-center
+	font-size: 32px
+	color: #111
+	margin: 16px
+
+	> *
+		@include box
+
+.spaced-title
+	display: flex
+	justify-content: space-between
+	align-items: center
+	color: #111
+	margin: 16px
+
+	> *
+		@include box
+
+		&:nth-child(2)
+			font-size: 32px
+
+.about
+	@include fatbox
+	font-size: 24px
+
+	*:first-child
+		margin-bottom: 16px
+		color: #111
+
+.message
+	@include flex-center
+	font-size: 18px
+	margin: 16px
+
+	> div
+		@include box
+		max-width: 800px
+
+		> *:not(:last-child)
+			margin-bottom: 8px
+
+
+.login-container
+	display: grid
+	grid-template-columns: 1fr auto auto
+	grid-column-gap: 10px
+	border: 5px solid #222
+	padding: 16px
+	background-color: rgba(255, 255, 255, 0.6)
+	color: #282828
+	margin: 16px
+	width: 100%
+	max-width: 600px
+	margin: 0 auto
+
+	input
+		padding: 4px
+		line-height: 1
+		font-size: 18px
+		border: 2px solid #de56a9
+		background-color: white
+		color: black
+		outline: none
+
+		&:disabled
+			border-color: #777
+			color: #555
+
+	input[type="submit"], input[type="button"]
+		font-size: 16px
+		padding: 4px 8px
+		transition: 0.2s ease-out
+		transition-property: color, background-color
+
+		&:not(:disabled)
+			cursor: pointer
+
+			&:hover
+				background-color: #de56a9
+				color: white
+
+#get-token
+	margin-top: 20px
+
+.hidden
+	transition: 0.4s cubic-bezier(0,0,.33,.84)
+	transform: translateY(0px)
+	opacity: 1
+
+	&:not(.hidden-active)
+		transform: translateY(-20px)
+		opacity: 0
+
+.guilds
+	display: flex
+	flex-wrap: wrap
+	justify-content: center
+
+	> a
+		text-decoration: none
+		@include fatbox
+		display: flex
+		width: 250px
+
+		img
+			height: 90px
+			margin-right: 16px
+			border-radius: 50%
+
+		.letter-icon
+			@include flex-center
+			color: #ccc
+			background-color: #2f3136
+			font-size: 32px
+			width: 90px
+			height: 90px
+			margin-right: 16px
+			border-radius: 50%
+			overflow: hidden
+
+		.name
+			@include flex-center(false, true)

@@ -81,11 +81,9 @@ const responses = {
 		"Aww, I think you look really cute. :3"
 	],
 }
-
 const bored = [
 	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit."
 ]
-
 const intent = {
 	"question": [
 		"question", "ask"
@@ -111,16 +109,18 @@ const intent = {
 }
 
 const flat = [].concat(...Object.values(responses));
-
 let userHistory = {};
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, db, utils, commands, config } = passthrough;
+	let { client, commands, config, reloader } = passthrough;
 
-	return {
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
+
+	commands.assign({
 		"cleverai": {
 			usage: "<a very witty question>",
 			description: "Ask me the answer to life's greatest questions. "+
@@ -166,5 +166,5 @@ module.exports = function(passthrough) {
 				msg.channel.send(clever_message);
 			}
 		}
-	}
+	});
 }

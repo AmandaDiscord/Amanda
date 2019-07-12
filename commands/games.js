@@ -1,76 +1,84 @@
 const rp = require("request-promise");
 const entities = require("entities");
-const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
 const Discord = require("discord.js");
+const path = require("path");
+
 require("../types.js");
+
+const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
+
+/**
+ * @typedef TriviaResponse
+ * @property {String} category
+ * @property {String} type
+ * @property {String} difficulty
+ * @property {String} question
+ * @property {String} correct_answer
+ * @property {Array<String>} incorrect_answers
+ */
 
 /**
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, utils, reloadEvent } = passthrough;
+	let { client, reloadEvent, commands, reloader, gameManager } = passthrough;
 
-	let games = {
-		games: [],
+	let utils = require("../modules/utilities.js")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
+
+	let lang = require("../modules/lang.js")(passthrough);
+	reloader.useSync("./modules/lang.js", lang);
+
+	class Game {
 		/**
-		 * Adds a game to storage
-		 * @param {TriviaGame} game An instance of any local game
-		 * @returns {Number} The new length of the games Array
+		 * @param {Discord.TextChannel} channel
+		 * @param {String} type
 		 */
-		add: function(game) {
-			this.games.push(game);
-		},
-		/**
-		 * Gets a game Object based on the channel parameter
-		 * @param {Discord.TextChannel} channel A Discord managed text channel
-		 * @returns {TriviaGame} An instance of any local game
-		 */
-		getChannel: function(channel) {
-			return this.games.find(g => g.channel == channel);
-		},
-		/**
-		 * Removes a game from this' game Array
-		 * @param {TriviaGame} game An instance of any local game
-		 * @returns {Array} The new games Array
-		 */
-		remove: function(game) {
-			this.games = this.games.filter(g => g != game);
+		constructor(channel, type) {
+			this.channel = channel;
+			this.type = type;
+			this.manager = gameManager;
+			this.id = channel.id;
+			this.permissions = channel.permissionsFor(client.user);
+		}
+		init() {
+			this.manager.addGame(this);
+			this.start();
+		}
+		destroy() {
+			this.manager.storage.delete(this.id);
+		}
+		start() {
+			// intentionally empty
 		}
 	}
-
-	/**
-	 * A class representing a local game of trivia
-	 */
-	class TriviaGame {
+	class TriviaGame extends Game {
 		/**
-		 * Create a new trivia game
-		 * @param {Discord.Channel} channel A Discord managed channel object
-		 * @param {Object} data A JSON response from OpenTDB
-		 * @param {String} category The category of the trivia question linked to this class instance
-		 * @constructor
+		 * @param {Discord.TextChannel} channel
+		 * @param {Object} data
+		 * @param {Number} data.response_code
+		 * @param {Array<TriviaResponse>} data.results
+		 * @param {String} category
 		 */
 		constructor(channel, data, category) {
-			let api = data.results[0];
-			this.storage = games;
-			this.channel = channel;
-			this.type = "trivia";
-			this.storage.add(this);
-			// Category
-			if (category) this.category = category;
-			// Answers
-			let correctAnswer = api.correct_answer.trim();
-			let wrongAnswers = api.incorrect_answers.map(a => a.trim());
+			super(channel, "trivia");
+			this.data = data.results[0];
+			this.category = category;
+		}
+		start() {
+			let correctAnswer = this.data.correct_answer.trim();
+			let wrongAnswers = this.data.incorrect_answers.map(a => a.trim());
 			this.answers = wrongAnswers
-				.map(answer => ({correct: false, answer}))
-				.concat([{correct: true, answer: correctAnswer}])
+				.map(answer => ({ correct: false, answer }))
+				.concat([{ correct: true, answer: correctAnswer }])
 				.shuffle()
-				.map((answer, index) => Object.assign(answer, {letter: Buffer.from([0xf0, 0x9f, 0x85, 0x90+index]).toString()}));
+				.map((answer, index) => Object.assign(answer, { letter: Buffer.from([0xf0, 0x9f, 0x85, 0x90+index]).toString() }));
 			this.correctAnswer = entities.decodeHTML(correctAnswer);
-			// Answer fields
-			let answerFields = [[], []];
+			// Answer Fields
+			let answerFields =[[], []];
 			this.answers.forEach((answer, index) => answerFields[index < this.answers.length/2 ? 0 : 1].push(answer));
 			// Difficulty
-			this.difficulty = api.difficulty;
+			this.difficulty = this.data.difficulty;
 			this.color =
 				  this.difficulty == "easy"
 				? 0x1ddd1d
@@ -79,22 +87,24 @@ module.exports = function(passthrough) {
 				: this.difficulty == "hard"
 				? 0xdd1d1d
 				: 0x3498DB
-			// Send message
+			// Send Message
 			let embed = new Discord.RichEmbed()
-			.setTitle(`${entities.decodeHTML(api.category)} (${api.difficulty})`)
-			.setDescription("​\n"+entities.decodeHTML(api.question))
-			.setColor(this.color);
+				.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
+				.setDescription("​\n"+entities.decodeHTML(this.data.question))
+				.setColor(this.color);
 			answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)} \n`).join("")+"​", true)) //SC: zero-width space and em space
 			embed.setFooter("To answer, type a letter in chat. You have 20 seconds.");
-			this.channel.send(embed);
+			let content;
+			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer.text}`;
+			else content = embed;
+			this.channel.send(content);
 			// Setup timer
 			this.timer = setTimeout(() => this.end(), 20000);
 			// Prepare to receive answers
 			this.receivedAnswers = new Map();
 		}
 		/**
-		 * A method to add an answer regarding the trivia question linked to this class instance
-		 * @param {Discord.Message} msg A Discord managed message object
+		 * @param {Discord.Message} msg
 		 */
 		addAnswer(msg) {
 			// Check answer is a single letter
@@ -107,13 +117,11 @@ module.exports = function(passthrough) {
 			this.receivedAnswers.set(msg.author.id, index);
 			//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`);
 		}
-		/**
-		 * A method to end the current game linked to this class instance
-		 */
 		async end() {
 			// Clean up
 			clearTimeout(this.timer);
-			this.storage.remove(this);
+			gameManager.gamesPlayed++;
+			this.destroy();
 			// Check answers
 			let coins =
 				this.difficulty == "easy"
@@ -142,16 +150,20 @@ module.exports = function(passthrough) {
 			}));
 			// Send message
 			let embed = new Discord.RichEmbed()
-			.setTitle("Correct answer:")
-			.setDescription(this.correctAnswer)
-			.setColor(this.color)
-			.setFooter("Click the reaction for another round.")
+				.setTitle("Correct answer:")
+				.setDescription(this.correctAnswer)
+				.setColor(this.color)
 			if (winners.length) {
-				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${client.lang.emoji.discoin})`).join("\n"));
+				embed.addField("Winners", winners.map(w => `${String(client.users.get(w[0]))} (+${w.winnings} ${lang.emoji.discoin})`).join("\n"));
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
-			return this.channel.send(embed).then(msg => {
+			if (this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
+			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
+			let content;
+			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer?embed.footer.text:""}`;
+			else content = embed;
+			return this.channel.send(content).then(msg => {
 				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
@@ -160,13 +172,87 @@ module.exports = function(passthrough) {
 			});
 		}
 	}
+	/**
+	 * @param {String} body
+	 * @param {Discord.TextChannel} channel
+	 */
+	async function JSONHelper(body, channel) {
+		try {
+			if (body.startsWith("http")) body = await rp(body);
+			return [true, JSON.parse(body)];
+		} catch (error) {
+			let permissions = channel.permissionsFor(client.user);
+			let embed = new Discord.RichEmbed()
+			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
+			.setColor(0xdd1d1d)
+			let content;
+			if (!permissions.has("EMBED_LINKS")) content = embed.description;
+			else content = embed;
+			return [false, channel.send(content)];
+		}
+	}
+	/**
+	 * @param {Discord.TextChannel} channel
+	 * @param {Object} options
+	 * @param {String} options.suffix
+	 * @param {Discord.Message} options.msg
+	 */
+	async function startGame(channel, options = {}) {
+		// Select category
+		let category = options.category || null;
+		if (options.suffix) {
+			channel.sendTyping();
+			let body = await JSONHelper("https://opentdb.com/api_category.php", channel);
+			if (!body[0]) return;
+			let data = body[1];
+			if (options.suffix.includes("categor")) {
+				options.msg.author.send(
+					new Discord.RichEmbed()
+					.setTitle("Categories")
+					.setDescription(data.trivia_categories.map(c => c.name)
+					.join("\n")+"\n\n"+
+					"To select a category, use `&trivia <category name>`.")
+				).then(() => {
+					channel.send("I've sent you a DM with the list of categories.");
+				}).catch(() => {
+					channel.send(lang.dm.failed(msg));
+				});
+				return;
+			} else {
+				let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix));
+				if (f.length == 0) {
+					return channel.send("Found no categories with that name. Use `&trivia categories` for the complete list of categories.");
+				} else if (f.length >= 2) {
+					return channel.send("There are multiple categories with that name: **"+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.");
+				} else {
+					category = f[0].id;
+				}
+			}
+		}
+		// Check games in progress
+		if (gameManager.storage.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(`There's a game already in progress for this channel.`);
+		// Send typing
+		channel.sendTyping();
+		// Get new game data
+		let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel);
+		if (!body[0]) return;
+		let data = body[1];
+		// Error check new game data
+		if (data.response_code != 0) return channel.send(`There was an error from the api`);
+		// Set up new game
+		new TriviaGame(channel, data, category).init();
+	}
+	utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector);
+	async function answerDetector(msg) {
+		let game = gameManager.storage.find(g => g.id == msg.channel.id && g.type == "trivia");
+		if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
+	}
 
 
 	/**
-	 * A function to create a board of mine sweeper using Discord spoilers
-	 * @param {String} difficulty How difficult the game should be
-	 * @param {Number} size The size of the board
-	 * @returns {Object} An Object containing data returned by this function
+	 * @param {String} difficulty "easy", "medium" or "hard"
+	 * @param {Number} size 4-14 inclusive
+	 * @returns {any}
 	 */
 	function sweeper(difficulty, size) {
 		let width = 8,
@@ -212,7 +298,6 @@ module.exports = function(passthrough) {
 			placement();
 			bombsPlaced++;
 		}
-
 
 		// Create rows
 		let currow = 1;
@@ -292,17 +377,7 @@ module.exports = function(passthrough) {
 		return { text: str, size: width, bombs: bombs, error: error };
 	}
 
-
-	reloadEvent.once(__filename, () => {
-		client.removeListener("message", answerDetector);
-	});
-	client.on("message", answerDetector);
-	async function answerDetector(msg) {
-		let game = games.getChannel(msg.channel);
-		if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
-	}
-
-	return {
+	commands.assign({
 		"trivia": {
 			usage: "none",
 			description: "Play a game of trivia with other members and win Discoins",
@@ -329,6 +404,8 @@ module.exports = function(passthrough) {
 				let size = 8, difficulty = "easy";
 				let string, title;
 				let sfx = suffix.toLowerCase();
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 
 				if (sfx.includes("--size:")) {
 					let tsize = sfx.split("--size:")[1].substring().split(" ")[0];
@@ -343,80 +420,13 @@ module.exports = function(passthrough) {
 				
 				title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`;
 				if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
-				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
-				msg.channel.send(embed);
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `${title}\n${string.text}`;
+				else content = embed;
+				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
+				msg.channel.send(content);
 			}
 		}
-	}
-
-	/**
-	 * A handler for data returned by an API
-	 * @param {String} body
-	 * @param {Discord.Channel} channel
-	 */
-	async function JSONHelper(body, channel) {
-		try {
-			if (body.startsWith("http")) body = await rp(body);
-			return [true, JSON.parse(body)];
-		} catch (error) {
-			let embed = new Discord.RichEmbed()
-			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
-			.setColor(0xdd1d1d)
-			return [false, channel.send({embed})];
-		}
-	}
-
-	/**
-	 * A manager to start a trivia game
-	 * @param {Discord.Channel} channel
-	 * @param {Object} options
-	 * @param {String} options.suffix
-	 * @param {Discord.Message} options.msg
-	 */
-	async function startGame(channel, options = {}) {
-		// Select category
-		let category = options.category || null;
-		if (options.suffix) {
-			channel.sendTyping();
-			let body = await JSONHelper("https://opentdb.com/api_category.php", channel);
-			if (!body[0]) return;
-			let data = body[1];
-			if (options.suffix.includes("categor")) {
-				options.msg.author.send(
-					new Discord.RichEmbed()
-					.setTitle("Categories")
-					.setDescription(data.trivia_categories.map(c => c.name)
-					.join("\n")+"\n\n"+
-					"To select a category, use `&trivia <category name>`.")
-				).then(() => {
-					channel.send("I've sent you a DM with the list of categories.");
-				}).catch(() => {
-					channel.send(client.lang.dm.failed(msg));
-				});
-				return;
-			} else {
-				let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix));
-				if (f.length == 0) {
-					return channel.send("Found no categories with that name. Use `&trivia categories` for the complete list of categories.");
-				} else if (f.length >= 2) {
-					return channel.send("There are multiple categories with that name: **"+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.");
-				} else {
-					category = f[0].id;
-				}
-			}
-		}
-		// Check games in progress
-		if (games.getChannel(channel)) return channel.send(`There's a game already in progress for this channel.`);
-		// Send typing
-		channel.sendTyping();
-		// Get new game data
-		let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel);
-		if (!body[0]) return;
-		let data = body[1];
-		// Error check new game data
-		if (data.response_code != 0) return channel.send(`There was an error from the api`);
-		// Set up new game
-		new TriviaGame(channel, data, category);
-	}
+	});
 }

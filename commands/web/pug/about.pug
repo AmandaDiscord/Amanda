@@ -1,0 +1,27 @@
+mixin user(userID, comment)
+	div.about
+		div= users.get(userID).tag + (comment ? " — "+comment : "")
+		div
+			block
+
+doctype html
+html
+	include includes/head.pug
+		title About | Amanda
+	
+	body
+		include includes/nav.pug
+		+nav("about")
+
+		div.title
+			div.box About Amanda
+		div
+			+user("405208699313848330")
+				| Hello! I'm Amanda and it's my pleasure to serve you. I might not be perfect but I hope to make your server a bit more interesting.
+				| Lots of love was put into me and I hope to share that love with all of you.
+			+user("320067006521147393", "Owner")
+				| Amanda came into being about December of 2017 which is when I started coding. 1 month later, I met Cadence and a few other people who helped me build Amanda and even hosted when I couldn't.
+				| At the time, this was all just a hobby to take up until I saw what we had created had potential to go places. Pretty much all of Amanda's core structure was done by me
+			+user("176580265294954507", "Co-owner")
+				| I've been developing bots in other node.js libraries since November 2016. At first they were pretty bad, but over the course of a year I evolved into a somewhat decent developer.
+				| I met Papi in January 2018 and started contributing to Amanda in early April. Pretty much all of Amanda's music- and web-related code was created by me.
