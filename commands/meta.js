@@ -616,7 +616,10 @@ module.exports = function(passthrough) {
 						utils.hasPermission(msg.author, "owner"),
 						utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
 					]);
-					if (!isEval || !isPremium) return msg.channel.send("You must be a donor to modify this setting.");
+					let allowed = false;
+					if (isEval) allowed = true;
+					if (isPremium) allowed = true;
+					if (!allowed) return msg.channel.send("You must be a donor to modify this setting.");
 					let data;
 					try {
 						data = await rp(value, { encoding: null });
