@@ -151,6 +151,7 @@ module.exports = function(passthrough) {
 			statusPrefix = result.find(r => r.status).prefix;
 			console.log("Loaded "+prefixes.length+" prefixes");
 			if (starting) client.emit("prefixes", prefixes)
+			update()
 		});
 		if (starting) {
 			console.log(`Successfully logged in as ${client.user.username}`);
