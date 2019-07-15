@@ -34,6 +34,8 @@ module.exports = function(passthrough) {
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
 
+	let bulkLoaders = [];
+
 	/**
 	 * @param {Song} song
 	 * @param {Discord.TextChannel} textChannel
@@ -69,17 +71,26 @@ module.exports = function(passthrough) {
 		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
 		if (!voiceChannel) voiceChannel = await detectVoiceChannel(msg, true);
 		if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
+
+		
 		let progress = 0;
 		let total = videoIDs.length;
 		let lastEdit = 0;
 		let editInProgress = false;
 		let progressMessage = await msg.channel.send(getProgressMessage());
+		let cancelled = false;
+		let loader = [msg.guild.id, () => {
+			cancelled = true;
+			progressMessage.edit(`Song loading cancelled (${progress}/${total})`);
+			bulkLoaders.splice(bulkLoaders.indexOf(loader), 1)
+		}];
+		bulkLoaders.push(loader)
 		let batches = [];
 		if (total <= useBatchLimit) batches.push(videoIDs);
 		else while (videoIDs.length) batches.push(videoIDs.splice(0, batchSize));
 		function getProgressMessage(batchNumber, batchProgress, batchTotal) {
-			if (!batchNumber) return `Please wait, loading songs...`;
-			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})`;
+			if (!batchNumber) return `Please wait, loading songs...\nUse \`&music stop\` to cancel.`;
+			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})\nUse \`&music stop\` to cancel.`;
 		}
 		let videos = [];
 		let batchNumber = 0;
@@ -89,6 +100,7 @@ module.exports = function(passthrough) {
 			let batchProgress = 0;
 			let promise = Promise.all(batch.map(videoID => {
 				return ytdl.getInfo(videoID).then(info => {
+					if (cancelled) return;
 					if (progress >= 0) {
 						progress++;
 						batchProgress++;
@@ -104,15 +116,18 @@ module.exports = function(passthrough) {
 				}).catch(reason => Promise.reject({reason, id: videoID}))
 			}));
 			promise.catch(error => {
+				if (cancelled) return;
 				progress = -1;
-				manageYtdlGetInfoErrors(msg, error.reason, error.id, oldVideoIDs.indexOf(error.id)+1).then(() => {
+				common.manageYtdlGetInfoErrors(msg, error.reason, error.id, oldVideoIDs.indexOf(error.id)+1).then(() => {
 					msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
 				});
 			});
 			promise.then(batchVideos => {
+				if (cancelled) return;
 				videos.push(...batchVideos);
 				if (batches.length) nextBatch();
 				else {
+					bulkLoaders.splice(bulkLoaders.indexOf(loader), 1);
 					videos.forEach(video => {
 						let queue = queueManager.storage.get(msg.guild.id);
 						let song = new songTypes.YouTubeSong(video, !queue || queue.songs.length <= 1);
@@ -121,37 +136,6 @@ module.exports = function(passthrough) {
 				}
 			});
 		})();
-	}
-
-	/**
-	 * @param {Discord.TextChannel} channel
-	 * @param {Object} reason
-	 * @param {String} reason.message
-	 * @param {String} id
-	 * @param {Number} item
-	 * @returns {Promise<Discord.Message>}
-	 */
-	function manageYtdlGetInfoErrors(channel, reason, id, item) {
-		if (channel.channel) channel = channel.channel;
-		let idString = id ? ` (index: ${item}, id: ${id})` : "";
-		if (!reason || !reason.message) {
-			return channel.send("An unknown error occurred."+idString);
-		} if (reason.message && reason.message.startsWith("No video id found:")) {
-			return channel.send(`That is not a valid YouTube video.`+idString);
-		} else if (reason.message && (
-				reason.message.includes("who has blocked it in your country")
-			|| reason.message.includes("This video is unavailable")
-			|| reason.message.includes("The uploader has not made this video available in your country")
-			|| reason.message.includes("copyright infringement")
-		)) {
-			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement.`+idString);
-		} else {
-			return new Promise(resolve => {
-				utils.stringify(reason).then(result => {
-					channel.send(result).then(resolve);
-				});
-			});
-		}
 	}
 
 	class VoiceStateCallback {
@@ -262,12 +246,166 @@ module.exports = function(passthrough) {
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
 
+	const subcommandsMap = new Map([
+		["play", {
+			voiceChannel: "ask",
+			code: async (msg, args, {voiceChannel}) => {
+				let permissions = voiceChannel.permissionsFor(client.user)
+				if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin());
+				if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak());
+				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
+				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
+				if (result == null) return;
+				if (result.length > 1) {
+					bulkPlaySongs(msg, voiceChannel, result, args[2], args[3]);
+				} else {
+					let song = new songTypes.YouTubeSong(result[0], undefined, true)
+					return handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
+				}
+			}
+		}],
+		["stop", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				let bulkLoaderIndex = -1;
+				for (let i = 0; i < bulkLoaders.length; i++) {
+					if (bulkLoaders[i][0] == msg.guild.id) bulkLoaderIndex = i;
+				}
+				if (bulkLoaderIndex != -1) {
+					bulkLoaders[bulkLoaderIndex][1]();
+				} else {
+					if (!queue) {
+						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
+						else return msg.channel.send(lang.voiceNothingPlaying(msg));
+					} else {
+						queue.wrapper.stop()
+					}
+				}
+			}
+		}],
+		["queue", {
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.getQueue(msg)
+			}
+		}],
+		["skip", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.skip(msg);
+			}
+		}],
+		["auto", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.toggleAuto(msg);
+			}
+		}],
+		["now", {
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				if (msg.channel == queue.textChannel) queue.sendNowPlaying();
+				else msg.channel.send("The current music session is over in "+queue.textChannel+". Go there to see what's playing!")
+			}
+		}],
+		["info", {
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.showInfo();
+			}
+		}],
+		["shuffle", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.shuffle(msg);
+			}
+		}],
+		["pause", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.pause(msg);
+			}
+		}],
+		["resume", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {queue}) => {
+				queue.wrapper.resume(msg);
+			}
+		}],
+		["related", {
+			voiceChannel: "required",
+			queue: "required",
+			code: async (msg, args, {voiceChannel, queue}) => {
+				let mode = args[1];
+				let index = parseInt(args[2])-1;
+				let related = await queue.songs[0].related();
+				if (related[index] && mode && ["p", "i"].includes(mode[0])) {
+					let videoID = related[index].id;
+					ytdl.getInfo(videoID).then(video => {
+						let song = new songTypes.YouTubeSong(video, !queue || queue.songs.length <= 1);
+						return handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
+					}).catch(reason => {
+						common.manageYtdlGetInfoErrors(msg, reason, args[1]);
+					});
+				} else {
+					if (related.length) {
+						let body = "";
+						related.forEach((songss, index) => {
+							let toAdd = `${index+1}. **${songss.title}** (${common.prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
+							if (body.length + toAdd.length < 2000) body += toAdd;
+						});
+						let embed = new Discord.RichEmbed()
+						.setAuthor(`Related videos`)
+						.setDescription(body)
+						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
+						.setColor("36393E")
+						return msg.channel.send(embed);
+					} else {
+						return msg.channel.send("No related songs available.");
+					}
+				}
+			}
+		}],
+		["playlist", {
+			voiceChannel: "provide",
+			code: async (msg, args, {voiceChannel}) => {
+				playlistCommand.command(msg, args, (songs) => {
+					songs.forEach(song => {
+						handleSong(song, msg.channel, voiceChannel, false);
+					})
+				})
+			}
+		}]
+	])
+	const subcommandAliasMap = new Map()
+	;[
+		["play", ["p", "insert", "i"]],
+		["queue", ["q"]],
+		["skip", ["s"]],
+		["now", ["n"]],
+		["related", ["rel"]],
+		["playlist", ["pl", "playlists"]]
+	].forEach(entry => {
+		entry[1].forEach(alias => {
+			subcommandAliasMap.set(alias, entry[0])
+		})
+	})
+	subcommandsMap.forEach((value, key) => {
+		subcommandAliasMap.set(key, key)
+	})
+
 	Object.assign(commands, {
 		"musictoken": {
 			usage: "none",
-			description: "Assign a login token for use on Amanda's web dashboard",
+			description: "Obtain a web dashboard login token",
 			aliases: ["token", "musictoken", "webtoken"],
-			category: "music",
+			category: "meta",
 			/**
 			 * @param {Discord.Message} msg
 			 */
@@ -318,118 +456,42 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				if (msg.channel.type != "text") return msg.channel.send(lang.command.guildOnly(msg));
-				let allowed = (await Promise.all([utils.hasPermission(msg.author, "music"), utils.hasPermission(msg.guild, "music")])).includes(true);
-				if (!allowed) {
-					let owner = await client.fetchUser("320067006521147393")
-					return msg.channel.send(`${msg.author.username}, you or this guild is not part of the partner system. Information can be obtained by DMing ${owner.tag}`);
+				// No DMs
+				if (msg.channel.type != "text") return msg.channel.send(lang.command.guildOnly(msg))
+				// Args
+				let args = suffix.split(" ")
+				// Find subcommand
+				let subcommand = args[0] ? args[0].trim().toLowerCase() : ""
+				let key = subcommandAliasMap.get(subcommand)
+				let subcommandObject = subcommandsMap.get(key)
+				if (!subcommandObject) return msg.channel.send(lang.input.music.invalidAction(msg))
+				// Create data for subcommand
+				let subcommmandData = {}
+				// Provide a queue?
+				if (subcommandObject.queue == "required") {
+					let Queue = queueFile.Queue
+					/** @type {Queue} */
+					let queue = queueManager.storage.get(msg.guild.id)
+					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg))
+					subcommmandData.queue = queue
 				}
-				let args = suffix.split(" ");
-				let queue = queueManager.storage.get(msg.guild.id);
-				const allowedSubcommands = ["q", "queue", "n", "now", "pl", "playlist", "playlists"];
-				let voiceChannel = await detectVoiceChannel(msg, !allowedSubcommands.includes(args[0].toLowerCase()));
-				if (!voiceChannel && !allowedSubcommands.includes(args[0].toLowerCase())) {
-					msg.channel.send(lang.voiceMustJoin(msg));
-					return;
+				// Provide a voice channel?
+				if (subcommandObject.voiceChannel) {
+					if (subcommandObject.voiceChannel == "required") {
+						let voiceChannel = await detectVoiceChannel(msg, false)
+						if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+						subcommmandData.voiceChannel = voiceChannel
+					} else if (subcommandObject.voiceChannel == "ask") {
+						let voiceChannel = await detectVoiceChannel(msg, true)
+						if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+						subcommmandData.voiceChannel = voiceChannel
+					} else if (subcommandObject.voiceChannel == "provide") {
+						let voiceChannel = await detectVoiceChannel(msg, false)
+						subcommmandData.voiceChannel = voiceChannel
+					}
 				}
-				if (args[0].toLowerCase() == "play" || args[0].toLowerCase() == "insert" || args[0].toLowerCase() == "p" || args[0].toLowerCase() == "i") {
-					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					const permissions = voiceChannel.permissionsFor(msg.client.user);
-					if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin());
-					if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak());
-					if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
-					let result = await queueFile.searchYoutube(args.slice(1).join(" "), msg, args[1]);
-					if (result == null) return;
-					if (result.constructor.name == "Array") bulkPlaySongs(msg, voiceChannel, result.map(video => video.id), args[2], args[3]);
-					else return handleSong(result, msg.channel, voiceChannel, args[0][0] == "i");
-				} else if (args[0].toLowerCase() == "stop") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) {
-						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
-						else return msg.channel.send(lang.voiceNothingPlaying(msg));
-					}
-					if (queue.stop(queue)[0]) return;
-				} else if (args[0].toLowerCase() == "queue" || args[0].toLowerCase() == "q") {
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					let totalLength = "\nTotal length: "+common.prettySeconds(queue.songs.reduce((p,c) => (p+parseInt(c.source == "YouTube" ? c.basic.length_seconds : 0)), 0)); //TODO: move this to the song object
-					let body = queue.songs.map((songss, index) => `${index+1}. **${songss.title}** (${common.prettySeconds(songss.source == "YouTube" ? songss.basic.length_seconds: "LIVE")})`).join('\n');
-					if (body.length > 2000) {
-						let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
-						let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
-						body = first+"\n…\n"+last;
-					}
-					let embed = new Discord.RichEmbed()
-					.setAuthor(`Queue for ${msg.guild.name}`)
-					.setDescription(body+totalLength)
-					.setColor("36393E")
-					return msg.channel.send({embed});
-				} else if (args[0].toLowerCase() == "skip" || args[0].toLowerCase() == "s") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					if (queue.skip()[0]) return;
-				} else if (args[0].toLowerCase() == "auto") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					queue.auto = !queue.auto;
-					return msg.channel.send(`Auto mode is now turned ${queue.auto ? "on" : "off"}`);
-				} else if (args[0].toLowerCase() == "now" || args[0].toLowerCase() == "n" || args[0].toLowerCase() == "np") {
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					let embed = queue.getNPEmbed()
-					let n = await msg.channel.send(embed);
-					queue.nowPlayingMsg.clearReactions();
-					queue.nowPlayingMsg = n;
-					queue.generateReactions();
-				} else if (args[0].toLowerCase() == "info" || args[0].toLowerCase() == "information") {
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					queue.showInfo();
-				} else if ("related".startsWith(args[0].toLowerCase())) {
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					let mode = args[1];
-					let index = parseInt(args[2])-1;
-					let related = await queue.songs[0].related();
-					if (related[index] && mode && ["p", "i"].includes(mode[0])) {
-						let videoID = related[index].id;
-						ytdl.getInfo(videoID).then(video => {
-							let song = new songTypes.YouTubeSong(video, !queue || queue.songs.length <= 1);
-							return handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
-						}).catch(reason => {
-							manageYtdlGetInfoErrors(msg, reason, args[1]);
-						});
-					} else {
-						if (related.length) {
-							let body = "";
-							related.forEach((songss, index) => {
-								let toAdd = `${index+1}. **${songss.title}** (${common.prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
-								if (body.length + toAdd.length < 2000) body += toAdd;
-							});
-							let embed = new Discord.RichEmbed()
-							.setAuthor(`Related videos`)
-							.setDescription(body)
-							.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
-							.setColor("36393E")
-							return msg.channel.send(embed);
-						} else {
-							return msg.channel.send("No related songs available.");
-						}
-					}
-				} else if (args[0].toLowerCase() == "shuffle") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					queue.songs = [queue.songs[0]].concat(queue.songs.slice(1).shuffle());
-					return;
-				} else if (args[0].toLowerCase() == "pause") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					if (queue.pause()[0]) return;
-				} else if (args[0].toLowerCase() == "resume") {
-					if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg));
-					if (queue.resume()[0]) return;
-				} else if (args[0].match(/^pl(aylists?)?$/)) {
-					return playlistCommand.command(msg, args, (songs, start, end, skip) => {
-						bulkPlaySongs(msg, voiceChannel, songs, start, end, skip)
-							});
-				} else return msg.channel.send(lang.genericInvalidAction(msg));
+				// Hand over execution to the subcommand
+				subcommandObject.code(msg, args, subcommmandData)
 			}
 		}
 	})

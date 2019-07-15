@@ -39,6 +39,7 @@ module.exports = (passthrough) => {
 					doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
 				},
 				music: {
+					invalidAction: msg => authorString(msg, "that's not a valid action. If you want to play something, try `&music play <thing>`.\nCheck out `&help music` and `&help playlists` for more things you can do!"),
 					playableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
 					youTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
 				}

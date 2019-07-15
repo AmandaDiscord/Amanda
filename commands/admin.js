@@ -15,6 +15,9 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", lang);
 
+	let common = require("./music/common.js")(passthrough);
+	reloader.useSync("./commands/music/common.js", common);
+
 	Object.assign(commands, {
 		"evaluate": {
 			usage: "<code>",

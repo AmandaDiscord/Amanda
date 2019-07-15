@@ -459,7 +459,7 @@ module.exports = (passthrough) => {
 				else if (typeof(data) == "function") result = "(function)";
 				else if (typeof(data) == "string") result = `"${data}"`;
 				else if (typeof(data) == "number") result = data.toString();
-				else if (data.constructor && data.constructor.name == "Promise") result = await utils.stringify(data);
+				else if (data.constructor && data.constructor.name == "Promise") result = utils.stringify(await data);
 				else if (data.constructor && data.constructor.name.toLowerCase().includes("error")) {
 					let errorObject = {};
 					Object.entries(data).forEach(e => {
@@ -486,6 +486,111 @@ module.exports = (passthrough) => {
 				let d = new Date(when || Date.now());
 				if (!seperator) seperator = "";
 				return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0");
+			},
+
+			playlistSection: function(items, startString, endString, shuffle) {
+				let from = startString == "-" ? 1 : (parseInt(startString) || 1);
+				let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length);
+				from = Math.max(from, 1);
+				to = Math.min(items.length, to);
+				if (startString) items = items.slice(from-1, to);
+				if (shuffle) {
+					items = items.shuffle();
+				}
+				if (!startString && !shuffle) items = items.slice(); // make copy of array for consistent behaviour
+				return items
+			},
+
+			/**
+			 * @param {Discord.TextChannel} channel
+			 * @param {Array} items
+			 * @param {Discord.RichEmbed} embed
+			 * @returns {Promise<Number>} The zero-based index that was selected.
+			 */
+			makeSelection: async function(channel, authorID, title, failedTitle, items, embed = undefined) {
+				// Set up embed
+				if (!embed) embed = new Discord.RichEmbed();
+				embed.setTitle(title);
+				embed.setDescription(items.join("\n"));
+				embed.setColor("36393e");
+				embed.setFooter(`Type a number from 1-${items.length} to select that item`);
+				// Send embed
+				let selectmessage = await channel.send(embed);
+				// Make collector
+				let collector = channel.createMessageCollector((m => m.author.id == authorID), {maxMatches: 1, time: 60000});
+				return collector.next.then(newmessage => {
+					// Collector got a message
+					let index = parseInt(newmessage.content);
+					// Is index a number?
+					if (isNaN(index)) throw new Error();
+					index--;
+					// Is index in bounds?
+					if (index < 0 || index >= items.length) throw new Error(); // just head off to the catch
+					// Edit to success
+					embed.setDescription("» "+items[index]);
+					embed.setFooter("");
+					selectmessage.edit(embed);
+					return index;
+				}).catch(() => {
+					// Collector failed, show the failure message and exit
+					embed.setTitle(failedTitle);
+					embed.setDescription("");
+					embed.setFooter("");
+					selectmessage.edit(embed);
+					throw new Error("Collector didn't receive a valid response");
+				});
+			},
+
+			/** @param {Date} date */
+			upcomingDate: function(date) {
+				let hours = date.getUTCHours()
+				if (hours < 12) {
+					hours += " AM"
+				} else {
+					hours = (hours - 12) + " PM"
+				}
+				return date.toUTCString().split(" ").slice(0, 4).join(" ")+" at "+hours+" UTC"
+			},
+
+			compactRows: {
+				/** @param {Array<String>} rows */
+				removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
+					let currentLength = 0
+					let maxItems = 20
+					for (let i = 0; i < rows.length; i++) {
+						let row = rows[i]
+						if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
+							return rows.slice(0, i).concat([endString])
+						}
+						currentLength += row.length + joinLength
+					}
+					return rows
+				},
+
+				/** @param {Array<String>} rows */
+				removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
+					let currentLength = 0
+					let currentItems = 0
+					let maxItems = 20
+					let reconstruction = new Map([["left", []], ["right", []]])
+					let leftOffset = 0
+					let rightOffset = 0
+					function getNextDirection() {
+						return rightOffset * 3 > leftOffset ? "left" : "right"
+					}
+					while (currentItems < rows.length) {
+						let direction = getNextDirection()
+						if (direction == "left") var row = rows[leftOffset++]
+						else var row = rows[rows.length - 1 - rightOffset++]
+						if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
+							return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
+						}
+						reconstruction.get(direction).push(row)
+						currentLength += row.length + joinLength
+						currentItems++
+					}
+					return reconstruction.get("left").concat(reconstruction.get("right").reverse())
+				}
 			}
 		}
 

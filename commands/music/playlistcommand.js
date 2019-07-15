@@ -2,6 +2,7 @@
 require("../../types.js")
 
 const Discord = require("discord.js")
+const ytdl = require("ytdl-core")
 
 /** @param {PassthroughType} passthrough */
 module.exports = passthrough => {
@@ -15,6 +16,10 @@ module.exports = passthrough => {
 	
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
+
+
+	let songTypes = require("./songtypes.js")(passthrough)
+	reloader.useSync("./commands/music/songtypes.js", songTypes)
 
 	return {
 		command: async function(msg, args, bulkPlayCallback) {
@@ -60,12 +65,11 @@ module.exports = passthrough => {
 			let action = args[2] || "";
 			if (action.toLowerCase() == "add") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				let videoID;
 				if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
-				let result = await searchYoutube(args.slice(3).join(" "), msg, args[3], true);
-				if (result != null) videoID = result.basic.id;
-				else return;
-				ytdl.getInfo(videoID).then(async video => {
+				msg.channel.sendTyping();
+				let result = await common.resolveInput.toIDWithSearch(args.slice(3).join(" "), msg.channel, msg.author.id);
+				if (result == null) return;
+				ytdl.getInfo(result[0]).then(async video => {
 					if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(lang.playlistDuplicateItem(msg));
 					await Promise.all([
 						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
@@ -123,7 +127,13 @@ module.exports = passthrough => {
 				msg.channel.send(embed);
 
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
-				bulkPlayCallback(orderedSongs.map(song => song.videoID), args[3], args[4], action.toLowerCase()[0] == "s");
+				if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+				let rows = utils.playlistSection(orderedSongs, args[3], args[4], action.toLowerCase()[0] == "s");
+				rows = rows.map(row => new songTypes.YouTubeSong(row.videoID, undefined, false, {
+					title: row.name,
+					length_seconds: row.length
+				}));
+				bulkPlayCallback(rows);
 			} else if (action.toLowerCase() == "import") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
 				if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
