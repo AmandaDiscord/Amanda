@@ -515,7 +515,6 @@ module.exports = function(passthrough) {
 							"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n"+
 							"`&music auto`")
 						.addField(`queue`, `Shows the current queue.\n\`&music queue\``)
-						.addField(`shuffle`, `Shuffle the queue. Does not affect the current song.\n\`&music shuffle\``)
 						.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 						.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 						.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)

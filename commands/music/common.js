@@ -70,11 +70,7 @@ module.exports = passthrough => {
 				return output.join(":");
 			},
 			resolveInput: {
-				/** 
-				 * @param {String} input
-				 * @returns {(Array<String>|Null)} Returns an array of video IDs, or null
-				 */
-				toID: async function(input) {
+				toID: async function(input, channel) {
 					input = input.replace(/(<|>)/g, "");
 					try {
 						let inputAsURL = input;
@@ -103,10 +99,28 @@ module.exports = passthrough => {
 							}
 							// Is it a playlist?
 							else if (url.pathname == "/playlist") {
-								let list = url.searchParams.get("list");
-								let playlist = await youtube.getPlaylist("https://www.youtube.com/playlist?list="+list);
-								let videos = await playlist.getVideos();
-								return videos.map(v => v.id);
+								let list = url.searchParams.get("list")
+								let playlist = await youtube.getPlaylistByID(list, {part: "snippet,contentDetails"})
+								if (channel) {
+									if (playlist.length > 300) await channel.send(`That's a MASSIVE playlist (${playlist.length} items). I'll only load the first 300 items. Give me a moment...`)
+									else if (playlist.length > 100) await channel.send(`That's a pretty big playlist (${playlist.length} items). Give me a moment to load it...`)
+								}
+								let videos = await playlist.getVideos(300)
+								let parts = []
+								let addIndex = 0
+								while (addIndex < videos.length) {
+									parts.push(videos.slice(addIndex, addIndex+50))
+									addIndex += 50
+								}
+								await Promise.all(parts.map(part => {
+									let ids = part.map(p => p.id).join("%2C")
+									return rp(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${youtube.key}`, {json: true}).then(data => {
+										data.items.forEach((dataItem, index) => {
+											part[index]._patch(dataItem)
+										})
+									})
+								}))
+								return videos
 							}
 							// YouTube-compatible, but can't resolve to a video.
 							else {
@@ -142,7 +156,7 @@ module.exports = passthrough => {
 				 * @returns {(Array<String>|Null)} Returns an array of video IDs, or null
 				 */
 				toIDWithSearch: async function(input, channel, authorID) {
-					let id = await common.resolveInput.toID(input);
+					let id = await common.resolveInput.toID(input, channel);
 					if (id) return id;
 					channel.sendTyping()
 					let videos = await common.resolveInput.toSearch(input);

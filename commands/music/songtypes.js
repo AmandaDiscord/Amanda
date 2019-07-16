@@ -22,6 +22,7 @@ module.exports = passthrough => {
 		constructor(id, info, cache, basic) {
 			this.id = id
 			this.connectionPlayFunction = "playOpusStream"
+			this.canBePaused = true
 			this.url = "https://youtu.be/"+id
 			this.error = null
 			this.progressUpdateFrequency = 5000
@@ -54,9 +55,6 @@ module.exports = passthrough => {
 				console.log(this.getUniqueID()+" - deleteCache (sync)")
 			}
 		}
-		/**
-		 * @returns {Promise<any>}
-		 */
 		getStream() {
 			return this._getInfo(true).then(info => {
 				if (info) {
@@ -173,6 +171,7 @@ module.exports = passthrough => {
 			this.filledBarOffset = 0
 			this.progressUpdateFrequency = 15000
 			this.connectionPlayFunction = "playStream"
+			this.canBePaused = false
 			this.title = "Frisky Radio"
 		}
 		getUniqueID() {

@@ -23,16 +23,26 @@ module.exports = function(passthrough) {
 
 	let songTypes = require("./songtypes.js")(passthrough)
 	reloader.useSync("./commands/music/songtypes.js", songTypes)
-	let Song = songTypes.Song // intellisense sucks
+	let Song = songTypes.YouTubeSong // intellisense sucks
 
 	let queueFile = require("./queue.js")(passthrough)
 	reloader.useSync("./commands/music/queue.js", queueFile)
+	let Queue = queueFile.Queue // intellisense sucks
 
 	let playlistCommand = require("./playlistcommand.js")(passthrough)
 	reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)
 
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
+
+	utils.addTemporaryListener(client, "guildUpdate", path.basename(__filename), (a, b) => {
+		/** @type {Queue} */
+		let queue = queueManager.storage.get(b.id)
+		if (a.region != b.region && queue) {
+			queue.textChannel.send("The guild region changed, forcing me to disconnect from voice and stop playing music.")
+			queue.stop()
+		}
+	})
 
 	let bulkLoaders = [];
 
@@ -81,7 +91,7 @@ module.exports = function(passthrough) {
 		let cancelled = false;
 		let loader = [msg.guild.id, () => {
 			cancelled = true;
-			progressMessage.edit(`Song loading cancelled (${progress}/${total})`);
+			progressMessage.edit(`Song loading cancelled. (${progress}/${total})`);
 			bulkLoaders.splice(bulkLoaders.indexOf(loader), 1)
 		}];
 		bulkLoaders.push(loader)
@@ -256,12 +266,14 @@ module.exports = function(passthrough) {
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
 				if (result == null) return;
-				if (result.length > 1) {
-					bulkPlaySongs(msg, voiceChannel, result, args[2], args[3]);
-				} else {
-					let song = new songTypes.YouTubeSong(result[0], undefined, true)
-					return handleSong(song, msg.channel, voiceChannel, args[0][0] == "i");
-				}
+				result.forEach(item => {
+					if (item instanceof YouTube.Video) {
+						var song = new songTypes.YouTubeSong(item.id, undefined, true, {title: item.title, length_seconds: item.durationSeconds})
+					} else {
+						var song = new songTypes.YouTubeSong(item, undefined, true)
+					}
+					handleSong(song, msg.channel, voiceChannel, args[0][0] == "i")
+				})
 			}
 		}],
 		["stop", {
@@ -315,13 +327,6 @@ module.exports = function(passthrough) {
 			queue: "required",
 			code: async (msg, args, {queue}) => {
 				queue.wrapper.showInfo();
-			}
-		}],
-		["shuffle", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.shuffle(msg);
 			}
 		}],
 		["pause", {

@@ -203,20 +203,39 @@ module.exports = passthrough => {
 				} else {
 					author.push(playlistName);
 				}
-				let totalLength = "\nTotal length: "+common.prettySeconds(orderedSongs.reduce((p,c) => (p+parseInt(c.length)), 0));
-				let body = orderedSongs.map((songss, index) => `${index+1}. **${songss.name}** (${common.prettySeconds(songss.length)})`).join('\n');
-				if (body.length+totalLength.length > 2000) {
-					let first = body.slice(0, 995-totalLength.length/2).split("\n").slice(0, -1).join("\n");
-					let last = body.slice(totalLength.length/2-995).split("\n").slice(1).join("\n");
-					body = first+"\n…\n"+last;
-				}
-				body += totalLength;
+
+				let rows = orderedSongs.map((song, index) => `${index+1}. **${song.name}** (${common.prettySeconds(song.length)})`)
+				let totalLength = "\nTotal length: "+common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))
 				let embed = new Discord.RichEmbed()
 				.setAuthor(author[0], author[1])
-				//.setDescription(orderedSongs.map((row, index) => `${index+1}. **${row.name}** (${common.prettySeconds(row.length)})`).join("\n")+"\nTotal length: "+common.prettySeconds(totalLength))
-				.setDescription(body)
 				.setColor("36393E")
-				msg.channel.send(embed);
+				if (rows.join("\n").length + totalLength.length <= 2000) {
+					embed.setDescription(rows.join("\n")+totalLength)
+					msg.channel.send({embed});
+				} else {
+					let pages = []
+					let currentPage = []
+					let currentPageLength = 0
+					let currentPageMaxLength = 2000 - totalLength.length
+					let itemsPerPage = 20
+					let itemsPerPageTolerance = 5
+					for (let i = 0; i < rows.length; i++) {
+						let row = rows[i]
+						if ((currentPage.length >= itemsPerPage && rows.length-i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
+							pages.push(currentPage)
+							currentPage = []
+							currentPageLength = 0
+						}
+						currentPage.push(row)
+						currentPageLength += row.length+1
+					}
+					pages.push(currentPage)
+					utils.paginate(msg.channel, pages.length, page => {
+						embed.setTitle(`Page ${page+1} of ${pages.length}`)
+						embed.setDescription(pages[page].join("\n") + totalLength)
+						return embed
+					})
+				}
 			}
 		}
 	}

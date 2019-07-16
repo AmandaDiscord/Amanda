@@ -24,7 +24,7 @@ module.exports = passthrough => {
 	reloader.useSync("./modules/lang.js", lang);
 
 	let songTypes = require("./songtypes.js")(passthrough)
-	let Song = songTypes.Song // thanks jsdoc
+	let Song = songTypes.YouTubeSong // thanks jsdoc
 	reloader.useSync("./commands/music/songtypes.js", songTypes)
 
 	let common = require("./common.js")(passthrough)
@@ -82,17 +82,6 @@ module.exports = passthrough => {
 			 */
 			get dispatcher() {
 				return this.connection.dispatcher || this._dispatcher;
-			}
-			toObject() {
-				return {
-					id: this.id,
-					songs: this.songs.map(s => s.toUnified()),
-					time: this.dispatcher.time,
-					playing: this.playing,
-					skippable: this.skippable,
-					auto: this.auto,
-					volume: this.volume,
-				}
 			}
 			/**
 			 * Destroy the current song,
@@ -165,7 +154,7 @@ module.exports = passthrough => {
 			getNPEmbed() {
 				let song = this.songs[0];
 				let time = this.dispatcher ? this.dispatcher.time : 0
-				let paused = this.dispatcher ? this.dispatcher.paused : false
+				let paused = this.paused
 				let embed = new Discord.RichEmbed().setColor("36393E")
 				.setDescription(`Now playing: **${song.getTitle()}**`)
 				.addField("­", this.songs[0].getProgress(time, paused));
@@ -177,17 +166,16 @@ module.exports = passthrough => {
 				if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
 					{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
-						if (this.playing) this.pause();
-						else this.resume();
+						this.wrapper.pause("reaction")
 					}},
 					{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
-						this.skip();
+						this.wrapper.skip("reaction")
 					}},
 					{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
 						msg.clearReactions();
-						this.stop();
+						this.wrapper.stop("reaction")
 					}}
 				]);
 			}
@@ -251,36 +239,42 @@ module.exports = passthrough => {
 					return this.playNext()
 				}
 				stream.on("error", async err => {
-					this.textChannel.send("//TODO error lol")
+					this.textChannel.send("Failed to stream that file. This is a bug. Please tell us about it. https://discord.gg/zhthQjH")
+					console.error(err)
+					stream.removeAllListeners("data")
+					return this.playNext()
 				});
 				// Make a dispatcher
 				/**
 				 * @type {Discord.StreamDispatcher}
 				 */
-				const dispatcher = this.connection[song.connectionPlayFunction](stream)
-				this._dispatcher = dispatcher
-				dispatcher.once("start", async () => {
-					// Set up the internal state
-					dispatcher.setBitrate("auto")
-					queueManager.songsPlayed++
-					this.skippable = true
-					this.playing = true
-					this.startNowPlayingUpdates()
-					// Listen for errors
-					dispatcher.on("error", handleDispatcherError)
-					// Wait for the end
-					dispatcher.once("end", () => {
-						// Deconstruct everything
-						this.playing = false
-						this.skippable = false
-						this.stopNowPlayingUpdates()
-						this.updateNowPlaying()
-						song.destroy()
-						dispatcher.removeListener("error", handleDispatcherError)
-						// Reset the pausedTime
-						dispatcher.player.streamingData.pausedTime = 0
-						// Play the next song, or quit
-						this.playNext()
+				stream.once("data", () => {
+					const dispatcher = this.connection[song.connectionPlayFunction](stream)
+					this._dispatcher = dispatcher
+					dispatcher.once("start", async () => {
+						// Set up the internal state
+						dispatcher.setBitrate("auto")
+						queueManager.songsPlayed++
+						this.skippable = true
+						this.playing = true
+						this.startNowPlayingUpdates()
+						// Listen for errors
+						dispatcher.on("error", handleDispatcherError)
+						// Wait for the end
+						dispatcher.once("end", () => {
+							// Deconstruct everything
+							this.playing = false
+							this.skippable = false
+							this.stopNowPlayingUpdates()
+							this.updateNowPlaying()
+							song.destroy()
+							stream.removeAllListeners("error")
+							dispatcher.removeListener("error", handleDispatcherError)
+							// Reset the pausedTime
+							dispatcher.player.streamingData.pausedTime = 0
+							// Play the next song, or quit
+							this.playNext()
+						})
 					})
 				})
 			}
@@ -293,10 +287,10 @@ module.exports = passthrough => {
 			 * @returns {Number} Status code. 0 success, 1 already paused, 2 live
 			 */
 			pause() {
-				if (!this.playing) {
-					return 1
-				} else if (this.songs[0].live) {
+				if (!this.songs[0].canBePaused) {
 					return 2
+				} else if (!this.playing) {
+					return 1
 				} else if (this.connection && this.connection.dispatcher) {
 					this.playing = false
 					this.stopNowPlayingUpdates()
@@ -359,23 +353,55 @@ module.exports = passthrough => {
 				this.queue.textChannel.send(info)
 			}
 
-			async pause() {
-				this.queue.pause()
+			pause(context) {
+				let result = this.queue.pause()
+				if (context instanceof Discord.Message || context === "reaction") {
+					let channel = context.channel || this.queue.textChannel
+					if (result == -1) {
+						channel.send(lang.voiceCannotAction("paused"))
+					} else if (result == 1) {
+						channel.send("Music is already paused. To resume playback, use `&music resume`.")
+					} else if (result == 2) {
+						channel.send("You can't pause live music.")
+					}
+				}
 			}
 
-			async resume() {
-				this.queue.resume()
+			resume(context) {
+				let result = this.queue.resume()
+				if (context instanceof Discord.Message || context === "reaction") {
+					let channel = context.channel || this.queue.textChannel
+					if (result == -1) {
+						channel.send(lang.voiceCannotAction("resumed"))
+					} else if (result == 1) {
+						channel.send("Music's already playing. If you want to pause it, use `&music pause`.")
+					}
+				}
 			}
 
-			async skip() {
-				this.queue.skip()
+			skip(context) {
+				let result = this.queue.skip()
+				if (context instanceof Discord.Message || context === "reaction") {
+					let channel = context.channel || this.queue.textChannel
+					if (result == -1) {
+						channel.send(lang.voiceCannotAction("skipped"))
+					} else if (result == 1) {
+						channel.send("You can't skip if music is paused. Resume playback, then skip.")
+					}
+				}
 			}
 
-			async stop() {
-				this.queue.stop()
+			stop(context) {
+				let result = this.queue.stop()
+				if (context instanceof Discord.Message || context === "reaction") {
+					let channel = context.channel || this.queue.textChannel
+					if (result == -1) {
+						channel.send(lang.voiceCannotAction("stopped"))
+					}
+				}
 			}
 
-			async toggleAuto(context) {
+			toggleAuto(context) {
 				this.queue.auto = !this.queue.auto
 				if (context instanceof Discord.Message) {
 					let mode = this.queue.auto ? "on" : "off"

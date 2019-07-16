@@ -221,7 +221,11 @@ module.exports = function(passthrough) {
 		let menu = reactionMenus[id];
 		if (!menu) return;
 		let msg = menu.message;
-		let action = menu.actions.find(a => a.emoji == emoji || (a.emoji.name == emoji.name && a.emoji.id == emoji.id));
+		function fixEmoji(emoji) {
+			if (typeof(emoji) == "object" && emoji.id !== null) emoji = emoji.name+":"+emoji.id
+			return emoji
+		}
+		let action = menu.actions.find(a => fixEmoji(a.emoji) == fixEmoji(emoji))
 		if (!action) return;
 		if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {
 			if (action.remove == "user") messageReaction.remove(user);

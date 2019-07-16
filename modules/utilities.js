@@ -591,6 +591,34 @@ module.exports = (passthrough) => {
 					}
 					return reconstruction.get("left").concat(reconstruction.get("right").reverse())
 				}
+			},
+
+			/** @param {Discord.TextChannel} channel */
+			paginate: async function(channel, pageCount, callback) {
+				let page = 0
+				let msg = await channel.send(callback(page))
+				let reactionMenuExpires;
+				function makeTimeout() {
+					clearTimeout(reactionMenuExpires)
+					reactionMenuExpires = setTimeout(() => {
+						reactionMenu.destroy(true)
+					}, 10*60*1000)
+				}
+				let reactionMenu = msg.reactionMenu([
+					{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
+						page--
+						if (page < 0) page = pageCount-1
+						msg.edit(callback(page))
+						makeTimeout()
+					}},
+					{emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
+						page++
+						if (page >= pageCount) page = 0
+						msg.edit(callback(page))
+						makeTimeout()
+					}}
+				])
+				reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
 			}
 		}
 
