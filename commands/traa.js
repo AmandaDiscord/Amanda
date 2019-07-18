@@ -46,7 +46,7 @@ module.exports = function(passthrough) {
 			let {botInfo, command} = prompts.splice(i, 1)[0];
 			if (!botInfo) return;
 			
-			if (msg.author.id == botInfo[0] && utils.sp(msg, "embeds.0.type") == "rich" && utils.sp(msg, "embeds.0.image.url")) {
+			if (msg.author.id == botInfo[0] && msg.embeds && msg.embeds[0] && msg.embeds[0].type == "rich" && msg.embeds[0].image && msg.embeds[0].image.url) {
 				let url = msg.embeds[0].image.url;
 
 				let existing = await utils.sql.get("SELECT * FROM GenderGifsV2 WHERE url = ?", url);
