@@ -47,12 +47,12 @@ module.exports = passthrough => {
 		}
 		_deleteCache() {
 			if (this.info instanceof Promise) {
-				console.log(this.getUniqueID()+" - deleteCache (promise)")
+				//console.log(this.getUniqueID()+" - deleteCache (promise)")
 				this.info.then(() => {
 					this.info = null
 				})
 			} else {
-				console.log(this.getUniqueID()+" - deleteCache (sync)")
+				//console.log(this.getUniqueID()+" - deleteCache (sync)")
 			}
 		}
 		getStream() {
@@ -80,7 +80,7 @@ module.exports = passthrough => {
 		_getInfo(cache, force = undefined) {
 			if (this.info || force) return Promise.resolve(this.info)
 			else {
-				console.log(this.getUniqueID()+" - getInfo")
+				//console.log(this.getUniqueID()+" - getInfo")
 				return this.info = ytdl.getInfo(this.id).then(info => {
 					this.basic.title = info.title
 					this.basic.length_seconds = +info.length_seconds
