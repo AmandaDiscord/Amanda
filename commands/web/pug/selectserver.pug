@@ -8,9 +8,11 @@ html
 		+nav("dash")
 
 		div.spaced-title
-			div= user.tag
-			div Select a server
-			a(href="/logout").no-underline Log out
+			div.spaced-title-side= user.tag
+			div.spaced-title-main Select a server
+			form(method="post" action="/logout")
+				input(type="hidden" name="csrftoken" value=csrfToken)
+				input(type="submit" value="Log out").logout-button.spaced-title-side
 
 		div.guilds
 			for guild in guilds

@@ -113,11 +113,13 @@ a.no-underline
 	color: #111
 	margin: 16px
 
-	> *
+	.spaced-title-main
 		@include box
+		font-size: 32px
 
-		&:nth-child(2)
-			font-size: 32px
+	.spaced-title-side
+		@include box
+		font-size: 16px
 
 .about
 	@include fatbox
@@ -190,6 +192,9 @@ a.no-underline
 	&:not(.hidden-active)
 		transform: translateY(-20px)
 		opacity: 0
+
+.logout-button
+	cursor: pointer
 
 .guilds
 	display: flex

@@ -1,4 +1,5 @@
 const path = require("path")
+const crypto = require("crypto")
 
 module.exports = function(passthrough) {
 	let {reloader} = passthrough
@@ -39,6 +40,24 @@ module.exports = function(passthrough) {
 			} catch (e) {
 				throw [400, {message: "Malformed URL encoded body"}]
 			}
+		},
+
+		generateCSRF: function(loginToken = null) {
+			let token = crypto.randomBytes(32).toString("hex")
+			utils.sql.all("INSERT INTO CSRFTokens (token, loginToken) VALUES (?, ?)", [token, loginToken])
+			return token
+		},
+
+		checkCSRF: async function(token, loginToken, consume) {
+			let result = true
+			let row = await utils.sql.get("SELECT * FROM CSRFTokens WHERE token = ?", token)
+			// Token doesn't exist? Fail.
+			if (!row) result = false
+			// Checking against a loginToken, but row loginToken differs? Fail.
+			else if (loginToken && row.loginToken != loginToken) result = false
+			// Looking good.
+			if (consume) await utils.sql.all("DELETE FROM CSRFTokens WHERE token = ?", token)
+			return result
 		}
 	}
 }

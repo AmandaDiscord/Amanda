@@ -24,6 +24,7 @@ html
 				input(name="token" placeholder="Token" required)
 				input(type="submit" value="Log in")
 				input(type="button" value="What's this?" onclick="showGetToken(event)")
+				input(type="hidden" name="csrftoken" value=csrfToken)
 		
 		div#get-token.message.hidden
 			div

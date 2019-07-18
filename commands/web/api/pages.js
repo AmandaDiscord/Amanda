@@ -49,14 +49,16 @@ module.exports = (passthrough) => {
 					let user = await client.fetchUser(session.userID)
 					let guilds = [...client.guilds.filter(g => g.members.has(session.userID)).values()]
 
-					let page = pugCache.get("commands/web/pug/selectserver.pug")({user, guilds})
+					let csrfToken = extra.generateCSRF()
+					let page = pugCache.get("commands/web/pug/selectserver.pug")({user, guilds, csrfToken})
 					return {
 						statusCode: 200,
 						contentType: "text/html",
 						content: page
 					}
 				} else {
-					let page = pugCache.get("commands/web/pug/login.pug")()
+					let csrfToken = extra.generateCSRF()
+					let page = pugCache.get("commands/web/pug/login.pug")({csrfToken})
 					return {
 						statusCode: 200,
 						contentType: "text/html",
@@ -69,7 +71,8 @@ module.exports = (passthrough) => {
 			route: "/dash", methods: ["POST"], code: ({req, body}) => {
 				return new validators.FormValidator()
 				.trust({req, body, config})
-				.ensureParams("token")
+				.ensureParams(["token", "csrftoken"])
+				.useCSRF(extra)
 				.do({
 					code: (_) => utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", _.params.get("token"))
 					,assign: "row"
@@ -86,12 +89,13 @@ module.exports = (passthrough) => {
 						content: "Logging in...",
 						headers: {
 							"Location": "/dash",
-							"Set-Cookie": `token=${token}; path=/; expires=${expires}`,
+							"Set-Cookie": `token=${token}; path=/; expires=${expires}`
 						}
 					}
 				})
 				.catch(errorValue => {
-					let page = pugCache.get("commands/web/pug/login.pug")({message: errorValue[1]})
+					let csrfToken = extra.generateCSRF()
+					let page = pugCache.get("commands/web/pug/login.pug")({message: errorValue[1], csrfToken})
 					return {
 						statusCode: errorValue[0],
 						contentType: "text/html",
@@ -101,7 +105,42 @@ module.exports = (passthrough) => {
 			}
 		},
 		{
-			route: "/logout", methods: ["GET", "POST"], code: ({req, body}) => {
+			route: "/logout", methods: ["GET"], code: () => {
+				return {
+					statusCode: 303,
+					contentType: "text/html",
+					content: "Redirecting...",
+					headers: {
+						"Location": "/dash"
+					}
+				}
+			}
+		},
+		{
+			route: "/logout", methods: ["POST"], code: ({req, body}) => {
+				return new validators.FormValidator()
+				.trust({req, body, config})
+				.ensureParams(["csrftoken"])
+				.useCSRF(extra)
+				.go()
+				.then(() => {
+					return {
+						statusCode: 303,
+						contentType: "text/html",
+						content: "Logging out...",
+						headers: {
+							"Location": "/dash",
+							"Set-Cookie": `token=-; path=/; expires=${new Date(0).toUTCString()}`
+						}
+					}
+				})
+				.catch(errorValue => {
+					return {
+						statusCode: errorValue[0],
+						contentType: "text/plain",
+						content: errorValue[1]
+					}
+				})
 			}
 		}
 	]

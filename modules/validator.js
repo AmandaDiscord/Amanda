@@ -103,7 +103,7 @@ class FormValidator extends Validator {
 		})
 		return this
 	}
-
+	
 	ensureParams(list, matchMode="get") {
 		if (!(list instanceof Array)) list = [list]
 		list.forEach(item => {
@@ -113,6 +113,15 @@ class FormValidator extends Validator {
 				,[400, "Missing "+item]
 			)
 		})
+		return this
+	}
+	
+	useCSRF(extra, loginToken) {
+		this.do(
+			() => extra.checkCSRF(this.state.params.get("csrftoken"), loginToken, true)
+			,true
+			,[400, "Invalid CSRF token"]
+		)
 		return this
 	}
 }
