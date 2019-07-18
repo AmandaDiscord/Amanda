@@ -107,7 +107,7 @@ module.exports = function(passthrough) {
 					embed
 					.addField(`${client.user.tag} <:online:453823508200554508>`,
 						`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
-						`**❯ Songs Playing:**\n${queueManager.storage.size} songs`, true)
+						`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 					.addField("­",
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
 						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)}`, true)

@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const mysql = require("mysql2/promise");
 const hotreload = require("./hotreload.js");
+const commandstore = require("./commandstore.js");
 const YouTube = require("simple-youtube-api");
 
 const config = require("./config.json");

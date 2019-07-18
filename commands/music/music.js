@@ -405,7 +405,7 @@ module.exports = function(passthrough) {
 		subcommandAliasMap.set(key, key)
 	})
 
-	Object.assign(commands, {
+	commands.assign({
 		"musictoken": {
 			usage: "none",
 			description: "Obtain a web dashboard login token",
