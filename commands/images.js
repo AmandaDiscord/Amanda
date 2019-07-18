@@ -1,6 +1,5 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
-const path = require("path");
 
 require("../types.js");
 
@@ -23,7 +22,8 @@ module.exports = function(passthrough) {
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
-		let url;
+		let url, permissions;
+		if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;
 		else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`;
 		else return Promise.reject("Host provided not supported");
@@ -43,10 +43,13 @@ module.exports = function(passthrough) {
 			.setImage(img)
 			.setColor('36393E')
 			.setFooter(footer)
-		return nmsg.edit({embed});
+		let content;
+		if (permissions && !permissions.has("EMBED_LINKS")) content = `${img} - ${footer}`;
+		else content = embed;
+		return nmsg.edit(content);
 	}
 
-	Object.assign(commands, {
+	commands.assign({
 		"cat": {
 			usage: "none",
 			description: "Returns an image of a cute cat",

@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const path = require("path");
+const rp = require("request-promise");
 
 require("../types.js");
 
@@ -15,7 +15,7 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", lang);
 
-	Object.assign(commands, {
+	commands.assign({
 		"evaluate": {
 			usage: "<code>",
 			description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
@@ -76,6 +76,7 @@ module.exports = function(passthrough) {
 					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				});
+				return;
 			}
 		},
 		"award": {

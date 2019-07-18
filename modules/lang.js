@@ -39,6 +39,7 @@ module.exports = (passthrough) => {
 					doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
 				},
 				music: {
+					invalidAction: msg => authorString(msg, "that's not a valid action. If you want to play something, try `&music play <thing>`.\nCheck out `&help music` and `&help playlists` for more things you can do!"),
 					playableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
 					youTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
 				}
@@ -66,6 +67,7 @@ module.exports = (passthrough) => {
 			permissionVoiceJoin: () => "I don't have permission to join your voice channel.",
 			permissionVoiceSpeak: () => "I don't have permission to speak in your voice channel.",
 			permissionOtherDMBlocked: () => "I couldn't DM that person. Maybe they've blocked me, or maybe they need to turn on DMs in a shared server.",
+			permissionDeniedGeneric: permission => `I don't have permission to ${permission}. I work best when I have all of the permissions I've asked for when inviting me. Please modify my permissions to use this command.`,
 
 			// Generic
 			genericIndexOutOfRange: msg => authorString(msg, "that index is out of range."),
@@ -82,6 +84,7 @@ module.exports = (passthrough) => {
 
 		langResultCache = lang
 	} else {
+		//@ts-ignore
 		var lang = langResultCache
 	}
 

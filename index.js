@@ -1,9 +1,12 @@
 const Discord = require("discord.js");
 const mysql = require("mysql2/promise");
 const hotreload = require("./hotreload.js");
+const commandstore = require("./commandstore.js");
+const YouTube = require("simple-youtube-api");
 
 const config = require("./config.json");
 const client = new Discord.Client({disableEveryone: true});
+const youtube = new YouTube(config.yt_api_key);
 
 let db = mysql.createPool({
 	host: config.mysql_domain,
@@ -13,7 +16,7 @@ let db = mysql.createPool({
 	connectionLimit: 5
 });
 
-const commands = {};
+let commands = new commandstore()
 let reactionMenus = {};
 
 let queueManager = {
@@ -38,11 +41,15 @@ let gameManager = {
 	]);
 
 	let reloader = new hotreload();
-	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, reactionMenus, queueManager, gameManager};
+	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, reactionMenus, queueManager, gameManager, youtube};
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",
-		"./modules/validator.js"
+		"./modules/validator.js",
+		"./commands/music/common.js",
+		"./commands/music/songtypes.js",
+		"./commands/music/queue.js",
+		"./commands/music/playlistcommand.js"
 	])
 	reloader.watchAndLoad([
 		"./modules/prototypes.js",
@@ -56,7 +63,7 @@ let gameManager = {
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music.js",
+		"./commands/music/music.js",
 		"./commands/traa.js",
 		"./commands/web/server.js"
 	])

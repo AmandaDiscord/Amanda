@@ -4,6 +4,7 @@ const util = require("util");
 const Jimp = require("jimp");
 const path = require("path");
 
+//@ts-ignore
 require("../types.js");
 
 const startingCoins = 5000
@@ -17,16 +18,6 @@ module.exports = (passthrough) => {
 
 	if (!utilsResultCache) {
 		var utils = {
-			sp: function(object, properties) {
-				let list = properties.split(".");
-				let result = this;
-				list.forEach(p => {
-					if (result) result = result[p];
-					else result = undefined;
-				});
-				return result;
-			},
-			
 			DMUser: class DMUser {
 				/**
 				 * @param {Discord.Snowflake} userID
@@ -113,8 +104,7 @@ module.exports = (passthrough) => {
 				}
 				/**
 				 * @param {String} name
-				 * @param {Promise<Jimp>} promise
-				 * @returns {Promise<Jimp>}
+				 * @param {Promise} promise
 				 */
 				savePromise(name, promise) {
 					this.store.set(name, promise);
@@ -145,10 +135,9 @@ module.exports = (passthrough) => {
 			sql: {
 				/**
 				 * @param {String} statement
-				 * @param {Array<any>} prepared
+				 * @param {(any[]|any)} prepared
 				 */
-				"all": function(string, prepared, connection, attempts) {
-					if (!attempts) attempts = 2;
+				"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 					if (!connection) connection = db;
 					if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
 					return new Promise((resolve, reject) => {
@@ -165,9 +154,9 @@ module.exports = (passthrough) => {
 				},
 				/**
 				 * @param {String} statement
-				 * @param {Array<any>} prepared
+				 * @param {(any[]|any)} prepared
 				 */
-				"get": async function(string, prepared, connection) {
+				"get": async function(string, prepared = undefined, connection = undefined) {
 					return (await utils.sql.all(string, prepared, connection))[0];
 				}
 			},
@@ -371,7 +360,7 @@ module.exports = (passthrough) => {
 			 * @param {events.EventEmitter} target
 			 * @param {String} name
 			 * @param {String} filename
-			 * @param {Function} code
+			 * @param {any} code
 			 */
 			addTemporaryListener: function(target, name, filename, code) {
 				console.log("added event "+name);
@@ -437,10 +426,9 @@ module.exports = (passthrough) => {
 			/**
 			 * @param {any} data
 			 * @param {Number} depth
-			 * @returns {String}
+			 * @returns {Promise<String>}
 			 */
-			stringify: async function(data, depth) {
-				if (!depth) depth = 0;
+			stringify: async function(data, depth = 0) {
 				let result;
 				if (data === undefined) result = "(undefined)";
 				else if (data === null) result = "(null)";
@@ -465,15 +453,7 @@ module.exports = (passthrough) => {
 				}
 				return result;
 			},
-			/**
-			 * @param {Discord.Guild} guild
-			 * @param {any} entry
-			 */
-			addMusicLogEntry: function(guild, entry) {
-				if (!guild.musicLog) guild.musicLog = [];
-				guild.musicLog.unshift(entry);
-				if (guild.musicLog.length > 15) guild.musicLog.pop();
-			},
+
 			/**
 			 * @param {Date} when
 			 * @param {String} seperator
@@ -482,6 +462,139 @@ module.exports = (passthrough) => {
 				let d = new Date(when || Date.now());
 				if (!seperator) seperator = "";
 				return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0");
+			},
+
+			playlistSection: function(items, startString, endString, shuffle) {
+				let from = startString == "-" ? 1 : (parseInt(startString) || 1);
+				let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length);
+				from = Math.max(from, 1);
+				to = Math.min(items.length, to);
+				if (startString) items = items.slice(from-1, to);
+				if (shuffle) {
+					items = items.shuffle();
+				}
+				if (!startString && !shuffle) items = items.slice(); // make copy of array for consistent behaviour
+				return items
+			},
+
+			/**
+			 * @param {Discord.TextChannel} channel
+			 * @param {Array} items
+			 * @param {Discord.RichEmbed} embed
+			 * @returns {Promise<Number>} The zero-based index that was selected.
+			 */
+			makeSelection: async function(channel, authorID, title, failedTitle, items, embed = undefined) {
+				// Set up embed
+				if (!embed) embed = new Discord.RichEmbed();
+				embed.setTitle(title);
+				embed.setDescription(items.join("\n"));
+				embed.setColor("36393e");
+				embed.setFooter(`Type a number from 1-${items.length} to select that item`);
+				// Send embed
+				let selectmessage = await channel.send(embed);
+				// Make collector
+				let collector = channel.createMessageCollector((m => m.author.id == authorID), {maxMatches: 1, time: 60000});
+				return collector.next.then(newmessage => {
+					// Collector got a message
+					let index = parseInt(newmessage.content);
+					// Is index a number?
+					if (isNaN(index)) throw new Error();
+					index--;
+					// Is index in bounds?
+					if (index < 0 || index >= items.length) throw new Error(); // just head off to the catch
+					// Edit to success
+					embed.setDescription("» "+items[index]);
+					embed.setFooter("");
+					selectmessage.edit(embed);
+					return index;
+				}).catch(() => {
+					// Collector failed, show the failure message and exit
+					embed.setTitle(failedTitle);
+					embed.setDescription("");
+					embed.setFooter("");
+					selectmessage.edit(embed);
+					throw new Error("Collector didn't receive a valid response");
+				});
+			},
+
+			/** @param {Date} date */
+			upcomingDate: function(date) {
+				let hours = date.getUTCHours()
+				if (hours < 12) {
+					hours += " AM"
+				} else {
+					hours = (hours - 12) + " PM"
+				}
+				return date.toUTCString().split(" ").slice(0, 4).join(" ")+" at "+hours+" UTC"
+			},
+
+			compactRows: {
+				/** @param {Array<String>} rows */
+				removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
+					let currentLength = 0
+					let maxItems = 20
+					for (let i = 0; i < rows.length; i++) {
+						let row = rows[i]
+						if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
+							return rows.slice(0, i).concat([endString])
+						}
+						currentLength += row.length + joinLength
+					}
+					return rows
+				},
+
+				/** @param {Array<String>} rows */
+				removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
+					let currentLength = 0
+					let currentItems = 0
+					let maxItems = 20
+					let reconstruction = new Map([["left", []], ["right", []]])
+					let leftOffset = 0
+					let rightOffset = 0
+					function getNextDirection() {
+						return rightOffset * 3 > leftOffset ? "left" : "right"
+					}
+					while (currentItems < rows.length) {
+						let direction = getNextDirection()
+						if (direction == "left") var row = rows[leftOffset++]
+						else var row = rows[rows.length - 1 - rightOffset++]
+						if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
+							return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
+						}
+						reconstruction.get(direction).push(row)
+						currentLength += row.length + joinLength
+						currentItems++
+					}
+					return reconstruction.get("left").concat(reconstruction.get("right").reverse())
+				}
+			},
+
+			/** @param {Discord.TextChannel} channel */
+			paginate: async function(channel, pageCount, callback) {
+				let page = 0
+				let msg = await channel.send(callback(page))
+				let reactionMenuExpires;
+				function makeTimeout() {
+					clearTimeout(reactionMenuExpires)
+					reactionMenuExpires = setTimeout(() => {
+						reactionMenu.destroy(true)
+					}, 10*60*1000)
+				}
+				let reactionMenu = msg.reactionMenu([
+					{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
+						page--
+						if (page < 0) page = pageCount-1
+						msg.edit(callback(page))
+						makeTimeout()
+					}},
+					{emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
+						page++
+						if (page >= pageCount) page = 0
+						msg.edit(callback(page))
+						makeTimeout()
+					}}
+				])
+				reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
 			}
 		}
 
@@ -492,6 +605,7 @@ module.exports = (passthrough) => {
 
 		utilsResultCache = utils;
 	} else {
+		//@ts-ignore
 		var utils = utilsResultCache;
 	}
 
