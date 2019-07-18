@@ -76,7 +76,7 @@ module.exports = function(passthrough) {
 		if (!prefix) return;
 		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
 		let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
-		let cmd = Object.values(commands).find(c => c.aliases.includes(cmdTxt));
+		let cmd = commands.find(c => c.aliases.includes(cmdTxt));
 		if (cmd) {
 			try {
 				await cmd.process(msg, suffix);

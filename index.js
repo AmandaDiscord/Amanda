@@ -15,7 +15,7 @@ let db = mysql.createPool({
 	connectionLimit: 5
 });
 
-const commands = {};
+let commands = new commandstore()
 let reactionMenus = {};
 
 let queueManager = {

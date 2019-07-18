@@ -18,16 +18,6 @@ module.exports = (passthrough) => {
 
 	if (!utilsResultCache) {
 		var utils = {
-			sp: function(object, properties) {
-				let list = properties.split(".");
-				let result = this;
-				list.forEach(p => {
-					if (result) result = result[p];
-					else result = undefined;
-				});
-				return result;
-			},
-			
 			DMUser: class DMUser {
 				/**
 				 * @param {Discord.Snowflake} userID

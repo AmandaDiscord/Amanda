@@ -65,7 +65,7 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	Object.assign(commands, {
+	commands.assign({
 		"storegif": {
 			usage: "<\`gif url\`> <type> <gender> [gender] [...]",
 			description: "Store a GIF in the database",

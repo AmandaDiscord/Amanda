@@ -1,4 +1,6 @@
 const rp = require("request-promise");
+const bs = require("buffer-signature");
+const fs = require("fs");
 const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
@@ -85,7 +87,7 @@ module.exports = function(passthrough) {
 		return "broken";
 	}
 
-	Object.assign(commands, {
+	commands.assign({
 		"statistics": {
 			usage: "<music, games>",
 			description: "Displays detailed statistics",
@@ -96,6 +98,8 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
 				let embed = new Discord.RichEmbed().setColor("36393E");
 				if (!suffix) return defaultStats();
@@ -107,7 +111,10 @@ module.exports = function(passthrough) {
 					.addField("­",
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
 						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)}`, true)
-					return msg.channel.send({embed});
+					let content;
+					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
+					else content = embed;
+					return msg.channel.send(content);
 				}
 				else if (suffix.toLowerCase() == "games") {
 					embed
@@ -116,7 +123,10 @@ module.exports = function(passthrough) {
 						`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
 					.addField("­",
 						`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)}`, true)
-					return msg.channel.send({embed});
+					let content;
+					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
+					else content = embed;
+					return msg.channel.send(content);
 				} else return defaultStats();
 				async function defaultStats() {
 					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
@@ -131,7 +141,10 @@ module.exports = function(passthrough) {
 						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 						`**❯ Channel Count:**\n${client.channels.size} channels\n`+
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections`, true)
-					return nmsg.edit({embed});
+					let content;
+					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
+					else content = embed;
+					return nmsg.edit(content);
 				}
 			}
 		},
@@ -144,11 +157,16 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function (msg) {
-				let array = ["So young... So damaged...", "We've all got no where to go...","You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				let array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
-				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
-				return nmsg.edit({embed});
+				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.author.name}\n${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}\n${embed.footer.text}`;
+				else content = embed;
+				return nmsg.edit(content);
 			}
 		},
 		"forcestatupdate": {
@@ -172,7 +190,10 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id]);
+				if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send(`Alright. You'll be notified of the next time I restart`);
 				msg.react("✅");
 			}
 		},
@@ -185,12 +206,17 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.title}: ${embed.url}\n${embed.description}`;
+				else content = embed;
 				try {
-					await msg.author.send({embed});
+					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 					return;
-				} catch (reason) { return msg.channel.send(lang.dm.failed(msg));}
+				} catch (reason) { return msg.channel.send(content);}
 			}
 		},
 		"info": {
@@ -202,6 +228,8 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let [c1, c2] = await Promise.all([
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
@@ -210,12 +238,15 @@ module.exports = function(passthrough) {
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
-						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>\n`+
-						`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl1:582555022014021643>`)
+						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl2:582555022471069726>\n`+
+						`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl2:582555022471069726>`)
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nWanna donate? Check out her [Patreon](https://www.patreon.com/papiophidian) or make a 1 time donation through [PayPal](https://paypal.me/papiophidian).`)
 					.setColor("36393E");
-				return msg.channel.send(embed);
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `Info:\n${embed.description}\n${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
+				else content = embed;
+				return msg.channel.send(content);
 			}
 		},
 		"donate": {
@@ -227,6 +258,9 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: function(msg) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send("Thinking of donating? :heart:\nIf you're interested in making monthly donations, you may at Patreon at <https://www.patreon.com/papiophidian> or If you're interested in a one time donation, you can donate through PayPal at <https://paypal.me/papiophidian>\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my Support Server at <https://discord.gg/zhthQjH> and get a distinguishing donor badge on &profile");
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle("Thinking of donating? :heart:")
 				.setDescription("I'm excited that you're possibly interested in supporting my creators. If you're interested in making monthly donations, you may at [Patreon](https://www.patreon.com/papiophidian) or If you're interested in a one time donation, you can donate through [PayPal](https://paypal.me/papiophidian)\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my [Support Server](https://discord.gg/zhthQjH) and get a distinguishing donor badge on &profile");
 				return msg.channel.send(embed);
@@ -241,6 +275,9 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send("You should allow me to embed links to see what my creators have been up to :eyes:");
 				msg.channel.sendTyping();
 				const limit = 5;
 				const authorNameMap = {
@@ -290,12 +327,17 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
-				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes.This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				let content;
+				if (permissions && !permissions.has("EMBED_LINKS")) content = `Privacy Statement:\n${embed.description}`;
+				else content = embed;
 				try {
-					await msg.author.send({embed});
+					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
 					return;
-				} catch (reason) { return msg.channel.send(lang.dm.failed(msg)); }
+				} catch (reason) { return msg.channel.send(content); }
 			}
 		},
 		"user": {
@@ -308,6 +350,9 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(lang.permissionDeniedGeneric("embed links"));
 				let user, member;
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
@@ -352,7 +397,8 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				let user, member;
+				let user, member, permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
@@ -361,6 +407,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(user.displayAvatarURL);
 				return msg.channel.send({embed});
 			}
 		},
@@ -374,12 +421,15 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: function(msg, suffix) {
+				let permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let emoji = client.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(emoji.url);
 				return msg.channel.send({embed});
 			}
 		},
@@ -393,14 +443,15 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				let user, member;
+				let user, member, permissions;
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"));
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(lang.input.invalid(msg, "user"));
-
-				msg.channel.sendTyping()
+				msg.channel.sendTyping();
 
 				let [isOwner, isPremium, money, info, avatar, images] = await Promise.all([
 					utils.hasPermission(user, "owner"),
@@ -409,24 +460,31 @@ module.exports = function(passthrough) {
 					utils.waifu.get(user.id),
 					Jimp.read(user.sizedAvatarURL(128)),
 					profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none"])
-				])
+				]);
 
 				avatar.resize(111, 111);
 				
-				let heartType = getHeartType(user, info)
-				let heart = images.get("heart-"+heartType)
+				let heartType = getHeartType(user, info);
+				let heart = images.get("heart-"+heartType);
 				
-				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
-				let badgeImage = images.get(badge)
+				let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none";
+				let badgeImage = images.get(badge);
+				let canvas;
 
-				let canvas = images.get("canvas").clone()
+				if (isOwner||isPremium) {
+					try {
+						canvas = await Jimp.read(`./images/backgrounds/${user.id}.png`);
+					} catch (e) {
+						canvas = images.get("canvas").clone();
+					}
+				} else canvas = images.get("canvas").clone();
 				canvas.composite(avatar, 32, 85);
 				canvas.composite(images.get("profile"), 0, 0);
 				canvas.composite(badgeImage, 166, 113);
 
 
-				let font = images.get("font")
-				let font2 = images.get("font2")
+				let font = images.get("font");
+				let font2 = images.get("font2");
 				canvas.print(font, 508, 72, user.username);
 				canvas.print(font2, 508, 104, `#${user.discriminator}`);
 				canvas.print(font2, 550, 163, money);
@@ -439,7 +497,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"settings": {
-			usage: "<self|server> <view|settings name> <true or false>",
+			usage: "<self|server> <view|setting name> <value>",
 			description: "Modify settings Amanda will use for yourself or server wide",
 			aliases: ["settings"],
 			category: "configuration",
@@ -449,41 +507,154 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				let args = suffix.split(" ");
+				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "dm") {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
 				}
-				if (args[0].toLowerCase() == "self") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view your settings, use &settings self view`);
-					if (args[1].toLowerCase() == "view") {
-						let memsettings = await utils.settings.get(msg.author.id);
-						if (!memsettings) return msg.channel.send(`${msg.author.tag}, it looks like you haven't set any settings. Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims you or divorces from you.\ngamblingAlert are DM messages when someone gives you Discoins`);
-						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.author.tag}`, msg.author.smallAvatarURL).setDescription(`Waifu Alerts: ${memsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${memsettings.gamblingAlert != 0} - Messages for gambling related things`));
+
+				const settings = {
+					"waifualert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"gamblingalert": {
+						type: "boolean",
+						default: "1",
+						scope: ["self", "server"]
+					},
+					"prefix": {
+						type: "string",
+						default: "[unset]",
+						scope: ["server"]
+					},
+					"profilebackground": {
+						type: "string",
+						default: "[unset] (Recommended to be a 800x500px png/jpeg)",
+						scope: "self"
 					}
-					if (args[1] == "waifuAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
-						await utils.settings.set(msg.author.id, "user", "waifuAlert", args[2]=="true"?1:0);
-					} else if (args[1] == "gamblingAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
-						await utils.settings.set(msg.author.id, "user", "gamblingAlert", args[2]=="true"?1:0);
-					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
-					return msg.channel.send(`${msg.author.tag}, you have successfully modified your ${args[1]} setting to ${args[2]}`);
-				} else if (args[0].toLowerCase() == "server") {
-					if (!args[1]) return msg.channel.send(`${msg.author.tag}, you didn't provide any other arguments. If you would like to view this server's settings, use &settings server view`);
-					if (args[1].toLowerCase() == "view") {
-						let guildsettings = await utils.settings.get(msg.guild.id);
-						if (!guildsettings) return msg.channel.send(`${msg.author.tag}, it looks this server hasn't set any settings. ${msg.member.hasPermission("MANAGE_GUILD")?"Valid setting names are waifuAlert or gamblingAlert.\nwaifuAlert are DM messages when someone claims someone or divorces from someone.\ngamblingAlert are DM messages when someone gives someone Discoins": ""}`);
-						return msg.channel.send(new Discord.RichEmbed().setColor("36393E").setAuthor(`Settings for ${msg.guild.name}`, msg.guild.iconURL).setDescription(`Waifu Alerts: ${guildsettings.waifuAlert != 0} - Messages for waifu related things\nGambling Alerts: ${guildsettings.gamblingAlert != 0} - Messages for gambling related things`));
+				}
+
+				const tableNames = {self: "SettingsSelf", server: "SettingsGuild"};
+
+				let scope = args[0].toLowerCase();
+				if (!["self", "server"].includes(scope)) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `scope` was incorrect, it must be either `self` or `server`."
+				);
+				let tableName = tableNames[scope];
+				let keyID = scope == "self" ? msg.author.id : msg.guild.id;
+
+				let settingName = args[1] ? args[1].toLowerCase() : "";
+				if (args[1] == "view") {
+					let all = await utils.sql.all("SELECT * FROM "+tableName+" WHERE keyID =?", keyID);
+					if (all.length == 0) return msg.channel.send(`There are no settings set for scope ${scope}`);
+					return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"));
+				}
+
+				if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(
+					`You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.`
+				);
+
+				let setting = settings[settingName];
+				if (!setting) return msg.channel.send(
+					"Command syntax is `&settings <scope> <name> <value>`. "
+					+"Your value for `name` was incorrect, it must be one of: "
+					+Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => "`"+k+"`").join(", ")
+				);
+				if (!setting.scope.includes(scope)) return msg.channel.send("The setting `"+settingName+"` is not valid for the scope `"+scope+"`.");
+
+				let value = args[2];
+				if (value == undefined) {
+					let row = await utils.sql.get("SELECT value FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					if (scope == "server") {
+						value = row ? row.value : setting.default;
+						if (setting.type == "boolean") {
+							value = !!+value;
+						}
+						if (row) {
+							return msg.channel.send("Current value of `"+settingName+"` is `"+value+"`. This value was set for the server.");
+						} else {
+							return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.");
+						}
+					} else if (scope == "self") {
+						let serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName]);
+						let values = [
+							setting.default,
+							serverRow ? serverRow.value : null,
+							row ? row.value : null
+						];
+						if (setting.type == "boolean") {
+							values = values.map(v => v != null ? !!+v : v);
+						}
+						let finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]");
+						return msg.channel.send(
+							"Default value: "+values[0]+"\n"
+							+"Server value: "+(values[1] != null ? values[1] : "[unset]")+"\n"
+							+"Your value: "+(values[2] != null ? values[2] : "[unset]")+"\n"
+							+"Computed value: "+finalValue
+						);
 					}
-					if (!msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(`${msg.author.tag}, you must have the manage server permission to modify a server's Amanda settings`);
-					if (args[1] == "waifuAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: waifuAlert`);
-						await utils.settings.set(msg.guild.id, "guild", "waifuAlert", args[2]=="true"?1:0);
-					} else if (args[1] == "gamblingAlert") {
-						if (!["true", "false"].includes(args[2])) return msg.channel.send(`That is not a proper value for setting: gamblingAlert`);
-						await utils.settings.set(msg.guild.id, "guild", "gamblingAlert", args[2]=="true"?1:0);
-					} else return msg.channel.send(`${msg.author.tag}, that is not a valid setting name. Valid settings are waifuAlert and gamblingAlert`);
-					return msg.channel.send(`${msg.author.tag}, you have successfully modified ${msg.guild.name}'s ${args[1]} setting to ${args[2]}`);
-				} else return msg.channel.send(`${msg.author.username}, that is not a valid operant. Valid operants are self and server`);
+				}
+				value = value.toLowerCase();
+				
+				if (value === "null") {
+					if (settingName == "profilebackground") {
+						try {
+							await fs.promises.unlink(`./images/backgrounds/${msg.author.id}.png`);
+						} catch (e) {
+							return msg.channel.send("You didn't have a profile background image. No action was taken.");
+						}
+					}
+					await utils.sql.all("DELETE FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName]);
+					return msg.channel.send("Setting deleted.");
+				}
+
+				if (settingName == "profilebackground") {
+					await msg.channel.sendTyping();
+					let [isEval, isPremium] = await Promise.all([
+						utils.hasPermission(msg.author, "owner"),
+						utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+					]);
+					let allowed = false;
+					if (isEval) allowed = true;
+					if (isPremium) allowed = true;
+					if (!allowed) return msg.channel.send("You must be a donor to modify this setting.");
+					let data;
+					try {
+						data = await rp(value, { encoding: null });
+					} catch (e) {
+						return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.");
+					}
+					let type = bs.identify(data);
+					if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may not set a background which is not a PNG or a JPEG");
+					let image = await Jimp.read(value);
+					image.cover(800, 500);
+					let buffer = await image.getBufferAsync(Jimp.MIME_PNG);
+					await fs.promises.writeFile(`./images/backgrounds/${msg.author.id}.png`, buffer);
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, 1]);
+					return msg.channel.send("Setting updated.");
+				}
+
+				if (setting.type == "boolean") {
+					let value = args[2].toLowerCase();
+					if (!["true", "false"].includes(value)) return msg.channel.send(
+						"Command syntax is `&settings <scope> <name> <value>`. "
+						+"The setting `"+settingName+"` is a boolean, and so your `"+value+"` must be either `true` or `false`."
+					);
+					let value_result = args[2] == "true" ? "1" : "0";
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else if (setting.type == "string") {
+					let value = args[2].toLowerCase();
+					if (value.length > 50) return msg.channel.send("That setting value is too long. It must not be more than 50 characters.");
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					return msg.channel.send("Setting updated.");
+
+				} else {
+					throw new Error("Invalid reference data type for setting `"+settingName+"`");
+				}
 			}
 		},
 		"help": {
@@ -496,7 +667,7 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function (msg, suffix) {
-				let embed;
+				let embed, permissions;
 				if (suffix) {
 					suffix = suffix.toLowerCase();
 					if (suffix == "music" || suffix == "m") {
@@ -555,36 +726,48 @@ module.exports = function(passthrough) {
 						.setColor('36393E')
 						send("dm").catch(() => send("channel"));
 					} else {
-						let command = Object.values(commands).find(c => c.aliases.includes(suffix));
+						let command = commands.find(c => c.aliases.includes(suffix));
 						if (command) {
 							embed = new Discord.RichEmbed()
-							.addField(`Help for ${command.aliases[0]}`,
-								`Arguments: ${command.usage}\n`+
-								`Description: ${command.description}\n`+
-								"Aliases: "+command.aliases.map(a => "`"+a+"`").join(", ")+"\n"+
-								`Category: ${command.category}`)
-							.setColor('36393E');
+							.setAuthor(`Help for ${command.aliases[0]}`)
+							.setDescription(`Arguments: ${command.usage}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
+							.setColor("36393E")
 							send("channel");
 						} else {
-							let categoryCommands = Object.values(commands).filter(c => c.category == suffix);
-							let maxLength = categoryCommands.map(c => c.aliases[0].length).sort((a, b) => (b - a))[0];
-							if (categoryCommands.length) {
+							if (commands.categories.get(suffix)) {
+								let cat = commands.categories.get(suffix);
+								let maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0);
 								embed = new Discord.RichEmbed()
-								.setTitle("Command category: "+suffix)
+								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(
-									categoryCommands.map(c =>
-										"`"+c.aliases[0]+" ​".repeat(maxLength-c.aliases[0].length)+"` "+c.description // space + zwsp
-									).join("\n")+
-									"\n\nType `&help <command>` to see more information about a command.\nClick the reaction for a mobile-compatible view.")
+									cat.map(c =>`\`${commands.get(c).aliases[0]}${" ​".repeat(maxLength-commands.get(c).aliases[0].length)}\` ${commands.get(c).description}`).join("\n")+
+									"\n\nType `&help <command>` to see more information about a command.")
 								.setColor("36393E")
-								send("dm").then(dm => {
+								if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.");
+								send("dm").then(mobile).catch(() => send("channel").then(mobile));
+								function mobile(message) {
 									let mobileEmbed = new Discord.RichEmbed()
-									.setTitle("Command category: "+suffix)
-									.setDescription(categoryCommands.map(c => `**${c.aliases[0]}**\n${c.description}`).join("\n\n"))
+									.setAuthor(`Command Category: ${suffix}`)
+									.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
 									.setColor("36393E")
-									let menu = dm.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: mobileEmbed}]);
+									let content = "";
+									if (msg.channel.type != "dm") permissions = message.channel.permissionsFor(client.user);
+									if (!permissions || permissions.has("EMBED_LINKS")) content = mobileEmbed;
+									else {
+										function addPart(value) {
+											if (value) {
+												if (content) content += "\n"
+												content += value
+											}
+										}
+										addPart(mobileEmbed.author && `**${mobileEmbed.author.name}**`);
+										addPart(mobileEmbed.description);
+										addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => f.name+"\n"+f.value).join("\n"));
+										addPart(mobileEmbed.footer && mobileEmbed.footer.text);
+									}
+									let menu = message.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: content}]);
 									setTimeout(() => menu.destroy(true), 5*60*1000);
-								}).catch(() => send("channel"));
+								}
 							} else {
 								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
 								send("channel");
@@ -592,25 +775,40 @@ module.exports = function(passthrough) {
 						}
 					}
 				} else {
-					let all = Object.values(commands).map(c => c.category);
-					let filter = (value, index, self) => { return self.indexOf(value) == index && value != "admin"; };
-					let cats = all.filter(filter).sort();
 					embed = new Discord.RichEmbed()
 					.setAuthor("Command Categories")
 					.setDescription(
-						`❯ ${cats.join("\n❯ ")}\n\n`+
+						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n`+
 						"Type `&help <category>` to see all commands in that category.\n"+
 						"Type `&help <command>` to see more information about a command.")
-					.setColor('36393E');
-					send("dm").catch(() => send("channel"));
+					.setColor('36393E')
+					send("dm").catch(() => send("channel").catch(console.error));
 				}
 				function send(where) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
-						target.send({embed}).then(dm => {
+						if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+						if (!permissions || permissions.has("EMBED_LINKS")) {
+							var promise = target.send(embed);
+						} else {
+							let content = "";
+							function addPart(value) {
+								if (value) {
+									if (content) content += "\n"
+									content += value
+								}
+							}
+							addPart(embed.author && `**${embed.author.name}**`);
+							addPart(embed.description);
+							addPart(embed.fields && embed.fields.map(f => f.name+"\n"+f.value).join("\n"));
+							addPart(embed.footer && embed.footer.text);
+							if (content.length >= 2000) var promise = target.send(`Please allow me to embed content`);
+							else var promise = target.send(content);
+						}
+						promise.then(dm => {
 							if (where == "dm" && msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
 							resolve(dm);
-						}).catch(reject)
+						}).catch(reject);
 					});
 				}
 			}
