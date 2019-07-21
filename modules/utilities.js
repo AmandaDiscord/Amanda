@@ -605,10 +605,15 @@ module.exports = (passthrough) => {
 				let value;
 				let permissions = channel.permissionsFor(client.user);
 				if (content instanceof Discord.RichEmbed) {
-					if (permissions && !permissions.has("EMBED_LINKS")) value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`;
-					else value = content;
-				} else if (content instanceof String) value = content;
-				else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor?content.constructor.name:typeof content}`);
+					if (permissions && !permissions.has("EMBED_LINKS")) {
+						value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`;
+						if (value.length > 2000) value = value.slice(0, 1960)+"…";
+						value+="\nPlease allow me to embed content";
+					} else return content;
+				} else if (content instanceof String) {
+					value = content;
+					if (value.length > 2000) value = value.slice(0, 1998)+"…";
+				} else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor?content.constructor.name:typeof content}`);
 				return value;
 			}
 		}
