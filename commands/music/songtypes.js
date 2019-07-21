@@ -104,7 +104,7 @@ module.exports = passthrough => {
 		getProgress(time, paused) {
 			let max = this.basic.length_seconds;
 			let rightTime = common.prettySeconds(max)
-			let current = Math.floor(time/1000);
+			let current = Math.round(time/1000);
 			if (current > max) current = max;
 			let leftTime = common.prettySeconds(current)
 			let bar = utils.progressBar(35, current, max, paused ? " [PAUSED] " : "")
@@ -187,7 +187,7 @@ module.exports = passthrough => {
 			return this.title + (this.actuallyStreaming ? "" : " (loading...)")
 		}
 		getProgress(time) {
-			time = common.prettySeconds(Math.floor(time/1000))
+			time = common.prettySeconds(Math.round(time/1000))
 			let bar = this.actuallyStreaming ? this._getFilledBar() : "- ".repeat(17)+"-"
 			return `\`[ ${time} ${bar} LIVE ]\``
 		}

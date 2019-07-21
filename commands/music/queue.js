@@ -154,7 +154,7 @@ module.exports = passthrough => {
 			getNPEmbed() {
 				let song = this.songs[0];
 				let time = this.dispatcher ? this.dispatcher.time : 0
-				let paused = this.paused
+				let paused = this.dispatcher && this.dispatcher.paused
 				let embed = new Discord.RichEmbed().setColor("36393E")
 				.setDescription(`Now playing: **${song.getTitle()}**`)
 				.addField("­", this.songs[0].getProgress(time, paused));
@@ -166,7 +166,7 @@ module.exports = passthrough => {
 				if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
 					{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
-						this.wrapper.pause("reaction")
+						this.wrapper.togglePlaying("reaction")
 					}},
 					{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
@@ -293,9 +293,9 @@ module.exports = passthrough => {
 					return 1
 				} else if (this.connection && this.connection.dispatcher) {
 					this.playing = false
+					this.connection.dispatcher.pause()
 					this.stopNowPlayingUpdates()
 					this.updateNowPlaying()
-					this.connection.dispatcher.pause()
 					return 0
 				} else {
 					return -1
@@ -407,6 +407,11 @@ module.exports = passthrough => {
 					let mode = this.queue.auto ? "on" : "off"
 					context.channel.send(`Auto mode is now turned ${mode}.`)
 				}
+			}
+
+			togglePlaying(context) {
+				if (this.queue.playing) return this.pause(context)
+				else return this.resume(context)
 			}
 
 			getQueue(context) {
