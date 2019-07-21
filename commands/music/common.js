@@ -89,6 +89,11 @@ module.exports = passthrough => {
 								return null;
 							}
 						}
+						// Is it youtu.be?
+						else if (url.hostname == "youtu.be") {
+							let id = url.pathname.slice(1)
+							return [id]
+						}
 						// Is it YouTube-compatible?
 						else if (url.hostname == "youtube.com" || url.hostname == "invidio.us" || url.hostname == "hooktube.com") {
 							// Is it a video?
