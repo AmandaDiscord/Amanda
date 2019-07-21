@@ -8,6 +8,7 @@
  * @property {String} config.chewey_api_key
  * @property {String} config.website_protocol
  * @property {String} config.website_domain
+ * @property {Boolean} config.is_staging
  * @property {import("discord.js").Client} client
  * @property {import("./commandstore")} commands
  * @property {import("mysql2/promise").PromisePool} db

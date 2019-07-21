@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
-    "start": "node --optimize_for_size --max_old_space_size=460 index.js"
+    "start": "node --expose-gc index.js"
   },
   "license": "UNLICENSED",
   "engines": {
@@ -17,6 +17,7 @@
     "discord.js": "github:cloudrac3r/discord.js#amanda",
     "entities": "^1.1.2",
     "events": "^3.0.0",
+    "gc-profiler": "^1.4.0",
     "jimp": "0.x",
     "mime": "^2.4.4",
     "mysql2": "^1.6.5",

@@ -5,6 +5,8 @@ const Discord = require("discord.js");
 const Jimp = require("jimp");
 const path = require("path");
 const simpleGit = require("simple-git")(__dirname);
+const profiler = require("gc-profiler");
+const util = require("util");
 
 require("../types.js");
 
@@ -100,7 +102,7 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let permissions;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
-				let ramUsage = (((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024) / 1024).toFixed(2);
+				let ram = process.memoryUsage();
 				let embed = new Discord.RichEmbed().setColor("36393E");
 				if (!suffix) return defaultStats();
 				if (suffix.toLowerCase() == "music") {
@@ -115,8 +117,7 @@ module.exports = function(passthrough) {
 					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
 					else content = embed;
 					return msg.channel.send(content);
-				}
-				else if (suffix.toLowerCase() == "games") {
+				} else if (suffix.toLowerCase() == "games") {
 					embed
 					.addField(`${client.user.tag} <:online:453823508200554508>`,
 						`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
@@ -127,15 +128,24 @@ module.exports = function(passthrough) {
 					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
 					else content = embed;
 					return msg.channel.send(content);
+				} else if (suffix.toLowerCase() == "gc") {
+					let allowed = await utils.hasPermission(msg.author, "eval");
+					if (!allowed) return;
+					if (global.gc) global.gc();
+					else return msg.channel.send("The global Garbage Collector variable is not exposed");
+					profiler.once("gc", info => {
+						let now = process.memoryUsage();
+						return msg.channel.send(`Garbage Collection completed in ${info.duration}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`);
+					});
 				} else return defaultStats();
 				async function defaultStats() {
 					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 					embed
 					.addField(`${client.user.tag} <:online:453823508200554508>`,
-						`**❯ Gateway:**\n${client.ping.toFixed(0)}ms\n`+
+						`**❯ Heart beat:**\n${client.ping.toFixed(0)}ms\n`+
 						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
-						`**❯ RAM Usage:**\n${ramUsage}MB`, true)
+						`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
 					.addField("­",
 						`**❯ User Count:**\n${client.users.size} users\n`+
 						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
@@ -145,6 +155,9 @@ module.exports = function(passthrough) {
 					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
 					else content = embed;
 					return nmsg.edit(content);
+				}
+				function bToMB (number) {
+					return `${((number/1024)/1024).toFixed(2)}MB`;
 				}
 			}
 		},
