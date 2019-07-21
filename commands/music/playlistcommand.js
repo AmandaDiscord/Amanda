@@ -69,6 +69,7 @@ module.exports = passthrough => {
 				msg.channel.sendTyping();
 				let result = await common.resolveInput.toIDWithSearch(args.slice(3).join(" "), msg.channel, msg.author.id);
 				if (result == null) return;
+				result = result[0]
 				ytdl.getInfo(result[0]).then(async video => {
 					if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(lang.playlistDuplicateItem(msg));
 					await Promise.all([

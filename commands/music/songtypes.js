@@ -72,6 +72,37 @@ module.exports = passthrough => {
 				}
 			})
 		}
+		async _getRelated() {
+			let info = await this._getInfo(true)
+			return info.related_videos.filter(v => v.title && v.length_seconds > 0).map(v => {
+				v.length_seconds = +v.length_seconds
+				return v
+			}).slice(0, 10)
+		}
+		getRelated() {
+			return this._getRelated()
+		}
+		getSuggested() {
+			return this._getRelated().then(videos => videos[0] ? new YouTubeSong(videos[0].id, undefined, true, videos[0]) : null)
+		}
+		showRelated() {
+			return this._getRelated().then(videos => {
+				if (videos.length) {
+					return new Discord.RichEmbed()
+					.setTitle("Related videos")
+					.setDescription(
+						videos.map((v, i) =>
+							`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.length_seconds)})`
+							+`\n — ${v.author}`
+						)
+					)
+					.setColor(0x36393f)
+					.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
+				} else {
+					return "No related content available."
+				}
+			})
+		}
 		/**
 		 * Returns null if failed. Examine this.error.
 		 * @param {Boolean} cache Whether to cache the results if they are fetched
@@ -281,6 +312,15 @@ module.exports = passthrough => {
 		getQueueLine() {
 			return `**Frisky Radio: ${this._getStationTitle()}** (LIVE)`
 		}
+		getRelated() {
+			return []
+		}
+		getSuggested() {
+			return Promise.resolve(null)
+		}
+		showRelated() {
+			return "Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, and `&frisky chill`."
+		}
 	}
 
 	function makeYTSFromRow(row) {
@@ -296,7 +336,7 @@ module.exports = passthrough => {
 	[YouTubeSong, FriskySong].forEach(song => {
 		[
 			"getUniqueID", "getUserFacingID", "getError", "getTitle", "getProgress", "getQueueLine", "getLength",
-			"getStream", "getDetails", "destroy", "getProgress", "prepare", "clean"
+			"getStream", "getDetails", "destroy", "getProgress", "prepare", "clean", "getRelated", "getSuggested", "showRelated"
 		].forEach(key => {
 			if (!song.prototype[key]) throw new Error(`Song type ${song.name} does not have the required method ${key}`)
 		})

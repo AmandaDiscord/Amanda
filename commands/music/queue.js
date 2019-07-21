@@ -132,6 +132,7 @@ module.exports = passthrough => {
 				} else {
 					song.clean()
 				}
+				return this.songs.length
 			}
 			/**
 			 * @param {Discord.GuildMember} oldMember
@@ -272,16 +273,31 @@ module.exports = passthrough => {
 							dispatcher.removeListener("error", handleDispatcherError)
 							// Reset the pausedTime
 							dispatcher.player.streamingData.pausedTime = 0
-							// Play the next song, or quit
+							// Play the next song, or quit (auto is handled in here)
 							this.playNext()
 						})
 					})
 				})
 			}
 			playNext() {
-				this.songs.shift()
-				if (this.songs[0]) this.play()
-				else this.dissolve()
+				let justPlayed = this.songs.shift()
+				if (this.songs[0]) {
+					this.play()
+				} else if (!this.auto) {
+					this.dissolve()
+				} else {
+					justPlayed.getSuggested().then(song => {
+						if (song) {
+							let isQueueStillEmpty = !this.songs[0]
+							this.songs.push(song)
+							if (isQueueStillEmpty) this.play()
+						} else {
+							this.dissolve()
+						}
+					}).catch(() => {
+						this.dissolve()
+					})
+				}
 			}
 			/**
 			 * @returns {Number} Status code. 0 success, 1 already paused, 2 live

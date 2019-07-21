@@ -610,10 +610,10 @@ module.exports = (passthrough) => {
 						if (value.length > 2000) value = value.slice(0, 1960)+"…";
 						value+="\nPlease allow me to embed content";
 					} else return content;
-				} else if (content instanceof String) {
+				} else if (typeof(content) == "string") {
 					value = content;
 					if (value.length > 2000) value = value.slice(0, 1998)+"…";
-				} else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor?content.constructor.name:typeof content}`);
+				} else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor ? content.constructor.name : typeof content}`);
 				return value;
 			}
 		}

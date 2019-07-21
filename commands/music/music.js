@@ -52,9 +52,13 @@ module.exports = function(passthrough) {
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Boolean} insert
 	 */
-	async function handleSong(song, textChannel, voiceChannel, insert = undefined) {
+	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
-		queue.addSong(song, insert);
+		let numberOfSongs = queue.addSong(song, insert);
+		if (context instanceof Discord.Message && numberOfSongs > 1) {
+			context.react("✅")
+		}
+		return numberOfSongs
 	}
 	/**
 	 * @param {Discord.Message} msg
@@ -266,13 +270,16 @@ module.exports = function(passthrough) {
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
 				if (result == null) return;
+				let usedSearch = result[1]
+				result = result[0]
 				result.forEach(item => {
 					if (item instanceof YouTube.Video) {
 						var song = new songTypes.YouTubeSong(item.id, undefined, true, {title: item.title, length_seconds: item.durationSeconds})
 					} else {
 						var song = new songTypes.YouTubeSong(item, undefined, true)
 					}
-					handleSong(song, msg.channel, voiceChannel, args[0][0] == "i")
+					let numberOfSongs = handleSong(song, msg.channel, voiceChannel, args[0][0] == "i")
+					if (numberOfSongs > 1 && !usedSearch) msg.react("✅")
 				})
 			}
 		}],
@@ -348,32 +355,16 @@ module.exports = function(passthrough) {
 			queue: "required",
 			code: async (msg, args, {voiceChannel, queue}) => {
 				let mode = args[1];
-				let index = parseInt(args[2])-1;
-				let related = await queue.songs[0].related();
-				if (related[index] && mode && ["p", "i"].includes(mode[0])) {
-					let videoID = related[index].id;
-					ytdl.getInfo(videoID).then(video => {
-						let song = new songTypes.YouTubeSong(video, !queue || queue.songs.length <= 1);
-						return handleSong(song, msg.channel, voiceChannel, mode[0] == "i");
-					}).catch(reason => {
-						common.manageYtdlGetInfoErrors(msg, reason, args[1]);
-					});
+				let index = parseInt(args[2]);
+				if (mode && (mode[0] == "p" || mode[0] == "i") && index) {
+					let related = await queue.songs[0].getRelated()
+					let selection = related[index-1]
+					if (!selection) return msg.channel.send("The syntax is `&music related <play|insert> <index>`. Your index was invalid.")
+					let song = new songTypes.YouTubeSong(selection.id, undefined, true, selection)
+					handleSong(song, msg.channel, voiceChannel, mode[0] == "i", msg)
 				} else {
-					if (related.length) {
-						let body = "";
-						related.forEach((songss, index) => {
-							let toAdd = `${index+1}. **${songss.title}** (${common.prettySeconds(songss.length_seconds)})\n *— ${songss.author}*\n`;
-							if (body.length + toAdd.length < 2000) body += toAdd;
-						});
-						let embed = new Discord.RichEmbed()
-						.setAuthor(`Related videos`)
-						.setDescription(body)
-						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
-						.setColor("36393E")
-						return msg.channel.send(utils.contentify(msg.channel, embed));
-					} else {
-						return msg.channel.send("No related songs available.");
-					}
+					let content = await queue.songs[0].showRelated()
+					msg.channel.send(utils.contentify(msg.channel, content))
 				}
 			}
 		}],
@@ -381,9 +372,12 @@ module.exports = function(passthrough) {
 			voiceChannel: "provide",
 			code: async (msg, args, {voiceChannel}) => {
 				playlistCommand.command(msg, args, (songs) => {
-					songs.forEach(song => {
-						handleSong(song, msg.channel, voiceChannel, false);
+					let isNewQueue = false
+					songs.forEach((song, index) => {
+						let numberOfSongs = handleSong(song, msg.channel, voiceChannel, false)
+						if (index == 0 && numberOfSongs == 1) isNewQueue = true
 					})
+					if (isNewQueue) msg.react("✅")
 				})
 			}
 		}]

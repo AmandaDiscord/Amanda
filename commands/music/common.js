@@ -70,6 +70,7 @@ module.exports = passthrough => {
 				return output.join(":");
 			},
 			resolveInput: {
+				/** @returns {Array<String>|Array<Object>} */
 				toID: async function(input, channel) {
 					input = input.replace(/(<|>)/g, "");
 					try {
@@ -146,7 +147,7 @@ module.exports = passthrough => {
 				/**
 				 * Not interactive. Max 10 results.
 				 * @param {String} input
-				 * @returns {Array<String>}
+				 * @returns {Array<Object>}
 				 */
 				toSearch: async function(input) {
 					let videos = await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`, {json: true});
@@ -162,12 +163,12 @@ module.exports = passthrough => {
 				 */
 				toIDWithSearch: async function(input, channel, authorID) {
 					let id = await common.resolveInput.toID(input, channel);
-					if (id) return id;
+					if (id) return [id, false];
 					channel.sendTyping()
 					let videos = await common.resolveInput.toSearch(input);
 					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${common.prettySeconds(video.lengthSeconds)})`);
 					return utils.makeSelection(channel, authorID, "Song selection", "Song selection cancelled", videoResults).then(index => {
-						return [videos[index].videoId];
+						return [[videos[index].videoId], true];
 					}).catch(() => {
 						return null;
 					})
