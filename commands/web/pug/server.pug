@@ -1,0 +1,11 @@
+doctype html
+html
+	include includes/head.pug
+		title= guild.name+" | Amanda"
+	
+	body
+		include includes/nav.pug
+		+nav("dash")
+
+		div.message
+			div= guild.name

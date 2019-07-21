@@ -142,6 +142,44 @@ module.exports = (passthrough) => {
 					}
 				})
 			}
+		},
+		{
+			route: "/server/(\\d+)", methods: ["GET"], code: async ({req, fill}) => {
+				let cookies = extra.getCookies(req)
+				let session = await extra.getSession(cookies)
+
+				return new validators.Validator()
+				.do({
+					code: () => session === undefined
+					,expected: false
+				}).do({
+					code: (_) => _.guild = client.guilds.get(fill[0])
+					,expected: v => v != undefined
+				}).do({
+					code: (_) => _.guild.members.has(session.userID)
+					,expected: true
+				})
+				.go()
+				.then(async state => {
+					let guild = state.guild
+					let user = await client.fetchUser(session.userID)
+
+					let page = pugCache.get("commands/web/pug/server.pug")({guild, user})
+					return {
+						statusCode: 200,
+						contentType: "text/html",
+						content: page
+					}
+				})
+				.catch(() => {
+					let page = pugCache.get("commands/web/pug/accessdenied.pug")({session})
+					return {
+						statusCode: 403,
+						contentType: "text/html",
+						content: page
+					}
+				})
+			}
 		}
 	]
 }
