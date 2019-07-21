@@ -159,7 +159,7 @@ module.exports = passthrough => {
 				.setDescription(`Now playing: **${song.getTitle()}**`)
 				.addField("­", this.songs[0].getProgress(time, paused));
 				if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
-				return embed;
+				return utils.contentify(this.textChannel, embed);
 			}
 			generateReactions() {
 				if (this.reactionMenu) this.reactionMenu.destroy(true);
@@ -350,7 +350,7 @@ module.exports = passthrough => {
 					this.queue.textChannel.sendTyping()
 					info = await info
 				}
-				this.queue.textChannel.send(info)
+				this.queue.textChannel.send(utils.contentify(this.queue.textChannel, info))
 			}
 
 			pause(context) {
@@ -418,7 +418,7 @@ module.exports = passthrough => {
 					.setAuthor(`Queue for ${context.guild.name}`)
 					.setDescription(body)
 					.setColor("36393E")
-					return context.channel.send({embed});
+					return context.channel.send(utils.contentify(context.channel, embed));
 				}
 			}
 		}

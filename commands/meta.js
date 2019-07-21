@@ -100,8 +100,6 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let ram = process.memoryUsage();
 				let embed = new Discord.RichEmbed().setColor("36393E");
 				if (!suffix) return defaultStats();
@@ -113,10 +111,7 @@ module.exports = function(passthrough) {
 					.addField("­",
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
 						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)}`, true)
-					let content;
-					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
-					else content = embed;
-					return msg.channel.send(content);
+					return msg.channel.send(utils.contentify(msg.channel, embed));
 				} else if (suffix.toLowerCase() == "games") {
 					embed
 					.addField(`${client.user.tag} <:online:453823508200554508>`,
@@ -124,10 +119,7 @@ module.exports = function(passthrough) {
 						`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
 					.addField("­",
 						`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)}`, true)
-					let content;
-					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
-					else content = embed;
-					return msg.channel.send(content);
+					return msg.channel.send(utils.contentify(msg.channel, embed));
 				} else if (suffix.toLowerCase() == "gc") {
 					let allowed = await utils.hasPermission(msg.author, "eval");
 					if (!allowed) return;
@@ -142,7 +134,7 @@ module.exports = function(passthrough) {
 					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 					embed
 					.addField(`${client.user.tag} <:online:453823508200554508>`,
-						`**❯ Heart beat:**\n${client.ping.toFixed(0)}ms\n`+
+						`**❯ Heart Beat:**\n${client.ping.toFixed(0)}ms\n`+
 						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
 						`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
@@ -151,10 +143,7 @@ module.exports = function(passthrough) {
 						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 						`**❯ Channel Count:**\n${client.channels.size} channels\n`+
 						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections`, true)
-					let content;
-					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
-					else content = embed;
-					return nmsg.edit(content);
+					return nmsg.edit(utils.contentify(msg.channel, embed));
 				}
 				function bToMB (number) {
 					return `${((number/1024)/1024).toFixed(2)}MB`;
@@ -170,16 +159,11 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function (msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
-				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Gateway:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.author.name}\n${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}\n${embed.footer.text}`;
-				else content = embed;
-				return nmsg.edit(content);
+				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Heart Beat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
+				return nmsg.edit(utils.contentify(msg.channel, embed));
 			}
 		},
 		"forcestatupdate": {
@@ -219,17 +203,12 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.title}: ${embed.url}\n${embed.description}`;
-				else content = embed;
 				try {
 					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
 					return;
-				} catch (reason) { return msg.channel.send(content);}
+				} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed));}
 			}
 		},
 		"info": {
@@ -241,8 +220,6 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let [c1, c2] = await Promise.all([
 					client.fetchUser("320067006521147393"),
 					client.fetchUser("176580265294954507")
@@ -256,10 +233,7 @@ module.exports = function(passthrough) {
 					.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
 					.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nWanna donate? Check out her [Patreon](https://www.patreon.com/papiophidian) or make a 1 time donation through [PayPal](https://paypal.me/papiophidian).`)
 					.setColor("36393E");
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `Info:\n${embed.description}\n${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
-				else content = embed;
-				return msg.channel.send(content);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"donate": {
@@ -271,12 +245,9 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: function(msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
-				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send("Thinking of donating? :heart:\nIf you're interested in making monthly donations, you may at Patreon at <https://www.patreon.com/papiophidian> or If you're interested in a one time donation, you can donate through PayPal at <https://paypal.me/papiophidian>\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my Support Server at <https://discord.gg/zhthQjH> and get a distinguishing donor badge on &profile");
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle("Thinking of donating? :heart:")
 				.setDescription("I'm excited that you're possibly interested in supporting my creators. If you're interested in making monthly donations, you may at [Patreon](https://www.patreon.com/papiophidian) or If you're interested in a one time donation, you can donate through [PayPal](https://paypal.me/papiophidian)\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my [Support Server](https://discord.gg/zhthQjH) and get a distinguishing donor badge on &profile");
-				return msg.channel.send(embed);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"commits": {
@@ -288,9 +259,6 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
-				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send("You should allow me to embed links to see what my creators have been up to :eyes:");
 				msg.channel.sendTyping();
 				const limit = 5;
 				const authorNameMap = {
@@ -323,12 +291,12 @@ module.exports = function(passthrough) {
 						});
 					});
 				});
-				return msg.channel.send(new Discord.RichEmbed()
+				let embed = new Discord.RichEmbed()
 					.setTitle("Git info")
 					.addField("Status", "On branch "+res.branch+", latest commit "+res.latestCommitHash)
 					.addField(`Commits (latest ${limit} entries)`, res.logString)
 					.setColor("36393E")
-				);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"privacy": {
@@ -340,17 +308,12 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 */
 			process: async function(msg) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `Privacy Statement:\n${embed.description}`;
-				else content = embed;
 				try {
 					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
 					return;
-				} catch (reason) { return msg.channel.send(content); }
+				} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed)); }
 			}
 		},
 		"user": {
@@ -363,9 +326,6 @@ module.exports = function(passthrough) {
 			 * @param {String} suffix
 			 */
 			process: async function(msg, suffix) {
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
-				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(lang.permissionDeniedGeneric("embed links"));
 				let user, member;
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
@@ -397,7 +357,7 @@ module.exports = function(passthrough) {
 				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
 				embed.setTitle(`${user.tag} ${status}`);
 				if (game) embed.setDescription(game);
-				return msg.channel.send({embed});
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"avatar": {

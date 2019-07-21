@@ -491,7 +491,7 @@ module.exports = (passthrough) => {
 				embed.setColor("36393e");
 				embed.setFooter(`Type a number from 1-${items.length} to select that item`);
 				// Send embed
-				let selectmessage = await channel.send(embed);
+				let selectmessage = await channel.send(utils.contentify(channel, embed));
 				// Make collector
 				let collector = channel.createMessageCollector((m => m.author.id == authorID), {maxMatches: 1, time: 60000});
 				return collector.next.then(newmessage => {
@@ -505,14 +505,14 @@ module.exports = (passthrough) => {
 					// Edit to success
 					embed.setDescription("» "+items[index]);
 					embed.setFooter("");
-					selectmessage.edit(embed);
+					selectmessage.edit(utils.contentify(selectmessage.channel, embed));
 					return index;
 				}).catch(() => {
 					// Collector failed, show the failure message and exit
 					embed.setTitle(failedTitle);
 					embed.setDescription("");
 					embed.setFooter("");
-					selectmessage.edit(embed);
+					selectmessage.edit(utils.contentify(selectmessage.channel, embed));
 					throw new Error("Collector didn't receive a valid response");
 				});
 			},
@@ -595,6 +595,21 @@ module.exports = (passthrough) => {
 					}}
 				])
 				reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
+			},
+			/**
+			 * @param {Discord.TextChannel} channel
+			 * @param {String|Discord.RichEmbed} content
+			 */
+			contentify: function (channel, content) {
+				if (channel.type != "text") return content;
+				let value;
+				let permissions = channel.permissionsFor(client.user);
+				if (content instanceof Discord.RichEmbed) {
+					if (permissions && !permissions.has("EMBED_LINKS")) value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`;
+					else value = content;
+				} else if (content instanceof String) value = content;
+				else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor?content.constructor.name:typeof content}`);
+				return value;
 			}
 		}
 

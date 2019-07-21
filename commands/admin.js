@@ -104,7 +104,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
-				msg.channel.send({embed});
+				msg.channel.send(utils.contentify(msg.channel, embed));
 				return member.send(`**${String(msg.author)}** has awarded you ${award} ${lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"));
 			}
 		}

@@ -215,7 +215,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let permissions = msg.channel.permissionsFor(client.user);
 				let member = await msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let money = await utils.coinsManager.get(member.id);
@@ -223,10 +222,7 @@ module.exports = function(passthrough) {
 					.setAuthor(`Coins for ${member.displayTag}`)
 					.setDescription(`${money} Discoins ${lang.emoji.discoin}`)
 					.setColor("F8E71C")
-				let content;
-				if (!permissions.has("EMBED_LINKS")) content = `**${embed.author.name}**\n${embed.description}`;
-				else content = embed;
-				return msg.channel.send(content);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"daily": {
@@ -239,7 +235,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let permissions = msg.channel.permissionsFor(client.user);
 				let [row, donor] = await Promise.all([
 					utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
 					utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
@@ -251,10 +246,7 @@ module.exports = function(passthrough) {
 					let embed = new Discord.RichEmbed()
 						.setDescription(lang.external.money.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
 						.setColor("F8E71C")
-					let content;
-					if (!permissions.has("EMBED_LINKS")) content = embed.description;
-					else content = embed;
-					msg.channel.send(content);
+					msg.channel.send(utils.contentify(msg.channel, embed));
 					utils.coinsManager.award(msg.author.id, amount);
 					utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()]);
 				} else {
@@ -275,8 +267,6 @@ module.exports = function(passthrough) {
 			process: async function(msg, suffix) {
 				let pagesize = 10;
 				let pagenum = 1;
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (suffix) {
 					let inputnum = parseInt(suffix);
 					inputnum = Math.min(Math.max(inputnum, 1), 50);
@@ -295,10 +285,7 @@ module.exports = function(passthrough) {
 				}))
 				.setFooter(`Page ${pagenum}`)
 				.setColor("F8E71C")
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `**${embed.author.name}\n${embed.description}\n${embed.footer}`;
-				else content = embed;
-				return msg.channel.send(content);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"give": {
@@ -312,7 +299,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let permissions = msg.channel.permissionsFor(client.user);
 				let args = suffix.split(" ");
 				if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`);
 				let usertxt = suffix.slice(args[0].length + 1);
@@ -340,10 +326,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
-				let content;
-				if (!permissions.has("EMBED_LINKS")) content = embed.description;
-				else content = embed;
-				msg.channel.send(content);
+				msg.channel.send(utils.contentify(msg.channel, embed));
 				if (memsettings && memsettings.value == 0) return;
 				if (guildsettings && guildsettings.value == 0) {
 					if (memsettings && memsettings.value == 1) return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked(msg)));

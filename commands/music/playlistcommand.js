@@ -26,7 +26,7 @@ module.exports = passthrough => {
 			let playlistName = args[1];
 			if (playlistName == "show") {
 				let playlists = await utils.sql.all("SELECT * FROM Playlists");
-				return msg.channel.send(new Discord.RichEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n")));
+				return msg.channel.send(utils.contentify(msg.channel, new Discord.RichEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n"))));
 			}
 			if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 			let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
@@ -124,7 +124,7 @@ module.exports = passthrough => {
 				let embed = new Discord.RichEmbed()
 				.setDescription(body)
 				.setColor("36393E")
-				msg.channel.send(embed);
+				msg.channel.send(utils.contentify(msg.channel, embed));
 
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
@@ -184,7 +184,7 @@ module.exports = passthrough => {
 					"<:bn_del:331164186790854656> - confirm deletion\n"+
 					"<:bn_ti:327986149203116032> - ignore"
 				);
-				let message = await msg.channel.send(deletePromptEmbed)
+				let message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
 				message.reactionMenu([
 					{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
@@ -192,9 +192,9 @@ module.exports = passthrough => {
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 						]);
 						deletePromptEmbed.setDescription("Playlist deleted.");
-						message.edit(deletePromptEmbed);
+						message.edit(utils.contentify(msg.channel, deletePromptEmbed));
 					}},
-					{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled")}
+					{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
 				]);
 			} else {
 				let author = [];
@@ -211,7 +211,7 @@ module.exports = passthrough => {
 				.setColor("36393E")
 				if (rows.join("\n").length + totalLength.length <= 2000) {
 					embed.setDescription(rows.join("\n")+totalLength)
-					msg.channel.send({embed});
+					msg.channel.send(utils.contentify(msg.channel, embed));
 				} else {
 					let pages = []
 					let currentPage = []
@@ -233,7 +233,7 @@ module.exports = passthrough => {
 					utils.paginate(msg.channel, pages.length, page => {
 						embed.setTitle(`Page ${page+1} of ${pages.length}`)
 						embed.setDescription(pages[page].join("\n") + totalLength)
-						return embed
+						return utils.contentify(msg.channel, embed)
 					})
 				}
 			}

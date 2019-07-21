@@ -84,7 +84,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let permissions = msg.channel.permissionsFor(client.user);
 				let member = await msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let info = await utils.waifu.get(member.id);
@@ -95,10 +94,7 @@ module.exports = function(passthrough) {
 					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")
 					.addField("Gifts:", info.gifts.received.emojis || "(none)")
 					.setColor("36393E")
-				let content;
-				if (!permissions.has("EMBED_LINKS")) content = `${embed.author.name}\n${embed.fields.map(f => f.name+"\n"+f.value).join("\n")}`;
-				else content = embed;
-				return msg.channel.send(content);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"claim": {
@@ -112,7 +108,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				let permissions = msg.channel.permissionsFor(client.user);
 				let args = suffix.split(" ");
 				let usertxt = args.slice(1).join(" ");
 				if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send("The correct format is `&claim <amount> <user>`. Amount comes first, user comes last.");
@@ -145,10 +140,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${lang.emoji.discoin}`)
 					.setColor("36393E")
-				let content;
-				if (!permissions.has("EMBED_LINKS")) content = embed.description;
-				else content = embed;
-				msg.channel.send(content);
+				msg.channel.send(utils.contentify(msg.channel, embed));
 				if (memsettings && memsettings.value == 0) return;
 				if (guildsettings && guildsettings.value == 0) {
 					if (memsettings && memsettings.value == 1) return member.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()));
@@ -227,7 +219,6 @@ module.exports = function(passthrough) {
 			 */
 			process: async function(msg, suffix) {
 				let amount = 10;
-				let permissions;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (suffix) {
 					let num = Number(suffix);
@@ -258,10 +249,7 @@ module.exports = function(passthrough) {
 					)
 					.setFooter(`Page ${amount/10}`)
 					.setColor("F8E71C")
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `**${embed.title}**\n${embed.description}\n${embed.footer.text}`;
-				else content = embed;
-				return msg.channel.send(content);
+				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
 		"bean": {
@@ -386,14 +374,12 @@ module.exports = function(passthrough) {
 	 */
 	async function doInteraction(msg, suffix, source) {
 		if (msg.channel.type == "dm") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`);
-		let permissions = msg.channel.permissionsFor(client.user);
 		if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`);
 		let member = await msg.guild.findMember(msg, suffix);
 		if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 		if (member.user.id == msg.author.id) return msg.channel.send(responses.random());
 		if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username));
-		let fetch;
-		let description = "";
+		let fetch, description = "";
 		if (source.traaOverride) {
 			let g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_";
 			let g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_";
@@ -436,10 +422,7 @@ module.exports = function(passthrough) {
 			.setImage(url)
 			.setColor("36393E")
 			if (source.footer) embed.setFooter(source.footer);
-			let content;
-			if (!permissions.has("EMBED_LINKS")) content = `${embed.description}\n${embed.image.url}\n${embed.footer?embed.footer.text:""}`;
-			else content = embed;
-			return msg.channel.send(content);
+			return msg.channel.send(utils.contentify(msg.channel, embed));
 		}).catch(error => { return msg.channel.send("There was an error: ```\n"+error+"```"); });
 	}
 

@@ -370,7 +370,7 @@ module.exports = function(passthrough) {
 						.setDescription(body)
 						.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
 						.setColor("36393E")
-						return msg.channel.send(embed);
+						return msg.channel.send(utils.contentify(msg.channel, embed));
 					} else {
 						return msg.channel.send("No related songs available.");
 					}

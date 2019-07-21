@@ -21,7 +21,7 @@ const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":sev
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, reloadEvent, commands, reloader, gameManager } = passthrough;
+	let { client, commands, reloader, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
@@ -94,10 +94,7 @@ module.exports = function(passthrough) {
 				.setColor(this.color);
 			answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)} \n`).join("")+"​", true)) //SC: zero-width space and em space
 			embed.setFooter("To answer, type a letter in chat. You have 20 seconds.");
-			let content;
-			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer.text}`;
-			else content = embed;
-			this.channel.send(content);
+			this.channel.send(utils.contentify(this.channel, embed));
 			// Setup timer
 			this.timer = setTimeout(() => this.end(), 20000);
 			// Prepare to receive answers
@@ -160,10 +157,7 @@ module.exports = function(passthrough) {
 			}
 			if (this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
 			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
-			let content;
-			if (!this.permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n${embed.footer?embed.footer.text:""}`;
-			else content = embed;
-			return this.channel.send(content).then(msg => {
+			return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
@@ -181,14 +175,10 @@ module.exports = function(passthrough) {
 			if (body.startsWith("http")) body = await rp(body);
 			return [true, JSON.parse(body)];
 		} catch (error) {
-			let permissions = channel.permissionsFor(client.user);
 			let embed = new Discord.RichEmbed()
 			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
 			.setColor(0xdd1d1d)
-			let content;
-			if (!permissions.has("EMBED_LINKS")) content = embed.description;
-			else content = embed;
-			return [false, channel.send(content)];
+			return [false, channel.send(utils.contentify(channel, embed))];
 		}
 	}
 	/**
@@ -404,8 +394,6 @@ module.exports = function(passthrough) {
 				let size = 8, difficulty = "easy";
 				let string, title;
 				let sfx = suffix.toLowerCase();
-				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 
 				if (sfx.includes("--size:")) {
 					let tsize = sfx.split("--size:")[1].substring().split(" ")[0];
@@ -417,15 +405,16 @@ module.exports = function(passthrough) {
 				else if (sfx.includes("hard")) difficulty = "hard";
 
 				string = sweeper(difficulty, size);
-				
+
 				title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`;
 				if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
-				let content;
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `${title}\n${string.text}`;
-				else content = embed;
-				if (sfx.includes("-r") || sfx.includes("--raw")) return msg.channel.send(`${title}\n${string.text}`);
-				msg.channel.send(content);
+				if (sfx.includes("-r") || sfx.includes("--raw")) {
+					let rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|");
+					if (rawcontent.length > 1999) return msg.channel.send("The raw content exceeded the 200 character limit. Consider using a smaller board size");
+					return msg.channel.send(rawcontent);
+				}
+				msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		}
 	});
