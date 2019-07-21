@@ -2,10 +2,10 @@ const path = require("path")
 const crypto = require("crypto")
 
 module.exports = function(passthrough) {
-	let {reloader} = passthrough
+	let {config, reloader} = passthrough
 
-	let utils = require("../../modules/utilities.js")(passthrough);
-	reloader.useSync("./modules/utilities.js", utils);
+	let utils = require("../../modules/utilities.js")(passthrough)
+	reloader.useSync("./modules/utilities.js", utils)
 
 	return {
 		/**
@@ -30,7 +30,10 @@ module.exports = function(passthrough) {
 
 		getSession: function(token) {
 			if (token instanceof Map) token = token.get("token")
-			if (token) return utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", token)
+			if (token) return utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", token).then(row => {
+				if (row && row.staging && !config.is_staging) return null
+				else return row
+			})
 			else return Promise.resolve(null)
 		},
 
