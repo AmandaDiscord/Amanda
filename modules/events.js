@@ -53,6 +53,7 @@ module.exports = function(passthrough) {
 		if (reason && reason.code) {
 			if (reason.code == 10008) return;
 			if (reason.code == 50013) return;
+			if (reaspm.code == 50001) return;
 		}
 		if (reason) console.error(reason);
 		else console.log("There was an error but no reason");
