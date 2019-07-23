@@ -3,23 +3,26 @@ require("../../types.js")
 
 const Discord = require("discord.js")
 const ytdl = require("ytdl-core")
+const Youtube = require("simple-youtube-api")
+
 
 /** @param {PassthroughType} passthrough */
 module.exports = passthrough => {
-	let {client, reloader} = passthrough
+	let {client, reloader, config} = passthrough
 
 	let utils = require("../../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
 
 	let lang = require("../../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/lang.js", lang);
-	
+
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
 
-
 	let songTypes = require("./songtypes.js")(passthrough)
 	reloader.useSync("./commands/music/songtypes.js", songTypes)
+
+	let youtube = new Youtube(config.yt_api_key)
 
 	return {
 		command: async function(msg, args, bulkPlayCallback) {

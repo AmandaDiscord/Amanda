@@ -651,6 +651,7 @@ module.exports = function(passthrough) {
 						.addField(`now`, `Show the current song.\n\`&music now\``)
 						.addField(`pause`, `Pause playback.\n\`&music pause\``)
 						.addField(`resume`, `Resume playback. (Unpause.)\n\`&music resume\``)
+						.addField(`info`, `Shows information about the current song/Frisky station\n\`&music info\``)
 						.addField(`related [play|insert] [index]`,
 							"Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n"+
 							"`&music related` (shows related songs)\n"+
