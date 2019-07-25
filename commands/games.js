@@ -39,7 +39,7 @@ module.exports = function(passthrough) {
 			this.type = type;
 			this.manager = gameManager;
 			this.id = channel.id;
-			this.permissions = channel.permissionsFor(client.user);
+			this.permissions = channel.type!="dm"?channel.permissionsFor(client.user):undefined;
 		}
 		init() {
 			this.manager.addGame(this);
@@ -155,7 +155,7 @@ module.exports = function(passthrough) {
 			} else {
 				embed.addField("Winners", "No winners.");
 			}
-			if (this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
+			if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
 			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
 			return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 				msg.reactionMenu([
