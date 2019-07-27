@@ -15,7 +15,7 @@
  * @property {import("./hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {Object} queueManager
- * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} queueManager.storage
+ * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} queueManager.storage <guildID, queue>
  * @property {Number} queueManager.songsPlayed
  * @property {Function} queueManager.addQueue
  * @property {Object} gameManager

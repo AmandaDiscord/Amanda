@@ -146,10 +146,16 @@ module.exports = passthrough => {
 							this.textChannel.send("Everyone left, so I have as well.");
 							this.dissolve();
 						}, voiceEmptyDuration);
-						this.textChannel.send("No users left in my voice channel. I will stop playing in "+voiceEmptyDuration/1000+" seconds if nobody rejoins.");
+						this.voiceLeaveWarningMessagePromise = this.textChannel.send("No users left in my voice channel. I will stop playing in "+voiceEmptyDuration/1000+" seconds if nobody rejoins.");
 					}
 				} else {
 					this.voiceLeaveTimeout.clear();
+					if (this.voiceLeaveWarningMessagePromise) {
+						this.voiceLeaveWarningMessagePromise.then(msg => {
+							msg.delete()
+							delete this.voiceLeaveWarningMessagePromise
+						})
+					}
 				}
 			}
 			getNPEmbed() {

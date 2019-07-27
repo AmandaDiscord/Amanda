@@ -217,13 +217,10 @@ module.exports = function(passthrough) {
 	}
 
 	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldMember, newMember) => {
-		// Ignore self
-		if (newMember.id == client.user.id) return;
-
 		// Process waiting to join
-		if (newMember.voiceChannel) voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(state => state.trigger(newMember.voiceChannel))
+		if (newMember.id != client.user.id && newMember.voiceChannel) voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(state => state.trigger(newMember.voiceChannel))
 
-		// Process leave timeout
+		// Pass on to queue for leave timeouts
 		let channel = oldMember.voiceChannel || newMember.voiceChannel;
 		if (!channel || !channel.guild) return;
 		let queue = queueManager.storage.get(channel.guild.id);
@@ -264,9 +261,11 @@ module.exports = function(passthrough) {
 		["play", {
 			voiceChannel: "ask",
 			code: async (msg, args, {voiceChannel}) => {
-				let permissions = voiceChannel.permissionsFor(client.user)
-				if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin());
-				if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak());
+				if (!queueManager.storage.has(msg.guild.id)) {
+					let permissions = voiceChannel.permissionsFor(client.user)
+					if (!permissions.has("CONNECT")) return msg.channel.send(lang.permissionVoiceJoin());
+					if (!permissions.has("SPEAK")) return msg.channel.send(lang.permissionVoiceSpeak());
+				}
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
 				if (result == null) return;
