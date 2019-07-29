@@ -496,11 +496,6 @@ module.exports = function(passthrough) {
 						default: "1",
 						scope: ["self", "server"]
 					},
-					"prefix": {
-						type: "string",
-						default: "[unset]",
-						scope: ["server"]
-					},
 					"profilebackground": {
 						type: "string",
 						default: "[unset] (Recommended to be a 800x500px png/jpeg)",
