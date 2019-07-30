@@ -14,6 +14,7 @@
  * @property {import("mysql2/promise").PromisePool} db
  * @property {import("./hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
+ * @property {Object.<string, {message: import("discord.js").Message, actions: Array<{emoji: String, allowedUsers?: Array<String>, deniedUsers?: Array<String>, ignore?: String, remove?: String, actionType?: String, actionData?: Function}>, promise: Promise<void>}>} reactionMenus
  * @property {Object} queueManager
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} queueManager.storage <guildID, queue>
  * @property {Number} queueManager.songsPlayed

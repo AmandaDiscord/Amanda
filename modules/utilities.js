@@ -14,7 +14,7 @@ let utilsResultCache;
  * @param {PassthroughType} passthrough
  */
 module.exports = (passthrough) => {
-	let { client, db, reloadEvent, queueManager } = passthrough;
+	let { client, db, reloadEvent, queueManager, reactionMenus } = passthrough;
 
 	if (!utilsResultCache) {
 		var utils = {
@@ -104,7 +104,7 @@ module.exports = (passthrough) => {
 				}
 				/**
 				 * @param {String} name
-				 * @param {Promise} promise
+				 * @param {Promise<any>} promise
 				 */
 				savePromise(name, promise) {
 					this.store.set(name, promise);
@@ -130,6 +130,35 @@ module.exports = (passthrough) => {
 					return Promise.all(names.map(name =>
 						this.get(name).then(value => result.set(name, value))
 					)).then(() => result);
+				}
+			},
+			ReactionMenu: class ReactionMenu {
+				/**
+				 * @param {Discord.Message} message
+				 * @param {Array<{emoji: String, allowedUsers?: Array<String>, deniedUsers?: Array<String>, ignore?: String, remove?: String, actionType?: String, actionData?: Function}>} actions
+				 */
+				constructor(message, actions) {
+					this.message = message;
+					this.actions = actions;
+					reactionMenus[this.message.id] = this;
+					this.promise = this.react();
+				}
+				async react() {
+					for (let a of this.actions) {
+						a.messageReaction = await this.message.react(a.emoji).catch(new Function());
+					}
+				}
+				destroy(remove) {
+					delete reactionMenus[this.message.id];
+					if (remove) {
+						if (this.message.channel.type == "text") {
+							this.message.clearReactions().catch(new Function());
+						} else if (this.message.channel.type == "dm") {
+							this.actions.forEach(a => {
+								if (a.messageReaction) a.messageReaction.remove().catch(new Function());
+							});
+						}
+					}
 				}
 			},
 			sql: {
@@ -253,25 +282,21 @@ module.exports = (passthrough) => {
 						utils.sql.all("DELETE FROM waifu WHERE userID = ? OR waifuID = ?", [claimer, claimed]),
 						utils.coinsManager.award(claimer, -price)
 					]);
-					return utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [claimer, claimed, price]);
+					void await utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [claimer, claimed, price]);
 				},
 				/**
 				 * @param {Discord.Snowflake} user
-				 * @returns {Promise<undefined>}
 				 */
 				unbind: async function(user) {
-					await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [user]);
-					return undefined;
+					void await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [user]);
 				},
 				/**
 				 * @param {Discord.Snowflake} user
 				 * @param {Number} amount
-				 * @returns {Promise<undefined>}
 				 */
 				transact: async function(user, amount) {
 					let waifu = await this.get(user, { basic: true });
-					await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + amount, user]);
-					return undefined;
+					void await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + amount, user]);
 				}
 			},
 			coinsManager: {
@@ -480,7 +505,7 @@ module.exports = (passthrough) => {
 
 			/**
 			 * @param {Discord.TextChannel} channel
-			 * @param {Array} items
+			 * @param {Array<String>} items
 			 * @param {Discord.RichEmbed} embed
 			 * @returns {Promise<Number>} The zero-based index that was selected.
 			 */
@@ -570,7 +595,10 @@ module.exports = (passthrough) => {
 				}
 			},
 
-			/** @param {Discord.TextChannel} channel */
+			/**
+			 * @param {Discord.TextChannel} channel
+			 * @param {Number} pageCount
+			 */
 			paginate: async function(channel, pageCount, callback) {
 				let page = 0
 				let msg = await channel.send(callback(page))

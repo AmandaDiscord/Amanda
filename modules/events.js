@@ -73,6 +73,7 @@ module.exports = function(passthrough) {
 	 */
 	async function manageMessage(msg) {
 		if (msg.author.bot) return;
+		if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`);
 		let prefix = prefixes.find(p => msg.content.startsWith(p));
 		if (!prefix) return;
 		let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
@@ -91,7 +92,8 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed()
 				.setDescription(msgTxt)
 				.setColor("dd2d2d")
-				msg.channel.send({embed});
+				if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed);
+				else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`);
 				// Report to #amanda-error-log
 				let reportChannel = client.channels.get("512869106089852949");
 				if (reportChannel) {
@@ -122,28 +124,7 @@ module.exports = function(passthrough) {
 					reportChannel.send(embed);
 				}
 			}
-		} else {
-			if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
-				let username = msg.guild ? msg.guild.me.displayName : client.user.username;
-				let chat = msg.cleanContent.replace(new RegExp('@' + username + ',?'), '').trim();
-				if (!chat) return;
-				msg.channel.sendTyping();
-				let owner = await client.fetchUser("320067006521147393");
-				if (chat.toLowerCase().startsWith("say")) return;
-				try {
-					require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
-						let data = JSON.parse(res);
-						if (!data.output || !data.output[0] || !data.output[0].actions) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?");
-						let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, owner.username);
-						if (text.length >= 2000) text = text.slice(0, 1999)+"…";
-						if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no");
-						if (text == "IE=edge,chrome=1 (Answers.com)" && data.output[0].actions.source && data.output[0].actions.source.url) text = "I believe you can find the answer here: "+data.output[0].actions.source.url;
-						if (["sex", "fuck", "cock"].find(word => text.toLowerCase().includes(word))) return msg.channel.send(`I think I misunderstood what you said. My response was a bit unprofessional. Let's talk about something else`);
-						msg.channel.send(text);
-					});
-				} catch (error) { msg.channel.send(error); };
-			} else return;
-		}
+		} else return;
 	}
 
 	async function manageReady() {
@@ -173,43 +154,15 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	/**
-	 * @param {Array<any>} actions
-	 */
-	Discord.Message.prototype.reactionMenu = function(actions) {
-		let message = this;
-		return new ReactionMenu(message, actions);
-	}
-
-	class ReactionMenu {
-		/**
-		 * @param {Discord.Message} message
-		 * @param {Array<any>} actions
-		 */
-		constructor(message, actions) {
-			this.message = message;
-			this.actions = actions;
-			reactionMenus[this.message.id] = this;
-			this.promise = this.react();
+	Object.defineProperties(Discord.Message.prototype, {
+		reactionMenu: {
+			value: function(actions) {
+				let message = this;
+				return new utils.ReactionMenu(message, actions);
+			},
+			configurable: true
 		}
-		async react() {
-			for (let a of this.actions) {
-				a.messageReaction = await this.message.react(a.emoji).catch(new Function());
-			}
-		}
-		destroy(remove) {
-			delete reactionMenus[this.message.id];
-			if (remove) {
-				if (this.message.channel.type == "text") {
-					this.message.clearReactions().catch(new Function());
-				} else if (this.message.channel.type == "dm") {
-					this.actions.forEach(a => {
-						if (a.messageReaction) a.messageReaction.remove().catch(new Function());
-					});
-				}
-			}
-		}
-	}
+	});
 
 	/**
 	 * @param {Discord.MessageReaction} messageReaction
