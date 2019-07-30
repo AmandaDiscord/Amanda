@@ -134,13 +134,14 @@ module.exports = (passthrough) => {
 			},
 			sql: {
 				/**
-				 * @param {String} statement
-				 * @param {(any[]|any)} prepared
+				 * @param {String} string
+				 * @param {Array<any>|any} [prepared=undefined]
 				 */
 				"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 					if (!connection) connection = db;
 					if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared];
 					return new Promise((resolve, reject) => {
+						if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`));
 						connection.execute(string, prepared).then(result => {
 							let rows = result[0];
 							resolve(rows);
@@ -153,8 +154,8 @@ module.exports = (passthrough) => {
 					});
 				},
 				/**
-				 * @param {String} statement
-				 * @param {(any[]|any)} prepared
+				 * @param {String} string
+				 * @param {Array<any>|any} [prepared=undefined]
 				 */
 				"get": async function(string, prepared = undefined, connection = undefined) {
 					return (await utils.sql.all(string, prepared, connection))[0];
