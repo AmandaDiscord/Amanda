@@ -2,10 +2,29 @@ doctype html
 html
 	include includes/head.pug
 		title= guild.name+" | Amanda"
+		script.
+			const guildID = "#{guild.id}"
+		script(defer src="/exports.js")
+		script(defer src="/player.js" data-ex="player")
+		script(defer src="/classes.js" data-ex="classes")
+		script(defer src="/utilities.js" data-ex="utilities")
 	
 	body
 		include includes/nav.pug
 		+nav("dash")
 
-		div.message
-			div= guild.name
+		main
+			div.player-grid
+				div.player-controls#player-container
+					div.song-title Connecting...
+				div.guild-info
+					div.guild-icon
+						if guild.icon
+							img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
+						else
+							div.letter-icon= guild.nameAcronym
+					div.guild-words
+						div.guild-name= guild.name
+						div.voice-channel-name#voice-channel-name Connecting...
+				div.queue-container#queue-container
+				div.voice-info

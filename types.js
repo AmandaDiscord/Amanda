@@ -18,9 +18,11 @@
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} queueManager.storage <guildID, queue>
  * @property {Number} queueManager.songsPlayed
  * @property {Function} queueManager.addQueue
+ * @property {import("events").EventEmitter} queueManager.events
  * @property {Object} gameManager
  * @property {import("discord.js").Collection<import("discord.js").Snowflake, any>} gameManager.storage
  * @property {Number} gameManager.gamesPlayed
  * @property {Function} gameManager.addGame
  * @property {import("simple-youtube-api")} youtube
+ * @property {import("ws").Server} wss
  */

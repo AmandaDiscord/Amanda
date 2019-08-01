@@ -1,8 +1,9 @@
 const Discord = require("discord.js")
-const ytdlDiscord = require("ytdl-core-discord");
-const ytdl = require("ytdl-core");
-const net = require("net");
-const rp = require("request-promise");
+const ytdlDiscord = require("ytdl-core-discord")
+const ytdl = require("ytdl-core")
+const net = require("net")
+const rp = require("request-promise")
+const events = require("events")
 
 module.exports = passthrough => {
 	let {reloader} = passthrough
@@ -13,13 +14,27 @@ module.exports = passthrough => {
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
 
-	class YouTubeSong {
+	class WebSong {
+		constructor() {
+			this.events = new events.EventEmitter()
+		}
+		webInfo() {
+			return {
+				title: this.getTitle(),
+				length: this.getLength(),
+				thumbnail: this.getThumbnail()
+			}
+		}
+	}
+
+	class YouTubeSong extends WebSong {
 		/**
 		 * @param {ytdl.videoInfo} info
 		 * @param {Boolean} cache
 		 * @constructor
 		 */
 		constructor(id, info, cache, basic) {
+			super()
 			this.id = id
 			this.connectionPlayFunction = "playOpusStream"
 			this.canBePaused = true
@@ -43,6 +58,13 @@ module.exports = passthrough => {
 					}
 					this._getInfo(cache)
 				}
+			}
+		}
+		getThumbnail() {
+			return {
+				src: `https://invidio.us/vi/${this.id}/mqdefault.jpg`,
+				width: 320,
+				height: 180
 			}
 		}
 		_deleteCache() {
@@ -82,8 +104,12 @@ module.exports = passthrough => {
 		getRelated() {
 			return this._getRelated()
 		}
-		getSuggested() {
-			return this._getRelated().then(videos => videos[0] ? new YouTubeSong(videos[0].id, undefined, true, videos[0]) : null)
+		getSuggested(playedSongs) {
+			return this._getRelated().then(videos => {
+				let filtered = videos.filter(v => !playedSongs.has("youtube_"+v.id))
+				if (filtered[0]) return new YouTubeSong(filtered[0].id, undefined, true, filtered[0])
+				else return null
+			})
 		}
 		showRelated() {
 			return this._getRelated().then(videos => {
@@ -115,12 +141,14 @@ module.exports = passthrough => {
 				return this.info = ytdl.getInfo(this.id).then(info => {
 					this.basic.title = info.title
 					this.basic.length_seconds = +info.length_seconds
+					this.events.emit("update")
 					if (cache) this.info = info
 					return info
 				}).catch(error => {
 					this.error = error
 					this.basic.title = "Deleted video"
 					this.basic.length_seconds = 0
+					this.events.emit("update")
 					return null
 				})
 			}
@@ -129,20 +157,21 @@ module.exports = passthrough => {
 		 * @returns {Promise<Array<any>>}
 		 */
 		async _related() {
-			await this.getInfo(true);
-			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10);
+			await this.getInfo(true)
+			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10)
 		}
 		getProgress(time, paused) {
-			let max = this.basic.length_seconds;
+			let max = this.basic.length_seconds
 			let rightTime = common.prettySeconds(max)
-			let current = Math.round(time/1000);
-			if (current > max) current = max;
+			let current = Math.round(time/1000)
+			if (current > max) current = max
 			let leftTime = common.prettySeconds(current)
 			let bar = utils.progressBar(35, current, max, paused ? " [PAUSED] " : "")
-			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``;
+			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 		}
 		destroy() {
 			this._deleteCache()
+			this.events.removeAllListeners()
 		}
 		prepare() {
 			this._getInfo(true)
@@ -179,11 +208,12 @@ module.exports = passthrough => {
 		}
 	}
 
-	class FriskySong {
+	class FriskySong extends WebSong {
 		/**
 		 * @param {String} station Lowercase station from frisky, deep, chill
 		 */
 		constructor(station) {
+			super()
 			if (!["frisky", "deep", "chill"].includes(station)) {
 				throw new Error(`FriskySong station was ${this.station}, expected one of frisky, deep, chill`)
 			}
@@ -204,6 +234,13 @@ module.exports = passthrough => {
 			this.connectionPlayFunction = "playStream"
 			this.canBePaused = false
 			this.title = "Frisky Radio"
+		}
+		getThumbnail() {
+			return {
+				src: "http://media.friskyradio.com.s3.amazonaws.com/logos_press/1352476361-FRISKY_mark_preview.png",
+				width: 568,
+				height: 290
+			}
 		}
 		getUniqueID() {
 			return "frisky_"+this.station
@@ -289,6 +326,7 @@ module.exports = passthrough => {
 			return this.info = rp("https://www.friskyradio.com/api/v2/nowPlaying", {json: true}).then(data => {
 				let item = data.data.items.find(i => i.station == this.station)
 				this.info = item
+				this.events.emit("update")
 				return this.info
 			}).catch(console.error)
 		}
@@ -335,7 +373,7 @@ module.exports = passthrough => {
 	// Verify that songs have the right methods
 	[YouTubeSong, FriskySong].forEach(song => {
 		[
-			"getUniqueID", "getUserFacingID", "getError", "getTitle", "getProgress", "getQueueLine", "getLength",
+			"getUniqueID", "getUserFacingID", "getError", "getTitle", "getProgress", "getQueueLine", "getLength", "getThumbnail",
 			"getStream", "getDetails", "destroy", "getProgress", "prepare", "clean", "getRelated", "getSuggested", "showRelated"
 		].forEach(key => {
 			if (!song.prototype[key]) throw new Error(`Song type ${song.name} does not have the required method ${key}`)

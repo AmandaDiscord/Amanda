@@ -6,8 +6,6 @@
 	font-family: Whitney, sans-serif
 
 body
-	background: url("/images/back.svg") no-repeat center center fixed
-	background-size: cover
 	margin: 0px
 	font-size: 16px
 	color: #282828
@@ -212,116 +210,27 @@ a.no-underline
 			margin-right: 16px
 			border-radius: 50%
 
+		.letter-icon
+			@include flex-center
+			color: #ccc
+			background-color: #2f3136
+			font-size: 32px
+			width: 90px
+			height: 90px
+			margin-right: 16px
+			border-radius: 50%
+			overflow: hidden
+
 		.name
 			@include flex-center(false, true)
 
-.letter-icon
-	@include flex-center
-	color: #ccc
-	background-color: #2f3136
-	font-size: 32px
-	width: 90px
-	height: 90px
-	margin-right: 16px
-	border-radius: 50%
-	overflow: hidden
-
-.player-grid
-	display: grid
-	grid-template-columns: 5fr 3fr
-	margin: 20px
-	grid-gap: 20px
+#background-container
+	position: fixed
+	z-index: -1
+	transform: rotate(45deg)
+	display: flex
+	background: white
 
 	> *
-		@include box
-		padding: 12px
-
-	.player-controls
-		display: flex
-
-		.player-status
-			flex: 1
-
-		.thumbnail
-			border: 3px solid #222
-			margin-right: 16px
-			display: flex
-
-			img
-				height: 94px
-				width: auto
-
-		.song-title
-			font-size: 22px
-			height: 25px
-			overflow: hidden
-			margin-bottom: 7px
-
-			&.nothing-playing
-				margin: auto
-				line-height: 1
-
-		.progress
-			position: relative
-			display: flex
-			justify-content: space-between
-			font-size: 20px
-			font-family: "Noto Mono", monospace
-			align-items: center
-			line-height: 1
-			padding: 0px 5px
-			height: 28px
-			border: 2px solid #222
-			background: white
-			margin-bottom: 6px
-
-			> *
-				position: relative
-
-			.progressbar
-				position: absolute
-				top: 0
-				left: 0
-				bottom: 0
-				right: 0
-				background-color: #58aef1
-				transform-origin: top left
-
-		.controls
-			display: flex
-			justify-content: flex-start
-
-			img
-				width: 30px
-				height: 30px
-				margin-right: 6px
-
-	.queue-container
-		display: flex
-		flex-direction: column
-		height: auto
-
-		.queue-item
-			background-color: #f04747
-			margin-bottom: 20px
-
-	.guild-info
-		display: flex
-		align-items: center
-
-		.guild-icon
-			padding-right: 16px
-
-			img 
-				width: 90px
-				height: 90px
-				border-radius: 50%
-				background: linear-gradient(-25deg, #34353e, hsla(234, 9%, 34%, 1) 30%, #34353e)
-
-		.guild-words
-			display: flex
-			flex-direction: column
-			font-size: 22px
-
-			> *
-				padding: 5px 0px
+		margin-right: -2px
+		flex: 1

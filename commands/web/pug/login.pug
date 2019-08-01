@@ -21,7 +21,7 @@ html
 
 		form(method="post" action="/dash")
 			div.login-container
-				input(name="token" placeholder="Token" required)
+				input(name="token" placeholder="Token" required autofocus)
 				input(type="submit" value="Log in")
 				input(type="button" value="What's this?" onclick="showGetToken(event)")
 				input(type="hidden" name="csrftoken" value=csrfToken)

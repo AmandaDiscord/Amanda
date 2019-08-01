@@ -3,6 +3,7 @@ const mysql = require("mysql2/promise");
 const hotreload = require("./hotreload.js");
 const commandstore = require("./commandstore.js");
 const YouTube = require("simple-youtube-api");
+const events = require("events")
 
 const config = require("./config.json");
 const client = new Discord.Client({disableEveryone: true});
@@ -24,7 +25,9 @@ let queueManager = {
 	songsPlayed: 0,
 	addQueue(queue) {
 		this.storage.set(queue.id, queue);
-	}
+		this.events.emit("new", queue)
+	},
+	events: new events.EventEmitter()
 };
 let gameManager = {
 	storage: new Discord.Collection(),

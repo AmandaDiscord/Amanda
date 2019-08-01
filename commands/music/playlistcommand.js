@@ -70,19 +70,23 @@ module.exports = passthrough => {
 				if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
 				msg.channel.sendTyping();
 				let result = await common.resolveInput.toIDWithSearch(args.slice(3).join(" "), msg.channel, msg.author.id);
-				if (result == null) return;
-				result = result[0]
-				ytdl.getInfo(result[0]).then(async video => {
-					if (orderedSongs.some(row => row.videoID == video.video_id)) return msg.channel.send(lang.playlistDuplicateItem(msg));
-					await Promise.all([
-						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [video.video_id, video.title, video.length_seconds, video.video_id]),
-						utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, video.video_id]),
-						utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [video.video_id, playlistRow.playlistID, video.video_id])
-					]);
-					return msg.channel.send(`${msg.author.username}, Added **${video.title}** to playlist **${playlistName}**`);
-				}).catch(e => {
-					return msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
-				});
+				(async () => {
+					if (result == null) throw new Error()
+					result = result[0][0]
+					if (result.id) result = result.id
+					return ytdl.getInfo(result).then(async video => {
+						let id = video.player_response.videoDetails.videoId
+						if (orderedSongs.some(row => row.videoID == id)) return msg.channel.send(lang.playlistDuplicateItem(msg));
+						await Promise.all([
+							utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [id, video.title, video.length_seconds, id]),
+							utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, id]),
+							utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [id, playlistRow.playlistID, id])
+						]);
+						return msg.channel.send(`${msg.author.username}, Added **${video.title}** to playlist **${playlistName}**`);
+					})
+				})().catch(() => {
+					msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
+				})
 			} else if (action.toLowerCase() == "remove") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
 				let index = parseInt(args[3]);
@@ -156,24 +160,24 @@ module.exports = passthrough => {
 						let video = videos[i];
 						promises.push(utils.sql.all(
 							"INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)",
-							[video.video_id, video.title, video.length_seconds, video.video_id]
+							[video.player_response.videoDetails.videoId, video.title, video.length_seconds, video.player_response.videoDetails.videoId]
 						));
 						if (i != videos.length-1) {
 							let nextVideo = videos[i+1];
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, ?)",
-								[playlistRow.playlistID, video.video_id, nextVideo.video_id]
+								[playlistRow.playlistID, video.player_response.videoDetails.videoId, nextVideo.player_response.videoDetails.videoId]
 							));
 						} else {
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, NULL)",
-								[playlistRow.playlistID, video.video_id]
+								[playlistRow.playlistID, video.player_response.videoDetails.videoId]
 							));
 						}
 					}
 					promises.push(utils.sql.all(
 						"UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?",
-						[videos[0].video_id, playlistRow.playlistID, videos.slice(-1)[0].video_id]
+						[videos[0].player_response.videoDetails.videoId, playlistRow.playlistID, videos.slice(-1)[0].player_response.videoDetails.videoId]
 					));
 					await Promise.all(promises);
 					editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);
