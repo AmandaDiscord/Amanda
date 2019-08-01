@@ -209,7 +209,8 @@ module.exports = function(passthrough) {
 				});
 				return;
 			} else {
-				let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix));
+				let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()));
+				if (options.suffix.toLowerCase().endsWith("music")) f = data.trivia_categories.filter(c => c.name == "Entertainment: Music");
 				if (f.length == 0) {
 					return channel.send("Found no categories with that name. Use `&trivia categories` for the complete list of categories.");
 				} else if (f.length >= 2) {
