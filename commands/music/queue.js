@@ -268,11 +268,10 @@ module.exports = passthrough => {
 				 * @type {Discord.StreamDispatcher}
 				 */
 				stream.once("data", () => {
-					const dispatcher = this.connection[song.connectionPlayFunction](stream)
+					const dispatcher = this.connection[song.connectionPlayFunction](stream, {bitrate: "auto"})
 					this._dispatcher = dispatcher
 					dispatcher.once("start", async () => {
 						// Set up the internal state
-						dispatcher.setBitrate("auto")
 						queueManager.songsPlayed++
 						this.skippable = true
 						this.playing = true
