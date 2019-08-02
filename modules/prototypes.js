@@ -203,12 +203,21 @@ Object.defineProperties(Discord.GuildMember.prototype, {
 });
 function getPresenceEmoji () {
 	let presences = {
-		online: "<:online:453823508200554508>",
-		idle: "<:idle:453823508028456971>",
-		dnd: "<:dnd:453823507864748044>",
-		offline: "<:invisible:453827513995755520>"
+		playing: {
+			online: "<:online_playing:606662982608486403>",
+			idle: "<:idle_playing:606662982226804767>",
+			dnd: "<:dnd_playing:606662982197444634>",
+			offline: "<:invisible:606662982558154774>"
+		},
+		regular: {
+			online: "<:online:606664341298872324>",
+			idle: "<:idle:606664341353267221>",
+			dnd: "<:dnd:606664341269381163>",
+			offline: "<:invisible:606662982558154774>"
+		}
 	};
-	return presences[this.presence.status];
+	if (this.presence.game) return presences.playing[this.presence.status];
+	else return presences.regular[this.presence.status];
 }
 function getPresencePrefix() {
 	if (this.presence.game == null) return null;

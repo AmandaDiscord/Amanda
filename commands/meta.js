@@ -345,7 +345,7 @@ module.exports = function(passthrough) {
 				if (user.presence.game && user.presence.game.streaming) {
 					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
-					status = `<:streaming:454228675227942922>`;
+					status = `<:streaming:606662982558154812>`;
 				} else if (user.presence.game) {
 					game = user.presencePrefix+" **"+user.presence.game.name+"**";
 					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
