@@ -305,7 +305,18 @@ module.exports = function(passthrough) {
 		["queue", {
 			queue: "required",
 			code: async (msg, args, {queue}) => {
-				queue.wrapper.getQueue(msg)
+				if (args[1] == "remove") {
+					let index = +args[2]
+					if (isNaN(index) || index != Math.floor(index) || index <= 1 || index > queue.songs.length) {
+						return msg.channel.send("Syntax: `&music queue remove <position>`, where position is the number of the item in the queue")
+					}
+					index--
+					let title = queue.songs[index].getTitle()
+					queue.removeSong(index)
+					msg.channel.send(lang.voiceQueueRemovedSong(title))
+				} else {
+					queue.wrapper.getQueue(msg)
+				}
 			}
 		}],
 		["skip", {

@@ -8,6 +8,7 @@ html
 		script(defer src="/player.js" data-ex="player")
 		script(defer src="/classes.js" data-ex="classes")
 		script(defer src="/utilities.js" data-ex="utilities")
+		script(defer src="/imagestore.js" data-ex="imagestore")
 	
 	body
 		include includes/nav.pug
@@ -16,7 +17,7 @@ html
 		main
 			div.player-grid
 				div.player-controls#player-container
-					div.song-title Connecting...
+					div.song-title.nothing-playing Connecting...
 				div.guild-info
 					div.guild-icon
 						if guild.icon

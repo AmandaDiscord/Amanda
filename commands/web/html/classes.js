@@ -1,7 +1,7 @@
 var ex = ex || []
 ex.push({
 	name: "classes",
-	dependencies: []
+	dependencies: ["imagestore"]
 })
 
 class ElemJS {
@@ -87,16 +87,25 @@ function ejs(string) {
 }
 
 class Queue extends ElemJS {
-	constructor(container) {
+	constructor(container, session) {
 		super(container)
+		this.session = session
+		this.addingCount = 0
+		this.isFirstAdd = true
 	}
 	addItem(data, position) {
-		let e = new QueueItem(data)
+		let e = new QueueItem(data, this)
 		this.child(e, position)
+		e.animateAdd()
+	}
+	removeIndex(index) {
+		let removed = this.children.splice(index, 1)[0]
+		if (removed) removed.animateRemove()
 	}
 	shift() {
 		let removed = this.children.shift()
-		if (removed) this.element.removeChild(removed.element)
+		//if (removed) this.element.removeChild(removed.element)
+		if (removed) removed.animateShift()
 	}
 	replaceItems(data) {
 		this.clearChildren()
@@ -105,17 +114,143 @@ class Queue extends ElemJS {
 }
 
 class QueueItem extends ElemJS {
-	constructor(data) {
+	constructor(data, queue) {
 		super("div")
+		this.class("queue-item")
+
+		this.queue = queue
+		this.adding = false
+		this.removing = false
+
+		this.parts = {
+			title: ejs`div.song-title`,
+			length: ejs`div.song-length`,
+			controls: ejs`div.song-management`
+		}
+		;["play", "remove"].forEach(icon => {
+			let child = new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => this[icon]())
+			this.parts.controls.child(child)
+		})
+
 		this.data = {}
 		this.updateData(data)
 	}
 	updateData(data) {
 		Object.assign(this.data, data)
 		this.render()
+		this.preloadThumbnail()
 	}
 	render() {
-		this.text(this.data.title)
+		this.clearChildren()
+		this.parts.title.text(this.data.title)
+		this.parts.length.text(prettySeconds(this.data.length))
+		this.child(this.parts.title)
+		this.child(this.parts.length)
+		this.child(this.parts.controls)
+	}
+	preloadThumbnail() {
+		if (this.data.thumbnail && this.data.thumbnail.src) {
+			imageStore.add(this.data.thumbnail.src)
+		}
+	}
+	remove() {
+		let index = this.queue.children.indexOf(this)
+		this.disable()
+		this.queue.session.send({
+			op: opcodes.REQUEST_QUEUE_REMOVE,
+			d: {index: index+1} // +1 because backend queue starts with currently playing
+		})
+	}
+	disable() {
+		this.class("disabled")
+		this.parts.controls.children.forEach(button => button.direct("onclick", null))
+	}
+	animateAdd() {
+		if (this.adding) return
+		this.adding = true
+		this.queue.addingCount++
+		
+		let style = window.getComputedStyle(this.element)
+		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
+		
+		let values = {}
+		props.forEach(key => {
+			values[key] = "0px"
+		})
+		values.opacity = 0
+		values.marginBottom = "-10px"
+		values.easing = "ease"
+		
+		let endValues = {}
+		props.forEach(key => {
+			endValues[key] = style[key]
+		})
+		if (this.element.children[2].getBoundingClientRect().height < 1)
+			endValues.height = parseInt(endValues.height)+24+"px"
+		endValues.opacity = 1
+
+		Object.entries(values).forEach(entry => {
+			this.element.style[entry[0]] = entry[1]
+		})
+
+		setTimeout(() => {
+			this.element.animate([
+				values, endValues
+			], 400).addEventListener("finish", () => {
+				this.adding = false
+				this.queue.addingCount--
+				Object.entries(values).forEach(entry => {
+					this.element.style[entry[0]] = ""
+				})
+			})
+		}, this.queue.addingCount*70+400*this.queue.isFirstAdd)
+	}
+	animateRemove() {
+		if (this.removing) return
+		this.removing = true
+
+		this.disable()
+
+		let style = window.getComputedStyle(this.element)
+		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
+		
+		let values = {}
+		props.forEach(key => {
+			values[key] = style[key]
+		})
+		values.easing = "ease"
+		values.opacity = 1
+
+		let endValues = {}
+		props.forEach(key => {
+			endValues[key] = "0px"
+		})
+		endValues.opacity = 0
+		endValues.marginBottom = "-10px"
+		
+		this.element.animate([
+			values, endValues
+		], 400).addEventListener("finish", () => {
+			this.element.remove()
+		})
+	}
+	animateShift() {
+		if (this.shifting) return
+		this.shifting = true
+
+		let height = Math.floor(this.element.getBoundingClientRect().height)+20
+
+		this.queue.element.animate([
+			{top: "0px", easing: "ease-out"},
+			{top: -height+"px"}
+		], 400).addEventListener("finish", () => {
+			this.element.remove()
+		})
+		this.element.animate([
+			{opacity: 1}, {opacity: 0}
+		], 200).addEventListener("finish", () => {
+			this.element.style.opacity = 0
+		})
 	}
 }
 
@@ -125,23 +260,12 @@ class Player extends ElemJS {
 		this.song = null
 		this.songSet = false
 		this.parts = {
-			controls:
-				ejs`div.controls`.child(
-					ejs`img`
-					.direct("src", "https://discordapp.com/assets/de8fa839a61b39d17febf16f22fd8159.svg")
-					.direct("onclick", () => session.togglePlayback())
-				).child(
-					ejs`img`
-					.direct("src", "https://discordapp.com/assets/4e5dd162acac96c5af80b8f9e67c4bf1.svg")
-					.direct("onclick", () => session.skip())
-				).child(
-					ejs`img`
-					.direct("src", "https://discordapp.com/assets/76bb3e920ff642a218226a6c8a4cbc07.svg")
-					.direct("onclick", () => session.stop())
-				),
-			time:
-				new PlayerTime()
+			controls: ejs`div.controls`,
+			time: new PlayerTime()
 		}
+		;["playpause", "skip", "stop"].forEach(icon => {
+			this.parts.controls.child(new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => session[icon]()))
+		})
 		this.render()
 	}
 	setSong(song) {
@@ -160,8 +284,9 @@ class Player extends ElemJS {
 	render() {
 		this.clearChildren()
 		if (this.song) {
-			let thumbnail = ejs`img`
-			Object.assign(thumbnail.element, this.song.thumbnail)
+			let thumbnail = new ElemJS(imageStore.get(this.song.thumbnail.src))
+			thumbnail.width = this.song.thumbnail.width
+			thumbnail.height = this.song.thumbnail.height
 			this.child(
 				ejs`div`.child(
 					ejs`div.thumbnail`.child(
@@ -227,7 +352,6 @@ class PlayerTime extends ElemJS {
 				{transform: "scaleX(1)"}
 			], this.getMSRemaining())
 			this.animation.addEventListener("finish", () => {
-				console.log("animation finish")
 				this.children[0].element.style.transform = "scaleX(1)"
 				if (this.interval) clearInterval(this.interval)
 				this.state.time = this.state.maxTime * 1000

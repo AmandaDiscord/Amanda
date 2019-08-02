@@ -11,6 +11,7 @@ body
 	margin: 0px
 	font-size: 16px
 	color: #282828
+	overflow-y: scroll
 
 noscript
 	text-align: center
@@ -86,6 +87,9 @@ a.no-underline
 	padding: 16px
 	background-color: rgba(255, 255, 255, 0.6)
 
+.box
+	@include box
+
 @mixin fatbox
 	@include box
 	margin: 16px
@@ -107,19 +111,24 @@ a.no-underline
 		@include box
 
 .spaced-title
-	display: flex
+	display: grid
+	grid-template-columns: 1fr auto 1fr
 	justify-content: space-between
 	align-items: center
 	color: #111
 	margin: 16px
 
 	.spaced-title-main
-		@include box
 		font-size: 32px
 
-	.spaced-title-side
-		@include box
+	.spaced-title-left, .spaced-title-right
 		font-size: 16px
+
+	.spaced-title-left
+		justify-self: left
+	
+	.spaced-title-right
+		justify-self: right
 
 .about
 	@include fatbox
@@ -194,7 +203,9 @@ a.no-underline
 		opacity: 0
 
 .logout-button
+	@include box
 	cursor: pointer
+	font-size: 16px
 
 .guilds
 	display: flex
@@ -202,10 +213,11 @@ a.no-underline
 	justify-content: center
 
 	> a
-		text-decoration: none
+		position: relative
 		@include fatbox
 		display: flex
 		width: 250px
+		text-decoration: none
 
 		img
 			height: 90px
@@ -214,6 +226,17 @@ a.no-underline
 
 		.name
 			@include flex-center(false, true)
+
+		.speaker
+			position: absolute
+			top: 5px
+			right: 5px
+			width: 24px
+			height: 24px
+
+			> img
+				max-width: 100%
+				max-height: 100%
 
 .letter-icon
 	@include flex-center
@@ -226,18 +249,21 @@ a.no-underline
 	border-radius: 50%
 	overflow: hidden
 
+@mixin player-box
+	@include box
+	padding: 12px
+
 .player-grid
 	display: grid
 	grid-template-columns: 5fr 3fr
 	margin: 20px
 	grid-gap: 20px
 
-	> *
-		@include box
-		padding: 12px
-
 	.player-controls
+		@include player-box
 		display: flex
+		position: relative
+		z-index: 1
 
 		.player-status
 			flex: 1
@@ -300,12 +326,35 @@ a.no-underline
 		display: flex
 		flex-direction: column
 		height: auto
+		position: relative
 
 		.queue-item
-			background-color: #f04747
+			@include player-box
 			margin-bottom: 20px
+			display: grid
+			grid-template-columns: 1fr auto
+			font-size: 18px
+			overflow: hidden
+
+			&.disabled
+				color: #555
+				background: rgba(255, 255, 255, 0.4)
+
+				.song-management
+					filter: grayscale(1) brightness(1.2)
+
+			.song-management
+				grid-column-start: span 2
+				margin-top: 8px
+				display: grid
+				grid-template-columns: 1fr auto
+
+				img
+					width: 24px
+					margin-right: 4px
 
 	.guild-info
+		@include player-box
 		display: flex
 		align-items: center
 
@@ -325,3 +374,7 @@ a.no-underline
 
 			> *
 				padding: 5px 0px
+
+	.voice-info
+		@include player-box
+		align-self: start

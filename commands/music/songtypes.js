@@ -62,7 +62,7 @@ module.exports = passthrough => {
 		}
 		getThumbnail() {
 			return {
-				src: `https://invidio.us/vi/${this.id}/mqdefault.jpg`,
+				src: `https://i.ytimg.com/vi/${this.id}/mqdefault.jpg`,
 				width: 320,
 				height: 180
 			}

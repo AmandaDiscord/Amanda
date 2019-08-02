@@ -10,7 +10,7 @@ ex.push({
 				this.state = null
 
 				this.player = new Player(q("#player-container"), this)
-				this.queue = new Queue(q("#queue-container"))
+				this.queue = new Queue(q("#queue-container"), this)
 		
 				const opcodeMethodMap = new Map([
 					[opcodes.ACKNOWLEDGE, "acknowledge"],
@@ -18,7 +18,8 @@ ex.push({
 					[opcodes.QUEUE_ADD, "queueAdd"],
 					[opcodes.NEXT, "next"],
 					[opcodes.SONG_UPDATE, "songUpdate"],
-					[opcodes.TIME_UPDATE, "timeUpdate"]
+					[opcodes.TIME_UPDATE, "timeUpdate"],
+					[opcodes.QUEUE_REMOVE, "queueRemove"]
 				])
 		
 				this.ws.addEventListener("open", () => this.onOpen())
@@ -61,6 +62,7 @@ ex.push({
 					q("#voice-channel-name").textContent = this.state.voiceChannel.name
 					this.player.setSong(this.state.songs[0])
 					this.queue.replaceItems(this.state.songs.slice(1))
+					this.queue.isFirstAdd = false
 					this.updatePlayerTime()
 				}
 			}
@@ -80,6 +82,11 @@ ex.push({
 				} else {
 					this.queue.addItem(song, position)
 				}
+			}
+			
+			queueRemove(data) {
+				let index = data.d.position
+				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
 			}
 		
 			next() {
@@ -103,8 +110,10 @@ ex.push({
 			}
 
 			resetTime() {
-				Object.assign(this.state, {time: 0, maxTime: 0, playing: false})
-				this.updatePlayerTime()
+				if (this.state) {
+					Object.assign(this.state, {time: 0, maxTime: 0, playing: false})
+					this.updatePlayerTime()
+				}
 			}
 
 			updatePlayerTime() {
@@ -115,7 +124,7 @@ ex.push({
 				})
 			}
 
-			togglePlayback() {
+			playpause() {
 				this.send({
 					op: opcodes.TOGGLE_PLAYBACK
 				})

@@ -17,7 +17,9 @@ const opcodes = {
 	"TIME_UPDATE": 8,
 	"TOGGLE_PLAYBACK": 9,
 	"SKIP": 10,
-	"STOP": 11
+	"STOP": 11,
+	"QUEUE_REMOVE": 12,
+	"REQUEST_QUEUE_REMOVE": 13
 }
 
 let generateNonce

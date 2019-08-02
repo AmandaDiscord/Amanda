@@ -13,15 +13,18 @@ const opcodes = {
 	"TIME_UPDATE": 8,
 	"TOGGLE_PLAYBACK": 9,
 	"SKIP": 10,
-	"STOP": 11
+	"STOP": 11,
+	"QUEUE_REMOVE": 12,
+	"REQUEST_QUEUE_REMOVE": 13
 }
 
 const opcodeMethodMap = new Map([
-	[1, "identify"],
-	[3, "sendState"],
-	[9, "togglePlayback"],
-	[10, "skip"],
-	[11, "stop"]
+	[opcodes.IDENTIFY, "identify"],
+	[opcodes.REQUEST_STATE, "sendState"],
+	[opcodes.TOGGLE_PLAYBACK, "togglePlayback"],
+	[opcodes.SKIP, "skip"],
+	[opcodes.STOP, "stop"],
+	[opcodes.REQUEST_QUEUE_REMOVE, "requestQueueRemove"]
 ])
 
 const eventList = [
@@ -30,7 +33,8 @@ const eventList = [
 	["queue", "next", "next"],
 	["queue", "songUpdate", "songUpdate"],
 	["queue", "dissolve", "queueDissolve"],
-	["queue", "timeUpdate", "timeUpdate"]
+	["queue", "timeUpdate", "timeUpdate"],
+	["queue", "queueRemove", "queueRemove"]
 ]
 
 /** @param {PassthroughType} passthrough */
@@ -146,6 +150,15 @@ module.exports = (passthrough) => {
 			})
 		}
 
+		queueRemove(position) {
+			this.send({
+				op: opcodes.QUEUE_REMOVE,
+				d: {
+					position: position
+				}
+			})
+		}
+
 		next() {
 			this.send({
 				op: opcodes.NEXT,
@@ -195,6 +208,13 @@ module.exports = (passthrough) => {
 		stop() {
 			let queue = this.getQueue()
 			if (queue) queue.wrapper.stop()
+		}
+
+		requestQueueRemove(data) {
+			if (data.d && typeof(data.d.index) == "number" && !isNaN(data.d.index)) {
+				let queue = this.getQueue()
+				if (queue) queue.removeSong(data.d.index)
+			}
 		}
 	}
 

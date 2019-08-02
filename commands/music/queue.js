@@ -141,6 +141,15 @@ module.exports = passthrough => {
 				}
 				return this.songs.length
 			}
+			removeSong(index) {
+				if (index == 0) return 1
+				if (!this.songs[index]) return 1
+				let removed = this.songs.splice(index, 1)[0]
+				if (!removed) return 2
+				removed.destroy()
+				this.events.emit("queueRemove", index)
+				return 0
+			}
 			/** @param {Song} song */
 			announceSongInfoUpdate(song) {
 				let index = this.songs.indexOf(song)
