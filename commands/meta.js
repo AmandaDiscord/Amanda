@@ -105,7 +105,7 @@ module.exports = function(passthrough) {
 				if (!suffix) return defaultStats();
 				if (suffix.toLowerCase() == "music") {
 					embed
-					.addField(`${client.user.tag} <:online:453823508200554508>`,
+					.addField(`${client.user.tag} <:online:606664341298872324>`,
 						`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
 						`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 					.addField("­",
@@ -114,7 +114,7 @@ module.exports = function(passthrough) {
 					return msg.channel.send(utils.contentify(msg.channel, embed));
 				} else if (suffix.toLowerCase() == "games") {
 					embed
-					.addField(`${client.user.tag} <:online:453823508200554508>`,
+					.addField(`${client.user.tag} <:online:606664341298872324>`,
 						`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
 						`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
 					.addField("­",
@@ -133,8 +133,8 @@ module.exports = function(passthrough) {
 				async function defaultStats() {
 					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 					embed
-					.addField(`${client.user.tag} <:online:453823508200554508>`,
-						`**❯ Heart Beat:**\n${client.ping.toFixed(0)}ms\n`+
+					.addField(`${client.user.tag} <:online:606664341298872324>`,
+						`**❯ Heartbeat:**\n${client.ping.toFixed(0)}ms\n`+
 						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
 						`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
@@ -162,7 +162,7 @@ module.exports = function(passthrough) {
 				let array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
-				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Heart Beat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Message Send:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
+				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
 				return nmsg.edit(utils.contentify(msg.channel, embed));
 			}
 		},
@@ -344,18 +344,18 @@ module.exports = function(passthrough) {
 				let game = "";
 				if (user.presence.game && user.presence.game.streaming) {
 					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
-					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
-					status = `<:streaming:606662982558154812>`;
+					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
+					status =`<:streaming:606815351967318019>`;
 				} else if (user.presence.game) {
 					game = user.presencePrefix+" **"+user.presence.game.name+"**";
-					if (user.presence.game.details) game += ` <:RichPresence:477313641146744842>\n${user.presence.game.details}`;
+					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\n${user.presence.game.details}`;
 					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
 					else if (user.presence.game.state) game += `\n${user.presence.game.state}`;
 				}
 				if (user.bot) status = "<:bot:412413027565174787>";
 				embed.setThumbnail(user.displayAvatarURL);
 				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
-				embed.setTitle(`${user.tag} ${status}`);
+				embed.setTitle(`${user.tag}${status}`);
 				if (game) embed.setDescription(game);
 				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
