@@ -246,8 +246,12 @@ module.exports = passthrough => {
 					return this.playNext()
 				}
 				stream.on("error", async err => {
-					this.textChannel.send("Failed to stream that file. This is a bug. Please tell us about it. https://discord.gg/zhthQjH")
-					console.error(err)
+					if (err && typeof(err.message) == "string" && err.message.startsWith("No formats found")) {
+						this.textChannel.send(`That video doesn't have playable sound. It will be skipped. (id: ${song.getUserFacingID()})`)
+					} else {
+						this.textChannel.send("Failed to stream that file. This is a bug. Please tell us about it. https://discord.gg/zhthQjH")
+						console.error(err)
+					}
 					stream.removeAllListeners("data")
 					return this.playNext()
 				});
