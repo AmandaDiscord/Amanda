@@ -87,7 +87,7 @@ class FormValidator extends Validator {
 		if (!req || !body || !config) throw new Error("Not all parameters were passed")
 		this.do(
 			() => req.headers["origin"] || req.headers["referer"] || ""
-			,v => v.startsWith(`${config.website_protocol}://${config.website_domain}`)
+			,v => true //v.startsWith(`${config.website_protocol}://${config.website_domain}`)
 			,[400, "Origin or referer must start with the current domain"]
 		).do(
 			() => req.headers["content-type"]
