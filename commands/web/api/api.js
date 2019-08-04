@@ -15,7 +15,8 @@ const opcodes = {
 	"SKIP": 10,
 	"STOP": 11,
 	"QUEUE_REMOVE": 12,
-	"REQUEST_QUEUE_REMOVE": 13
+	"REQUEST_QUEUE_REMOVE": 13,
+	"MEMBERS_CHANGE": 14
 }
 
 const opcodeMethodMap = new Map([
@@ -34,7 +35,8 @@ const eventList = [
 	["queue", "songUpdate", "songUpdate"],
 	["queue", "dissolve", "queueDissolve"],
 	["queue", "timeUpdate", "timeUpdate"],
-	["queue", "queueRemove", "queueRemove"]
+	["queue", "queueRemove", "queueRemove"],
+	["queue", "membersChange", "membersChange"]
 ]
 
 /** @param {PassthroughType} passthrough */
@@ -174,6 +176,18 @@ module.exports = (passthrough) => {
 					song: song.webInfo()
 				}
 			})
+		}
+
+		membersChange() {
+			let queue = this.getQueue()
+			if (queue) {
+				this.send({
+					op: opcodes.MEMBERS_CHANGE,
+					d: {
+						members: queue.wrapper.getMembers()
+					}
+				})
+			}
 		}
 
 		queueDissolve() {

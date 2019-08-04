@@ -178,6 +178,7 @@ module.exports = passthrough => {
 						})
 					}
 				}
+				this.events.emit("membersChange")
 			}
 			getNPEmbed() {
 				let song = this.songs[0];
@@ -480,16 +481,21 @@ module.exports = passthrough => {
 				}
 			}
 
+			getMembers() {
+				return this.queue.voiceChannel.members.map(m => ({
+					id: m.id,
+					name: m.displayName,
+					avatar: m.user.sizedAvatarURL(64),
+					isAmanda: m.id == client.user.id
+				}))
+			}
+
 			getState() {
 				return {
 					playing: this.queue.playing,
 					time: this.queue.dispatcher ? this.queue.dispatcher.time : 0,
 					songs: this.queue.songs.map(s => s.webInfo()),
-					members: this.queue.voiceChannel.members.map(m => ({
-						id: m.id,
-						name: m.displayName,
-						avatar: m.user.sizedAvatarURL(64)
-					})),
+					members: this.getMembers(),
 					voiceChannel: {
 						id: this.queue.voiceChannel.id,
 						name: this.queue.voiceChannel.name

@@ -279,9 +279,11 @@ a.no-underline
 
 		.song-title
 			font-size: 22px
-			height: 25px
+			height: 24px
+			line-height: 1
 			overflow: hidden
-			margin-bottom: 7px
+			margin-top: 2px
+			margin-bottom: 6px
 
 			&.nothing-playing
 				margin: auto
@@ -378,3 +380,22 @@ a.no-underline
 	.voice-info
 		@include player-box
 		align-self: start
+		display: grid
+		grid-template-columns: auto 1fr
+		align-items: center
+		grid-gap: 6px
+		visibility: hidden
+
+		.avatar
+			border-radius: 50%
+			border: 2px solid #222
+			position: relative
+
+		.name
+			display: flex
+			align-items: center
+
+			img
+				width: 16px
+				height: 17px
+				margin-right: 4px

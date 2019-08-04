@@ -19,7 +19,8 @@ const opcodes = {
 	"SKIP": 10,
 	"STOP": 11,
 	"QUEUE_REMOVE": 12,
-	"REQUEST_QUEUE_REMOVE": 13
+	"REQUEST_QUEUE_REMOVE": 13,
+	"MEMBERS_CHANGE": 14
 }
 
 let generateNonce

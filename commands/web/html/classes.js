@@ -363,8 +363,100 @@ class PlayerTime extends ElemJS {
 			}, 1000)
 		}
 	}
-
 	renderCurrentTime() {
 		this.children[1].text(prettySeconds(Math.floor(this.state.time/1000)))
+	}
+}
+
+class VoiceInfo extends ElemJS {
+	constructor(container) {
+		super(container)
+		this.oldMembers = []
+		this.members = []
+		this.memberStore = new Map()
+		this.render()
+	}
+	setMembers(members) {
+		members.forEach(member => {
+			if (!this.memberStore.has(member.id)) {
+				this.memberStore.set(member.id, new VoiceMember(member))
+			}
+		})
+		this.oldMembers = this.members
+		this.members = members.map(m => m.id)
+		this.members.forEach(id => {
+			if (!this.oldMembers.includes(id)) this.memberStore.get(id).isNew = true
+		})
+		this.oldMembers.forEach(id => {
+			if (!this.members.includes(id)) this.memberStore.get(id).leave().then(() => {
+				this.memberStore.delete(id)
+			})
+		})
+		this.render()
+	}
+	render() {
+		this.clearChildren()
+		if (this.members.length) {
+			this.element.style.visibility = "visible"
+			this.memberStore.forEach(member => {
+				member.join(this)
+			})
+		} else {
+			this.element.style.visibility = "hidden"
+		}
+	}
+}
+
+class VoiceMember extends ElemJS {
+	constructor(props) {
+		super("div")
+		this.props = props
+		this.avatarSize = 40
+		this.parts = {
+			avatar: this.getAvatar(),
+			name: this.getName()
+		}
+		this.isNew = false
+		this.leaving = false
+	}
+	join(voiceInfo) {
+		voiceInfo.child(this.parts.avatar, this.props.isAmanda ? 0 : -1)
+		voiceInfo.child(this.parts.name, this.props.isAmanda ? 1 : -1)
+		this.animateJoin()
+	}
+	leave() {
+		this.leaving = true
+		return this.animateLeave()
+	}
+	animateJoin() {
+		if (this.isNew) {
+			this.parts.avatar.element.animate([
+				{left: "-12px", filter: "brightness(2.5)", opacity: 0, easing: "ease-out"},
+				{left: "0px", filter: "brightness(1)", opacity: 1}
+			], 200)
+			this.isNew = false
+		}
+	}
+	animateLeave() {
+		return Promise.all(Object.values(this.parts).map(part => 
+			new Promise(resolve => {
+				part.element.animate([
+					{opacity: 1},
+					{opacity: 0}
+				], 200).addEventListener("finish", () => {
+					part.element.remove()
+					resolve()
+				})
+			})
+		))
+	}
+	getAvatar() {
+		return new ElemJS("img").class("avatar").direct("src", this.props.avatar).direct("width", this.avatarSize).direct("height", this.avatarSize)
+	}
+	getName() {
+		let name = new ElemJS("div").class("name")
+		if (this.props.isAmanda) name.child(new ElemJS("img").direct("src", "/images/notes.svg"))
+		name.child(new ElemJS("span").text(this.props.name))
+		return name
 	}
 }

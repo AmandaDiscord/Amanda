@@ -11,6 +11,7 @@ ex.push({
 
 				this.player = new Player(q("#player-container"), this)
 				this.queue = new Queue(q("#queue-container"), this)
+				this.voiceInfo = new VoiceInfo(q("#voice-info"))
 		
 				const opcodeMethodMap = new Map([
 					[opcodes.ACKNOWLEDGE, "acknowledge"],
@@ -19,7 +20,8 @@ ex.push({
 					[opcodes.NEXT, "next"],
 					[opcodes.SONG_UPDATE, "songUpdate"],
 					[opcodes.TIME_UPDATE, "timeUpdate"],
-					[opcodes.QUEUE_REMOVE, "queueRemove"]
+					[opcodes.QUEUE_REMOVE, "queueRemove"],
+					[opcodes.MEMBERS_CHANGE, "membersChange"]
 				])
 		
 				this.ws.addEventListener("open", () => this.onOpen())
@@ -64,6 +66,16 @@ ex.push({
 					this.queue.replaceItems(this.state.songs.slice(1))
 					this.queue.isFirstAdd = false
 					this.updatePlayerTime()
+				}
+				this.membersChange(data)
+			}
+
+			membersChange(data) {
+				if (data && this.state) {
+					this.state.members = data.d.members
+					this.voiceInfo.setMembers(this.state.members)
+				} else {
+					this.voiceInfo.setMembers([])
 				}
 			}
 		
