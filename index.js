@@ -67,6 +67,9 @@ let gameManager = {
 		"./commands/traa.js",
 		"./commands/web/server.js"
 	])
+	
+	// no reloading for statuses. statuses will be periodically fetched from mysql.
+	require("./modules/status.js")(passthrough)
 
 	client.login(config.bot_token);
 

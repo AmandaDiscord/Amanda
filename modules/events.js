@@ -131,9 +131,8 @@ module.exports = function(passthrough) {
 		utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 			prefixes = result.map(r => r.prefix);
 			statusPrefix = result.find(r => r.status).prefix;
-			console.log("Loaded "+prefixes.length+" prefixes");
-			if (starting) client.emit("prefixes", prefixes)
-			update()
+			console.log("Loaded "+prefixes.length+" prefixes: "+prefixes.join(" "));
+			if (starting) client.emit("prefixes", prefixes, statusPrefix)
 		});
 		if (starting) {
 			console.log(`Successfully logged in as ${client.user.username}`);
@@ -149,8 +148,6 @@ module.exports = function(passthrough) {
 				});
 				utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id]);
 			});
-			update();
-			client.setInterval(update, 300000);
 		}
 	}
 
@@ -226,54 +223,4 @@ module.exports = function(passthrough) {
 			break;
 		}
 	}
-
-	const presences = {
-		yearly: [
-			['alone', 'PLAYING'], ['in a box', 'PLAYING'], ['with fire 🔥', 'PLAYING'], ['dead', 'PLAYING'],
-			['anime', 'WATCHING'], ['Netflix', 'WATCHING'], ['YouTube', 'WATCHING'], ['bots take over the world', 'WATCHING'], ['endless space go by', 'WATCHING'], ['cute cat videos', 'WATCHING'],
-			['music', 'LISTENING'], ['Spotify', 'LISTENING'],
-			['Netflix for ∞ hours', 'STREAMING']
-		],
-		newYears: [
-			["with sparklers", "PLAYING"],
-			["a fireworks show", "WATCHING"], ["Times Square", "WATCHING"], ["the countdown", "WATCHING"],
-			["The Final Countdown", "LISTENING"],
-			["fire snakes", "STREAMING"]
-		],
-		halloween: [
-			["Silent Hill", "PLAYING"],
-			["scary movies", "WATCHING"], ["Halloween decor being hung", "WATCHING"],
-			["Thriller by M.J.", "LISTENING"], ["the screams of many", "LISTENING"],
-			["Halloween on Netflix", "STREAMING"]
-		],
-		thanksgiving: [
-			["in the leaves", "PLAYING"],
-			["people give thanks", "LISTENING"],
-			["my family eat a feast", "WATCHING"]
-		],
-		christmas: [
-			["in the snow", "PLAYING"],
-			["Christmas carols", "LISTENING"],
-			["The Night before Christmas", "WATCHING"], ["snow fall", "WATCHING"],
-			["Christmas movies", "STREAMING"]
-		]
-	};
-
-	function update() {
-		let now = new Date().toJSON();
-		let choice;
-		if (now.includes("-10-09")) choice = [["happy age++, Cadence <3", "STREAMING"]]
-		else if (now.includes("-10-")) choice = presences.halloween;
-		else if (now.includes("-11-22")) choice = presences.thanksgiving;
-		else if (now.includes("-12-25")) choice = [["with wrapping paper", "PLAYING"], ["presents being unwrapped", "WATCHING"]];
-		else if (now.includes("-12-31")) choice = presences.newYears;
-		else if (now.includes("-12-")) choice = presences.christmas;
-		else if (now.includes("-01-01")) choice = presences.newYears;
-		else if (now.includes("-01-16")) choice = [["at my owner's bday party", "PLAYING"]];
-		else if (now.includes("-07-04")) choice = [["with fireworks 💥", "PLAYING"]];
-		else choice = presences.yearly;
-		const [name, type] = choice[Math.floor(Math.random() * choice.length)];
-		client.user.setActivity(`${name} | ${statusPrefix}help`, { type, url: 'https://www.twitch.tv/papiophidian/' });
-	};
-
 }
