@@ -55,9 +55,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a cute cat",
 			aliases: ["cat"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: function(msg) {
 				return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
@@ -67,9 +64,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a cute doggo",
 			aliases: ["dog", "doggo"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: function(msg) {
 				return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
@@ -79,9 +73,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of space",
 			aliases: ["space"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: function(msg) {
 				return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.ga");
 			}
@@ -91,9 +82,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a snek",
 			aliases: ["snek", "snake"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: async function(msg) {
 				return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
@@ -103,9 +91,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a birb",
 			aliases: ["birb", "bird"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: async function(msg) {
 				return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga");
 			}
@@ -115,9 +100,6 @@ module.exports = function(passthrough) {
 			description: "Returns an image of a neko (ฅ’ω’ฅ)",
 			aliases: ["neko"],
 			category: "images",
-			/**
-			 * @param {Discord.Message} msg
-			 */
 			process: function(msg) {
 				return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life");
 			}

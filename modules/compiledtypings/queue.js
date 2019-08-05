@@ -1,0 +1,127 @@
+const Discord = require("discord.js");
+
+let QueueWrapper = require("./queuewrapper.js");
+let BetterTimeout = require("./bettertimeout.js");
+
+module.exports = class Queue {
+	/**
+	 * @param {Discord.TextChannel} textChannel
+	 * @param {Discord.VoiceChannel} voiceChannel
+	 * @constructor
+	 */
+	constructor(textChannel, voiceChannel) {
+		this.textChannel = textChannel
+		this._voiceChannel = voiceChannel
+		this.id = this.textChannel.guild.id
+		/**
+		 * @type {Discord.VoiceConnection}
+		 */
+		this.connection;
+		/**
+		 * @type {Discord.StreamDispatcher}
+		 */
+		this._dispatcher;
+		/**
+		 * @type {Set<String>}
+		 */
+		this.playedSongs;
+		/**
+		 * @type {Array<any>}
+		 */
+		this.songs;
+		this.playing = false
+		this.skippable = false
+		this.auto = false
+		/**
+		 * @type {Discord.Message}
+		 */
+		this.nowPlayingMsg;
+		this.queueManager = require("../managers.js").queueManager
+		this.queueManager.addQueue(this)
+		/**
+		 * @type {QueueWrapper}
+		 */
+		this.wrapper;
+		/**
+		 * @type {BetterTimeout}
+		 */
+		this.voiceLeaveTimeout;
+	}
+	/**
+	 * @returns {Discord.VoiceChannel}
+	 */
+	get voiceChannel() {}
+	/**
+	 * @returns {Discord.StreamDispatcher}
+	 */
+	get dispatcher() {}
+	/**
+	 * Destroy the current song,
+	 * delete all songs,
+	 * stop the current song,
+	 * leave the voice channel,
+	 * delete the reaction menu,
+	 * remove from storage
+	 */
+	dissolve() {}
+	/**
+	 * Remove this queue from storage.
+	 */
+	destroy() {}
+	/**
+	 * @param {Song} song
+	 * @param {Boolean} insert
+	 * @returns {Number}
+	 */
+	addSong(song, insert) {}
+	/**
+	 * @param {Discord.GuildMember} oldMember
+	 * @param {Discord.GuildMember} newMember
+	 */
+	voiceStateUpdate(oldMember, newMember) {}
+	/**
+	 * @returns {Discord.RichEmbed|String}
+	 */
+	getNPEmbed() {}
+	generateReactions() {}
+	/**
+	 * Deactivate the old now playing message and send a new one.
+	 * This does not wait for the reactions to generate.
+	 */
+	async sendNowPlaying() {}
+	/**
+	 * Update the existing now playing message once.
+	 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
+	 * @returns {Error|Discord.RichEmbed|String}
+	 */
+	updateNowPlaying() {}
+	/**
+	 * Immediately update the now playing message, and continue to update it every few seconds, as defined by the song.
+	 */
+	startNowPlayingUpdates() {}
+	/**
+	 * Prevent further updates of the now playing message.
+	 */
+	stopNowPlayingUpdates() {}
+	/**
+	 * @returns {Promise<void>} void
+	 */
+	async play() {}
+	playNext() {}
+	/**
+	 * @returns {Number} Status code. 0 success, 1 already paused, 2 live
+	 */
+	pause() {}
+	/**
+	 * @returns {Number} Status code. 0 success, 1 not paused
+	 */
+	resume() {}
+	/**
+	 * @returns {Number} Status code. 0 success, 1 paused
+	 */
+	skip() {}
+	/**
+	 * @returns {Number} Status code. 0 success
+	 */
+	stop() {}
+}

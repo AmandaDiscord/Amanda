@@ -374,10 +374,6 @@ module.exports = function(passthrough) {
 			description: "Play a game of trivia with other members and win Discoins",
 			aliases: ["trivia", "t"],
 			category: "games",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				startGame(msg.channel, {suffix, msg});
 			}
@@ -387,10 +383,6 @@ module.exports = function(passthrough) {
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: function(msg, suffix) {
 				let size = 8, difficulty = "easy";
 				let string, title;

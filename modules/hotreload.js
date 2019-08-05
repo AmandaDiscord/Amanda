@@ -3,7 +3,7 @@ const path = require("path");
 const pj = path.join;
 
 function localPath(path) {
-	return pj(__dirname, path)
+	return pj(__dirname, "..", path)
 }
 
 const currentYear = new Date().getYear()+1900
@@ -48,7 +48,7 @@ module.exports = class Reloader {
 	watchAndLoad(filenames) {
 		this.setupWatch(filenames)
 		filenames.forEach(filename => {
-			this._doSync(filename)
+			this._doSync(localPath(filename))
 		})
 		return this
 	}

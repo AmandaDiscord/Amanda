@@ -71,10 +71,6 @@ module.exports = function(passthrough) {
 			description: "Store a GIF in the database",
 			aliases: ["storegif"],
 			category: "admin",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return msg.channel.send("not you");

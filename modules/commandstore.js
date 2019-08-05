@@ -8,6 +8,9 @@ module.exports = class CommandStore extends Discord.Collection {
 		 */
 		this.categories = new Map();
 	}
+	/**
+	 * @param {Object.<string, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>} properties
+	 */
 	assign(properties) {
 		Object.values(properties).forEach(i => {
 			if (this.get(i.aliases[0])) this.delete(i.aliases[0]);

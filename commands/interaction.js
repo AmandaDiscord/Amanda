@@ -25,10 +25,6 @@ module.exports = function(passthrough) {
 			description: "Ships two people",
 			aliases: ["ship"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let permissions = msg.channel.permissionsFor(client.user);
@@ -78,10 +74,6 @@ module.exports = function(passthrough) {
 			description: "Gets the waifu information about yourself or a user",
 			aliases: ["waifu"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let member = await msg.guild.findMember(msg, suffix, true);
@@ -102,10 +94,6 @@ module.exports = function(passthrough) {
 			description: "Claims someone as a waifu. Requires Discoins",
 			aliases: ["claim"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
@@ -154,10 +142,6 @@ module.exports = function(passthrough) {
 			description: "Divorces a user",
 			aliases: ["divorce"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				let info = await utils.waifu.get(msg.author.id);
 				if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`);
@@ -181,10 +165,6 @@ module.exports = function(passthrough) {
 			description: "Gifts an amount of Discoins towards your waifu's price",
 			aliases: ["gift"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
@@ -213,10 +193,6 @@ module.exports = function(passthrough) {
 			description: "Displays the leaderboard of the top waifus",
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				let amount = 10;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
@@ -257,10 +233,6 @@ module.exports = function(passthrough) {
 			description: "Beans a user",
 			aliases: ["bean"],
 			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly");
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "user"));
