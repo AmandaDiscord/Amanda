@@ -1,5 +1,7 @@
 const Discord = require("discord.js");
+const events = require("events");
 
+let Song = require("./youtubesong.js");
 let QueueWrapper = require("./queuewrapper.js");
 let BetterTimeout = require("./bettertimeout.js");
 
@@ -10,41 +12,31 @@ module.exports = class Queue {
 	 * @constructor
 	 */
 	constructor(textChannel, voiceChannel) {
-		this.textChannel = textChannel
-		this._voiceChannel = voiceChannel
-		this.id = this.textChannel.guild.id
-		/**
-		 * @type {Discord.VoiceConnection}
-		 */
+		this.textChannel = textChannel;
+		this._voiceChannel = voiceChannel;
+		this.id = this.textChannel.guild.id;
+		/** @type {Discord.VoiceConnection} */
 		this.connection;
-		/**
-		 * @type {Discord.StreamDispatcher}
-		 */
+		/** @type {Discord.StreamDispatcher} */
 		this._dispatcher;
-		/**
-		 * @type {Set<String>}
-		 */
+		/** @type {Set<String>} */
 		this.playedSongs;
-		/**
-		 * @type {Array<any>}
-		 */
+		/** @type {Array<Song>} */
 		this.songs;
-		this.playing = false
-		this.skippable = false
-		this.auto = false
-		/**
-		 * @type {Discord.Message}
-		 */
+		/** @type {Boolean} */
+		this.playing;
+		/** @type {Boolean} */
+		this.skippable;
+		/** @type {Boolean} */
+		this.auto;
+		/** @type {Discord.Message} */
 		this.nowPlayingMsg;
 		this.queueManager = require("../managers.js").queueManager
-		this.queueManager.addQueue(this)
-		/**
-		 * @type {QueueWrapper}
-		 */
+		/** @type {QueueWrapper} */
 		this.wrapper;
-		/**
-		 * @type {BetterTimeout}
-		 */
+		/** @type {events.EventEmitter} */
+		this.events;
+		/** @type {BetterTimeout} */
 		this.voiceLeaveTimeout;
 	}
 	/**
@@ -75,6 +67,15 @@ module.exports = class Queue {
 	 */
 	addSong(song, insert) {}
 	/**
+	 * @param {Number} index
+	 * @returns {0|1|2}
+	 */
+	removeSong(index) {}
+	/**
+	 * @param {Song} song
+	 */
+	announceSongInfoUpdate(song) {}
+	/**
 	 * @param {Discord.GuildMember} oldMember
 	 * @param {Discord.GuildMember} newMember
 	 */
@@ -92,7 +93,7 @@ module.exports = class Queue {
 	/**
 	 * Update the existing now playing message once.
 	 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
-	 * @returns {Error|Discord.RichEmbed|String}
+	 * @returns {Promise<Error|Discord.RichEmbed|String>}
 	 */
 	updateNowPlaying() {}
 	/**
@@ -103,9 +104,6 @@ module.exports = class Queue {
 	 * Prevent further updates of the now playing message.
 	 */
 	stopNowPlayingUpdates() {}
-	/**
-	 * @returns {Promise<void>} void
-	 */
 	async play() {}
 	playNext() {}
 	/**

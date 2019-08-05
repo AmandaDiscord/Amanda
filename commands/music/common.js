@@ -70,7 +70,11 @@ module.exports = passthrough => {
 				return output.join(":");
 			},
 			resolveInput: {
-				/** @returns {Array<String>|Array<Object>} */
+				/**
+				 * @param {String} input
+				 * @param {Discord.TextChannel} channel
+				 * @returns {Promise<Array<String>|Array<import("simple-youtube-api").Video>>}
+				 */
 				toID: async function(input, channel) {
 					input = input.replace(/(<|>)/g, "");
 					try {
@@ -147,7 +151,7 @@ module.exports = passthrough => {
 				/**
 				 * Not interactive. Max 10 results.
 				 * @param {String} input
-				 * @returns {Array<Object>}
+				 * @returns {Array<{type: String, title: String, videoId: String, author: String, authorId: String, videoThumbnails: Array<{quality: String, url: String, width: Number, height: Number}>, description: String, descriptionHtml: String, viewCount: Number, published: Number, publishedText: String, lengthSeconds: Number, liveNow: Boolean, paid: Boolean, premium: Boolean}>}
 				 */
 				toSearch: async function(input) {
 					let videos = await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`, {json: true});
@@ -158,8 +162,9 @@ module.exports = passthrough => {
 				/**
 				 * Interactive.
 				 * @param {String} input
-				 * @param {Discord.Channel} channel
-				 * @returns {(Array<String>|Null)} Returns an array of video IDs, or null
+				 * @param {Discord.TextChannel} channel
+				 * @param {String} authorID
+				 * @returns {Array<String>} An array of video IDs, or null
 				 */
 				toIDWithSearch: async function(input, channel, authorID) {
 					let id = await common.resolveInput.toID(input, channel);

@@ -10,23 +10,23 @@ module.exports = class QueueWrapper {
 
 	async showInfo() {}
 	/**
-	 * @param {Discord.Message|String} context
+	 * @param {Discord.Message|String} [context]
 	 */
 	pause(context) {}
 	/**
-	 * @param {Discord.Message|String} context
+	 * @param {Discord.Message|String} [context]
 	 */
 	resume(context) {}
 	/**
-	 * @param {Discord.Message|String} context
+	 * @param {Discord.Message|String} [context]
 	 */
 	skip(context) {}
 	/**
-	 * @param {Discord.Message|String} context
+	 * @param {Discord.Message|String} [context]
 	 */
 	stop(context) {}
 	/**
-	 * @param {Discord.Message} context
+	 * @param {Discord.Message} [context]
 	 */
 	toggleAuto(context) {}
 	/**
@@ -38,4 +38,16 @@ module.exports = class QueueWrapper {
 	 * @returns {Discord.Message}
 	 */
 	getQueue(context) {}
+	/**
+	 * @returns {Array<{id: String, name: String, avatar: String, isAmanda: Boolean}>}
+	 */
+	getMembers() {}
+	/**
+	 * @returns {{auto: Boolean}}
+	 */
+	getAttributes() {}
+	/**
+	 * @returns {{playing: Boolean, time: Number, songs: Array<{title: String, length: Number, thumbnail: String}>, members: Array<{id: String, name: String, avatar: String, isAmanda: Boolean}>, voiceChannel: {id: String, name: String}, attributes: {auto: Boolean}}}
+	 */
+	getState() {}
 }

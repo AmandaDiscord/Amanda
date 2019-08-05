@@ -141,6 +141,10 @@ module.exports = passthrough => {
 				}
 				return this.songs.length
 			}
+			/**
+			 * @param {Number} index
+			 * @returns {0|1|2}
+			 */
 			removeSong(index) {
 				if (index == 0) return 1
 				if (!this.songs[index]) return 1
@@ -150,7 +154,9 @@ module.exports = passthrough => {
 				this.events.emit("queueRemove", index)
 				return 0
 			}
-			/** @param {Song} song */
+			/**
+			 * @param {Song} song
+			 */
 			announceSongInfoUpdate(song) {
 				let index = this.songs.indexOf(song)
 				if (index != -1) this.events.emit("songUpdate", index)
@@ -222,6 +228,7 @@ module.exports = passthrough => {
 			/**
 			 * Update the existing now playing message once.
 			 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
+			 * @returns {Promise<Error|Discord.RichEmbed|String>}
 			 */
 			updateNowPlaying() {
 				if (!this.nowPlayingMsg) throw new Error("I TOLD YOU SO!!!")
@@ -251,9 +258,6 @@ module.exports = passthrough => {
 				clearTimeout(this.npUpdateTimeout)
 				clearInterval(this.npUpdateInterval)
 			}
-			/**
-			 * @returns {Promise<void>} void
-			 */
 			async play() {
 				// Set up song
 				let song = this.songs[0]
@@ -410,7 +414,9 @@ module.exports = passthrough => {
 				}
 				this.queue.textChannel.send(utils.contentify(this.queue.textChannel, info))
 			}
-
+			/**
+			 * @param {Discord.Message|String} [context]
+			 */
 			pause(context) {
 				let result = this.queue.pause()
 				if (context instanceof Discord.Message || context === "reaction") {
@@ -424,7 +430,9 @@ module.exports = passthrough => {
 					}
 				}
 			}
-
+			/**
+			 * @param {Discord.Message|String} [context]
+			 */
 			resume(context) {
 				let result = this.queue.resume()
 				if (context instanceof Discord.Message || context === "reaction") {
@@ -436,7 +444,9 @@ module.exports = passthrough => {
 					}
 				}
 			}
-
+			/**
+			 * @param {Discord.Message|String} [context]
+			 */
 			skip(context) {
 				let result = this.queue.skip()
 				if (context instanceof Discord.Message || context === "reaction") {
@@ -448,7 +458,9 @@ module.exports = passthrough => {
 					}
 				}
 			}
-
+			/**
+			 * @param {Discord.Message|String} [context]
+			 */
 			stop(context) {
 				let result = this.queue.stop()
 				if (context instanceof Discord.Message || context === "reaction") {
@@ -458,7 +470,9 @@ module.exports = passthrough => {
 					}
 				}
 			}
-
+			/**
+			 * @param {Discord.Message} [context]
+			 */
 			toggleAuto(context) {
 				this.queue.toggleAuto()
 				if (context instanceof Discord.Message) {
@@ -466,12 +480,16 @@ module.exports = passthrough => {
 					context.channel.send(`Auto mode is now turned ${mode}.`)
 				}
 			}
-
+			/**
+			 * @param {Discord.Message|String} [context]
+			 */
 			togglePlaying(context) {
 				if (this.queue.playing) return this.pause(context)
 				else return this.resume(context)
 			}
-
+			/**
+			 * @param {Discord.Message} context
+			 */
 			getQueue(context) {
 				if (context instanceof Discord.Message) {
 					let rows = this.queue.songs.map((song, index) => `${index+1}. `+song.getQueueLine())
@@ -489,6 +507,7 @@ module.exports = passthrough => {
 				return this.queue.voiceChannel.members.map(m => ({
 					id: m.id,
 					name: m.displayName,
+					/** @type {String} */
 					avatar: m.user.sizedAvatarURL(64),
 					isAmanda: m.id == client.user.id
 				}))
@@ -496,6 +515,7 @@ module.exports = passthrough => {
 
 			getAttributes() {
 				return {
+					/** @type {Boolean} */
 					auto: this.queue.auto
 				}
 			}

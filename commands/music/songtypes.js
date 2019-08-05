@@ -18,6 +18,9 @@ module.exports = passthrough => {
 		constructor() {
 			this.events = new events.EventEmitter()
 		}
+		/**
+		 * @returns {{title: String, length: Number, thumbnail: String}}
+		 */
 		webInfo() {
 			return {
 				title: this.getTitle(),
@@ -29,8 +32,10 @@ module.exports = passthrough => {
 
 	class YouTubeSong extends WebSong {
 		/**
-		 * @param {ytdl.videoInfo} info
-		 * @param {Boolean} cache
+		 * @param {String} id
+		 * @param {ytdl.videoInfo} [info]
+		 * @param {Boolean} [cache]
+		 * @param {{title: String, length_seconds: Number}} [basic]
 		 * @constructor
 		 */
 		constructor(id, info, cache, basic) {
@@ -94,6 +99,9 @@ module.exports = passthrough => {
 				}
 			})
 		}
+		/**
+		 * @returns {Promise<Array<ytdl.relatedVideo>>}
+		 */
 		async _getRelated() {
 			let info = await this._getInfo(true)
 			return info.related_videos.filter(v => v.title && v.length_seconds > 0).map(v => {
@@ -132,7 +140,8 @@ module.exports = passthrough => {
 		/**
 		 * Returns null if failed. Examine this.error.
 		 * @param {Boolean} cache Whether to cache the results if they are fetched
-		 * @param {Boolean} force Whether to try to get from the existing cache first
+		 * @param {Boolean} [force=undefined] Whether to try to get from the existing cache first
+		 * @returns {Promise<ytdl.videoInfo>}
 		 */
 		_getInfo(cache, force = undefined) {
 			if (this.info || force) return Promise.resolve(this.info)
@@ -154,12 +163,16 @@ module.exports = passthrough => {
 			}
 		}
 		/**
-		 * @returns {Promise<Array<any>>}
+		 * @returns {Promise<Array<ytdl.relatedVideo>>}
 		 */
 		async _related() {
 			await this.getInfo(true)
 			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10)
 		}
+		/**
+		 * @param {Number} time
+		 * @param {Boolean} paused
+		 */
 		getProgress(time, paused) {
 			let max = this.basic.length_seconds
 			let rightTime = common.prettySeconds(max)
@@ -227,6 +240,7 @@ module.exports = passthrough => {
 			this.host = parts[0]
 			this.path = parts[1]
 			this.queue = null
+			/** @type {FriskyNowPlayingItem} */
 			this.info = null
 			this.actuallyStreaming = false
 			this.filledBarOffset = 0
@@ -246,7 +260,7 @@ module.exports = passthrough => {
 			return "frisky_"+this.station
 		}
 		getUserFacingID() {
-			return this.getStationTitle
+			return this._getStationTitle()
 		}
 		getError() {
 			return null
@@ -263,6 +277,9 @@ module.exports = passthrough => {
 		}
 		clean() {
 		}
+		/**
+		 * @return {Promise<net.Socket>}
+		 */
 		async getStream() {
 			let socket = new net.Socket()
 			return Promise.all([
@@ -321,6 +338,10 @@ module.exports = passthrough => {
 			if (info && info.episode) title += " ⧸ "+info.episode.show_title+" ⧸ "+info.episode.artist_title
 			this.title = title
 		}
+		/**
+		 * @param {Boolean} refresh
+		 * @returns {Promise<FriskyNowPlayingItem>}
+		 */
 		async _getInfo(refresh) {
 			if (!refresh && this.info) return this.info
 			return this.info = rp("https://www.friskyradio.com/api/v2/nowPlaying", {json: true}).then(data => {
@@ -382,3 +403,103 @@ module.exports = passthrough => {
 
 	return {YouTubeSong, FriskySong, makeYTSFromRow}
 }
+
+/**
+ * @typedef {Object} FriskyNowPlayingItem
+ * @property {String} station
+ * @property {{currentlisteners: Number, peaklisteners: Number, maxlisteners: Number, uniquelisteners: Number, averagetime: Number, servergenre: String, serverurl: String, servertitle: String, songtitle: String, nexttitle: String, streamhits: Number, streamstatus: Number, backupstatus: Number, streamsource: String, streampath: String, streamuptime: Number, bitrate: Number, content: String, version: String}} server
+ * @property {String} title
+ * @property {FriskyEpisode} episode
+ * @property {FriskyShow} show
+ */
+
+/**
+ * @typedef {Object} FriskyEpisode
+ * @property {Number} id
+ * @property {String} title
+ * @property {String} url
+ * @property {String} full_url
+ * @property {Number} artist_id
+ * @property {Array<String>} genre
+ * @property {Array<String>} track_list
+ * @property {{url: String, mime: String, filename: String, filesize: Number, s3_filename: String}} mix_url
+ * @property {{url: String, mime: String, filename: String, filesize: Number, s3_filename: String}} mix_url_64k
+ * @property {Number} show_id
+ * @property {String} included_as
+ * @property {String} allow_playing
+ * @property {Number} reach
+ * @property {String} artist_title
+ * @property {String} [artist_url]
+ * @property {String} [artist_home_city]
+ * @property {String} [artist_residency]
+ * @property {String} artist_genre
+ * @property {String} artist_biography
+ * @property {FriskyThumb} artist_photo
+ * @property {String} [artist_facebook_url]
+ * @property {String} [artist_myspace_url]
+ * @property {String} [artist_twitter_url]
+ * @property {String} [artist_website_url]
+ * @property {String} [artist_musical_influences]
+ * @property {String} [artist_favorite_venues]
+ * @property {String} [artist_status]
+ * @property {String} show_title
+ * @property {String} show_url
+ * @property {String} show_summary
+ * @property {Array<String>} show_genre
+ * @property {Number} show_artist_id
+ * @property {FriskyThumb} show_image
+ * @property {FriskyThumb} show_thumbnail
+ * @property {FriskyThumb} show_album_art
+ * @property {String} show_type
+ * @property {String} show_status
+ * @property {Number} occurrence_id
+ * @property {String} occurrence_title
+ * @property {String} occurrence_url
+ * @property {String} occurrence_summary
+ * @property {String} occurrence_genre
+ * @property {Number} occurrence_artist_id
+ * @property {FriskyThumb} occurrence_image
+ * @property {FriskyThumb} occurrence_thumbnail
+ * @property {FriskyThumb} occurrence_album_art
+ * @property {String} occurrence_status
+ * @property {String} occurrence_location
+ * @property {String} occurrence_type
+ * @property {String} show_location
+ * @property {String} show_channel_title
+ */
+
+/**
+ * @typedef {Object} FriskyShow
+ * @property {Number} id
+ * @property {String} title
+ * @property {String} url
+ * @property {String} summary
+ * @property {Array<String>} genre
+ * @property {Number} artist_id
+ * @property {FriskyThumb} image
+ * @property {FriskyThumb} thumbnail
+ * @property {FriskyThumb} album_art
+ * @property {String} type
+ * @property {String} status
+ * @property {String} channel_title
+ * @property {Date} modification_time
+ * @property {String} location
+ * @property {Date} next_episode
+ */
+
+/**
+ * @typedef {Object} FriskyThumb
+ * @property {String} url
+ * @property {String} mime
+ * @property {String} filename
+ * @property {Number} filesize
+ * @property {String} thumb_url
+ * @property {String} custom_url
+ * @property {Number} image_width
+ * @property {String} s3_filename
+ * @property {Number} thumb_width
+ * @property {Number} image_height
+ * @property {String} s3_thumbname
+ * @property {Number} thumb_height
+ * @property {Number} thumb_filesize
+ */

@@ -51,6 +51,7 @@ module.exports = function(passthrough) {
 	 * @param {Discord.TextChannel} textChannel
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Boolean} insert
+	 * @param {Discord.Message} context
 	 */
 	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
@@ -209,6 +210,7 @@ module.exports = function(passthrough) {
 	 * @param {Discord.Snowflake} userID
 	 * @param {Discord.Guild} guild
 	 * @param {Number} timeoutMs
+	 * @returns {Promise<Discord.VoiceChannel>}
 	 */
 	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
 		return new Promise(resolve => {
@@ -415,11 +417,7 @@ module.exports = function(passthrough) {
 			description: "Obtain a web dashboard login token",
 			aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
 			category: "meta",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
-			 process: async function(msg, suffix) {
+			process: async function(msg, suffix) {
 				if (suffix == "delete") {
 					await deleteAll()
 					msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
@@ -464,10 +462,6 @@ module.exports = function(passthrough) {
 			description: "Frisky radio",
 			aliases: ["frisky"],
 			category: "music",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				const voiceChannel = msg.member.voiceChannel;
@@ -482,10 +476,6 @@ module.exports = function(passthrough) {
 			description: "You're not supposed to see this",
 			aliases: ["music", "m"],
 			category: "music",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {String} suffix
-			 */
 			process: async function(msg, suffix) {
 				// No DMs
 				if (msg.channel.type != "text") return msg.channel.send(lang.command.guildOnly(msg))

@@ -490,6 +490,12 @@ module.exports = (passthrough) => {
 				return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0");
 			},
 
+			/**
+			 * @param {Array<{videoID: String, name: String, length_seconds: Number}>} items
+			 * @param {String} startString
+			 * @param {String} endString
+			 * @param {Boolean} shuffle
+			 */
 			playlistSection: function(items, startString, endString, shuffle) {
 				let from = startString == "-" ? 1 : (parseInt(startString) || 1);
 				let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length);
@@ -505,8 +511,11 @@ module.exports = (passthrough) => {
 
 			/**
 			 * @param {Discord.TextChannel} channel
+			 * @param {String} authorID
+			 * @param {String} title
+			 * @param {String} failedTitle
 			 * @param {Array<String>} items
-			 * @param {Discord.RichEmbed} embed
+			 * @param {Discord.RichEmbed} [embed=undefined]
 			 * @returns {Promise<Number>} The zero-based index that was selected.
 			 */
 			makeSelection: async function(channel, authorID, title, failedTitle, items, embed = undefined) {
@@ -555,7 +564,12 @@ module.exports = (passthrough) => {
 			},
 
 			compactRows: {
-				/** @param {Array<String>} rows */
+				/**
+				 * @param {Array<String>} rows
+				 * @param {Number} maxLength
+				 * @param {Number} joinLength
+				 * @param {String} endString
+				 */
 				removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
 					let currentLength = 0
 					let maxItems = 20
@@ -569,12 +583,17 @@ module.exports = (passthrough) => {
 					return rows
 				},
 
-				/** @param {Array<String>} rows */
+				/**
+				 * @param {Array<String>} rows
+				 * @param {Number} maxLength
+				 * @param {Number} joinLength
+				 * @param {String} middleString
+				 */
 				removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
 					let currentLength = 0
 					let currentItems = 0
 					let maxItems = 20
-					let reconstruction = new Map([["left", []], ["right", []]])
+					let reconstruction = new Map([["left", []], ["right", []]]) // Jesus fucking christ what is this
 					let leftOffset = 0
 					let rightOffset = 0
 					function getNextDirection() {
@@ -598,6 +617,7 @@ module.exports = (passthrough) => {
 			/**
 			 * @param {Discord.TextChannel} channel
 			 * @param {Number} pageCount
+			 * @param {Function} callback
 			 */
 			paginate: async function(channel, pageCount, callback) {
 				let page = 0

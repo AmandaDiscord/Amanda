@@ -24,6 +24,11 @@ module.exports = passthrough => {
 	let youtube = passthrough.youtube
 
 	return {
+		/**
+		 * @param {Discord.Message} msg
+		 * @param {Array<String>} args
+		 * @param {Function} bulkPlayCallback
+		 */
 		command: async function(msg, args, bulkPlayCallback) {
 			let playlistName = args[1];
 			if (playlistName == "show") {
