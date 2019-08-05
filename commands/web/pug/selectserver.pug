@@ -1,4 +1,16 @@
 doctype html
+
+mixin guild-selection(guild, active)
+	a(href="/server/"+guild.id)
+		if guild.icon
+			img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
+		else
+			div.letter-icon= guild.nameAcronym
+		div.name= guild.name
+		if active
+			div.speaker
+				img(src="/images/speaker.svg")
+
 html
 	include includes/head.pug
 		title Select server | Amanda
@@ -7,18 +19,22 @@ html
 		include includes/nav.pug
 		+nav("dash")
 
-		div.spaced-title
-			div.spaced-title-side= user.tag
-			div.spaced-title-main Select a server
-			form(method="post" action="/logout")
-				input(type="hidden" name="csrftoken" value=csrfToken)
-				input(type="submit" value="Log out").logout-button.spaced-title-side
+		main
+			div.spaced-title
+				div.spaced-title-left.box= user.tag
+				div.spaced-title-main.box Select a server
+				form.spaced-title-right(method="post" action="/logout")
+					input(type="hidden" name="csrftoken" value=csrfToken)
+					input(type="submit" value="Log out").logout-button
 
-		div.guilds
-			for guild in guilds
-				a(href="/server/"+guild.id)
-					if guild.icon
-						img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
-					else
-						div.letter-icon= guild.nameAcronym
-					div.name= guild.name
+			if npguilds
+				div.guilds
+					for guild in npguilds
+						+guild-selection(guild, true)
+
+			if guilds
+				div.guilds
+					for guild in guilds
+						+guild-selection(guild, false)
+			else
+				div.message We don't share any servers? Wha-!

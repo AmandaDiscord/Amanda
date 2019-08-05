@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const events = require("events");
 
 let Queue = require("./compiledtypings/queue.js");
 let Game = require("./compiledtypings/game.js");
@@ -17,7 +18,9 @@ module.exports = {
 		 */
 		addQueue(queue) {
 			this.storage.set(queue.id, queue);
-		}
+			this.events.emit("new", queue);
+		},
+		events: new events.EventEmitter()
 	},
 	gameManager: {
 		/**

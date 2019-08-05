@@ -139,7 +139,7 @@ module.exports = passthrough => {
 						}
 					} catch (e) {
 						// Not a URL. Might be an ID?
-						if (input.length == 11) return ytdl.getBasicInfo(input).then(info => [info.video_id]).catch(() => null)
+						if (input.length == 11) return ytdl.getBasicInfo(input).then(info => [info.player_response.videoDetails.videoId]).catch(() => null)
 						else return null
 					}
 				},

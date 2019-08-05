@@ -10,7 +10,9 @@ module.exports = function(passthrough) {
 	const server = pinski({
 		pageHandlers: [
 			{web: "/", local: "commands/web/pug/home.pug", type: "pug"},
-			{web: "/main.css", local: "commands/web/sass/main.sass", type: "sass"}
+			{web: "/main.css", local: "commands/web/sass/main.sass", type: "sass"},
+			{web: "/animation_demo.css", local: "commands/web/sass/animation_demo.sass", type: "sass"},
+			{web: "/animation_demo", local: "commands/web/pug/animation_demo.pug", type: "pug"}
 		],
 		pugDir: "commands/web/pug",
 		pugIncludeDirs: ["commands/web/pug/includes"],
@@ -20,6 +22,7 @@ module.exports = function(passthrough) {
 		relativeRoot: pj(__dirname, "../.."),
 		filesDir: "commands/web/html",
 		httpPort: 10400,
-		httpsPort: null
+		httpsPort: null,
+		ws: true
 	})
 }

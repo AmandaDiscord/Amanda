@@ -6,12 +6,9 @@
 	font-family: Whitney, sans-serif
 
 body
-	background: url("/images/back.svg") no-repeat center center fixed
-	background-size: cover
 	margin: 0px
 	font-size: 16px
 	color: #282828
-	overflow-y: scroll
 
 noscript
 	text-align: center
@@ -87,9 +84,6 @@ a.no-underline
 	padding: 16px
 	background-color: rgba(255, 255, 255, 0.6)
 
-.box
-	@include box
-
 @mixin fatbox
 	@include box
 	margin: 16px
@@ -111,24 +105,19 @@ a.no-underline
 		@include box
 
 .spaced-title
-	display: grid
-	grid-template-columns: 1fr auto 1fr
+	display: flex
 	justify-content: space-between
 	align-items: center
 	color: #111
 	margin: 16px
 
 	.spaced-title-main
+		@include box
 		font-size: 32px
 
-	.spaced-title-left, .spaced-title-right
+	.spaced-title-side
+		@include box
 		font-size: 16px
-
-	.spaced-title-left
-		justify-self: left
-	
-	.spaced-title-right
-		justify-self: right
 
 .about
 	@include fatbox
@@ -203,9 +192,7 @@ a.no-underline
 		opacity: 0
 
 .logout-button
-	@include box
 	cursor: pointer
-	font-size: 16px
 
 .guilds
 	display: flex
@@ -213,189 +200,37 @@ a.no-underline
 	justify-content: center
 
 	> a
-		position: relative
+		text-decoration: none
 		@include fatbox
 		display: flex
 		width: 250px
-		text-decoration: none
 
 		img
 			height: 90px
 			margin-right: 16px
 			border-radius: 50%
 
+		.letter-icon
+			@include flex-center
+			color: #ccc
+			background-color: #2f3136
+			font-size: 32px
+			width: 90px
+			height: 90px
+			margin-right: 16px
+			border-radius: 50%
+			overflow: hidden
+
 		.name
 			@include flex-center(false, true)
 
-		.speaker
-			position: absolute
-			top: 5px
-			right: 5px
-			width: 24px
-			height: 24px
+#background-container
+	position: fixed
+	z-index: -1
+	transform: rotate(45deg)
+	display: flex
+	background: white
 
-			> img
-				max-width: 100%
-				max-height: 100%
-
-.letter-icon
-	@include flex-center
-	color: #ccc
-	background-color: #2f3136
-	font-size: 32px
-	width: 90px
-	height: 90px
-	margin-right: 16px
-	border-radius: 50%
-	overflow: hidden
-
-@mixin player-box
-	@include box
-	padding: 12px
-
-.player-grid
-	display: grid
-	grid-template-columns: 5fr 3fr
-	margin: 20px
-	grid-gap: 20px
-
-	.player-controls
-		@include player-box
-		display: flex
-		position: relative
-		z-index: 1
-
-		.player-status
-			flex: 1
-
-		.thumbnail
-			border: 3px solid #222
-			margin-right: 16px
-			display: flex
-
-			img
-				height: 94px
-				width: auto
-
-		.song-title
-			font-size: 22px
-			height: 24px
-			line-height: 1
-			overflow: hidden
-			margin-top: 2px
-			margin-bottom: 6px
-
-			&.nothing-playing
-				margin: auto
-				line-height: 1
-
-		.progress
-			position: relative
-			display: flex
-			justify-content: space-between
-			font-size: 20px
-			font-family: "Noto Mono", monospace
-			align-items: center
-			line-height: 1
-			padding: 0px 5px
-			height: 28px
-			border: 2px solid #222
-			background: white
-			margin-bottom: 6px
-
-			> *
-				position: relative
-
-			.progressbar
-				position: absolute
-				top: 0
-				left: 0
-				bottom: 0
-				right: 0
-				background-color: #58aef1
-				transform-origin: top left
-
-		.controls
-			display: grid
-			grid-template-columns: auto auto 1fr auto
-			grid-gap: 6px
-			
-			img
-				width: 30px
-				height: 30px
-
-	.queue-container
-		display: flex
-		flex-direction: column
-		height: auto
-		position: relative
-
-		.queue-item
-			@include player-box
-			margin-bottom: 20px
-			display: grid
-			grid-template-columns: 1fr auto
-			font-size: 18px
-			overflow: hidden
-
-			&.disabled
-				color: #555
-				background: rgba(255, 255, 255, 0.4)
-
-				.song-management
-					filter: grayscale(1) brightness(1.2)
-
-			.song-management
-				grid-column-start: span 2
-				margin-top: 8px
-				display: grid
-				grid-template-columns: 1fr auto
-
-				img
-					width: 24px
-					margin-right: 4px
-
-	.guild-info
-		@include player-box
-		display: flex
-		align-items: center
-
-		.guild-icon
-			padding-right: 16px
-
-			img 
-				width: 90px
-				height: 90px
-				border-radius: 50%
-				background: linear-gradient(-25deg, #34353e, hsla(234, 9%, 34%, 1) 30%, #34353e)
-
-		.guild-words
-			display: flex
-			flex-direction: column
-			font-size: 22px
-
-			> *
-				padding: 5px 0px
-
-	.voice-info
-		@include player-box
-		align-self: start
-		display: grid
-		grid-template-columns: auto 1fr
-		align-items: center
-		grid-gap: 6px
-		visibility: hidden
-
-		.avatar
-			border-radius: 50%
-			border: 2px solid #222
-			position: relative
-
-		.name
-			display: flex
-			align-items: center
-
-			img
-				width: 16px
-				height: 17px
-				margin-right: 4px
+	> *
+		margin-right: -2px
+		flex: 1

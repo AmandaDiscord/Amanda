@@ -58,6 +58,7 @@ module.exports = (passthrough) => {
 			voiceNothingPlaying: msg => authorString(msg, "nothing is currently playing."),
 			voiceCannotAction: action => `The current queue cannot be ${action} at this time.`,
 			voiceChannelWaiting: msg => authorString(msg, "you need to join a voice channel to do that. Waiting for you to connect..."),
+			voiceQueueRemovedSong: title => `Removed **${title}** from the queue.`,
 
 			// Playlists
 			playlistNotOwned: msg => authorString(msg, "you do not own that playlist and so cannot modify it."),
