@@ -84,11 +84,6 @@ module.exports = (passthrough) => {
 					,expected: v => v !== undefined
 					,errorValue: [400, "Invalid token"]
 				})
-				.do({
-					code: (_) => !_.row.staging || config.is_staging
-					,expected: true
-					,errorValue: [400, "Cannot using staging tokens here"]
-				})
 				.go()
 				.then(state => {
 					let token = state.params.get("token")

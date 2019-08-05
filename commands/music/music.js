@@ -419,46 +419,37 @@ module.exports = function(passthrough) {
 			 * @param {Discord.Message} msg
 			 * @param {String} suffix
 			 */
-			process: async function(msg, suffix) {
-				if (!config.is_staging) {
-					return msg.channel.send(
-						"The music controls website is currently under construction.\n"
-						+"Feel free to join the support server to get an announcement as soon as it's available: https://discord.gg/zhthQjH\n"
-						+"Users who have donated and are in the support server have access to a beta version of the website. Once the website is complete, it will be available to everyone."
-					);
-				} else {
-					if (suffix == "delete") {
-						await deleteAll()
-						msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
-					} else if (suffix == "new") {
-						await deleteAll()
+			 process: async function(msg, suffix) {
+				if (suffix == "delete") {
+					await deleteAll()
+					msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
+				} else if (suffix == "new") {
+					await deleteAll()
 					let hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
 					await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1]);
+					send(
+						`Your existing tokens were deleted, and a new one was created.`
+						+"\n`"+hash+"`"
+						+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
+						+`\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
+					)
+				} else {
+					let existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
+					if (existing) {
 						send(
-							`Your existing tokens were deleted, and a new one was created.`
-							+"\n`"+hash+"`"
-							+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
-							+"\nThis is a staging token. It will only work on a staging version of the website."
-						+`\n${config.website_protocol}://${config.website_domain}/dash`
+							"Here is the token you generated previously:"
+							+"\n`"+existing.token+"`"
+							+"\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
 						)
 					} else {
-						let existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
-						if (existing) {
-							send(
-								"Here is the token you generated previously:"
-								+"\n`"+existing.token+"`"
-								+"\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
-							)
-						} else {
-							send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
-						}
+						send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
 					}
 				}
-
+				
 				function deleteAll() {
 					return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
 				}
-
+				
 				function send(text) {
 					msg.author.send(text).then(() => {
 						if (msg.channel.type == "text") msg.channel.send(`I sent you a DM.`)

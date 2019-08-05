@@ -31,8 +31,8 @@ module.exports = function(passthrough) {
 		getSession: function(token) {
 			if (token instanceof Map) token = token.get("token")
 			if (token) return utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", token).then(row => {
-				if (row && row.staging && !config.is_staging) return null
-				else return row
+				if (row) return row
+				else return null
 			})
 			else return Promise.resolve(null)
 		},
