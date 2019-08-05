@@ -16,7 +16,9 @@ const opcodes = {
 	"STOP": 11,
 	"QUEUE_REMOVE": 12,
 	"REQUEST_QUEUE_REMOVE": 13,
-	"MEMBERS_CHANGE": 14
+	"MEMBERS_CHANGE": 14,
+	"ATTRIBUTES_CHANGE": 15,
+	"REQUEST_ATTRIBUTES_CHANGE": 16
 }
 
 const opcodeMethodMap = new Map([
@@ -25,7 +27,8 @@ const opcodeMethodMap = new Map([
 	[opcodes.TOGGLE_PLAYBACK, "togglePlayback"],
 	[opcodes.SKIP, "skip"],
 	[opcodes.STOP, "stop"],
-	[opcodes.REQUEST_QUEUE_REMOVE, "requestQueueRemove"]
+	[opcodes.REQUEST_QUEUE_REMOVE, "requestQueueRemove"],
+	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"]
 ])
 
 const eventList = [
@@ -36,7 +39,8 @@ const eventList = [
 	["queue", "dissolve", "queueDissolve"],
 	["queue", "timeUpdate", "timeUpdate"],
 	["queue", "queueRemove", "queueRemove"],
-	["queue", "membersChange", "membersChange"]
+	["queue", "membersChange", "membersChange"],
+	["queue", "attributes", "attributesChange"]
 ]
 
 /** @param {PassthroughType} passthrough */
@@ -56,11 +60,13 @@ module.exports = (passthrough) => {
 			this.eventStore = new Map()
 	
 			this.ws.on("message", async message => {
-				let data = JSON.parse(message)
-				let method = opcodeMethodMap.get(data.op)
-				if (method) {
-					this[method](data)
-				}
+				try {
+					let data = JSON.parse(message)
+					let method = opcodeMethodMap.get(data.op)
+					if (method) {
+						this[method](data)
+					}
+				} catch (e) {}
 			})
 	
 			ws.on("close", () => this.onClose())
@@ -106,7 +112,7 @@ module.exports = (passthrough) => {
 		}
 	
 		async identify(data) {
-			if (data.d && typeof(data.d.cookie) == "string" && typeof(data.d.guildID) == "string") {
+			if (data && data.d && typeof(data.d.cookie) == "string" && typeof(data.d.guildID) == "string") {
 				let cookies = extra.getCookies({headers: {cookie: data.d.cookie}})
 				let session = await extra.getSession(cookies)
 				if (!session) return
@@ -225,9 +231,25 @@ module.exports = (passthrough) => {
 		}
 
 		requestQueueRemove(data) {
-			if (data.d && typeof(data.d.index) == "number" && !isNaN(data.d.index)) {
+			if (data && data.d && typeof(data.d.index) == "number" && !isNaN(data.d.index)) {
 				let queue = this.getQueue()
 				if (queue) queue.removeSong(data.d.index)
+			}
+		}
+
+		attributesChange() {
+			this.send({
+				op: opcodes.ATTRIBUTES_CHANGE,
+				d: this.getQueue().wrapper.getAttributes()
+			})
+		}
+
+		requestAttributesChange(data) {
+			let queue = this.getQueue()
+			if (queue) {
+				if (typeof(data) == "object" && typeof(data.d) == "object") {
+					if (typeof(data.d.auto) == "boolean" && queue.auto != data.d.auto) queue.wrapper.toggleAuto()
+				}
 			}
 		}
 	}

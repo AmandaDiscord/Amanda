@@ -316,13 +316,13 @@ a.no-underline
 				transform-origin: top left
 
 		.controls
-			display: flex
-			justify-content: flex-start
-
+			display: grid
+			grid-template-columns: auto auto 1fr auto
+			grid-gap: 6px
+			
 			img
 				width: 30px
 				height: 30px
-				margin-right: 6px
 
 	.queue-container
 		display: flex

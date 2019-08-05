@@ -258,6 +258,7 @@ class Player extends ElemJS {
 	constructor(container, session) {
 		super(container)
 		this.song = null
+		this.attributes = {}
 		this.songSet = false
 		this.parts = {
 			controls: ejs`div.controls`,
@@ -266,6 +267,10 @@ class Player extends ElemJS {
 		;["playpause", "skip", "stop"].forEach(icon => {
 			this.parts.controls.child(new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => session[icon]()))
 		})
+		this.parts.controls.child(this.parts.autoButton = new ElemJS("img").direct("src", "/images/auto_inactive.svg").direct("onclick", () => {
+			this.updateAttributes({auto: !this.attributes.auto})
+			session.requestAttributesChange(this.attributes)
+		}))
 		this.render()
 	}
 	setSong(song) {
@@ -280,6 +285,10 @@ class Player extends ElemJS {
 	}
 	updateTime(data) {
 		this.parts.time.update(data)
+	}
+	updateAttributes(data) {
+		this.attributes = data
+		this.parts.autoButton.direct("src", `/images/auto_${this.attributes.auto ? "active" : "inactive"}.svg`)
 	}
 	render() {
 		this.clearChildren()

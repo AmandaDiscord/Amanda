@@ -390,6 +390,10 @@ module.exports = passthrough => {
 				this.dissolve()
 				return 0
 			}
+			toggleAuto() {
+				this.auto = !this.auto
+				this.events.emit("attributes")
+			}
 		}
 
 		class QueueWrapper {
@@ -456,7 +460,7 @@ module.exports = passthrough => {
 			}
 
 			toggleAuto(context) {
-				this.queue.auto = !this.queue.auto
+				this.queue.toggleAuto()
 				if (context instanceof Discord.Message) {
 					let mode = this.queue.auto ? "on" : "off"
 					context.channel.send(`Auto mode is now turned ${mode}.`)
@@ -490,6 +494,12 @@ module.exports = passthrough => {
 				}))
 			}
 
+			getAttributes() {
+				return {
+					auto: this.queue.auto
+				}
+			}
+
 			getState() {
 				return {
 					playing: this.queue.playing,
@@ -499,7 +509,8 @@ module.exports = passthrough => {
 					voiceChannel: {
 						id: this.queue.voiceChannel.id,
 						name: this.queue.voiceChannel.name
-					}
+					},
+					attributes: this.getAttributes()
 				}
 			}
 		}

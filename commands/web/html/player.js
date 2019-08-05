@@ -21,7 +21,8 @@ ex.push({
 					[opcodes.SONG_UPDATE, "songUpdate"],
 					[opcodes.TIME_UPDATE, "timeUpdate"],
 					[opcodes.QUEUE_REMOVE, "queueRemove"],
-					[opcodes.MEMBERS_CHANGE, "membersChange"]
+					[opcodes.MEMBERS_CHANGE, "membersChange"],
+					[opcodes.ATTRIBUTES_CHANGE, "attributesChange"]
 				])
 		
 				this.ws.addEventListener("open", () => this.onOpen())
@@ -58,11 +59,13 @@ ex.push({
 				if (this.state === null) {
 					q("#voice-channel-name").textContent = "Nothing playing"
 					this.player.setSong(null)
+					this.player.updateAttributes({})
 					this.resetTime()
 					this.queue.replaceItems([])
 				} else {
 					q("#voice-channel-name").textContent = this.state.voiceChannel.name
 					this.player.setSong(this.state.songs[0])
+					this.player.updateAttributes(this.state.attributes)
 					this.queue.replaceItems(this.state.songs.slice(1))
 					this.queue.isFirstAdd = false
 					this.updatePlayerTime()
@@ -151,6 +154,18 @@ ex.push({
 			stop() {
 				this.send({
 					op: opcodes.STOP
+				})
+			}
+
+			attributesChange(data) {
+				Object.assign(this.state.attributes, data.d)
+				this.player.updateAttributes(this.state.attributes)
+			}
+
+			requestAttributesChange(data) {
+				this.send({
+					op: opcodes.REQUEST_ATTRIBUTES_CHANGE,
+					d: data
 				})
 			}
 		}
