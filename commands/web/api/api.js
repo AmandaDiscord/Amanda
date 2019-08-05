@@ -57,7 +57,7 @@ module.exports = (passthrough) => {
 		constructor(ws) {
 			this.ws = ws
 			this.member = null
-			this.eventStore = new Map()
+			this.eventStore = []
 	
 			this.ws.on("message", async message => {
 				try {
@@ -94,21 +94,21 @@ module.exports = (passthrough) => {
 				let fn = this[fnName].bind(this)
 				if (emitter == "queue") {
 					if (this.getQueue()) {
-						this.eventStore.set(fnName, [this.getQueue().events, fn])
 						this.getQueue().events.on(eventName, fn)
+						this.eventStore.push([this.getQueue().events, eventName, fn])
 					}
 				} else if (emitter == "manager") {
-					this.eventStore.set(fnName, [queueManager.events, fn])
 					queueManager.events.on(eventName, fn)
+					this.eventStore.push([queueManager.events, eventName, fn])
 				}
 			})
 		}
 
 		removeEventListeners() {
-			this.eventStore.forEach(([emitter, fn], eventName) => {
+			this.eventStore.forEach(([emitter, eventName, fn]) => {
 				emitter.removeListener(eventName, fn)
 			})
-			this.eventStore.clear()
+			this.eventStore = []
 		}
 	
 		async identify(data) {
