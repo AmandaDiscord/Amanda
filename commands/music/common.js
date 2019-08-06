@@ -154,7 +154,12 @@ module.exports = passthrough => {
 				 * @returns {Array<{type: String, title: String, videoId: String, author: String, authorId: String, videoThumbnails: Array<{quality: String, url: String, width: Number, height: Number}>, description: String, descriptionHtml: String, viewCount: Number, published: Number, publishedText: String, lengthSeconds: Number, liveNow: Boolean, paid: Boolean, premium: Boolean}>}
 				 */
 				toSearch: async function(input) {
-					let videos = await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`, {json: true});
+					let videos;
+					try {
+						videos = await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`, {json: true});
+					} catch (e) {
+						return [];
+					}
 					videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
 					return videos;
 				},
@@ -171,6 +176,7 @@ module.exports = passthrough => {
 					if (id) return [id, false];
 					channel.sendTyping()
 					let videos = await common.resolveInput.toSearch(input);
+					if (videos.length < 1) return null;
 					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${common.prettySeconds(video.lengthSeconds)})`);
 					return utils.makeSelection(channel, authorID, "Song selection", "Song selection cancelled", videoResults).then(index => {
 						return [[videos[index].videoId], true];

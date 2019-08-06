@@ -270,7 +270,7 @@ module.exports = function(passthrough) {
 				}
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
-				if (result == null) return;
+				if (result == null) return msg.channel.send("I could not find any videos at this moment. Try again later");
 				let usedSearch = result[1]
 				result = result[0]
 				result.forEach(item => {
