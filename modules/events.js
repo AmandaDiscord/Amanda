@@ -51,9 +51,7 @@ module.exports = function(passthrough) {
 	});
 	utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 		if (reason && reason.code) {
-			if (reason.code == 10008) return;
-			if (reason.code == 50013) return;
-			if (reason.code == 50001) return;
+			if ([10003, 10008, 50001, 50013].includes(reason.code)) return;
 		}
 		if (reason) console.error(reason);
 		else console.log("There was an error but no reason");
