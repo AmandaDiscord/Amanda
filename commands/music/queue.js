@@ -282,10 +282,8 @@ module.exports = passthrough => {
 					return this.playNext()
 				});
 				// Make a dispatcher
-				/**
-				 * @type {Discord.StreamDispatcher}
-				 */
 				stream.once("data", () => {
+					/** @type {Discord.StreamDispatcher} */
 					const dispatcher = this.connection[song.connectionPlayFunction](stream, {bitrate: "auto"})
 					this._dispatcher = dispatcher
 					dispatcher.once("start", async () => {

@@ -6,7 +6,7 @@ const managers = require("./modules/managers.js");
 const YouTube = require("simple-youtube-api");
 
 const config = require("./config.json");
-const client = new Discord.Client({disableEveryone: true});
+const client = new Discord.Client({disableEveryone: true, disabledEvents: ["TYPING_START"]});
 const youtube = new YouTube(config.yt_api_key);
 
 let db = mysql.createPool({

@@ -4,7 +4,13 @@ const ytdl = require("ytdl-core")
 const net = require("net")
 const rp = require("request-promise")
 const events = require("events")
+const stream = require("stream")
 
+require("../../types.js");
+
+/**
+ * @param {PassthroughType} passthrough
+ */
 module.exports = passthrough => {
 	let {reloader} = passthrough
 
@@ -82,6 +88,9 @@ module.exports = passthrough => {
 				//console.log(this.getUniqueID()+" - deleteCache (sync)")
 			}
 		}
+		/**
+		 * @returns {stream.Readable}
+		 */
 		getStream() {
 			return this._getInfo(true).then(info => {
 				if (info) {
