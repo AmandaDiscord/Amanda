@@ -1,6 +1,6 @@
 /**
  * @typedef {Object} Operation
- * @property {Function} code
+ * @property {(state: any, nextValue: any) => Promise<any>} code
  * @property {String} assign
  * @property {any} expected
  * @property {any} errorValue
@@ -15,9 +15,6 @@ class Validator {
 		this.stage = 0
 	}
 
-	/**
-	 * @param {Operation} operation
-	 */
 	do() {
 		let operation = arguments[0]
 		if (typeof(operation) == "function") operation = {code: operation}

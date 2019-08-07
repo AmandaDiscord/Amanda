@@ -24,11 +24,12 @@
 
 /**
  * @typedef {Object} ReactionMenuAction
- * @property {String} emoji
+ * @property {import("discord.js").Emoji|import("discord.js").ReactionEmoji|String} emoji
+ * @property {import("discord.js").MessageReaction} [messageReaction]
  * @property {Array<String>} [allowedUsers]
  * @property {Array<String>} [deniedUsers]
- * @property {"that"|"thatTotal"|"all"|"total"} [ignore]
- * @property {"user"|"bot"|"all"|"message"} [remove]
- * @property {"reply"|"edit"|"js"} [actionType]
- * @property {(msg: import("discord.js").Message, emoji: import("discord.js").Emoji | import("discord.js").ReactionEmoji, user: import("discord.js").User, messageReaction: import("discord.js").MessageReaction, reactionMenus: Object.<string, ReactionMenu>) => any} [actionData]
+ * @property {"that"|"thatTotal"|"all"|"total"|"none"|String} [ignore]
+ * @property {"user"|"bot"|"all"|"message"|String} [remove]
+ * @property {"reply"|"edit"|"js"|"none"|String} [actionType]
+ * @property {(msg: import("discord.js").Message, emoji: import("discord.js").Emoji | import("discord.js").ReactionEmoji, user: import("discord.js").User, messageReaction: import("discord.js").MessageReaction, reactionMenus: Object.<string, ReactionMenu>) => any|any} [actionData]
  */

@@ -3,6 +3,7 @@ const entities = require("entities");
 const Discord = require("discord.js");
 const path = require("path");
 
+// @ts-ignore
 require("../types.js");
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"];
@@ -31,7 +32,7 @@ module.exports = function(passthrough) {
 
 	class Game {
 		/**
-		 * @param {Discord.TextChannel} channel
+		 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
 		 * @param {String} type
 		 */
 		constructor(channel, type) {
@@ -39,7 +40,8 @@ module.exports = function(passthrough) {
 			this.type = type;
 			this.manager = gameManager;
 			this.id = channel.id;
-			this.permissions = channel.type!="dm"?channel.permissionsFor(client.user):undefined;
+			if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
+			else this.permissions = undefined;
 		}
 		init() {
 			this.manager.addGame(this);
@@ -54,10 +56,8 @@ module.exports = function(passthrough) {
 	}
 	class TriviaGame extends Game {
 		/**
-		 * @param {Discord.TextChannel} channel
-		 * @param {Object} data
-		 * @param {Number} data.response_code
-		 * @param {Array<TriviaResponse>} data.results
+		 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+		 * @param {{response_code: Number, results: Array<TriviaResponse>}} data
 		 * @param {String} category
 		 */
 		constructor(channel, data, category) {
@@ -75,7 +75,7 @@ module.exports = function(passthrough) {
 				.map((answer, index) => Object.assign(answer, { letter: Buffer.from([0xf0, 0x9f, 0x85, 0x90+index]).toString() }));
 			this.correctAnswer = entities.decodeHTML(correctAnswer);
 			// Answer Fields
-			let answerFields =[[], []];
+			let answerFields = [[], []];
 			this.answers.forEach((answer, index) => answerFields[index < this.answers.length/2 ? 0 : 1].push(answer));
 			// Difficulty
 			this.difficulty = this.data.difficulty;
@@ -98,6 +98,7 @@ module.exports = function(passthrough) {
 			// Setup timer
 			this.timer = setTimeout(() => this.end(), 20000);
 			// Prepare to receive answers
+			/** @type {Map<String, Number>} */
 			this.receivedAnswers = new Map();
 		}
 		/**
@@ -168,7 +169,7 @@ module.exports = function(passthrough) {
 	}
 	/**
 	 * @param {String} body
-	 * @param {Discord.TextChannel} channel
+	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
 	 */
 	async function JSONHelper(body, channel) {
 		try {
@@ -182,16 +183,15 @@ module.exports = function(passthrough) {
 		}
 	}
 	/**
-	 * @param {Discord.TextChannel} channel
-	 * @param {Object} options
-	 * @param {String} options.suffix
-	 * @param {Discord.Message} options.msg
+	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+	 * @param {{suffix?: String, msg?: Discord.Message, category?: String}} options
 	 */
 	async function startGame(channel, options = {}) {
 		// Select category
 		let category = options.category || null;
 		if (options.suffix) {
 			channel.sendTyping();
+			/** @type {Array<{trivia_categories: Array<{id: Number, name: String}>>}} */
 			let body = await JSONHelper("https://opentdb.com/api_category.php", channel);
 			if (!body[0]) return;
 			let data = body[1];
@@ -225,6 +225,7 @@ module.exports = function(passthrough) {
 		// Send typing
 		channel.sendTyping();
 		// Get new game data
+		/** @type {Array<{response_code: Number, results: Array<TriviaResponse>}>} */
 		let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel);
 		if (!body[0]) return;
 		let data = body[1];
@@ -241,9 +242,9 @@ module.exports = function(passthrough) {
 
 
 	/**
-	 * @param {String} difficulty "easy", "medium" or "hard"
-	 * @param {Number} size 4-14 inclusive
-	 * @returns {any}
+	 * @param {"easy"|"medium"|"hard"} [difficulty="easy"] "easy", "medium" or "hard"
+	 * @param {Number} [size=8] 4-14 inclusive
+	 * @returns {{text: String, size: Number, bombs: Number, error?: Boolean}}
 	 */
 	function sweeper(difficulty, size) {
 		let width = 8,
@@ -293,7 +294,7 @@ module.exports = function(passthrough) {
 		// Create rows
 		let currow = 1;
 		board.forEach((item, index) => {
-			i = index+1;
+			let i = index+1;
 			if (!rows[currow-1]) rows[currow-1] = [];
 			rows[currow-1].push(item);
 			if (i%width == 0) currow++;
@@ -359,6 +360,7 @@ module.exports = function(passthrough) {
 		// Create a string to send
 		rows.forEach(row => {
 			row.forEach(item => {
+				let it;
 				if (typeof item == "number") it = numbers[item-1];
 				else it = item;
 				str += `||${it}||`;
@@ -370,7 +372,7 @@ module.exports = function(passthrough) {
 
 	commands.assign({
 		"trivia": {
-			usage: "none",
+			usage: "[category]",
 			description: "Play a game of trivia with other members and win Discoins",
 			aliases: ["trivia", "t"],
 			category: "games",
@@ -379,7 +381,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"minesweeper": {
-			usage: "<easy|medium|hard> [--raw] [--size:x]",
+			usage: "[easy|medium|hard] [--raw] [--size:Number]",
 			description: "Starts a game of minesweeper using the Discord spoiler system",
 			aliases: ["minesweeper", "ms"],
 			category: "games",
@@ -404,7 +406,7 @@ module.exports = function(passthrough) {
 				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
 				if (sfx.includes("-r") || sfx.includes("--raw")) {
 					let rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|");
-					if (rawcontent.length > 1999) return msg.channel.send("The raw content exceeded the 200 character limit. Consider using a smaller board size");
+					if (rawcontent.length > 1999) return msg.channel.send("The raw content exceeded the 2000 character limit. Consider using a smaller board size");
 					return msg.channel.send(rawcontent);
 				}
 				msg.channel.send(utils.contentify(msg.channel, embed));

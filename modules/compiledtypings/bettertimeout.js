@@ -1,6 +1,6 @@
 module.exports = class BetterTimeout {
 	/**
-	 * @param {Function} callback
+	 * @param {(...args: Array<any>) => void} callback
 	 * @param {Number} delay
 	 * @constructor
 	 */
@@ -8,7 +8,7 @@ module.exports = class BetterTimeout {
 		this.callback = callback;
 		this.delay = delay;
 		this.isActive = true;
-		this.timeout = 0;
+		this.timeout = setTimeout(this.callback, this.delay);
 	}
 	triggerNow() {}
 	clear() {}

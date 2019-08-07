@@ -35,7 +35,7 @@ module.exports = class QueueWrapper {
 	togglePlaying(context) {}
 	/**
 	 * @param {Discord.Message} context
-	 * @returns {Discord.Message}
+	 * @returns {Promise<Discord.Message>}
 	 */
 	getQueue(context) {}
 	/**

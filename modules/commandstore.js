@@ -3,7 +3,7 @@ const Discord = require("discord.js");
 /**
  * @extends {Discord.Collection<String, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>}
  */
-module.exports = class CommandStore extends Discord.Collection {
+class CommandStore extends Discord.Collection {
 	constructor() {
 		super();
 		/**
@@ -26,3 +26,5 @@ module.exports = class CommandStore extends Discord.Collection {
 		});
 	}
 }
+
+module.exports = CommandStore;

@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const path = require("path");
 
+// @ts-ignore
 require("../types.js");
 
 const bots = [

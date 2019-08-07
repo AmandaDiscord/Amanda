@@ -6,6 +6,7 @@ const rp = require("request-promise")
 const events = require("events")
 const stream = require("stream")
 
+// @ts-ignore
 require("../../types.js");
 
 /**
@@ -175,7 +176,7 @@ module.exports = passthrough => {
 		 * @returns {Promise<Array<ytdl.relatedVideo>>}
 		 */
 		async _related() {
-			await this.getInfo(true)
+			await this._getInfo(true)
 			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10)
 		}
 		/**
@@ -348,7 +349,7 @@ module.exports = passthrough => {
 			this.title = title
 		}
 		/**
-		 * @param {Boolean} refresh
+		 * @param {Boolean} [refresh]
 		 * @returns {Promise<FriskyNowPlayingItem>}
 		 */
 		async _getInfo(refresh) {

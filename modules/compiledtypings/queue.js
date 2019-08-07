@@ -5,6 +5,9 @@ let Song = require("./youtubesong.js");
 let QueueWrapper = require("./queuewrapper.js");
 let BetterTimeout = require("./bettertimeout.js");
 
+// @ts-ignore
+require("../../types.js");
+
 module.exports = class Queue {
 	/**
 	 * @param {Discord.TextChannel} textChannel
@@ -38,6 +41,12 @@ module.exports = class Queue {
 		this.events;
 		/** @type {BetterTimeout} */
 		this.voiceLeaveTimeout;
+		/** @type {Promise<Discord.Message>} */
+		this.voiceLeaveWarningMessagePromise;
+		/** @type {ReactionMenu} */
+		this.reactionMenu;
+		this.npUpdateTimeout = setTimeout(() => "lol", 100);
+		this.npUpdateInterval = setInterval(() => "lol", 100);
 	}
 	/**
 	 * @returns {Discord.VoiceChannel}
@@ -122,4 +131,5 @@ module.exports = class Queue {
 	 * @returns {Number} Status code. 0 success
 	 */
 	stop() {}
+	toggleAuto() {}
 }

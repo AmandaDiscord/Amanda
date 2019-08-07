@@ -3,6 +3,7 @@ const events = require("events");
 const util = require("util");
 const Jimp = require("jimp");
 const path = require("path");
+const mysql = require("mysql2/promise");
 
 //@ts-ignore
 require("../types.js");
@@ -28,6 +29,9 @@ module.exports = (passthrough) => {
 					this.events = new events.EventEmitter();
 					this.fetch();
 				}
+				/**
+				 * @returns {Promise<void>}
+				 */
 				fetch() {
 					new Promise(resolve => {
 						if (client.readyAt) resolve();
@@ -40,6 +44,9 @@ module.exports = (passthrough) => {
 						});
 					});
 				}
+				/**
+				 * @returns {Promise<Discord.Message>}
+				 */
 				send() {
 					return new Promise((resolve, reject) => {
 						return new Promise(fetched => {
@@ -57,8 +64,8 @@ module.exports = (passthrough) => {
 			},
 			BetterTimeout: class BetterTimeout {
 				/**
-				 * @param {Function} callback
-				 * @param {Number} delay
+				 * @param {(...args: Array<any>) => void} [callback]
+				 * @param {Number} [delay]
 				 * @constructor
 				 */
 				constructor(callback, delay) {
@@ -84,13 +91,13 @@ module.exports = (passthrough) => {
 			JIMPStorage: class JIMPStorage {
 				constructor() {
 					/**
-					 * @type {Map<String, any>}
+					 * @type {Map<String, Jimp>}
 					 */
 					this.store = new Map();
 				}
 				/**
 				 * @param {String} name
-				 * @param {String} type
+				 * @param {"file"|"font"} type
 				 * @param {String} value
 				 */
 				save(name, type, value) {
@@ -104,7 +111,7 @@ module.exports = (passthrough) => {
 				}
 				/**
 				 * @param {String} name
-				 * @param {Promise<any>} promise
+				 * @param {Promise<Jimp>} promise
 				 */
 				savePromise(name, promise) {
 					this.store.set(name, promise);
@@ -149,7 +156,7 @@ module.exports = (passthrough) => {
 					}
 				}
 				/**
-				 * @param {Boolean} remove
+				 * @param {Boolean} [remove]
 				 */
 				destroy(remove) {
 					delete reactionMenus[this.message.id];
@@ -167,7 +174,10 @@ module.exports = (passthrough) => {
 			sql: {
 				/**
 				 * @param {String} string
-				 * @param {Array<any>|any} [prepared=undefined]
+				 * @param {any} [prepared=undefined]
+				 * @param {db|mysql.PromisePoolConnection} [connection=undefined]
+				 * @param {Number} [attempts=2]
+				 * @returns {Promise<Array<any>>}
 				 */
 				"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 					if (!connection) connection = db;
@@ -187,52 +197,24 @@ module.exports = (passthrough) => {
 				},
 				/**
 				 * @param {String} string
-				 * @param {Array<any>|any} [prepared=undefined]
+				 * @param {any} [prepared=undefined]
+				 * @param {db|mysql.PromisePoolConnection} [connection=undefined]
 				 */
 				"get": async function(string, prepared = undefined, connection = undefined) {
 					return (await utils.sql.all(string, prepared, connection))[0];
 				}
 			},
 			/**
-			 * @returns {any}
+			 * @returns {mysql.PromisePoolConnection}
 			 */
 			getConnection: function() {
 				return db.getConnection();
 			},
-			settings: {
-				/**
-				 * @param {Discord.Snowflake} ID
-				 */
-				get: async function(ID) {
-					let st = await utils.sql.get("SELECT * FROM settings WHERE userID =? OR guildID =?", [ID, ID]);
-					if (!st) return false;
-					return { waifuAlert: st.waifuAlert, gamblingAlert: st.gamblingAlert };
-				},
-				/**
-				 * @param {Discord.Snowflake} ID
-				 * @param {String} type
-				 * @param {String} setting
-				 * @param {any} value
-				 */
-				set: async function(ID, type, setting, value) {
-					let st = await utils.settings.get(ID);
-					if (type == "user") {
-						if (!st) await utils.sql.all("INSERT INTO settings (userID, waifuAlert, gamblingAlert) VALUES (?, ?, ?)", [ID, 1, 1]);
-						if (setting == "waifuAlert") return await utils.sql.all("UPDATE settings SET waifuAlert =? WHERE userID =?", [value, ID]);
-						if (setting == "gamblingAlert") return await utils.sql.all("UPDATE settings SET gamblingAlert =? WHERE userID =?", [value, ID]);
-					}
-					if (type == "guild") {
-						if (!st) await utils.sql.all("INSERT INTO settings (guildID, waifuAlert, gamblingAlert) VALUES (?, ?, ?)", [ID, 1, 1]);
-						if (setting == "waifuAlert") return await utils.sql.all("UPDATE settings SET waifuAlert =? WHERE guildID =?", [value, ID]);
-						if (setting == "gamblingAlert") return await utils.sql.all("UPDATE settings SET gamblingAlert =? WHERE guildID =?", [value, ID]);
-					}
-				}
-			},
 			waifu: {
 				/**
 				 * @param {Discord.Snowflake} userID
-				 * @param {Object} options
-				 * @param {Boolean} options.basic
+				 * @param {{basic: Boolean}} [options]
+				 * @returns {Promise<{claimer: Discord.User, price: Number, waifu: Discord.User, waifuID?: String, userID?: String, waifuPrice: Number, gifts: {received: {list: Array<any>, emojis: String}, sent: {list: Array<any>, emojis: String}}}>}
 				 */
 				get: async function(userID, options) {
 					const emojiMap = {
@@ -322,11 +304,10 @@ module.exports = (passthrough) => {
 				"set": async function(userID, value) {
 					let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 					if (row) {
-						await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID]);
+						void utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID]);
 					} else {
-						await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value]);
+						void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value]);
 					}
-					return;
 				},
 				/**
 				 * @param {Discord.Snowflake} userID
@@ -335,9 +316,9 @@ module.exports = (passthrough) => {
 				"award": async function(userID, value) {
 					let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID);
 					if (row) {
-						await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID]);
+						void await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID]);
 					} else {
-						await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value]);
+						void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value]);
 					}
 				}
 			},
@@ -389,7 +370,7 @@ module.exports = (passthrough) => {
 			 * @param {events.EventEmitter} target
 			 * @param {String} name
 			 * @param {String} filename
-			 * @param {any} code
+			 * @param {(...args: Array<any>) => void} code
 			 */
 			addTemporaryListener: function(target, name, filename, code) {
 				console.log("added event "+name);
@@ -401,7 +382,7 @@ module.exports = (passthrough) => {
 			},
 			/**
 			 * @param {Discord.User} user
-			 * @param {String} permission
+			 * @param {"eval"|"owner"} permission
 			 * @returns {Promise<Boolean>}
 			 */
 			hasPermission: async function(user, permission) {
@@ -412,13 +393,7 @@ module.exports = (passthrough) => {
 			/**
 			 * @param {Discord.Snowflake} userID
 			 * @param {String} command
-			 * @param {Object} info
-			 * @param {Number} info.max
-			 * @param {Number} info.min
-			 * @param {Number} info.step
-			 * @param {Object} info.regen
-			 * @param {Number} info.regen.time
-			 * @param {Number} info.regen.amount
+			 * @param {{max: Number, min: Number, step: Number, regen: {time: Number, amount: Number}}} info
 			 */
 			cooldownManager: async function(userID, command, info) {
 				let winChance = info.max;
@@ -436,7 +411,7 @@ module.exports = (passthrough) => {
 			 * @param {Number} length
 			 * @param {Number} value
 			 * @param {Number} max
-			 * @param {String} text
+			 * @param {String} [text=""]
 			 */
 			progressBar: function(length, value, max, text) {
 				if (!text) text = "";
@@ -454,17 +429,18 @@ module.exports = (passthrough) => {
 			},
 			/**
 			 * @param {any} data
-			 * @param {Number} depth
+			 * @param {Number} [depth=0]
 			 * @returns {Promise<String>}
 			 */
 			stringify: async function(data, depth = 0) {
+				/** @type {String} */
 				let result;
 				if (data === undefined) result = "(undefined)";
 				else if (data === null) result = "(null)";
 				else if (typeof(data) == "function") result = "(function)";
 				else if (typeof(data) == "string") result = `"${data}"`;
 				else if (typeof(data) == "number") result = data.toString();
-				else if (data.constructor && data.constructor.name == "Promise") result = utils.stringify(await data);
+				else if (data.constructor && data.constructor.name == "Promise") result = await utils.stringify(await data);
 				else if (data.constructor && data.constructor.name.toLowerCase().includes("error")) {
 					let errorObject = {};
 					Object.entries(data).forEach(e => {
@@ -557,70 +533,70 @@ module.exports = (passthrough) => {
 
 			/** @param {Date} date */
 			upcomingDate: function(date) {
-				let hours = date.getUTCHours()
+				let hours = date.getUTCHours();
 				if (hours < 12) {
-					hours += " AM"
+					hours += " AM";
 				} else {
-					hours = (hours - 12) + " PM"
+					hours = (hours - 12) + " PM";
 				}
-				return date.toUTCString().split(" ").slice(0, 4).join(" ")+" at "+hours+" UTC"
+				return date.toUTCString().split(" ").slice(0, 4).join(" ")+" at "+hours+" UTC";
 			},
 
 			compactRows: {
 				/**
 				 * @param {Array<String>} rows
-				 * @param {Number} maxLength
-				 * @param {Number} joinLength
-				 * @param {String} endString
+				 * @param {Number} [maxLength=2000]
+				 * @param {Number} [joinLength=1]
+				 * @param {String} [endString="…"]
 				 */
 				removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
-					let currentLength = 0
-					let maxItems = 20
+					let currentLength = 0;
+					let maxItems = 20;
 					for (let i = 0; i < rows.length; i++) {
-						let row = rows[i]
+						let row = rows[i];
 						if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
-							return rows.slice(0, i).concat([endString])
+							return rows.slice(0, i).concat([endString]);
 						}
-						currentLength += row.length + joinLength
+						currentLength += row.length + joinLength;
 					}
-					return rows
+					return rows;
 				},
 
 				/**
 				 * @param {Array<String>} rows
-				 * @param {Number} maxLength
-				 * @param {Number} joinLength
-				 * @param {String} middleString
+				 * @param {Number} [maxLength=2000]
+				 * @param {Number} [joinLength=1]
+				 * @param {String} [middleString="…"]
 				 */
 				removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
-					let currentLength = 0
-					let currentItems = 0
-					let maxItems = 20
-					let reconstruction = new Map([["left", []], ["right", []]]) // Jesus fucking christ what is this
-					let leftOffset = 0
-					let rightOffset = 0
+					let currentLength = 0;
+					let currentItems = 0;
+					let maxItems = 20;
+					let reconstruction = new Map([["left", []], ["right", []]]); // Jesus fucking christ what is this
+					let leftOffset = 0;
+					let rightOffset = 0;
 					function getNextDirection() {
-						return rightOffset * 3 > leftOffset ? "left" : "right"
+						return rightOffset * 3 > leftOffset ? "left" : "right";
 					}
 					while (currentItems < rows.length) {
-						let direction = getNextDirection()
-						if (direction == "left") var row = rows[leftOffset++]
-						else var row = rows[rows.length - 1 - rightOffset++]
+						let direction = getNextDirection();
+						if (direction == "left") var row = rows[leftOffset++];
+						else var row = rows[rows.length - 1 - rightOffset++];
 						if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
-							return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
+							return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse());
 						}
-						reconstruction.get(direction).push(row)
-						currentLength += row.length + joinLength
-						currentItems++
+						reconstruction.get(direction).push(row);
+						currentLength += row.length + joinLength;
+						currentItems++;
 					}
-					return reconstruction.get("left").concat(reconstruction.get("right").reverse())
+					return reconstruction.get("left").concat(reconstruction.get("right").reverse());
 				}
 			},
 
 			/**
 			 * @param {Discord.TextChannel} channel
 			 * @param {Number} pageCount
-			 * @param {Function} callback
+			 * @param {(page: Number) => void} callback
 			 */
 			paginate: async function(channel, pageCount, callback) {
 				let page = 0
@@ -649,13 +625,14 @@ module.exports = (passthrough) => {
 				reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
 			},
 			/**
-			 * @param {Discord.TextChannel} channel
+			 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
 			 * @param {String|Discord.RichEmbed} content
 			 */
 			contentify: function (channel, content) {
 				if (channel.type != "text") return content;
-				let value;
-				let permissions = channel.permissionsFor(client.user);
+				let value = "";
+				let permissions;
+				if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user);
 				if (content instanceof Discord.RichEmbed) {
 					if (permissions && !permissions.has("EMBED_LINKS")) {
 						value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`;

@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const path = require("path");
 const repl = require("repl");
 const util = require("util");
+const vm = require("vm");
 
 require("../types.js");
 
@@ -9,7 +10,7 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager } = passthrough;
+	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
@@ -17,6 +18,12 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/lang.js", lang);
 
+	/**
+	 * @param {String} input
+	 * @param {vm.Context} context
+	 * @param {String} filename
+	 * @param {(err: Error|null, result: any) => void} callback
+	 */
 	async function customEval(input, context, filename, callback) {
 		let depth = 0;
 		if (input == "exit\n") return process.exit();

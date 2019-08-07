@@ -1,3 +1,4 @@
+// @ts-ignore
 require("../types.js");
 
 const responses = {

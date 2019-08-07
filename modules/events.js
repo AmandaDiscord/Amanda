@@ -172,7 +172,7 @@ module.exports = function(passthrough) {
 		}
 		switch (action.actionType) {
 		case "reply":
-			msg.channel.send(user.mention+" "+action.actionData);
+			msg.channel.send(user.toString()+" "+action.actionData);
 			break;
 		case "edit":
 			msg.edit(action.actionData);

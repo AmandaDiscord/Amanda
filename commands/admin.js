@@ -1,6 +1,9 @@
 const Discord = require("discord.js");
 const rp = require("request-promise");
+const util = require("util");
+const path = require("path");
 
+// @ts-ignore
 require("../types.js");
 
 /**
@@ -27,7 +30,7 @@ module.exports = function(passthrough) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
 					let result;
 					let depth = suffix.split("--depth:")[1]
-					depth?depth=depth.substring().split(" ")[0]:undefined;
+					depth?depth=depth.substring(0).split(" ")[0]:undefined;
 					if (!depth) depth = 0;
 					else {
 						depth = Math.floor(Number(depth));
@@ -62,7 +65,7 @@ module.exports = function(passthrough) {
 					else if (stdout) result = stdout;
 					else if (stderr) result = stderr;
 					else result = "No output";
-					result = result.toString("utf8");
+					result = result.toString();
 					if (result.length >= 2000) result = result.slice(0, 1993)+"…";
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
 					let menu = new utils.ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);

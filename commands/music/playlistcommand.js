@@ -27,7 +27,7 @@ module.exports = passthrough => {
 		/**
 		 * @param {Discord.Message} msg
 		 * @param {Array<String>} args
-		 * @param {Function} bulkPlayCallback
+		 * @param {(rows: Array<{videoID: String, name: String, length_seconds: Number}>) => void} bulkPlayCallback
 		 */
 		command: async function(msg, args, bulkPlayCallback) {
 			let playlistName = args[1];
@@ -207,7 +207,7 @@ module.exports = passthrough => {
 						deletePromptEmbed.setDescription("Playlist deleted.");
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed));
 					}},
-					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
+					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
 				]);
 			} else {
 				let author = [];

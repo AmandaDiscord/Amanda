@@ -50,8 +50,8 @@ module.exports = function(passthrough) {
 	 * @param {Song} song
 	 * @param {Discord.TextChannel} textChannel
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Boolean} insert
-	 * @param {Discord.Message} context
+	 * @param {Boolean} [insert]
+	 * @param {Discord.Message} [context]
 	 */
 	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
@@ -61,104 +61,13 @@ module.exports = function(passthrough) {
 		}
 		return numberOfSongs
 	}
-	/**
-	 * @param {Discord.Message} msg
-	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Array<String>} videoIDs
-	 * @param {String} startString
-	 * @param {String} endString
-	 * @param {Boolean} shuffle
-	 * @returns {Promise}
-	 */
-	async function bulkPlaySongs(msg, voiceChannel, videoIDs, startString, endString, shuffle = false) {
-		const useBatchLimit = 50;
-		const batchSize = 30;
-
-		let oldVideoIDs = videoIDs;
-		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
-		let to = endString == "-" ? videoIDs.length : (parseInt(endString) || from || videoIDs.length);
-		from = Math.max(from, 1);
-		to = Math.min(videoIDs.length, to);
-		if (startString) videoIDs = videoIDs.slice(from-1, to);
-		if (shuffle) {
-			videoIDs = videoIDs.shuffle();
-		}
-		if (!startString && !shuffle) videoIDs = videoIDs.slice(); // copy array to leave oldVideoIDs intact after making batches
-		if (!voiceChannel) voiceChannel = await detectVoiceChannel(msg, true);
-		if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-
-		
-		let progress = 0;
-		let total = videoIDs.length;
-		let lastEdit = 0;
-		let editInProgress = false;
-		let progressMessage = await msg.channel.send(getProgressMessage());
-		let cancelled = false;
-		let loader = [msg.guild.id, () => {
-			cancelled = true;
-			progressMessage.edit(`Song loading cancelled. (${progress}/${total})`);
-			bulkLoaders.splice(bulkLoaders.indexOf(loader), 1)
-		}];
-		bulkLoaders.push(loader)
-		let batches = [];
-		if (total <= useBatchLimit) batches.push(videoIDs);
-		else while (videoIDs.length) batches.push(videoIDs.splice(0, batchSize));
-		function getProgressMessage(batchNumber, batchProgress, batchTotal) {
-			if (!batchNumber) return `Please wait, loading songs...\nUse \`&music stop\` to cancel.`;
-			else return `Please wait, loading songs (batch ${batchNumber}: ${batchProgress}/${batchTotal}, total: ${progress}/${total})\nUse \`&music stop\` to cancel.`;
-		}
-		let videos = [];
-		let batchNumber = 0;
-		(function nextBatch() {
-			let batch = batches.shift();
-			batchNumber++;
-			let batchProgress = 0;
-			let promise = Promise.all(batch.map(videoID => {
-				return ytdl.getInfo(videoID).then(info => {
-					if (cancelled) return;
-					if (progress >= 0) {
-						progress++;
-						batchProgress++;
-						if ((Date.now()-lastEdit > 2000 && !editInProgress) || progress == total) {
-							lastEdit = Date.now();
-							editInProgress = true;
-							progressMessage.edit(getProgressMessage(batchNumber, batchProgress, batch.length)).then(() => {
-								editInProgress = false;
-							});
-						}
-						return info;
-					}
-				}).catch(reason => Promise.reject({reason, id: videoID}))
-			}));
-			promise.catch(error => {
-				if (cancelled) return;
-				progress = -1;
-				common.manageYtdlGetInfoErrors(msg, error.reason, error.id, oldVideoIDs.indexOf(error.id)+1).then(() => {
-					msg.channel.send("At least one video in the playlist was not playable. Playlist loading has been cancelled.");
-				});
-			});
-			promise.then(batchVideos => {
-				if (cancelled) return;
-				videos.push(...batchVideos);
-				if (batches.length) nextBatch();
-				else {
-					bulkLoaders.splice(bulkLoaders.indexOf(loader), 1);
-					videos.forEach(video => {
-						let queue = queueManager.storage.get(msg.guild.id);
-						let song = new songTypes.YouTubeSong(video, !queue || queue.songs.length <= 1);
-						handleSong(song, msg.channel, voiceChannel);
-					});
-				}
-			});
-		})();
-	}
 
 	class VoiceStateCallback {
 		/**
 		 * @param {Discord.Snowflake} userID
 		 * @param {Discord.Guild} guild
 		 * @param {Number} timeoutMs
-		 * @param {Function} callback
+		 * @param {(voiceChannel: Discord.VoiceChannel) => void} callback
 		 * @constructor
 		 */
 		constructor(userID, guild, timeoutMs, callback) {

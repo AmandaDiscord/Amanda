@@ -1,6 +1,7 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
 
+// @ts-ignore
 require("../types.js");
 
 /**
@@ -23,7 +24,7 @@ module.exports = function(passthrough) {
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
 		let url, permissions;
-		if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+		if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;
 		else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`;
 		else return Promise.reject("Host provided not supported");
@@ -51,7 +52,7 @@ module.exports = function(passthrough) {
 
 	commands.assign({
 		"cat": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of a cute cat",
 			aliases: ["cat"],
 			category: "images",
@@ -60,7 +61,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"dog": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of a cute doggo",
 			aliases: ["dog", "doggo"],
 			category: "images",
@@ -69,7 +70,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"space": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of space",
 			aliases: ["space"],
 			category: "images",
@@ -78,7 +79,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"snek": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of a snek",
 			aliases: ["snek", "snake"],
 			category: "images",
@@ -87,7 +88,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"birb": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of a birb",
 			aliases: ["birb", "bird"],
 			category: "images",
@@ -96,7 +97,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"neko": {
-			usage: "none",
+			usage: "None",
 			description: "Returns an image of a neko (ฅ’ω’ฅ)",
 			aliases: ["neko"],
 			category: "images",

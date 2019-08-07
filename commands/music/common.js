@@ -20,7 +20,7 @@ module.exports = passthrough => {
 	if (!resultCache) {
 		var common = {
 			/**
-			 * @param {Discord.TextChannel} channel
+			 * @param {Discord.TextChannel|Discord.Message} channel
 			 * @param {Object} reason
 			 * @param {String} reason.message
 			 * @param {String} id
@@ -151,7 +151,7 @@ module.exports = passthrough => {
 				/**
 				 * Not interactive. Max 10 results.
 				 * @param {String} input
-				 * @returns {Array<{type: String, title: String, videoId: String, author: String, authorId: String, videoThumbnails: Array<{quality: String, url: String, width: Number, height: Number}>, description: String, descriptionHtml: String, viewCount: Number, published: Number, publishedText: String, lengthSeconds: Number, liveNow: Boolean, paid: Boolean, premium: Boolean}>}
+				 * @returns {Promise<Array<{type: String, title: String, videoId: String, author: String, authorId: String, videoThumbnails: Array<{quality: String, url: String, width: Number, height: Number}>, description: String, descriptionHtml: String, viewCount: Number, published: Number, publishedText: String, lengthSeconds: Number, liveNow: Boolean, paid: Boolean, premium: Boolean}>>}
 				 */
 				toSearch: async function(input) {
 					let videos;
@@ -169,7 +169,7 @@ module.exports = passthrough => {
 				 * @param {String} input
 				 * @param {Discord.TextChannel} channel
 				 * @param {String} authorID
-				 * @returns {Array<String>} An array of video IDs, or null
+				 * @returns {Promise<Array<any>>} An array of video IDs, or null
 				 */
 				toIDWithSearch: async function(input, channel, authorID) {
 					let id = await common.resolveInput.toID(input, channel);
@@ -177,7 +177,7 @@ module.exports = passthrough => {
 					channel.sendTyping()
 					let videos = await common.resolveInput.toSearch(input);
 					if (videos.length < 1) return null;
-					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.escapeMarkdown(video.title)}** (${common.prettySeconds(video.lengthSeconds)})`);
+					let videoResults = videos.map((video, index) => `${index+1}. **${Discord.Util.escapeMarkdown(video.title)}** (${common.prettySeconds(video.lengthSeconds)})`);
 					return utils.makeSelection(channel, authorID, "Song selection", "Song selection cancelled", videoResults).then(index => {
 						return [[videos[index].videoId], true];
 					}).catch(() => {

@@ -8,6 +8,7 @@ const simpleGit = require("simple-git")(__dirname);
 const profiler = require("gc-profiler");
 const util = require("util");
 
+// @ts-ignore
 require("../types.js");
 
 /**
@@ -22,12 +23,15 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/lang.js", lang);
 
-	sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
+	let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)));
 	console.log(`added timeout sendStatsTimeout`);
 	function sendStatsTimeoutFunction() {
 		sendStats();
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
+	/**
+	 * @param {Discord.Message} [msg]
+	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
 		let now = Date.now();
@@ -43,7 +47,7 @@ module.exports = function(passthrough) {
 		return console.log("Sent stats.", new Date().toUTCString());
 	}
 
-	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)));
+	let dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)));
 	console.log(`added timeout dailyTimeout`);
 	function setDailyStatsTimeout() {
 		setDailyStats();
@@ -73,6 +77,10 @@ module.exports = function(passthrough) {
 	profileStorage.save("badge-none", "file", "./images/36393E.png");
 	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
 
+	/**
+	 * @param {Discord.User} user
+	 * @param {{waifu?: {id: String}, claimer?: {id: String}}} info
+	 */
 	function getHeartType(user, info) {
 		// Full hearts for Amanda! Amanda loves everyone.
 		if (user.id == client.user.id) return "full";
@@ -91,7 +99,7 @@ module.exports = function(passthrough) {
 
 	commands.assign({
 		"statistics": {
-			usage: "<music, games>",
+			usage: "[music|games]",
 			description: "Displays detailed statistics",
 			aliases: ["statistics", "stats"],
 			category: "meta",
@@ -147,7 +155,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"ping": {
-			usage: "none",
+			usage: "None",
 			description: "Gets latency to Discord",
 			aliases: ["ping", "pong"],
 			category: "meta",
@@ -160,7 +168,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"forcestatupdate": {
-			usage: "none",
+			usage: "None",
 			description: "",
 			aliases: ["forcestatupdate"],
 			category: "admin",
@@ -169,20 +177,20 @@ module.exports = function(passthrough) {
 			}
 		},
 		"restartnotify": {
-			usage: "none",
+			usage: "None",
 			description: "",
 			aliases: ["restartnotify"],
 			category: "admin",
 			process: async function(msg) {
 				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id]);
 				if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send(`Alright. You'll be notified of the next time I restart`);
 				msg.react("✅");
 			}
 		},
 		"invite": {
-			usage: "none",
+			usage: "None",
 			description: "Sends the bot invite link to you via DMs",
 			aliases: ["invite", "inv"],
 			category: "meta",
@@ -196,7 +204,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"info": {
-			usage: "none",
+			usage: "None",
 			description: "Displays information about Amanda",
 			aliases: ["info", "inf"],
 			category: "meta",
@@ -218,7 +226,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"donate": {
-			usage: "none",
+			usage: "None",
 			description: "Get information on how to donate",
 			aliases: ["donate", "patreon"],
 			category: "meta",
@@ -229,7 +237,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"commits": {
-			usage: "none",
+			usage: "None",
 			description: "Gets the latest git commits to Amanda",
 			aliases: ["commits", "commit", "git"],
 			category: "meta",
@@ -275,7 +283,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"privacy": {
-			usage: "none",
+			usage: "None",
 			description: "Details Amanda's privacy statement",
 			aliases: ["privacy"],
 			category: "meta",
@@ -289,7 +297,7 @@ module.exports = function(passthrough) {
 			}
 		},
 		"user": {
-			usage: "<user>",
+			usage: "[user]",
 			description: "Provides information about a user",
 			aliases: ["user"],
 			category: "meta",
@@ -329,13 +337,13 @@ module.exports = function(passthrough) {
 			}
 		},
 		"avatar": {
-			usage: "<user>",
+			usage: "[user]",
 			description: "Gets a user's avatar",
 			aliases: ["avatar", "pfp"],
 			category: "meta",
 			process: async function(msg, suffix) {
 				let user, member, permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
@@ -355,7 +363,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: function(msg, suffix) {
 				let permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"));
@@ -367,13 +375,13 @@ module.exports = function(passthrough) {
 			}
 		},
 		"profile": {
-			usage: "<user>",
+			usage: "[user]",
 			description: "Get profile information about someone",
 			aliases: ["profile"],
 			category: "meta",
 			process: async function(msg, suffix) {
 				let user, member, permissions;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"));
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
@@ -426,13 +434,13 @@ module.exports = function(passthrough) {
 			}
 		},
 		"settings": {
-			usage: "<self|server> <view|setting name> <value>",
+			usage: "<self|server> <view|setting name> [value]",
 			description: "Modify settings Amanda will use for yourself or server wide",
 			aliases: ["settings"],
 			category: "configuration",
 			process: async function(msg, suffix) {
-				let args = suffix.split(" ");
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				let args = suffix.split(" "), permissions;
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "dm") {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
 				}
@@ -478,7 +486,7 @@ module.exports = function(passthrough) {
 
 				let setting = settings[settingName];
 				if (!setting) return msg.channel.send(
-					"Command syntax is `&settings <scope> <name> <value>`. "
+					`Command syntax is \`&settings ${this.usage}\`. `
 					+"Your value for `name` was incorrect, it must be one of: "
 					+Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => "`"+k+"`").join(", ")
 				);
@@ -569,7 +577,7 @@ module.exports = function(passthrough) {
 				} else if (setting.type == "string") {
 					let value = args[2].toLowerCase();
 					if (value.length > 50) return msg.channel.send("That setting value is too long. It must not be more than 50 characters.");
-					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result]);
+					await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value]);
 					return msg.channel.send("Setting updated.");
 
 				} else {
@@ -578,12 +586,13 @@ module.exports = function(passthrough) {
 			}
 		},
 		"help": {
-			usage: "<command>",
+			usage: "[command]",
 			description: "Your average help command",
 			aliases: ["help", "h", "commands", "cmds"],
 			category: "meta",
 			process: async function (msg, suffix) {
 				let embed, permissions;
+				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (suffix) {
 					suffix = suffix.toLowerCase();
 					if (suffix == "music" || suffix == "m") {
@@ -670,8 +679,10 @@ module.exports = function(passthrough) {
 									.setAuthor(`Command Category: ${suffix}`)
 									.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
 									.setColor("36393E")
-									let content = "";
-									if (msg.channel.type != "dm") permissions = message.channel.permissionsFor(client.user);
+									let content;
+									if (msg.channel.type != "dm") {
+										if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user);
+									}
 									if (!permissions || permissions.has("EMBED_LINKS")) content = mobileEmbed;
 									else {
 										function addPart(value) {
@@ -707,7 +718,7 @@ module.exports = function(passthrough) {
 				function send(where) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
-						if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+						if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 						if (!permissions || permissions.has("EMBED_LINKS")) {
 							var promise = target.send(embed);
 						} else {

@@ -26,7 +26,7 @@ module.exports = class YouTubeSong extends WebSong {
 		this.basic = basic;
 	}
 	/**
-	 * @returns {{src: String, width: 320, height: 180}}
+	 * @returns {{src: String, width: number, height: number}}
 	 */
 	getThumbnail() {}
 	_deleteCache() {}

@@ -29,7 +29,7 @@ module.exports = function(passthrough) {
 	client.once("prefixes", async (prefixes, statusPrefix) => {
 		await refresh()
 		
-		/** @type {String[]} */
+		/** @type {Array<String>} */
 		function getCurrentGroups() {
 			return users.filter(o => o.userID == client.user.id).map(o => o.label)
 		}
