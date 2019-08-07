@@ -160,6 +160,7 @@ module.exports = passthrough => {
 					} catch (e) {
 						return [];
 					}
+					if (!videos.filter) return [];
 					videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
 					return videos;
 				},
