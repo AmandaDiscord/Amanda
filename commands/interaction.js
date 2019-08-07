@@ -19,6 +19,9 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/lang.js", lang);
 
+	/**
+	 * @type {Object.<string, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>}
+	 */
 	let cmds = {
 		"ship": {
 			usage: "<mention 1> <mention 2>",

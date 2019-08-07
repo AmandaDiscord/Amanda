@@ -315,7 +315,7 @@ module.exports = function(passthrough) {
 					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
 					status =`<:streaming:606815351967318019>`;
 				} else if (user.presence.game) {
-					game = user.presencePrefix+" **"+user.presence.game.name+"**";
+					game = user.activityPrefix+" **"+user.presence.game.name+"**";
 					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\n${user.presence.game.details}`;
 					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
 					else if (user.presence.game.state) game += `\n${user.presence.game.state}`;
@@ -357,7 +357,7 @@ module.exports = function(passthrough) {
 				let permissions;
 				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"));
-				let emoji = client.parseEmoji(suffix);
+				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let embed = new Discord.RichEmbed()
 					.setImage(emoji.url)
@@ -662,6 +662,9 @@ module.exports = function(passthrough) {
 								.setColor("36393E")
 								if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.");
 								send("dm").then(mobile).catch(() => send("channel").then(mobile));
+								/**
+								 * @param {Discord.Message} message
+								 */
 								function mobile(message) {
 									let mobileEmbed = new Discord.RichEmbed()
 									.setAuthor(`Command Category: ${suffix}`)
@@ -682,7 +685,7 @@ module.exports = function(passthrough) {
 										addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => f.name+"\n"+f.value).join("\n"));
 										addPart(mobileEmbed.footer && mobileEmbed.footer.text);
 									}
-									let menu = message.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: content}]);
+									let menu = new utils.ReactionMenu(message, [{emoji: "📱", ignore: "total", actionType: "edit", actionData: content}]);
 									setTimeout(() => menu.destroy(true), 5*60*1000);
 								}
 							} else {

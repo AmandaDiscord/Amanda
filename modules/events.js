@@ -149,16 +149,6 @@ module.exports = function(passthrough) {
 		}
 	}
 
-	Object.defineProperties(Discord.Message.prototype, {
-		reactionMenu: {
-			value: function(actions) {
-				let message = this;
-				return new utils.ReactionMenu(message, actions);
-			},
-			configurable: true
-		}
-	});
-
 	/**
 	 * @param {Discord.MessageReaction} messageReaction
 	 * @param {Discord.User} user

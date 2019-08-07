@@ -135,7 +135,7 @@ module.exports = (passthrough) => {
 			ReactionMenu: class ReactionMenu {
 				/**
 				 * @param {Discord.Message} message
-				 * @param {Array<{emoji: String, allowedUsers?: Array<String>, deniedUsers?: Array<String>, ignore?: String, remove?: String, actionType?: String, actionData?: Function}>} actions
+				 * @param {Array<ReactionMenuAction>} actions
 				 */
 				constructor(message, actions) {
 					this.message = message;
@@ -148,6 +148,9 @@ module.exports = (passthrough) => {
 						a.messageReaction = await this.message.react(a.emoji).catch(new Function());
 					}
 				}
+				/**
+				 * @param {Boolean} remove
+				 */
 				destroy(remove) {
 					delete reactionMenus[this.message.id];
 					if (remove) {
@@ -629,7 +632,7 @@ module.exports = (passthrough) => {
 						reactionMenu.destroy(true)
 					}, 10*60*1000)
 				}
-				let reactionMenu = msg.reactionMenu([
+				let reactionMenu = new utils.ReactionMenu(msg, [
 					{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
 						page--
 						if (page < 0) page = pageCount-1

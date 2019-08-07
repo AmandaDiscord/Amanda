@@ -198,7 +198,7 @@ module.exports = passthrough => {
 			}
 			generateReactions() {
 				if (this.reactionMenu) this.reactionMenu.destroy(true);
-				if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
+				if (this.nowPlayingMsg) this.reactionMenu = new utils.ReactionMenu(this.nowPlayingMsg, [
 					{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
 						this.wrapper.togglePlaying("reaction")

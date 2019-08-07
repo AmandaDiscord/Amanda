@@ -198,8 +198,8 @@ module.exports = passthrough => {
 					"<:bn_ti:327986149203116032> - ignore"
 				);
 				let message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
-				message.reactionMenu([
-					{emoji: client.emojis.get(client.parseEmoji("<:bn_del:331164186790854656>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
+				new utils.ReactionMenu(message, [
+					{emoji: client.emojis.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
@@ -207,7 +207,7 @@ module.exports = passthrough => {
 						deletePromptEmbed.setDescription("Playlist deleted.");
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed));
 					}},
-					{emoji: client.emojis.get(client.parseEmoji("<:bn_ti:327986149203116032>").id), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
+					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
 				]);
 			} else {
 				let author = [];

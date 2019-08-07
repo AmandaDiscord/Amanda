@@ -158,7 +158,7 @@ module.exports = function(passthrough) {
 			if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
 			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
 			return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
-				msg.reactionMenu([
+				new utils.ReactionMenu(msg, [
 					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
 					}}
@@ -205,7 +205,7 @@ module.exports = function(passthrough) {
 				).then(() => {
 					channel.send("I've sent you a DM with the list of categories.");
 				}).catch(() => {
-					channel.send(lang.dm.failed(msg));
+					channel.send(lang.dm.failed(options.msg));
 				});
 				return;
 			} else {
