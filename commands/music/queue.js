@@ -275,8 +275,9 @@ module.exports = passthrough => {
 					if (err && typeof(err.message) == "string" && err.message.startsWith("No formats found")) {
 						this.textChannel.send(`That video doesn't have playable sound. It will be skipped. (id: ${song.getUserFacingID()})`)
 					} else {
-						this.textChannel.send("Failed to stream that file. This is a bug. Please tell us about it. https://discord.gg/zhthQjH")
+						console.error("Posting a support server link :<")
 						console.error(err)
+						this.textChannel.send("Failed to stream that file. This is a bug. We're aware of the cause, and we're working on it.\nIf you try the same thing again, it will probably work.")
 					}
 					stream.removeAllListeners("data")
 					return this.playNext()
