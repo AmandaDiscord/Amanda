@@ -75,7 +75,6 @@ module.exports = passthrough => {
 				if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
 				msg.channel.sendTyping();
 				let result = await common.resolveInput.toIDWithSearch(args.slice(3).join(" "), msg.channel, msg.author.id);
-				if (result == null) return msg.channel.send("I could not find any videos at this moment. Try again later");
 				(async () => {
 					if (result == null) throw new Error()
 					result = result[0][0]
