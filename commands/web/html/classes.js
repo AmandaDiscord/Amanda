@@ -304,7 +304,7 @@ class Player extends ElemJS {
 				)
 			).child(
 				ejs`div.player-status`.child(
-					ejs`div.song-title`.text(this.song.title)
+					ejs`div.song-title.one-line`.text(this.song.title)
 				).child(
 					this.parts.time
 				).child(
