@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "buffer-signature": "^1.1.0",
-    "discord.js": "github:cloudrac3r/discord.js#amanda",
+    "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
     "entities": "^2.0.0",
     "events": "^3.0.0",
     "gc-profiler": "^1.4.1",

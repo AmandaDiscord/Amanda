@@ -1,17 +1,14 @@
-const Discord = require("discord.js");
 const mysql = require("mysql2/promise");
 const hotreload = require("./modules/hotreload.js");
-const commandstore = require("./modules/commandstore.js");
-const managers = require("./modules/managers.js");
+const managers = require("./modules/managers");
 const YouTube = require("simple-youtube-api");
+
+const { Amanda } = require("./modules/structures");
 
 // @ts-ignore
 const config = require("./config.json");
-const client = new Discord.Client({disableEveryone: true, disabledEvents: ["TYPING_START"]});
+const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"]});
 const youtube = new YouTube(config.yt_api_key);
-
-// @ts-ignore
-require("./types.js");
 
 let db = mysql.createPool({
 	host: config.mysql_domain,
@@ -21,9 +18,7 @@ let db = mysql.createPool({
 	connectionLimit: 5
 });
 
-let commands = new commandstore();
-/** @type {Object.<string, ReactionMenu>} */
-let reactionMenus = {};
+let commands = new managers.CommandStore();
 
 (async () => {
 	await Promise.all([
@@ -32,7 +27,7 @@ let reactionMenus = {};
 	]);
 
 	let reloader = new hotreload();
-	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, reactionMenus, queueManager: managers.queueManager, gameManager: managers.gameManager, youtube, wss: undefined};
+	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, queueManager: new managers.QueueManager(), gameManager: new managers.GameManager(), youtube, wss: undefined};
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",

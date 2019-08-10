@@ -5,6 +5,7 @@ const Jimp = require("jimp");
 const path = require("path");
 const mysql = require("mysql2/promise");
 
+const Structures = require("./structures");
 //@ts-ignore
 require("../types.js");
 
@@ -37,7 +38,7 @@ module.exports = (passthrough) => {
 						if (client.readyAt) resolve();
 						else client.once("ready", () => resolve());
 					}).then(() => {
-						client.fetchUser(this.userID).then(user => {
+						client.users.fetch(this.userID).then(user => {
 							this.user = user;
 							this.events.emit("fetched");
 							this.events = undefined;
@@ -45,7 +46,7 @@ module.exports = (passthrough) => {
 					});
 				}
 				/**
-				 * @returns {Promise<Discord.Message>}
+				 * @returns {Promise<Structures.Message>}
 				 */
 				send() {
 					return new Promise((resolve, reject) => {
@@ -139,38 +140,6 @@ module.exports = (passthrough) => {
 					)).then(() => result);
 				}
 			},
-			ReactionMenu: class ReactionMenu {
-				/**
-				 * @param {Discord.Message} message
-				 * @param {Array<ReactionMenuAction>} actions
-				 */
-				constructor(message, actions) {
-					this.message = message;
-					this.actions = actions;
-					reactionMenus[this.message.id] = this;
-					this.promise = this.react();
-				}
-				async react() {
-					for (let a of this.actions) {
-						a.messageReaction = await this.message.react(a.emoji).catch(new Function());
-					}
-				}
-				/**
-				 * @param {Boolean} [remove]
-				 */
-				destroy(remove) {
-					delete reactionMenus[this.message.id];
-					if (remove) {
-						if (this.message.channel.type == "text") {
-							this.message.clearReactions().catch(new Function());
-						} else if (this.message.channel.type == "dm") {
-							this.actions.forEach(a => {
-								if (a.messageReaction) a.messageReaction.remove().catch(new Function());
-							});
-						}
-					}
-				}
-			},
 			sql: {
 				/**
 				 * @param {String} string
@@ -214,7 +183,7 @@ module.exports = (passthrough) => {
 				/**
 				 * @param {Discord.Snowflake} userID
 				 * @param {{basic: Boolean}} [options]
-				 * @returns {Promise<{claimer: Discord.User, price: Number, waifu: Discord.User, waifuID?: String, userID?: String, waifuPrice: Number, gifts: {received: {list: Array<any>, emojis: String}, sent: {list: Array<any>, emojis: String}}}>}
+				 * @returns {Promise<{claimer: Structures.User, price: Number, waifu: Structures.User, waifuID?: String, userID?: String, waifuPrice: Number, gifts: {received: {list: Array<any>, emojis: String}, sent: {list: Array<any>, emojis: String}}}>}
 				 */
 				get: async function(userID, options) {
 					const emojiMap = {
@@ -241,9 +210,9 @@ module.exports = (passthrough) => {
 						utils.sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
 						utils.sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
 					]);
-					let claimer = claimerRow ? await client.fetchUser(claimerRow.userID) : undefined;
+					let claimer = claimerRow ? await client.users.fetch(claimerRow.userID) : undefined;
 					let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0;
-					let waifu = meRow ? await client.fetchUser(meRow.waifuID) : undefined;
+					let waifu = meRow ? await client.users.fetch(meRow.waifuID) : undefined;
 					let waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0;
 					let gifts = {
 						received: {
@@ -381,7 +350,7 @@ module.exports = (passthrough) => {
 				});
 			},
 			/**
-			 * @param {Discord.User} user
+			 * @param {Structures.User} user
 			 * @param {"eval"|"owner"} permission
 			 * @returns {Promise<Boolean>}
 			 */
@@ -489,17 +458,17 @@ module.exports = (passthrough) => {
 			},
 
 			/**
-			 * @param {Discord.TextChannel} channel
+			 * @param {Structures.TextChannel} channel
 			 * @param {String} authorID
 			 * @param {String} title
 			 * @param {String} failedTitle
 			 * @param {Array<String>} items
-			 * @param {Discord.RichEmbed} [embed=undefined]
+			 * @param {Discord.MessageEmbed} [embed=undefined]
 			 * @returns {Promise<Number>} The zero-based index that was selected.
 			 */
 			makeSelection: async function(channel, authorID, title, failedTitle, items, embed = undefined) {
 				// Set up embed
-				if (!embed) embed = new Discord.RichEmbed();
+				if (!embed) embed = new Discord.MessageEmbed();
 				embed.setTitle(title);
 				embed.setDescription(items.join("\n"));
 				embed.setColor("36393e");
@@ -594,7 +563,7 @@ module.exports = (passthrough) => {
 			},
 
 			/**
-			 * @param {Discord.TextChannel} channel
+			 * @param {Structures.TextChannel} channel
 			 * @param {Number} pageCount
 			 * @param {(page: Number) => void} callback
 			 */
@@ -625,15 +594,15 @@ module.exports = (passthrough) => {
 				reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
 			},
 			/**
-			 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
-			 * @param {String|Discord.RichEmbed} content
+			 * @param {Structures.TextChannel|Structures.DMChannel} channel
+			 * @param {String|Discord.MessageEmbed} content
 			 */
 			contentify: function (channel, content) {
 				if (channel.type != "text") return content;
 				let value = "";
 				let permissions;
-				if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user);
-				if (content instanceof Discord.RichEmbed) {
+				if (channel instanceof Structures.TextChannel) permissions = channel.permissionsFor(client.user);
+				if (content instanceof Discord.MessageEmbed) {
 					if (permissions && !permissions.has("EMBED_LINKS")) {
 						value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`;
 						if (value.length > 2000) value = value.slice(0, 1960)+"…";
@@ -642,15 +611,10 @@ module.exports = (passthrough) => {
 				} else if (typeof(content) == "string") {
 					value = content;
 					if (value.length > 2000) value = value.slice(0, 1998)+"…";
-				} else throw new TypeError(`Content provide must be an instance of a RichEmbed or String. Got ${content.constructor ? content.constructor.name : typeof content}`);
+				} else throw new TypeError(`Content provide must be an instance of a MessageEmbed or String. Got ${content.constructor ? content.constructor.name : typeof content}`);
 				return value;
 			}
 		}
-
-		Object.defineProperty(Discord.Guild.prototype, "queue", {
-			get: function() { return queueManager.storage.get(this.id); },
-			configurable: true
-		});
 
 		utilsResultCache = utils;
 	} else {

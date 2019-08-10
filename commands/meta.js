@@ -40,7 +40,7 @@ module.exports = function(passthrough) {
 		let users = client.users.size;
 		let guilds = client.guilds.size;
 		let channels = client.channels.size;
-		let voiceConnections = client.voiceConnections.size;
+		let voiceConnections = client.voice.connections.size;
 		let uptime = process.uptime();
 		await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime]);
 		if (msg) msg.react("👌");
@@ -105,7 +105,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: async function(msg, suffix) {
 				let ram = process.memoryUsage();
-				let embed = new Discord.RichEmbed().setColor("36393E");
+				let embed = new Discord.MessageEmbed().setColor("36393E");
 				if (!suffix) return defaultStats();
 				if (suffix.toLowerCase() == "music") {
 					embed
@@ -163,7 +163,7 @@ module.exports = function(passthrough) {
 				let array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
-				let embed = new Discord.RichEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
+				let embed = new Discord.MessageEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
 				return nmsg.edit(utils.contentify(msg.channel, embed));
 			}
 		},
@@ -195,7 +195,7 @@ module.exports = function(passthrough) {
 			aliases: ["invite", "inv"],
 			category: "meta",
 			process: async function(msg) {
-				let embed = new Discord.RichEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
+				let embed = new Discord.MessageEmbed().setDescription("**I've been invited?**\n*Be sure that you have manage server permissions on the server you would like to invite me to*").setTitle("Invite Link").setURL("https://discord-bots.ga/amanda").setColor("36393E")
 				try {
 					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(`${msg.author.username}, a DM has been sent!`);
@@ -210,10 +210,10 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: async function(msg) {
 				let [c1, c2] = await Promise.all([
-					client.fetchUser("320067006521147393", true),
-					client.fetchUser("176580265294954507", true)
+					client.users.fetch("320067006521147393", true),
+					client.users.fetch("176580265294954507", true)
 				]);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setAuthor("Amanda", client.user.smallAvatarURL)
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
@@ -231,7 +231,7 @@ module.exports = function(passthrough) {
 			aliases: ["donate", "patreon"],
 			category: "meta",
 			process: function(msg) {
-				let embed = new Discord.RichEmbed().setColor("36393E").setTitle("Thinking of donating? :heart:")
+				let embed = new Discord.MessageEmbed().setColor("36393E").setTitle("Thinking of donating? :heart:")
 				.setDescription("I'm excited that you're possibly interested in supporting my creators. If you're interested in making monthly donations, you may at [Patreon](https://www.patreon.com/papiophidian) or If you're interested in a one time donation, you can donate through [PayPal](https://paypal.me/papiophidian)\n\nAll money donated will go back into development. Access to features will also not change regardless of your choice but you will recieve a donor role if you join my [Support Server](https://discord.gg/zhthQjH) and get a distinguishing donor badge on &profile");
 				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
@@ -274,7 +274,7 @@ module.exports = function(passthrough) {
 						});
 					});
 				});
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setTitle("Git info")
 					.addField("Status", "On branch "+res.branch+", latest commit "+res.latestCommitHash)
 					.addField(`Commits (latest ${limit} entries)`, res.logString)
@@ -288,7 +288,7 @@ module.exports = function(passthrough) {
 			aliases: ["privacy"],
 			category: "meta",
 			process: async function(msg) {
-				let embed = new Discord.RichEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+				let embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 				try {
 					await msg.author.send(embed);
 					if (msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg));
@@ -308,7 +308,7 @@ module.exports = function(passthrough) {
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(`Couldn't find that user`);
-				let embed = new Discord.RichEmbed().setColor("36393E");
+				let embed = new Discord.MessageEmbed().setColor("36393E");
 				embed.addField("User ID:", user.id);
 				let userCreatedTime = user.createdAt.toUTCString();
 				embed.addField("Account created at:", userCreatedTime);
@@ -349,7 +349,7 @@ module.exports = function(passthrough) {
 					if (member) user = member.user;
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(lang.input.invalid(msg, "user"));
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessaeEmbed()
 					.setImage(user.displayAvatarURL)
 					.setColor("36393E");
 				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(user.displayAvatarURL);
@@ -367,7 +367,7 @@ module.exports = function(passthrough) {
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"));
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setImage(emoji.url)
 					.setColor("36393E")
 				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(emoji.url);
@@ -596,7 +596,7 @@ module.exports = function(passthrough) {
 				if (suffix) {
 					suffix = suffix.toLowerCase();
 					if (suffix == "music" || suffix == "m") {
-						embed = new Discord.RichEmbed()
+						embed = new Discord.MessageEmbed()
 						.setAuthor("&music: command help (aliases: music, m)")
 						.addField(`play`, `Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n\`&music play https://youtube.com/watch?v=e53GDo-wnSs\` or\n\`&music play despacito\``)
 						.addField(`insert`, `Works the same as play, but inserts the song at the start of the queue instead of at the end.\n\`&music insert https://youtube.com/watch?v=e53GDo-wnSs\``)
@@ -618,7 +618,7 @@ module.exports = function(passthrough) {
 						.setColor('36393E')
 						send("dm").catch(() => send("channel"));
 					} else if (suffix.includes("playlist")) {
-						embed = new Discord.RichEmbed()
+						embed = new Discord.MessageEmbed()
 						.setAuthor(`&music playlist: command help (aliases: playlist, playlists, pl)`)
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. "+
 							"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n"+
@@ -654,7 +654,7 @@ module.exports = function(passthrough) {
 					} else {
 						let command = commands.find(c => c.aliases.includes(suffix));
 						if (command) {
-							embed = new Discord.RichEmbed()
+							embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
 							.setDescription(`Arguments: ${command.usage}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
 							.setColor("36393E")
@@ -663,7 +663,7 @@ module.exports = function(passthrough) {
 							if (commands.categories.get(suffix)) {
 								let cat = commands.categories.get(suffix);
 								let maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0);
-								embed = new Discord.RichEmbed()
+								embed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(
 									cat.map(c =>`\`${commands.get(c).aliases[0]}${" ​".repeat(maxLength-commands.get(c).aliases[0].length)}\` ${commands.get(c).description}`).join("\n")+
@@ -675,7 +675,7 @@ module.exports = function(passthrough) {
 								 * @param {Discord.Message} message
 								 */
 								function mobile(message) {
-									let mobileEmbed = new Discord.RichEmbed()
+									let mobileEmbed = new Discord.MessageEmbed()
 									.setAuthor(`Command Category: ${suffix}`)
 									.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
 									.setColor("36393E")
@@ -700,13 +700,13 @@ module.exports = function(passthrough) {
 									setTimeout(() => menu.destroy(true), 5*60*1000);
 								}
 							} else {
-								embed = new Discord.RichEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
+								embed = new Discord.MesageEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000");
 								send("channel");
 							}
 						}
 					}
 				} else {
-					embed = new Discord.RichEmbed()
+					embed = new Discord.MessageEmbed()
 					.setAuthor("Command Categories")
 					.setDescription(
 						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n`+

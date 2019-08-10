@@ -68,7 +68,7 @@ module.exports = function(passthrough) {
 					result = result.toString();
 					if (result.length >= 2000) result = result.slice(0, 1993)+"…";
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
-					let menu = new utils.ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					let menu = new utils.ReactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				});
 				return;
@@ -92,7 +92,7 @@ module.exports = function(passthrough) {
 				let member = await msg.guild.findMember(msg, usertxt);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				utils.coinsManager.award(member.id, award);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
 					.setColor("F8E71C")
 				msg.channel.send(utils.contentify(msg.channel, embed));

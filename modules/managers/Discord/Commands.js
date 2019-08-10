@@ -1,8 +1,7 @@
 const Discord = require("discord.js");
+const Structures = require("../../structures/");
+const managers = require("../");
 
-/**
- * @extends {Discord.Collection<String, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>}
- */
 class CommandStore extends Discord.Collection {
 	constructor() {
 		super();
@@ -12,7 +11,7 @@ class CommandStore extends Discord.Collection {
 		this.categories = new Map();
 	}
 	/**
-	 * @param {Object.<string, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>} properties
+	 * @param {Object.<string, managers.Command>} properties
 	 */
 	assign(properties) {
 		Object.values(properties).forEach(i => {

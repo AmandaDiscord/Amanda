@@ -205,7 +205,7 @@ module.exports = function(passthrough) {
 				let member = await msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let money = await utils.coinsManager.get(member.id);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setAuthor(`Coins for ${member.displayTag}`)
 					.setDescription(`${money} Discoins ${lang.emoji.discoin}`)
 					.setColor("F8E71C")
@@ -227,7 +227,7 @@ module.exports = function(passthrough) {
 					let amount;
 					if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500)+1;
 					else amount = Math.floor(Math.random() * (500 - 100) + 100)+1;
-					let embed = new Discord.RichEmbed()
+					let embed = new Discord.MessageEmbed()
 						.setDescription(lang.external.money.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
 						.setColor("F8E71C")
 					msg.channel.send(utils.contentify(msg.channel, embed));
@@ -254,7 +254,7 @@ module.exports = function(passthrough) {
 				}
 				let offset = (pagenum-1)*pagesize;
 				let all = await utils.sql.all("SELECT userID, coins FROM money WHERE userID != ? ORDER BY coins DESC LIMIT ? OFFSET ?", [client.user.id, pagesize, offset]);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 				.setAuthor("Leaderboard")
 				.setDescription(all.map((row, index) => {
 					let ranking = (index+offset+1)+". ";
@@ -299,7 +299,7 @@ module.exports = function(passthrough) {
 				}
 				utils.coinsManager.award(msg.author.id, -gift);
 				utils.coinsManager.award(member.id, gift);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
 					.setColor("F8E71C")
 				msg.channel.send(utils.contentify(msg.channel, embed));

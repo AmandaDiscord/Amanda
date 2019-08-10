@@ -33,7 +33,7 @@ module.exports = passthrough => {
 			let playlistName = args[1];
 			if (playlistName == "show") {
 				let playlists = await utils.sql.all("SELECT * FROM Playlists");
-				return msg.channel.send(utils.contentify(msg.channel, new Discord.RichEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n"))));
+				return msg.channel.send(utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n"))));
 			}
 			if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 			let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
@@ -133,7 +133,7 @@ module.exports = passthrough => {
 				if (body.length > 2000) {
 					body = body.slice(0, 1998).split("\n").slice(0, -1).join("\n")+"\n…";
 				}
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 				.setDescription(body)
 				.setColor("36393E")
 				msg.channel.send(utils.contentify(msg.channel, embed));
@@ -189,7 +189,7 @@ module.exports = passthrough => {
 				} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`);
 			} else if (action.toLowerCase() == "delete") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				let deletePromptEmbed = new Discord.RichEmbed().setColor("dd1d1d").setDescription(
+				let deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(
 					"This action will permanently delete the playlist `"+playlistRow.name+"`. "+
 					"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n"+
 					"You will not be able to undo this action.\n\n"+
@@ -206,7 +206,7 @@ module.exports = passthrough => {
 						deletePromptEmbed.setDescription("Playlist deleted.");
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed));
 					}},
-					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.RichEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
+					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.MessageEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
 				]);
 			} else {
 				let author = [];
@@ -218,7 +218,7 @@ module.exports = passthrough => {
 
 				let rows = orderedSongs.map((song, index) => `${index+1}. **${song.name}** (${common.prettySeconds(song.length)})`)
 				let totalLength = "\nTotal length: "+common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 				.setAuthor(author[0], author[1])
 				.setColor("36393E")
 				if (rows.join("\n").length + totalLength.length <= 2000) {

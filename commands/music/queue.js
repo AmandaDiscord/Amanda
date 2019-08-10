@@ -190,7 +190,7 @@ module.exports = passthrough => {
 				let song = this.songs[0];
 				let time = this.dispatcher ? this.dispatcher.time : 0
 				let paused = this.dispatcher && this.dispatcher.paused
-				let embed = new Discord.RichEmbed().setColor("36393E")
+				let embed = new Discord.MessageEmbed().setColor("36393E")
 				.setDescription(`Now playing: **${song.getTitle()}**`)
 				.addField("­", this.songs[0].getProgress(time, paused));
 				if (!this.textChannel.permissionsFor(client.user).has("ADD_REACTIONS")) embed.addField("­", "Please give me permission to add reactions to use player controls!");
@@ -228,7 +228,7 @@ module.exports = passthrough => {
 			/**
 			 * Update the existing now playing message once.
 			 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
-			 * @returns {Promise<Error|Discord.RichEmbed|String>}
+			 * @returns {Promise<Error|Discord.MessageEmbed|String>}
 			 */
 			updateNowPlaying() {
 				if (!this.nowPlayingMsg) throw new Error("I TOLD YOU SO!!!")
@@ -494,7 +494,7 @@ module.exports = passthrough => {
 					let rows = this.queue.songs.map((song, index) => `${index+1}. `+song.getQueueLine())
 					let totalLength = "\nTotal length: "+common.prettySeconds(this.queue.songs.reduce((acc, cur) => (acc + cur.getLength()), 0))
 					let body = utils.compactRows.removeMiddle(rows, 2000-totalLength.length).join("\n") + totalLength
-					let embed = new Discord.RichEmbed()
+					let embed = new Discord.MessageEmbed()
 					.setAuthor(`Queue for ${context.guild.name}`)
 					.setDescription(body)
 					.setColor("36393E")

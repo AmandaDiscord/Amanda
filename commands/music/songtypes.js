@@ -48,7 +48,7 @@ module.exports = passthrough => {
 		constructor(id, info, cache, basic) {
 			super()
 			this.id = id
-			this.connectionPlayFunction = "playOpusStream"
+			this.streamType = "opus"
 			this.canBePaused = true
 			this.url = "https://youtu.be/"+id
 			this.error = null
@@ -132,7 +132,7 @@ module.exports = passthrough => {
 		showRelated() {
 			return this._getRelated().then(videos => {
 				if (videos.length) {
-					return new Discord.RichEmbed()
+					return new Discord.MessageEmbed()
 					.setTitle("Related videos")
 					.setDescription(
 						videos.map((v, i) =>
@@ -255,7 +255,7 @@ module.exports = passthrough => {
 			this.actuallyStreaming = false
 			this.filledBarOffset = 0
 			this.progressUpdateFrequency = 15000
-			this.connectionPlayFunction = "playStream"
+			this.streamType = "unknown"
 			this.canBePaused = false
 			this.title = "Frisky Radio"
 		}
@@ -308,7 +308,7 @@ module.exports = passthrough => {
 		async getDetails() {
 			let info = await this._getInfo()
 			let nextEpisode = await this._fetchNextEpisode()
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 			.setThumbnail(info.episode.occurrence_album_art.url)
 			.setTitle("FRISKY: "+info.title)
 			.setURL("https://www.friskyradio.com/show"+info.episode.full_url)

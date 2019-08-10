@@ -1,0 +1,12 @@
+{
+  "name": "managers",
+  "version": "1.0.0",
+  "description": "Managers used by Amanda to handle certain things with typings",
+  "main": "index.js",
+  "types": "./typings/managers.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "PapiOphidian",
+  "license": "UNLICENSED"
+}

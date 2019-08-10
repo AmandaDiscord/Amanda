@@ -84,7 +84,7 @@ module.exports = function(passthrough) {
 				let member = await msg.guild.findMember(msg, suffix, true);
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let info = await utils.waifu.get(member.id);
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setAuthor(member.displayTag, member.user.smallAvatarURL)
 					.addField(`Price:`, info.price)
 					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
@@ -130,7 +130,7 @@ module.exports = function(passthrough) {
 				await utils.waifu.bind(msg.author.id, member.id, claim);
 				let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"];
 				let face = faces.random()
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${lang.emoji.discoin}`)
 					.setColor("36393E")
 				msg.channel.send(utils.contentify(msg.channel, embed));
@@ -191,7 +191,7 @@ module.exports = function(passthrough) {
 				}
 				await utils.waifu.transact(msg.author.id, gift);
 				await utils.coinsManager.award(msg.author.id, -gift);
-				let user = await client.fetchUser(waifu.waifuID);
+				let user = await client.users.fetch(waifu.waifuID);
 				return msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`);
 			}
 		},
@@ -220,10 +220,10 @@ module.exports = function(passthrough) {
 				}
 				let userObjectMap = new Map();
 				await Promise.all(users.map(async userID => {
-					let userObject = await client.fetchUser(userID);
+					let userObject = await client.users.fetch(userID);
 					userObjectMap.set(userID, userObject);
 				}));
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 					.setTitle("Waifu leaderboard")
 					.setDescription(
 						all.map((row, index) =>
@@ -392,7 +392,7 @@ module.exports = function(passthrough) {
 			}
 		}
 		fetch.then(url => {
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 			.setDescription(`${msg.author.username} ${source.verb} <@${member.user.id}>`)
 			.setImage(url)
 			.setColor("36393E")

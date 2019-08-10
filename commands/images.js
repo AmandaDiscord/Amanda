@@ -40,7 +40,7 @@ module.exports = function(passthrough) {
 		if (host == "chewey") img = data.data;
 		else if (host == "nekos") img = data.url;
 		else img = undefined; // excuse me what
-		let embed = new Discord.RichEmbed()
+		let embed = new Discord.MessageEmbed()
 			.setImage(img)
 			.setColor('36393E')
 			.setFooter(footer)

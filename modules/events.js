@@ -1,6 +1,7 @@
 const Discord = require("discord.js");
 const path = require("path");
 
+const Structures = require("./structures");
 require("../types.js");
 
 let lastAttemptedLogins = [];
@@ -26,7 +27,7 @@ module.exports = function(passthrough) {
 		if (data.constructor.name == "Message") manageMessage(data);
 		else if (data.content) {
 			let channel = client.channels.get(data.channel_id);
-			let message = new Discord.Message(channel, data, client);
+			let message = new Discord.Message(client, data, channel);
 			manageMessage(message);
 		}
 	});
@@ -67,7 +68,7 @@ module.exports = function(passthrough) {
 	});
 
 	/**
-	 * @param {Discord.Message} msg
+	 * @param {Structures.Message} msg
 	 */
 	async function manageMessage(msg) {
 		if (msg.author.bot) return;
@@ -87,7 +88,7 @@ module.exports = function(passthrough) {
 				}
 				// Report to original channel
 				let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e));
-				let embed = new Discord.RichEmbed()
+				let embed = new Discord.MessageEmbed()
 				.setDescription(msgTxt)
 				.setColor("dd2d2d")
 				if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed);
@@ -151,13 +152,12 @@ module.exports = function(passthrough) {
 
 	/**
 	 * @param {Discord.MessageReaction} messageReaction
-	 * @param {Discord.User} user
+	 * @param {Structures.User} user
 	 */
 	function reactionEvent(messageReaction, user) {
-		let id = messageReaction.messageID;
 		let emoji = messageReaction.emoji;
 		if (user.id == client.user.id) return;
-		let menu = reactionMenus[id];
+		let menu = messageReaction.message.menu;
 		if (!menu) return;
 		let msg = menu.message;
 		function fixEmoji(emoji) {

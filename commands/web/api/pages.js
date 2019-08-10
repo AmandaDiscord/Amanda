@@ -28,7 +28,7 @@ module.exports = (passthrough) => {
 					let promises = [];
 					for (let string of match) {
 						let userID = string.match(/\d+/)[0];
-						promises.push(client.fetchUser(userID));
+						promises.push(client.users.fetch(userID));
 					}
 					let users = await Promise.all(promises);
 					page = page.replace(/<!-- user (\d+) -->/g, (string, userID) => users.find(u => u.id == userID).tag);
@@ -46,7 +46,7 @@ module.exports = (passthrough) => {
 				let session = await extra.getSession(cookies)
 				
 				if (session) {
-					let user = await client.fetchUser(session.userID)
+					let user = await client.users.fetch(session.userID)
 					let guilds = []
 					let npguilds = []
 					for (let guild of client.guilds.filter(g => g.members.has(session.userID)).values()) {
@@ -167,7 +167,7 @@ module.exports = (passthrough) => {
 				.go()
 				.then(async state => {
 					let guild = state.guild
-					let user = await client.fetchUser(session.userID)
+					let user = await client.users.fetch(session.userID)
 
 					let page = pugCache.get("commands/web/pug/server.pug")({guild, user})
 					return {

@@ -90,7 +90,7 @@ module.exports = class Queue {
 	 */
 	voiceStateUpdate(oldMember, newMember) {}
 	/**
-	 * @returns {Discord.RichEmbed|String}
+	 * @returns {Discord.MessageEmbed|String}
 	 */
 	getNPEmbed() {}
 	generateReactions() {}
@@ -102,7 +102,7 @@ module.exports = class Queue {
 	/**
 	 * Update the existing now playing message once.
 	 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
-	 * @returns {Promise<Error|Discord.RichEmbed|String>}
+	 * @returns {Promise<Error|Discord.MessageEmbed|String>}
 	 */
 	updateNowPlaying() {}
 	/**

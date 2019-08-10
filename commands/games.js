@@ -88,7 +88,7 @@ module.exports = function(passthrough) {
 				? 0xdd1d1d
 				: 0x3498DB
 			// Send Message
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 				.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
 				.setDescription("​\n"+entities.decodeHTML(this.data.question))
 				.setColor(this.color);
@@ -147,7 +147,7 @@ module.exports = function(passthrough) {
 				utils.coinsManager.award(w[0], w.winnings);
 			}));
 			// Send message
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 				.setTitle("Correct answer:")
 				.setDescription(this.correctAnswer)
 				.setColor(this.color)
@@ -176,7 +176,7 @@ module.exports = function(passthrough) {
 			if (body.startsWith("http")) body = await rp(body);
 			return [true, JSON.parse(body)];
 		} catch (error) {
-			let embed = new Discord.RichEmbed()
+			let embed = new Discord.MessageEmbed()
 			.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
 			.setColor(0xdd1d1d)
 			return [false, channel.send(utils.contentify(channel, embed))];
@@ -197,7 +197,7 @@ module.exports = function(passthrough) {
 			let data = body[1];
 			if (options.suffix.includes("categor")) {
 				options.msg.author.send(
-					new Discord.RichEmbed()
+					new Discord.MessageEmbed()
 					.setTitle("Categories")
 					.setDescription(data.trivia_categories.map(c => c.name)
 					.join("\n")+"\n\n"+
@@ -403,7 +403,7 @@ module.exports = function(passthrough) {
 
 				title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`;
 				if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
-				let embed = new Discord.RichEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
+				let embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text);
 				if (sfx.includes("-r") || sfx.includes("--raw")) {
 					let rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|");
 					if (rawcontent.length > 1999) return msg.channel.send("The raw content exceeded the 2000 character limit. Consider using a smaller board size");

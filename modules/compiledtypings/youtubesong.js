@@ -48,7 +48,7 @@ module.exports = class YouTubeSong extends WebSong {
 	 */
 	getSuggested(playedSongs) {}
 	/**
-	 * @returns {Promise<Discord.RichEmbed|"No related content available.">}
+	 * @returns {Promise<Discord.MessageEmbed|"No related content available.">}
 	 */
 	showRelated() {}
 	/**
