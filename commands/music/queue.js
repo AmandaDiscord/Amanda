@@ -164,10 +164,10 @@ module.exports = passthrough => {
 				if (index != -1) this.events.emit("songUpdate", index)
 			}
 			/**
-			 * @param {Structures.GuildMember} oldMember
-			 * @param {Structures.GuildMember} newMember
+			 * @param {Discord.VoiceState} oldState
+			 * @param {Discord.VoiceState} newState
 			 */
-			voiceStateUpdate(oldMember, newMember) {
+			voiceStateUpdate(oldState, newState) {
 				let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
 				if (count == 0) {
 					if (!this.voiceLeaveTimeout.isActive) {
@@ -190,7 +190,7 @@ module.exports = passthrough => {
 			}
 			getNPEmbed() {
 				let song = this.songs[0];
-				let time = this.dispatcher ? this.dispatcher.time : 0
+				let time = this.dispatcher ? this.dispatcher.streamTime : 0
 				let paused = this.dispatcher && this.dispatcher.paused
 				let embed = new Discord.MessageEmbed().setColor("36393E")
 				.setDescription(`Now playing: **${song.getTitle()}**`)
@@ -242,7 +242,7 @@ module.exports = passthrough => {
 			 */
 			startNowPlayingUpdates() {
 				this.updateNowPlaying()
-				let timePastLastUpdate = this.dispatcher.time % this.songs[0].progressUpdateFrequency
+				let timePastLastUpdate = this.dispatcher.streamTime % this.songs[0].progressUpdateFrequency
 				let timeUntilNextUpdate = this.songs[0].progressUpdateFrequency - timePastLastUpdate
 				// Wait until the next multiple
 				this.npUpdateTimeout = setTimeout(() => {
@@ -524,7 +524,7 @@ module.exports = passthrough => {
 			getState() {
 				return {
 					playing: this.queue.playing,
-					time: this.queue.dispatcher ? this.queue.dispatcher.time : 0,
+					time: this.queue.dispatcher ? this.queue.dispatcher.streamTime : 0,
 					songs: this.queue.songs.map(s => s.webInfo()),
 					members: this.getMembers(),
 					voiceChannel: {

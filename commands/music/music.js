@@ -127,16 +127,16 @@ module.exports = function(passthrough) {
 		});
 	}
 
-	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldMember, newMember) => {
+	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
 		// Process waiting to join
-		if (newMember.id != client.user.id && newMember.voice?newMember.voice.channel:null) voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(state => state.trigger(newMember.voice?newMember.voice.channel:null))
+		if (newState.id != client.user.id && newState.channel) voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
 
 		// Pass on to queue for leave timeouts
-		let channel = oldMember.voice?oldMember.voice.channel:null || newMember.voice?newMember.voice.channel:null;
+		let channel = oldState.channel || newState.channel;
 		if (!channel || !channel.guild) return;
 		let queue = queueManager.storage.get(channel.guild.id);
-		if (queue) queue.voiceStateUpdate(oldMember, newMember);
-	})
+		if (queue) queue.voiceStateUpdate(oldState, newState);
+	});
 	
 	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
 		if (action == "getQueues") {

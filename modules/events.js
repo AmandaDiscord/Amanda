@@ -31,7 +31,7 @@ module.exports = function(passthrough) {
 			manageMessage(message);
 		}
 	});
-	utils.addTemporaryListener(client, "disconnect", path.basename(__filename), (reason) => {
+	utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (reason) => {
 		if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
 		if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`);
 		lastAttemptedLogins.push(Date.now());

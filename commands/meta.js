@@ -139,7 +139,7 @@ module.exports = function(passthrough) {
 					let nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too");
 					embed
 					.addField(`${client.user.tag} <:online:606664341298872324>`,
-						`**❯ Heartbeat:**\n${client.ping.toFixed(0)}ms\n`+
+						`**❯ Heartbeat:**\n${client.ws.ping.toFixed(0)}ms\n`+
 						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 						`**❯ Uptime:**\n${process.uptime().humanize("sec")}\n`+
 						`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
@@ -164,7 +164,7 @@ module.exports = function(passthrough) {
 				let array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."];
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
-				let embed = new Discord.MessageEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
+				let embed = new Discord.MessageEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ws.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
 				return nmsg.edit(utils.contentify(msg.channel, embed));
 			}
 		},
