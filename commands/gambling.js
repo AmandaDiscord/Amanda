@@ -85,7 +85,7 @@ module.exports = function(passthrough) {
 					canvas.print(font, 130, 523, "Nothing");
 					canvas.print(font, 405, 523, "Nothing");
 					buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-					image = new Discord.Attachment(buffer, "slot.png");
+					image = new Discord.MessageAttachment(buffer, "slot.png");
 					return msg.channel.send({ files: [image] });
 				}
 				let bet;
@@ -120,7 +120,7 @@ module.exports = function(passthrough) {
 				canvas.print(font, 115, 523, winning);
 				canvas.print(font, 390, 523, bet);
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-				image = new Discord.Attachment(buffer, "slot.png");
+				image = new Discord.MessageAttachment(buffer, "slot.png");
 				return msg.channel.send(result, {files: [image]});
 			}
 		},
@@ -362,7 +362,7 @@ module.exports = function(passthrough) {
 				canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY);
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-				let image = new Discord.Attachment(buffer, "wheel.png");
+				let image = new Discord.MessageAttachment(buffer, "wheel.png");
 				await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount));
 				return msg.channel.send(`${msg.author.tag} bet ${amount} discoins and got ${Math.round(amount * Number(choice))} back ${lang.emoji.discoin}`, {files: [image]});
 			}

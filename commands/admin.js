@@ -10,7 +10,7 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager, gameManager } = passthrough;
+	let { config, client, commands, db, reloader, reloadEvent, queueManager, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
@@ -44,7 +44,7 @@ module.exports = function(passthrough) {
 					}
 					let output = await utils.stringify(result, depth);
 					let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"));
-					let menu = new utils.ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				} else return;
 			}
@@ -68,7 +68,7 @@ module.exports = function(passthrough) {
 					result = result.toString();
 					if (result.length >= 2000) result = result.slice(0, 1993)+"…";
 					let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``);
-					let menu = new utils.ReactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
+					let menu = nmsg.reactionMenu([{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }]);
 					return setTimeout(() => menu.destroy(true), 5*60*1000);
 				});
 				return;
@@ -81,7 +81,7 @@ module.exports = function(passthrough) {
 			category: "admin",
 			process: async function(msg, suffix) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
-				if (!allowed) return msg.channel.sendNopeMessage();
+				if (!allowed) return;
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
 				let args = suffix.split(" ");
 				if (!args[0]) return msg.channel.send(lang.input.invalid(msg, "amount to award"));

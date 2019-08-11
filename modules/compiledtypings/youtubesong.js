@@ -3,6 +3,7 @@ const stream = require("stream");
 const Discord = require("discord.js");
 
 let WebSong = require("./websong.js");
+let Queue = require("./queue");
 
 module.exports = class YouTubeSong extends WebSong {
 	/**
@@ -24,6 +25,8 @@ module.exports = class YouTubeSong extends WebSong {
 		this.progressUpdateFrequency = 5000;
 		this.info = info;
 		this.basic = basic;
+		/** @type {Queue} */
+		this.queue;
 	}
 	/**
 	 * @returns {{src: String, width: number, height: number}}

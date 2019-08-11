@@ -21,6 +21,15 @@ class User extends Discord.User {
 		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
 		return prefixes[this.presence.activity.type];
 	}
+	get activityEmoji() {
+		let presences = {
+			online: "<:online:606664341298872324>",
+			idle: "<:idle:606664341353267221>",
+			dnd: "<:dnd:606664341269381163>",
+			offline: "<:invisible:606662982558154774>"
+		};
+		return presences[this.presence.status];
+	}
 }
 
 Discord.Structures.extend("User", () => { return User; });

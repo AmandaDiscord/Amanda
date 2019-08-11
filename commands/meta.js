@@ -7,6 +7,7 @@ const path = require("path");
 const simpleGit = require("simple-git")(__dirname);
 const profiler = require("gc-profiler");
 const util = require("util");
+const Structures = require("../modules/structures");
 
 // @ts-ignore
 require("../types.js");
@@ -30,7 +31,7 @@ module.exports = function(passthrough) {
 		sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60);
 	}
 	/**
-	 * @param {Discord.Message} [msg]
+	 * @param {Structures.Message} [msg]
 	 */
 	async function sendStats(msg) {
 		console.log("Sending stats...");
@@ -78,7 +79,7 @@ module.exports = function(passthrough) {
 	profileStorage.get("badge-none").then(badge => badge.resize(50, 50));
 
 	/**
-	 * @param {Discord.User} user
+	 * @param {Structures.User} user
 	 * @param {{waifu?: {id: String}, claimer?: {id: String}}} info
 	 */
 	function getHeartType(user, info) {
@@ -183,7 +184,7 @@ module.exports = function(passthrough) {
 			category: "admin",
 			process: async function(msg) {
 				let permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id]);
 				if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send(`Alright. You'll be notified of the next time I restart`);
 				msg.react("✅");
@@ -214,7 +215,7 @@ module.exports = function(passthrough) {
 					client.users.fetch("176580265294954507", true)
 				]);
 				let embed = new Discord.MessageEmbed()
-					.setAuthor("Amanda", client.user.smallAvatarURL)
+					.setAuthor("Amanda", client.user.avatarURL({format: "png", size: 32}))
 					.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
 					.addField("Creators",
 						`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl3:582555022508687370>\n`+
@@ -343,7 +344,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: async function(msg, suffix) {
 				let user, member, permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
 					if (member) user = member.user;
@@ -363,7 +364,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: function(msg, suffix) {
 				let permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"));
 				let emoji = Discord.Util.parseEmoji(suffix);
 				if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"));
@@ -381,7 +382,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: async function(msg, suffix) {
 				let user, member, permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"));
 				if (msg.channel.type == "text") {
 					member = await msg.guild.findMember(msg, suffix, true);
@@ -395,7 +396,7 @@ module.exports = function(passthrough) {
 					utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 					utils.coinsManager.get(user.id),
 					utils.waifu.get(user.id),
-					Jimp.read(user.sizedAvatarURL(128)),
+					Jimp.read(user.avatarURL({size: 128})),
 					profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none"])
 				]);
 
@@ -429,7 +430,7 @@ module.exports = function(passthrough) {
 				canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu?info.waifu.tag:"Nobody, yet");
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-				image = new Discord.Attachment(buffer, "profile.png");
+				let image = new Discord.MessageAttachment(buffer, "profile.png");
 				return msg.channel.send({files: [image]});
 			}
 		},
@@ -440,7 +441,7 @@ module.exports = function(passthrough) {
 			category: "configuration",
 			process: async function(msg, suffix) {
 				let args = suffix.split(" "), permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (msg.channel.type == "dm") {
 					if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`);
 				}
@@ -592,7 +593,7 @@ module.exports = function(passthrough) {
 			category: "meta",
 			process: async function (msg, suffix) {
 				let embed, permissions;
-				if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (suffix) {
 					suffix = suffix.toLowerCase();
 					if (suffix == "music" || suffix == "m") {
@@ -672,7 +673,7 @@ module.exports = function(passthrough) {
 								if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.");
 								send("dm").then(mobile).catch(() => send("channel").then(mobile));
 								/**
-								 * @param {Discord.Message} message
+								 * @param {Structures.Message} message
 								 */
 								function mobile(message) {
 									let mobileEmbed = new Discord.MessageEmbed()
@@ -681,7 +682,7 @@ module.exports = function(passthrough) {
 									.setColor("36393E")
 									let content;
 									if (msg.channel.type != "dm") {
-										if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user);
+										if (message.channel instanceof Structures.TextChannel) permissions = message.channel.permissionsFor(client.user);
 									}
 									if (!permissions || permissions.has("EMBED_LINKS")) content = mobileEmbed;
 									else {
@@ -696,7 +697,7 @@ module.exports = function(passthrough) {
 										addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => f.name+"\n"+f.value).join("\n"));
 										addPart(mobileEmbed.footer && mobileEmbed.footer.text);
 									}
-									let menu = new utils.ReactionMenu(message, [{emoji: "📱", ignore: "total", actionType: "edit", actionData: content}]);
+									let menu = message.reactionMenu([{emoji: "📱", ignore: "total", actionType: "edit", actionData: content}]);
 									setTimeout(() => menu.destroy(true), 5*60*1000);
 								}
 							} else {
@@ -718,7 +719,7 @@ module.exports = function(passthrough) {
 				function send(where) {
 					return new Promise((resolve, reject) => {
 						let target = where == "dm" ? msg.author : msg.channel;
-						if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+						if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 						if (!permissions || permissions.has("EMBED_LINKS")) {
 							var promise = target.send(embed);
 						} else {

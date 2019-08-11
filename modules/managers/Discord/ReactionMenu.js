@@ -14,6 +14,7 @@ class ReactionMenu {
 		reactionMenus[this.message.id] = this;
 		this.promise = this.react();
 		this.message.menu = this;
+		this.menus = reactionMenus;
 	}
 	async react() {
 		for (let a of this.actions) {

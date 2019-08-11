@@ -27,7 +27,7 @@ let commands = new managers.CommandStore();
 	]);
 
 	let reloader = new hotreload();
-	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, queueManager: new managers.QueueManager(), gameManager: new managers.GameManager(), youtube, wss: undefined};
+	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, queueManager: managers.QueueManager, gameManager: managers.GameManager, youtube, wss: undefined};
 	reloader.setPassthrough(passthrough);
 	reloader.setupWatch([
 		"./modules/utilities.js",

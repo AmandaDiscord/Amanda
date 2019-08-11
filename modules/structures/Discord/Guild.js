@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 
-const managers = require("../../managers");
+const QueueManager = require("../../managers/Discord/Queues");
 const Structures = require("../");
 const { Amanda, GuildMember } = Structures;
 
@@ -13,7 +13,7 @@ class Guild extends Discord.Guild {
 		super(client, data);
 	}
 	get queue() {
-		return managers.QueueManager.storage.get(this.id);
+		return QueueManager.storage.get(this.id);
 	}
 	/**
 	 * @param {Structures.Message} message Message Object

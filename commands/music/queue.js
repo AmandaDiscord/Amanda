@@ -1,10 +1,12 @@
 //@ts-ignore
-require("../../types.js")
+require("../../types.js");
 
 const Discord = require("discord.js");
 const ytdl = require("ytdl-core");
 const rp = require("request-promise");
-const events = require("events")
+const events = require("events");
+
+const Structures = require("../../modules/structures");
 
 const voiceEmptyDuration = 20000;
 
@@ -34,7 +36,7 @@ module.exports = passthrough => {
 	if (!queueFileCache) {
 		class Queue {
 			/**
-			 * @param {Discord.TextChannel} textChannel
+			 * @param {Structures.TextChannel} textChannel
 			 * @param {Discord.VoiceChannel} voiceChannel
 			 * @constructor
 			 */
@@ -100,9 +102,9 @@ module.exports = passthrough => {
 				this.songs.length = 0;
 				this.auto = false;
 				this.voiceLeaveTimeout.clear();
-				if (this.connection && this.connection.dispatcher) this.connection.dispatcher.end();
+				if (this.connection && this.connection.dispatcher) this.connection.dispatcher.destroy();
 				if (this.voiceChannel) this.voiceChannel.leave();
-				if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions();
+				if (this.nowPlayingMsg) this.nowPlayingMsg.reactions.clear();
 				if (this.reactionMenu) this.reactionMenu.destroy(true);
 				this.events.emit("dissolve")
 				this.events.removeAllListeners()
@@ -162,8 +164,8 @@ module.exports = passthrough => {
 				if (index != -1) this.events.emit("songUpdate", index)
 			}
 			/**
-			 * @param {Discord.GuildMember} oldMember
-			 * @param {Discord.GuildMember} newMember
+			 * @param {Structures.GuildMember} oldMember
+			 * @param {Structures.GuildMember} newMember
 			 */
 			voiceStateUpdate(oldMember, newMember) {
 				let count = this.voiceChannel.members.filter(m => !m.user.bot).size;
@@ -198,7 +200,7 @@ module.exports = passthrough => {
 			}
 			generateReactions() {
 				if (this.reactionMenu) this.reactionMenu.destroy(true);
-				if (this.nowPlayingMsg) this.reactionMenu = new utils.ReactionMenu(this.nowPlayingMsg, [
+				if (this.nowPlayingMsg) this.reactionMenu = this.nowPlayingMsg.reactionMenu([
 					{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
 						this.wrapper.togglePlaying("reaction")
@@ -209,7 +211,7 @@ module.exports = passthrough => {
 					}},
 					{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 						if (!this.voiceChannel.members.has(user.id)) return;
-						msg.clearReactions();
+						msg.reactions.clear();
 						this.wrapper.stop("reaction")
 					}}
 				]);
@@ -221,7 +223,7 @@ module.exports = passthrough => {
 			async sendNowPlaying() {
 				let embed = this.getNPEmbed()
 				let newmessage = await this.textChannel.send(embed)
-				if (this.nowPlayingMsg) this.nowPlayingMsg.clearReactions()
+				if (this.nowPlayingMsg) this.nowPlayingMsg.reactions.clear()
 				this.nowPlayingMsg = newmessage
 				this.generateReactions() // this also destroys the old menu. hooray for no leaks?
 			}
@@ -285,7 +287,7 @@ module.exports = passthrough => {
 				// Make a dispatcher
 				stream.once("data", () => {
 					/** @type {Discord.StreamDispatcher} */
-					const dispatcher = this.connection[song.connectionPlayFunction](stream, {bitrate: "auto"})
+					const dispatcher = this.connection.play(stream, {type: song.streamType, bitrate: "auto", volume: false});
 					this._dispatcher = dispatcher
 					dispatcher.once("start", async () => {
 						// Set up the internal state
@@ -298,7 +300,7 @@ module.exports = passthrough => {
 						// Listen for errors
 						dispatcher.on("error", handleDispatcherError)
 						// Wait for the end
-						dispatcher.once("end", () => {
+						dispatcher.once("finish", () => {
 							// Deconstruct everything
 							this.playing = false
 							this.skippable = false
@@ -380,7 +382,7 @@ module.exports = passthrough => {
 				if (!this.playing) {
 					return 1
 				} else if (this.connection && this.connection.dispatcher) {
-					this.connection.dispatcher.end()
+					this.connection.dispatcher.destroy()
 					return 0
 				} else {
 					return -1
@@ -414,11 +416,11 @@ module.exports = passthrough => {
 				this.queue.textChannel.send(utils.contentify(this.queue.textChannel, info))
 			}
 			/**
-			 * @param {Discord.Message|String} [context]
+			 * @param {Structures.Message|String} [context]
 			 */
 			pause(context) {
 				let result = this.queue.pause()
-				if (context instanceof Discord.Message || context === "reaction") {
+				if (context instanceof Structures.Message || context === "reaction") {
 					let channel = context.channel || this.queue.textChannel
 					if (result == -1) {
 						channel.send(lang.voiceCannotAction("paused"))
@@ -430,11 +432,11 @@ module.exports = passthrough => {
 				}
 			}
 			/**
-			 * @param {Discord.Message|String} [context]
+			 * @param {Structures.Message|String} [context]
 			 */
 			resume(context) {
 				let result = this.queue.resume()
-				if (context instanceof Discord.Message || context === "reaction") {
+				if (context instanceof Structures.Message || context === "reaction") {
 					let channel = context.channel || this.queue.textChannel
 					if (result == -1) {
 						channel.send(lang.voiceCannotAction("resumed"))
@@ -444,11 +446,11 @@ module.exports = passthrough => {
 				}
 			}
 			/**
-			 * @param {Discord.Message|String} [context]
+			 * @param {Structures.Message|String} [context]
 			 */
 			skip(context) {
 				let result = this.queue.skip()
-				if (context instanceof Discord.Message || context === "reaction") {
+				if (context instanceof Structures.Message || context === "reaction") {
 					let channel = context.channel || this.queue.textChannel
 					if (result == -1) {
 						channel.send(lang.voiceCannotAction("skipped"))
@@ -458,11 +460,11 @@ module.exports = passthrough => {
 				}
 			}
 			/**
-			 * @param {Discord.Message|String} [context]
+			 * @param {Structures.Message|String} [context]
 			 */
 			stop(context) {
 				let result = this.queue.stop()
-				if (context instanceof Discord.Message || context === "reaction") {
+				if (context instanceof Structures.Message || context === "reaction") {
 					let channel = context.channel || this.queue.textChannel
 					if (result == -1) {
 						channel.send(lang.voiceCannotAction("stopped"))
@@ -470,27 +472,27 @@ module.exports = passthrough => {
 				}
 			}
 			/**
-			 * @param {Discord.Message} [context]
+			 * @param {Structures.Message} [context]
 			 */
 			toggleAuto(context) {
 				this.queue.toggleAuto()
-				if (context instanceof Discord.Message) {
+				if (context instanceof Structures.Message) {
 					let mode = this.queue.auto ? "on" : "off"
 					context.channel.send(`Auto mode is now turned ${mode}.`)
 				}
 			}
 			/**
-			 * @param {Discord.Message|String} [context]
+			 * @param {Structures.Message|String} [context]
 			 */
 			togglePlaying(context) {
 				if (this.queue.playing) return this.pause(context)
 				else return this.resume(context)
 			}
 			/**
-			 * @param {Discord.Message} context
+			 * @param {Structures.Message} context
 			 */
 			getQueue(context) {
-				if (context instanceof Discord.Message) {
+				if (context instanceof Structures.Message) {
 					let rows = this.queue.songs.map((song, index) => `${index+1}. `+song.getQueueLine())
 					let totalLength = "\nTotal length: "+common.prettySeconds(this.queue.songs.reduce((acc, cur) => (acc + cur.getLength()), 0))
 					let body = utils.compactRows.removeMiddle(rows, 2000-totalLength.length).join("\n") + totalLength
@@ -507,7 +509,7 @@ module.exports = passthrough => {
 					id: m.id,
 					name: m.displayName,
 					/** @type {String} */
-					avatar: m.user.sizedAvatarURL(64),
+					avatar: m.user.avatarURL({size: 64}),
 					isAmanda: m.id == client.user.id
 				}))
 			}

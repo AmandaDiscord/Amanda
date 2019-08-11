@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 
-const managers = require("../../managers");
+const ReactionMenu = require("../../managers/Discord/ReactionMenu");
 const Structures = require("../");
 const { Amanda, TextChannel, DMChannel, User, GuildMember, Guild } = Structures;
 
@@ -25,7 +25,7 @@ class Message extends Discord.Message {
 	 * @param {Array<managers.ReactionMenuAction>} actions
 	 */
 	reactionMenu(actions) {
-		return new reactionMenu(this, actions);
+		return new ReactionMenu(this, actions);
 	}
 }
 

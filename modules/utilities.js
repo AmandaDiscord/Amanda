@@ -16,13 +16,13 @@ let utilsResultCache;
  * @param {PassthroughType} passthrough
  */
 module.exports = (passthrough) => {
-	let { client, db, reloadEvent, queueManager, reactionMenus } = passthrough;
+	let { client, db, reloadEvent, queueManager } = passthrough;
 
 	if (!utilsResultCache) {
 		var utils = {
 			DMUser: class DMUser {
 				/**
-				 * @param {Discord.Snowflake} userID
+				 * @param {String} userID
 				 */
 				constructor(userID) {
 					this.userID = userID;
@@ -181,7 +181,7 @@ module.exports = (passthrough) => {
 			},
 			waifu: {
 				/**
-				 * @param {Discord.Snowflake} userID
+				 * @param {String} userID
 				 * @param {{basic: Boolean}} [options]
 				 * @returns {Promise<{claimer: Structures.User, price: Number, waifu: Structures.User, waifuID?: String, userID?: String, waifuPrice: Number, gifts: {received: {list: Array<any>, emojis: String}, sent: {list: Array<any>, emojis: String}}}>}
 				 */
@@ -227,8 +227,8 @@ module.exports = (passthrough) => {
 					return { claimer, price, waifu, waifuPrice, gifts };
 				},
 				/**
-				 * @param {Discord.Snowflake} claimer
-				 * @param {Discord.Snowflake} claimed
+				 * @param {String} claimer
+				 * @param {String} claimed
 				 * @param {Number} price
 				 */
 				bind: async function(claimer, claimed, price) {
@@ -239,13 +239,13 @@ module.exports = (passthrough) => {
 					void await utils.sql.all("INSERT INTO waifu VALUES (?, ?, ?)", [claimer, claimed, price]);
 				},
 				/**
-				 * @param {Discord.Snowflake} user
+				 * @param {String} user
 				 */
 				unbind: async function(user) {
 					void await utils.sql.all("DELETE FROM waifu WHERE userID = ?", [user]);
 				},
 				/**
-				 * @param {Discord.Snowflake} user
+				 * @param {String} user
 				 * @param {Number} amount
 				 */
 				transact: async function(user, amount) {
@@ -255,7 +255,7 @@ module.exports = (passthrough) => {
 			},
 			coinsManager: {
 				/**
-				 * @param {Discord.Snowflake} userID
+				 * @param {String} userID
 				 * @returns {Promise<Number>}
 				 */
 				"get": async function(userID) {
@@ -267,7 +267,7 @@ module.exports = (passthrough) => {
 					}
 				},
 				/**
-				 * @param {Discord.Snowflake} userID
+				 * @param {String} userID
 				 * @param {Number} value
 				 */
 				"set": async function(userID, value) {
@@ -279,7 +279,7 @@ module.exports = (passthrough) => {
 					}
 				},
 				/**
-				 * @param {Discord.Snowflake} userID
+				 * @param {String} userID
 				 * @param {Number} value
 				 */
 				"award": async function(userID, value) {
@@ -339,7 +339,7 @@ module.exports = (passthrough) => {
 			 * @param {events.EventEmitter} target
 			 * @param {String} name
 			 * @param {String} filename
-			 * @param {(...args: Array<any>) => void} code
+			 * @param {(...args: Array<any>) => any} code
 			 */
 			addTemporaryListener: function(target, name, filename, code) {
 				console.log("added event "+name);
@@ -360,7 +360,7 @@ module.exports = (passthrough) => {
 				return !!result;
 			},
 			/**
-			 * @param {Discord.Snowflake} userID
+			 * @param {String} userID
 			 * @param {String} command
 			 * @param {{max: Number, min: Number, step: Number, regen: {time: Number, amount: Number}}} info
 			 */
@@ -565,7 +565,7 @@ module.exports = (passthrough) => {
 			/**
 			 * @param {Structures.TextChannel} channel
 			 * @param {Number} pageCount
-			 * @param {(page: Number) => void} callback
+			 * @param {(page: Number) => any} callback
 			 */
 			paginate: async function(channel, pageCount, callback) {
 				let page = 0
@@ -577,7 +577,7 @@ module.exports = (passthrough) => {
 						reactionMenu.destroy(true)
 					}, 10*60*1000)
 				}
-				let reactionMenu = new utils.ReactionMenu(msg, [
+				let reactionMenu = msg.reactionMenu([
 					{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
 						page--
 						if (page < 0) page = pageCount-1

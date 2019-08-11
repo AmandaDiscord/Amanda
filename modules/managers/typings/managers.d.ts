@@ -28,6 +28,9 @@ export class ReactionMenu {
 	public message: Structures.Message;
 	public actions: Array<ReactionMenuAction>;
 	public promise: Promise<void>;
+	public menus: {
+		[messageID: string]: ReactionMenu;
+	}
 
 	public react(): Promise<void>;
 	public destroy(remove?: boolean): void;
@@ -54,7 +57,7 @@ export class ReactionMenuAction {
 	public remove?: "user"|"bot"|"all"|"message";
 	public actionType?: "reply"|"edit"|"js"|"none";
 
-	public actionData(message: Structures.Message, emoji: Discord.Emoji|Discord.ReactionEmoji, user: Structures.User, messageReaction: Discord.MessageReaction, reactionMenus: {
+	public actionData(message?: Structures.Message, emoji?: Discord.Emoji|Discord.ReactionEmoji, user?: Structures.User, messageReaction?: Discord.MessageReaction, reactionMenus?: {
 		[messageID: string]: ReactionMenu;
 	}): any;
 }
@@ -66,5 +69,5 @@ export class Command {
 	public aliases: Array<string>;
 	public category: string;
 
-	public process(msg: Structures.Message, suffix?: string): any;
+	public process(msg?: Structures.Message, suffix?: string): any;
 }

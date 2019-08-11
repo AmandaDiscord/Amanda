@@ -3,6 +3,8 @@ const entities = require("entities");
 const Discord = require("discord.js");
 const path = require("path");
 
+const Structures = require("../modules/structures");
+
 // @ts-ignore
 require("../types.js");
 
@@ -32,7 +34,7 @@ module.exports = function(passthrough) {
 
 	class Game {
 		/**
-		 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+		 * @param {Structures.TextChannel|Structures.DMChannel} channel
 		 * @param {String} type
 		 */
 		constructor(channel, type) {
@@ -40,7 +42,7 @@ module.exports = function(passthrough) {
 			this.type = type;
 			this.manager = gameManager;
 			this.id = channel.id;
-			if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
+			if (channel instanceof Structures.TextChannel) this.permissions = channel.permissionsFor(client.user)
 			else this.permissions = undefined;
 		}
 		init() {
@@ -56,7 +58,7 @@ module.exports = function(passthrough) {
 	}
 	class TriviaGame extends Game {
 		/**
-		 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+		 * @param {Structures.TextChannel|Structures.DMChannel} channel
 		 * @param {{response_code: Number, results: Array<TriviaResponse>}} data
 		 * @param {String} category
 		 */
@@ -102,7 +104,7 @@ module.exports = function(passthrough) {
 			this.receivedAnswers = new Map();
 		}
 		/**
-		 * @param {Discord.Message} msg
+		 * @param {Structures.Message} msg
 		 */
 		addAnswer(msg) {
 			// Check answer is a single letter
@@ -159,7 +161,7 @@ module.exports = function(passthrough) {
 			if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.");
 			else embed.setFooter(`${lang.permissionDeniedGeneric("add reactions")}\nType \`&t\` for another round`);
 			return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
-				new utils.ReactionMenu(msg, [
+				msg.reactionMenu([
 					{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: () => {
 						startGame(this.channel, {category: this.category});
 					}}
@@ -169,7 +171,7 @@ module.exports = function(passthrough) {
 	}
 	/**
 	 * @param {String} body
-	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+	 * @param {Structures.TextChannel|Structures.DMChannel} channel
 	 */
 	async function JSONHelper(body, channel) {
 		try {
@@ -183,7 +185,7 @@ module.exports = function(passthrough) {
 		}
 	}
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+	 * @param {Structures.TextChannel|Structures.DMChannel} channel
 	 * @param {{suffix?: String, msg?: Discord.Message, category?: String}} options
 	 */
 	async function startGame(channel, options = {}) {

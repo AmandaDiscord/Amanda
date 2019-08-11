@@ -2,6 +2,7 @@ const Jimp = require("jimp");
 const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
+const managers = require("../modules/managers");
 
 // @ts-ignore
 require("../types.js");
@@ -21,7 +22,7 @@ module.exports = function(passthrough) {
 	reloader.useSync("./modules/lang.js", lang);
 
 	/**
-	 * @type {Object.<string, {usage: String, description: String, aliases: Array<String>, category: String, process: (msg: Discord.Message, suffix?: String) => any}>}
+	 * @type {Object.<string, managers.Command>}
 	 */
 	let cmds = {
 		"ship": {
@@ -57,7 +58,7 @@ module.exports = function(passthrough) {
 				await canvas.composite(pfp2, 200, 0);
 
 				let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG);
-				let image = new Discord.Attachment(buffer, `ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g,"")+".png");
+				let image = new Discord.MessageAttachment(buffer, `ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g,"")+".png");
 				let strings = [mem1.id, mem2.id].sort((a,b) => parseInt(a)-parseInt(b)).join(" ");
 				let percentage = undefined;
 
@@ -85,7 +86,7 @@ module.exports = function(passthrough) {
 				if (!member) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let info = await utils.waifu.get(member.id);
 				let embed = new Discord.MessageEmbed()
-					.setAuthor(member.displayTag, member.user.smallAvatarURL)
+					.setAuthor(member.displayTag, member.user.avatarURL({format: "png", size: 32}))
 					.addField(`Price:`, info.price)
 					.addField(`Claimed by:`, info.claimer ? info.claimer.tag : "(nobody)")
 					.addField(`Waifu:`, info.waifu ? info.waifu.tag : "(nobody)")

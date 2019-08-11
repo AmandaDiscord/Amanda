@@ -129,10 +129,10 @@ module.exports = function(passthrough) {
 
 	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldMember, newMember) => {
 		// Process waiting to join
-		if (newMember.id != client.user.id && newMember.voiceChannel) voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(state => state.trigger(newMember.voiceChannel))
+		if (newMember.id != client.user.id && newMember.voice?newMember.voice.channel:null) voiceStateCallbackManager.getAll(newMember.id, newMember.guild).forEach(state => state.trigger(newMember.voice?newMember.voice.channel:null))
 
 		// Pass on to queue for leave timeouts
-		let channel = oldMember.voiceChannel || newMember.voiceChannel;
+		let channel = oldMember.voice?oldMember.voice.channel:null || newMember.voice?newMember.voice.channel:null;
 		if (!channel || !channel.guild) return;
 		let queue = queueManager.storage.get(channel.guild.id);
 		if (queue) queue.voiceStateUpdate(oldMember, newMember);
@@ -162,7 +162,7 @@ module.exports = function(passthrough) {
 	 * @returns {Promise<(Discord.VoiceChannel|null)>}
 	 */
 	async function detectVoiceChannel(msg, wait) {
-		if (msg.member.voiceChannel) return msg.member.voiceChannel;
+		if (msg.member.voice.channel) return msg.member.voice.channel;
 		if (!wait) return null;
 		let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
@@ -373,7 +373,7 @@ module.exports = function(passthrough) {
 			category: "music",
 			process: async function(msg, suffix) {
 				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				const voiceChannel = msg.member.voiceChannel;
+				const voiceChannel = msg.member.voice.channel;
 				if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new songTypes.FriskySong(station);

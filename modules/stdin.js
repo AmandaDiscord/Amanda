@@ -10,7 +10,7 @@ require("../types.js");
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { config, client, commands, db, reloader, reloadEvent, reactionMenus, queueManager, gameManager } = passthrough;
+	let { config, client, commands, db, reloader, reloadEvent, queueManager, gameManager } = passthrough;
 
 	let utils = require("../modules/utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
@@ -46,6 +46,6 @@ module.exports = function(passthrough) {
 
 		Object.assign(cli.context, passthrough, {Discord});
 		
-		cli.on("exit", () => process.exit());
+		cli.once("exit", () => process.exit());
 	});
 }

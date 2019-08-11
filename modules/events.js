@@ -10,7 +10,7 @@ let lastAttemptedLogins = [];
  * @param {PassthroughType} passthrough
  */
 module.exports = function(passthrough) {
-	let { client, config, commands, reloadEvent, reloader, reactionMenus, queueManager } = passthrough;
+	let { client, config, commands, reloadEvent, reloader, queueManager } = passthrough;
 	let prefixes = [];
 	let statusPrefix = "&";
 	let starting = true;
@@ -27,7 +27,7 @@ module.exports = function(passthrough) {
 		if (data.constructor.name == "Message") manageMessage(data);
 		else if (data.content) {
 			let channel = client.channels.get(data.channel_id);
-			let message = new Discord.Message(client, data, channel);
+			let message = new Structures.Message(client, data, channel);
 			manageMessage(message);
 		}
 	});
@@ -151,7 +151,7 @@ module.exports = function(passthrough) {
 	}
 
 	/**
-	 * @param {Discord.MessageReaction} messageReaction
+	 * @param {Structures.MessageReaction} messageReaction
 	 * @param {Structures.User} user
 	 */
 	function reactionEvent(messageReaction, user) {
@@ -161,13 +161,16 @@ module.exports = function(passthrough) {
 		if (!menu) return;
 		let msg = menu.message;
 		function fixEmoji(emoji) {
-			if (typeof(emoji) == "object" && emoji.id !== null) emoji = emoji.name+":"+emoji.id
-			return emoji
+			if (emoji && emoji.name) {
+				if (emoji.id != null) return emoji.id;
+				else if (emoji.name) return emoji.name;
+			}
+			return emoji;
 		}
 		let action = menu.actions.find(a => fixEmoji(a.emoji) == fixEmoji(emoji))
 		if (!action) return;
 		if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {
-			if (action.remove == "user") messageReaction.remove(user);
+			if (action.remove == "user") messageReaction.users.remove(user);
 			return;
 		}
 		switch (action.actionType) {
@@ -178,7 +181,7 @@ module.exports = function(passthrough) {
 			msg.edit(action.actionData);
 			break;
 		case "js":
-			action.actionData(msg, emoji, user, messageReaction, reactionMenus);
+			action.actionData(msg, emoji, user, messageReaction, menu.menus);
 			break;
 		}
 		switch (action.ignore) {
@@ -197,13 +200,13 @@ module.exports = function(passthrough) {
 		}
 		switch (action.remove) {
 		case "user":
-			messageReaction.remove(user);
+			messageReaction.users.remove(user);
 			break;
 		case "bot":
-			messageReaction.remove();
+			messageReaction.users.remove();
 			break;
 		case "all":
-			msg.clearReactions();
+			msg.reactions.clear();
 			break;
 		case "message":
 			menu.destroy(true);

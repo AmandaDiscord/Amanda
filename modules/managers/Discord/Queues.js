@@ -20,4 +20,4 @@ class QueueManager {
 		this.events.emit("new", queue);
 	}
 }
-module.exports = QueueManager;
+module.exports = new QueueManager();

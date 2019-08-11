@@ -4,6 +4,8 @@ require("../../types.js")
 const Discord = require("discord.js")
 const ytdl = require("ytdl-core")
 
+const Structures = require("../../modules/structures")
+
 
 /** @param {PassthroughType} passthrough */
 module.exports = passthrough => {
@@ -25,7 +27,7 @@ module.exports = passthrough => {
 
 	return {
 		/**
-		 * @param {Discord.Message} msg
+		 * @param {Structures.Message} msg
 		 * @param {Array<String>} args
 		 * @param {(rows: Array<{videoID: String, name: String, length_seconds: Number}>) => void} bulkPlayCallback
 		 */
@@ -139,7 +141,7 @@ module.exports = passthrough => {
 				msg.channel.send(utils.contentify(msg.channel, embed));
 
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
-				if (!msg.member.voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+				if (!msg.member.voice.channel) return msg.channel.send(lang.voiceMustJoin(msg))
 				let rows = utils.playlistSection(orderedSongs, args[3], args[4], action.toLowerCase()[0] == "s");
 				rows = rows.map(row => new songTypes.YouTubeSong(row.videoID, undefined, false, {
 					title: row.name,
@@ -197,7 +199,7 @@ module.exports = passthrough => {
 					"<:bn_ti:327986149203116032> - ignore"
 				);
 				let message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
-				new utils.ReactionMenu(message, [
+				message.reactionMenu([
 					{emoji: client.emojis.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
@@ -211,7 +213,7 @@ module.exports = passthrough => {
 			} else {
 				let author = [];
 				if (client.users.get(playlistRow.author)) {
-					author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).smallAvatarURL);
+					author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).avatarURL({format: "png", size: 32}));
 				} else {
 					author.push(playlistName);
 				}

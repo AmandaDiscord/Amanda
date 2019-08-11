@@ -1,33 +1,3 @@
-const Discord = require("discord.js");
-
-// Discord Prototypes
-// User Prototypes
-Object.defineProperties(Discord.User.prototype, {
-	presenceEmoji: {
-		get: getPresenceEmoji,
-		configurable: true
-	}
-});
-
-// GuildMember Prototypes
-Object.defineProperties(Discord.GuildMember.prototype, {
-	presenceEmoji: {
-		get: getPresenceEmoji,
-		configurable: true
-	}
-});
-function getPresenceEmoji () {
-	let presences = {
-			online: "<:online:606664341298872324>",
-			idle: "<:idle:606664341353267221>",
-			dnd: "<:dnd:606664341269381163>",
-			offline: "<:invisible:606662982558154774>"
-	};
-	return presences[this.presence.status];
-}
-
-
-// Non Discord Prototypes
 Object.defineProperties(Array.prototype, {
 	random: {
 		value: function() {
