@@ -2,6 +2,8 @@ const Discord = require("discord.js");
 const rp = require("request-promise");
 const util = require("util");
 const path = require("path");
+const Structures = require("../modules/structures");
+const managers = require("../modules/managers");
 
 // @ts-ignore
 require("../types.js");

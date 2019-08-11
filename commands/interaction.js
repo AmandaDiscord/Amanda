@@ -45,8 +45,8 @@ module.exports = function(passthrough) {
 				if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`);
 				msg.channel.sendTyping();
 				let canvas = await Jimp.read("./images/transparent/300x100.png");
-				let pfp1 = await Jimp.read({ url: mem1.user.displayAvatarURL });
-				let pfp2 = await Jimp.read({ url: mem2.user.displayAvatarURL });
+				let pfp1 = await Jimp.read({ url: mem1.user.displayAvatarURL({format: "png"}) });
+				let pfp2 = await Jimp.read({ url: mem2.user.displayAvatarURL({format: "png"}) });
 				let heart = await Jimp.read("./images/emojis/heart.png");
 
 				await pfp1.resize(100, 100);

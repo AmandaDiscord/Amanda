@@ -163,7 +163,7 @@ module.exports = function(passthrough) {
 		function fixEmoji(emoji) {
 			if (emoji && emoji.name) {
 				if (emoji.id != null) return emoji.id;
-				else if (emoji.name) return emoji.name;
+				else return emoji.name;
 			}
 			return emoji;
 		}

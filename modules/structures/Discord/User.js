@@ -18,7 +18,12 @@ class User extends Discord.User {
 	 */
 	get activityPrefix() {
 		if (this.presence && this.presence.activity == null) return null;
-		let prefixes = ["Playing", "Streaming", "Listening to", "Watching"];
+		let prefixes = {
+			PLAYING: "Playing",
+			STREAMING: "Streaming",
+			LISTENING: "Listening to",
+			WATCHING: "Watching"
+		}
 		return prefixes[this.presence.activity.type];
 	}
 	get activityEmoji() {

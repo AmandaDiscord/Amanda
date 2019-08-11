@@ -317,23 +317,23 @@ module.exports = function(passthrough) {
 					let guildJoinedTime = member.joinedAt.toUTCString();
 					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
 				}
-				let status = user.presenceEmoji;
-				let game = "";
-				if (user.presence.game && user.presence.game.streaming) {
-					game = `Streaming [${user.presence.game.name}](${user.presence.game.url})`;
-					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.game.details}`;
+				let status = user.activityEmoji;
+				let activity = "";
+				if (user.presence.activity && user.presence.activity.type == "STREAMING") {
+					activity = `Streaming [${user.presence.activity.name}](${user.presence.activity.url})`;
+					if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.activity.details}`;
 					status =`<:streaming:606815351967318019>`;
-				} else if (user.presence.game) {
-					game = user.activityPrefix+" **"+user.presence.game.name+"**";
-					if (user.presence.game.details) game += `<:RichPresence:477313641146744842>\n${user.presence.game.details}`;
-					if (user.presence.game.state && user.presence.game.name == "Spotify") game += `\nby ${user.presence.game.state}`;
-					else if (user.presence.game.state) game += `\n${user.presence.game.state}`;
+				} else if (user.presence.activity) {
+					activity = user.activityPrefix+" **"+user.presence.activity.name+"**";
+					if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\n${user.presence.activity.details}`;
+					if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`;
+					else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`;
 				}
 				if (user.bot) status = "<:bot:412413027565174787>";
-				embed.setThumbnail(user.displayAvatarURL);
-				embed.addField("Avatar URL:", `[Click Here](${user.displayAvatarURL})`);
+				embed.setThumbnail(!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL());
+				embed.addField("Avatar URL:", `[Click Here](${!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL()})`);
 				embed.setTitle(`${user.tag}${status}`);
-				if (game) embed.setDescription(game);
+				if (activity) embed.setDescription(activity);
 				return msg.channel.send(utils.contentify(msg.channel, embed));
 			}
 		},
@@ -351,9 +351,9 @@ module.exports = function(passthrough) {
 				} else user = await client.findUser(msg, suffix, true);
 				if (!user) return msg.channel.send(lang.input.invalid(msg, "user"));
 				let embed = new Discord.MessaeEmbed()
-					.setImage(user.displayAvatarURL)
+					.setImage(!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL())
 					.setColor("36393E");
-				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(user.displayAvatarURL);
+				if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL());
 				return msg.channel.send({embed});
 			}
 		},

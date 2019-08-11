@@ -40,6 +40,8 @@ export class Guild extends Discord.Guild {
 export class GuildMember extends Discord.GuildMember {
 	constructor(client: Amanda, data: any, guild: Guild);
 
+	public user: User;
+
 	readonly displaTag: string;
 	readonly activityEmoji: string;
 
