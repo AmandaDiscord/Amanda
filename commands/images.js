@@ -14,6 +14,9 @@ module.exports = function(passthrough) {
 	let lang = require("../modules/lang.js")(passthrough);
 	reloader.useSync("./modules/lang.js", lang);
 
+	let utils = require("../modules/utilities")(passthrough);
+	reloader.useSync("./modules/utilities.js", utils);
+
 	/**
 	 * @param {String} host
 	 * @param {String} path
@@ -23,8 +26,7 @@ module.exports = function(passthrough) {
 	 * @returns {Promise<Discord.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
-		let url, permissions;
-		if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user);
+		let url;
 		if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`;
 		else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`;
 		else return Promise.reject("Host provided not supported");
@@ -44,10 +46,7 @@ module.exports = function(passthrough) {
 			.setImage(img)
 			.setColor('36393E')
 			.setFooter(footer)
-		let content;
-		if (permissions && !permissions.has("EMBED_LINKS")) content = `${img} - ${footer}`;
-		else content = embed;
-		return nmsg.edit(content);
+		return nmsg.edit("", utils.contentify(nmsg.channel, embed));
 	}
 
 	commands.assign({

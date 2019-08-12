@@ -86,6 +86,7 @@ export class User extends Discord.User {
 
 	readonly activityPrefix: "Playing"|"Streaming"|"Listening to"|"Watching";
 	readonly activityEmoji: string;
+	readonly activeOn: string;
 
 	public send(content?: Discord.StringResolvable, options?: Discord.MessageOptions | Discord.MessageAdditions): Promise<Message>;
 	public send(content?: Discord.StringResolvable, options?: Discord.MessageOptions & { split?: false } | Discord.MessageAdditions): Promise<Message>;

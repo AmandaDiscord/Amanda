@@ -114,7 +114,7 @@ module.exports = function(passthrough) {
 						`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
 						`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 					.addField("­",
-						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections\n`+
+						`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
 						`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
 					return msg.channel.send(utils.contentify(msg.channel, embed));
 				} else if (suffix.toLowerCase() == "games") {
@@ -147,8 +147,8 @@ module.exports = function(passthrough) {
 						`**❯ User Count:**\n${client.users.size} users\n`+
 						`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 						`**❯ Channel Count:**\n${client.channels.size} channels\n`+
-						`**❯ Voice Connections:**\n${client.voiceConnections.size} connections`, true)
-					return nmsg.edit(utils.contentify(msg.channel, embed));
+						`**❯ Voice Connections:**\n${client.voice.connections.size} connections`, true)
+					return nmsg.edit("", utils.contentify(msg.channel, embed));
 				}
 				function bToMB (number) {
 					return `${((number/1024)/1024).toFixed(2)}MB`;
@@ -165,7 +165,7 @@ module.exports = function(passthrough) {
 				let message = array.random();
 				let nmsg = await msg.channel.send(message);
 				let embed = new Discord.MessageEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ws.ping.toFixed(0)}ms`, true).addField(`❯ Latency:`, `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E");
-				return nmsg.edit(utils.contentify(msg.channel, embed));
+				return nmsg.edit("", utils.contentify(msg.channel, embed));
 			}
 		},
 		"forcestatupdate": {
@@ -318,13 +318,13 @@ module.exports = function(passthrough) {
 					embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime);
 				}
 				let status = user.activityEmoji;
-				let activity = "";
+				let activity = `*${user.activeOn}*\n`;
 				if (user.presence.activity && user.presence.activity.type == "STREAMING") {
-					activity = `Streaming [${user.presence.activity.name}](${user.presence.activity.url})`;
+					activity += `Streaming [${user.presence.activity.name}](${user.presence.activity.url})`;
 					if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.activity.details}`;
 					status =`<:streaming:606815351967318019>`;
 				} else if (user.presence.activity) {
-					activity = user.activityPrefix+" **"+user.presence.activity.name+"**";
+					activity += user.activityPrefix+" **"+user.presence.activity.name+"**";
 					if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\n${user.presence.activity.details}`;
 					if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`;
 					else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`;

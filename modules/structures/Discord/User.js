@@ -35,6 +35,13 @@ class User extends Discord.User {
 		};
 		return presences[this.presence.status];
 	}
+	get activeOn() {
+		let cs = this.presence.clientStatus;
+		if (!cs) return `Offline`;
+		if (cs) {
+			return `Active on ${cs.desktop?"Desktop":""}${cs.desktop&&cs.web?" and ":""}${cs.web?"Web":""}${(cs.desktop&&cs.mobile)||(cs.web&&cs.mobile)?" and ":""}${cs.mobile?" Mobile":""}`;
+		}
+	}
 }
 
 Discord.Structures.extend("User", () => { return User; });
