@@ -5,6 +5,8 @@ const ytdl = require("ytdl-core");
 const rp = require("request-promise");
 const Discord = require("discord.js");
 
+const Structures = require("../../modules/structures");
+
 let resultCache;
 
 /** @param {PassthroughType} passthrough */
@@ -20,15 +22,15 @@ module.exports = passthrough => {
 	if (!resultCache) {
 		var common = {
 			/**
-			 * @param {Discord.TextChannel|Discord.Message} channel
+			 * @param {Structures.TextChannel} channel
 			 * @param {Object} reason
 			 * @param {String} reason.message
 			 * @param {String} id
 			 * @param {Number} item
-			 * @returns {Promise<Discord.Message>}
+			 * @returns {Promise<Structures.Message>}
 			 */
 			manageYtdlGetInfoErrors: function(channel, reason, id, item) {
-				if (channel.channel) channel = channel.channel;
+				if (channel instanceof Structures.Message) channel = channel.channel;
 				let idString = id ? ` (index: ${item}, id: ${id})` : "";
 				if (!reason || !reason.message) {
 					return channel.send("An unknown error occurred."+idString);
@@ -72,7 +74,7 @@ module.exports = passthrough => {
 			resolveInput: {
 				/**
 				 * @param {String} input
-				 * @param {Discord.TextChannel} channel
+				 * @param {Structures.TextChannel} channel
 				 * @returns {Promise<Array<String>|Array<import("simple-youtube-api").Video>>}
 				 */
 				toID: async function(input, channel) {
@@ -168,7 +170,7 @@ module.exports = passthrough => {
 				/**
 				 * Interactive.
 				 * @param {String} input
-				 * @param {Discord.TextChannel} channel
+				 * @param {Structures.TextChannel} channel
 				 * @param {String} authorID
 				 * @returns {Promise<Array<any>>} An array of video IDs, or null
 				 */

@@ -16,7 +16,7 @@ module.exports = class YouTubeSong extends WebSong {
 	constructor(id, info, cache, basic) {
 		super()
 		this.id = id;
-		this.connectionPlayFunction = "playOpusStream";
+		this.streamType = "opus";
 		/** @type {Boolean} */
 		this.canBePaused;
 		this.url = "https://youtu.be/"+id;
@@ -25,8 +25,6 @@ module.exports = class YouTubeSong extends WebSong {
 		this.progressUpdateFrequency = 5000;
 		this.info = info;
 		this.basic = basic;
-		/** @type {Queue} */
-		this.queue;
 	}
 	/**
 	 * @returns {{src: String, width: number, height: number}}

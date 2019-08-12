@@ -1,6 +1,8 @@
 const Discord = require("discord.js");
 const path = require("path");
 
+const Structures = require("../modules/structures");
+
 // @ts-ignore
 require("../types.js");
 
@@ -24,7 +26,7 @@ module.exports = function(passthrough) {
 	utils.addTemporaryListener(client, "message", path.basename(__filename), gifDetector);
 
 	/**
-	 * @param {Discord.Message} msg
+	 * @param {Structures.Message} msg
 	 */
 	async function gifDetector(msg) {
 		if (!msg.author.bot) { // command

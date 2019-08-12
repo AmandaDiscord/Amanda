@@ -1,6 +1,9 @@
 const Discord = require("discord.js");
 const events = require("events");
 
+const Structures = require("../structures");
+const managers = require("../managers");
+
 let Song = require("./youtubesong.js");
 let QueueWrapper = require("./queuewrapper.js");
 let BetterTimeout = require("./bettertimeout.js");
@@ -10,7 +13,7 @@ require("../../types.js");
 
 module.exports = class Queue {
 	/**
-	 * @param {Discord.TextChannel} textChannel
+	 * @param {Structures.TextChannel} textChannel
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @constructor
 	 */
@@ -32,7 +35,7 @@ module.exports = class Queue {
 		this.skippable;
 		/** @type {Boolean} */
 		this.auto;
-		/** @type {Discord.Message} */
+		/** @type {Structures.Message} */
 		this.nowPlayingMsg;
 		this.queueManager = require("../managers.js").queueManager
 		/** @type {QueueWrapper} */
@@ -41,9 +44,9 @@ module.exports = class Queue {
 		this.events;
 		/** @type {BetterTimeout} */
 		this.voiceLeaveTimeout;
-		/** @type {Promise<Discord.Message>} */
+		/** @type {Promise<Structures.Message>} */
 		this.voiceLeaveWarningMessagePromise;
-		/** @type {ReactionMenu} */
+		/** @type {managers.ReactionMenu} */
 		this.reactionMenu;
 		this.npUpdateTimeout = setTimeout(() => "lol", 100);
 		this.npUpdateInterval = setInterval(() => "lol", 100);
@@ -85,10 +88,10 @@ module.exports = class Queue {
 	 */
 	announceSongInfoUpdate(song) {}
 	/**
-	 * @param {Discord.GuildMember} oldMember
-	 * @param {Discord.GuildMember} newMember
+	 * @param {Discord.VoiceState} oldState
+	 * @param {Discord.VoiceState} newState
 	 */
-	voiceStateUpdate(oldMember, newMember) {}
+	voiceStateUpdate(oldState, newState) {}
 	/**
 	 * @returns {Discord.MessageEmbed|String}
 	 */

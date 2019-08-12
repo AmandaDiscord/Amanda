@@ -6,6 +6,9 @@ const rp = require("request-promise");
 const Discord = require("discord.js");
 const path = require("path");
 
+const Structures = require("../../modules/structures");
+const managers = require("../../modules/managers");
+
 //@ts-ignore
 require("../../types.js");
 
@@ -36,7 +39,6 @@ module.exports = function(passthrough) {
 	reloader.useSync("./commands/music/common.js", common)
 
 	utils.addTemporaryListener(client, "guildUpdate", path.basename(__filename), (a, b) => {
-		/** @type {Queue} */
 		let queue = queueManager.storage.get(b.id)
 		if (a.region != b.region && queue) {
 			queue.textChannel.send("The guild region changed, forcing me to disconnect from voice and stop playing music.")
@@ -48,15 +50,15 @@ module.exports = function(passthrough) {
 
 	/**
 	 * @param {Song} song
-	 * @param {Discord.TextChannel} textChannel
+	 * @param {Structures.TextChannel} textChannel
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Boolean} [insert]
-	 * @param {Discord.Message} [context]
+	 * @param {Structures.Message} [context]
 	 */
 	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
 		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
 		let numberOfSongs = queue.addSong(song, insert);
-		if (context instanceof Discord.Message && numberOfSongs > 1) {
+		if (context instanceof Structures.Message && numberOfSongs > 1) {
 			context.react("✅")
 		}
 		return numberOfSongs
@@ -64,8 +66,8 @@ module.exports = function(passthrough) {
 
 	class VoiceStateCallback {
 		/**
-		 * @param {Discord.Snowflake} userID
-		 * @param {Discord.Guild} guild
+		 * @param {String} userID
+		 * @param {Structures.Guild} guild
 		 * @param {Number} timeoutMs
 		 * @param {(voiceChannel: Discord.VoiceChannel) => void} callback
 		 * @constructor
@@ -107,8 +109,8 @@ module.exports = function(passthrough) {
 	const voiceStateCallbackManager = {
 		callbacks: [],
 		/**
-		 * @param {Discord.Snowflake} userID
-		 * @param {Discord.Guild} guild
+		 * @param {String} userID
+		 * @param {Structures.Guild} guild
 		 * @returns {Array<VoiceStateCallback>}
 		 */
 		getAll: function(userID, guild) {
@@ -116,8 +118,8 @@ module.exports = function(passthrough) {
 		}
 	}
 	/**
-	 * @param {Discord.Snowflake} userID
-	 * @param {Discord.Guild} guild
+	 * @param {String} userID
+	 * @param {Structures.Guild} guild
 	 * @param {Number} timeoutMs
 	 * @returns {Promise<Discord.VoiceChannel>}
 	 */
@@ -157,7 +159,7 @@ module.exports = function(passthrough) {
 		}
 	});
 	/**
-	 * @param {Discord.Message} msg
+	 * @param {Structures.Message} msg
 	 * @param {Boolean} wait
 	 * @returns {Promise<(Discord.VoiceChannel|null)>}
 	 */
@@ -168,6 +170,9 @@ module.exports = function(passthrough) {
 		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
 	}
 
+	/**
+	 * @type {Map<String, {voiceChannel?: String, queue?: String, code: (msg: Structures.Message, args: Array<String>, any) => any}>}
+	 */
 	const subcommandsMap = new Map([
 		["play", {
 			voiceChannel: "ask",
@@ -205,7 +210,7 @@ module.exports = function(passthrough) {
 					bulkLoaders[bulkLoaderIndex][1]();
 				} else {
 					if (!queue) {
-						if (msg.guild.voiceConnection) return msg.guild.voiceConnection.channel.leave();
+						if (msg.guild.voice.connection) return msg.guild.voice.connection.channel.leave();
 						else return msg.channel.send(lang.voiceNothingPlaying(msg));
 					} else {
 						queue.wrapper.stop()

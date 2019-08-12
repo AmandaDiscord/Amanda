@@ -186,7 +186,7 @@ module.exports = function(passthrough) {
 	}
 	/**
 	 * @param {Structures.TextChannel|Structures.DMChannel} channel
-	 * @param {{suffix?: String, msg?: Discord.Message, category?: String}} options
+	 * @param {{suffix?: String, msg?: Structures.Message, category?: String}} options
 	 */
 	async function startGame(channel, options = {}) {
 		// Select category

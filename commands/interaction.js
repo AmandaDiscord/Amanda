@@ -2,6 +2,8 @@ const Jimp = require("jimp");
 const crypto = require("crypto");
 const rp = require("request-promise");
 const Discord = require("discord.js");
+
+const Structures = require("../modules/structures");
 const managers = require("../modules/managers");
 
 // @ts-ignore
@@ -202,8 +204,8 @@ module.exports = function(passthrough) {
 			aliases: ["waifuleaderboard", "waifulb"],
 			category: "interaction",
 			process: async function(msg, suffix) {
-				let amount = 10;
-				if (msg.channel.type != "dm") permissions = msg.channel.permissionsFor(client.user);
+				let amount = 10, permissions;
+				if (msg.channel instanceof Structures.TextChannel) permissions = msg.channel.permissionsFor(client.user);
 				if (suffix) {
 					let num = Number(suffix);
 					if (num < 1) num = 1;
@@ -320,7 +322,7 @@ module.exports = function(passthrough) {
 				aliases: [source.name],
 				category: "interaction",
 				/**
-				 * @param {Discord.Message} msg
+				 * @param {Structures.Message} msg
 				 * @param {String} suffix
 				 */
 				process: (msg, suffix) => doInteraction(msg, suffix, source)
@@ -344,7 +346,7 @@ module.exports = function(passthrough) {
 	]);
 
 	/**
-	 * @param {Discord.Message} msg
+	 * @param {Structures.Message} msg
 	 * @param {String} suffix
 	 * @param {{name: String, description: String, verb: String, shortcut: String, fetch?: () => Promise<String>, amanda: (name: String) => String, footer?: String, traaOverride?: Boolean, url?: () => String}} source
 	 */

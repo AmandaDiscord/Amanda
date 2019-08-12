@@ -1,6 +1,8 @@
 const rp = require("request-promise");
 const Discord = require("discord.js");
 
+const Structures = require("../modules/structures")
+
 // @ts-ignore
 require("../types.js");
 
@@ -20,10 +22,10 @@ module.exports = function(passthrough) {
 	/**
 	 * @param {String} host
 	 * @param {String} path
-	 * @param {Discord.Message} msg
+	 * @param {Structures.Message} msg
 	 * @param {String} emoji
 	 * @param {String} footer
-	 * @returns {Promise<Discord.Message>}
+	 * @returns {Promise<Structures.Message>}
 	 */
 	async function sendImage(host, path, msg, emoji, footer) {
 		let url;

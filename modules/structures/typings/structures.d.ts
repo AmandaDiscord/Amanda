@@ -35,14 +35,14 @@ export class Guild extends Discord.Guild {
 
 	public queue: Queue;
 
-	public findMember(message: Message, string: string, self: boolean): Promise<GuildMember>;
+	public findMember(message: Message, string: string, self?: boolean): Promise<GuildMember>;
 }
 export class GuildMember extends Discord.GuildMember {
 	constructor(client: Amanda, data: any, guild: Guild);
 
 	public user: User;
 
-	readonly displaTag: string;
+	readonly displayTag: string;
 	readonly activityEmoji: string;
 
 	public send(content?: Discord.StringResolvable, options?: Discord.MessageOptions | Discord.MessageAdditions): Promise<Message>;

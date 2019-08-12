@@ -1,5 +1,7 @@
 const Discord = require("discord.js");
 
+const Structures = require("../structures");
+
 const Queue = require("./queue.js");
 
 module.exports = class QueueWrapper {
@@ -10,32 +12,32 @@ module.exports = class QueueWrapper {
 
 	async showInfo() {}
 	/**
-	 * @param {Discord.Message|String} [context]
+	 * @param {Structures.Message|String} [context]
 	 */
 	pause(context) {}
 	/**
-	 * @param {Discord.Message|String} [context]
+	 * @param {Structures.Message|String} [context]
 	 */
 	resume(context) {}
 	/**
-	 * @param {Discord.Message|String} [context]
+	 * @param {Structures.Message|String} [context]
 	 */
 	skip(context) {}
 	/**
-	 * @param {Discord.Message|String} [context]
+	 * @param {Structures.Message|String} [context]
 	 */
 	stop(context) {}
 	/**
-	 * @param {Discord.Message} [context]
+	 * @param {Structures.Message} [context]
 	 */
 	toggleAuto(context) {}
 	/**
-	 * @param {Discord.Message|String} context
+	 * @param {Structures.Message|String} context
 	 */
 	togglePlaying(context) {}
 	/**
-	 * @param {Discord.Message} context
-	 * @returns {Promise<Discord.Message>}
+	 * @param {Structures.Message} context
+	 * @returns {Promise<Structures.Message>}
 	 */
 	getQueue(context) {}
 	/**

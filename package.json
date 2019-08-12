@@ -28,7 +28,7 @@
     "request-promise": "^4.2.4",
     "simple-git": "^1.124.0",
     "simple-youtube-api": "^5.2.1",
-    "ytdl-core": "^0.29.4",
+    "ytdl-core": "^0.29.5",
     "ytdl-core-discord": "github:cloudrac3r/ytdl-core-discord"
   }
 }

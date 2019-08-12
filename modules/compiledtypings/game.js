@@ -1,16 +1,20 @@
 const Discord = require("discord.js");
 
+const Structures = require("../structures");
+const managers = require("../managers");
+
 module.exports = class Game {
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel|Discord.GroupDMChannel} channel
+	 * @param {Structures.TextChannel|Structures.DMChannel} channel
 	 * @param {String} type
 	 */
 	constructor(channel, type) {
 		this.channel = channel;
 		this.type = type;
-		this.manager = require("../managers").gameManager;
+		/** @type {managers.GameManager} */
+		this.manager;
 		this.id = channel.id;
-		if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(this.channel.client.user)
+		if (channel instanceof Structures.TextChannel) this.permissions = channel.permissionsFor(this.channel.client.user)
 		else this.permissions = undefined;
 	}
 	init() {}

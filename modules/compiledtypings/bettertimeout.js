@@ -1,6 +1,6 @@
 module.exports = class BetterTimeout {
 	/**
-	 * @param {(...args: Array<any>) => void} callback
+	 * @param {(...args: Array<any>) => any} callback
 	 * @param {Number} delay
 	 * @constructor
 	 */
