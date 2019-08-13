@@ -1,4 +1,5 @@
 import Discord = require("discord.js");
+import LavaLink = require("discord.js-lavalink");
 
 import managers = require("../../managers");
 
@@ -7,6 +8,8 @@ import Queue = require("../../compiledtypings/queue");
 // Export Structures Classes
 export class Amanda extends Discord.Client {
 	constructor(options?: Discord.ClientOptions);
+
+	public lavalink: LavaLink.PlayerManager;
 
 	public user: ClientUser
 	public users: UserStore;

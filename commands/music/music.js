@@ -178,8 +178,8 @@ module.exports = function(passthrough) {
 			voiceChannel: "ask",
 			code: async (msg, args, {voiceChannel}) => {
 				if (!queueManager.storage.has(msg.guild.id)) {
-					if (!voiceChannel.joinable) return msg.channel.send(lang.permissionVoiceJoin());
-					if (!voiceChannel.speakable) return msg.channel.send(lang.permissionVoiceSpeak());
+					if (voiceChannel && !voiceChannel.joinable) return msg.channel.send(lang.permissionVoiceJoin());
+					if (voiceChannel && !voiceChannel.speakable) return msg.channel.send(lang.permissionVoiceSpeak());
 				}
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
 				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);

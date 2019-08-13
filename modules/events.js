@@ -1,5 +1,6 @@
 const Discord = require("discord.js");
 const path = require("path");
+const { PlayerManager } = require("discord.js-lavalink");
 
 const Structures = require("./structures");
 require("../types.js");
@@ -15,6 +16,10 @@ module.exports = function(passthrough) {
 	let statusPrefix = "&";
 	let starting = true;
 	if (client.readyAt != null) starting = false;
+
+	let lavalinknodes = [
+		{ host: "amanda.discord-bots.ga", port: 10402, password: config.lavalink_password }
+	];
 
 	let utils = require("./utilities.js")(passthrough);
 	reloader.useSync("./modules/utilities.js", utils);
@@ -136,6 +141,10 @@ module.exports = function(passthrough) {
 		if (starting) {
 			console.log(`Successfully logged in as ${client.user.username}`);
 			process.title = client.user.username;
+			client.lavalink = new PlayerManager(this, lavalinknodes, {
+				user: client.user.id,
+				shards: 1
+			});
 			utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 				result.forEach(row => {
 					let channel = client.channels.get(row.channelID);

@@ -1,4 +1,5 @@
 const Discord = require("discord.js");
+const { PlayerManager } = require("discord.js-lavalink");
 
 const Structures = require("../");
 const { Message, User, TextChannel } = Structures;
@@ -15,6 +16,9 @@ class Amanda extends Discord.Client {
 
 		/** @type {Structures.GuildStore} */
 		this.guilds;
+
+		/** @type {PlayerManager} */
+		this.lavalink;
 	}
 	/**
 	 * @param {Message} message Message Object

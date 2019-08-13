@@ -51,7 +51,8 @@ let commands = new managers.CommandStore();
 		"./commands/meta.js",
 		"./commands/music/music.js",
 		"./commands/traa.js",
-		"./commands/web/server.js"
+		"./commands/web/server.js",
+		"./commands/lavalink.js"
 	]);
 	
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
