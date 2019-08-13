@@ -102,7 +102,7 @@ module.exports = passthrough => {
 				this.songs.length = 0;
 				this.auto = false;
 				this.voiceLeaveTimeout.clear();
-				if (this.connection && this.connection.dispatcher) this.connection.dispatcher.destroy();
+				if (this.connection && this.connection.dispatcher) this.connection.dispatcher.end();
 				if (this.voiceChannel) this.voiceChannel.leave();
 				if (this.nowPlayingMsg) this.nowPlayingMsg.reactions.clear();
 				if (this.reactionMenu) this.reactionMenu.destroy(true);
@@ -382,7 +382,7 @@ module.exports = passthrough => {
 				if (!this.playing) {
 					return 1
 				} else if (this.connection && this.connection.dispatcher) {
-					this.connection.dispatcher.destroy()
+					this.connection.dispatcher.end();
 					return 0
 				} else {
 					return -1
