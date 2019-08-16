@@ -327,7 +327,7 @@ class PlayerTime extends ElemJS {
 		this.class("progress")
 		this.animation = null
 		this.interval = null
-		this.state = {playing: false, time: 0, maxTime: 0}
+		this.state = {playing: false, time: 0, maxTime: 0, live: false}
 		this.child(new ElemJS("div").class("progressbar"))
 		this.child(new ElemJS("div"))
 		this.child(new ElemJS("div"))
@@ -341,8 +341,8 @@ class PlayerTime extends ElemJS {
 		return Math.max(0, this.state.maxTime*1000 - this.state.time)
 	}
 	getTransform() {
-		if (this.state.time == 0 && this.state.maxTime == 0) {
-			if (this.playing) return `scaleX(1)`
+		if (this.state.maxTime == 0 || this.state.live) {
+			if (this.state.playing) return `scaleX(1)`
 			else return `scaleX(0)`
 		} else {
 			let fraction = (this.state.time/1000) / this.state.maxTime
@@ -353,19 +353,21 @@ class PlayerTime extends ElemJS {
 		if (this.animation) this.animation.cancel()
 		if (this.interval) clearInterval(this.interval)
 		this.renderCurrentTime()
-		this.children[2].text(prettySeconds(this.state.maxTime))
+		this.children[2].text(this.state.live ? "LIVE" : prettySeconds(this.state.maxTime))
 		this.children[0].element.style.transform = this.getTransform()
 		if (this.state.playing) {
-			this.animation = this.children[0].element.animate([
-				{transform: this.getTransform(), easing: "linear"},
-				{transform: "scaleX(1)"}
-			], this.getMSRemaining())
-			this.animation.addEventListener("finish", () => {
-				this.children[0].element.style.transform = "scaleX(1)"
-				if (this.interval) clearInterval(this.interval)
-				this.state.time = this.state.maxTime * 1000
-				this.renderCurrentTime()
-			})
+			if (this.getMSRemaining()) {
+				this.animation = this.children[0].element.animate([
+					{transform: this.getTransform(), easing: "linear"},
+					{transform: "scaleX(1)"}
+				], this.getMSRemaining())
+				this.animation.addEventListener("finish", () => {
+					this.children[0].element.style.transform = "scaleX(1)"
+					if (this.interval) clearInterval(this.interval)
+					this.state.time = this.state.maxTime * 1000
+					this.renderCurrentTime()
+				})
+			}
 			this.interval = setInterval(() => {
 				this.state.time += 1000
 				this.renderCurrentTime()

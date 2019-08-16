@@ -133,7 +133,10 @@ module.exports = passthrough => {
 				if (position == -1) this.songs.push(song);
 				else this.songs.splice(position, 0, song);
 				this.events.emit("queueAdd", song, position)
-				song.events.on("update", () => this.announceSongInfoUpdate(song))
+				song.events.on("update", () => {
+					this.updateNowPlaying()
+					this.announceSongInfoUpdate(song)
+				})
 				if (this.songs.length == 1) {
 					if (this.connection) this.play();
 				} else if (this.songs.length == 2) {
@@ -233,9 +236,10 @@ module.exports = passthrough => {
 			 * @returns {Promise<Error|Discord.MessageEmbed|String>}
 			 */
 			updateNowPlaying() {
-				if (!this.nowPlayingMsg) throw new Error("I TOLD YOU SO!!!")
-				if (this.songs[0]) return this.nowPlayingMsg.edit(this.getNPEmbed())
-				else return Promise.resolve(null)
+				if (this.nowPlayingMsg) {
+					if (this.songs[0]) return this.nowPlayingMsg.edit(this.getNPEmbed())
+					else return Promise.resolve(null)
+				}
 			}
 			/**
 			 * Immediately update the now playing message, and continue to update it every few seconds, as defined by the song.
@@ -326,12 +330,9 @@ module.exports = passthrough => {
 				} else if (!this.auto) {
 					this.dissolve()
 				} else {
-					justPlayed.getSuggested(this.playedSongs).then(song => {
+					justPlayed.getSuggested(undefined, this.playedSongs).then(song => {
 						if (song) {
-							let isQueueStillEmpty = !this.songs[0]
-							this.songs.push(song)
-							this.events.emit("queueAdd", song, -1)
-							if (isQueueStillEmpty) this.play()
+							this.addSong(song)
 						} else {
 							this.dissolve()
 						}

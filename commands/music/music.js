@@ -282,10 +282,8 @@ module.exports = function(passthrough) {
 				let mode = args[1];
 				let index = parseInt(args[2]);
 				if (mode && (mode[0] == "p" || mode[0] == "i") && index) {
-					let related = await queue.songs[0].getRelated()
-					let selection = related[index-1]
-					if (!selection) return msg.channel.send("The syntax is `&music related <play|insert> <index>`. Your index was invalid.")
-					let song = new songTypes.YouTubeSong(selection.id, undefined, true, selection)
+					let song = await queue.songs[0].getSuggested(index-1)
+					if (!song) return msg.channel.send("The syntax is `&music related <play|insert> <index>`. Your index was invalid.")
 					handleSong(song, msg.channel, voiceChannel, mode[0] == "i", msg)
 				} else {
 					let content = await queue.songs[0].showRelated()
@@ -381,7 +379,7 @@ module.exports = function(passthrough) {
 				if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new songTypes.FriskySong(station);
-				return handleSong(stream, msg.channel, voiceChannel);
+				return handleSong(stream, msg.channel, voiceChannel, false, msg);
 			}
 		},
 		"music": {

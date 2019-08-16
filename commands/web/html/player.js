@@ -135,7 +135,8 @@ ex.push({
 				this.player.updateTime({
 					playing: this.state.playing,
 					time: this.state.time,
-					maxTime: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].length : 0
+					maxTime: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].length : 0,
+					live: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].live : false
 				})
 			}
 

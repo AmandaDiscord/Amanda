@@ -613,6 +613,39 @@ module.exports = (passthrough) => {
 					if (value.length > 2000) value = value.slice(0, 1998)+"…";
 				} else throw new TypeError(`Content provide must be an instance of a MessageEmbed or String. Got ${content.constructor ? content.constructor.name : typeof content}`);
 				return value;
+			},
+
+			AsyncValueCache: class AsyncValueCache {
+				/**
+				 * @param {Promise<any>} getter
+				 * @param {Number} lifetime
+				 */
+				constructor(getter, lifetime) {
+					this.getter = getter
+					this.lifetime = lifetime
+					this.lifetimeTimeout = null
+					this.promise = null
+					this.cache = null
+				}
+				clear() {
+					clearTimeout(this.lifetimeTimeout)
+					this.cache = null
+				}
+				get() {
+					if (this.cache) return Promise.resolve(this.cache)
+					if (this.promise) return this.promise
+					return this._getNew()
+				}
+				_getNew() {
+					this.promise = this.getter()
+					return this.promise.then(result => {
+						this.cache = result
+						this.promise = null
+						clearTimeout(this.lifetimeTimeout)
+						if (this.lifetime) this.lifetimeTimeout = setTimeout(() => this.clear(), this.lifetime)
+						return result
+					})
+				}
 			}
 		}
 
