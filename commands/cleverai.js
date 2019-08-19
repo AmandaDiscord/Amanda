@@ -19,14 +19,15 @@ const responses = {
 		"That seems like the obvious choice, yeah.",
 		"Why wouldn't you?",
 		"Sounds like a solid plan. Would you like me to help?",
-
 		"Are you crazy? No.",
 		"How could you possibly think that's acceptable?",
 		"I hope when you grow up you don't have childen, so that they can't inherit the same bad idea disease that you have.",
-		"If you asked Ouija that, it'd say goodbye, so that it wouldn't have to dignify that with a response."
+		"If you asked Ouija that, it'd say goodbye, so that it wouldn't have to dignify that with a response"
 	],
 	"challenge": [
-		"Who do you think you are to say that to me?"
+		"Who do you think you are to say that to me?",
+		"W-what? You wanna challenge me? Challenge accepted!",
+		"There is no way that I'll challenge you..."
 	],
 	"any": [
 		"I'm sure there's a joke in here somewhere.",
@@ -67,8 +68,7 @@ const responses = {
 		"Let's go surfing!"
 	],
 	"media": [
-		"Want to see a funny video? https://i.imgur.com/TOQxk9V.gifv",
-
+		"Want to see a funny video? https://i.imgur.com/TOQxk9V.gifv"
 	],
 	"wellbeing": [
 		"I feel great!",
@@ -77,13 +77,15 @@ const responses = {
 		"Gosh, I... I, I dunno... I'm fine, I guess.",
 		"Today is a good day.",
 		"I'm feeling a bit stressed, actually. Please don't ask me any taxing questions, I don't know if I'm up to the task of answering them today.",
+		"Thanks for asking but, I'm fine..."
 	],
 	"compliment": [
-		"Aww, I think you look really cute. :3"
+		"Aww, I think you look really cute. :3",
+		"T-thanks... You're a cutie too..."
 	],
 }
 const bored = [
-	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit."
+	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit.",
 ]
 const intent = {
 	"question": [
