@@ -49,7 +49,7 @@ export class CommandStore extends Discord.Collection<string, Command> {
 export class ReactionMenuAction {
 	constructor();
 
-	public emoji: Discord.Emoji|Discord.ReactionEmoji;
+	public emoji: Discord.Emoji|Discord.ReactionEmoji|String;
 	public messageReaction?: Discord.MessageReaction;
 	public allowedUsers?: Array<string>;
 	public deniedUsers?: Array<string>;

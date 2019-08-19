@@ -241,7 +241,7 @@ module.exports = passthrough => {
 	}
 
 	function friskyDataToInfoEmbed(data, nextEpisode) {
-		let embed = new Discord.RichEmbed()
+		let embed = new Discord.MessageEmbed()
 		.setThumbnail(data.episode.occurrence_album_art.url)
 		.setTitle("FRISKY: "+data.title)
 		.setURL("https://www.friskyradio.com/show"+data.episode.full_url)

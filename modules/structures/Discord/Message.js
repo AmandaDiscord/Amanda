@@ -8,7 +8,7 @@ class Message extends Discord.Message {
 	/**
 	 * @param {Amanda} client
 	 * @param {any} data
-	 * @param {TextChannel|DMChannel} channel
+	 * @param {Structures.TextChannel} channel
 	 */
 	constructor(client, data, channel) {
 		super(client, data, channel);

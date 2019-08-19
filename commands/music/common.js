@@ -56,7 +56,6 @@ module.exports = passthrough => {
 			 * @param {Number} seconds
 			 */
 			prettySeconds: function(seconds) {
-				if (isNaN(seconds)) return seconds;
 				let minutes = Math.floor(seconds / 60);
 				seconds = seconds % 60;
 				let hours = Math.floor(minutes / 60);

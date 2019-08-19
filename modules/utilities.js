@@ -615,16 +615,20 @@ module.exports = (passthrough) => {
 				return value;
 			},
 
-			AsyncValueCache: class AsyncValueCache {
+			AsyncValueCache:
+			/** @template T */
+			class AsyncValueCache {
 				/**
-				 * @param {Promise<any>} getter
+				 * @param {() => Promise<T>} getter
 				 * @param {Number} lifetime
 				 */
-				constructor(getter, lifetime) {
+				constructor(getter, lifetime = undefined) {
 					this.getter = getter
 					this.lifetime = lifetime
 					this.lifetimeTimeout = null
+					/** @type {Promise<T>} */
 					this.promise = null
+					/** @type {T} */
 					this.cache = null
 				}
 				clear() {
@@ -645,6 +649,38 @@ module.exports = (passthrough) => {
 						if (this.lifetime) this.lifetimeTimeout = setTimeout(() => this.clear(), this.lifetime)
 						return result
 					})
+				}
+			},
+
+			FrequencyUpdater:
+			class FrequencyUpdater {
+				/**
+				 * @param {Function} callback
+				 */
+				constructor(callback) {
+					this.callback = callback
+					this.timeout = null
+					this.interval = null
+				}
+				/**
+				 * @param {Number} frequency Number of milliseconds between calls of the callback
+				 * @param {Boolean} trigger Whether to call the callback straight away
+				 * @param {Number} delay Defaults to frequency. Delay to be used for the the first delay only.
+				 */
+				start(frequency, trigger, delay = frequency) {
+					this.stop(false)
+					if (trigger) this.callback()
+					this.timeout = setTimeout(() => {
+						this.callback()
+						this.interval = setInterval(() => {
+							this.callback()
+						}, frequency)
+					}, delay)
+				}
+				stop(trigger = false) {
+					clearTimeout(this.timeout)
+					clearInterval(this.interval)
+					if (trigger) this.callback()
 				}
 			}
 		}

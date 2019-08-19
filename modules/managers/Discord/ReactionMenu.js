@@ -32,7 +32,7 @@ class ReactionMenu {
 				this.message.reactions.removeAll().catch(new Function());
 			} else if (this.message.channel.type == "dm") {
 				this.actions.forEach(a => {
-					if (a.messageReaction) a.messageReaction.remove().catch(new Function());
+					a.messageReaction.users.remove().catch(new Function())
 				});
 			}
 		}

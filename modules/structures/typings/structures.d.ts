@@ -58,7 +58,7 @@ export class GuildMember extends Discord.GuildMember {
 export class Message extends Discord.Message {
 	constructor(client: Amanda, data: any, channel: TextChannel|DMChannel);
 
-	public channel: TextChannel|DMChannel;
+	public channel: Structures.TextChannel;
 	public guild: Guild;
 	public author: User;
 	public member: GuildMember;

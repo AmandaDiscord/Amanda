@@ -6,7 +6,7 @@ const YouTube = require("simple-youtube-api");
 const { Amanda } = require("./modules/structures");
 
 // @ts-ignore
-const config = require("./config.json");
+const config = require("./config.js");
 const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"]});
 const youtube = new YouTube(config.yt_api_key);
 
@@ -49,10 +49,9 @@ let commands = new managers.CommandStore();
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music/music.js",
+		"./commands/music/lavalink.js",
 		"./commands/traa.js",
 		"./commands/web/server.js",
-		"./commands/lavalink.js"
 	]);
 	
 	// no reloading for statuses. statuses will be periodically fetched from mysql.

@@ -145,6 +145,12 @@ module.exports = function(passthrough) {
 				user: client.user.id,
 				shards: 1
 			});
+			client.lavalink.on("ready", () => {
+				console.log("Lavalink ready")
+			})
+			client.lavalink.on("error", (self, error) => {
+				console.error("Failed to initialise Lavalink: "+error.message)
+			})
 			utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 				result.forEach(row => {
 					let channel = client.channels.get(row.channelID);
