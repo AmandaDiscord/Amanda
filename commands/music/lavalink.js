@@ -530,12 +530,12 @@ module.exports = function(passthrough) {
 			async process(msg, suffix) {
 				if (msg.channel.type == "dm") return
 				if (msg.member.voice && !msg.member.voice.channel) return msg.channel.send("You have to be in a voice channel")
+				if (!msg.member.voice.channel.joinable) return msg.channel.send("I can't join that channel lol")
+				if (!msg.member.voice.channel.speakable) return msg.channel.send("I can't speak in that channel lol")
 
 				let args = suffix.split(" ")
 				let search = suffix.slice(args[0].length + 1)
 				if (args[0] == "play") {
-					if (!msg.member.voice.channel.joinable) return msg.channel.send("I can't join that channel lol")
-					if (!msg.member.voice.channel.speakable) return msg.channel.send("I can't speak in that channel lol")
 					if (!search) return msg.channel.send("You gotta gimme something to play. Lmao")
 					let result = await getTracks(search)
 					if (result.length < 1) return msg.channel.send("Nothing found lol")
