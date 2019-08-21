@@ -245,7 +245,7 @@ module.exports = function(passthrough) {
 				this.player.play(song.track)
 				this.songStartTime = Date.now()
 				this._startNPUpdates()
-				this._sendNewNP()
+				this.sendNewNP()
 			}
 		}
 		/**
@@ -381,28 +381,33 @@ module.exports = function(passthrough) {
 		}
 		/**
 		 * Send a new now playing message and generate reactions on it. Destroy the previous reaction menu.
+		 * This can be called internally and externally.
 		 * @param {Boolean} force If false, don't create more NP messages. If true, force creation of a new one.
 		 * @returns {Promise<void>}
 		 */
-		_sendNewNP(force = false) {
-			if (this.np && !force) return Promise.resolve()
-			else return this.textChannel.send(this._buildNPEmbed()).then(x => {
-				this.np = x
-				this.npMenu = this.np.reactionMenu([
-					{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-						if (!this.voiceChannel.members.has(user.id)) return;
-						this.wrapper.togglePlaying("reaction")
-					}},
-					{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
-						if (!this.voiceChannel.members.has(user.id)) return;
-						this.wrapper.skip("reaction")
-					}},
-					{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
-						if (!this.voiceChannel.members.has(user.id)) return;
-						this.wrapper.stop("reaction")
-					}}
-				])
-			})
+		sendNewNP(force = false) {
+			if (this.np && !force) {
+				return Promise.resolve()
+			} else {
+				if (this.npMenu) this.npMenu.destroy(true)
+				return this.textChannel.send(this._buildNPEmbed()).then(x => {
+					this.np = x
+					this.npMenu = this.np.reactionMenu([
+						{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+							if (!this.voiceChannel.members.has(user.id)) return;
+							this.wrapper.togglePlaying("reaction")
+						}},
+						{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user, messageReaction) => {
+							if (!this.voiceChannel.members.has(user.id)) return;
+							this.wrapper.skip("reaction")
+						}},
+						{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+							if (!this.voiceChannel.members.has(user.id)) return;
+							this.wrapper.stop("reaction")
+						}}
+					])
+				})
+			}
 		}
 	}
 
@@ -566,6 +571,13 @@ module.exports = function(passthrough) {
 							.setDescription(body)
 							.setColor(0x36393f)
 						)
+					} else {
+						msg.channel.send("nothing playing lol")
+					}
+				} else if (args[0] == "n") {
+					let queue = queueStore.get(msg.guild.id)
+					if (queue) {
+						queue.sendNewNP(true)
 					} else {
 						msg.channel.send("nothing playing lol")
 					}
