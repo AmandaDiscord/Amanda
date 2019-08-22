@@ -1,6 +1,6 @@
 module.exports = {
-	CommandStore: (require("./Discord/Commands")),
-	GameManager: (require("./Discord/Games")),
-	QueueManager: (require("./Discord/Queues")),
+	CommandStore: (require("./Discord/CommandStore")),
+	GameManager: (require("./Discord/GameManager")),
+	QueueManager: (require("./Discord/QueueManager")),
 	ReactionMenu: (require("./Discord/ReactionMenu"))
 };

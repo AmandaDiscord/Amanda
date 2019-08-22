@@ -13,7 +13,7 @@ require("../../types.js")
  * @param {PassthroughType} passthrough
  */
 module.exports = passthrough => {
-	let {reloader} = passthrough
+	let {client, reloader} = passthrough
 
 	let utils = require("../../modules/utilities.js")(passthrough)
 	reloader.useSync("./modules/utilities.js", utils)
@@ -21,404 +21,177 @@ module.exports = passthrough => {
 	let common = require("./common.js")(passthrough)
 	reloader.useSync("./commands/music/common.js", common)
 
-	class WebSong {
-		constructor() {
-			this.events = new events.EventEmitter()
-		}
-		/**
-		 * @returns {{title: String, length: Number, thumbnail: String}}
-		 */
-		webInfo() {
-			return {
-				title: this.getTitle(),
-				length: this.getLength(),
-				thumbnail: this.getThumbnail(),
-				live: this.isLive
-			}
-		}
-		destroy() {
-			this.events.removeAllListeners()
-		}
-	}
+	const stationData = new Map([
+		["frisky", {title: "Frisky Radio", queue: "Frisky Radio: Frisky"}],
+		["deep", {title: "Frisky Radio: Deep", queue: "Frisky Radio: Deep"}],
+		["chill", {title: "Frisky Radio: Chill", queue: "Frisky Radio: Deep"}]
+	])
 
-	class YouTubeSong extends WebSong {
-		/**
-		 * @param {String} id
-		 * @param {ytdl.videoInfo} [info]
-		 * @param {Boolean} [cache]
-		 * @param {{title: String, length_seconds: Number}} [basic]
-		 * @constructor
-		 */
-		constructor(id, info, cache, basic) {
-			super()
-			this.id = id
-			this.streamType = "opus"
-			this.canBePaused = true
-			this.isLive = false
-			this.url = "https://youtu.be/"+id
-			this.error = null
-			this.progressUpdateFrequency = 5000
-			if (info) {
-				this.basic = {
-					title: info.title,
-					length_seconds: +info.length_seconds
-				}
-				if (cache) this.info = info
-				else this.info = null
-			} else {
-				if (basic) {
-					this.basic = basic
-				} else {
-					this.basic = {
-						title: "Loading...",
-						length_seconds: 0
-					}
-					this._getInfo(cache)
-				}
-			}
-		}
-		getThumbnail() {
-			return {
-				src: `https://i.ytimg.com/vi/${this.id}/mqdefault.jpg`,
-				width: 320,
-				height: 180
-			}
-		}
-		_deleteCache() {
-			if (this.info instanceof Promise) {
-				//console.log(this.getUniqueID()+" - deleteCache (promise)")
-				this.info.then(() => {
-					this.info = null
-				})
-			} else {
-				//console.log(this.getUniqueID()+" - deleteCache (sync)")
-			}
-		}
-		/**
-		 * @returns {stream.Readable}
-		 */
-		getStream() {
-			return this._getInfo(true).then(info => {
-				if (info) {
-					let streams = ytdlDiscord.downloadFromInfo(info)
-					function streamErrorRedirector() {
-						streams[0].emit("error", ...arguments)
-					}
-					streams[1].on("error", streamErrorRedirector)
-					streams[1].once("close", () => {
-						streams[1].removeListener("error", streamErrorRedirector)
-					})
-					return streams[0]
-				} else {
-					return null
-				}
+	class Song {
+		constructor() {
+			this.title = ""
+			this.queueLine = ""
+			this.track = ""
+			this.lengthSeconds = -1
+			this.npUpdateFrequency = 0
+			this.noPauseReason = ""
+			this.error = ""
+			this.typeWhileGetRelated = true
+			
+			this.validated = false
+			setTimeout(() => {
+				if (this.validated == false) this.validationError("must call validate() in constructor")
 			})
 		}
 		/**
-		 * @returns {Promise<Array<ytdl.relatedVideo>>}
-		 */
-		async _getRelated() {
-			let info = await this._getInfo(true)
-			return info.related_videos.filter(v => v.title && v.length_seconds > 0).map(v => {
-				v.length_seconds = +v.length_seconds
-				return v
-			}).slice(0, 10)
-		}
-		getRelated() {
-			return this._getRelated()
-		}
-		async getSuggested(index, playedSongs) {
-			let videos = await this._getRelated()
-			if (index != undefined) {
-				if (!videos[index]) return null
-				return new YouTubeSong(videos[index].id, undefined, true, videos[index])
-			} else {
-				let filtered = videos.filter(v => !playedSongs.has("youtube_"+v.id))
-				if (filtered[0]) return new YouTubeSong(filtered[0].id, undefined, true, filtered[0])
-				else return null
-			}
-		}
-		showRelated() {
-			return this._getRelated().then(videos => {
-				if (videos.length) {
-					return new Discord.MessageEmbed()
-					.setTitle("Related videos")
-					.setDescription(
-						videos.map((v, i) =>
-							`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.length_seconds)})`
-							+`\n — ${v.author}`
-						)
-					)
-					.setColor(0x36393f)
-					.setFooter(`Use "&music related <play|insert> <index>" to queue an item from this list.`)
-				} else {
-					return "No related content available."
-				}
-			})
-		}
-		/**
-		 * Returns null if failed. Examine this.error.
-		 * @param {Boolean} cache Whether to cache the results if they are fetched
-		 * @param {Boolean} [force=undefined] Whether to try to get from the existing cache first
-		 * @returns {Promise<ytdl.videoInfo>}
-		 */
-		_getInfo(cache, force = undefined) {
-			if (this.info || force) return Promise.resolve(this.info)
-			else {
-				//console.log(this.getUniqueID()+" - getInfo")
-				return this.info = ytdl.getInfo(this.id).then(info => {
-					this.basic.title = info.title
-					this.basic.length_seconds = +info.length_seconds
-					this.events.emit("update")
-					if (cache) this.info = info
-					return info
-				}).catch(error => {
-					this.error = error
-					this.basic.title = "Deleted video"
-					this.basic.length_seconds = 0
-					this.events.emit("update")
-					return null
-				})
-			}
-		}
-		/**
-		 * @returns {Promise<Array<ytdl.relatedVideo>>}
-		 */
-		async _related() {
-			await this._getInfo(true)
-			return this.info.related_videos.filter(v => v.title && +v.length_seconds > 0).slice(0, 10)
-		}
-		/**
-		 * @param {Number} time
+		 * @param {Number} time milliseconds
 		 * @param {Boolean} paused
 		 */
 		getProgress(time, paused) {
-			let max = this.basic.length_seconds
+			return ""
+		}
+		/**
+		 * @returns {Promise<Song[]>}
+		 */
+		getRelated() {
+			return Promise.resolve([])
+		}
+		/** @returns {Promise<String|Discord.MessageEmbed>} */
+		showRelated() {
+			return Promise.resolve("This isn't a real song.")
+		}
+		/**
+		 * @param {String} message
+		 */
+		validationError(message) {
+			console.error("Song validation error: "+this.constructor.name+" "+message)
+		}
+		validate() {
+			["track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
+				if (!this[key]) this.validationError("unset "+key)
+			})
+			;["getProgress", "getRelated", "showRelated"].forEach(key => {
+				if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
+			})
+			if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
+			this.validated = true
+		}
+		prepare() {
+			return Promise.resolve()
+		}
+	}
+
+	class YouTubeSong extends Song {
+		/**
+		 * @param {String} id
+		 * @param {String} title
+		 * @param {Number} lengthSeconds
+		 * @param {String?} track
+		 */
+		constructor(id, title, lengthSeconds, track = undefined) {
+			super()
+			this.id = id
+			this.title = title
+			this.lengthSeconds = lengthSeconds
+			this.track = track || "!"
+			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+			this.npUpdateFrequency = 5000
+			this.typeWhileGetRelated = true
+
+			this.related = new utils.AsyncValueCache(
+			/** @returns {Promise<any[]>} */
+			() => {
+				return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
+					this.typeWhileGetRelated = false
+					return data.recommendedVideos.slice(0, 10)
+				})
+			})
+
+			this.validate()
+		}
+		/**
+		 * @param {Number} time milliseconds
+		 * @param {Boolean} paused
+		 */
+		getProgress(time, paused) {
+			let max = this.lengthSeconds
 			let rightTime = common.prettySeconds(max)
-			let current = Math.round(time/1000)
-			if (current > max) current = max
-			let leftTime = common.prettySeconds(current)
-			let bar = utils.progressBar(35, current, max, paused ? " [PAUSED] " : "")
+			if (time > max) time = max
+			let leftTime = common.prettySeconds(time)
+			let bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
 			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 		}
-		destroy() {
-			this._deleteCache()
-			WebSong.prototype.destroy.call(this)
+		async getRelated() {
+			let related = await this.related.get()
+			return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
 		}
-		prepare() {
-			this._getInfo(true)
-		}
-		getError() {
-			let error = this.error
-			if (!error) return "No errors."
-			let message = error.message
-			if (message) message = "The error is: "+message
-			else message = "The reason for this is unknown."
-			if (!message.endsWith(".")) message = message+"."
-			return `Failed to play YouTube video with ID \`${this.getUserFacingID()}\`. ${message}\n<https://youtube.com/watch?v=${this.getUserFacingID()}>`
-		}
-		getTitle() {
-			return this.basic.title
-		}
-		getUniqueID() {
-			return "youtube_"+this.getUserFacingID()
-		}
-		getUserFacingID() {
-			return this.id
-		}
-		getDetails() {
-			return this.url
-		}
-		clean() {
-			this._deleteCache()
-		}
-		getLength() {
-			return this.basic.length_seconds
-		}
-		getQueueLine() {
-			return `**${this.getTitle()}** (${common.prettySeconds(this.getLength())})`
-		}
-	}
-
-	function friskyDataToInfoEmbed(data, nextEpisode) {
-		let embed = new Discord.MessageEmbed()
-		.setThumbnail(data.episode.occurrence_album_art.url)
-		.setTitle("FRISKY: "+data.title)
-		.setURL("https://www.friskyradio.com/show"+data.episode.full_url)
-		.setDescription(data.episode.occurrence_summary)
-		.setColor("e9268f")
-		.addField("Details",
-			`Show: ${data.show.title} / [view](https://www.friskyradio.com/show/${data.episode.show_url})`
-			+`\nEpisode: ${data.episode.occurrence_title} / [view](https://www.friskyradio.com/show${data.episode.full_url})`
-			+"\nArtist: "+data.episode.artist_title
-			+"\nEpisode genres: "+data.episode.genre.join(", ")
-			+"\nShow genres: "+data.show.genre.join(", ")
-			+"\nStation: "+data.episode.show_channel_title
-			+nextEpisode
-		)
-		if (data.episode.track_list.length) embed.addField("Track list", data.episode.track_list.map((v, i) => (i+1)+". "+v).join("\n"))
-		return embed
-	}
-
-	class FriskySong extends WebSong {
-		/**
-		 * @param {String} station Lowercase station from frisky, deep, chill
-		 */
-		constructor(station) {
-			super()
-			if (!["frisky", "deep", "chill"].includes(station)) {
-				throw new Error(`FriskySong station was ${this.station}, expected one of frisky, deep, chill`)
-			}
-			this.station = station
-			let parts =
-				this.station == "frisky"
-				? ["stream.friskyradio.com", "frisky_mp3_hi"]
-				: this.station == "deep"
-				? ["deep.friskyradio.com", "/friskydeep_aachi"]
-				: ["chill.friskyradio.com", "/friskychill_mp3_high"]
-			this.host = parts[0]
-			this.path = parts[1]
-			this.queue = null
-			/** @type {FriskyNowPlayingItem} */
-			this.info = null
-			this.loadingStream = false
-			this.filledBarOffset = 0
-			this.progressUpdateFrequency = 15000
-			this.streamType = "unknown"
-			this.canBePaused = false
-			this.isLive = true
-			this.title = "Frisky Radio"
-			if (this.station != "frisky") this.title += ": "+this._getStationTitle()
-		}
-		getThumbnail() {
-			return {
-				src: "/images/frisky-small.png",
-				width: 320,
-				height: 180
+		async showRelated() {
+			let related = await this.related.get()
+			if (related.length) {
+				return new Discord.MessageEmbed()
+				.setTitle("Related content from YouTube")
+				.setDescription(
+					related.map((v, i) =>
+						`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+						+`\n — ${v.author}`
+					)
+				)
+				.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
+				.setColor(0x36393f)
+			} else {
+				return "No related content available for the current item."
 			}
 		}
-		getUniqueID() {
-			return "frisky_"+this.station
-		}
-		getUserFacingID() {
-			return this._getStationTitle()
-		}
-		getError() {
-			return null
-		}
-		getTitle() {
-			return this.title + (this.loadingStream ? " (loading...)" : "")
-		}
-		getProgress(time) {
-			time = common.prettySeconds(Math.round(time/1000))
-			let bar = this.loadingStream ? "- ".repeat(17)+"-" : this._getFilledBar()
-			return `\`[ ${time} ${bar} LIVE ]\``
-		}
 		prepare() {
-		}
-		clean() {
-		}
-		/**
-		 * @return {Promise<net.Socket>}
-		 */
-		async getStream() {
-			this.loadingStream = true
-			this.events.emit("update")
-			let socket = new net.Socket()
-			return Promise.all([
-				this._startTitleUpdates(),
-				new Promise(resolve => {
-					socket.connect(80, this.host, () => {
-						socket.write(`GET ${this.path} HTTP/1.0\r\n\r\n`)
-						socket.once("data", () => {
-							this.loadingStream = false
-						})
-						resolve(socket)
-					})
+			if (this.track == "!") {
+				return common.getTracks(this.id).then(tracks => {
+					if (tracks[0] && tracks[0].track) {
+						this.track = tracks[0].track
+					} else {
+						console.error(tracks)
+						this.error = "No tracks available for ID "+this.id
+					}
 				})
-			]).then(array => array[1])
+			} else {
+				return Promise.resolve()
+			}
 		}
-		async getDetails() {
-			let info = await this._getInfo()
-			let nextEpisode = await this._fetchNextEpisode()
-			return friskyDataToInfoEmbed(info, nextEpisode)
-		}
-		destroy() {
-			this._stopTitleUpdates()
-			WebSong.prototype.destroy.call(this)
-		}
-		_getStationTitle() {
-			return this.station[0].toUpperCase()+this.station.slice(1)
-		}
-		_startTitleUpdates() {
-			this.updateTitleInterval = setInterval(async () => {
-				this._updateTitle(true)
-			}, 60000)
-			return this._updateTitle()
-		}
-		_stopTitleUpdates() {
-			clearInterval(this.updateTitleInterval)
-		}
-		async _updateTitle(refresh = false) {
-			let title = "Frisky Radio"
-			if (this.station != "frisky") title += " / "+this._getStationTitle()
-			let info = await this._getInfo(refresh)
-			if (info && info.episode) title += " / "+info.episode.show_title+" / "+info.episode.artist_title
-			this.title = title
-		}
-		/**
-		 * @param {Boolean} [refresh]
-		 * @returns {Promise<FriskyNowPlayingItem>}
-		 */
-		async _getInfo(refresh) {
-			if (!refresh && this.info) return this.info
-			return this.info = rp("https://www.friskyradio.com/api/v2/nowPlaying", {json: true}).then(data => {
-				let item = data.data.items.find(i => i.station == this.station)
-				this.info = item
-				setTimeout(() => this.events.emit("update")) // allow the title to update first?
-				return this.info
-			}).catch(console.error)
-		}
-		_fetchNextEpisode() {
-			return rp("https://www.friskyradio.com/api/v2/shows"+this.info.episode.full_url, {json: true}).then(data => {
-				let date = new Date(data.data.show.next_episode)
-				return "\nNext episode: "+utils.upcomingDate(date)
-			}).catch(() => "")
-		}
-		_getFilledBar() {
-			let part = "= ⋄ ==== ⋄ ==="
-			let fragment = part.substr(7-this.filledBarOffset, 7)
-			let bar = "​"+fragment.repeat(5)+"​"
-			this.filledBarOffset++
-			if (this.filledBarOffset >= 7) this.filledBarOffset = 0
-			return bar
-		}
-		getLength() {
-			return 0
-		}
-		getQueueLine() {
-			return `**Frisky Radio: ${this._getStationTitle()}** (LIVE)`
+	}
+
+	class FriskySong extends Song {
+		constructor(station, data) {
+			super()
+
+			this.station = station
+
+			this.title = stationData.get(station).title
+			this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
+			this.track = data.track
+			this.lengthSeconds = 0
+			this.npUpdateFrequency = 15000
+			this.typeWhileGetRelated = false
+			this.noPauseReason = "You can't pause live radio."
+
+			this._filledBarOffset = 0
+
+			this.validate()
 		}
 		getRelated() {
-			return []
-		}
-		getSuggested() {
-			return Promise.resolve(null)
+			return Promise.resolve([])
 		}
 		showRelated() {
-			return "Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, and `&frisky chill`."
+			return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
+		}
+		getProgress(time, paused) {
+			let part = "= ⋄ ==== ⋄ ==="
+			let fragment = part.substr(7-this._filledBarOffset, 7)
+			let bar = "​"+fragment.repeat(5)+"​"
+			this._filledBarOffset++
+			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+			time = common.prettySeconds(time)
+			return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
 		}
 	}
-
-	// Verify that songs have the right methods
-	[YouTubeSong, FriskySong].forEach(song => {
-		[
-			"getUniqueID", "getUserFacingID", "getError", "getTitle", "getProgress", "getQueueLine", "getLength", "getThumbnail",
-			"getStream", "getDetails", "destroy", "getProgress", "prepare", "clean", "getRelated", "getSuggested", "showRelated"
-		].forEach(key => {
-			if (!song.prototype[key]) throw new Error(`Song type ${song.name} does not have the required method ${key}`)
-		})
-	})
 
 	return {YouTubeSong, FriskySong}
 }

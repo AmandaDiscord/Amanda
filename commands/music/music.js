@@ -31,6 +31,12 @@ module.exports = function(passthrough) {
 	let queueFile = require("./queue.js")(passthrough)
 	reloader.useSync("./commands/music/queue.js", queueFile)
 	let Queue = queueFile.Queue // intellisense sucks
+	let queueStore;
+	if (passthrough.queueStore) queueStore = passthrough.queueStore
+	else {
+		queueStore = new queueFile.QueueStore();
+		passthrough.queueStore = queueStore;
+	}
 
 	let playlistCommand = require("./playlistcommand.js")(passthrough)
 	reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)
@@ -56,7 +62,7 @@ module.exports = function(passthrough) {
 	 * @param {Structures.Message} [context]
 	 */
 	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
-		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(textChannel, voiceChannel);
+		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(queueStore, voiceChannel, textChannel);
 		let numberOfSongs = queue.addSong(song, insert);
 		if (context instanceof Structures.Message && numberOfSongs > 1) {
 			context.react("✅")
@@ -181,17 +187,16 @@ module.exports = function(passthrough) {
 					if (voiceChannel && !voiceChannel.joinable) return msg.channel.send(lang.permissionVoiceJoin());
 					if (voiceChannel && !voiceChannel.speakable) return msg.channel.send(lang.permissionVoiceSpeak());
 				}
+				console.log("checks");
 				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
-				let result = await common.resolveInput.toIDWithSearch(args.slice(1).join(" "), msg.channel, msg.author.id);
+				let result = await common.resolveInput.getTracks(args.slice(1).join(" "), msg.channel, msg.author.id);
+				console.log(result);
 				if (result == null) return;
 				let usedSearch = result[1]
 				result = result[0]
 				result.forEach(item => {
-					if (item instanceof YouTube.Video) {
-						var song = new songTypes.YouTubeSong(item.id, undefined, true, {title: item.title, length_seconds: item.durationSeconds})
-					} else {
-						var song = new songTypes.YouTubeSong(item, undefined, true)
-					}
+					let song = new songTypes.YouTubeSong(item.info.identifier, item.info.title, Math.ceil(item.info.length/1000), item.track)
+					console.log(song)
 					let numberOfSongs = handleSong(song, msg.channel, voiceChannel, args[0][0] == "i")
 					if (numberOfSongs > 1 && !usedSearch) msg.react("✅")
 				})
@@ -296,7 +301,8 @@ module.exports = function(passthrough) {
 			code: async (msg, args, {voiceChannel}) => {
 				playlistCommand.command(msg, args, (songs) => {
 					let isNewQueue = false
-					songs.forEach((song, index) => {
+					songs.forEach((data, index) => {
+						let song = new songTypes.YouTubeSong(data.videoID, data.name, data.length_seconds)
 						let numberOfSongs = handleSong(song, msg.channel, voiceChannel, false)
 						if (index == 0 && numberOfSongs == 1) isNewQueue = true
 					})
@@ -314,6 +320,7 @@ module.exports = function(passthrough) {
 		["related", ["rel"]],
 		["playlist", ["pl", "playlists"]]
 	].forEach(entry => {
+		// @ts-ignore
 		entry[1].forEach(alias => {
 			subcommandAliasMap.set(alias, entry[0])
 		})
@@ -379,6 +386,7 @@ module.exports = function(passthrough) {
 				if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
 				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
 				let stream = new songTypes.FriskySong(station);
+				// @ts-ignore
 				return handleSong(stream, msg.channel, voiceChannel, false, msg);
 			}
 		},

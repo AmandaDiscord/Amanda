@@ -37,6 +37,7 @@ export class Guild extends Discord.Guild {
 	constructor(client: Amanda, data: any);
 
 	public queue: Queue;
+	public members: GuildMemberStore;
 
 	public findMember(message: Message, string: string, self?: boolean): Promise<GuildMember>;
 }
@@ -58,7 +59,7 @@ export class GuildMember extends Discord.GuildMember {
 export class Message extends Discord.Message {
 	constructor(client: Amanda, data: any, channel: TextChannel|DMChannel);
 
-	public channel: Structures.TextChannel;
+	public channel: TextChannel;
 	public guild: Guild;
 	public author: User;
 	public member: GuildMember;
@@ -140,7 +141,39 @@ export class MessageStore extends Discord.DataStore<string, Message, typeof Mess
 	public remove(message: MessageResolvable, reason?: string): Promise<void>;
 }
 
+export class GuildMemberStore extends Discord.DataStore<string, GuildMember, typeof GuildMember, GuildMemberResolvable> {
+	constructor(guild: Guild, iterable?: Iterable<any>);
+
+	public ban(user: UserResolvable, options?: BanOptions): Promise<GuildMember|User|string>;
+	public unban(user: UserResolvable, reason?: string): Promise<User>;
+	public fetch(options: UserResolvable | FetchMemberOptions): Promise<GuildMember>;
+	public fetch(): Promise<GuildMemberStore>;
+	public fetch(options: FetchMembersOptions): Promise<Discord.Collection<string, GuildMember>>;
+	public prune(options: GuildPruneMembersOptions & { dry?: false, count: false }): Promise<null>;
+	public prune(options?: GuildPruneMembersOptions): Promise<number>;
+}
+
 // Local Types
 type GuildResolvable = Guild|string;
 type UserResolvable = User|string;
 type MessageResolvable = Message|string;
+type GuildMemberResolvable = GuildMember|string;
+
+interface BanOptions {
+	days?: number;
+	reason?: string;
+}
+interface FetchMemberOptions {
+	user: UserResolvable;
+	cache?: boolean;
+}
+interface FetchMembersOptions {
+	query?: string;
+	limit?: number;
+}
+interface GuildPruneMembersOptions {
+	count?: boolean;
+	days?: number;
+	dry?: boolean;
+	reason?: string;
+}

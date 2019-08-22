@@ -185,11 +185,42 @@ module.exports = passthrough => {
 					}).catch(() => {
 						return null;
 					})
+				},
+				/**
+				 * Call /loadtracks on the first node using the passed identifier.
+				 * @param {String} input
+				 * @param {Structures.TextChannel} channel
+				 * @param {String} authorID
+				 * @returns {Promise<[{ track: String, info: {identifier: String, isSeekable: Boolean, author: String, length: Number, isStream: Boolean, position: Number, title: String, uri: String}}]>}
+				 */
+				getTracks: async function(input, channel, authorID) {
+					const node = client.lavalink.nodes.first()
+
+					const params = new URLSearchParams()
+					params.append("identifier", input)
+
+					return rp({
+						url: `http://${node.host}:${node.port}/loadtracks?${params.toString()}`,
+						headers: {
+							"Authorization": node.password
+						},
+						json: true
+					}).then(data => {
+						console.log(data);
+						if (data.tracks.length == 0) return null
+						if (data.tracks.length == 1) return [[data.tracks[0]], false]
+						return utils.makeSelection(channel, authorID, "Song selection", "Song selection cancelled", data.tracks.map(i => i.info.title)).then(index => {
+							return [[data.tracks[index]], true]
+						}).catch(() => {
+							return null
+						})
+					})
 				}
 			}
 		}
 		resultCache = common
 	} else {
+		// @ts-ignore
 		var common = resultCache
 	}
 

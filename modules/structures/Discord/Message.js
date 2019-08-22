@@ -3,6 +3,7 @@ const Discord = require("discord.js");
 const ReactionMenu = require("../../managers/Discord/ReactionMenu");
 const Structures = require("../");
 const { Amanda, TextChannel, DMChannel, User, GuildMember, Guild } = Structures;
+const managers = require("../../managers");
 
 class Message extends Discord.Message {
 	/**

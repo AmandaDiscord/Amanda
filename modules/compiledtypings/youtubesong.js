@@ -1,103 +1,62 @@
-const ytdl = require("ytdl-core");
-const stream = require("stream");
-const Discord = require("discord.js");
+const ytdl = require("ytdl-core")
+const stream = require("stream")
+const Discord = require("discord.js")
 
-let WebSong = require("./websong.js");
-let Queue = require("./queue");
+let Song = require("./song.js")
+let Queue = require("./queue")
+let AsyncValueCache = require("./asyncvaluecache")
 
-module.exports = class YouTubeSong extends WebSong {
+module.exports = class YouTubeSong extends Song {
 	/**
 	 * @param {String} id
-	 * @param {ytdl.videoInfo} [info]
-	 * @param {Boolean} [cache]
-	 * @param {{title: String, length_seconds: Number}} [basic]
-	 * @constructor
+	 * @param {String} title
+	 * @param {Number} lengthSeconds
+	 * @param {String?} track
 	 */
-	constructor(id, info, cache, basic) {
+	constructor(id, title, lengthSeconds, track = undefined) {
 		super()
-		this.id = id;
-		this.streamType = "opus";
-		/** @type {Boolean} */
-		this.canBePaused;
-		this.url = "https://youtu.be/"+id;
-		/** @type {Error} */
-		this.error;
-		this.progressUpdateFrequency = 5000;
-		this.info = info;
-		this.basic = basic;
+		this.id = id
+		this.title = title
+		this.lengthSeconds = lengthSeconds
+		this.track = track || "!"
+		this.queueLine = ``
+		this.npUpdateFrequency = 5000
+		this.typeWhileGetRelated = true
+
+		/** @type {AsyncValueCache} */
+		this.related;
+
+		this.validate()
 	}
 	/**
-	 * @returns {{src: String, width: number, height: number}}
-	 */
-	getThumbnail() {}
-	_deleteCache() {}
-	/**
-	 * @returns {stream.Readable}
-	 */
-	getStream() {}
-	/**
-	 * @returns {Promise<Array<ytdl.relatedVideo>>}
-	 */
-	async _getRelated() {}
-	/**
-	 * @returns {Promise<Array<ytdl.relatedVideo>>}
-	 */
-	getRelated() {}
-	/**
-	 * @param {Set<String>} playedSongs
-	 * @returns {Promise<YouTubeSong>}
-	 */
-	getSuggested(playedSongs) {}
-	/**
-	 * @returns {Promise<Discord.MessageEmbed|"No related content available.">}
-	 */
-	showRelated() {}
-	/**
-	 * Returns null if failed. Examine this.error.
-	 * @param {Boolean} cache Whether to cache the results if they are fetched
-	 * @param {Boolean} [force=undefined] Whether to try to get from the existing cache first
-	 * @returns {Promise<ytdl.videoInfo>}
-	 */
-	_getInfo(cache, force = undefined) {}
-	/**
-	 * @returns {Promise<Array<ytdl.relatedVideo>>}
-	 */
-	async _related() {}
-	/**
-	 * @param {Number} time
+	 * @param {Number} time milliseconds
 	 * @param {Boolean} paused
-	 * @returns {String}
 	 */
-	getProgress(time, paused) {}
-	destroy() {}
-	prepare() {}
-	/**
-	 * @returns {String}
-	 */
-	getError() {}
-	/**
-	 * @returns {String}
-	 */
-	getTitle() {}
-	/**
-	 * @returns {String}
-	 */
-	getUniqueID() {}
-	/**
-	 * @returns {String}
-	 */
-	getUserFacingID() {}
-	/**
-	 * @returns {String}
-	 */
-	getDetails() {}
-	clean() {}
-	/**
-	 * @returns {Number}
-	 */
-	getLength() {}
-	/**
-	 * @returns {String}
-	 */
-	getQueueLine() {}
+	getProgress(time, paused) {
+		let max = this.lengthSeconds
+		let rightTime = ""
+		if (time > max) time = max
+		let leftTime = ""
+		let bar = ""
+		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+	}
+	async getRelated() {
+		let related = await this.related.get()
+		return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
+	}
+	async showRelated() {
+		let related = await this.related.get()
+		if (related.length) {
+			return new Discord.MessageEmbed()
+			.setTitle("Related content from YouTube")
+			.setDescription("")
+			.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
+			.setColor(0x36393f)
+		} else {
+			return "No related content available for the current item."
+		}
+	}
+	prepare() {
+		return Promise.resolve()
+	}
 }

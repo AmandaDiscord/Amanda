@@ -1,5 +1,4 @@
 const Discord = require("discord.js");
-const Structures = require("../../structures/");
 const managers = require("../");
 
 class CommandStore extends Discord.Collection {

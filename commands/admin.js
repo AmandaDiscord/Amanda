@@ -30,14 +30,14 @@ module.exports = function(passthrough) {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (allowed) {
 					if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`);
-					let result;
-					let depth = suffix.split("--depth:")[1]
+					let result, depth;
+					depth = suffix.split("--depth:")[1]
 					depth?depth=depth.substring(0).split(" ")[0]:undefined;
 					if (!depth) depth = 0;
 					else {
 						depth = Math.floor(Number(depth));
 						if (isNaN(depth)) depth = 0;
-						suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring().split(" ")[0]}`, "");
+						suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring(0).split(" ")[0]}`, "");
 					}
 					try {
 						result = eval(suffix.replace(/client.token/g, `"${config.fake_token}"`));
@@ -62,7 +62,7 @@ module.exports = function(passthrough) {
 				if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly");
 				await msg.channel.sendTyping();
 				require("child_process").exec(suffix, async (error, stdout, stderr) => {
-					let result = "Output too large";
+					let result;
 					if (error) result = error;
 					else if (stdout) result = stdout;
 					else if (stderr) result = stderr;

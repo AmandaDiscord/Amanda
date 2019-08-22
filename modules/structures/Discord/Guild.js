@@ -1,6 +1,6 @@
 const Discord = require("discord.js");
 
-const QueueManager = require("../../managers/Discord/Queues");
+const QueueManager = require("../../managers/Discord/QueueManager");
 const Structures = require("../");
 const { Amanda, GuildMember } = Structures;
 
@@ -11,6 +11,9 @@ class Guild extends Discord.Guild {
 	 */
 	constructor(client, data) {
 		super(client, data);
+
+		/** @type {Structures.GuildMemberStore} */
+		this.members;
 	}
 	get queue() {
 		return QueueManager.storage.get(this.id);
@@ -51,11 +54,12 @@ class Guild extends Discord.Guild {
 				if (!permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.footer.text}`;
 				else content = embed;
 				let selectmessage = await message.channel.send(content);
-				let collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), {maxMatches: 1, time: 60000});
+				let collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), {max: 1, time: 60000});
 				return await collector.next.then(newmessage => {
 					let index = parseInt(newmessage.content);
 					if (!index || !list[index-1]) return resolve(null);
 					selectmessage.delete();
+					// @ts-ignore
 					newmessage.delete().catch(new Function());
 					return resolve(list[index-1]);
 				}).catch(() => {

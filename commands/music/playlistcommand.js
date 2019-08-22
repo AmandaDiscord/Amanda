@@ -29,7 +29,7 @@ module.exports = passthrough => {
 		/**
 		 * @param {Structures.Message} msg
 		 * @param {Array<String>} args
-		 * @param {(rows: Array<{videoID: String, name: String, length_seconds: Number}>) => void} bulkPlayCallback
+		 * @param {(rows: Array<{videoID: String, name: String, length_seconds: Number}>) => any} bulkPlayCallback
 		 */
 		command: async function(msg, args, bulkPlayCallback) {
 			let playlistName = args[1];
@@ -76,21 +76,17 @@ module.exports = passthrough => {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
 				if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
 				msg.channel.sendTyping();
-				let result = await common.resolveInput.toIDWithSearch(args.slice(3).join(" "), msg.channel, msg.author.id);
+				let result = await common.resolveInput.getTracks(args.slice(3).join(" "), msg.channel, msg.author.id);
 				(async () => {
 					if (result == null) throw new Error()
-					result = result[0][0]
-					if (result.id) result = result.id
-					return ytdl.getInfo(result).then(async video => {
-						let id = video.player_response.videoDetails.videoId
-						if (orderedSongs.some(row => row.videoID == id)) return msg.channel.send(lang.playlistDuplicateItem(msg));
-						await Promise.all([
-							utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [id, video.title, video.length_seconds, id]),
-							utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, id]),
-							utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [id, playlistRow.playlistID, id])
-						]);
-						return msg.channel.send(`${msg.author.username}, Added **${video.title}** to playlist **${playlistName}**`);
-					})
+					let data = result[0]
+					if (orderedSongs.some(row => row.videoID == data.info.identifier)) return msg.channel.send(lang.playlistDuplicateItem(msg));
+					await Promise.all([
+						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [data.info.identifier, data.info.title, data.info.length, data.info.identifier]),
+						utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, data.info.identifier]),
+						utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [data.info.identifier, playlistRow.playlistID, data.info.identifier])
+					]);
+					return msg.channel.send(`${msg.author.username}, Added **${data.info.title}** to playlist **${playlistName}**`);
 				})().catch(() => {
 					msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`);
 				})
@@ -160,31 +156,31 @@ module.exports = passthrough => {
 						else return true;
 					});
 					let editmsg = await msg.channel.send("Importing playlist. This could take a moment...\n(Fetching song info)");
-					videos = await Promise.all(videos.map(video => ytdl.getInfo(video.id)));
-					if (!videos.length) return editmsg.edit(`${msg.author.username}, all videos in that playlist have already been imported.`);
+					let fullvideos = await Promise.all(videos.map(video => common.resolveInput.getTracks(video.id, msg.channel, msg.author.id).then(r => r[0])));
+					if (!fullvideos.length) return editmsg.edit(`${msg.author.username}, all videos in that playlist have already been imported.`);
 					await editmsg.edit("Importing playlist. This could take a moment...\n(Updating database)");
-					for (let i = 0; i < videos.length; i++) {
-						let video = videos[i];
+					for (let i = 0; i < fullvideos.length; i++) {
+						let video = fullvideos[i];
 						promises.push(utils.sql.all(
 							"INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)",
-							[video.player_response.videoDetails.videoId, video.title, video.length_seconds, video.player_response.videoDetails.videoId]
+							[video.info.identifier, video.info.title, video.info.length, video.info.identifier]
 						));
-						if (i != videos.length-1) {
-							let nextVideo = videos[i+1];
+						if (i != fullvideos.length-1) {
+							let nextVideo = fullvideos[i+1];
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, ?)",
-								[playlistRow.playlistID, video.player_response.videoDetails.videoId, nextVideo.player_response.videoDetails.videoId]
+								[playlistRow.playlistID, video.info.identifier, nextVideo.info]
 							));
 						} else {
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, NULL)",
-								[playlistRow.playlistID, video.player_response.videoDetails.videoId]
+								[playlistRow.playlistID, video.info.identifier]
 							));
 						}
 					}
 					promises.push(utils.sql.all(
 						"UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?",
-						[videos[0].player_response.videoDetails.videoId, playlistRow.playlistID, videos.slice(-1)[0].player_response.videoDetails.videoId]
+						[fullvideos[0].info.identifier, playlistRow.playlistID, fullvideos.slice(-1)[0].info.identifier]
 					));
 					await Promise.all(promises);
 					editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`);

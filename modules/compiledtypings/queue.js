@@ -1,138 +1,93 @@
-const Discord = require("discord.js");
-const events = require("events");
+const Discord = require("discord.js")
+const lavalink = require("discord.js-lavalink")
 
-const Structures = require("../structures");
-const managers = require("../managers");
+const Structures = require("../structures")
+const Amanda = require("../structures/Discord/Amanda")
 
-let Song = require("./youtubesong.js");
-let QueueWrapper = require("./queuewrapper.js");
-let BetterTimeout = require("./bettertimeout.js");
+let Song = require("./youtubesong")
+let QueueWrapper = require("./queuewrapper")
+let QueueStore = require("./queuestore")
+let FrequencyUpdater = require('./frequencyupdater')
+let client = new Amanda();
+let BetterTimeout = require("./bettertimeout")
 
 // @ts-ignore
 require("../../types.js");
 
 module.exports = class Queue {
 	/**
-	 * @param {Structures.TextChannel} textChannel
+	 * @param {QueueStore} store
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @constructor
+	 * @param {Structures.TextChannel} textChannel
 	 */
-	constructor(textChannel, voiceChannel) {
-		this.textChannel = textChannel;
-		this._voiceChannel = voiceChannel;
-		this.id = this.textChannel.guild.id;
-		/** @type {Discord.VoiceConnection} */
-		this.connection;
-		/** @type {Discord.StreamDispatcher} */
-		this._dispatcher;
-		/** @type {Set<String>} */
-		this.playedSongs;
-		/** @type {Array<Song>} */
-		this.songs;
-		/** @type {Boolean} */
-		this.playing;
-		/** @type {Boolean} */
-		this.skippable;
-		/** @type {Boolean} */
-		this.auto;
-		/** @type {Structures.Message} */
-		this.nowPlayingMsg;
-		this.queueManager = require("../managers.js").queueManager
+	constructor(store, voiceChannel, textChannel) {
+		this.store = store
+		this.guildID = voiceChannel.guild.id
+		this.voiceChannel = voiceChannel
+		this.textChannel = textChannel
 		/** @type {QueueWrapper} */
 		this.wrapper;
-		/** @type {events.EventEmitter} */
-		this.events;
+		this.songStartTime = 0
+		this.pausedAt = null
+		/** @type {Song[]} */
+		this.songs = []
+		/** @type {lavalink.Player} */
+		this.player
+		/** @type {Structures.Message} */
+		this.np = null
+		/** @type {import("../../modules/managers/Discord/ReactionMenu.js")} */
+		this.npMenu
+		/** @type {FrequencyUpdater} */
+		this.npUpdater
 		/** @type {BetterTimeout} */
-		this.voiceLeaveTimeout;
+		this.voiceLeaveTimeout
 		/** @type {Promise<Structures.Message>} */
 		this.voiceLeaveWarningMessagePromise;
-		/** @type {managers.ReactionMenu} */
-		this.reactionMenu;
-		this.npUpdateTimeout = setTimeout(() => "lol", 100);
-		this.npUpdateInterval = setInterval(() => "lol", 100);
 	}
+	async play() {}
+	_startNPUpdates() {}
 	/**
-	 * @returns {Discord.VoiceChannel}
+	 * @param {LLEndEvent} event
 	 */
-	get voiceChannel() {}
+	_onEnd(event) {}
+	_nextSong() {}
+	_dissolve() {}
 	/**
-	 * @returns {Discord.StreamDispatcher}
+	 * @returns {String?}
 	 */
-	get dispatcher() {}
-	/**
-	 * Destroy the current song,
-	 * delete all songs,
-	 * stop the current song,
-	 * leave the voice channel,
-	 * delete the reaction menu,
-	 * remove from storage
-	 */
-	dissolve() {}
-	/**
-	 * Remove this queue from storage.
-	 */
-	destroy() {}
+	pause() { return "" }
+	resume() {}
+	skip() {}
+	stop() {}
 	/**
 	 * @param {Song} song
-	 * @param {Boolean} insert
-	 * @returns {Number}
+	 * @param {Number|Boolean} [insert]
+	 * @returns {0|1}
 	 */
-	addSong(song, insert) {}
+	addSong(song, insert) { return true?1:0 }
 	/**
 	 * @param {Number} index
-	 * @returns {0|1|2}
+	 * @returns {1|0|2}
 	 */
-	removeSong(index) {}
+	removeSong(index) { return true?1:true?0:2 }
 	/**
-	 * @param {Song} song
+	 * @param {Number} index
+	 * @returns {Promise<0|1>}
 	 */
-	announceSongInfoUpdate(song) {}
+	async playRelated(index) { return true?1:0 }
+	get time() { return 0 }
+	get timeSeconds() { return 0 }
+	get isPaused() { return true }
+	getTotalLength() { return 0 }
+	_buildNPEmbed() { return new Discord.MessageEmbed() }
 	/**
-	 * @param {Discord.VoiceState} oldState
-	 * @param {Discord.VoiceState} newState
+	 * @param {Boolean} force
+	 * @returns {Promise<void>}
 	 */
-	voiceStateUpdate(oldState, newState) {}
+	sendNewNP(force = false) { return Promise.resolve(undefined) }
 	/**
-	 * @returns {Discord.MessageEmbed|String}
+	 * @param {Discord.VoiceState} oldstate
+	 * @param {Discord.VoiceState} newstate
 	 */
-	getNPEmbed() {}
-	generateReactions() {}
-	/**
-	 * Deactivate the old now playing message and send a new one.
-	 * This does not wait for the reactions to generate.
-	 */
-	async sendNowPlaying() {}
-	/**
-	 * Update the existing now playing message once.
-	 * Do not call this before the first Queue.play(), because the now playing message might not exist then.
-	 * @returns {Promise<Error|Discord.MessageEmbed|String>}
-	 */
-	updateNowPlaying() {}
-	/**
-	 * Immediately update the now playing message, and continue to update it every few seconds, as defined by the song.
-	 */
-	startNowPlayingUpdates() {}
-	/**
-	 * Prevent further updates of the now playing message.
-	 */
-	stopNowPlayingUpdates() {}
-	async play() {}
-	playNext() {}
-	/**
-	 * @returns {Number} Status code. 0 success, 1 already paused, 2 live
-	 */
-	pause() {}
-	/**
-	 * @returns {Number} Status code. 0 success, 1 not paused
-	 */
-	resume() {}
-	/**
-	 * @returns {Number} Status code. 0 success, 1 paused
-	 */
-	skip() {}
-	/**
-	 * @returns {Number} Status code. 0 success
-	 */
-	stop() {}
-	toggleAuto() {}
+	voiceStateUpdate(oldstate, newstate) {}
 }

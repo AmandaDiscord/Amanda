@@ -49,7 +49,7 @@ let commands = new managers.CommandStore();
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music/lavalink.js",
+		"./commands/music/music.js",
 		"./commands/traa.js",
 		"./commands/web/server.js",
 	]);

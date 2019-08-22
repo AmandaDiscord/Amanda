@@ -5,51 +5,21 @@ const Structures = require("../structures");
 const Queue = require("./queue.js");
 
 module.exports = class QueueWrapper {
-	/** @param {Queue} queue */
+	/**
+	 * @param {Queue} queue
+	 */
 	constructor(queue) {
-		this.queue = queue;
+		this.queue = queue
 	}
-
-	async showInfo() {}
-	/**
-	 * @param {Structures.Message|String} [context]
-	 */
-	pause(context) {}
-	/**
-	 * @param {Structures.Message|String} [context]
-	 */
-	resume(context) {}
-	/**
-	 * @param {Structures.Message|String} [context]
-	 */
+	togglePlaying(context) {}
 	skip(context) {}
-	/**
-	 * @param {Structures.Message|String} [context]
-	 */
 	stop(context) {}
 	/**
-	 * @param {Structures.Message} [context]
+	 * @param {Structures.TextChannel} channel
 	 */
-	toggleAuto(context) {}
+	async showRelated(channel) {}
 	/**
-	 * @param {Structures.Message|String} context
+	 * @param {Number} index
 	 */
-	togglePlaying(context) {}
-	/**
-	 * @param {Structures.Message} context
-	 * @returns {Promise<Structures.Message>}
-	 */
-	getQueue(context) {}
-	/**
-	 * @returns {Array<{id: String, name: String, avatar: String, isAmanda: Boolean}>}
-	 */
-	getMembers() {}
-	/**
-	 * @returns {{auto: Boolean}}
-	 */
-	getAttributes() {}
-	/**
-	 * @returns {{playing: Boolean, time: Number, songs: Array<{title: String, length: Number, thumbnail: String}>, members: Array<{id: String, name: String, avatar: String, isAmanda: Boolean}>, voiceChannel: {id: String, name: String}, attributes: {auto: Boolean}}}
-	 */
-	getState() {}
+	async playRelated(index, context) {}
 }
