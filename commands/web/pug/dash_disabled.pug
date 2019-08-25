@@ -1,0 +1,20 @@
+doctype html
+html
+	include includes/head.pug
+		title= "Disabled for maintenance | Amanda"
+	
+	body
+		include includes/nav.pug
+		+nav("dash")
+
+		main
+			div.message
+				div
+					div Amanda's web dashboard is currently disabled for maintenance. We're sorry...
+					div You can still use the command #[code &amp;music] to play music like normal.
+					div We're striving to get this back online as soon as possible!
+					div You can join the support server for news and progress on this.
+
+			div.message
+				a(href="https://discord.gg/zhthQjH").pinkbutton Join our server
+				a(href="/").pinkbutton Go home

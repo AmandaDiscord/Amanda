@@ -164,14 +164,23 @@ module.exports = (passthrough) => {
 				})
 				.go()
 				.then(async state => {
-					let guild = state.guild
-					let user = await client.users.fetch(session.userID)
+					if (config.music_dash_enabled) {
+						let guild = state.guild
+						let user = await client.users.fetch(session.userID)
 
-					let page = pugCache.get("commands/web/pug/server.pug")({guild, user})
-					return {
-						statusCode: 200,
-						contentType: "text/html",
-						content: page
+						let page = pugCache.get("commands/web/pug/server.pug")({guild, user})
+						return {
+							statusCode: 200,
+							contentType: "text/html",
+							content: page
+						}
+					} else {
+						let page = pugCache.get("commands/web/pug/dash_disabled.pug")()
+						return {
+							statusCode: 200,
+							contentType: "text/html",
+							content: page
+						}
 					}
 				})
 				.catch(() => {
