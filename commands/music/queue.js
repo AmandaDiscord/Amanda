@@ -17,6 +17,17 @@ function handleDispatcherError(error) {
 	console.error(error);
 }
 
+/**
+ * @typedef {Object} LLEndEvent
+ * @property {String} guildId
+ * @property {String} reason
+ * @property {String} track
+ * @property {"event"} op
+ * @property {"TrackEndEvent"} type
+ */
+
+void 0 // prevent jsdoc fallthrough
+
 /** @param {PassthroughType} passthrough */
 module.exports = passthrough => {
 	const {client, queueManager, reloader, reloadEvent, youtube} = passthrough
@@ -376,7 +387,7 @@ module.exports = passthrough => {
 				let result = await this.queue.playRelated(index)
 				if (context instanceof Structures.Message) {
 					if (result == 0) context.react("✅")
-					else context.channel.send("The number you typed doesn't correspond to an item in the related list.")
+					else context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
 				}
 			}
 		}

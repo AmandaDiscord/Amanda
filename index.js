@@ -1,9 +1,10 @@
+const passthrough = require("./passthrough")
+
 const mysql = require("mysql2/promise");
 const hotreload = require("./modules/hotreload.js");
-const managers = require("./modules/managers");
 const YouTube = require("simple-youtube-api");
 
-const { Amanda } = require("./modules/structures");
+const Amanda = require("./modules/structures/Discord/Amanda");
 
 // @ts-ignore
 const config = require("./config.js");
@@ -18,30 +19,30 @@ let db = mysql.createPool({
 	connectionLimit: 5
 });
 
-let commands = new managers.CommandStore();
-
 (async () => {
+
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
 		db.query("SET CHARACTER SET utf8mb4")
 	]);
 
 	let reloader = new hotreload();
-	let passthrough = {config, client, commands, db, reloader, reloadEvent: reloader.reloadEvent, queueManager: managers.QueueManager, gameManager: managers.GameManager, youtube, wss: undefined};
-	reloader.setPassthrough(passthrough);
+	Object.assign(passthrough, {config, client, db, reloader, youtube})
+	passthrough.reloadEvent = reloader.reloadEvent
+
+
 	reloader.setupWatch([
 		"./modules/utilities.js",
 		"./modules/validator.js",
 		"./commands/music/common.js",
 		"./commands/music/songtypes.js",
 		"./commands/music/queue.js",
-		"./commands/music/playlistcommand.js"
+		"./commands/music/playlistcommand.js",
+		"./modules/lang.js",
 	]);
 	reloader.watchAndLoad([
-		"./modules/prototypes.js",
 		"./modules/events.js",
 		"./modules/stdin.js",
-		"./modules/lang.js",
 		"./commands/admin.js",
 		"./commands/cleverai.js",
 		"./commands/gambling.js",
@@ -49,13 +50,13 @@ let commands = new managers.CommandStore();
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music/music.js",
+		//"./commands/music/music.js",
 		"./commands/traa.js",
 		"./commands/web/server.js",
 	]);
-	
+
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
-	require("./modules/status.js")(passthrough)
+	require("./modules/status.js")
 
 	client.login(config.bot_token);
 

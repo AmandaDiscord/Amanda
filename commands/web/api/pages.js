@@ -1,5 +1,3 @@
-require("../../../types.js")
-
 const fs = require("fs");
 const path = require("path")
 const pj = path.join
@@ -9,7 +7,7 @@ const util = require("util")
 module.exports = (passthrough) => {
 	const {config, client, extra, reloadEvent, reloader, resolveTemplates, pugCache} = passthrough;
 
-	let utils = require("../../../modules/utilities.js")(passthrough);
+	let utils = require("../../../modules/utilities.js");
 	reloader.useSync("./modules/utilities.js", utils);
 
 	let validators = require("../../../modules/validator.js")()
@@ -44,7 +42,7 @@ module.exports = (passthrough) => {
 			route: "/dash", methods: ["GET"], code: async ({req}) => {
 				let cookies = extra.getCookies(req)
 				let session = await extra.getSession(cookies)
-				
+
 				if (session) {
 					let user = await client.users.fetch(session.userID)
 					let guilds = []

@@ -4,7 +4,7 @@ const crypto = require("crypto")
 module.exports = function(passthrough) {
 	let {config, reloader} = passthrough
 
-	let utils = require("../../modules/utilities.js")(passthrough)
+	let utils = require("../../modules/utilities.js")
 	reloader.useSync("./modules/utilities.js", utils)
 
 	return {

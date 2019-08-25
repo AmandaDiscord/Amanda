@@ -1,28 +1,20 @@
+//@ts-check
+
 const fs = require("fs");
 const path = require("path");
 const pj = path.join;
-
-require("../types.js");
 
 function localPath(path) {
 	return pj(__dirname, "..", path);
 }
 
-const currentYear = new Date().getYear()+1900;
+const currentYear = new Date().getFullYear()
 
 module.exports = class Reloader {
 	constructor() {
 		this.watchers = new Map();
 		this.syncers = [];
 		this.reloadEvent = new (require("events").EventEmitter)();
-	}
-	/**
-	 * Provide the passthrough object to be used when requiring all files.
-	 * @param {PassthroughType} passthrough
-	 */
-	setPassthrough(passthrough) {
-		this.passthrough = passthrough;
-		return this;
 	}
 	/**
 	 * Set up a file to be watched and reloaded in the future.
@@ -79,7 +71,6 @@ module.exports = class Reloader {
 		delete require.cache[require.resolve(filename)];
 		let result = require(filename);
 		if (result instanceof Function) {
-			result = result(this.passthrough);
 			syncers.forEach(syncer => Object.assign(syncer.object, result));
 		}
 	}

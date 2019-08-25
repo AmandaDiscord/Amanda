@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "buffer-signature": "^1.1.0",
-    "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
+    "discord.js": "file:../../Code/discord.js",
     "discord.js-lavalink": "github:MrJacz/discord.js-lavalink#v3",
     "entities": "^2.0.0",
     "events": "^3.0.0",

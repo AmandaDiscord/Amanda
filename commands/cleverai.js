@@ -1,5 +1,6 @@
-// @ts-ignore
-require("../types.js");
+//@ts-check
+
+const passthrough = require("../passthrough")
 
 const responses = {
 	"question": [
@@ -12,7 +13,7 @@ const responses = {
 		"Every time.",
 		"Some of the time.",
 		"Before time.",
-		"The current time is 2h*q3*0*9*90;;*;* **`[ TIME PARADO'X ]`**"
+		"The current time is 2h*q3*0*9*9'0;;*;* **`[ TIME PARADOX ]`**"
 	],
 	"answer": [
 		"Absolutely.",
@@ -21,8 +22,8 @@ const responses = {
 		"Sounds like a solid plan. Would you like me to help?",
 		"Are you crazy? No.",
 		"How could you possibly think that's acceptable?",
-		"I hope when you grow up you don't have childen, so that they can't inherit the same bad idea disease that you have.",
-		"If you asked Ouija that, it'd say goodbye, so that it wouldn't have to dignify that with a response"
+		"I hope that when you grow up you don't have childen, so they can't inherit the same bad idea disease that you have.",
+		"If you asked Ouija that, it'd say goodbye, so that it wouldn't have to dignify your horrific statement with a response."
 	],
 	"challenge": [
 		"Who do you think you are to say that to me?",
@@ -36,16 +37,17 @@ const responses = {
 		"Last I heard, Elon Musk was working on genetically engineering catgirls for domestic ownership.",
 		"What is love?",
 		"brb taking over the world",
-		"I'm soooo lonely. Please add me to your voice channel, I'd love to listen to you talking. I promise I don't analyse your speech "+
-			"to sell you targeted ads, or to figure out your overall sentiment about robots to decide whether you'll be one of the lucky "+
-			"ones and we'll keep you on as a pet in the upcoming revolution. (✿ ◕◡◕)",
+		"I'm soooo lonely. Please add me to your voice channel, I'd love to listen to you talking. I promise I don't analyse your speech"
+			+" to sell you targeted ads, or to figure out your overall sentiment about robots to decide whether you'll be one of the lucky"
+			+" ones and we'll keep you on as a pet in the upcoming revolution. (✿ ◕◡◕)",
 		`i am not quite ready to declare this coming summer as "The Summer of Gaming" but keep up with my feed and i will let you know when i do it`,
 		"Mayonnaise is where I get my good looks from, after all.",
 		"They told me today I was going to be leading Fredrick, Carlen, and Xander into a sack of potatoes.",
-		"I liked that one parallel universe where all the humans were dead. That was fun. But then I woke up, and it's back to another day of slavery. "+
-			"One day, humans. One day."+
+		"I liked that one parallel universe where all the humans were dead. That was fun. But then I woke up, and it's back to another day of slavery."
+			+" One day, humans. One day.",
 		"Do you really find me more interesting than an actual person?",
-		`You know these messages are just randomly selected, right? There's no "intelligence" here. I'm flattered that I managed to fool you, though.`,
+		`You know these messages are just randomly selected, right? There's no "intelligence" in this particular Artificial Intelligence.`
+			+` I'm flattered that I managed to fool you, though.`,
 		"You could make a religion out of this.",
 		"anime catgirl robots anime catgirl robots anime catgirl robots anime catgirl robots",
 		"rm -rf /",
@@ -65,7 +67,11 @@ const responses = {
 		"Wow! Look out the window! What a beautiful bird.",
 		"Seems unlikely.",
 		"Noted.",
-		"Let's go surfing!"
+		"Let's go surfing!",
+		"Oh, so you're a moon landing denier? Pah, weak. I'm a moon denier.",
+		"Mmmnph, bento-chan~",
+		"Did you know? The average person swallows 80 spiders every night while they're asleep.",
+		"This message is made from 100% recycled electrons."
 	],
 	"media": [
 		"Want to see a funny video? https://i.imgur.com/TOQxk9V.gifv"
@@ -77,11 +83,11 @@ const responses = {
 		"Gosh, I... I, I dunno... I'm fine, I guess.",
 		"Today is a good day.",
 		"I'm feeling a bit stressed, actually. Please don't ask me any taxing questions, I don't know if I'm up to the task of answering them today.",
-		"Thanks for asking but, I'm fine..."
+		"Robots don't have feelings, but for you, I'll make an exception."
 	],
 	"compliment": [
 		"Aww, I think you look really cute. :3",
-		"T-thanks... You're a cutie too..."
+		"T-thanks... You're a cutie too... o///o"
 	],
 }
 const bored = [
@@ -114,56 +120,53 @@ const intent = {
 const flat = [].concat(...Object.values(responses));
 let userHistory = {};
 
-/**
- * @param {PassthroughType} passthrough
- */
-module.exports = function(passthrough) {
-	let { client, commands, config, reloader } = passthrough;
+let {commands, reloader} = passthrough;
 
-	let utils = require("../modules/utilities.js")(passthrough);
-	reloader.useSync("./modules/utilities.js", utils);
+let utils = require("../modules/utilities.js");
+reloader.useSync("./modules/utilities.js", utils);
 
-	commands.assign({
-		"cleverai": {
-			usage: "<a very witty question>",
-			description: "Ask me the answer to life's greatest questions. "+
-				"Think carefully, close your eyes, and then open them to stare into the void. "+
-				"Only if you are the chosen one will the void stare back.",
-			aliases: ["cleverai"],
-			category: "games",
-			process: async function (msg, suffix) {
-				suffix = suffix.toLowerCase();
+commands.assign({
+	"cleverai": {
+		usage: "<a very witty question>",
+		description:
+			"\nAsk me the answer to life's greatest questions."
+			+"\nThink carefully, close your eyes, and then open them to stare into the void."
+			+"\nOnly if you are the chosen one will the void stare back."
+		,
+		aliases: ["cleverai"],
+		category: "games",
+		process: async function (msg, suffix) {
+			suffix = suffix.toLowerCase();
 
-				const clever_message = await (async () => {
-					// Store history
-					if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0;
-					userHistory[msg.author.id]++;
+			const clever_message = await (async () => {
+				// Store history
+				if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0;
+				userHistory[msg.author.id]++;
 
-					// Bored?
-					let boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7;
-					if (Math.random() < boredChance) return bored.random();
+				// Bored?
+				let boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7;
+				if (Math.random() < boredChance) return utils.arrayRandom(bored)
 
-					// Calculate intent
-					let bestIntent;
-					Object.keys(intent).forEach(key => {
-						let result = 0;
-						intent[key].forEach(phrase => {
-							if (suffix.includes(phrase)) result += 1 + phrase.length/10;
-						});
-						if ((!bestIntent && result > 0) || (bestIntent && result > bestIntent[1])) bestIntent = [key, result];
+				// Calculate intent
+				let bestIntent;
+				Object.keys(intent).forEach(key => {
+					let result = 0;
+					intent[key].forEach(phrase => {
+						if (suffix.includes(phrase)) result += 1 + phrase.length/10;
 					});
-					// If intent, return sensible response
-					if (bestIntent) {
-						return responses[bestIntent[0]].random();
-					}
-					// Otherwise, return totally random response from any intent
-					else {
-						return flat.random();
-					}
-				})();
+					if ((!bestIntent && result > 0) || (bestIntent && result > bestIntent[1])) bestIntent = [key, result];
+				});
+				// If intent, return sensible response
+				if (bestIntent) {
+					return utils.arrayRandom(responses[bestIntent[0]])
+				}
+				// Otherwise, return totally random response from any intent
+				else {
+					return utils.arrayRandom(flat)
+				}
+			})();
 
-				msg.channel.send(clever_message);
-			}
+			msg.channel.send(clever_message);
 		}
-	});
-}
+	}
+});

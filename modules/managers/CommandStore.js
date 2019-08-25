@@ -1,5 +1,15 @@
 const Discord = require("discord.js");
-const managers = require("../");
+
+/**
+ * @typedef {Object} Command
+ * @property {string} usage
+ * @property {string} description
+ * @property {string[]} aliases
+ * @property {string} category
+ *	@property {(msg: Discord.Message, suffix?: string) => any} process
+ */
+
+void 0 // prevent jsdoc fallthrough
 
 class CommandStore extends Discord.Collection {
 	constructor() {
@@ -10,7 +20,7 @@ class CommandStore extends Discord.Collection {
 		this.categories = new Map();
 	}
 	/**
-	 * @param {Object.<string, managers.Command>} properties
+	 * @param {Object.<string, Command>} properties
 	 */
 	assign(properties) {
 		Object.values(properties).forEach(i => {

@@ -1,5 +1,3 @@
-require("../../../types.js")
-
 const Discord = require("discord.js")
 
 const opcodes = {
@@ -47,7 +45,7 @@ const eventList = [
 module.exports = (passthrough) => {
 	const {client, extra,  reloader, queueManager} = passthrough;
 
-	let utils = require("../../../modules/utilities.js")(passthrough);
+	let utils = require("../../../modules/utilities.js");
 	reloader.useSync("./modules/utilities.js", utils);
 
 	let validators = require("../../../modules/validator.js")()
@@ -58,7 +56,7 @@ module.exports = (passthrough) => {
 			this.ws = ws
 			this.member = null
 			this.eventStore = []
-	
+
 			this.ws.on("message", async message => {
 				try {
 					let data = JSON.parse(message)
@@ -68,12 +66,12 @@ module.exports = (passthrough) => {
 					}
 				} catch (e) {}
 			})
-	
+
 			ws.on("close", () => this.onClose())
-	
+
 			ws.on("error", e => console.log("WebSocket error", e))
 		}
-	
+
 		send(data) {
 			this.ws.send(JSON.stringify(data))
 		}
@@ -89,7 +87,7 @@ module.exports = (passthrough) => {
 
 		addEventListeners() {
 			this.removeEventListeners()
-			
+
 			eventList.forEach(([emitter, eventName, fnName]) => {
 				let fn = this[fnName].bind(this)
 				if (emitter == "queue") {
@@ -110,7 +108,7 @@ module.exports = (passthrough) => {
 			})
 			this.eventStore = []
 		}
-	
+
 		async identify(data) {
 			if (data && data.d && typeof(data.d.cookie) == "string" && typeof(data.d.guildID) == "string") {
 				let cookies = extra.getCookies({headers: {cookie: data.d.cookie}})
@@ -130,7 +128,7 @@ module.exports = (passthrough) => {
 				})
 			}
 		}
-	
+
 		sendState(data) {
 			if (!this.member) return
 			let state = this.member.guild.queue ? this.member.guild.queue.wrapper.getState() : null
