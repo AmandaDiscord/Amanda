@@ -248,8 +248,10 @@ async function startGame(channel, options = {}) {
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector);
 async function answerDetector(msg) {
 	if (msg.author.bot) return;
-	let game = gameManager.storage.find(g => g.id == msg.channel.id && g.type == "trivia");
-	if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
+	let game = gameManager.storage.find(g => g.id == msg.channel.id);
+	if (game instanceof TriviaGame) {
+		if (game) game.addAnswer(msg); // all error checking to be done inside addAnswer
+	}
 }
 
 

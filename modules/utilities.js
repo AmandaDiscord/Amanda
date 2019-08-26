@@ -64,29 +64,40 @@ const utils = {
 		}
 	},
 	BetterTimeout: class BetterTimeout {
+		constructor() {
+			this.callback = null
+			/** @type {number} */
+			this.delay = null
+			this.isActive = false
+			this.timeout = null
+		}
+		setCallback(callback) {
+			this.clear()
+			this.callback = callback
+			return this
+		}
 		/**
-		 * @param {(...args: Array<any>) => void} [callback]
-		 * @param {Number} [delay]
-		 * @constructor
+		 * @param {number} delay
 		 */
-		constructor(callback, delay) {
-			this.callback = callback;
-			this.delay = delay;
-			if (this.callback) {
-				this.isActive = true;
-				this.timeout = setTimeout(this.callback, this.delay);
-			} else {
-				this.isActive = false;
-				this.timeout = null;
+		setDelay(delay) {
+			this.clear()
+			this.delay = delay
+			return this
+		}
+		run() {
+			this.clear()
+			if (this.callback && this.delay) {
+				this.isActive = true
+				this.timeout = setTimeout(() => this.callback(), this.delay)
 			}
 		}
 		triggerNow() {
-			this.clear();
-			this.callback();
+			this.clear()
+			if (this.callback) this.callback()
 		}
 		clear() {
-			this.isActive = false;
-			clearTimeout(this.timeout);
+			this.isActive = false
+			clearTimeout(this.timeout)
 		}
 	},
 	JIMPStorage: class JIMPStorage {
@@ -410,7 +421,7 @@ const utils = {
 		else if (typeof(data) == "string") result = `"${data}"`;
 		else if (typeof(data) == "number") result = data.toString();
 		else if (data.constructor && data.constructor.name == "Promise") result = await utils.stringify(await data);
-		else if (data.constructor && data.constructor.name.toLowerCase().includes("error")) {
+		else if (data.constructor && data.constructor.name && data.constructor.name.toLowerCase().includes("error")) {
 			let errorObject = {};
 			Object.entries(data).forEach(e => {
 				errorObject[e[0]] = e[1];

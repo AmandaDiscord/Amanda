@@ -136,6 +136,7 @@ async function manageReady() {
 	if (starting) {
 		console.log(`Successfully logged in as ${client.user.username}`);
 		process.title = client.user.username;
+		lavalinknodes.forEach(node => node.resumeKey = client.user.id)
 		client.lavalink = new PlayerManager(this, lavalinknodes, {
 			user: client.user.id,
 			shards: 1

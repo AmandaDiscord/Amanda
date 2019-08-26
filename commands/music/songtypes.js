@@ -1,3 +1,5 @@
+//@ts-check
+
 const Discord = require("discord.js")
 const ytdlDiscord = require("ytdl-core-discord")
 const ytdl = require("ytdl-core")
@@ -6,195 +8,224 @@ const rp = require("request-promise")
 const events = require("events")
 const stream = require("stream")
 
-// @ts-ignore
-require("../../types.js")
+const passthrough = require("../../passthrough")
+let {client, reloader} = passthrough
 
-/**
- * @param {PassthroughType} passthrough
- */
-module.exports = passthrough => {
-	let {client, reloader} = passthrough
+let utils = require("../../modules/utilities.js")
+reloader.useSync("./modules/utilities.js", utils)
 
-	let utils = require("../../modules/utilities.js")(passthrough)
-	reloader.useSync("./modules/utilities.js", utils)
+let common = require("./common.js")
+reloader.useSync("./commands/music/common.js", common)
 
-	let common = require("./common.js")(passthrough)
-	reloader.useSync("./commands/music/common.js", common)
+const stationData = new Map([
+	["frisky", {title: "Frisky Radio", queue: "Frisky Radio: Frisky", url: "http://stream.friskyradio.com/frisky_mp3_hi"}], // 44100Hz 2ch 128k MP3
+	["deep", {title: "Frisky Radio: Deep", queue: "Frisky Radio: Deep", url: "http://deep.friskyradio.com/friskydeep_acchi"}], // 32000Hz 2ch 128k MP3 (!)
+	["chill", {title: "Frisky Radio: Chill", queue: "Frisky Radio: Chill", url: "http://chill.friskyradio.com/friskychill_mp3_high"}] // 44100Hz 2ch 128k MP3
+])
 
-	const stationData = new Map([
-		["frisky", {title: "Frisky Radio", queue: "Frisky Radio: Frisky"}],
-		["deep", {title: "Frisky Radio: Deep", queue: "Frisky Radio: Deep"}],
-		["chill", {title: "Frisky Radio: Chill", queue: "Frisky Radio: Deep"}]
-	])
+class Song {
+	constructor() {
+		this.title = ""
+		this.queueLine = ""
+		this.track = ""
+		this.lengthSeconds = -1
+		this.npUpdateFrequency = 0
+		this.noPauseReason = ""
+		this.error = ""
+		this.typeWhileGetRelated = true
 
-	class Song {
-		constructor() {
-			this.title = ""
-			this.queueLine = ""
-			this.track = ""
-			this.lengthSeconds = -1
-			this.npUpdateFrequency = 0
-			this.noPauseReason = ""
-			this.error = ""
-			this.typeWhileGetRelated = true
-			
-			this.validated = false
-			setTimeout(() => {
-				if (this.validated == false) this.validationError("must call validate() in constructor")
+		this.validated = false
+		setTimeout(() => {
+			if (this.validated == false) this.validationError("must call validate() in constructor")
+		})
+	}
+	toObject() {
+	}
+	/**
+	 * @param {Number} time milliseconds
+	 * @param {Boolean} paused
+	 */
+	getProgress(time, paused) {
+		return ""
+	}
+	/**
+	 * @returns {Promise<Song[]>}
+	 */
+	getRelated() {
+		return Promise.resolve([])
+	}
+	/** @returns {Promise<String|Discord.MessageEmbed>} */
+	showRelated() {
+		return Promise.resolve("This isn't a real song.")
+	}
+	/**
+	 * @param {String} message
+	 */
+	validationError(message) {
+		console.error("Song validation error: "+this.constructor.name+" "+message)
+	}
+	validate() {
+		["track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
+			if (!this[key]) this.validationError("unset "+key)
+		})
+		;["getProgress", "getRelated", "showRelated", "toObject"].forEach(key => {
+			if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
+		})
+		if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
+		this.validated = true
+	}
+	prepare() {
+		return Promise.resolve()
+	}
+}
+
+class YouTubeSong extends Song {
+	/**
+	 * @param {String} id
+	 * @param {String} title
+	 * @param {Number} lengthSeconds
+	 * @param {String?} track
+	 */
+	constructor(id, title, lengthSeconds, track = undefined) {
+		super()
+		this.id = id
+		this.title = title
+		this.lengthSeconds = lengthSeconds
+		this.track = track || "!"
+		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		this.npUpdateFrequency = 5000
+		this.typeWhileGetRelated = true
+
+		this.related = new utils.AsyncValueCache(
+		/** @returns {Promise<any[]>} */
+		() => {
+			return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
+				this.typeWhileGetRelated = false
+				return data.recommendedVideos.slice(0, 10)
 			})
+		})
+
+		this.validate()
+	}
+	toObject() {
+		return {
+			constructor: "YouTubeSong",
+			id: this.id,
+			title: this.title,
+			lengthSeconds: this.lengthSeconds,
+			track: this.track
 		}
-		/**
-		 * @param {Number} time milliseconds
-		 * @param {Boolean} paused
-		 */
-		getProgress(time, paused) {
-			return ""
+	}
+	/**
+	 * @param {Number} time milliseconds
+	 * @param {Boolean} paused
+	 */
+	getProgress(time, paused) {
+		let max = this.lengthSeconds
+		let rightTime = common.prettySeconds(max)
+		if (time > max) time = max
+		let leftTime = common.prettySeconds(time)
+		let bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
+		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+	}
+	async getRelated() {
+		let related = await this.related.get()
+		return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
+	}
+	async showRelated() {
+		let related = await this.related.get()
+		if (related.length) {
+			return new Discord.MessageEmbed()
+			.setTitle("Related content from YouTube")
+			.setDescription(
+				related.map((v, i) =>
+					`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+					+`\n — ${v.author}`
+				)
+			)
+			.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
+			.setColor(0x36393f)
+		} else {
+			return "No related content available for the current item."
 		}
-		/**
-		 * @returns {Promise<Song[]>}
-		 */
-		getRelated() {
-			return Promise.resolve([])
-		}
-		/** @returns {Promise<String|Discord.MessageEmbed>} */
-		showRelated() {
-			return Promise.resolve("This isn't a real song.")
-		}
-		/**
-		 * @param {String} message
-		 */
-		validationError(message) {
-			console.error("Song validation error: "+this.constructor.name+" "+message)
-		}
-		validate() {
-			["track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
-				if (!this[key]) this.validationError("unset "+key)
+	}
+	prepare() {
+		if (this.track == "!") {
+			return common.getTracks(this.id).then(tracks => {
+				if (tracks[0] && tracks[0].track) {
+					this.track = tracks[0].track
+				} else {
+					console.error(tracks)
+					this.error = "No tracks available for ID "+this.id
+				}
 			})
-			;["getProgress", "getRelated", "showRelated"].forEach(key => {
-				if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
-			})
-			if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
-			this.validated = true
-		}
-		prepare() {
+		} else {
 			return Promise.resolve()
 		}
 	}
-
-	class YouTubeSong extends Song {
-		/**
-		 * @param {String} id
-		 * @param {String} title
-		 * @param {Number} lengthSeconds
-		 * @param {String?} track
-		 */
-		constructor(id, title, lengthSeconds, track = undefined) {
-			super()
-			this.id = id
-			this.title = title
-			this.lengthSeconds = lengthSeconds
-			this.track = track || "!"
-			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
-			this.npUpdateFrequency = 5000
-			this.typeWhileGetRelated = true
-
-			this.related = new utils.AsyncValueCache(
-			/** @returns {Promise<any[]>} */
-			() => {
-				return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
-					this.typeWhileGetRelated = false
-					return data.recommendedVideos.slice(0, 10)
-				})
-			})
-
-			this.validate()
-		}
-		/**
-		 * @param {Number} time milliseconds
-		 * @param {Boolean} paused
-		 */
-		getProgress(time, paused) {
-			let max = this.lengthSeconds
-			let rightTime = common.prettySeconds(max)
-			if (time > max) time = max
-			let leftTime = common.prettySeconds(time)
-			let bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
-			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
-		}
-		async getRelated() {
-			let related = await this.related.get()
-			return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
-		}
-		async showRelated() {
-			let related = await this.related.get()
-			if (related.length) {
-				return new Discord.MessageEmbed()
-				.setTitle("Related content from YouTube")
-				.setDescription(
-					related.map((v, i) =>
-						`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
-						+`\n — ${v.author}`
-					)
-				)
-				.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
-				.setColor(0x36393f)
-			} else {
-				return "No related content available for the current item."
-			}
-		}
-		prepare() {
-			if (this.track == "!") {
-				return common.getTracks(this.id).then(tracks => {
-					if (tracks[0] && tracks[0].track) {
-						this.track = tracks[0].track
-					} else {
-						console.error(tracks)
-						this.error = "No tracks available for ID "+this.id
-					}
-				})
-			} else {
-				return Promise.resolve()
-			}
-		}
-	}
-
-	class FriskySong extends Song {
-		constructor(station, data) {
-			super()
-
-			this.station = station
-
-			this.title = stationData.get(station).title
-			this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
-			this.track = data.track
-			this.lengthSeconds = 0
-			this.npUpdateFrequency = 15000
-			this.typeWhileGetRelated = false
-			this.noPauseReason = "You can't pause live radio."
-
-			this._filledBarOffset = 0
-
-			this.validate()
-		}
-		getRelated() {
-			return Promise.resolve([])
-		}
-		showRelated() {
-			return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
-		}
-		getProgress(time, paused) {
-			let part = "= ⋄ ==== ⋄ ==="
-			let fragment = part.substr(7-this._filledBarOffset, 7)
-			let bar = "​"+fragment.repeat(5)+"​"
-			this._filledBarOffset++
-			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-			time = common.prettySeconds(time)
-			return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
-		}
-	}
-
-	return {YouTubeSong, FriskySong}
 }
+
+class FriskySong extends Song {
+	constructor(station, data = {}) {
+		super()
+
+		this.station = station
+
+		if (!stationData.has(this.station)) throw new Error("Unsupported station: "+this.station)
+
+		this.title = stationData.get(this.station).title
+		this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
+		this.track = data.track || "!"
+		this.lengthSeconds = 0
+		this.npUpdateFrequency = 15000
+		this.typeWhileGetRelated = false
+		this.noPauseReason = "You can't pause live radio."
+
+		this._filledBarOffset = 0
+
+		this.validate()
+	}
+	toObject() {
+		return {
+			constructor: "FriskySong",
+			station: this.station
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
+	}
+	getProgress(time, paused) {
+		let part = "= ⋄ ==== ⋄ ==="
+		let fragment = part.substr(7-this._filledBarOffset, 7)
+		let bar = "​"+fragment.repeat(5)+"​"
+		this._filledBarOffset++
+		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+		time = common.prettySeconds(time)
+		return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
+	}
+	prepare() {
+		if (this.track == "!") {
+			return common.getTracks(stationData.get(this.station).url).then(tracks => {
+				if (tracks[0] && tracks[0].track) {
+					this.track = tracks[0].track
+				} else {
+					console.error(tracks)
+					this.error = "No tracks available for station "+this.station
+				}
+			})
+		} else {
+			return Promise.resolve()
+		}
+	}
+}
+
+function makeYouTubeSongFromData(data) {
+	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000), data.track)
+}
+module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 
 /**
  * @typedef {Object} FriskyNowPlayingItem
@@ -305,3 +336,7 @@ module.exports = passthrough => {
  * @property {Number} data.mp3_url.expires
  * @property {String} data.mp3_url.path
  */
+
+module.exports.Song = Song
+module.exports.YouTubeSong = YouTubeSong
+module.exports.FriskySong = FriskySong

@@ -1,438 +1,347 @@
-const ytdl = require("ytdl-core");
-const YouTube = require('simple-youtube-api');
-const net = require("net");
-const crypto = require("crypto");
-const rp = require("request-promise");
-const Discord = require("discord.js");
-const path = require("path");
+//@ts-check
 
-const Structures = require("../../modules/structures");
-const managers = require("../../modules/managers");
+const ytdl = require("ytdl-core")
+const YouTube = require('simple-youtube-api')
+const net = require("net")
+const crypto = require("crypto")
+const rp = require("request-promise")
+const Discord = require("discord.js")
+const path = require("path")
 
-//@ts-ignore
-require("../../types.js");
+const passthrough = require("../../passthrough")
+let {config, client, reloadEvent, reloader, commands, queueStore} = passthrough
+
+let utils = require("../../modules/utilities.js")
+reloader.useSync("./modules/utilities.js", utils)
+
+let lang = require("../../modules/lang.js")
+reloader.useSync("./modules/lang.js", lang)
+
+let songTypes = require("./songtypes.js")
+reloader.useSync("./commands/music/songtypes.js", songTypes)
+
+let queueFile = require("./queue.js")
+reloader.useSync("./commands/music/queue.js", queueFile)
+
+/*let playlistCommand = require("./playlistcommand.js")
+reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)*/
+
+let common = require("./common.js")
+reloader.useSync("./commands/music/common.js", common)
 
 /**
- * @param {PassthroughType} passthrough
+ * @param {songTypes.Song} song
+ * @param {Discord.TextChannel} textChannel
+ * @param {Discord.VoiceChannel} voiceChannel
+ * @param {Boolean} [insert]
+ * @param {Discord.Message} [context]
  */
-module.exports = function(passthrough) {
-	let { config, client, reloadEvent, reloader, commands, queueManager, youtube } = passthrough;
-
-	let utils = require("../../modules/utilities.js")(passthrough);
-	reloader.useSync("./modules/utilities.js", utils);
-
-	let lang = require("../../modules/lang.js")(passthrough);
-	reloader.useSync("./modules/lang.js", lang);
-
-	let songTypes = require("./songtypes.js")(passthrough)
-	reloader.useSync("./commands/music/songtypes.js", songTypes)
-	let Song = songTypes.YouTubeSong // intellisense sucks
-
-	let queueFile = require("./queue.js")(passthrough)
-	reloader.useSync("./commands/music/queue.js", queueFile)
-	let Queue = queueFile.Queue // intellisense sucks
-	let queueStore;
-	if (passthrough.queueStore) queueStore = passthrough.queueStore
-	else {
-		queueStore = new queueFile.QueueStore();
-		passthrough.queueStore = queueStore;
+function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
+	let queue = queueStore.getOrCreate(voiceChannel, textChannel)
+	let result = queue.addSong(song, insert)
+	if (context instanceof Discord.Message && result == 0) {
+		context.react("✅")
 	}
+}
 
-	let playlistCommand = require("./playlistcommand.js")(passthrough)
-	reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)
-
-	let common = require("./common.js")(passthrough)
-	reloader.useSync("./commands/music/common.js", common)
-
-	utils.addTemporaryListener(client, "guildUpdate", path.basename(__filename), (a, b) => {
-		let queue = queueManager.storage.get(b.id)
-		if (a.region != b.region && queue) {
-			queue.textChannel.send("The guild region changed, forcing me to disconnect from voice and stop playing music.")
-			queue.stop()
-		}
-	})
-
-	let bulkLoaders = [];
-
-	/**
-	 * @param {Song} song
-	 * @param {Structures.TextChannel} textChannel
-	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Boolean} [insert]
-	 * @param {Structures.Message} [context]
-	 */
-	function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
-		let queue = queueManager.storage.get(textChannel.guild.id) || new queueFile.Queue(queueStore, voiceChannel, textChannel);
-		let numberOfSongs = queue.addSong(song, insert);
-		if (context instanceof Structures.Message && numberOfSongs > 1) {
-			context.react("✅")
-		}
-		return numberOfSongs
-	}
-
-	class VoiceStateCallback {
-		/**
-		 * @param {String} userID
-		 * @param {Structures.Guild} guild
-		 * @param {Number} timeoutMs
-		 * @param {(voiceChannel: Discord.VoiceChannel) => void} callback
-		 * @constructor
-		 */
-		constructor(userID, guild, timeoutMs, callback) {
-			this.userID = userID;
-			this.guild = guild;
-			this.timeout = setTimeout(() => this.cancel(), timeoutMs);
-			this.callback = callback;
-			this.active = true;
-			voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
-			this.add();
-		}
-		add() {
-			voiceStateCallbackManager.callbacks.push(this);
-		}
-		remove() {
-			let index = voiceStateCallbackManager.callbacks.indexOf(this);
-			if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
-		}
-		/**
-		 * @param {Discord.VoiceChannel} voiceChannel
-		 */
-		trigger(voiceChannel) {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(voiceChannel);
-			}
-		}
-		cancel() {
-			if (this.active) {
-				this.active = false;
-				this.remove();
-				this.callback(null);
-			}
-		}
-	}
-	const voiceStateCallbackManager = {
-		callbacks: [],
-		/**
-		 * @param {String} userID
-		 * @param {Structures.Guild} guild
-		 * @returns {Array<VoiceStateCallback>}
-		 */
-		getAll: function(userID, guild) {
-			return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
-		}
-	}
+class VoiceStateCallback {
 	/**
 	 * @param {String} userID
-	 * @param {Structures.Guild} guild
+	 * @param {Discord.Guild} guild
 	 * @param {Number} timeoutMs
-	 * @returns {Promise<Discord.VoiceChannel>}
+	 * @param {(voiceChannel: Discord.VoiceChannel) => void} callback
+	 * @constructor
 	 */
-	function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
-		return new Promise(resolve => {
-			new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel));
-		});
+	constructor(userID, guild, timeoutMs, callback) {
+		this.userID = userID;
+		this.guild = guild;
+		this.timeout = setTimeout(() => this.cancel(), timeoutMs);
+		this.callback = callback;
+		this.active = true;
+		voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
+		this.add();
 	}
-
-	utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
-		// Process waiting to join
-		if (newState.id != client.user.id && newState.channel) voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
-
-		// Pass on to queue for leave timeouts
-		let channel = oldState.channel || newState.channel;
-		if (!channel || !channel.guild) return;
-		let queue = queueManager.storage.get(channel.guild.id);
-		if (queue) queue.voiceStateUpdate(oldState, newState);
-	});
-	
-	utils.addTemporaryListener(reloadEvent, "music", path.basename(__filename), function(action) {
-		if (action == "getQueues") {
-			reloadEvent.emit("musicOut", "queues", queueManager.storage);
-		} else if (action == "getQueue") {
-			let serverID = [...arguments][1];
-			if (!serverID) return;
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return;
-			reloadEvent.emit("musicOut", "queue", queue);
-		} else if (["skip", "stop", "pause", "resume"].includes(action)) {
-			let [serverID, callback] = [...arguments].slice(1);
-			let queue = queueManager.storage.get(serverID);
-			if (!queue) return callback([400, "Server is not playing music"]);
-			let result = queue[action](true);
-			if (result[0]) callback([200, result[1]]);
-			else callback([400, result[1]]);
-		}
-	});
-	/**
-	 * @param {Structures.Message} msg
-	 * @param {Boolean} wait
-	 * @returns {Promise<(Discord.VoiceChannel|null)>}
-	 */
-	async function detectVoiceChannel(msg, wait) {
-		if (msg.member.voice.channel) return msg.member.voice.channel;
-		if (!wait) return null;
-		let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
-		return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
+	add() {
+		voiceStateCallbackManager.callbacks.push(this);
 	}
-
+	remove() {
+		let index = voiceStateCallbackManager.callbacks.indexOf(this);
+		if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+	}
 	/**
-	 * @type {Map<String, {voiceChannel?: String, queue?: String, code: (msg: Structures.Message, args: Array<String>, any) => any}>}
+	 * @param {Discord.VoiceChannel} voiceChannel
 	 */
-	const subcommandsMap = new Map([
-		["play", {
-			voiceChannel: "ask",
-			code: async (msg, args, {voiceChannel}) => {
-				if (!queueManager.storage.has(msg.guild.id)) {
-					if (voiceChannel && !voiceChannel.joinable) return msg.channel.send(lang.permissionVoiceJoin());
-					if (voiceChannel && !voiceChannel.speakable) return msg.channel.send(lang.permissionVoiceSpeak());
-				}
-				console.log("checks");
-				if (!args[1]) return msg.channel.send(lang.input.music.playableRequired(msg));
-				let result = await common.resolveInput.getTracks(args.slice(1).join(" "), msg.channel, msg.author.id);
-				console.log(result);
-				if (result == null) return;
-				let usedSearch = result[1]
-				result = result[0]
-				result.forEach(item => {
-					let song = new songTypes.YouTubeSong(item.info.identifier, item.info.title, Math.ceil(item.info.length/1000), item.track)
-					console.log(song)
-					let numberOfSongs = handleSong(song, msg.channel, voiceChannel, args[0][0] == "i")
-					if (numberOfSongs > 1 && !usedSearch) msg.react("✅")
-				})
-			}
-		}],
-		["stop", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				let bulkLoaderIndex = -1;
-				for (let i = 0; i < bulkLoaders.length; i++) {
-					if (bulkLoaders[i][0] == msg.guild.id) bulkLoaderIndex = i;
-				}
-				if (bulkLoaderIndex != -1) {
-					bulkLoaders[bulkLoaderIndex][1]();
-				} else {
-					if (!queue) {
-						if (msg.guild.voice.connection) return msg.guild.voice.connection.channel.leave();
-						else return msg.channel.send(lang.voiceNothingPlaying(msg));
-					} else {
-						queue.wrapper.stop()
-					}
-				}
-			}
-		}],
-		["queue", {
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				if (args[1] == "remove") {
-					let index = +args[2]
-					if (isNaN(index) || index != Math.floor(index) || index <= 1 || index > queue.songs.length) {
-						return msg.channel.send("Syntax: `&music queue remove <position>`, where position is the number of the item in the queue")
-					}
-					index--
-					let title = queue.songs[index].getTitle()
-					queue.removeSong(index)
-					msg.channel.send(lang.voiceQueueRemovedSong(title))
-				} else {
-					queue.wrapper.getQueue(msg)
-				}
-			}
-		}],
-		["skip", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.skip(msg);
-			}
-		}],
-		["auto", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.toggleAuto(msg);
-			}
-		}],
-		["now", {
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				if (msg.channel == queue.textChannel) queue.sendNowPlaying();
-				else msg.channel.send("The current music session is over in "+queue.textChannel+". Go there to see what's playing!")
-			}
-		}],
-		["info", {
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.showInfo();
-			}
-		}],
-		["pause", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.pause(msg);
-			}
-		}],
-		["resume", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {queue}) => {
-				queue.wrapper.resume(msg);
-			}
-		}],
-		["related", {
-			voiceChannel: "required",
-			queue: "required",
-			code: async (msg, args, {voiceChannel, queue}) => {
-				let mode = args[1];
-				let index = parseInt(args[2]);
-				if (mode && (mode[0] == "p" || mode[0] == "i") && index) {
-					let song = await queue.songs[0].getSuggested(index-1)
-					if (!song) return msg.channel.send("The syntax is `&music related <play|insert> <index>`. Your index was invalid.")
-					handleSong(song, msg.channel, voiceChannel, mode[0] == "i", msg)
-				} else {
-					let content = await queue.songs[0].showRelated()
-					msg.channel.send(utils.contentify(msg.channel, content))
-				}
-			}
-		}],
-		["playlist", {
-			voiceChannel: "provide",
-			code: async (msg, args, {voiceChannel}) => {
-				playlistCommand.command(msg, args, (songs) => {
-					let isNewQueue = false
-					songs.forEach((data, index) => {
-						let song = new songTypes.YouTubeSong(data.videoID, data.name, data.length_seconds)
-						let numberOfSongs = handleSong(song, msg.channel, voiceChannel, false)
-						if (index == 0 && numberOfSongs == 1) isNewQueue = true
-					})
-					if (isNewQueue) msg.react("✅")
-				})
-			}
-		}]
-	])
-	const subcommandAliasMap = new Map()
-	;[
-		["play", ["p", "insert", "i"]],
-		["queue", ["q"]],
-		["skip", ["s"]],
-		["now", ["n"]],
-		["related", ["rel"]],
-		["playlist", ["pl", "playlists"]]
-	].forEach(entry => {
-		// @ts-ignore
-		entry[1].forEach(alias => {
-			subcommandAliasMap.set(alias, entry[0])
-		})
-	})
-	subcommandsMap.forEach((value, key) => {
-		subcommandAliasMap.set(key, key)
-	})
-
-	commands.assign({
-		"musictoken": {
-			usage: "[new|delete]",
-			description: "Obtain a web dashboard login token",
-			aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
-			category: "meta",
-			process: async function(msg, suffix) {
-				if (suffix == "delete") {
-					await deleteAll()
-					msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
-				} else if (suffix == "new") {
-					await deleteAll()
-					let hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
-					await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1]);
-					send(
-						`Your existing tokens were deleted, and a new one was created.`
-						+"\n`"+hash+"`"
-						+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
-						+`\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
-					)
-				} else {
-					let existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
-					if (existing) {
-						send(
-							"Here is the token you generated previously:"
-							+"\n`"+existing.token+"`"
-							+"\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
-						)
-					} else {
-						send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
-					}
-				}
-				
-				function deleteAll() {
-					return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
-				}
-				
-				function send(text) {
-					msg.author.send(text).then(() => {
-						if (msg.channel.type == "text") msg.channel.send(`I sent you a DM.`)
-					}).catch(() => {
-						msg.channel.send(`Please allow me to send you DMs.`)
-					})
-				}
-			}
-		},
-		"frisky": {
-			usage: "[frisky|deep|chill]",
-			description: "Frisky radio",
-			aliases: ["frisky"],
-			category: "music",
-			process: async function(msg, suffix) {
-				if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg));
-				const voiceChannel = msg.member.voice.channel;
-				if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-				let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
-				let stream = new songTypes.FriskySong(station);
-				// @ts-ignore
-				return handleSong(stream, msg.channel, voiceChannel, false, msg);
-			}
-		},
-		"music": {
-			usage: "none",
-			description: "You're not supposed to see this",
-			aliases: ["music", "m"],
-			category: "music",
-			process: async function(msg, suffix) {
-				// No DMs
-				if (msg.channel.type != "text") return msg.channel.send(lang.command.guildOnly(msg))
-				// Args
-				let args = suffix.split(" ")
-				// Find subcommand
-				let subcommand = args[0] ? args[0].trim().toLowerCase() : ""
-				let key = subcommandAliasMap.get(subcommand)
-				let subcommandObject = subcommandsMap.get(key)
-				if (!subcommandObject) return msg.channel.send(lang.input.music.invalidAction(msg))
-				// Create data for subcommand
-				let subcommmandData = {}
-				// Provide a queue?
-				if (subcommandObject.queue == "required") {
-					let Queue = queueFile.Queue
-					/** @type {Queue} */
-					let queue = queueManager.storage.get(msg.guild.id)
-					if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg))
-					subcommmandData.queue = queue
-				}
-				// Provide a voice channel?
-				if (subcommandObject.voiceChannel) {
-					if (subcommandObject.voiceChannel == "required") {
-						let voiceChannel = await detectVoiceChannel(msg, false)
-						if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
-						subcommmandData.voiceChannel = voiceChannel
-					} else if (subcommandObject.voiceChannel == "ask") {
-						let voiceChannel = await detectVoiceChannel(msg, true)
-						if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
-						subcommmandData.voiceChannel = voiceChannel
-					} else if (subcommandObject.voiceChannel == "provide") {
-						let voiceChannel = await detectVoiceChannel(msg, false)
-						subcommmandData.voiceChannel = voiceChannel
-					}
-				}
-				// Hand over execution to the subcommand
-				subcommandObject.code(msg, args, subcommmandData)
-			}
+	trigger(voiceChannel) {
+		if (this.active) {
+			this.active = false;
+			this.remove();
+			this.callback(voiceChannel);
 		}
-	})
+	}
+	cancel() {
+		if (this.active) {
+			this.active = false;
+			this.remove();
+			this.callback(null);
+		}
+	}
 }
+const voiceStateCallbackManager = {
+	callbacks: [],
+	/**
+	 * @param {String} userID
+	 * @param {Discord.Guild} guild
+	 * @returns {Array<VoiceStateCallback>}
+	 */
+	getAll: function(userID, guild) {
+		return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
+	}
+}
+/**
+ * @param {String} userID
+ * @param {Discord.Guild} guild
+ * @param {Number} timeoutMs
+ * @returns {Promise<Discord.VoiceChannel>}
+ */
+function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
+	return new Promise(resolve => {
+		new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel));
+	});
+}
+
+utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
+	// Process waiting to join
+	if (newState.id != client.user.id && newState.channel) voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
+
+	// Pass on to queue for leave timeouts
+	let channel = oldState.channel || newState.channel;
+	if (!channel || !channel.guild) return;
+	let queue = queueStore.get(channel.guild.id);
+	if (queue) queue.voiceStateUpdate(oldState, newState);
+});
+
+/**
+ * @param {Discord.Message} msg
+ * @param {Boolean} wait
+ * @returns {Promise<(Discord.VoiceChannel|null)>}
+ */
+async function detectVoiceChannel(msg, wait) {
+	if (msg.member.voice.channel) return msg.member.voice.channel;
+	if (!wait) return null;
+	let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
+	return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
+}
+
+/**
+ * @type {Map<String, {voiceChannel?: String, queue?: String, code: (msg: Discord.Message, args: Array<String>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue})) => any}>}
+ */
+const subcommandsMap = new Map([
+	["play", {
+		voiceChannel: "ask",
+		code: async (msg, args, {voiceChannel}) => {
+			// was highly broken, get that shit outta here
+		}
+	}],
+	["stop", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			// broken
+		}
+	}],
+	["queue", {
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			// broken
+		}
+	}],
+	["skip", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			queue.wrapper.skip();
+		}
+	}],
+	["auto", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			// not implemented
+		}
+	}],
+	["now", {
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			// broken
+			/*if (msg.channel == queue.textChannel) queue.sendNowPlaying();
+			else msg.channel.send("The current music session is over in "+queue.textChannel+". Go there to see what's playing!")*/
+		}
+	}],
+	["info", {
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			// broken
+			//queue.wrapper.showInfo();
+		}
+	}],
+	["pause", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			queue.wrapper.pause(msg);
+		}
+	}],
+	["resume", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {queue}) => {
+			queue.wrapper.resume();
+		}
+	}],
+	["related", {
+		voiceChannel: "required",
+		queue: "required",
+		code: async (msg, args, {voiceChannel, queue}) => {
+			// broken
+		}
+	}],
+	["playlist", {
+		voiceChannel: "provide",
+		code: async (msg, args, {voiceChannel}) => {
+			// broken
+		}
+	}]
+])
+
+// left side is user input, right side is mapped subcommand
+const subcommandAliasMap = new Map([
+	["p", "play"],
+	["i", "play"],
+	["insert", "play"],
+	["q", "queue"],
+	["s", "skip"],
+	["n", "now"],
+	["rel", "related"],
+	["pl", "playlist"],
+	["playlists", "playlist"]
+])
+for (let key of subcommandsMap.keys()) {
+	subcommandAliasMap.set(key, key)
+}
+
+commands.assign({
+	"musictoken": {
+		usage: "[new|delete]",
+		description: "Obtain a web dashboard login token",
+		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
+		category: "meta",
+		process: async function(msg, suffix) {
+			if (suffix == "delete") {
+				await deleteAll()
+				msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
+			} else if (suffix == "new") {
+				await deleteAll()
+				let hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
+				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1]);
+				send(
+					`Your existing tokens were deleted, and a new one was created.`
+					+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
+					+`\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
+				)
+				send("`"+hash+"`")
+			} else {
+				let existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
+				if (existing) {
+					send(
+						"Here is the token you generated previously:"
+						+"\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
+					)
+					send("`"+existing.token+"`")
+				} else {
+					send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
+				}
+			}
+
+			function deleteAll() {
+				return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
+			}
+
+			function send(text) {
+				return msg.author.send(text).then(() => {
+					if (msg.channel.type == "text") msg.channel.send(`I sent you a DM.`)
+				}).catch(() => {
+					msg.channel.send(`Please allow me to send you DMs.`)
+				})
+			}
+		}
+	},
+	"frisky": {
+		usage: "[frisky|deep|chill]",
+		description: "Frisky radio",
+		aliases: ["frisky"],
+		category: "music",
+		process: async function(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg));
+			const voiceChannel = msg.member.voice.channel;
+			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
+			let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
+			let stream = new songTypes.FriskySong(station);
+			return handleSong(stream, msg.channel, voiceChannel, false, msg);
+		}
+	},
+	"music": {
+		usage: "none",
+		description: "You're not supposed to see this",
+		aliases: ["music", "m"],
+		category: "music",
+		process: async function(msg, suffix) {
+			// No DMs
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			// Args
+			let args = suffix.split(" ")
+			// Find subcommand
+			let subcommand = args[0] ? args[0].trim().toLowerCase() : ""
+			let key = subcommandAliasMap.get(subcommand)
+			let subcommandObject = subcommandsMap.get(key)
+			if (!subcommandObject) return msg.channel.send(lang.input.music.invalidAction(msg))
+			// Create data for subcommand
+			let subcommmandData = {}
+			// Provide a queue?
+			if (subcommandObject.queue == "required") {
+				let queue = queueStore.get(msg.guild.id)
+				if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg))
+				subcommmandData.queue = queue
+			}
+			// Provide a voice channel?
+			if (subcommandObject.voiceChannel) {
+				if (subcommandObject.voiceChannel == "required") {
+					let voiceChannel = await detectVoiceChannel(msg, false)
+					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+					subcommmandData.voiceChannel = voiceChannel
+				} else if (subcommandObject.voiceChannel == "ask") {
+					let voiceChannel = await detectVoiceChannel(msg, true)
+					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+					subcommmandData.voiceChannel = voiceChannel
+				} else if (subcommandObject.voiceChannel == "provide") {
+					let voiceChannel = await detectVoiceChannel(msg, false)
+					subcommmandData.voiceChannel = voiceChannel
+				}
+			}
+			// Hand over execution to the subcommand
+			subcommandObject.code(msg, args, subcommmandData)
+		}
+	},
+	"resume": {
+		aliases: ["resume"],
+		category: "admin",
+		description: "",
+		usage: "",
+		process: (msg) => {
+			client.lavalink.join({
+				guild: msg.guild.id,
+				channel: msg.member.voice.channel.id,
+				host: client.lavalink.nodes.first().host
+			})
+		}
+	}
+})

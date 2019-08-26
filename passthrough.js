@@ -1,30 +1,30 @@
-if (process._ptcreated) throw new Error("Do not reload the passthrough file.")
-process._ptcreated = true
+//@ts-check
 
-const CommandStore = require("./modules/managers/CommandStore")
-const GameManager = require("./modules/managers/GameManager")
+//@ts-ignore
+if (process._ptcreated) throw new Error("Do not reload the passthrough file.")
+//@ts-ignore
+process._ptcreated = true
 
 /**
  * @typedef {Object} Passthrough
- * @property {import("discord.js").Client} client
+ * @property {import("./modules/structures/Discord/Amanda")} client
  * @property {import("./config")} config
  * @property {import("./modules/managers/CommandStore")} commands
  * @property {import("mysql2/promise").PromisePool} db
  * @property {import("./modules/hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
- * @property {import("./modules/managers").GameManager} gameManager
+ * @property {import("./modules/managers/GameManager")} gameManager
  * @property {Map<string, import("./modules/reactionmenu")>} reactionMenus
+ * @property {import("./commands/music/queue").QueueStore} queueStore
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss
+ * @property {Object<string, import("nedb-promises")>} nedb
  */
 
 /**
  * @type {Passthrough}
  */
+//@ts-ignore
 const passthrough = {}
 
 module.exports = passthrough
-
-passthrough.reactionMenus = new Map()
-passthrough.commands = new CommandStore()
-passthrough.gameManager = new GameManager()

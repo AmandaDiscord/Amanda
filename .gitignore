@@ -8,3 +8,4 @@ nohup.out
 *.sqlite
 dblimg.png
 /images/backgrounds
+/saves
