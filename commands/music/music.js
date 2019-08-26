@@ -139,27 +139,34 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, {voiceChannel}) => {
-			// was highly broken, get that shit outta here
 		}
 	}],
 	["stop", {
 		voiceChannel: "required",
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			// broken
+			queue.wrapper.stop()
 		}
 	}],
 	["queue", {
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			// broken
+			let rows = queue.songs.map((song, index) => `${index+1}. `+song.queueLine)
+			let totalLength = "\nTotal length: "+common.prettySeconds(queue.getTotalLength())
+			let body = utils.compactRows.removeMiddle(rows, 2000-totalLength.length).join("\n") + totalLength
+			msg.channel.send(
+				new Discord.MessageEmbed()
+				.setTitle(`Queue for ${Discord.Util.escapeMarkdown(msg.guild.name)}`)
+				.setDescription(body)
+				.setColor(0x36393f)
+			)
 		}
 	}],
 	["skip", {
 		voiceChannel: "required",
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			queue.wrapper.skip();
+			queue.wrapper.skip()
 		}
 	}],
 	["auto", {
@@ -172,9 +179,11 @@ const subcommandsMap = new Map([
 	["now", {
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			// broken
-			/*if (msg.channel == queue.textChannel) queue.sendNowPlaying();
-			else msg.channel.send("The current music session is over in "+queue.textChannel+". Go there to see what's playing!")*/
+			if (msg.channel.id == queue.textChannel.id) {
+				queue.sendNewNP(true)
+			} else {
+				msg.channel.send(`The current music session is over in ${queue.textChannel}. Go there to see what's playing!`)
+			}
 		}
 	}],
 	["info", {
@@ -188,14 +197,14 @@ const subcommandsMap = new Map([
 		voiceChannel: "required",
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			queue.wrapper.pause(msg);
+			queue.wrapper.pause(msg)
 		}
 	}],
 	["resume", {
 		voiceChannel: "required",
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			queue.wrapper.resume();
+			queue.wrapper.resume(msg)
 		}
 	}],
 	["related", {
@@ -320,7 +329,7 @@ commands.assign({
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "ask") {
 					let voiceChannel = await detectVoiceChannel(msg, true)
-					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+					if (!voiceChannel) return // this was stupid: msg.channel.send(lang.voiceMustJoin(msg))
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
 					let voiceChannel = await detectVoiceChannel(msg, false)

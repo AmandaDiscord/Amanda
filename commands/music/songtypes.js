@@ -40,6 +40,9 @@ class Song {
 		})
 	}
 	toObject() {
+		return {
+			class: "Did not override generic toObject"
+		}
 	}
 	/**
 	 * @param {Number} time milliseconds
@@ -109,7 +112,7 @@ class YouTubeSong extends Song {
 	}
 	toObject() {
 		return {
-			constructor: "YouTubeSong",
+			class: "YouTubeSong",
 			id: this.id,
 			title: this.title,
 			lengthSeconds: this.lengthSeconds,
@@ -187,7 +190,7 @@ class FriskySong extends Song {
 	}
 	toObject() {
 		return {
-			constructor: "FriskySong",
+			class: "FriskySong",
 			station: this.station
 		}
 	}

@@ -148,10 +148,11 @@ class Queue {
 			this.textChannel.send(song.error)
 			this._nextSong()
 		} else {
-			this.player.play(song.track)
-			this.songStartTime = Date.now()
-			this._startNPUpdates()
-			this.sendNewNP()
+			this.player.play(song.track).then(() => {
+				this.songStartTime = Date.now()
+				this._startNPUpdates()
+				this.sendNewNP()
+			})
 		}
 	}
 	/**
@@ -201,6 +202,8 @@ class Queue {
 	pause() {
 		if (this.songs[0].noPauseReason) {
 			return this.songs[0].noPauseReason
+		} else if (this.isPaused) {
+			return "Music is already paused. Use `&music resume` to resume."
 		} else {
 			this.pausedAt = Date.now()
 			this.player.pause()
@@ -210,14 +213,22 @@ class Queue {
 	}
 	/**
 	 * Resume playback.
+	 * Returns 0 on success.
+	 * Returns 1 if the queue wasn't paused.
+	 * @returns {0|1}
 	 */
 	resume() {
-		let pausedTime = Date.now() - this.pausedAt
-		this.songStartTime += pausedTime
-		this.pausedAt = null
-		this.player.resume().then(() => {
-			this._startNPUpdates()
-		})
+		if (!this.isPaused) {
+			return 1
+		} else {
+			let pausedTime = Date.now() - this.pausedAt
+			this.songStartTime += pausedTime
+			this.pausedAt = null
+			this.player.resume().then(() => {
+				this._startNPUpdates()
+			})
+			return 0
+		}
 	}
 	/**
 	 * Skip the current song by asking the player to stop.
@@ -341,6 +352,11 @@ class Queue {
 	 * @param {Discord.VoiceState} newState
 	 */
 	voiceStateUpdate(oldState, newState) {
+		// Update own channel
+		if (newState.member.id == client.user.id && newState.channelID != oldState.channelID && newState.channel) {
+			this.voiceChannel = newState.channel
+		}
+		// Detect number of users left in channel
 		let count = this.voiceChannel.members.filter(m => !m.user.bot).size
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
@@ -380,8 +396,13 @@ class QueueWrapper {
 			}
 		}
 	}
-	resume() {
-		this.queue.resume()
+	resume(context) {
+		let result = this.queue.resume()
+		if (result == 1) {
+			if (context instanceof Discord.Message) {
+				context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
+			}
+		}
 	}
 	skip() {
 		this.queue.skip()
@@ -416,17 +437,35 @@ class QueueWrapper {
 async function restoreQueues() {
 	let data = await passthrough.nedb.queue.findOne({_id: "QueueStore"})
 	data.queues.forEach(async q => {
+		console.log(q)
+		let guildID = q.guildID
 		let voiceChannel = client.channels.get(q.voiceChannelID)
 		let textChannel = client.channels.get(q.textChannelID)
 		if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
-		let queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
-		queue.songStartTime = q.songStartTime
-		queue.pausedAt = q.pausedAt
-		let message = await textChannel.messages.fetch(q.npID, false)
-		queue.np = message
-		queue._startNPUpdates()
-		queue._makeReactionMenu()
-
+		console.log("Making queue for voice channel "+voiceChannel.name)
+		let exists = passthrough.queueStore.has(guildID)
+		if (exists) {
+			console.log("Queue already in store! Cancelling.")
+		} else {
+			let queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
+			q.songs.forEach(s => {
+				if (s.class == "YouTubeSong") {
+					let song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
+					queue.songs.push(song)
+					console.log("Added YouTubeSong "+song.title)
+				} else if (s.class == "FriskySong") {
+					let song = new songTypes.FriskySong(s.station, {track: s.track})
+					queue.songs.push(song)
+					console.log("Added FriskySong "+song.title)
+				}
+			})
+			queue.songStartTime = q.songStartTime
+			queue.pausedAt = q.pausedAt
+			let message = await textChannel.messages.fetch(q.npID, false)
+			queue.np = message
+			queue._startNPUpdates()
+			queue._makeReactionMenu()
+		}
 	})
 }
 
