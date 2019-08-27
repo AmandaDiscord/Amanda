@@ -149,7 +149,7 @@ class YouTubeSong extends Song {
 			.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
 			.setColor(0x36393f)
 		} else {
-			return "No related content available for the current item."
+			return "No related content available for the current song."
 		}
 	}
 	prepare() {

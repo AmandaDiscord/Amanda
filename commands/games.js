@@ -181,6 +181,7 @@ module.exports.TriviaGame = TriviaGame
 /**
  * @param {String} body
  * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @returns {Promise<[boolean, any]>}
  */
 async function JSONHelper(body, channel) {
 	try {
@@ -202,10 +203,12 @@ async function startGame(channel, options = {}) {
 	let category = options.category || null;
 	if (options.suffix) {
 		channel.sendTyping();
-		/** @type {Array<{trivia_categories: Array<{id: Number, name: String}>>}} */
-		let body = await JSONHelper("https://opentdb.com/api_category.php", channel);
-		if (!body[0]) return;
-		let data = body[1];
+		let [
+			success,
+			/** @type {{trivia_categories: {id: Number, name: String}[]}} */
+			data
+		] = await JSONHelper("https://opentdb.com/api_category.php", channel)
+		if (!success) return;
 		if (options.suffix.includes("categor")) {
 			options.msg.author.send(
 				new Discord.MessageEmbed()

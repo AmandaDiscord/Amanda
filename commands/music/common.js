@@ -63,121 +63,64 @@ let common = {
 		output.push(seconds.toString().padStart(2, "0"));
 		return output.join(":");
 	},
-	resolveInput: {
-		/**
-		 * @param {String} input
-		 * @param {Discord.TextChannel} channel
-		 * @returns {Promise<Array<String>|Array<import("simple-youtube-api").Video>>}
-		 */
-		toID: async function(input, channel) {
-			input = input.replace(/(<|>)/g, "");
-			try {
-				let inputAsURL = input;
-				if (inputAsURL.includes(".com/") && !inputAsURL.startsWith("http")) inputAsURL = "https://"+inputAsURL;
-				let url = new URL(inputAsURL);
-				// It's a URL.
-				if (url.hostname.startsWith("www.")) url.hostname = url.hostname.slice(4);
-				// Is it CloudTube?
-				if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") {
-					try {
-						let id = url.pathname.match(/video\.(.*)$/)[1];
-						// Got an ID!
-						return [id];
-					} catch (e) {
-						// Didn't match.
-						return null;
-					}
+
+	inputToID:
+	/**
+	 * @param {String} input
+	 * @returns {({type: string, id?: string, list?: string})|null}
+	 */
+	function(input) {
+		input = input.replace(/(<|>)/g, "")
+		try {
+			let inputAsURL = input
+			if (inputAsURL.includes(".com/") && !inputAsURL.startsWith("http")) inputAsURL = "https://"+inputAsURL
+			const url = new URL(inputAsURL)
+			// It's a URL.
+			if (url.hostname.startsWith("www.")) url.hostname = url.hostname.slice(4)
+			// Is it CloudTube?
+			if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") {
+				try {
+					const id = url.pathname.match(/video\/([\w-]{11})$/)[1]
+					// Got an ID!
+					return {type: "video", id: id}
+				} catch (e) {
+					// Didn't match.
+					return null
 				}
-				// Is it youtu.be?
-				else if (url.hostname == "youtu.be") {
-					let id = url.pathname.slice(1)
-					return [id]
+			}
+			// Is it youtu.be?
+			else if (url.hostname == "youtu.be") {
+				const id = url.pathname.slice(1)
+				return {type: "video", id: id}
+			}
+			// Is it YouTube-compatible?
+			else if (url.hostname == "youtube.com" || url.hostname == "invidio.us" || url.hostname == "hooktube.com") {
+				// Is it a playlist?
+				if (url.searchParams.get("list")) {
+					let result = {type: "playlist", list: url.searchParams.get("list")}
+					const id = url.searchParams.get("v")
+					if (id) result.id = id
+					return result
 				}
-				// Is it YouTube-compatible?
-				else if (url.hostname == "youtube.com" || url.hostname == "invidio.us" || url.hostname == "hooktube.com") {
-					// Is it a video?
-					if (url.pathname == "/watch") {
-						let id = url.searchParams.get("v");
-						// Got an ID!
-						return [id];
-					}
-					// Is it a playlist?
-					else if (url.pathname == "/playlist") {
-						let list = url.searchParams.get("list")
-						let playlist = await youtube.getPlaylistByID(list, {part: "snippet,contentDetails"})
-						if (channel) {
-							if (playlist.length > 300) await channel.send(`That's a MASSIVE playlist (${playlist.length} items). I'll only load the first 300 items. Give me a moment...`)
-							else if (playlist.length > 100) await channel.send(`That's a pretty big playlist (${playlist.length} items). Give me a moment to load it...`)
-						}
-						let videos = await playlist.getVideos(300)
-						let parts = []
-						let addIndex = 0
-						while (addIndex < videos.length) {
-							parts.push(videos.slice(addIndex, addIndex+50))
-							addIndex += 50
-						}
-						await Promise.all(parts.map(part => {
-							let ids = part.map(p => p.id).join("%2C")
-							return rp(`https://www.googleapis.com/youtube/v3/videos?part=contentDetails&id=${ids}&key=${youtube.key}`, {json: true}).then(data => {
-								data.items.forEach((dataItem, index) => {
-									part[index]._patch(dataItem)
-								})
-							})
-						}))
-						return videos
-					}
-					// YouTube-compatible, but can't resolve to a video.
-					else {
-						return null;
-					}
+				// Is it a video?
+				else if (url.pathname == "/watch") {
+					const id = url.searchParams.get("v")
+					// Got an ID!
+					return {type: "video", id: id}
 				}
-				// Unknown site.
+				// YouTube-compatible, but can't resolve to a video.
 				else {
-					return null;
+					return null
 				}
-			} catch (e) {
-				// Not a URL. Might be an ID?
-				if (input.length == 11) return ytdl.getBasicInfo(input).then(info => [info.player_response.videoDetails.videoId]).catch(() => null)
-				else return null
 			}
-		},
-
-		/**
-		 * Not interactive. Max 10 results.
-		 * @param {String} input
-		 * @returns {Promise<Array<{type: String, title: String, videoId: String, author: String, authorId: String, videoThumbnails: Array<{quality: String, url: String, width: Number, height: Number}>, description: String, descriptionHtml: String, viewCount: Number, published: Number, publishedText: String, lengthSeconds: Number, liveNow: Boolean, paid: Boolean, premium: Boolean}>>}
-		 */
-		toSearch: async function(input) {
-			let videos;
-			try {
-				videos = await rp(`https://invidio.us/api/v1/search?order=relevance&q=${encodeURIComponent(input)}`, {json: true});
-			} catch (e) {
-				return [];
+			// Unknown site.
+			else {
+				return null
 			}
-			if (!videos.filter) return [];
-			videos = videos.filter(v => v.lengthSeconds > 0).slice(0, 10);
-			return videos;
-		},
-
-		/**
-		 * Interactive.
-		 * @param {String} input
-		 * @param {Discord.TextChannel} channel
-		 * @param {String} authorID
-		 * @returns {Promise<Array<any>>} An array of video IDs, or null
-		 */
-		toIDWithSearch: async function(input, channel, authorID) {
-			let id = await common.resolveInput.toID(input, channel);
-			if (id) return [id, false];
-			channel.sendTyping()
-			let videos = await common.resolveInput.toSearch(input);
-			if (videos.length < 1) return null;
-			let videoResults = videos.map((video, index) => `${index+1}. **${Discord.Util.escapeMarkdown(video.title)}** (${common.prettySeconds(video.lengthSeconds)})`);
-			return utils.makeSelection(channel, authorID, "Song selection", "Song selection cancelled", videoResults).then(index => {
-				return [[videos[index].videoId], true];
-			}).catch(() => {
-				return null;
-			})
+		} catch (e) {
+			// Not a URL. Might be an ID?
+			if (input.length == 11) return {type: "video", id: input}
+			else return null
 		}
 	},
 	/**
@@ -198,6 +141,76 @@ let common = {
 			},
 			json: true
 		}).then(data => data.tracks)
+	},
+
+	inserters: {
+		handleSong:
+		/**
+		 * @param {import("./songtypes").Song} song
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {boolean} insert
+		 * @param {Discord.Message} [context]
+		 */
+		function(song, textChannel, voiceChannel, insert = false, context) {
+			let queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
+			let result = queue.addSong(song, insert)
+			if (context instanceof Discord.Message && result == 0) {
+				context.react("✅")
+			}
+		},
+
+		fromData:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {any} data
+		 * @param {boolean} insert
+		 * @param {Discord.Message} [context]
+		 */
+		function(textChannel, voiceChannel, data, insert, context) {
+			const songTypes = require("./songtypes")
+			let song = songTypes.makeYouTubeSongFromData(data)
+			common.inserters.handleSong(song, textChannel, voiceChannel, insert, context)
+		},
+
+
+		fromDataArray:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {any[]} data
+		 * @param {boolean} insert
+		 * @param {Discord.Message} [context]
+		 */
+		function(textChannel, voiceChannel, data, insert, context) {
+			const songTypes = require("./songtypes")
+			if (insert) data.reverse()
+			data.forEach(item => {
+				let song = songTypes.makeYouTubeSongFromData(item)
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert, context)
+			})
+		},
+
+		fromSearch:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.User} author
+		 * @param {boolean} insert
+		 * @param {string} search
+		 */
+		async function(textChannel, voiceChannel, author, insert, search) {
+			let tracks = await common.getTracks("ytsearch:"+search)
+			if (tracks.length == 0) return textChannel.send("No results.")
+			tracks = tracks.slice(0, 10)
+			let results = tracks.map((track, index) => `${index+1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length/1000)})`)
+			utils.makeSelection(textChannel, author.id, "Song selection", "Song selection cancelled", results).then(index => {
+				if (typeof(index) != "number") return
+				let track = tracks[index]
+				common.inserters.fromData(textChannel, voiceChannel, track, insert)
+			})
+		}
 	}
 }
 

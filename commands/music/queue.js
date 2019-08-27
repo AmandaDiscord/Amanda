@@ -81,7 +81,41 @@ class QueueStore {
 		this.store.delete(guildID)
 	}
 	save() {
-		passthrough.nedb.queue.update({}, this.toObject(), {upsert: true})
+		return passthrough.nedb.queue.update({}, this.toObject(), {upsert: true})
+	}
+	async restore() {
+		let data = await passthrough.nedb.queue.findOne({_id: "QueueStore"})
+		data.queues.forEach(async q => {
+			console.log(q)
+			let guildID = q.guildID
+			let voiceChannel = client.channels.get(q.voiceChannelID)
+			let textChannel = client.channels.get(q.textChannelID)
+			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
+			console.log("Making queue for voice channel "+voiceChannel.name)
+			let exists = this.has(guildID)
+			if (exists) {
+				console.log("Queue already in store! Skipping.")
+			} else {
+				let queue = this.getOrCreate(voiceChannel, textChannel)
+				q.songs.forEach(s => {
+					if (s.class == "YouTubeSong") {
+						let song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
+						queue.songs.push(song)
+						console.log("Added YouTubeSong "+song.title)
+					} else if (s.class == "FriskySong") {
+						let song = new songTypes.FriskySong(s.station, {track: s.track})
+						queue.songs.push(song)
+						console.log("Added FriskySong "+song.station)
+					}
+				})
+				queue.songStartTime = q.songStartTime
+				queue.pausedAt = q.pausedAt
+				let message = await textChannel.messages.fetch(q.npID, false)
+				queue.np = message
+				queue._startNPUpdates()
+				queue._makeReactionMenu()
+			}
+		})
 	}
 }
 
@@ -124,7 +158,10 @@ class Queue {
 		/** @type {import("../../modules/reactionmenu")} */
 		this.npMenu = null
 		this.npUpdater = new utils.FrequencyUpdater(() => {
-			if (this.np) this.np.edit(this._buildNPEmbed())
+			if (this.np) {
+				let embed = this._buildNPEmbed()
+				if (embed) this.np.edit(embed)
+			}
 		})
 	}
 	toObject() {
@@ -281,15 +318,16 @@ class Queue {
 	 * Play something from the list of related items.
 	 * Returns 0 on success.
 	 * Returns 1 if the index is out of range.
-	 * @param {Number} index Zero-based index.
+	 * @param {number} index Zero-based index.
+	 * @param {boolean} insert
 	 * @returns {Promise<0|1>}
 	 */
-	async playRelated(index) {
+	async playRelated(index, insert) {
 		if (typeof(index) != "number" || isNaN(index) || index < 0 || Math.floor(index) != index) return 1
 		let related = await this.songs[0].getRelated()
 		let item = related[index]
 		if (!item) return 1
-		this.addSong(item)
+		this.addSong(item, insert)
 		return 0
 	}
 	get time() {
@@ -307,12 +345,17 @@ class Queue {
 	}
 	/**
 	 * Create and return an embed containing details about the current song.
+	 *	Returns null if no songs.
 	 */
 	_buildNPEmbed() {
 		let song = this.songs[0]
-		return new Discord.MessageEmbed()
-		.setDescription(`Now playing: **${song.title}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
-		.setColor(0x36393f)
+		if (song) {
+			return new Discord.MessageEmbed()
+			.setDescription(`Now playing: **${song.title}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
+			.setColor(0x36393f)
+		} else {
+			return null
+		}
 	}
 	/**
 	 * Send a new now playing message and generate reactions on it. Destroy the previous reaction menu.
@@ -422,54 +465,20 @@ class QueueWrapper {
 	/**
 	 * Permitted contexts:
 	 * - A message `&m rel p 1`. A reaction will be added, or an error message will be sent.
-	 * @param {Number} index One-based index.
+	 * @param {number} index One-based index.
+	 * @param {boolean} insert
+	 * @param {any} [context]
 	 */
-	async playRelated(index, context) {
+	async playRelated(index, insert, context) {
 		index--
-		let result = await this.queue.playRelated(index)
+		let result = await this.queue.playRelated(index, insert)
 		if (context instanceof Discord.Message) {
 			if (result == 0) context.react("✅")
-			else context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
+			else if (result == 1) context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
 		}
 	}
-}
-
-async function restoreQueues() {
-	let data = await passthrough.nedb.queue.findOne({_id: "QueueStore"})
-	data.queues.forEach(async q => {
-		console.log(q)
-		let guildID = q.guildID
-		let voiceChannel = client.channels.get(q.voiceChannelID)
-		let textChannel = client.channels.get(q.textChannelID)
-		if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
-		console.log("Making queue for voice channel "+voiceChannel.name)
-		let exists = passthrough.queueStore.has(guildID)
-		if (exists) {
-			console.log("Queue already in store! Cancelling.")
-		} else {
-			let queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
-			q.songs.forEach(s => {
-				if (s.class == "YouTubeSong") {
-					let song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
-					queue.songs.push(song)
-					console.log("Added YouTubeSong "+song.title)
-				} else if (s.class == "FriskySong") {
-					let song = new songTypes.FriskySong(s.station, {track: s.track})
-					queue.songs.push(song)
-					console.log("Added FriskySong "+song.title)
-				}
-			})
-			queue.songStartTime = q.songStartTime
-			queue.pausedAt = q.pausedAt
-			let message = await textChannel.messages.fetch(q.npID, false)
-			queue.np = message
-			queue._startNPUpdates()
-			queue._makeReactionMenu()
-		}
-	})
 }
 
 module.exports.Queue = Queue
 module.exports.QueueStore = QueueStore
 module.exports.QueueWrapper = QueueWrapper
-module.exports.restoreQueues = restoreQueues

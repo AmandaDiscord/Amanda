@@ -450,10 +450,12 @@ const utils = {
 	},
 
 	/**
-	 * @param {Array<{videoID: String, name: String, length_seconds: Number}>} items
-	 * @param {String} startString
-	 * @param {String} endString
-	 * @param {Boolean} shuffle
+	 * @param {T[]} items
+	 * @param {string} startString One-based index
+	 * @param {string} endString One-based index
+	 * @param {boolean} shuffle Shuffle the result before returning
+	 * @returns {T[]}
+	 * @template T
 	 */
 	playlistSection: function(items, startString, endString, shuffle) {
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1);
@@ -470,19 +472,19 @@ const utils = {
 
 	/**
 	 * @param {Discord.TextChannel} channel
-	 * @param {String} authorID
-	 * @param {String} title
-	 * @param {String} failedTitle
-	 * @param {Array<String>} items
+	 * @param {string} authorID
+	 * @param {string} title
+	 * @param {string} failedTitle
+	 * @param {string[]} items
 	 * @param {Discord.MessageEmbed} [embed=undefined]
-	 * @returns {Promise<Number>} The zero-based index that was selected.
+	 * @returns {Promise<number|null>} The zero-based index that was selected, or null if invalid response.
 	 */
 	makeSelection: async function(channel, authorID, title, failedTitle, items, embed = undefined) {
 		// Set up embed
 		if (!embed) embed = new Discord.MessageEmbed();
 		embed.setTitle(title);
 		embed.setDescription(items.join("\n"));
-		embed.setColor("36393e");
+		embed.setColor(0x36393f);
 		embed.setFooter(`Type a number from 1-${items.length} to select that item`);
 		// Send embed
 		let selectmessage = await channel.send(utils.contentify(channel, embed));
@@ -502,12 +504,12 @@ const utils = {
 			selectmessage.edit(utils.contentify(selectmessage.channel, embed));
 			return index;
 		}).catch(() => {
-			// Collector failed, show the failure message and exit
+			// Collector failed, show the failure message and return null
 			embed.setTitle(failedTitle);
 			embed.setDescription("");
 			embed.setFooter("");
 			selectmessage.edit(utils.contentify(selectmessage.channel, embed));
-			throw new Error("Collector didn't receive a valid response");
+			return null
 		});
 	},
 

@@ -29,21 +29,6 @@ reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)*/
 let common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
-/**
- * @param {songTypes.Song} song
- * @param {Discord.TextChannel} textChannel
- * @param {Discord.VoiceChannel} voiceChannel
- * @param {Boolean} [insert]
- * @param {Discord.Message} [context]
- */
-function handleSong(song, textChannel, voiceChannel, insert = undefined, context) {
-	let queue = queueStore.getOrCreate(voiceChannel, textChannel)
-	let result = queue.addSong(song, insert)
-	if (context instanceof Discord.Message && result == 0) {
-		context.react("✅")
-	}
-}
-
 class VoiceStateCallback {
 	/**
 	 * @param {String} userID
@@ -139,6 +124,100 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, {voiceChannel}) => {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			let insert = args[0][0] == "i"
+			let search = args.slice(1).join(" ")
+			let match = common.inputToID(search)
+
+			// Linked to a video. ID may or may not work, so fall back to search.
+			if (match && match.type == "video" && match.id) {
+				// Get the track
+				let tracks = await common.getTracks(match.id)
+				if (tracks[0]) {
+					// If the ID worked, add the song
+					common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
+				} else {
+					// Otherwise, start a search
+					common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search)
+				}
+			}
+
+			// Linked to a playlist. `list` is set, `id` may or may not be.
+			else if (match && match.type == "playlist" && match.list) {
+				// Get the tracks
+				let tracks = await common.getTracks(match.list)
+				// Figure out what index was linked to, if any
+				/** @type {number} */
+				let linkedIndex = null
+				if (match.id) {
+					let found = tracks.findIndex(t => t.info.identifier == match.id)
+					if (found != -1) linkedIndex = found
+				}
+				// We have linkedIndex. Now what to do with it?
+				if (linkedIndex == null || args[2]) {
+					// User knows they linked a playlist.
+					tracks = utils.playlistSection(tracks, args[2], args[3], false)
+					common.inserters.fromDataArray(msg.channel, voiceChannel, tracks, insert, msg)
+				}
+				else {
+					// A specific video was linked and a section was not specified, user may want to choose what to play.
+					// linkedIndex is definitely specified here.
+					// Define options
+					let buttons = [
+						"<:bn_1:327896448232325130>",
+						"<:bn_2:327896448505217037>",
+						"<:bn_3:327896452363976704>"
+					]
+					let options = [
+						"Play the entire playlist from the start",
+						"Play the playlist, starting at the linked song",
+						"Only play the linked song"
+					]
+					// Make an embed
+					let embed = new Discord.MessageEmbed()
+					.setTitle("Playlist section")
+					.setColor(0x36393f)
+					.setDescription(
+						`You linked to this song in the playlist: **${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**`
+						+"\nWhat would you like to do?"
+						+options.map((o, i) => `\n${buttons[i]} ${o}`).join("")
+						+"\nTo play a more specific range from the playlist, use `&music play <link> <start> <end>`. See `&help playlist` for more information."
+					)
+					// Send the embed
+					let nmsg = await msg.channel.send(embed)
+					// Make the base reaction menu action
+					let action = {ignore: "total", remove: "all", actionType: "js", actionData: (msg, emoji, user) => {
+						// User made a choice
+						/** Zero-indexed emoji choice */
+						let choice = emoji.name[3]-1
+						// Edit the message to reflect the choice
+						embed.setDescription("» "+options[choice])
+						nmsg.edit(embed)
+						// Now obey that choice
+						if (choice == 0) {
+							// choice == 0: play full playlist
+							common.inserters.fromDataArray(msg.channel, voiceChannel, tracks, insert)
+						} else if (choice == 1) {
+							// choice == 1: play from linked item
+							tracks = tracks.slice(linkedIndex)
+							common.inserters.fromDataArray(msg.channel, voiceChannel, tracks, insert)
+						} else if (choice == 2) {
+							// choice == 2: play linked item only
+							common.inserters.fromData(msg.channel, voiceChannel, tracks[linkedIndex], insert)
+						}
+					}}
+					// Create the reaction menu
+					utils.reactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
+						let emoji = buttons[i].match(/\d{2,}/)[0]
+						return Object.assign({emoji}, action)
+					}))
+				}
+			}
+
+			// User input wasn't a playlist and wasn't a video. Start a search.
+			else {
+				common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search)
+			}
 		}
 	}],
 	["stop", {
@@ -210,8 +289,15 @@ const subcommandsMap = new Map([
 	["related", {
 		voiceChannel: "required",
 		queue: "required",
-		code: async (msg, args, {voiceChannel, queue}) => {
-			// broken
+		code: async (msg, args, {queue}) => {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			if (args[1] == "play" || args[1] == "insert" || args[1] == "p" || args[1] == "i") {
+				let insert = args[1][0] == "i"
+				let index = +args[2]
+				queue.wrapper.playRelated(index, insert, msg)
+			} else {
+				queue.wrapper.showRelated(msg.channel)
+			}
 		}
 	}],
 	["playlist", {
@@ -294,8 +380,8 @@ commands.assign({
 			const voiceChannel = msg.member.voice.channel;
 			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
 			let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
-			let stream = new songTypes.FriskySong(station);
-			return handleSong(stream, msg.channel, voiceChannel, false, msg);
+			let song = new songTypes.FriskySong(station);
+			return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg);
 		}
 	},
 	"music": {
@@ -340,17 +426,13 @@ commands.assign({
 			subcommandObject.code(msg, args, subcommmandData)
 		}
 	},
-	"resume": {
-		aliases: ["resume"],
-		category: "admin",
-		description: "",
+	"playlist": {
+		aliases: ["playlist", "playlists", "pl"],
+		category: "music",
+		description: "Create, play, and edit playlists.",
 		usage: "",
 		process: (msg) => {
-			client.lavalink.join({
-				guild: msg.guild.id,
-				channel: msg.member.voice.channel.id,
-				host: client.lavalink.nodes.first().host
-			})
+			msg.channel.send("not yet implemented, dab emoji")
 		}
 	}
 })
