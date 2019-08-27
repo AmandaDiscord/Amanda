@@ -23,14 +23,15 @@ utils.addTemporaryListener(client, "message", path.basename(__filename), manageM
 if (!starting) manageReady();
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady);
 utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent);
-utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (oldMessage, data) => {
-	if (data.constructor.name == "Message") manageMessage(data);
-	else if (data.content) {
-		let channel = client.channels.get(data.channel_id);
-		let message = new Discord.Message(client, data, channel);
-		manageMessage(message);
+utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
+	if (data && data.id && data.channel_id && data.content && data.author && data.member) {
+		const channel = client.channels.get(data.channel_id)
+		if (channel) {
+			const message = new Discord.Message(client, data, channel)
+			manageMessage(message)
+		}
 	}
-});
+})
 utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (reason) => {
 	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`);
 	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`);
