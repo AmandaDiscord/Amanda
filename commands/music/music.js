@@ -348,16 +348,20 @@ commands.assign({
 					`Your existing tokens were deleted, and a new one was created.`
 					+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
 					+`\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
-				)
-				send("`"+hash+"`")
+					,true, true
+				).then(() => {
+					return send("`"+hash+"`", false, false)
+				}).catch(() => {})
 			} else {
 				let existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
 				if (existing) {
 					send(
 						"Here is the token you generated previously:"
 						+"\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
-					)
-					send("`"+existing.token+"`")
+						,true, true
+					).then(() => {
+						send("`"+existing.token+"`", false, false)
+					}).catch(() => {})
 				} else {
 					send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
 				}
@@ -367,11 +371,12 @@ commands.assign({
 				return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
 			}
 
-			function send(text) {
+			function send(text, announce = true, throwFailed = false) {
 				return msg.author.send(text).then(() => {
-					if (msg.channel.type == "text") msg.channel.send(`I sent you a DM.`)
+					if (msg.channel.type == "text" && announce) msg.channel.send(lang.dm.success(msg))
 				}).catch(() => {
-					msg.channel.send(`Please allow me to send you DMs.`)
+					if (announce) msg.channel.send(lang.dm.failed(msg))
+					if (throwFailed) throw new Error("DM failed")
 				})
 			}
 		}

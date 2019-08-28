@@ -21,7 +21,7 @@ module.exports = {
 		/**@param {Discord.Message} msg */
 		success: msg => authorString(msg, "I sent you a DM."),
 		/**@param {Discord.Message} msg */
-		failed: msg => authorString(msg, "you must allow me to DM you for that command to work. Either you've blocked me, or you need to turn on DMs in this server.")
+		failed: msg => authorString(msg, "you must allow me to DM you for that command to work. Either you've blocked me, or you need to turn on DMs in this server. (server settings → privacy → allow direct messages)")
 	},
 
 	command: {
