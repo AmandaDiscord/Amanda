@@ -820,6 +820,40 @@ const utils = {
 				});
 			}
 		});
+	},
+
+	/**
+	 * Do not ask me in what way this "fixes" an emoji.
+	 * Please know what you are doing before touching this.
+	 * This should probably only be used in the reaction event.
+	 */
+	fixEmoji: function(emoji) {
+		if (emoji && emoji.name) {
+			if (emoji.id != null) return emoji.id;
+			else return emoji.name;
+		}
+		return emoji;
+	},
+
+	/**
+	 * @param {string} channelID
+	 * @param {string} messageID
+	 * @param {emoji} any
+	 * @param {string} [userID]
+	 */
+	removeUncachedReaction: function(channelID, messageID, emoji, userID) {
+		if (!userID) userID = "@me"
+		if (emoji.id) {
+			// Custom emoji, has name and ID
+			var reaction = emoji.name+":"+emoji.id
+		} else {
+			// Default emoji, has name only
+			var reaction = encodeURIComponent(emoji.name)
+		}
+		//@ts-ignore: client.api is not documented
+		let promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
+		promise.catch(() => console.error)
+		return promise
 	}
 }
 

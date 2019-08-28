@@ -185,9 +185,21 @@ let common = {
 		 */
 		function(textChannel, voiceChannel, data, insert, context) {
 			const songTypes = require("./songtypes")
-			if (insert) data.reverse()
-			data.forEach(item => {
-				let song = songTypes.makeYouTubeSongFromData(item)
+			let songs = data.map(item => songTypes.makeYouTubeSongFromData(item))
+			common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, context)
+		},
+
+		fromSongArray:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {any[]} songs
+		 * @param {boolean} insert
+		 * @param {Discord.Message} [context]
+		 */
+		function(textChannel, voiceChannel, songs, insert, context) {
+			if (insert) songs.reverse()
+			songs.forEach(song => {
 				common.inserters.handleSong(song, textChannel, voiceChannel, insert, context)
 			})
 		},

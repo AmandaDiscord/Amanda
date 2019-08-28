@@ -66,6 +66,7 @@ let db = mysql.createPool({
 		"./commands/interaction.js",
 		"./commands/meta.js",
 		"./commands/music/music.js",
+		"./commands/music/playlistcommand.js",
 		"./commands/traa.js",
 		"./commands/web/server.js",
 	]);

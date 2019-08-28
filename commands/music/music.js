@@ -303,7 +303,13 @@ const subcommandsMap = new Map([
 	["playlist", {
 		voiceChannel: "provide",
 		code: async (msg, args, {voiceChannel}) => {
-			// broken
+			if (commands.has("playlist")) {
+				let suffix = args.slice(1).join(" ")
+				let command = commands.get("playlist")
+				return command.process(msg, suffix)
+			} else {
+				throw new Error("Playlist command not loaded")
+			}
 		}
 	}]
 ])
@@ -424,15 +430,6 @@ commands.assign({
 			}
 			// Hand over execution to the subcommand
 			subcommandObject.code(msg, args, subcommmandData)
-		}
-	},
-	"playlist": {
-		aliases: ["playlist", "playlists", "pl"],
-		category: "music",
-		description: "Create, play, and edit playlists.",
-		usage: "",
-		process: (msg) => {
-			msg.channel.send("not yet implemented, dab emoji")
 		}
 	}
 })

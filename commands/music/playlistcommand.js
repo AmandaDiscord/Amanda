@@ -1,38 +1,35 @@
-//@ts-ignore
-require("../../types.js")
+//@ts-check
 
 const Discord = require("discord.js")
 const ytdl = require("ytdl-core")
 
-const Structures = require("../../modules/structures")
+const passthrough = require("../../passthrough")
+let {client, reloader, config, commands} = passthrough
 
+let utils = require("../../modules/utilities.js");
+reloader.useSync("./modules/utilities.js", utils);
 
-/** @param {PassthroughType} passthrough */
-module.exports = passthrough => {
-	let {client, reloader, config} = passthrough
+let lang = require("../../modules/lang.js");
+reloader.useSync("./modules/lang.js", lang);
 
-	let utils = require("../../modules/utilities.js")(passthrough);
-	reloader.useSync("./modules/utilities.js", utils);
+let common = require("./common.js")
+reloader.useSync("./commands/music/common.js", common)
 
-	let lang = require("../../modules/lang.js")(passthrough);
-	reloader.useSync("./modules/lang.js", lang);
+let songTypes = require("./songtypes.js")
+reloader.useSync("./commands/music/songtypes.js", songTypes)
 
-	let common = require("./common.js")(passthrough)
-	reloader.useSync("./commands/music/common.js", common)
+let youtube = passthrough.youtube
 
-	let songTypes = require("./songtypes.js")(passthrough)
-	reloader.useSync("./commands/music/songtypes.js", songTypes)
-
-	let youtube = passthrough.youtube
-
-	return {
-		/**
-		 * @param {Structures.Message} msg
-		 * @param {Array<String>} args
-		 * @param {(rows: Array<{videoID: String, name: String, length_seconds: Number}>) => any} bulkPlayCallback
-		 */
-		command: async function(msg, args, bulkPlayCallback) {
-			let playlistName = args[1];
+commands.assign({
+	playlist: {
+		aliases: ["playlist", "playlists", "pl"],
+		category: "music",
+		description: "Create, play, and edit playlists.",
+		usage: "",
+		process: async function(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			let args = suffix.split(" ")
+			let playlistName = args[0]
 			if (playlistName == "show") {
 				let playlists = await utils.sql.all("SELECT * FROM Playlists");
 				return msg.channel.send(utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n"))));
@@ -40,7 +37,7 @@ module.exports = passthrough => {
 			if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 			let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
 			if (!playlistRow) {
-				if (args[2] == "create") {
+				if (args[1] == "create") {
 					await utils.sql.all("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
 					return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`);
 				} else {
@@ -71,12 +68,12 @@ module.exports = passthrough => {
 				await utils.sql.all("END TRANSACTION");
 				return msg.channel.send(`${msg.author.username}, The database entries for that playlist are inconsistent. The inconsistencies have been resolved by resetting the order of the songs in that playlist. Apart from the song order, no data was lost. Other playlists were not affected.`);
 			}
-			let action = args[2] || "";
+			let action = args[1] || "";
 			if (action.toLowerCase() == "add") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				if (!args[3]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
+				if (!args[2]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`);
 				msg.channel.sendTyping();
-				let result = await common.resolveInput.getTracks(args.slice(3).join(" "), msg.channel, msg.author.id);
+				let result = await common.resolveInput.getTracks(args.slice(2).join(" "), msg.channel, msg.author.id);
 				(async () => {
 					if (result == null) throw new Error()
 					let data = result[0]
@@ -92,7 +89,7 @@ module.exports = passthrough => {
 				})
 			} else if (action.toLowerCase() == "remove") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				let index = parseInt(args[3]);
+				let index = parseInt(args[2]);
 				if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`);
 				index = index-1;
 				if (!orderedSongs[index]) return msg.channel.send(lang.genericIndexOutOfRange(msg));
@@ -104,8 +101,8 @@ module.exports = passthrough => {
 				return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`);
 			} else if (action.toLowerCase() == "move") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				let from = parseInt(args[3]);
-				let to = parseInt(args[4]);
+				let from = parseInt(args[2]);
+				let to = parseInt(args[3]);
 				if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`);
 				from--; to--;
 				if (!orderedSongs[from]) return msg.channel.send(lang.genericIndexOutOfRange(msg));
@@ -126,7 +123,7 @@ module.exports = passthrough => {
 			} else if (action.toLowerCase() == "search" || action.toLowerCase() == "find") {
 				let body = orderedSongs
 					.map((songss, index) => `${index+1}. **${songss.name}** (${common.prettySeconds(songss.length)})`)
-					.filter(s => s.toLowerCase().includes(args.slice(3).join(" ").toLowerCase()))
+					.filter(s => s.toLowerCase().includes(args.slice(2).join(" ").toLowerCase()))
 					.join("\n");
 				if (body.length > 2000) {
 					body = body.slice(0, 1998).split("\n").slice(0, -1).join("\n")+"\n…";
@@ -138,16 +135,13 @@ module.exports = passthrough => {
 
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				if (!msg.member.voice.channel) return msg.channel.send(lang.voiceMustJoin(msg))
-				let rows = utils.playlistSection(orderedSongs, args[3], args[4], action.toLowerCase()[0] == "s");
-				rows = rows.map(row => new songTypes.YouTubeSong(row.videoID, undefined, false, {
-					title: row.name,
-					length_seconds: row.length
-				}));
-				bulkPlayCallback(rows);
+				let rows = utils.playlistSection(orderedSongs, args[2], args[3], action.toLowerCase()[0] == "s");
+				let songs = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
+				common.inserters.fromSongArray(msg.channel, msg.member.voice.channel, songs, false, msg)
 			} else if (action.toLowerCase() == "import") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
-				if (args[3].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-					let playlist = await youtube.getPlaylist(args[3]);
+				if (args[2].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
+					let playlist = await youtube.getPlaylist(args[2]);
 					let videos = await playlist.getVideos();
 					let promises = [];
 					videos = videos.filter((video, i) => {
@@ -195,7 +189,7 @@ module.exports = passthrough => {
 					"<:bn_ti:327986149203116032> - ignore"
 				);
 				let message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
-				message.reactionMenu([
+				utils.reactionMenu(message, [
 					{emoji: client.emojis.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
@@ -204,6 +198,7 @@ module.exports = passthrough => {
 						deletePromptEmbed.setDescription("Playlist deleted.");
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed));
 					}},
+					//@ts-ignore: actionData is normally a function, but actionType here is "edit".
 					{emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.MessageEmbed().setColor("36393e").setDescription("Playlist deletion cancelled"))}
 				]);
 			} else {
@@ -249,4 +244,4 @@ module.exports = passthrough => {
 			}
 		}
 	}
-}
+})

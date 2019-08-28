@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const passthrough = require("../passthrough")
 
 /**
- * @typedef {(message: Discord.Message, emoji: Discord.Emoji|Discord.ReactionEmoji, user: Discord.User, messageReaction: Discord.MessageReaction) => void} ReactionMenuActionCallback
+ * @typedef {(message: Discord.Message, emoji: Discord.Emoji|Discord.ReactionEmoji, user: Discord.User) => void} ReactionMenuActionCallback
  */
 
 /**

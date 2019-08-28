@@ -1,3 +1,5 @@
+//@ts-check
+
 const Discord = require("discord.js");
 const path = require("path");
 const {PlayerManager} = require("discord.js-lavalink");
@@ -26,7 +28,7 @@ utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filenam
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
 	if (data && data.id && data.channel_id && data.content && data.author && data.member) {
 		const channel = client.channels.get(data.channel_id)
-		if (channel) {
+		if (channel instanceof Discord.TextChannel || channel instanceof Discord.DMChannel) {
 			const message = new Discord.Message(client, data, channel)
 			manageMessage(message)
 		}
@@ -96,14 +98,14 @@ async function manageMessage(msg) {
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`);
 			// Report to #amanda-error-log
 			let reportChannel = client.channels.get("512869106089852949");
-			if (reportChannel) {
+			if (reportChannel instanceof Discord.TextChannel) {
 				embed.setTitle("Command error occurred.");
 				let details = [
 					["User", msg.author.tag],
 					["User ID", msg.author.id],
 					["Bot", msg.author.bot ? "Yes" : "No"]
 				];
-				if (msg.guild) {
+				if (msg.channel instanceof Discord.TextChannel) {
 					details = details.concat([
 						["Guild", msg.guild.name],
 						["Guild ID", msg.guild.id],
@@ -151,11 +153,13 @@ async function manageReady() {
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(row => {
 				let channel = client.channels.get(row.channelID);
-				if (!channel) {
+				if (channel instanceof Discord.TextChannel) {
+					channel.send("<@"+row.mentionID+"> Restarted! Uptime: "+utils.shortTime(process.uptime(), "sec"));
+				} else {
 					let user = client.users.get(row.mentionID);
 					if (!user) console.log(`Could not notify ${row.mentionID}`);
-					else user.send("Restarted! Uptime: "+process.uptime().humanize("sec"));
-				} else channel.send("<@"+row.mentionID+"> Restarted! Uptime: "+process.uptime().humanize("sec"));
+					else user.send("Restarted! Uptime: "+utils.shortTime(process.uptime(), "sec"));
+				}
 			});
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id]);
 		});
@@ -163,28 +167,38 @@ async function manageReady() {
 }
 
 /**
- * @param {Discord.MessageReaction} messageReaction
+ * @param {object} data
+ * @property {string} data.user_id
+ * @param {Discord.Channel} channel
  * @param {Discord.User} user
  */
-function reactionEvent(messageReaction, user) {
-	let emoji = messageReaction.emoji;
+function reactionEvent(data, channel, user) {
+	/*
+	data
+		user_id: snowflake
+		channel_id: snowflake
+		message_id: snowflake
+		emoji
+			id: snowflake?
+			name: string
+	*/
+	// Set up vars
+	let emoji = data.emoji
+	let menu = passthrough.reactionMenus.get(data.message_id)
+	// Quick conditions
 	if (user.id == client.user.id) return;
-	let menu = passthrough.reactionMenus.get(messageReaction.message.id)
 	if (!menu) return;
+	// We now have a menu
 	let msg = menu.message;
-	function fixEmoji(emoji) {
-		if (emoji && emoji.name) {
-			if (emoji.id != null) return emoji.id;
-			else return emoji.name;
-		}
-		return emoji;
-	}
-	let action = menu.actions.find(a => fixEmoji(a.emoji) == fixEmoji(emoji))
+	let action = menu.actions.find(a => utils.fixEmoji(a.emoji) == utils.fixEmoji(emoji))
+	// Make sure the emoji is actually an action
 	if (!action) return;
+	// Make sure the user is allowed
 	if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {
-		if (action.remove == "user") messageReaction.users.remove(user);
+		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji, user.id)
 		return;
 	}
+	// Actually do stuff
 	switch (action.actionType) {
 	case "reply":
 		msg.channel.send(user.toString()+" "+action.actionData);
@@ -193,7 +207,7 @@ function reactionEvent(messageReaction, user) {
 		msg.edit(action.actionData);
 		break;
 	case "js":
-		action.actionData(msg, emoji, user, messageReaction, menu.menus);
+		action.actionData(msg, emoji, user);
 		break;
 	}
 	switch (action.ignore) {
@@ -212,10 +226,10 @@ function reactionEvent(messageReaction, user) {
 	}
 	switch (action.remove) {
 	case "user":
-		messageReaction.users.remove(user);
+		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji, user.id)
 		break;
 	case "bot":
-		messageReaction.users.remove();
+		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji)
 		break;
 	case "all":
 		msg.reactions.clear();
