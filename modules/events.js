@@ -78,6 +78,7 @@ async function manageMessage(msg) {
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`);
 	let prefix = prefixes.find(p => msg.content.startsWith(p));
 	if (!prefix) return;
+	if (msg.guild) await msg.guild.members.fetch(client.user)
 	let cmdTxt = msg.content.substring(prefix.length).split(" ")[0];
 	let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1);
 	let cmd = commands.find(c => c.aliases.includes(cmdTxt));

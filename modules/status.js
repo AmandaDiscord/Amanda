@@ -78,7 +78,7 @@ client.once("prefixes", async (prefixes, statusPrefix) => {
 			if (message.dates) regional.push(message) // this is regional, it already matched, so it gets priority
 			if (!message.dates) constant.push(message) // this isn't regional, so it doesn't get priority
 		})
-		if (regional.length) constant = constant.filter(message => message.demote == 0) // if regional statuses are available, filter out demotable non-regional
+		if (regional.length) constant = constant.filter(message => message.demote == 0) // if regional statuses are available, filter out demotable non-regional. (demote has no effect on regional)
 		return regional.concat(constant)
 	}
 

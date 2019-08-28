@@ -31,14 +31,61 @@ commands.assign({
 			let args = suffix.split(" ")
 			let playlistName = args[0]
 			if (playlistName == "show") {
-				let playlists = await utils.sql.all("SELECT * FROM Playlists");
-				return msg.channel.send(utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle("Available playlists").setColor("36393E").setDescription(playlists.map(p => p.name).join("\n"))));
+				let playlists = await utils.sql.all(
+					"SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, count(*) as count, sum(Songs.length) as length"
+					+" FROM PlaylistSongs"
+					+" INNER JOIN Songs USING (videoID) INNER JOIN Playlists USING (playlistID)"
+					+" GROUP BY playlistID"
+					+" UNION"
+					+" SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, 0, 0"
+					+" FROM Playlists"
+					+" LEFT JOIN PlaylistSongs USING (playlistID)"
+					+" WHERE videoID IS NULL"
+				)
+				utils.arrayShuffle(playlists)
+				playlists = playlists.map(p => {
+					p.ranking = "" // higher ascii value is better
+					function addRanking(r) {
+						p.ranking += r+"."
+					}
+					if (p.count == 0) addRanking(0)
+					else addRanking(1)
+					addRanking(p.playCount.toString().padStart(8, "0"))
+					return p
+				}).sort((a, b) => {
+					if (a.ranking < b.ranking) return 1
+					else if (b.ranking < a.ranking) return -1
+					else return 0
+				})
+				function getAuthor(author) {
+					let user = client.users.get(author)
+					if (user) {
+						let username = user.username
+						if (username.length > 14) username = username.slice(0, 13)+"…"
+						return "`"+Discord.Util.escapeMarkdown(username)+"`"
+					} else {
+						return "(?)"
+					}
+				}
+				return utils.createPagination(
+					msg.channel
+					,["Playlist", "Songs", "Length", "Plays", "`Author`"]
+					,playlists.map(p => [
+						p.name
+						,p.count.toString()
+						,common.prettySeconds(p.length)
+						,p.playCount.toString()
+						,getAuthor(p.author)
+					])
+					,["left", "right", "right", "right", ""]
+					,2000
+				)
 			}
 			if (!playlistName) return msg.channel.send(msg.author.username+", you must name a playlist. Use `&music playlists show` to show all playlists.");
 			let playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName);
 			if (!playlistRow) {
 				if (args[1] == "create") {
-					await utils.sql.all("INSERT INTO Playlists VALUES (NULL, ?, ?)", [msg.author.id, playlistName]);
+					await utils.sql.all("INSERT INTO Playlists (author, name) VALUES (?, ?)", [msg.author.id, playlistName]);
 					return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`);
 				} else {
 					return msg.channel.send(`${msg.author.username}, That playlist does not exist. Use \`&music playlist ${playlistName} create\` to create it.`);
@@ -132,12 +179,15 @@ commands.assign({
 				.setDescription(body)
 				.setColor("36393E")
 				msg.channel.send(utils.contentify(msg.channel, embed));
-
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				if (!msg.member.voice.channel) return msg.channel.send(lang.voiceMustJoin(msg))
 				let rows = utils.playlistSection(orderedSongs, args[2], args[3], action.toLowerCase()[0] == "s");
-				let songs = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
-				common.inserters.fromSongArray(msg.channel, msg.member.voice.channel, songs, false, msg)
+				if (rows.length) {
+					let songs = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
+					common.inserters.fromSongArray(msg.channel, msg.member.voice.channel, songs, false, msg)
+				} else {
+					msg.channel.send("That playlist is empty. Add some songs with `&music playlist "+playlistRow.name+" add <song>`!")
+				}
 			} else if (action.toLowerCase() == "import") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg));
 				if (args[2].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
@@ -214,7 +264,7 @@ commands.assign({
 				let embed = new Discord.MessageEmbed()
 				.setAuthor(author[0], author[1])
 				.setColor("36393E")
-				if (rows.join("\n").length + totalLength.length <= 2000) {
+				if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 					embed.setDescription(rows.join("\n")+totalLength)
 					msg.channel.send(utils.contentify(msg.channel, embed));
 				} else {
@@ -223,7 +273,7 @@ commands.assign({
 					let currentPageLength = 0
 					let currentPageMaxLength = 2000 - totalLength.length
 					let itemsPerPage = 20
-					let itemsPerPageTolerance = 5
+					let itemsPerPageTolerance = 2
 					for (let i = 0; i < rows.length; i++) {
 						let row = rows[i]
 						if ((currentPage.length >= itemsPerPage && rows.length-i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
@@ -236,7 +286,7 @@ commands.assign({
 					}
 					pages.push(currentPage)
 					utils.paginate(msg.channel, pages.length, page => {
-						embed.setTitle(`Page ${page+1} of ${pages.length}`)
+						embed.setFooter(`Page ${page+1} of ${pages.length}`)
 						embed.setDescription(pages[page].join("\n") + totalLength)
 						return utils.contentify(msg.channel, embed)
 					})

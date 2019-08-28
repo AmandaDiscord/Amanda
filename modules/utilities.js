@@ -555,7 +555,15 @@ const utils = {
 			let currentLength = 0;
 			let currentItems = 0;
 			let maxItems = 20;
-			let reconstruction = new Map([["left", []], ["right", []]]); // Jesus fucking christ what is this
+			/**
+			 * Holds items for the left and right sides.
+			 * Items should flow into the left faster than the right.
+			 * At the end, the sides will be combined into the final list.
+			 */
+			let reconstruction = new Map([
+				["left", []],
+				["right", []]
+			]);
 			let leftOffset = 0;
 			let rightOffset = 0;
 			function getNextDirection() {
@@ -577,7 +585,96 @@ const utils = {
 	},
 
 	/**
-	 * @param {Discord.TextChannel} channel
+	 * @param {String[]} rows
+	 * @param {Number} maxLength
+	 * @param {Number} itemsPerPage
+	 * @param {Number} itemsPerPageTolerance
+	 */
+	createPages: function(rows, maxLength, itemsPerPage, itemsPerPageTolerance) {
+		let pages = []
+		let currentPage = []
+		let currentPageLength = 0
+		let currentPageMaxLength = maxLength
+		for (let i = 0; i < rows.length; i++) {
+			let row = rows[i]
+			if ((currentPage.length >= itemsPerPage && rows.length-i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
+				pages.push(currentPage)
+				currentPage = []
+				currentPageLength = 0
+			}
+			currentPage.push(row)
+			currentPageLength += row.length+1
+		}
+		pages.push(currentPage)
+		return pages
+	},
+
+	/**
+	 * @param {string[][]} rows
+	 * @param {any[]} align
+	 * @param {(currentLine?: number) => string} surround
+	 * @param {string} spacer
+	 * @returns {string[]}
+	 */
+	tableifyRows: function(rows, align, surround = () => "", spacer = " ") { //SC: en space
+		/** @type {string[]} */
+		let output = []
+		let maxLength = []
+		for (let i = 0; i < rows[0].length; i++) {
+			let thisLength = 0
+			for (let j = 0; j < rows.length; j++) {
+				if (thisLength < rows[j][i].length) thisLength = rows[j][i].length
+			}
+			maxLength.push(thisLength)
+		}
+		for (let i = 0; i < rows.length; i++) {
+			let line = ""
+			for (let j = 0; j < rows[0].length; j++) {
+				if (align[j] == "left" || align[j] == "right") {
+					line += surround(i)
+					if (align[j] == "left") {
+						let pad = " ​"
+						let padding = pad.repeat(maxLength[j] - rows[i][j].length)
+						line += rows[i][j] + padding
+					} else if (align[j] == "right") {
+						let pad = "​ "
+						let padding = pad.repeat(maxLength[j] - rows[i][j].length)
+						line += padding + rows[i][j]
+					}
+					line += surround(i)
+				} else {
+					line += rows[i][j]
+				}
+				if (j < rows[0].length - 1) line += spacer
+			}
+			output.push(line)
+		}
+		return output
+	},
+
+	/**
+	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {string[]} title
+	 * @param {string[][]} rows
+	 */
+	createPagination: function(channel, title, rows, align, maxLength) {
+		let alignedRows = utils.tableifyRows([title].concat(rows), align, () => "`")
+		let formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => "__**`"+sub+"`**__")
+		alignedRows = alignedRows.slice(1)
+		let pages = utils.createPages(alignedRows, maxLength-formattedTitle.length-1, 16, 4)
+		utils.paginate(channel, pages.length, page => {
+			return utils.contentify(channel,
+				new Discord.MessageEmbed()
+				.setTitle("Viewing all playlists")
+				.setColor(0x36393f)
+				.setDescription(formattedTitle + "\n" + pages[page].join("\n"))
+				.setFooter(`Page ${page+1} of ${pages.length}`)
+			)
+		})
+	},
+
+	/**
+	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {Number} pageCount
 	 * @param {(page: Number) => any} callback
 	 */
@@ -607,6 +704,7 @@ const utils = {
 		])
 		reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
 	},
+
 	/**
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {string|Discord.MessageEmbed} content

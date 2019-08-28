@@ -106,20 +106,22 @@ commands.assign({
 				msg.channel.send("dead")
 				/*embed
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
-					`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
-					`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
+				`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
+				`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 				.addField("­",
-					`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
-					`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
+				`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
+				`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed));*/
 			} else if (suffix.toLowerCase() == "games") {
+				msg.channel.send("dead")
+				/*
 				embed
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
 					`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
 					`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
 				.addField("­",
 					`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users (non bots)`, true)
-				return msg.channel.send(utils.contentify(msg.channel, embed));
+				return msg.channel.send(utils.contentify(msg.channel, embed));*/
 			} else if (suffix.toLowerCase() == "gc") {
 				let allowed = await utils.hasPermission(msg.author, "eval");
 				if (!allowed) return;
@@ -624,7 +626,10 @@ commands.assign({
 					.addField("auto", "Enable or disable auto mode.\n"+
 						"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n"+
 						"`&music auto`")
-					.addField(`queue`, `Shows the current queue.\n\`&music queue\``)
+					.addField(`queue [remove|clear] [index]`,
+						`Display or edit the current queue.\n`+
+						"`&music queue`\n"+
+						"`&music queue remove 2`")
 					.addField(`skip`, `Skip the current song and move to the next item in the queue.\n\`&music skip\``)
 					.addField(`stop`, `Empty the queue and leave the voice channel.\n\`&music stop\``)
 					.addField(`playlist`, `Manage playlists. Try \`&help playlist\` for more info.`)
