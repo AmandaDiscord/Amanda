@@ -69,7 +69,7 @@ let db = mysql.createPool({
 		"./commands/music/playlistcommand.js",
 		"./commands/traa.js",
 		"./commands/web/server.js",
-		//"./commands/alerts.js"
+		"./commands/alerts.js"
 	]);
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
