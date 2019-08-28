@@ -1,3 +1,5 @@
+//@ts-check
+
 const Discord = require("discord.js");
 
 const passthrough = require("../passthrough")
@@ -74,7 +76,7 @@ module.exports = {
 			 * @param {number} amount
 			 * @param {number|string} timeRemaining
 			 */
-			dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${lang.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
+			dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${this.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
 			/**
 			 * @param {Discord.Message} msg
 			 * @param {any} timeRemaining

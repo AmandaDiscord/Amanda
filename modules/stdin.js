@@ -19,7 +19,7 @@ reloader.useSync("./modules/lang.js", lang)
  * @param {String} input
  * @param {vm.Context} context
  * @param {String} filename
- * @param {(err: Error|null, result: any) => void} callback
+ * @param {(err: Error|null, result: any) => any} callback
  */
 async function customEval(input, context, filename, callback) {
 	let depth = 0;
