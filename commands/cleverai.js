@@ -117,13 +117,13 @@ const intent = {
 	]
 }
 
-const flat = [].concat(...Object.values(responses));
-let userHistory = {};
+const flat = [].concat(...Object.values(responses))
+let userHistory = {}
 
-let {commands, reloader} = passthrough;
+let {commands, reloader} = passthrough
 
-let utils = require("../modules/utilities.js");
-reloader.useSync("./modules/utilities.js", utils);
+let utils = require("../modules/utilities.js")
+reloader.useSync("./modules/utilities.js", utils)
 
 commands.assign({
 	"cleverai": {
@@ -136,26 +136,26 @@ commands.assign({
 		aliases: ["cleverai"],
 		category: "games",
 		process: async function (msg, suffix) {
-			suffix = suffix.toLowerCase();
+			suffix = suffix.toLowerCase()
 
 			const clever_message = await (async () => {
 				// Store history
-				if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0;
-				userHistory[msg.author.id]++;
+				if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0
+				userHistory[msg.author.id]++
 
 				// Bored?
-				let boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7;
+				let boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7
 				if (Math.random() < boredChance) return utils.arrayRandom(bored)
 
 				// Calculate intent
-				let bestIntent;
+				let bestIntent
 				Object.keys(intent).forEach(key => {
-					let result = 0;
+					let result = 0
 					intent[key].forEach(phrase => {
-						if (suffix.includes(phrase)) result += 1 + phrase.length/10;
-					});
-					if ((!bestIntent && result > 0) || (bestIntent && result > bestIntent[1])) bestIntent = [key, result];
-				});
+						if (suffix.includes(phrase)) result += 1 + phrase.length/10
+					})
+					if ((!bestIntent && result > 0) || (bestIntent && result > bestIntent[1])) bestIntent = [key, result]
+				})
 				// If intent, return sensible response
 				if (bestIntent) {
 					return utils.arrayRandom(responses[bestIntent[0]])
@@ -164,9 +164,9 @@ commands.assign({
 				else {
 					return utils.arrayRandom(flat)
 				}
-			})();
+			})()
 
-			msg.channel.send(clever_message);
+			msg.channel.send(clever_message)
 		}
 	}
-});
+})

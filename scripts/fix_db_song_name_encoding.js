@@ -9,7 +9,7 @@ let db = mysql.createPool({
 	password: config.mysql_password,
 	database: "money",
 	connectionLimit: 5
-});
+})
 const youtube = new YouTube(config.yt_api_key)
 
 ;(async () => {

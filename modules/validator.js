@@ -1,7 +1,7 @@
 /**
  * @typedef {Object} Operation
  * @property {(state: any, nextValue: any) => Promise<any>} code
- * @property {String} assign
+ * @property {string} assign
  * @property {any} expected
  * @property {any} errorValue
  */

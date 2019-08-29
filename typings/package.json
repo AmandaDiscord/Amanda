@@ -1,0 +1,12 @@
+{
+  "name": "typings",
+  "version": "1.0.0",
+  "description": "Typings for misc stuff only TS can do",
+  "main": "index.js",
+  "types": "./index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "PapiOphidian",
+  "license": "UNLICENSED"
+}

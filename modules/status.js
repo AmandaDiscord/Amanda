@@ -26,7 +26,7 @@ function refresh() {
 client.once("prefixes", async (prefixes, statusPrefix) => {
 	await refresh()
 
-	/** @return {Array<String>} */
+	/** @return {Array<string>} */
 	function getCurrentGroups() {
 		return users.filter(o => o.userID == client.user.id).map(o => o.label)
 	}

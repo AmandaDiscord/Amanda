@@ -1,16 +1,16 @@
 //@ts-check
 
-const Discord = require("discord.js");
+const Discord = require("discord.js")
 
 const passthrough = require("../passthrough")
 
 /**
  * @param {Discord.Message} msg
- * @param {String} sentence
+ * @param {string} sentence
  */
 function authorString(msg, sentence) {
-	if (msg) return msg.author.username+", "+sentence;
-	else return sentence[0].toUpperCase()+sentence.slice(1);
+	if (msg) return msg.author.username+", "+sentence
+	else return sentence[0].toUpperCase()+sentence.slice(1)
 }
 
 module.exports = {
@@ -34,14 +34,14 @@ module.exports = {
 	input: {
 		/**
 		 * @param {Discord.Message} msg
-		 * @param {String} type
+		 * @param {string} type
 		 */
 		invalid: (msg, type) => authorString(msg, `that's not a valid ${type}`),
 		money: {
 			/**
 			 * @param {Discord.Message} msg
-			 * @param {String} type
-			 * @param {Number} min
+			 * @param {string} type
+			 * @param {number} min
 			 */
 			small: (msg, type, min) => authorString(msg, `your ${type} must be at least ${min} Discoins.`)
 		},
@@ -79,7 +79,7 @@ module.exports = {
 			dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${this.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
 			/**
 			 * @param {Discord.Message} msg
-			 * @param {any} timeRemaining
+			 * @param {string} timeRemaining
 			 */
 			dailyCooldown: (msg, timeRemaining) => authorString(msg, `your daily coins will refresh in ${timeRemaining}.`)
 		}
@@ -90,11 +90,11 @@ module.exports = {
 	voiceMustJoin: msg => authorString(msg, "you need to join a voice channel to do that."),
 	/** @param {Discord.Message} msg */
 	voiceNothingPlaying: msg => authorString(msg, "nothing is currently playing."),
-	/** @param {String} action */
+	/** @param {string} action */
 	voiceCannotAction: action => `The current queue cannot be ${action} at this time.`,
 	/** @param {Discord.Message} msg */
 	voiceChannelWaiting: msg => authorString(msg, "you need to join a voice channel to do that. Waiting for you to connect..."),
-	/** @param {String} title */
+	/** @param {string} title */
 	voiceQueueRemovedSong: title => `Removed **${title}** from the queue.`,
 
 	// Playlists
@@ -107,7 +107,7 @@ module.exports = {
 	permissionVoiceJoin: () => "I don't have permission to join your voice channel.",
 	permissionVoiceSpeak: () => "I don't have permission to speak in your voice channel.",
 	permissionOtherDMBlocked: () => "I couldn't DM that person. Maybe they've blocked me, or maybe they need to turn on DMs in a shared server.",
-	/** @param {String} permission */
+	/** @param {string} permission */
 	permissionDeniedGeneric: permission => `I don't have permission to ${permission}. I work best when I have all of the permissions I've asked for when inviting me. Please modify my permissions.`,
 
 	// Generic

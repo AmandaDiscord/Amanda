@@ -3,24 +3,6 @@
 const Discord = require("discord.js")
 const passthrough = require("../passthrough")
 
-/**
- * @typedef {(message: Discord.Message, emoji: Discord.Emoji|Discord.ReactionEmoji, user: Discord.User) => void} ReactionMenuActionCallback
- */
-
-/**
- * @typedef {Object} ReactionMenuAction
- * @property {Discord.EmojiIdentifierResolvable} emoji
- * @property {Discord.MessageReaction} [messageReaction]
- * @property {string[]} [allowedUsers]
- * @property {string[]} [deniedUsers]
- * @property {string} [ignore]
- * @property {string} [remove]
- * @property {string} [actionType]
- * @property {ReactionMenuActionCallback} [actionData]
- */
-
-void 0 // stop above jsdoc from applying to the class
-
 module.exports = class ReactionMenu {
 	/**
 	 * @param {Discord.Message} message
@@ -69,3 +51,22 @@ module.exports = class ReactionMenu {
 		})
 	}
 }
+
+/**
+ * @callback ReactionMenuActionCallback
+ * @param {Discord.Message} message
+ * @param {Discord.Emoji|Discord.ReactionEmoji} emoji
+ * @param {Discord.User} user
+ */
+
+/**
+ * @typedef {Object} ReactionMenuAction
+ * @property {Discord.EmojiIdentifierResolvable} emoji
+ * @property {Discord.MessageReaction} [messageReaction]
+ * @property {string[]} [allowedUsers]
+ * @property {string[]} [deniedUsers]
+ * @property {string} [ignore]
+ * @property {string} [remove]
+ * @property {string} [actionType]
+ * @property {ReactionMenuActionCallback} [actionData]
+ */
