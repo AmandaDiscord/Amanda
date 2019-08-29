@@ -14,8 +14,6 @@ let {client, db, reloadEvent, reactionMenus} = passthrough
 
 const startingCoins = 5000
 
-const types = require("../typings")
-
 /**
  * @namespace
  */
@@ -159,7 +157,7 @@ const utils = {
 		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
 		 * @param {mysql.PromisePool|mysql.PromisePoolConnection} [connection=undefined]
 		 * @param {number} [attempts=2]
-		 * @returns {Promise<Array<types.BinaryRow>>}
+		 * @returns {Promise<Array<import("../typings").BinaryRow>>}
 		 */
 		"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 			if (!connection) connection = db
