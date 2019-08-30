@@ -34,42 +34,42 @@ let db = mysql.createPool({
 	passthrough.reloadEvent = reloader.reloadEvent
 
 	reloader.setupWatch([
+		"./commands/music/common.js",
+		"./commands/music/playlistcommand.js",
+		"./commands/music/queue.js",
+		"./commands/music/songtypes.js",
+		"./modules/lang.js",
 		"./modules/utilities.js",
 		"./modules/validator.js",
-		"./commands/music/common.js",
-		"./commands/music/songtypes.js",
-		"./commands/music/queue.js",
-		"./commands/music/playlistcommand.js",
-		"./modules/lang.js",
 	])
 
 	const CommandStore = require("./modules/managers/CommandStore")
-	const GameManager = require("./modules/managers/GameManager")
-	const QueueStore = require("./commands/music/queue.js").QueueStore
+	const GameStore = require("./modules/managers/GameStore")
+	const QueueStore = require("./modules/managers/QueueStore")
 
 	passthrough.reactionMenus = new Map()
 	passthrough.commands = new CommandStore()
-	passthrough.gameManager = new GameManager()
+	passthrough.gameStore = new GameStore()
 	passthrough.queueStore = new QueueStore()
 	passthrough.nedb = {
 		queue: nedb.create({filename: "saves/queue.db", autoload: true})
 	}
 
 	reloader.watchAndLoad([
-		"./modules/events.js",
-		"./modules/stdin.js",
+		"./commands/music/music.js",
+		"./commands/music/playlistcommand.js",
+		"./commands/web/server.js",
 		"./commands/admin.js",
+		"./commands/alerts.js",
 		"./commands/cleverai.js",
 		"./commands/gambling.js",
 		"./commands/games.js",
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/music/music.js",
-		"./commands/music/playlistcommand.js",
 		"./commands/traa.js",
-		"./commands/web/server.js",
-		"./commands/alerts.js"
+		"./modules/events.js",
+		"./modules/stdin.js",
 	])
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.

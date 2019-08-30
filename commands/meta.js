@@ -11,7 +11,7 @@ const profiler = require("gc-profiler")
 const util = require("util")
 
 const passthrough = require("../passthrough")
-let { client, config, commands, reloadEvent, reloader, gameManager } = passthrough
+let { client, config, commands, reloadEvent, reloader, gameStore, queueStore } = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -50,7 +50,8 @@ function setDailyStatsTimeout() {
 	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24)
 }
 function setDailyStats() {
-	gameManager.gamesPlayed = 0
+	gameStore.gamesPlayed = 0
+	queueStore.songsPlayed = 0
 }
 
 reloadEvent.once(path.basename(__filename), () => {
@@ -103,25 +104,22 @@ commands.assign({
 			let embed = new Discord.MessageEmbed().setColor("36393E")
 			if (!suffix) return defaultStats()
 			if (suffix.toLowerCase() == "music") {
-				msg.channel.send("dead")
-				/*embed
-				.addField(`${client.user.tag} <:online:606664341298872324>`,
-				`**❯ Daily Songs Played:**\n${queueManager.songsPlayed} songs\n`+
-				`**❯ Songs Enqueued:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
-				.addField("­",
-				`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
-				`**❯ Users Listening:**\n${queueManager.storage.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
-				return msg.channel.send(utils.contentify(msg.channel, embed))*/
-			} else if (suffix.toLowerCase() == "games") {
-				msg.channel.send("dead")
-				/*
 				embed
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
-					`**❯ Daily Games Played:**\n${gameManager.gamesPlayed} games\n`+
-					`**❯ Games Playing:**\n${gameManager.storage.size} games`, true)
+				`**❯ Daily Songs Played:**\n${queueStore.songsPlayed} songs\n`+
+				`**❯ Songs Enqueued:**\n${queueStore.store.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 				.addField("­",
-					`**❯ Users Playing:**\n${gameManager.storage.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users (non bots)`, true)
-				return msg.channel.send(utils.contentify(msg.channel, embed))*/
+				`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
+				`**❯ Users Listening:**\n${queueStore.store.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
+			} else if (suffix.toLowerCase() == "games") {
+				embed
+				.addField(`${client.user.tag} <:online:606664341298872324>`,
+					`**❯ Daily Games Played:**\n${gameStore.gamesPlayed} games\n`+
+					`**❯ Games Playing:**\n${gameStore.store.size} games`, true)
+				.addField("­",
+					`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users (non bots)`, true)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
 				let allowed = await utils.hasPermission(msg.author, "eval")
 				if (!allowed) return

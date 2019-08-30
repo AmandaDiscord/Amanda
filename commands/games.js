@@ -6,7 +6,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let { client, commands, reloader, gameManager } = passthrough
+let { client, commands, reloader, gameStore } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 
@@ -35,8 +35,9 @@ class Game {
 	constructor(channel, type) {
 		this.channel = channel
 		this.type = type
-		this.manager = gameManager
+		this.manager = gameStore
 		this.id = channel.id
+		this.receivedAnswers = undefined;
 		if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
 		else this.permissions = undefined
 	}
@@ -45,7 +46,7 @@ class Game {
 		this.start()
 	}
 	destroy() {
-		this.manager.storage.delete(this.id)
+		this.manager.store.delete(this.id)
 	}
 	start() {
 		// intentionally empty
@@ -120,7 +121,7 @@ class TriviaGame extends Game {
 	async end() {
 		// Clean up
 		clearTimeout(this.timer)
-		gameManager.gamesPlayed++
+		this.manager.gamesPlayed++
 		this.destroy()
 		// Check answers
 		let coins =
@@ -236,7 +237,7 @@ async function startGame(channel, options = {}) {
 		}
 	}
 	// Check games in progress
-	if (gameManager.storage.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(`There's a game already in progress for this channel.`)
+	if (gameStore.store.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(`There's a game already in progress for this channel.`)
 	// Send typing
 	channel.sendTyping()
 	// Get new game data
@@ -252,7 +253,7 @@ async function startGame(channel, options = {}) {
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 async function answerDetector(msg) {
 	if (msg.author.bot) return
-	let game = gameManager.storage.find(g => g.id == msg.channel.id)
+	let game = gameStore.store.find(g => g.id == msg.channel.id)
 	if (game instanceof TriviaGame) {
 		if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
 	}

@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let { config, client, commands, db, reloader, reloadEvent, gameManager } = passthrough
+let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore } = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)

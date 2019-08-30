@@ -13,9 +13,9 @@ process._ptcreated = true
  * @property {import("mysql2/promise").PromisePool} db
  * @property {import("./modules/hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
- * @property {import("./modules/managers/GameManager")} gameManager
+ * @property {import("./modules/managers/GameStore")} gameStore
  * @property {Map<string, import("./modules/reactionmenu")>} reactionMenus
- * @property {import("./commands/music/queue").QueueStore} queueStore
+ * @property {import("./modules/managers/QueueStore")} queueStore
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss
  * @property {Object<string, import("nedb-promises")>} nedb
