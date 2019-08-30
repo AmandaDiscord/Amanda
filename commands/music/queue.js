@@ -39,6 +39,7 @@ class Queue {
 		this.pausedAt = null
 		/** @type {songTypes.Song[]} */
 		this.songs = []
+		this.auto = false
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 		.setCallback(() => {
@@ -115,9 +116,21 @@ class Queue {
 		if (event.reason == "REPLACED") return
 		this._nextSong()
 	}
-	_nextSong() {
+	async _nextSong() {
 		if (this.songs.length <= 1) {
-			this._dissolve()
+			if (this.auto) {
+				let lastPlayed = this.songs.shift()
+				let related = await lastPlayed.getRelated()
+				if (related.length) {
+					this.addSong(related[0])
+				} else {
+					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
+					this.auto = false
+					this._dissolve()
+				}
+			} else {
+				this._dissolve()
+			}
 		} else {
 			this.songs.shift()
 			this.play()
@@ -183,7 +196,11 @@ class Queue {
 	 */
 	stop() {
 		this.songs = []
+		this.auto = false
 		this.player.stop()
+	}
+	toggleAuto() {
+		this.auto = !this.auto
 	}
 	/**
 	 * Add a song to the end of the queue.
@@ -329,6 +346,13 @@ class QueueWrapper {
 	 */
 	constructor(queue) {
 		this.queue = queue
+	}
+	toggleAuto(context) {
+		this.queue.toggleAuto()
+		let auto = this.queue.auto
+		if (context instanceof Discord.Message) {
+			context.channel.send("Auto mode is now turned "+(auto ? "on" : "off"))
+		}
 	}
 	togglePlaying(context) {
 		if (this.queue.isPaused) this.resume()

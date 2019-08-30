@@ -252,7 +252,7 @@ const subcommandsMap = new Map([
 		voiceChannel: "required",
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			// not implemented
+			queue.wrapper.toggleAuto(msg)
 		}
 	}],
 	["now", {

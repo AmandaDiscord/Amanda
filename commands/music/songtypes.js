@@ -52,12 +52,16 @@ class Song {
 		return ""
 	}
 	/**
+	 * An array of Song objects from related songs
 	 * @returns {Promise<Song[]>}
 	 */
 	getRelated() {
 		return Promise.resolve([])
 	}
-	/** @returns {Promise<String|Discord.MessageEmbed>} */
+	/**
+	 * Sendable data showing the related songs
+	 * @returns {Promise<String|Discord.MessageEmbed>}
+	 */
 	showRelated() {
 		return Promise.resolve("This isn't a real song.")
 	}
@@ -132,25 +136,33 @@ class YouTubeSong extends Song {
 		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 	}
 	async getRelated() {
-		let related = await this.related.get()
+		let related = await this.related.get().catch(() => [])
 		return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
 	}
 	async showRelated() {
-		let related = await this.related.get()
-		if (related.length) {
-			return new Discord.MessageEmbed()
-			.setTitle("Related content from YouTube")
-			.setDescription(
-				related.map((v, i) =>
-					`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
-					+`\n — ${v.author}`
+		return this.related.get().then(related => {
+			if (related.length) {
+				return new Discord.MessageEmbed()
+				.setTitle("Related content from YouTube")
+				.setDescription(
+					related.map((v, i) =>
+						`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+						+`\n — ${v.author}`
+					)
 				)
-			)
-			.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
-			.setColor(0x36393f)
-		} else {
-			return "No related content available for the current song."
-		}
+				.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
+				.setColor(0x36393f)
+			} else {
+				return "No related content available for the current song."
+			}
+		}).catch(() => {
+			this.typeWhileGetRelated = false
+			return ""
+				+`Invidious didn't return valid data.`
+				+`\n<https://invidio.us/api/v1/videos/${this.id}>`
+				+`\n<https://invidio.us/v/${this.id}>`
+				+`\n<https://youtu.be/${this.id}>`
+		})
 	}
 	prepare() {
 		if (this.track == "!") {
