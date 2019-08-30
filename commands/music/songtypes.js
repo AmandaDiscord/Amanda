@@ -203,7 +203,7 @@ class FriskySong extends Song {
 	getProgress(time, paused) {
 		let part = "= ⋄ ==== ⋄ ==="
 		let fragment = part.substr(7-this._filledBarOffset, 7)
-		let bar = "​"+fragment.repeat(5)+"​"
+		let bar = "​"+fragment.repeat(5)+"​" //SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
 		time = common.prettySeconds(time)

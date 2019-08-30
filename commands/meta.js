@@ -43,22 +43,9 @@ async function sendStats(msg) {
 	return console.log("Sent stats.", new Date().toUTCString())
 }
 
-let dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24 - (Date.now() % (1000*60*60*24)))
-console.log(`added timeout dailyTimeout`)
-function setDailyStatsTimeout() {
-	setDailyStats()
-	dailyTimeout = setTimeout(setDailyStatsTimeout, 1000*60*60*24)
-}
-function setDailyStats() {
-	gameStore.gamesPlayed = 0
-	queueStore.songsPlayed = 0
-}
-
 reloadEvent.once(path.basename(__filename), () => {
 	clearTimeout(sendStatsTimeout)
 	console.log(`removed Timeout sendStatsTimeout`)
-	clearTimeout(dailyTimeout)
-	console.log(`removed Timeout setDailyStatsTimeout`)
 })
 
 let profileStorage = new utils.JIMPStorage()
@@ -109,17 +96,18 @@ commands.assign({
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
 				`**❯ Songs Played Today:**\n${songsPlayed} songs\n`+
 				`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
-				.addField("­",
+				.addField(lang.emoji.bl,
 				`**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n`+
 				`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "games") {
+				let gamesPlayed = periodicHistory.getSize("game_start")
 				embed
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
-					`**❯ Daily Games Played:**\n${gameStore.gamesPlayed} games\n`+
-					`**❯ Games Playing:**\n${gameStore.store.size} games`, true)
-				.addField("­",
-					`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users (non bots)`, true)
+					`**❯ Games Played Today:**\n${gamesPlayed} games\n`+
+					`**❯ Games In Progress:**\n${gameStore.store.size} games`, true)
+				.addField(lang.emoji.bl,
+					`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
 				let allowed = await utils.hasPermission(msg.author, "eval")
@@ -139,7 +127,7 @@ commands.assign({
 					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 					`**❯ Uptime:**\n${utils.shortTime(process.uptime(), "sec")}\n`+
 					`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
-				.addField("­",
+				.addField(lang.emoji.bl,
 					`**❯ User Count:**\n${client.users.size} users\n`+
 					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 					`**❯ Channel Count:**\n${client.channels.size} channels\n`+

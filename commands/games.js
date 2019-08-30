@@ -121,7 +121,6 @@ class TriviaGame extends Game {
 	async end() {
 		// Clean up
 		clearTimeout(this.timer)
-		this.manager.gamesPlayed++
 		this.destroy()
 		// Check answers
 		let coins =

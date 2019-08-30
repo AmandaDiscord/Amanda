@@ -1,3 +1,5 @@
+//@ts-check
+
 const Discord = require("discord.js");
 
 const passthrough = require("../../passthrough")
@@ -57,7 +59,7 @@ class QueueStore {
 		return passthrough.nedb.queue.update({}, this.toObject(), {upsert: true})
 	}
 	async restore() {
-		/** @type {{queues: Array<QueueFile.Queue>}} */
+		const songTypes = require("../../commands/music/songtypes")
 		let data = await passthrough.nedb.queue.findOne({_id: "QueueStore"})
 		data.queues.forEach(async q => {
 			console.log(q)
