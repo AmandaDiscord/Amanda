@@ -16,6 +16,7 @@ process._ptcreated = true
  * @property {import("./modules/managers/GameStore")} gameStore
  * @property {Map<string, import("./modules/reactionmenu")>} reactionMenus
  * @property {import("./modules/managers/QueueStore")} queueStore
+ * @property {import("./modules/managers/PeriodicHistory")} periodicHistory
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss
  * @property {Object<string, import("nedb-promises")>} nedb

@@ -11,7 +11,7 @@ const profiler = require("gc-profiler")
 const util = require("util")
 
 const passthrough = require("../passthrough")
-let { client, config, commands, reloadEvent, reloader, gameStore, queueStore } = passthrough
+let {client, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory} = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -101,16 +101,17 @@ commands.assign({
 		category: "meta",
 		process: async function(msg, suffix) {
 			let ram = process.memoryUsage()
-			let embed = new Discord.MessageEmbed().setColor("36393E")
+			let embed = new Discord.MessageEmbed().setColor(0x36393f)
 			if (!suffix) return defaultStats()
 			if (suffix.toLowerCase() == "music") {
+				let songsPlayed = periodicHistory.getSize("song_start")
 				embed
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
-				`**❯ Daily Songs Played:**\n${queueStore.songsPlayed} songs\n`+
-				`**❯ Songs Enqueued:**\n${queueStore.store.reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
+				`**❯ Songs Played Today:**\n${songsPlayed} songs\n`+
+				`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
 				.addField("­",
-				`**❯ Voice Connections:**\n${client.voice.connections.size} connections\n`+
-				`**❯ Users Listening:**\n${queueStore.store.reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users (non bots)`, true)
+				`**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n`+
+				`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "games") {
 				embed
@@ -142,7 +143,7 @@ commands.assign({
 					`**❯ User Count:**\n${client.users.size} users\n`+
 					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
-					`**❯ Voice Connections:**\n${client.voice.connections.size} connections`, true)
+					`**❯ Voice Connections:**\n${client.lavalink.players.size} connections`, true)
 				let content = utils.contentify(msg.channel, embed)
 				if (typeof(content) == "string") nmsg.edit(content)
 				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)

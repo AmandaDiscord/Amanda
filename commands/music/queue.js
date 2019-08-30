@@ -89,6 +89,7 @@ class Queue {
 			this.textChannel.send(song.error)
 			this._nextSong()
 		} else {
+			passthrough.periodicHistory.add("song_start")
 			this.player.play(song.track).then(() => {
 				this.songStartTime = Date.now()
 				this._startNPUpdates()

@@ -46,11 +46,16 @@ let db = mysql.createPool({
 	const CommandStore = require("./modules/managers/CommandStore")
 	const GameStore = require("./modules/managers/GameStore")
 	const QueueStore = require("./modules/managers/QueueStore")
+	const PeriodicHistory = require("./modules/managers/PeriodicHistory")
 
 	passthrough.reactionMenus = new Map()
 	passthrough.commands = new CommandStore()
 	passthrough.gameStore = new GameStore()
 	passthrough.queueStore = new QueueStore()
+	passthrough.periodicHistory = new PeriodicHistory([
+		{field: "song_start", ttl: 86400e3},
+		{field: "game_start", ttl: 86400e3}
+	])
 	passthrough.nedb = {
 		queue: nedb.create({filename: "saves/queue.db", autoload: true})
 	}
