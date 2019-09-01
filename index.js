@@ -43,6 +43,9 @@ let db = mysql.createPool({
 		"./modules/validator.js",
 	])
 
+	const Frisky = require("frisky-client")
+	passthrough.frisky = new Frisky()
+
 	const CommandStore = require("./modules/managers/CommandStore")
 	const GameStore = require("./modules/managers/GameStore")
 	const QueueStore = require("./modules/managers/QueueStore")

@@ -117,21 +117,37 @@ class Queue {
 		this._nextSong()
 	}
 	async _nextSong() {
+		// Destroy current song
+		if (this.songs[0]) this.songs[0].destroy()
+		// Out of songs?
 		if (this.songs.length <= 1) {
+			// Is auto mode on?
 			if (this.auto) {
-				let lastPlayed = this.songs.shift()
+				// Store the current song
+				let lastPlayed = this.songs[0]
+				// Get related
 				let related = await lastPlayed.getRelated()
+				// Can we play a related song?
 				if (related.length) {
+					this.songs.shift()
 					this.addSong(related[0])
-				} else {
+				}
+				// No related songs. Dissolve.
+				else {
 					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
 					this.auto = false
+					this.songs = []
 					this._dissolve()
 				}
-			} else {
+			}
+			// Auto mode is off. Dissolve.
+			else {
+				this.songs = []
 				this._dissolve()
 			}
-		} else {
+		}
+		// We have more songs. Move on.
+		else {
 			this.songs.shift()
 			this.play()
 		}
@@ -195,6 +211,7 @@ class Queue {
 	 * End playback by clearing the queue, then asking the player to stop.
 	 */
 	stop() {
+		if (this.songs[0]) this.songs[0].destroy()
 		this.songs = []
 		this.auto = false
 		this.player.stop()
@@ -229,6 +246,12 @@ class Queue {
 			return 0
 		}
 	}
+	/**
+	 * Returns 0 on success.
+	 * Returns 1 if the index is out of range.
+	 * Returns 2 if index exists, but removed item was undefined.
+	 * @param {number} index Zero-based index.
+	 */
 	removeSong(index) {
 		if (index == 0) return 1
 		if (!this.songs[index]) return 1
@@ -389,6 +412,35 @@ class QueueWrapper {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
 		if (this.queue.songs[0].typeWhileGetRelated) channel.sendTyping()
 		let content = await this.queue.songs[0].showRelated()
+		channel.send(content)
+	}
+	/**
+	 * Permitted contexts:
+	 * - A message `&m q remove 2`. A reaction will be added, or an error message will be sent.
+	 * @param {number} index One-based index.
+	 * @param {any} [context]
+	 */
+	removeSong(index, context) {
+		let result = this.queue.removeSong(index-1)
+		if (context instanceof Discord.Message) {
+			if (result == 1) {
+				if (index == 1) {
+					context.channel.send(
+						"Item 1 is the currently playing song. Use `&music skip` to skip it, "
+						+"or `&music queue remove 2` if you wanted to remove the song that's up next."
+					)
+				} else {
+				}
+			} else {
+				context.react("✅")
+			}
+		}
+	}
+	/**
+	 * @param {Discord.TextChannel} channel
+	 */
+	async showInfo(channel) {
+		let content = await this.queue.songs[0].showInfo()
 		channel.send(content)
 	}
 	/**

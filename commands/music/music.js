@@ -230,15 +230,24 @@ const subcommandsMap = new Map([
 	["queue", {
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			let rows = queue.songs.map((song, index) => `${index+1}. `+song.queueLine)
-			let totalLength = "\nTotal length: "+common.prettySeconds(queue.getTotalLength())
-			let body = utils.compactRows.removeMiddle(rows, 2000-totalLength.length).join("\n") + totalLength
-			msg.channel.send(
-				new Discord.MessageEmbed()
-				.setTitle(`Queue for ${Discord.Util.escapeMarkdown(msg.guild.name)}`)
-				.setDescription(body)
-				.setColor(0x36393f)
-			)
+			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" || args[2] == "all")) {
+				let numberOfSongs = queue.songs.length-1
+				queue.songs = queue.songs.slice(0, 1)
+				msg.channel.send(`Cleared the queue, removing ${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}.`)
+			} else if (args[1] == "r" || args[1] == "remove") {
+				let index = +args[2]
+				queue.wrapper.removeSong(index, msg)
+			} else {
+				let rows = queue.songs.map((song, index) => `${index+1}. `+song.queueLine)
+				let totalLength = "\nTotal length: "+common.prettySeconds(queue.getTotalLength())
+				let body = utils.compactRows.removeMiddle(rows, 2000-totalLength.length).join("\n") + totalLength
+				msg.channel.send(
+					new Discord.MessageEmbed()
+					.setTitle(`Queue for ${Discord.Util.escapeMarkdown(msg.guild.name)}`)
+					.setDescription(body)
+					.setColor(0x36393f)
+				)
+			}
 		}
 	}],
 	["skip", {
@@ -268,8 +277,8 @@ const subcommandsMap = new Map([
 	["info", {
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			// broken
-			//queue.wrapper.showInfo();
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			queue.wrapper.showInfo(msg.channel);
 		}
 	}],
 	["pause", {
@@ -382,7 +391,7 @@ commands.assign({
 		}
 	},
 	"frisky": {
-		usage: "[frisky|deep|chill]",
+		usage: "[frisky|deep|chill|classics]",
 		description: "Frisky radio",
 		aliases: ["frisky"],
 		category: "music",
@@ -390,7 +399,8 @@ commands.assign({
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg));
 			const voiceChannel = msg.member.voice.channel;
 			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
-			let station = ["frisky", "deep", "chill"].includes(suffix) ? suffix : "frisky";
+			if (suffix == "classic") suffix = "classics" // alias
+			let station = ["frisky", "deep", "chill", "classics"].includes(suffix) ? suffix : "frisky";
 			let song = new songTypes.FriskySong(station);
 			return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg);
 		}

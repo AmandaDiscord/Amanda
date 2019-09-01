@@ -20,6 +20,7 @@ process._ptcreated = true
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss
  * @property {Object<string, import("nedb-promises")>} nedb
+ * @property {import("frisky-client")} frisky
  */
 
 /**

@@ -9,7 +9,7 @@ const events = require("events")
 const stream = require("stream")
 
 const passthrough = require("../../passthrough")
-let {client, reloader} = passthrough
+let {client, reloader, frisky} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -18,9 +18,30 @@ let common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
 const stationData = new Map([
-	["frisky", {title: "Frisky Radio", queue: "Frisky Radio: Frisky", url: "http://stream.friskyradio.com/frisky_mp3_hi"}], // 44100Hz 2ch 128k MP3
-	["deep", {title: "Frisky Radio: Deep", queue: "Frisky Radio: Deep", url: "http://deep.friskyradio.com/friskydeep_acchi"}], // 32000Hz 2ch 128k MP3 (!)
-	["chill", {title: "Frisky Radio: Chill", queue: "Frisky Radio: Chill", url: "http://chill.friskyradio.com/friskychill_mp3_high"}] // 44100Hz 2ch 128k MP3
+	["frisky", {
+		title: "Frisky Radio",
+		queue: "Frisky Radio: Frisky",
+		url: "http://stream.friskyradio.com/frisky_mp3_hi", // 44100Hz 2ch 128k MP3
+		beta_url: "http://stream.friskyradio.com/frisky_mp3_hi" // 44100Hz 2ch 128k MP3
+	}],
+	["deep", {
+		title: "Frisky Radio: Deep",
+		queue: "Frisky Radio: Deep",
+		url: "http://deep.friskyradio.com/friskydeep_acchi", // 32000Hz 2ch 128k MP3 (!)
+		beta_url: "http://deep.friskyradio.com/friskydeep_aachi" // 32000Hz 2ch 128k MP3 (!)
+	}],
+	["chill", {
+		title: "Frisky Radio: Chill",
+		queue: "Frisky Radio: Chill",
+		url: "http://chill.friskyradio.com/friskychill_mp3_high", // 44100Hz 2ch 128k MP3
+		beta_url: "https://stream.chill.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
+	}],
+	["classics", {
+		title: "Frisky Radio: Classics",
+		queue: "Frisky Radio: Classics",
+		url: "https://stream.classics.friskyradio.com/mp3_high", // 44100Hz 2ch 128k MP3
+		beta_url: "https://stream.classics.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
+	}]
 ])
 
 class Song {
@@ -66,6 +87,13 @@ class Song {
 		return Promise.resolve("This isn't a real song.")
 	}
 	/**
+	 * Get sendable data with information about this song
+	 * @returns {Promise<String|Discord.MessageEmbed>}
+	 */
+	showInfo() {
+		return Promise.resolve("This isn't a real song.")
+	}
+	/**
 	 * @param {String} message
 	 */
 	validationError(message) {
@@ -75,7 +103,7 @@ class Song {
 		["track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
 			if (!this[key]) this.validationError("unset "+key)
 		})
-		;["getProgress", "getRelated", "showRelated", "toObject"].forEach(key => {
+		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject", "destroy"].forEach(key => {
 			if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
 		})
 		if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
@@ -83,6 +111,8 @@ class Song {
 	}
 	prepare() {
 		return Promise.resolve()
+	}
+	destroy() {
 	}
 }
 
@@ -164,6 +194,9 @@ class YouTubeSong extends Song {
 				+`\n<https://youtu.be/${this.id}>`
 		})
 	}
+	showInfo() {
+		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
+	}
 	prepare() {
 		if (this.track == "!") {
 			return common.getTracks(this.id).then(tracks => {
@@ -178,9 +211,15 @@ class YouTubeSong extends Song {
 			return Promise.resolve()
 		}
 	}
+	destroy() {
+	}
 }
 
 class FriskySong extends Song {
+	/**
+	 * @param {string} station
+	 * @param {any} [data]
+	 */
 	constructor(station, data = {}) {
 		super()
 
@@ -195,6 +234,40 @@ class FriskySong extends Song {
 		this.npUpdateFrequency = 15000
 		this.typeWhileGetRelated = false
 		this.noPauseReason = "You can't pause live radio."
+
+		this.friskyStation = frisky.managers.stream.stations.get(this.station)
+		this.stationMixGetter = new utils.AsyncValueCache(
+			/**
+			 * @returns {Promise<import("frisky-client/lib/Mix")>}
+			 */
+			() => new Promise((resolve, reject) => {
+				let time = Date.now()
+				let attempts = 0
+
+				const attempt = () => {
+					const retry = (reason) => {
+						if (attempts < 3) {
+							setTimeout(() => {
+								attempt()
+							}, 1000)
+						} else {
+							reject(reason)
+						}
+					}
+
+					attempts++
+					let index = this.friskyStation.findNowPlayingIndex()
+					if (index == null) return retry("Current item is unknown")
+					let mix = this.friskyStation.getSchedule()[index].mix
+					if (!mix) return retry("Current mix not available")
+					let data = mix.data
+					if (!data) return retry("Current mix data not available")
+					console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
+					return resolve(mix)
+				}
+				attempt()
+			})
+		)
 
 		this._filledBarOffset = 0
 
@@ -212,6 +285,41 @@ class FriskySong extends Song {
 	showRelated() {
 		return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
 	}
+	showInfo() {
+		return this.stationMixGetter.get().then(mix => {
+			let stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
+			let embed = new Discord.MessageEmbed()
+			.setColor(0x36393f)
+			.setTitle("FRISKY: "+mix.data.title)
+			.setURL("https://beta.frisky.fm/mix/"+mix.id)
+			//.setThumbnail(mix.data...)
+			.addField("Details",
+				`Show: ${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`
+				+`\nEpisode: ${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`
+				//+"\nArtist: "+data.episode.artist_title
+				+"\nGenre: "+mix.data.genre.join(", ")
+				//+"\nEpisode genres: "+data.episode.genre.join(", ")
+				//+"\nShow genres: "+data.show.genre.join(", ")
+				+"\nStation: "+stationCase
+			)
+			if (mix.episode) {
+				embed.setThumbnail(mix.episode.data.thumbnail.url)
+			}
+			if (mix.data.track_list && mix.data.track_list.length) {
+				let trackList = mix.data.track_list
+				.slice(0, 6)
+				.map(track => track.artist + " - " + track.title)
+				.join("\n")
+				let hidden = mix.data.track_list.length-6
+				if (hidden > 0) trackList += `\n_and ${hidden} more..._`
+				embed.addField("Track list", trackList)
+			}
+			return embed
+		}).catch(reason => {
+			console.error(reason)
+			return "Unfortunately, we failed to retrieve information about the current song."
+		})
+	}
 	getProgress(time, paused) {
 		let part = "= ⋄ ==== ⋄ ==="
 		let fragment = part.substr(7-this._filledBarOffset, 7)
@@ -221,9 +329,12 @@ class FriskySong extends Song {
 		time = common.prettySeconds(time)
 		return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
 	}
-	prepare() {
+	async prepare() {
+		this.bound = this.stationUpdate.bind(this)
+		this.friskyStation.events.addListener("changed", this.bound)
+		await this.stationUpdate()
 		if (this.track == "!") {
-			return common.getTracks(stationData.get(this.station).url).then(tracks => {
+			return common.getTracks(stationData.get(this.station).beta_url).then(tracks => {
 				if (tracks[0] && tracks[0].track) {
 					this.track = tracks[0].track
 				} else {
@@ -234,6 +345,18 @@ class FriskySong extends Song {
 		} else {
 			return Promise.resolve()
 		}
+	}
+	stationUpdate() {
+		this.stationMixGetter.clear()
+		return this.stationMixGetter.get().then(mix => {
+			console.log(mix)
+			this.title = mix.data.title
+		}).catch(reason => {
+			console.error(reason)
+		})
+	}
+	destroy() {
+		this.friskyStation.events.removeListener("changed", this.bound)
 	}
 }
 
