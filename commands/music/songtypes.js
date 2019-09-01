@@ -1,12 +1,7 @@
 //@ts-check
 
 const Discord = require("discord.js")
-const ytdlDiscord = require("ytdl-core-discord")
-const ytdl = require("ytdl-core")
-const net = require("net")
 const rp = require("request-promise")
-const events = require("events")
-const stream = require("stream")
 
 const passthrough = require("../../passthrough")
 let {client, reloader, frisky} = passthrough

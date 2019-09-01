@@ -1,10 +1,6 @@
 //@ts-check
 
-const ytdl = require("ytdl-core")
-const YouTube = require('simple-youtube-api')
-const net = require("net")
 const crypto = require("crypto")
-const rp = require("request-promise")
 const Discord = require("discord.js")
 const path = require("path")
 

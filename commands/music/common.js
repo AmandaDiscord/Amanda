@@ -1,11 +1,10 @@
 //@ts-check
 
-const ytdl = require("ytdl-core")
 const rp = require("request-promise")
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, youtube} = passthrough
+let {client, reloader} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)

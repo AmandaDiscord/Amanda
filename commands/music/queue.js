@@ -1,10 +1,6 @@
 //@ts-check
 
 const Discord = require("discord.js");
-const ytdl = require("ytdl-core");
-const rp = require("request-promise");
-const events = require("events");
-const lavalink = require("discord.js-lavalink")
 
 const passthrough = require("../../passthrough")
 let {client, reloader, queueStore} = passthrough

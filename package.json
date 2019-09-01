@@ -17,7 +17,6 @@
     "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
     "entities": "^2.0.0",
-    "events": "^3.0.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "gc-profiler": "^1.4.1",
     "heapdump": "^0.3.14",
@@ -25,15 +24,10 @@
     "mime": "^2.4.4",
     "mysql2": "^1.6.5",
     "nedb-promises": "^4.0.0",
-    "node-fetch": "^2.6.0",
-    "node-opus": "0.x",
     "pinski": "github:cloudrac3r/pinski",
-    "prism-media": "^1.0.2",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "simple-git": "^1.124.0",
-    "simple-youtube-api": "^5.2.1",
-    "ytdl-core": "^0.29.5",
-    "ytdl-core-discord": "github:cloudrac3r/ytdl-core-discord"
+    "simple-youtube-api": "^5.2.1"
   }
 }
