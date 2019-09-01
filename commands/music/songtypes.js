@@ -257,7 +257,7 @@ class FriskySong extends Song {
 					if (!mix) return retry("Current mix not available")
 					let data = mix.data
 					if (!data) return retry("Current mix data not available")
-					console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
+					//console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
 					return resolve(mix)
 				}
 				attempt()
@@ -344,7 +344,7 @@ class FriskySong extends Song {
 	stationUpdate() {
 		this.stationMixGetter.clear()
 		return this.stationMixGetter.get().then(mix => {
-			console.log(mix)
+			//console.log(mix)
 			this.title = mix.data.title
 		}).catch(reason => {
 			console.error(reason)
