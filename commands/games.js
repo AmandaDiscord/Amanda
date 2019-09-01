@@ -64,6 +64,7 @@ class TriviaGame extends Game {
 		super(channel, "trivia")
 		this.data = data.results[0]
 		this.category = category
+		this.earningsDisabled = false
 	}
 	start() {
 		let correctAnswer = this.data.correct_answer.trim()
@@ -114,6 +115,11 @@ class TriviaGame extends Game {
 		let index = msg.content.toUpperCase().charCodeAt(0)-65
 		// Check answer is within range
 		if (!this.answers[index]) return
+		// Validate user legitimacy
+		if (msg.author.bot && msg.guild.id == "497159726455455754") {
+			this.earningsDisabled = true
+		}
+		if (msg.author.bot) return
 		// Add to received answers
 		this.receivedAnswers.set(msg.author.id, index)
 		//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`)
@@ -148,7 +154,9 @@ class TriviaGame extends Game {
 			let cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
 			result.winnings = Math.floor(coins * 0.8 ** (10-cooldownValue))
 			//result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
-			utils.coinsManager.award(result.userID, result.winnings)
+			if (!this.earningsDisabled) {
+				utils.coinsManager.award(result.userID, result.winnings)
+			}
 			return result
 		}))
 		// Send message
@@ -251,7 +259,6 @@ async function startGame(channel, options = {}) {
 }
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 async function answerDetector(msg) {
-	if (msg.author.bot) return
 	let game = gameStore.store.find(g => g.id == msg.channel.id)
 	if (game instanceof TriviaGame) {
 		if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
