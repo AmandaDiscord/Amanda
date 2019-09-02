@@ -13,7 +13,7 @@ function authorString(msg, sentence) {
 	else return sentence[0].toUpperCase()+sentence.slice(1)
 }
 
-module.exports = {
+let lang = {
 	/** @param {Error} error */
 	apiError: error => "API did not return any data.```\n"+error+"```",
 
@@ -76,7 +76,7 @@ module.exports = {
 			 * @param {number} amount
 			 * @param {number|string} timeRemaining
 			 */
-			dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${this.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
+			dailyClaimed: (msg, amount, timeRemaining) => `**${msg.author.username} claimed their daily and got ${amount} ${lang.emoji.discoin}**\nCome back in ${timeRemaining} for more coins!`,
 			/**
 			 * @param {Discord.Message} msg
 			 * @param {string} timeRemaining
@@ -125,3 +125,5 @@ module.exports = {
 		bl: "<:bl:616834265732349953>"
 	}
 }
+
+module.exports = lang
