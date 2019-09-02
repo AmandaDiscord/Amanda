@@ -54,6 +54,7 @@ class VoiceStateCallback {
 	 */
 	trigger(voiceChannel) {
 		if (this.active) {
+			if (!voiceChannel.joinable || !voiceChannel.speakable) this.callback(null)
 			this.active = false
 			this.remove()
 			this.callback(voiceChannel)
@@ -104,12 +105,15 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 /**
  * @param {Discord.Message} msg
  * @param {Boolean} wait
- * @returns {Promise<(Discord.VoiceChannel|null)>}
+ * @returns {Promise<(Discord.VoiceChannel)>}
  */
 async function detectVoiceChannel(msg, wait) {
-	if (msg.member.voice.channel) return msg.member.voice.channel
+	if (msg.member.voice.channel) {
+		if (!msg.member.voice.channel.joinable || !msg.member.voice.channel.speakable) return null;
+		return msg.member.voice.channel
+	}
 	if (!wait) return null
-	let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg))
+	await msg.channel.send(lang.voiceChannelWaiting(msg))
 	return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000)
 }
 

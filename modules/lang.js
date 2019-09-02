@@ -87,13 +87,13 @@ let lang = {
 
 	// Voice
 	/** @param {Discord.Message} msg */
-	voiceMustJoin: msg => authorString(msg, "you need to join a voice channel to do that."),
+	voiceMustJoin: msg => authorString(msg, "you must be in a voice channel which I can join, speak in, and is not full in order to do that"),
 	/** @param {Discord.Message} msg */
 	voiceNothingPlaying: msg => authorString(msg, "nothing is currently playing."),
 	/** @param {string} action */
 	voiceCannotAction: action => `The current queue cannot be ${action} at this time.`,
 	/** @param {Discord.Message} msg */
-	voiceChannelWaiting: msg => authorString(msg, "you need to join a voice channel to do that. Waiting for you to connect..."),
+	voiceChannelWaiting: msg => authorString(msg, "i'll be waiting for you to join a voice channel..."),
 	/** @param {string} title */
 	voiceQueueRemovedSong: title => `Removed **${title}** from the queue.`,
 
