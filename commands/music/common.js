@@ -22,12 +22,12 @@ let common = {
 	 * @returns {Promise<Discord.Message>}
 	 */
 	manageYtdlGetInfoErrors: function(channel, reason, id, item) {
-		if (channel instanceof Discord.Message) channel = channel.channel;
-		let idString = id ? ` (index: ${item}, id: ${id})` : "";
+		if (channel instanceof Discord.Message) channel = channel.channel
+		let idString = id ? ` (index: ${item}, id: ${id})` : ""
 		if (!reason || !reason.message) {
-			return channel.send("An unknown error occurred."+idString);
+			return channel.send("An unknown error occurred."+idString)
 		} if (reason.message && reason.message.startsWith("No video id found:")) {
-			return channel.send(`That is not a valid YouTube video.`+idString);
+			return channel.send(`That is not a valid YouTube video.`+idString)
 		} else if (reason.message && (
 				reason.message.includes("who has blocked it in your country")
 			|| reason.message.includes("This video is unavailable")
@@ -38,9 +38,9 @@ let common = {
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
-					channel.send(result).then(resolve);
-				});
-			});
+					channel.send(result).then(resolve)
+				})
+			})
 		}
 	},
 
@@ -48,19 +48,19 @@ let common = {
 	 * @param {Number} seconds
 	 */
 	prettySeconds: function(seconds) {
-		let minutes = Math.floor(seconds / 60);
-		seconds = seconds % 60;
-		let hours = Math.floor(minutes / 60);
-		minutes = minutes % 60;
-		let output = [];
+		let minutes = Math.floor(seconds / 60)
+		seconds = seconds % 60
+		let hours = Math.floor(minutes / 60)
+		minutes = minutes % 60
+		let output = []
 		if (hours) {
-			output.push(hours);
-			output.push(minutes.toString().padStart(2, "0"));
+			output.push(hours)
+			output.push(minutes.toString().padStart(2, "0"))
 		} else {
-			output.push(minutes);
+			output.push(minutes)
 		}
-		output.push(seconds.toString().padStart(2, "0"));
-		return output.join(":");
+		output.push(seconds.toString().padStart(2, "0"))
+		return output.join(":")
 	},
 
 	inputToID:

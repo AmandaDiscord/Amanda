@@ -7,7 +7,7 @@ const hotreload = require("./modules/hotreload.js")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 
-const Amanda = require("./modules/structures/Discord/Amanda");
+const Amanda = require("./modules/structures/Discord/Amanda")
 
 // @ts-ignore
 const config = require("./config.js")

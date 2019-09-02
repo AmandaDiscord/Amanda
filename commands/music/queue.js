@@ -1,17 +1,17 @@
 //@ts-check
 
-const Discord = require("discord.js");
+const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
 let {client, reloader, queueStore} = passthrough
 
-const voiceEmptyDuration = 20000;
+const voiceEmptyDuration = 20000
 
-let utils = require("../../modules/utilities.js");
-reloader.useSync("./modules/utilities.js", utils);
+let utils = require("../../modules/utilities.js")
+reloader.useSync("./modules/utilities.js", utils)
 
-let lang = require("../../modules/lang.js");
-reloader.useSync("./modules/lang.js", lang);
+let lang = require("../../modules/lang.js")
+reloader.useSync("./modules/lang.js", lang)
 
 let songTypes = require("./songtypes.js")
 reloader.useSync("./commands/music/songtypes.js", songTypes)
@@ -39,12 +39,12 @@ class Queue {
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 		.setCallback(() => {
-			this.textChannel.send("Everyone left, so I have as well.");
-			this._dissolve();
+			this.textChannel.send("Everyone left, so I have as well.")
+			this._dissolve()
 		})
 		.setDelay(voiceEmptyDuration)
 
-		this.voiceLeaveWarningMessagePromise = null;
+		this.voiceLeaveWarningMessagePromise = null
 		this.player = client.lavalink.join({
 			guild: this.guildID,
 			channel: this.voiceChannel.id,
@@ -224,17 +224,17 @@ class Queue {
 	 * @returns {0|1}
 	 */
 	addSong(song, insert) {
-		let position; // the actual position to insert into, `undefined` to push
+		let position // the actual position to insert into, `undefined` to push
 		if (insert == undefined) { // no insert? just push
-			position = -1;
+			position = -1
 		} else if (typeof(insert) == "number") { // number? insert into that point
-			position = insert;
+			position = insert
 		} else if (typeof(insert) == "boolean") { // boolean?
-			if (insert) position = 1; // if insert is true, insert
-			else position = -1; // otherwise, push
+			if (insert) position = 1 // if insert is true, insert
+			else position = -1 // otherwise, push
 		}
-		if (position == -1) this.songs.push(song);
-		else this.songs.splice(position, 0, song);
+		if (position == -1) this.songs.push(song)
+		else this.songs.splice(position, 0, song)
 		if (this.songs.length == 1) {
 			this.play()
 			return 1
@@ -318,15 +318,15 @@ class Queue {
 	_makeReactionMenu() {
 		this.npMenu = utils.reactionMenu(this.np, [
 			{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return;
+				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.togglePlaying("reaction")
 			}},
 			{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return;
+				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.skip()
 			}},
 			{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return;
+				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.stop()
 			}}
 		])

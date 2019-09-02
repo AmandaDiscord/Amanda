@@ -34,36 +34,36 @@ class VoiceStateCallback {
 	 * @constructor
 	 */
 	constructor(userID, guild, timeoutMs, callback) {
-		this.userID = userID;
-		this.guild = guild;
-		this.timeout = setTimeout(() => this.cancel(), timeoutMs);
-		this.callback = callback;
-		this.active = true;
-		voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel());
-		this.add();
+		this.userID = userID
+		this.guild = guild
+		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
+		this.callback = callback
+		this.active = true
+		voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel())
+		this.add()
 	}
 	add() {
-		voiceStateCallbackManager.callbacks.push(this);
+		voiceStateCallbackManager.callbacks.push(this)
 	}
 	remove() {
-		let index = voiceStateCallbackManager.callbacks.indexOf(this);
-		if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1);
+		let index = voiceStateCallbackManager.callbacks.indexOf(this)
+		if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1)
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 */
 	trigger(voiceChannel) {
 		if (this.active) {
-			this.active = false;
-			this.remove();
-			this.callback(voiceChannel);
+			this.active = false
+			this.remove()
+			this.callback(voiceChannel)
 		}
 	}
 	cancel() {
 		if (this.active) {
-			this.active = false;
-			this.remove();
-			this.callback(null);
+			this.active = false
+			this.remove()
+			this.callback(null)
 		}
 	}
 }
@@ -75,7 +75,7 @@ const voiceStateCallbackManager = {
 	 * @returns {Array<VoiceStateCallback>}
 	 */
 	getAll: function(userID, guild) {
-		return this.callbacks.filter(o => o.userID == userID && o.guild == guild);
+		return this.callbacks.filter(o => o.userID == userID && o.guild == guild)
 	}
 }
 /**
@@ -86,8 +86,8 @@ const voiceStateCallbackManager = {
  */
 function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
 	return new Promise(resolve => {
-		new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel));
-	});
+		new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel))
+	})
 }
 
 utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
@@ -95,11 +95,11 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 	if (newState.id != client.user.id && newState.channel) voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
 
 	// Pass on to queue for leave timeouts
-	let channel = oldState.channel || newState.channel;
-	if (!channel || !channel.guild) return;
-	let queue = queueStore.get(channel.guild.id);
-	if (queue) queue.voiceStateUpdate(oldState, newState);
-});
+	let channel = oldState.channel || newState.channel
+	if (!channel || !channel.guild) return
+	let queue = queueStore.get(channel.guild.id)
+	if (queue) queue.voiceStateUpdate(oldState, newState)
+})
 
 /**
  * @param {Discord.Message} msg
@@ -107,10 +107,10 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
  * @returns {Promise<(Discord.VoiceChannel|null)>}
  */
 async function detectVoiceChannel(msg, wait) {
-	if (msg.member.voice.channel) return msg.member.voice.channel;
-	if (!wait) return null;
-	let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg));
-	return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000);
+	if (msg.member.voice.channel) return msg.member.voice.channel
+	if (!wait) return null
+	let voiceWaitMsg = await msg.channel.send(lang.voiceChannelWaiting(msg))
+	return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000)
 }
 
 /**
@@ -274,7 +274,7 @@ const subcommandsMap = new Map([
 		queue: "required",
 		code: async (msg, args, {queue}) => {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
-			queue.wrapper.showInfo(msg.channel);
+			queue.wrapper.showInfo(msg.channel)
 		}
 	}],
 	["pause", {
@@ -348,7 +348,7 @@ commands.assign({
 			} else if (suffix == "new") {
 				await deleteAll()
 				let hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
-				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1]);
+				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1])
 				send(
 					`Your existing tokens were deleted, and a new one was created.`
 					+"\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
@@ -373,7 +373,7 @@ commands.assign({
 			}
 
 			function deleteAll() {
-				return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id);
+				return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id)
 			}
 
 			function send(text, announce = true, throwFailed = false) {
@@ -392,13 +392,13 @@ commands.assign({
 		aliases: ["frisky"],
 		category: "music",
 		process: async function(msg, suffix) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg));
-			const voiceChannel = msg.member.voice.channel;
-			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg));
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			let voiceChannel = await detectVoiceChannel(msg, false)
+			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
 			if (suffix == "classic") suffix = "classics" // alias
-			let station = ["frisky", "deep", "chill", "classics"].includes(suffix) ? suffix : "frisky";
-			let song = new songTypes.FriskySong(station);
-			return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg);
+			let station = ["frisky", "deep", "chill", "classics"].includes(suffix) ? suffix : "frisky"
+			let song = new songTypes.FriskySong(station)
+			return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg)
 		}
 	},
 	"music": {
