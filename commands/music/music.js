@@ -54,9 +54,9 @@ class VoiceStateCallback {
 	 */
 	trigger(voiceChannel) {
 		if (this.active) {
-			if (!voiceChannel.joinable || !voiceChannel.speakable) this.callback(null)
 			this.active = false
 			this.remove()
+			if (!voiceChannel.joinable || !voiceChannel.speakable) return this.callback(null)
 			this.callback(voiceChannel)
 		}
 	}
