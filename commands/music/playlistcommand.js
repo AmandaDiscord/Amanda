@@ -179,11 +179,12 @@ commands.assign({
 				.setColor("36393E")
 				msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
-				if (!msg.member.voice.channel) return msg.channel.send(lang.voiceMustJoin(msg))
+				let voiceChannel = await common.detectVoiceChannel(msg, true)
+				if (!voiceChannel) return
 				let rows = utils.playlistSection(orderedSongs, args[2], args[3], action.toLowerCase()[0] == "s")
 				if (rows.length) {
 					let songs = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
-					common.inserters.fromSongArray(msg.channel, msg.member.voice.channel, songs, false, msg)
+					common.inserters.fromSongArray(msg.channel, voiceChannel, songs, false, msg)
 				} else {
 					msg.channel.send("That playlist is empty. Add some songs with `&music playlist "+playlistRow.name+" add <song>`!")
 				}

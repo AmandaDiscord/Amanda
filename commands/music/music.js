@@ -19,103 +19,16 @@ reloader.useSync("./commands/music/songtypes.js", songTypes)
 let queueFile = require("./queue.js")
 reloader.useSync("./commands/music/queue.js", queueFile)
 
-/*let playlistCommand = require("./playlistcommand.js")
-reloader.useSync("./commands/music/playlistcommand.js", playlistCommand)*/
-
 let common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
-class VoiceStateCallback {
-	/**
-	 * @param {String} userID
-	 * @param {Discord.Guild} guild
-	 * @param {Number} timeoutMs
-	 * @param {(voiceChannel: Discord.VoiceChannel) => void} callback
-	 * @constructor
-	 */
-	constructor(userID, guild, timeoutMs, callback) {
-		this.userID = userID
-		this.guild = guild
-		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
-		this.callback = callback
-		this.active = true
-		voiceStateCallbackManager.getAll(this.userID, this.guild).forEach(o => o.cancel())
-		this.add()
-	}
-	add() {
-		voiceStateCallbackManager.callbacks.push(this)
-	}
-	remove() {
-		let index = voiceStateCallbackManager.callbacks.indexOf(this)
-		if (index != -1) voiceStateCallbackManager.callbacks.splice(index, 1)
-	}
-	/**
-	 * @param {Discord.VoiceChannel} voiceChannel
-	 */
-	trigger(voiceChannel) {
-		if (this.active) {
-			this.active = false
-			this.remove()
-			if (!voiceChannel.joinable || !voiceChannel.speakable) return this.callback(null)
-			this.callback(voiceChannel)
-		}
-	}
-	cancel() {
-		if (this.active) {
-			this.active = false
-			this.remove()
-			this.callback(null)
-		}
-	}
-}
-const voiceStateCallbackManager = {
-	callbacks: [],
-	/**
-	 * @param {String} userID
-	 * @param {Discord.Guild} guild
-	 * @returns {Array<VoiceStateCallback>}
-	 */
-	getAll: function(userID, guild) {
-		return this.callbacks.filter(o => o.userID == userID && o.guild == guild)
-	}
-}
-/**
- * @param {String} userID
- * @param {Discord.Guild} guild
- * @param {Number} timeoutMs
- * @returns {Promise<Discord.VoiceChannel>}
- */
-function getPromiseVoiceStateCallback(userID, guild, timeoutMs) {
-	return new Promise(resolve => {
-		new VoiceStateCallback(userID, guild, timeoutMs, voiceChannel => resolve(voiceChannel))
-	})
-}
-
 utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
-	// Process waiting to join
-	if (newState.id != client.user.id && newState.channel) voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
-
 	// Pass on to queue for leave timeouts
 	let channel = oldState.channel || newState.channel
 	if (!channel || !channel.guild) return
 	let queue = queueStore.get(channel.guild.id)
 	if (queue) queue.voiceStateUpdate(oldState, newState)
 })
-
-/**
- * @param {Discord.Message} msg
- * @param {Boolean} wait
- * @returns {Promise<(Discord.VoiceChannel)>}
- */
-async function detectVoiceChannel(msg, wait) {
-	if (msg.member.voice.channel) {
-		if (!msg.member.voice.channel.joinable || !msg.member.voice.channel.speakable) return null;
-		return msg.member.voice.channel
-	}
-	if (!wait) return null
-	await msg.channel.send(lang.voiceChannelWaiting(msg))
-	return getPromiseVoiceStateCallback(msg.author.id, msg.guild, 30000)
-}
 
 /**
  * @type {Map<String, {voiceChannel?: String, queue?: String, code: (msg: Discord.Message, args: Array<String>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue})) => any}>}
@@ -397,8 +310,8 @@ commands.assign({
 		category: "music",
 		process: async function(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
-			let voiceChannel = await detectVoiceChannel(msg, false)
-			if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+			let voiceChannel = await common.detectVoiceChannel(msg, true)
+			if (!voiceChannel) return
 			if (suffix == "classic") suffix = "classics" // alias
 			let station = ["frisky", "deep", "chill", "classics"].includes(suffix) ? suffix : "frisky"
 			let song = new songTypes.FriskySong(station)
@@ -431,15 +344,15 @@ commands.assign({
 			// Provide a voice channel?
 			if (subcommandObject.voiceChannel) {
 				if (subcommandObject.voiceChannel == "required") {
-					let voiceChannel = await detectVoiceChannel(msg, false)
-					if (!voiceChannel) return msg.channel.send(lang.voiceMustJoin(msg))
+					let voiceChannel = await common.detectVoiceChannel(msg, false)
+					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "ask") {
-					let voiceChannel = await detectVoiceChannel(msg, true)
-					if (!voiceChannel) return // this was stupid: msg.channel.send(lang.voiceMustJoin(msg))
+					let voiceChannel = await common.detectVoiceChannel(msg, true)
+					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
-					let voiceChannel = await detectVoiceChannel(msg, false)
+					let voiceChannel = msg.member.voice.channel
 					subcommmandData.voiceChannel = voiceChannel
 				}
 			}

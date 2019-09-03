@@ -2,6 +2,7 @@
 
 const rp = require("request-promise")
 const Discord = require("discord.js")
+const path = require("path")
 
 const passthrough = require("../../passthrough")
 let {client, reloader} = passthrough
@@ -11,6 +12,54 @@ reloader.useSync("./modules/utilities.js", utils)
 
 let lang = require("../../modules/lang.js")
 reloader.useSync("./modules/lang.js", lang)
+
+class VoiceStateCallback {
+	/**
+	 * @param {Discord.Message} msg
+	 * @param {number} timeoutMs
+	 * @param {(voiceChannel: Discord.VoiceChannel) => any} callback
+	 * @constructor
+	 */
+	constructor(msg, timeoutMs, callback) {
+		this.msg = msg
+		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
+		this.callback = callback
+		this.active = true
+		common.voiceStateCallbackManager.getAll(this.msg.author.id, this.msg.guild).forEach(o => o.cancel())
+		this.add()
+	}
+	add() {
+		common.voiceStateCallbackManager.callbacks.push(this)
+	}
+	remove() {
+		let index = common.voiceStateCallbackManager.callbacks.indexOf(this)
+		if (index != -1) common.voiceStateCallbackManager.callbacks.splice(index, 1)
+	}
+	/**
+	 * @param {Discord.VoiceChannel} voiceChannel
+	 */
+	trigger(voiceChannel) {
+		if (this.active) {
+			let checkedVoiceChannel = common.verifyVoiceChannel(voiceChannel, this.msg)
+			if (checkedVoiceChannel) {
+				// All good!
+				this.active = false
+				clearTimeout(this.timeout)
+				this.remove()
+				this.callback(voiceChannel)
+			}
+			// Else, couldn't join or speak. We'll keep this active in case they switch channels.
+		}
+	}
+	cancel() {
+		if (this.active) {
+			this.active = false
+			clearTimeout(this.timeout)
+			this.remove()
+			this.callback(null)
+		}
+	}
+}
 
 let common = {
 	/**
@@ -122,6 +171,7 @@ let common = {
 			else return null
 		}
 	},
+
 	/**
 	 * Call /loadtracks on the first node using the passed identifier.
 	 * @param {String} input
@@ -222,7 +272,96 @@ let common = {
 				common.inserters.fromData(textChannel, voiceChannel, track, insert)
 			})
 		}
+	},
+
+	voiceStateCallbackManager: {
+		/**
+		 * @type {VoiceStateCallback[]}
+		 */
+		callbacks: [],
+		/**
+		 * @param {String} userID
+		 * @param {Discord.Guild} guild
+		 * @returns {VoiceStateCallback[]}
+		 */
+		getAll: function(userID, guild) {
+			return this.callbacks.filter(o => o.msg.author.id == userID && o.msg.guild == guild)
+		}
+	},
+
+	VoiceStateCallback,
+
+	/**
+	 * @param {Discord.Message} msg
+	 * @param {number} timeoutMs
+	 * @returns {Promise<Discord.VoiceChannel>}
+	 */
+	getPromiseVoiceStateCallback: function(msg, timeoutMs) {
+		return new Promise(resolve => {
+			new common.VoiceStateCallback(msg, timeoutMs, voiceChannel => resolve(voiceChannel))
+		})
+	},
+
+	/**
+	 * Find the member that sent a message and get their voice channel.
+	 * If `wait` is set, then wait 30 seconds for them to connect.
+	 * Returns a promise that eventually resolves to a voice channel, or null (if they didn't join in time)
+	 * **This responds to the user on failure, and also checks if the client has permission to join and speak.**
+	 * @param {Discord.Message} msg
+	 * @param {Boolean} wait If false, return immediately. If true, wait up to 30 seconds for the member to connect.
+	 * @returns {Promise<(Discord.VoiceChannel|null)>}
+	 */
+	detectVoiceChannel: async function(msg, wait) {
+		// Already in a voice channel? Use that!
+		if (msg.member.voice.channel) return common.verifyVoiceChannel(msg.member.voice.channel, msg)
+		// Not in a voice channel, and not waiting? Quit.
+		if (!wait) {
+			msg.channel.send(lang.voiceMustJoin(msg))
+			return null
+		}
+		// Tell the user to join.
+		let prompt = await msg.channel.send(lang.voiceChannelWaiting(msg))
+		// Return a promise which waits for them.
+		return common.getPromiseVoiceStateCallback(msg, 30000).then(voiceChannel => {
+			if (voiceChannel) {
+				prompt.delete()
+				return voiceChannel
+			} else {
+				prompt.edit(lang.voiceMustJoin(msg))
+				return null
+			}
+		})
+	},
+
+	/**
+	 * Checks if the client can join and speak in the voice channel.
+	 * If it can, return the voice channel.
+	 * If it can't, send an error in chat and return null.
+	 * @param {Discord.VoiceChannel} voiceChannel Voice channel to check
+	 * @param {Discord.Message} msg Message to direct errors at
+	 * @return {(Discord.VoiceChannel|null)}
+	 */
+	verifyVoiceChannel: function(voiceChannel, msg) {
+		if (!voiceChannel.joinable) {
+			msg.channel.send(lang.voiceCannotJoin(msg))
+			return null
+		}
+		if (!voiceChannel.speakable) {
+			msg.channel.send(lang.voiceCannotSpeak(msg))
+			return null
+		}
+		// All good!
+		return voiceChannel
 	}
 }
+
+utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
+	// Process waiting to join
+	// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
+	if (newState.id != client.user.id && newState.channel) {
+		// Trigger all callbacks for that user in that guild
+		common.voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
+	}
+})
 
 module.exports = common
