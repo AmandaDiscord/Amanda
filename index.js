@@ -11,7 +11,7 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 
 // @ts-ignore
 const config = require("./config.js")
-const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"]})
+const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0})
 const youtube = new YouTube(config.yt_api_key)
 
 let db = mysql.createPool({
