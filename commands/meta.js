@@ -508,7 +508,8 @@ commands.assign({
 						return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.")
 					}
 				} else if (scope == "self") {
-					let serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
+					let serverRow;
+					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
 						serverRow ? serverRow.value : null,
