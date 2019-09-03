@@ -70,8 +70,6 @@ module.exports = class Reloader {
 		let syncers = this.syncers.filter(o => o.filename == filename)
 		delete require.cache[require.resolve(filename)]
 		let result = require(filename)
-		if (result instanceof Function) {
-			syncers.forEach(syncer => Object.assign(syncer.object, result))
-		}
+		syncers.forEach(syncer => Object.assign(syncer.object, result))
 	}
 }
