@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
-    "start": "node --expose-gc --optimize_for_size --max_old_space_size=460 index.js"
+    "start": "node --expose-gc index.js"
   },
   "license": "UNLICENSED",
   "engines": {
