@@ -2,6 +2,9 @@
 
 const Discord = require("discord.js")
 
+/**
+ * @extends Discord.Collection<string,Command>
+ */
 class CommandStore extends Discord.Collection {
 	constructor() {
 		super()
