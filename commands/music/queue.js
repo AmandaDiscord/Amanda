@@ -308,7 +308,6 @@ class Queue {
 		if (this.np && !force) {
 			return Promise.resolve()
 		} else {
-			if (this.npMenu) this.npMenu.destroy(true)
 			return this.textChannel.send(this._buildNPEmbed()).then(x => {
 				this.np = x
 				this._makeReactionMenu()
@@ -316,6 +315,7 @@ class Queue {
 		}
 	}
 	_makeReactionMenu() {
+		if (this.npMenu) this.npMenu.destroy(true)
 		this.npMenu = utils.reactionMenu(this.np, [
 			{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
@@ -325,7 +325,7 @@ class Queue {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.skip()
 			}},
-			{emoji: "⏹", remove: "all", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+			{emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.stop()
 			}}

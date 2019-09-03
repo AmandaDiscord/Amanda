@@ -24,6 +24,7 @@ module.exports = class ReactionMenu {
 		}
 	}
 	/**
+	 * Remove the menu from storage, and optionally delete its reactions.
 	 * @param {Boolean} [remove]
 	 */
 	destroy(remove) {
