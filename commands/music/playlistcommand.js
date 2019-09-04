@@ -119,7 +119,7 @@ commands.assign({
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
 				if (!args[2]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`)
 				msg.channel.sendTyping()
-				let result = await common.resolveInput.getTracks(args.slice(2).join(" "), msg.channel, msg.author.id)
+				let result = await common.getTracks(`ytsearch:${args.slice(2).join(" ")}`);
 				(async () => {
 					if (result == null) throw new Error()
 					let data = result[0]
@@ -200,7 +200,7 @@ commands.assign({
 						else return true
 					})
 					let editmsg = await msg.channel.send("Importing playlist. This could take a moment...\n(Fetching song info)")
-					let fullvideos = await Promise.all(videos.map(video => common.resolveInput.getTracks(video.id, msg.channel, msg.author.id).then(r => r[0])))
+					let fullvideos = await Promise.all(videos.map(video => common.getTracks(video.id).then(r => r[0])))
 					if (!fullvideos.length) return editmsg.edit(`${msg.author.username}, all videos in that playlist have already been imported.`)
 					await editmsg.edit("Importing playlist. This could take a moment...\n(Updating database)")
 					for (let i = 0; i < fullvideos.length; i++) {
