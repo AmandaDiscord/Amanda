@@ -31,7 +31,7 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 })
 
 /**
- * @type {Map<String, {voiceChannel?: String, queue?: String, code: (msg: Discord.Message, args: Array<String>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue})) => any}>}
+ * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue})) => any}>}
  */
 const subcommandsMap = new Map([
 	["play", {

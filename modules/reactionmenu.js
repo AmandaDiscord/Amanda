@@ -48,6 +48,7 @@ module.exports = class ReactionMenu {
 	 */
 	_removeEach() {
 		this.actions.forEach(a => {
+			if (!a.messageReaction) return;
 			a.messageReaction.users.remove().catch(() => {})
 		})
 	}

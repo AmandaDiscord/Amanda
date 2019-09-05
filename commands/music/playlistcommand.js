@@ -119,13 +119,17 @@ commands.assign({
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
 				if (!args[2]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`)
 				msg.channel.sendTyping()
-				let result = await common.getTracks(`ytsearch:${args.slice(2).join(" ")}`);
+				let match = common.inputToID(args.slice(2).join(" "))
+				let result;
+				if (match && match.type == "video") result = await common.getTracks(match.id);
+				else if (match && match.type == "playlist") return msg.channel.send("Do not use playlist importing with `playlist add`. Use `playlist import` instead")
+				else if (!match) result = await common.getTracks(`ytsearch: ${args.slice(2).join(" ")}`);
 				(async () => {
-					if (result == null) throw new Error()
+					if (!result || result && !result[0]) throw new Error()
 					let data = result[0]
 					if (orderedSongs.some(row => row.videoID == data.info.identifier)) return msg.channel.send(lang.playlistDuplicateItem(msg))
 					await Promise.all([
-						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [data.info.identifier, data.info.title, data.info.length, data.info.identifier]),
+						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [data.info.identifier, data.info.title, (data.info.length/1000), data.info.identifier]),
 						utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, data.info.identifier]),
 						utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [data.info.identifier, playlistRow.playlistID, data.info.identifier])
 					])

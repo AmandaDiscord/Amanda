@@ -61,8 +61,8 @@ class Song {
 		}
 	}
 	/**
-	 * @param {Number} time milliseconds
-	 * @param {Boolean} paused
+	 * @param {number} time milliseconds
+	 * @param {boolean} paused
 	 */
 	getProgress(time, paused) {
 		return ""
@@ -76,20 +76,20 @@ class Song {
 	}
 	/**
 	 * Sendable data showing the related songs
-	 * @returns {Promise<String|Discord.MessageEmbed>}
+	 * @returns {Promise<string|Discord.MessageEmbed>}
 	 */
 	showRelated() {
 		return Promise.resolve("This isn't a real song.")
 	}
 	/**
 	 * Get sendable data with information about this song
-	 * @returns {Promise<String|Discord.MessageEmbed>}
+	 * @returns {Promise<string|Discord.MessageEmbed>}
 	 */
 	showInfo() {
 		return Promise.resolve("This isn't a real song.")
 	}
 	/**
-	 * @param {String} message
+	 * @param {string} message
 	 */
 	validationError(message) {
 		console.error("Song validation error: "+this.constructor.name+" "+message)
@@ -113,10 +113,10 @@ class Song {
 
 class YouTubeSong extends Song {
 	/**
-	 * @param {String} id
-	 * @param {String} title
-	 * @param {Number} lengthSeconds
-	 * @param {String?} track
+	 * @param {string} id
+	 * @param {string} title
+	 * @param {number} lengthSeconds
+	 * @param {string?} track
 	 */
 	constructor(id, title, lengthSeconds, track = undefined) {
 		super()
@@ -149,8 +149,8 @@ class YouTubeSong extends Song {
 		}
 	}
 	/**
-	 * @param {Number} time milliseconds
-	 * @param {Boolean} paused
+	 * @param {number} time milliseconds
+	 * @param {boolean} paused
 	 */
 	getProgress(time, paused) {
 		let max = this.lengthSeconds
@@ -362,112 +362,112 @@ module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 
 /**
  * @typedef {Object} FriskyNowPlayingItem
- * @property {String} station
- * @property {{currentlisteners: Number, peaklisteners: Number, maxlisteners: Number, uniquelisteners: Number, averagetime: Number, servergenre: String, serverurl: String, servertitle: String, songtitle: String, nexttitle: String, streamhits: Number, streamstatus: Number, backupstatus: Number, streamsource: String, streampath: String, streamuptime: Number, bitrate: Number, content: String, version: String}} server
- * @property {String} title
+ * @property {string} station
+ * @property {{currentlisteners: number, peaklisteners: number, maxlisteners: number, uniquelisteners: number, averagetime: number, servergenre: string, serverurl: string, servertitle: string, songtitle: string, nexttitle: string, streamhits: number, streamstatus: number, backupstatus: number, streamsource: string, streampath: string, streamuptime: number, bitrate: number, content: string, version: string}} server
+ * @property {string} title
  * @property {FriskyEpisode} episode
  * @property {FriskyShow} show
  */
 
 /**
  * @typedef {Object} FriskyEpisode
- * @property {Number} id
- * @property {String} title
- * @property {String} url
- * @property {String} full_url
- * @property {Number} artist_id
- * @property {Array<String>} genre
- * @property {Array<String>} track_list
- * @property {{url: String, mime: String, filename: String, filesize: Number, s3_filename: String}} mix_url
- * @property {{url: String, mime: String, filename: String, filesize: Number, s3_filename: String}} mix_url_64k
- * @property {Number} show_id
- * @property {String} included_as
- * @property {String} allow_playing
- * @property {Number} reach
- * @property {String} artist_title
- * @property {String} [artist_url]
- * @property {String} [artist_home_city]
- * @property {String} [artist_residency]
- * @property {String} artist_genre
- * @property {String} artist_biography
+ * @property {number} id
+ * @property {string} title
+ * @property {string} url
+ * @property {string} full_url
+ * @property {number} artist_id
+ * @property {Array<string>} genre
+ * @property {Array<string>} track_list
+ * @property {{url: string, mime: string, filename: string, filesize: number, s3_filename: string}} mix_url
+ * @property {{url: string, mime: string, filename: string, filesize: number, s3_filename: string}} mix_url_64k
+ * @property {number} show_id
+ * @property {string} included_as
+ * @property {string} allow_playing
+ * @property {number} reach
+ * @property {string} artist_title
+ * @property {string} [artist_url]
+ * @property {string} [artist_home_city]
+ * @property {string} [artist_residency]
+ * @property {string} artist_genre
+ * @property {string} artist_biography
  * @property {FriskyThumb} artist_photo
- * @property {String} [artist_facebook_url]
- * @property {String} [artist_myspace_url]
- * @property {String} [artist_twitter_url]
- * @property {String} [artist_website_url]
- * @property {String} [artist_musical_influences]
- * @property {String} [artist_favorite_venues]
- * @property {String} [artist_status]
- * @property {String} show_title
- * @property {String} show_url
- * @property {String} show_summary
- * @property {Array<String>} show_genre
- * @property {Number} show_artist_id
+ * @property {string} [artist_facebook_url]
+ * @property {string} [artist_myspace_url]
+ * @property {string} [artist_twitter_url]
+ * @property {string} [artist_website_url]
+ * @property {string} [artist_musical_influences]
+ * @property {string} [artist_favorite_venues]
+ * @property {string} [artist_status]
+ * @property {string} show_title
+ * @property {string} show_url
+ * @property {string} show_summary
+ * @property {Array<string>} show_genre
+ * @property {number} show_artist_id
  * @property {FriskyThumb} show_image
  * @property {FriskyThumb} show_thumbnail
  * @property {FriskyThumb} show_album_art
- * @property {String} show_type
- * @property {String} show_status
- * @property {Number} occurrence_id
- * @property {String} occurrence_title
- * @property {String} occurrence_url
- * @property {String} occurrence_summary
- * @property {String} occurrence_genre
- * @property {Number} occurrence_artist_id
+ * @property {string} show_type
+ * @property {string} show_status
+ * @property {number} occurrence_id
+ * @property {string} occurrence_title
+ * @property {string} occurrence_url
+ * @property {string} occurrence_summary
+ * @property {string} occurrence_genre
+ * @property {number} occurrence_artist_id
  * @property {FriskyThumb} occurrence_image
  * @property {FriskyThumb} occurrence_thumbnail
  * @property {FriskyThumb} occurrence_album_art
- * @property {String} occurrence_status
- * @property {String} occurrence_location
- * @property {String} occurrence_type
- * @property {String} show_location
- * @property {String} show_channel_title
+ * @property {string} occurrence_status
+ * @property {string} occurrence_location
+ * @property {string} occurrence_type
+ * @property {string} show_location
+ * @property {string} show_channel_title
  */
 
 /**
  * @typedef {Object} FriskyShow
- * @property {Number} id
- * @property {String} title
- * @property {String} url
- * @property {String} summary
- * @property {Array<String>} genre
- * @property {Number} artist_id
+ * @property {number} id
+ * @property {string} title
+ * @property {string} url
+ * @property {string} summary
+ * @property {Array<string>} genre
+ * @property {number} artist_id
  * @property {FriskyThumb} image
  * @property {FriskyThumb} thumbnail
  * @property {FriskyThumb} album_art
- * @property {String} type
- * @property {String} status
- * @property {String} channel_title
+ * @property {string} type
+ * @property {string} status
+ * @property {string} channel_title
  * @property {Date} modification_time
- * @property {String} location
+ * @property {string} location
  * @property {Date} next_episode
  */
 
 /**
  * @typedef {Object} FriskyThumb
- * @property {String} url
- * @property {String} mime
- * @property {String} filename
- * @property {Number} filesize
- * @property {String} thumb_url
- * @property {String} custom_url
- * @property {Number} image_width
- * @property {String} s3_filename
- * @property {Number} thumb_width
- * @property {Number} image_height
- * @property {String} s3_thumbname
- * @property {Number} thumb_height
- * @property {Number} thumb_filesize
+ * @property {string} url
+ * @property {string} mime
+ * @property {string} filename
+ * @property {number} filesize
+ * @property {string} thumb_url
+ * @property {string} custom_url
+ * @property {number} image_width
+ * @property {string} s3_filename
+ * @property {number} thumb_width
+ * @property {number} image_height
+ * @property {string} s3_thumbname
+ * @property {number} thumb_height
+ * @property {number} thumb_filesize
  */
 
  /**
  * @typedef {Object} FriskyMixResponse
  * @property {Object} data
- * @property {Boolean} data.success
- * @property {String} data.error
+ * @property {boolean} data.success
+ * @property {string} data.error
  * @property {Object} data.mp3_url
- * @property {Number} data.mp3_url.expires
- * @property {String} data.mp3_url.path
+ * @property {number} data.mp3_url.expires
+ * @property {string} data.mp3_url.path
  */
 
 module.exports.Song = Song

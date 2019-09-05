@@ -220,7 +220,7 @@ class Queue {
 	 * Returns 0 on ordinary success.
 	 * Returns 1 if this made the queue non-empty and started playback.
 	 * @param {songTypes.Song} song
-	 * @param {Number|Boolean} [insert]
+	 * @param {number|boolean} [insert]
 	 * @returns {0|1}
 	 */
 	addSong(song, insert) {
@@ -301,7 +301,7 @@ class Queue {
 	/**
 	 * Send a new now playing message and generate reactions on it. Destroy the previous reaction menu.
 	 * This can be called internally and externally.
-	 * @param {Boolean} force If false, don't create more NP messages. If true, force creation of a new one.
+	 * @param {boolean} force If false, don't create more NP messages. If true, force creation of a new one.
 	 * @returns {Promise<void>}
 	 */
 	sendNewNP(force = false) {
@@ -461,9 +461,9 @@ module.exports.QueueWrapper = QueueWrapper
 
 /**
  * @typedef {Object} LLEndEvent
- * @property {String} guildId
- * @property {String} reason
- * @property {String} track
+ * @property {string} guildId
+ * @property {string} reason
+ * @property {string} track
  * @property {"event"} op
  * @property {"TrackEndEvent"} type
  */

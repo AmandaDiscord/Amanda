@@ -65,9 +65,9 @@ let common = {
 	/**
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {Object} reason
-	 * @param {String} reason.message
-	 * @param {String} id
-	 * @param {Number} item
+	 * @param {string} reason.message
+	 * @param {string} id
+	 * @param {number} item
 	 * @returns {Promise<Discord.Message>}
 	 */
 	manageYtdlGetInfoErrors: function(channel, reason, id, item) {
@@ -94,7 +94,7 @@ let common = {
 	},
 
 	/**
-	 * @param {Number} seconds
+	 * @param {number} seconds
 	 */
 	prettySeconds: function(seconds) {
 		let minutes = Math.floor(seconds / 60)
@@ -114,7 +114,7 @@ let common = {
 
 	inputToID:
 	/**
-	 * @param {String} input
+	 * @param {string} input
 	 * @returns {({type: string, id?: string, list?: string})|null}
 	 */
 	function(input) {
@@ -174,8 +174,8 @@ let common = {
 
 	/**
 	 * Call /loadtracks on the first node using the passed identifier.
-	 * @param {String} input
-	 * @returns {Promise<{track: String, info: {identifier: String, isSeekable: Boolean, author: String, length: Number, isStream: Boolean, position: Number, title: String, uri: String}}[]>}
+	 * @param {string} input
+	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
 	 */
 	getTracks: async function(input) {
 		const node = client.lavalink.nodes.first()
@@ -280,7 +280,7 @@ let common = {
 		 */
 		callbacks: [],
 		/**
-		 * @param {String} userID
+		 * @param {string} userID
 		 * @param {Discord.Guild} guild
 		 * @returns {VoiceStateCallback[]}
 		 */
@@ -308,7 +308,7 @@ let common = {
 	 * Returns a promise that eventually resolves to a voice channel, or null (if they didn't join in time)
 	 * **This responds to the user on failure, and also checks if the client has permission to join and speak.**
 	 * @param {Discord.Message} msg
-	 * @param {Boolean} wait If false, return immediately. If true, wait up to 30 seconds for the member to connect.
+	 * @param {boolean} wait If false, return immediately. If true, wait up to 30 seconds for the member to connect.
 	 * @returns {Promise<(Discord.VoiceChannel|null)>}
 	 */
 	detectVoiceChannel: async function(msg, wait) {
