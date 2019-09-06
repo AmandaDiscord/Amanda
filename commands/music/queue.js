@@ -199,8 +199,10 @@ class Queue {
 	}
 	/**
 	 * Skip the current song by asking the player to stop.
+	 * @param {number} [amount]
 	 */
-	skip() {
+	skip(amount) {
+		if (amount) this.songs.splice(1, amount-1)
 		this.player.stop()
 	}
 	/**
@@ -395,8 +397,8 @@ class QueueWrapper {
 			}
 		}
 	}
-	skip() {
-		this.queue.skip()
+	skip(amount) {
+		this.queue.skip(amount)
 	}
 	stop() {
 		this.queue.stop()
