@@ -47,6 +47,8 @@ commands.assign({
 					function addRanking(r) {
 						p.ranking += r+"."
 					}
+					if (p.author == msg.author.id) addRanking(1)
+					else addRanking(0)
 					if (p.count == 0) addRanking(0)
 					else addRanking(1)
 					addRanking(p.playCount.toString().padStart(8, "0"))

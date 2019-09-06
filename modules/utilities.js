@@ -683,12 +683,6 @@ const utils = {
 		let page = 0
 		let msg = await channel.send(callback(page))
 		let reactionMenuExpires
-		function makeTimeout() {
-			clearTimeout(reactionMenuExpires)
-			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true)
-			}, 10*60*1000)
-		}
 		let reactionMenu = utils.reactionMenu(msg, [
 			{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
 				page--
@@ -703,7 +697,13 @@ const utils = {
 				makeTimeout()
 			}}
 		])
-		reactionMenuExpires = setTimeout(() => reactionMenu.destroy(), 10*60*1000)
+		function makeTimeout() {
+			clearTimeout(reactionMenuExpires)
+			reactionMenuExpires = setTimeout(() => {
+				reactionMenu.destroy(true)
+			}, 10*60*1000)
+		}
+		makeTimeout()
 	},
 
 	/**
@@ -928,7 +928,7 @@ const utils = {
 	 */
 	fixEmoji: function(emoji) {
 		if (emoji && emoji.name) {
-			if (emoji.id != null) return emoji.id
+			if (emoji.id != null) return emoji.name+":"+emoji.id
 			else return emoji.name
 		}
 		return emoji

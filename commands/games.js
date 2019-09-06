@@ -174,7 +174,7 @@ class TriviaGame extends Game {
 		)
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 			utils.reactionMenu(msg, [
-				{emoji: client.emojis.get("362741439211503616"), ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
+				{emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
 					if (user.bot) {
 						msg.channel.send(user+" SHUT UP!!!!!!!!")
 					} else {
