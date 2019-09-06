@@ -58,7 +58,10 @@ profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
 profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
 profileStorage.save("badge-none", "file", "./images/36393E.png")
+profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
+profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
 profileStorage.get("badge-none").then(badge => badge.resize(50, 50))
+profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 /**
  * @param {Discord.User} user
@@ -398,7 +401,7 @@ commands.assign({
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.avatarURL({format: "png", size: 128})),
-				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none"])
+				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none", "badge-hunter", "badge-booster"])
 			])
 
 			avatar.resize(111, 111)
@@ -407,7 +410,14 @@ commands.assign({
 			let heart = images.get("heart-"+heartType)
 
 			let badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
+			let mem = client.guilds.get("475599038536744960").members.get(user.id)
+			let boosting, hunter
+			if (mem) {
+				boosting = mem.roles.has("613685290938138625")
+				hunter = mem.roles.has("497586624390234112")
+			}
 			let badgeImage = images.get(badge)
+			/** @type {Jimp} */
 			let canvas
 
 			if (isOwner||isPremium) {
@@ -420,7 +430,10 @@ commands.assign({
 			canvas.composite(avatar, 32, 85)
 			canvas.composite(images.get("profile"), 0, 0)
 			canvas.composite(badgeImage, 166, 113)
-
+			if (boosting) {
+				if (badge == "badge-none") canvas.composite(images.get("badge-booster"), 166, 115)
+				else canvas.composite(images.get("badge-booster"), 216, 115)
+			}
 
 			let font = images.get("font")
 			let font2 = images.get("font2")
@@ -429,6 +442,10 @@ commands.assign({
 			canvas.print(font2, 550, 163, money)
 			canvas.composite(heart, 508, 207)
 			canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu?info.waifu.tag:"Nobody, yet")
+			if (hunter) {
+				canvas.composite(images.get("badge-hunter"), 508, 250)
+				canvas.print(font2, 550, 260, "Amanda Bug Catcher")
+			}
 
 			let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			let image = new Discord.MessageAttachment(buffer, "profile.png")
