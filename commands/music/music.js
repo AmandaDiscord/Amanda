@@ -169,8 +169,9 @@ const subcommandsMap = new Map([
 		code: async (msg, args, {queue}) => {
 			let amount
 			if (args[1]) {
-				amount = Number(args[1])
+				amount = Math.floor(Number(args[1]))
 				if (isNaN(amount)) return msg.channel.send(`That is not a valid amount of songs to skip`)
+				if (amount < 1) return msg.channel.send(`You have to skip 1 or more songs`)
 				if (queue.songs.length < amount) return msg.channel.send(`You cannot skip more songs than are in the queue!`)
 				if (queue.songs.length == amount) return queue.wrapper.stop()
 			}
