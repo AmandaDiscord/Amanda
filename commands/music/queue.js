@@ -158,7 +158,7 @@ class Queue {
 	 */
 	_dissolve() {
 		this.npUpdater.stop(false)
-		this.npMenu.destroy(true)
+		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guildID)
 		this.store.delete(this.guildID)
 	}
