@@ -133,7 +133,7 @@ class YouTubeSong extends Song {
 		() => {
 			return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
 				this.typeWhileGetRelated = false
-				return data.recommendedVideos.slice(0, 10)
+				return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 			})
 		})
 
