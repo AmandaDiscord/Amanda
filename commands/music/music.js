@@ -45,10 +45,15 @@ const subcommandsMap = new Map([
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
-				let tracks = await common.getTracks(match.id)
-				if (tracks[0]) {
+				let data = await common.invidious.getData(match.id)
+				let url = common.invidious.dataToURL(data)
+				if (url) {
 					// If the ID worked, add the song
-					common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
+					let track = await common.invidious.urlToTrack(url)
+					if (track) {
+						let song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
+						common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
+					}
 				} else {
 					// Otherwise, start a search
 					common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search)
@@ -121,7 +126,7 @@ const subcommandsMap = new Map([
 					}}
 					// Create the reaction menu
 					utils.reactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
-						let emoji = buttons[i].match(/\d{2,}/)[0]
+						let emoji = buttons[i].slice(2, -1)
 						return Object.assign({emoji}, action)
 					}))
 				}

@@ -192,18 +192,9 @@ class YouTubeSong extends Song {
 	showInfo() {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
 	}
-	prepare() {
+	async prepare() {
 		if (this.track == "!") {
-			return common.getTracks(this.id).then(tracks => {
-				if (tracks[0] && tracks[0].track) {
-					this.track = tracks[0].track
-				} else {
-					console.error(tracks)
-					this.error = "No tracks available for ID "+this.id
-				}
-			})
-		} else {
-			return Promise.resolve()
+			this.track = await common.invidious.getTrack(this.id)
 		}
 	}
 	destroy() {
@@ -356,7 +347,7 @@ class FriskySong extends Song {
 }
 
 function makeYouTubeSongFromData(data) {
-	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000), data.track)
+	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000))
 }
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 

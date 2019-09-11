@@ -192,6 +192,46 @@ let common = {
 		}).then(data => data.tracks)
 	},
 
+	invidious: {
+		/**
+		 * @param {string} id
+		 */
+		getData: function(id) {
+			return rp(`https://invidio.us/api/v1/videos/${id}`, {json: true})
+		},
+
+		dataToURL: function(data) {
+			let formats = data && data.adaptiveFormats
+			if (!formats) return null
+			formats = formats
+			.filter(f => f.type.includes("audio"))
+			.sort((a, b) => (b.bitrate - a.bitrate))
+			if (formats[0]) return formats[0].url
+			else return null
+		},
+
+		urlToTrack: function(url) {
+			return common.getTracks(url).then(tracks => {
+				if (!tracks || !tracks.length) return null
+				return tracks[0].track
+			})
+		},
+
+		/**
+		 * @param {string} id
+		 * @returns {Promise<string>}
+		 */
+		getTrack: function(id) {
+			return common.invidious.getData(id)
+			.then(common.invidious.dataToURL)
+			.then(common.invidious.urlToTrack)
+			.catch(error => {
+				console.error(error)
+				return null
+			})
+		}
+	},
+
 	inserters: {
 		handleSong:
 		/**
@@ -269,7 +309,8 @@ let common = {
 			utils.makeSelection(textChannel, author.id, "Song selection", "Song selection cancelled", results).then(index => {
 				if (typeof(index) != "number") return
 				let track = tracks[index]
-				common.inserters.fromData(textChannel, voiceChannel, track, insert)
+				let song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length/1000))
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert)
 			})
 		}
 	},

@@ -55,7 +55,7 @@ utils.addTemporaryListener(client, "error", path.basename(__filename), reason =>
 })
 utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 	if (reason && reason.code) {
-		if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) return
+		//if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) return
 	}
 	if (reason) console.error(reason)
 	else console.log("There was an error but no reason")
