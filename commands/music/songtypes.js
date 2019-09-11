@@ -137,6 +137,16 @@ class YouTubeSong extends Song {
 			})
 		})
 
+		this.prepareCache = new utils.AsyncValueCache(async () => {
+			if (this.track == "!") {
+				return common.invidious.getTrack(this.id).then(track => {
+					this.track = track
+				}).catch(error => {
+					this.error = `${error.name} - ${error.message}`
+				})
+			}
+		})
+
 		this.validate()
 	}
 	toObject() {
@@ -192,10 +202,8 @@ class YouTubeSong extends Song {
 	showInfo() {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
 	}
-	async prepare() {
-		if (this.track == "!") {
-			this.track = await common.invidious.getTrack(this.id)
-		}
+	prepare() {
+		return this.prepareCache.get()
 	}
 	destroy() {
 	}
@@ -316,9 +324,11 @@ class FriskySong extends Song {
 		return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
 	}
 	async prepare() {
-		this.bound = this.stationUpdate.bind(this)
-		this.friskyStation.events.addListener("changed", this.bound)
-		await this.stationUpdate()
+		if (!this.bound) {
+			this.bound = this.stationUpdate.bind(this)
+			this.friskyStation.events.addListener("changed", this.bound)
+			await this.stationUpdate()
+		}
 		if (this.track == "!") {
 			return common.getTracks(stationData.get(this.station).beta_url).then(tracks => {
 				if (tracks[0] && tracks[0].track) {

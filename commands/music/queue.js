@@ -82,6 +82,7 @@ class Queue {
 	async play() {
 		let song = this.songs[0]
 		await song.prepare()
+		if (this.songs[1]) this.songs[1].prepare()
 		if (song.error) {
 			this.textChannel.send(song.error)
 			this._nextSong()
@@ -132,13 +133,13 @@ class Queue {
 				else {
 					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
 					this.auto = false
-					this.songs = []
+					this._clearSongs()
 					this._dissolve()
 				}
 			}
 			// Auto mode is off. Dissolve.
 			else {
-				this.songs = []
+				this._clearSongs()
 				this._dissolve()
 			}
 		}
@@ -147,6 +148,12 @@ class Queue {
 			this.songs.shift()
 			this.play()
 		}
+	}
+	_clearSongs() {
+		this.songs.forEach(song => {
+			song.destroy()
+		})
+		this.songs = []
 	}
 	/**
 	 * Deconstruct the queue:
@@ -157,6 +164,8 @@ class Queue {
 	 * You probably ought to make sure songs is empty and nothing is playing before calling.
 	 */
 	_dissolve() {
+		if (this.dissolved) return
+		this.dissolved = true
 		this.npUpdater.stop(false)
 		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guildID)
@@ -209,10 +218,10 @@ class Queue {
 	 * End playback by clearing the queue, then asking the player to stop.
 	 */
 	stop() {
-		if (this.songs[0]) this.songs[0].destroy()
-		this.songs = []
+		this._clearSongs()
 		this.auto = false
 		this.player.stop()
+		this._dissolve()
 	}
 	toggleAuto() {
 		this.auto = !this.auto
@@ -237,6 +246,7 @@ class Queue {
 		}
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
+		if (this.songs.length == 2) song.prepare()
 		if (this.songs.length == 1) {
 			this.play()
 			return 1
