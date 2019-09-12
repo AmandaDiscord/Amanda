@@ -45,19 +45,24 @@ const subcommandsMap = new Map([
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
-				let data = await common.invidious.getData(match.id)
-				let url = common.invidious.dataToURL(data)
-				if (url) {
-					// If the ID worked, add the song
-					let track = await common.invidious.urlToTrack(url)
-					if (track) {
-						let song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
-						common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
+				let channel = msg.channel // ts is ACTUALLY stupid.
+				common.invidious.getData(match.id).then(async data => {
+					let url = common.invidious.dataToURL(data)
+					if (url) {
+						// If the ID worked, add the song
+						let track = await common.invidious.urlToTrack(url)
+						if (track) {
+							let song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
+							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
+							return
+						}
 					}
-				} else {
+					// Didn't get a track, so try a search instead
+					throw new Error("dataToURL failed")
+				}).catch(() => {
 					// Otherwise, start a search
-					common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search)
-				}
+					common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+				})
 			}
 
 			// Linked to a playlist. `list` is set, `id` may or may not be.

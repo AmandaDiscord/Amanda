@@ -167,7 +167,7 @@ let common = {
 			}
 		} catch (e) {
 			// Not a URL. Might be an ID?
-			if (input.length == 11) return {type: "video", id: input}
+			if (input.match(/^[A-Za-z0-9_-]{11}$/)) return {type: "video", id: input}
 			else return null
 		}
 	},
