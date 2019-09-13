@@ -14,6 +14,9 @@ reloader.useSync("./modules/utilities.js", utils)
 let lang = require("../modules/lang.js")
 reloader.useSync("./modules/utilities.js", lang)
 
+let common = require("./music/common.js")
+reloader.useSync("./commands/music/common.js", common)
+
 commands.assign({
 	"evaluate": {
 		usage: "<code>",
@@ -39,7 +42,7 @@ commands.assign({
 					result = e
 				}
 				let output = await utils.stringify(result, depth)
-				let nmsg = await msg.channel.send(output.replace(new RegExp(config.bot_token, "g"), "No"))
+				let nmsg = await msg.channel.send(output.replace(new RegExp(client.token, "g"), config.fake_token))
 				let menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5*60*1000)
 			} else return

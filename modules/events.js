@@ -99,7 +99,7 @@ async function manageMessage(msg) {
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
 			let reportChannel = client.channels.get("512869106089852949")
-			if (reportChannel instanceof Discord.TextChannel) {
+			if (reportChannel instanceof Discord.TextChannel && reportChannel.permissionsFor(client.user).has("VIEW_CHANNEL")) {
 				embed.setTitle("Command error occurred.")
 				let details = [
 					["User", msg.author.tag],
