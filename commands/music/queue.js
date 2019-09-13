@@ -52,7 +52,9 @@ class Queue {
 		})
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
-			this.songStartTime = data.state.time - data.state.position
+			if (!this.isPaused) {
+				this.songStartTime = data.state.time - data.state.position
+			}
 		})
 		/** @type {Discord.Message} */
 		this.np = null
