@@ -194,12 +194,19 @@ let common = {
 
 	invidious: {
 		/**
+		 * Return a request promise. This is chained to reject if data.error is set.
 		 * @param {string} id
 		 */
 		getData: function(id) {
-			return rp(`https://invidio.us/api/v1/videos/${id}`, {json: true})
+			return rp(`https://invidio.us/api/v1/videos/${id}`, {json: true}).then(data => {
+				if (data.error) throw new Error(data.error)
+				return data
+			})
 		},
 
+		/**
+		 * Find the best audio stream URL in a data object. Returns null if the data is bad. Should never throw.
+		 */
 		dataToURL: function(data) {
 			let formats = data && data.adaptiveFormats
 			if (!formats) return null
@@ -210,14 +217,22 @@ let common = {
 			else return null
 		},
 
-		urlToTrack: function(url) {
+		/**
+		 * Promise to get the track. Errors are rejected.
+		 */
+		urlToTrack: async function(url) {
+			if (!url) throw new Error("url parameter in urlToTrack is falsy")
 			return common.getTracks(url).then(tracks => {
-				if (!tracks || !tracks.length) return null
-				return tracks[0].track
+				if (!tracks || !tracks[0]) {
+					throw new Error("Missing tracks from getTracks response")
+				} else {
+					return tracks[0].track
+				}
 			})
 		},
 
 		/**
+		 * Promise to get data to URL to track. Errors produced anywhere in the chain are rejected.
 		 * @param {string} id
 		 * @returns {Promise<string>}
 		 */
@@ -225,10 +240,6 @@ let common = {
 			return common.invidious.getData(id)
 			.then(common.invidious.dataToURL)
 			.then(common.invidious.urlToTrack)
-			.catch(error => {
-				console.error(error)
-				return null
-			})
 		}
 	},
 

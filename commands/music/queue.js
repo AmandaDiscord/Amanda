@@ -83,10 +83,22 @@ class Queue {
 	 */
 	async play() {
 		let song = this.songs[0]
-		await song.prepare()
 		if (this.songs[1]) this.songs[1].prepare()
+		await song.prepare()
+		if (!song.error) {
+			if (song.track == "!") {
+				song.error = "`song.track` is ! placeholder. This is a bug."
+			} else if (song.track == null) {
+				song.error = "`song.track` is null or undefined. This is a bug."
+			}
+		}
 		if (song.error) {
-			this.textChannel.send(song.error)
+			this.textChannel.send(
+				"We hit an error while trying to prepare that song for playback."
+				//@ts-ignore this is jank and the identifier should be its own property or function on song rather than this ||
+				+`\nConstructor: ${song.constructor.name}, ID: ${song.id || song.station}, title: ${song.title}`
+				+"\n"+song.error
+			)
 			this._nextSong()
 		} else {
 			passthrough.periodicHistory.add("song_start")
