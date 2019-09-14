@@ -346,18 +346,33 @@ commands.assign({
 		aliases: ["avatar", "pfp"],
 		category: "meta",
 		process: async function(msg, suffix) {
-			let user, member, permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			let canEmbedLinks = true
+			if (msg.channel instanceof Discord.TextChannel) {
+				if (!msg.channel.permissionsFor(client.user).has("EMBED_LINKS")) {
+					canEmbedLinks = false
+				}
+			}
+			/** @type {Discord.User} */
+			let user = null
 			if (msg.channel.type == "text") {
-				member = await msg.guild.findMember(msg, suffix, true)
-				if (member) user = member.user
-			} else user = await utils.findUser(msg, suffix, true)
+				let member = await msg.guild.findMember(msg, suffix, true)
+				if (member) {
+					user = member.user
+				}
+			} else {
+				user = await utils.findUser(msg, suffix, true)
+			}
 			if (!user) return msg.channel.send(lang.input.invalid(msg, "user"))
-			let embed = new Discord.MessageEmbed()
-				.setImage(!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL())
-				.setColor("36393E")
-			if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(!user.displayAvatarURL().endsWith("gif")?user.displayAvatarURL({format: "png"}):user.displayAvatarURL())
-			return msg.channel.send({embed})
+			let isAnimated = user.displayAvatarURL().endsWith("gif")
+			let url = user.displayAvatarURL({format: isAnimated ? "gif" : "png", size: 2048})
+			if (canEmbedLinks) {
+				let embed = new Discord.MessageEmbed()
+				.setImage(url)
+				.setColor(0x36393f)
+				msg.channel.send(embed)
+			} else {
+				msg.channel.send(url)
+			}
 		}
 	},
 	"wumbo": {
