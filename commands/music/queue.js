@@ -443,18 +443,28 @@ class QueueWrapper {
 	 * @param {any} [context]
 	 */
 	removeSong(index, context) {
-		let result = this.queue.removeSong(index-1)
-		if (context instanceof Discord.Message) {
-			if (result == 1) {
-				if (index == 1) {
-					context.channel.send(
-						"Item 1 is the currently playing song. Use `&music skip` to skip it, "
-						+"or `&music queue remove 2` if you wanted to remove the song that's up next."
-					)
+		if (!index || isNaN(index)) {
+			if (context instanceof Discord.Message) {
+				context.channel.send(
+					"You need to tell me which song to remove. `&music queue remove <number>`"
+					+"\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
+				)
+			}
+		} else {
+			let result = this.queue.removeSong(index-1)
+			if (context instanceof Discord.Message) {
+				if (result == 1) {
+					if (index == 1) {
+						context.channel.send(
+							"Item 1 is the currently playing song. Use `&music skip` to skip it, "
+							+"or `&music queue remove 2` if you wanted to remove the song that's up next."
+						)
+					} else {
+						context.channel.send("There are "+this.queue.songs.length+" items in the queue. You can only remove items 2-"+this.queue.songs.length+".")
+					}
 				} else {
+					context.react("✅")
 				}
-			} else {
-				context.react("✅")
 			}
 		}
 	}
