@@ -23,7 +23,9 @@ class Queue {
 
 	sweep() {
 		let currentTime = Date.now()
+		let oldLength = this.items.length
 		this.items = this.items.filter(i => currentTime - i < this.ttl)
+		return oldLength-this.items.length
 	}
 
 	size() {
@@ -54,12 +56,17 @@ class PeriodicHistory {
 			rows.forEach(row => {
 				let queue = this.getOrCreate(row.field)
 				queue.add(row.timestamp)
-				queue.sweep()
 			})
 			this.fetching = false
+			this.sweep(true)
 			return rows
 		})
 		this.fetch.get()
+
+		// Periodically sweep out old entries
+		setInterval(() => {
+			this.sweep()
+		}, 300e3) // 5 minutes
 	}
 
 	/**
@@ -94,6 +101,19 @@ class PeriodicHistory {
 	 */
 	getSize(field) {
 		return this.getOrCreate(field).size()
+	}
+
+	/**
+	 * Sweep each queue, and if items were removed, also delete from the database.
+	 */
+	sweep(force = false) {
+		for (let field of this.store.keys()) {
+			let queue = this.store.get(field)
+			let removed = queue.sweep()
+			if (removed || force) {
+				utils.sql.all("DELETE FROM PeriodicHistory WHERE field = ? AND timestamp < ?", [field, Date.now()-queue.ttl])
+			}
+		}
 	}
 }
 
