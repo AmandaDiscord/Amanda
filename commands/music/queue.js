@@ -57,9 +57,13 @@ class Queue {
 			}
 		})
 		this.player.on("error", exception => {
-			this.songs[0].error = exception.error
-			this._reportError()
-			// This already automatically continues, presumably because the "end" event is also fired.
+			if (this.songs[0].error) {
+				this.songs[0].error = exception.error
+				this._reportError()
+				// This already automatically continues, presumably because the "end" event is also fired.
+			} else {
+				console.error(exception)
+			}
 		})
 		/** @type {Discord.Message} */
 		this.np = null

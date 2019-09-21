@@ -84,6 +84,7 @@ class QueueStore {
 						console.log("Added FriskySong "+song.station)
 					}
 				})
+				queue.songs[0].resume()
 				queue.songStartTime = q.songStartTime
 				queue.pausedAt = q.pausedAt
 				let message = await textChannel.messages.fetch(q.npID, false)

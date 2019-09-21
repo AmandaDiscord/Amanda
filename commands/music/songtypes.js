@@ -105,9 +105,21 @@ class Song {
 		if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
 		this.validated = true
 	}
+	/**
+	 * Code to run to prepare the song for playback, such as fetching its `track`.
+	 */
 	prepare() {
 		return Promise.resolve()
 	}
+	/**
+	 * Code to run after the song was regenerated from resuming a queue
+	 */
+	resume() {
+		return Promise.resolve()
+	}
+	/**
+	 * Clean up event listeners and such when the song is removed
+	 */
 	destroy() {
 	}
 }
@@ -220,6 +232,9 @@ class YouTubeSong extends Song {
 	prepare() {
 		return this.prepareCache.get()
 	}
+	resume() {
+		return Promise.resolve()
+	}
 	destroy() {
 	}
 }
@@ -286,7 +301,8 @@ class FriskySong extends Song {
 	toObject() {
 		return {
 			class: "FriskySong",
-			station: this.station
+			station: this.station,
+			track: this.track
 		}
 	}
 	getRelated() {
@@ -369,8 +385,11 @@ class FriskySong extends Song {
 			console.error(reason)
 		})
 	}
+	resume() {
+		return this.prepare()
+	}
 	destroy() {
-		this.friskyStation.events.removeListener("changed", this.bound)
+		if (this.bound) this.friskyStation.events.removeListener("changed", this.bound)
 	}
 }
 
