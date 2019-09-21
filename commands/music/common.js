@@ -5,7 +5,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../../passthrough")
-let {client, reloader} = passthrough
+let {client, reloader, config} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -174,6 +174,7 @@ let common = {
 
 	/**
 	 * Call /loadtracks on the first node using the passed identifier.
+	 * Throws exception.message.
 	 * @param {string} input
 	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
 	 */
@@ -189,7 +190,10 @@ let common = {
 				"Authorization": node.password
 			},
 			json: true
-		}).then(data => data.tracks)
+		}).then(data => {
+			if (data.exception) throw data.exception.message
+			else return data.tracks
+		})
 	},
 
 	invidious: {
@@ -205,16 +209,16 @@ let common = {
 		},
 
 		/**
-		 * Find the best audio stream URL in a data object. Returns null if the data is bad. Should never throw.
+		 * Find the best audio stream URL in a data object. Throw if the data is bad.
 		 */
 		dataToURL: function(data) {
 			let formats = data && data.adaptiveFormats
-			if (!formats) return null
+			if (!formats || !formats[0]) throw new Error("This video has probably been deleted. (Invidious returned no formats.)")
 			formats = formats
 			.filter(f => f.type.includes("audio"))
 			.sort((a, b) => (b.bitrate - a.bitrate))
 			if (formats[0]) return formats[0].url
-			else return null
+			throw new Error("Invidious did not return any audio formats. Sadly, we cannot play this song.")
 		},
 
 		/**
@@ -224,6 +228,8 @@ let common = {
 			if (!url) throw new Error("url parameter in urlToTrack is falsy")
 			return common.getTracks(url).then(tracks => {
 				if (!tracks || !tracks[0]) {
+					console.error("Missing tracks from getTracks response")
+					console.error(tracks)
 					throw new Error("Missing tracks from getTracks response")
 				} else {
 					return tracks[0].track
@@ -318,10 +324,14 @@ let common = {
 			tracks = tracks.slice(0, 10)
 			let results = tracks.map((track, index) => `${index+1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length/1000)})`)
 			utils.makeSelection(textChannel, author.id, "Song selection", "Song selection cancelled", results).then(index => {
-				if (typeof(index) != "number") return
+				if (typeof index != "number") return
 				let track = tracks[index]
-				let song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length/1000))
-				common.inserters.handleSong(song, textChannel, voiceChannel, insert)
+				if (config.use_invidious) {
+					let song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length/1000))
+					common.inserters.handleSong(song, textChannel, voiceChannel, insert)
+				} else {
+					common.inserters.fromData(textChannel, voiceChannel, track, insert)
+				}
 			})
 		}
 	},

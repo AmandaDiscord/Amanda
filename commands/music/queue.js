@@ -56,6 +56,11 @@ class Queue {
 				this.songStartTime = data.state.time - data.state.position
 			}
 		})
+		this.player.on("error", exception => {
+			this.songs[0].error = exception.error
+			this._reportError()
+			// This already automatically continues, presumably because the "end" event is also fired.
+		})
 		/** @type {Discord.Message} */
 		this.np = null
 		/** @type {import("../../modules/reactionmenu")} */
@@ -93,12 +98,7 @@ class Queue {
 			}
 		}
 		if (song.error) {
-			this.textChannel.send(
-				"We hit an error while trying to prepare that song for playback."
-				//@ts-ignore this is jank and the identifier should be its own property or function on song rather than this ||
-				+`\nConstructor: ${song.constructor.name}, ID: ${song.id || song.station}, title: ${song.title}`
-				+"\n"+song.error
-			)
+			this._reportError()
 			this._nextSong()
 		} else {
 			passthrough.periodicHistory.add("song_start")
@@ -108,6 +108,17 @@ class Queue {
 				this.sendNewNP()
 			})
 		}
+	}
+	_reportError() {
+		const song = this.songs[0]
+		let embed = new Discord.MessageEmbed()
+		.setTitle("We couldn't play that song")
+		.setDescription(
+			`**${song.title}** (ID: ${song.id})`
+			+`\n${song.error}`
+		)
+		.setColor(0xdd2d2d)
+		this.textChannel.send(embed)
 	}
 	/**
 	 * Start updating the now playing message.

@@ -42,27 +42,41 @@ const subcommandsMap = new Map([
 			let search = args.slice(1).join(" ")
 			let match = common.inputToID(search)
 
+			const channel = msg.channel // ts is ACTUALLY stupid.
+
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
-				let channel = msg.channel // ts is ACTUALLY stupid.
-				common.invidious.getData(match.id).then(async data => {
-					let url = common.invidious.dataToURL(data)
-					if (url) {
-						// If the ID worked, add the song
+				if (config.use_invidious) { // Resolve tracks with Invidious
+					common.invidious.getData(match.id).then(async data => {
+						// Now get the URL.
+						// This can throw an error if there's no formats (i.e. video is unavailable?)
+						// If it does, we'll end up in the catch block to search instead.
+						let url = common.invidious.dataToURL(data)
+						// The ID worked. Add the song
 						let track = await common.invidious.urlToTrack(url)
 						if (track) {
 							let song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
 							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
 							return
 						}
-					}
-					// Didn't get a track, so try a search instead
-					throw new Error("dataToURL failed")
-				}).catch(() => {
-					// Otherwise, start a search
-					common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
-				})
+					}).catch(() => {
+						// Otherwise, start a search
+						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+					})
+				} else { // Resolve tracks with Lavalink
+					common.getTracks(match.id).then(tracks => {
+						if (tracks[0]) {
+							// If the ID worked, add the song
+							common.inserters.fromData(channel, voiceChannel, tracks[0], insert, msg)
+						} else {
+							throw new Error("No tracks available")
+						}
+					}).catch(() => {
+						// Otherwise, start a search
+						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+					})
+				}
 			}
 
 			// Linked to a playlist. `list` is set, `id` may or may not be.

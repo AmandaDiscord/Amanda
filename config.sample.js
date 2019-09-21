@@ -11,5 +11,6 @@ module.exports = {
 	website_domain: "localhost:10400",
 	is_staging: true,
 	music_dash_enabled: false,
-	lavalink_password: "lavalink password here"
+	lavalink_password: "lavalink password here",
+	use_invidious: false
 }

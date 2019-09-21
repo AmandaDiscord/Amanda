@@ -54,9 +54,12 @@ utils.addTemporaryListener(client, "error", path.basename(__filename), reason =>
 	if (reason) console.error(reason)
 })
 utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
+	let shouldIgnore = false
 	if (reason && reason.code) {
-		//if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) return
+		if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) shouldIgnore = true
+		if (reason.code == 500 && reason.name != "AbortError") shouldIgnore = false
 	}
+	if (shouldIgnore) return
 	if (reason) console.error(reason)
 	else console.log("There was an error but no reason")
 })

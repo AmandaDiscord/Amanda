@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, frisky} = passthrough
+let {client, reloader, frisky, config} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -49,6 +49,7 @@ class Song {
 		this.noPauseReason = ""
 		this.error = ""
 		this.typeWhileGetRelated = true
+		this.id = ""
 
 		this.validated = false
 		setTimeout(() => {
@@ -95,7 +96,7 @@ class Song {
 		console.error("Song validation error: "+this.constructor.name+" "+message)
 	}
 	validate() {
-		["track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
+		["id", "track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
 			if (!this[key]) this.validationError("unset "+key)
 		})
 		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject", "destroy"].forEach(key => {
@@ -139,11 +140,25 @@ class YouTubeSong extends Song {
 
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.track == "!") {
-				return common.invidious.getTrack(this.id).then(track => {
-					this.track = track
-				}).catch(error => {
-					this.error = `${error.name} - ${error.message}`
-				})
+				if (config.use_invidious) { // Resolve track with Invidious
+					return common.invidious.getTrack(this.id).then(track => {
+						this.track = track
+					}).catch(error => {
+						this.error = `${error.name} - ${error.message}`
+					})
+				} else { // Resolve track with Lavalink
+					return common.getTracks(this.id).then(tracks => {
+						if (!tracks[0]) {
+							this.error = "No results for ID "+this.id
+						} else if (!tracks[0].track) {
+							this.error = "Missing track for ID "+this.id
+						} else {
+							this.track = tracks[0].track
+						}
+					}).catch(message => {
+						this.error = message
+					})
+				}
 			}
 		})
 
@@ -221,6 +236,7 @@ class FriskySong extends Song {
 
 		if (!stationData.has(this.station)) throw new Error("Unsupported station: "+this.station)
 
+		this.id = this.station // designed for error reporting
 		this.title = stationData.get(this.station).title
 		this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
 		this.track = data.track || "!"
@@ -337,6 +353,8 @@ class FriskySong extends Song {
 					console.error(tracks)
 					this.error = "No tracks available for station "+this.station
 				}
+			}).catch(message => {
+				this.error = message
 			})
 		} else {
 			return Promise.resolve()
@@ -357,7 +375,11 @@ class FriskySong extends Song {
 }
 
 function makeYouTubeSongFromData(data) {
-	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000))
+	if (config.use_invidious) {
+		return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000))
+	} else {
+		return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000), data.track)
+	}
 }
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 
