@@ -164,7 +164,9 @@ commands.assign({
 		description: "",
 		aliases: ["forcestatupdate"],
 		category: "admin",
-		process: function(msg) {
+		process: async function(msg) {
+			let permissions = await utils.hasPermission(msg.author, "eval");
+			if (!permissions) return;
 			sendStats(msg)
 		}
 	},

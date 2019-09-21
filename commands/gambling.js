@@ -31,7 +31,7 @@ imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZ
 
 commands.assign({
 	"slot": {
-		usage: "[amount: number|all]",
+		usage: "[amount: number|all|half]",
 		description: "Runs a random slot machine for a chance at Discoins",
 		aliases: ["slot", "slots"],
 		category: "gambling",
@@ -85,9 +85,11 @@ commands.assign({
 				return msg.channel.send({ files: [image] })
 			}
 			let bet
-			if (args[0] == "all") {
+			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
-				bet = money
+				args[0] == "all"
+				? bet = money
+				: bet = Math.floor(money/2)
 			} else {
 				bet = Math.floor(Number(args[0]))
 				if (isNaN(bet)) return msg.channel.send(lang.input.invalid(msg, "bet"))
@@ -130,7 +132,7 @@ commands.assign({
 		}
 	},
 	"betflip": {
-		usage: "<amount: number|all> [h|t]",
+		usage: "<amount: number|all|half> [h|t]",
 		description: "Place a bet on a random flip for a chance of Discoins",
 		aliases: ["betflip", "bf"],
 		category: "gambling",
@@ -145,9 +147,11 @@ commands.assign({
 				args[1] = t
 			}
 			let bet
-			if (args[0] == "all") {
+			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
-				bet = money
+				args[0] == "all"
+				? bet = money
+				: bet = Math.floor(money/2)
 			} else {
 				bet = Math.floor(Number(args[0]))
 				if (isNaN(bet)) return msg.channel.send(lang.input.invalid(msg, "bet"))
@@ -264,7 +268,7 @@ commands.assign({
 		}
 	},
 	"give": {
-		usage: "<amount: number|all> <user>",
+		usage: "<amount: number|all|half> <user>",
 		description: "Gives discoins to a user from your account",
 		aliases: ["give"],
 		category: "gambling",
@@ -283,9 +287,11 @@ commands.assign({
 				utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "gamblingalert"])
 			])
 			let gift
-			if (args[0] == "all") {
+			if (args[0] == "all" || args[0] == "half") {
 				if (authorCoins == 0) return msg.channel.send(lang.external.money.insufficient(msg))
-				gift = authorCoins
+				args[0] == "all"
+				? gift = authorCoins
+				: gift = Math.floor(authorCoins/2)
 			} else {
 				gift = Math.floor(Number(args[0]))
 				if (isNaN(gift)) return msg.channel.send(lang.input.invalid(msg, "gift"))
@@ -307,7 +313,7 @@ commands.assign({
 		}
 	},
 	"wheel": {
-		usage: "[amount: number|all]",
+		usage: "[amount: number|all|half]",
 		description: "A Wheel of Fortune for a chance at making more Discoins",
 		aliases: ["wheel", "wof"],
 		category: "gambling",
@@ -325,9 +331,11 @@ commands.assign({
 
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide an amount to spin the wheel with`)
 			let amount
-			if (suffix == "all") {
+			if (suffix == "all" || suffix == "half") {
 				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
-				amount = money
+				suffix == "all"
+				? amount = money
+				: amount = Math.floor(money/2)
 			} else {
 				amount = Math.floor(Number(suffix))
 				if (isNaN(amount)) return msg.channel.send(lang.input.invalid(msg, "amount"))

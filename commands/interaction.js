@@ -93,7 +93,7 @@ let cmds = {
 		}
 	},
 	"claim": {
-		usage: "<amount: number|all> <user>",
+		usage: "<amount: number|all|half> <user>",
 		description: "Claims someone as a waifu. Requires Discoins",
 		aliases: ["claim"],
 		category: "interaction",
@@ -114,9 +114,11 @@ let cmds = {
 				utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
 			])
 			let claim = 0
-			if (args[0] == "all") {
+			if (args[0] == "all" || args[0] == "half") {
 				if (!money) return msg.channel.send(lang.external.money.insufficient(msg))
-				claim = money
+				args[0] == "all"
+				? claim = money
+				: claim = Math.floor(money/2)
 			} else {
 				claim = Math.floor(Number(args[0]))
 				if (isNaN(claim)) return msg.channel.send(lang.external.money.insufficient(msg))
@@ -166,7 +168,7 @@ let cmds = {
 		}
 	},
 	"gift": {
-		usage: "<amount: number|all>",
+		usage: "<amount: number|all|half>",
 		description: "Gifts an amount of Discoins towards your waifu's price",
 		aliases: ["gift"],
 		category: "interaction",
@@ -178,9 +180,11 @@ let cmds = {
 			if (!waifu || !waifu.waifuID) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`)
 			if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`)
 			let gift
-			if (args[0] == "all") {
+			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
-				gift = money
+				args[0] == "all"
+				? gift = money
+				: gift = Math.floor(money/2)
 			} else {
 				gift = Math.floor(Number(args[0]))
 				if (isNaN(gift)) return msg.channel.send(lang.input.invalid(msg, "gift"))
