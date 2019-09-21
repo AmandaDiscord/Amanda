@@ -167,7 +167,7 @@ let common = {
 			}
 		} catch (e) {
 			// Not a URL. Might be an ID?
-			if (input.length == 11) return {type: "video", id: input}
+			if (input.match(/^[A-Za-z0-9_-]{11}$/)) return {type: "video", id: input}
 			else return null
 		}
 	},
@@ -190,6 +190,57 @@ let common = {
 			},
 			json: true
 		}).then(data => data.tracks)
+	},
+
+	invidious: {
+		/**
+		 * Return a request promise. This is chained to reject if data.error is set.
+		 * @param {string} id
+		 */
+		getData: function(id) {
+			return rp(`https://invidio.us/api/v1/videos/${id}`, {json: true}).then(data => {
+				if (data.error) throw new Error(data.error)
+				return data
+			})
+		},
+
+		/**
+		 * Find the best audio stream URL in a data object. Returns null if the data is bad. Should never throw.
+		 */
+		dataToURL: function(data) {
+			let formats = data && data.adaptiveFormats
+			if (!formats) return null
+			formats = formats
+			.filter(f => f.type.includes("audio"))
+			.sort((a, b) => (b.bitrate - a.bitrate))
+			if (formats[0]) return formats[0].url
+			else return null
+		},
+
+		/**
+		 * Promise to get the track. Errors are rejected.
+		 */
+		urlToTrack: async function(url) {
+			if (!url) throw new Error("url parameter in urlToTrack is falsy")
+			return common.getTracks(url).then(tracks => {
+				if (!tracks || !tracks[0]) {
+					throw new Error("Missing tracks from getTracks response")
+				} else {
+					return tracks[0].track
+				}
+			})
+		},
+
+		/**
+		 * Promise to get data to URL to track. Errors produced anywhere in the chain are rejected.
+		 * @param {string} id
+		 * @returns {Promise<string>}
+		 */
+		getTrack: function(id) {
+			return common.invidious.getData(id)
+			.then(common.invidious.dataToURL)
+			.then(common.invidious.urlToTrack)
+		}
 	},
 
 	inserters: {
@@ -269,7 +320,8 @@ let common = {
 			utils.makeSelection(textChannel, author.id, "Song selection", "Song selection cancelled", results).then(index => {
 				if (typeof(index) != "number") return
 				let track = tracks[index]
-				common.inserters.fromData(textChannel, voiceChannel, track, insert)
+				let song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length/1000))
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert)
 			})
 		}
 	},

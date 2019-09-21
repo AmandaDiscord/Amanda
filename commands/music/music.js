@@ -45,14 +45,24 @@ const subcommandsMap = new Map([
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
-				let tracks = await common.getTracks(match.id)
-				if (tracks[0]) {
-					// If the ID worked, add the song
-					common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
-				} else {
+				let channel = msg.channel // ts is ACTUALLY stupid.
+				common.invidious.getData(match.id).then(async data => {
+					let url = common.invidious.dataToURL(data)
+					if (url) {
+						// If the ID worked, add the song
+						let track = await common.invidious.urlToTrack(url)
+						if (track) {
+							let song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
+							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
+							return
+						}
+					}
+					// Didn't get a track, so try a search instead
+					throw new Error("dataToURL failed")
+				}).catch(() => {
 					// Otherwise, start a search
-					common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search)
-				}
+					common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+				})
 			}
 
 			// Linked to a playlist. `list` is set, `id` may or may not be.
@@ -121,7 +131,7 @@ const subcommandsMap = new Map([
 					}}
 					// Create the reaction menu
 					utils.reactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
-						let emoji = buttons[i].match(/\d{2,}/)[0]
+						let emoji = buttons[i].slice(2, -1)
 						return Object.assign({emoji}, action)
 					}))
 				}
@@ -143,7 +153,7 @@ const subcommandsMap = new Map([
 	["queue", {
 		queue: "required",
 		code: async (msg, args, {queue}) => {
-			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" || args[2] == "all")) {
+			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
 				let numberOfSongs = queue.songs.length-1
 				queue.songs = queue.songs.slice(0, 1)
 				msg.channel.send(`Cleared the queue, removing ${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}.`)

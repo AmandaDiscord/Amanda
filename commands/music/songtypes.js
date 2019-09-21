@@ -133,8 +133,18 @@ class YouTubeSong extends Song {
 		() => {
 			return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
 				this.typeWhileGetRelated = false
-				return data.recommendedVideos.slice(0, 10)
+				return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 			})
+		})
+
+		this.prepareCache = new utils.AsyncValueCache(async () => {
+			if (this.track == "!") {
+				return common.invidious.getTrack(this.id).then(track => {
+					this.track = track
+				}).catch(error => {
+					this.error = `${error.name} - ${error.message}`
+				})
+			}
 		})
 
 		this.validate()
@@ -193,18 +203,7 @@ class YouTubeSong extends Song {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
 	}
 	prepare() {
-		if (this.track == "!") {
-			return common.getTracks(this.id).then(tracks => {
-				if (tracks[0] && tracks[0].track) {
-					this.track = tracks[0].track
-				} else {
-					console.error(tracks)
-					this.error = "No tracks available for ID "+this.id
-				}
-			})
-		} else {
-			return Promise.resolve()
-		}
+		return this.prepareCache.get()
 	}
 	destroy() {
 	}
@@ -325,9 +324,11 @@ class FriskySong extends Song {
 		return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
 	}
 	async prepare() {
-		this.bound = this.stationUpdate.bind(this)
-		this.friskyStation.events.addListener("changed", this.bound)
-		await this.stationUpdate()
+		if (!this.bound) {
+			this.bound = this.stationUpdate.bind(this)
+			this.friskyStation.events.addListener("changed", this.bound)
+			await this.stationUpdate()
+		}
 		if (this.track == "!") {
 			return common.getTracks(stationData.get(this.station).beta_url).then(tracks => {
 				if (tracks[0] && tracks[0].track) {
@@ -356,7 +357,7 @@ class FriskySong extends Song {
 }
 
 function makeYouTubeSongFromData(data) {
-	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000), data.track)
+	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000))
 }
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 

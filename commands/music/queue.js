@@ -52,7 +52,9 @@ class Queue {
 		})
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
-			this.songStartTime = data.state.time - data.state.position
+			if (!this.isPaused) {
+				this.songStartTime = data.state.time - data.state.position
+			}
 		})
 		/** @type {Discord.Message} */
 		this.np = null
@@ -81,9 +83,22 @@ class Queue {
 	 */
 	async play() {
 		let song = this.songs[0]
+		if (this.songs[1]) this.songs[1].prepare()
 		await song.prepare()
+		if (!song.error) {
+			if (song.track == "!") {
+				song.error = "`song.track` is ! placeholder. This is a bug."
+			} else if (song.track == null) {
+				song.error = "`song.track` is null or undefined. This is a bug."
+			}
+		}
 		if (song.error) {
-			this.textChannel.send(song.error)
+			this.textChannel.send(
+				"We hit an error while trying to prepare that song for playback."
+				//@ts-ignore this is jank and the identifier should be its own property or function on song rather than this ||
+				+`\nConstructor: ${song.constructor.name}, ID: ${song.id || song.station}, title: ${song.title}`
+				+"\n"+song.error
+			)
 			this._nextSong()
 		} else {
 			passthrough.periodicHistory.add("song_start")
@@ -132,13 +147,13 @@ class Queue {
 				else {
 					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
 					this.auto = false
-					this.songs = []
+					this._clearSongs()
 					this._dissolve()
 				}
 			}
 			// Auto mode is off. Dissolve.
 			else {
-				this.songs = []
+				this._clearSongs()
 				this._dissolve()
 			}
 		}
@@ -147,6 +162,12 @@ class Queue {
 			this.songs.shift()
 			this.play()
 		}
+	}
+	_clearSongs() {
+		this.songs.forEach(song => {
+			song.destroy()
+		})
+		this.songs = []
 	}
 	/**
 	 * Deconstruct the queue:
@@ -157,6 +178,8 @@ class Queue {
 	 * You probably ought to make sure songs is empty and nothing is playing before calling.
 	 */
 	_dissolve() {
+		if (this.dissolved) return
+		this.dissolved = true
 		this.npUpdater.stop(false)
 		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guildID)
@@ -209,10 +232,10 @@ class Queue {
 	 * End playback by clearing the queue, then asking the player to stop.
 	 */
 	stop() {
-		if (this.songs[0]) this.songs[0].destroy()
-		this.songs = []
+		this._clearSongs()
 		this.auto = false
 		this.player.stop()
+		this._dissolve()
 	}
 	toggleAuto() {
 		this.auto = !this.auto
@@ -237,6 +260,7 @@ class Queue {
 		}
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
+		if (this.songs.length == 2) song.prepare()
 		if (this.songs.length == 1) {
 			this.play()
 			return 1
@@ -419,18 +443,28 @@ class QueueWrapper {
 	 * @param {any} [context]
 	 */
 	removeSong(index, context) {
-		let result = this.queue.removeSong(index-1)
-		if (context instanceof Discord.Message) {
-			if (result == 1) {
-				if (index == 1) {
-					context.channel.send(
-						"Item 1 is the currently playing song. Use `&music skip` to skip it, "
-						+"or `&music queue remove 2` if you wanted to remove the song that's up next."
-					)
+		if (!index || isNaN(index)) {
+			if (context instanceof Discord.Message) {
+				context.channel.send(
+					"You need to tell me which song to remove. `&music queue remove <number>`"
+					+"\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
+				)
+			}
+		} else {
+			let result = this.queue.removeSong(index-1)
+			if (context instanceof Discord.Message) {
+				if (result == 1) {
+					if (index == 1) {
+						context.channel.send(
+							"Item 1 is the currently playing song. Use `&music skip` to skip it, "
+							+"or `&music queue remove 2` if you wanted to remove the song that's up next."
+						)
+					} else {
+						context.channel.send("There are "+this.queue.songs.length+" items in the queue. You can only remove items 2-"+this.queue.songs.length+".")
+					}
 				} else {
+					context.react("✅")
 				}
-			} else {
-				context.react("✅")
 			}
 		}
 	}
