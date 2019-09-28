@@ -490,7 +490,7 @@ const utils = {
 		// Send embed
 		let selectmessage = await channel.send(utils.contentify(channel, embed))
 		// Make collector
-		let collector = channel.createMessageCollector((m => m.author.id == authorID), {maxProcessed: 1, time: 60000})
+		let collector = channel.createMessageCollector((m => m.author.id == authorID), {max: 1, time: 60000})
 		return collector.next.then(newmessage => {
 			// Collector got a message
 			let index = parseInt(newmessage.content)
