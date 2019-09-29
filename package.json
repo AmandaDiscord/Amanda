@@ -25,6 +25,7 @@
     "mime": "^2.4.4",
     "mysql2": "^1.7.0",
     "nedb-promises": "^4.0.0",
+    "node-ipc": "^9.1.1",
     "pinski": "file:../../Code/pinski",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",

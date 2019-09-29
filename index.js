@@ -40,7 +40,6 @@ let db = mysql.createPool({
 		"./commands/music/songtypes.js",
 		"./modules/lang.js",
 		"./modules/utilities.js",
-		"./modules/validator.js",
 	])
 
 	const Frisky = require("frisky-client")
@@ -62,6 +61,10 @@ let db = mysql.createPool({
 	passthrough.nedb = {
 		queue: nedb.create({filename: "saves/queue.db", autoload: true})
 	}
+
+	const IPC = require("./modules/ipc")
+	const ipc = new IPC()
+	passthrough.ipc = ipc
 
 	reloader.watchAndLoad([
 		"./commands/music/music.js",

@@ -21,7 +21,7 @@ html
 
 		main
 			div.spaced-title
-				div.spaced-title-left.box= user.tag
+				div.spaced-title-left.box= user.username+"#"+user.discriminator
 				div.spaced-title-main.box Select a server
 				form.spaced-title-right(method="post" action="/logout")
 					input(type="hidden" name="csrftoken" value=csrfToken)

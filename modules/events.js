@@ -134,13 +134,15 @@ async function manageMessage(msg) {
 }
 
 async function manageReady() {
+	let firstStart = starting
+	starting = false
 	utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
 		console.log("Loaded "+prefixes.length+" prefixes: "+prefixes.join(" "))
-		if (starting) client.emit("prefixes", prefixes, statusPrefix)
+		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
 	})
-	if (starting) {
+	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
 		lavalinknodes.forEach(node => node.resumeKey = client.user.id)
@@ -167,6 +169,8 @@ async function manageReady() {
 			})
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])
 		})
+
+		passthrough.ipc.connect()
 	}
 }
 

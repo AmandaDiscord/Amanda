@@ -6,7 +6,7 @@ const pj = path.join
 const util = require("util")
 
 const passthrough = require("../passthrough")
-const {pugCache, snow, config} = passthrough
+const {pugCache, snow, config, ipc} = passthrough
 
 let utils = require("../modules/utilities.js");
 //reloader.useSync("./modules/utilities.js", utils);
@@ -34,14 +34,9 @@ module.exports = [
 			let session = await utils.getSession(cookies)
 
 			if (session) {
-				/*let user = await client.users.fetch(session.userID)
-				let guilds = []
-				let npguilds = []
-				for (let guild of client.guilds.filter(g => g.members.has(session.userID)).values()) {
-					if (guild.queue || guild.members.get(session.userID).voiceChannel) npguilds.push(guild)
-					else guilds.push(guild)
-				}*/
-				let user, guilds, npguilds
+				let user = await snow.user.cache.fetchUser(session.userID)
+				//TODO: un-hard-code shards
+				let {guilds, npguilds} = await ipc.requestAll({op: "GET_DASH_GUILDS", userID: session.userID}, "concatProps")
 
 				let csrfToken = utils.generateCSRF()
 				let page = pugCache.get("pug/selectserver.pug")({user, npguilds, guilds, csrfToken})
@@ -141,8 +136,8 @@ module.exports = [
 		route: "/server/(\\d+)", methods: ["GET"], code: async ({req, fill}) => {
 			let cookies = utils.getCookies(req)
 			let session = await utils.getSession(cookies)
-
-			/*return new validators.Validator()
+			/*
+			return new validators.Validator()
 			.do({
 				code: () => session === undefined
 				,expected: false

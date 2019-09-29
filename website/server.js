@@ -22,6 +22,10 @@ const db = mysql.createPool({
 })
 passthrough.db = db
 
+const IPC = require("./modules/ipc.js")
+const ipc = new IPC("website", config.website_ipc_bind, 6544)
+passthrough.ipc = ipc
+
 const server = pinski({
 	pageHandlers: [
 		{web: "/", local: "pug/home.pug", type: "pug"},
@@ -49,3 +53,5 @@ Object.assign(passthrough, server)
 	])
 	server.loadAPI()
 })()
+
+require("./modules/stdin.js")

@@ -10,6 +10,7 @@
  * @property {Map<string, (locals?: any) => string>} pugCache
  * @property {Map<string, string>} sassCache
  * @property {import("ws").Server} wss
+ * @property {import("./modules/ipc")} ipc
  */
 
 /**
