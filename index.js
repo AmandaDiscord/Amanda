@@ -66,7 +66,6 @@ let db = mysql.createPool({
 	reloader.watchAndLoad([
 		"./commands/music/music.js",
 		"./commands/music/playlistcommand.js",
-		"./commands/web/server.js",
 		"./commands/admin.js",
 		"./commands/alerts.js",
 		"./commands/cleverai.js",
