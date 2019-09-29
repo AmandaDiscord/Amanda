@@ -14,7 +14,7 @@ mixin guild-selection(guild, active)
 html
 	include includes/head.pug
 		title Select server | Amanda
-	
+
 	body
 		include includes/nav.pug
 		+nav("dash")
@@ -37,4 +37,7 @@ html
 					for guild in guilds
 						+guild-selection(guild, false)
 			else
-				div.message We don't share any servers? Wha-!
+				div.message
+					div We don't share any servers? Wha-!
+					div
+						a(href="https://discord-bots.ga/amanda") Want to add me to one?
