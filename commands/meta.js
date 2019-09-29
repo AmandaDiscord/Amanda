@@ -436,7 +436,7 @@ commands.assign({
 				hunter = mem.roles.has("497586624390234112")
 			}
 			let badgeImage = images.get(badge)
-			/** @type {Jimp} */
+			/** @type {import("jimp").default} */
 			let canvas
 
 			if (isOwner||isPremium) {
