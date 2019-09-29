@@ -4,6 +4,8 @@ const rp = require("request-promise")
 const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("discord.js")
+/** @type {import("jimp").default} */
+//@ts-ignore
 const Jimp = require("jimp")
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)

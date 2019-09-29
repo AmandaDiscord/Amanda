@@ -3,6 +3,8 @@
 const Discord = require("discord.js")
 const events = require("events")
 const util = require("util")
+/** @type import("jimp").default */
+//@ts-ignore
 const Jimp = require("jimp")
 const path = require("path")
 const mysql = require("mysql2/promise")

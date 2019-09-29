@@ -1,5 +1,7 @@
 //@ts-check
 
+/** @type {import("jimp").default} */
+//@ts-ignore
 const Jimp = require("jimp")
 const crypto = require("crypto")
 const rp = require("request-promise")

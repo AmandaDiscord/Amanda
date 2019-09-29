@@ -1,5 +1,7 @@
 //@ts-check
 
+/** @type {import("jimp").default} */
+//@ts-ignore
 const Jimp = require("jimp")
 const Discord = require("discord.js")
 
