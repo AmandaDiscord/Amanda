@@ -1,10 +1,5 @@
 //@ts-check
 
-const fs = require("fs");
-const path = require("path")
-const pj = path.join
-const util = require("util")
-
 const passthrough = require("../passthrough")
 const {pugCache, snow, config, ipc} = passthrough
 
@@ -34,9 +29,11 @@ module.exports = [
 			let session = await utils.getSession(cookies)
 
 			if (session) {
+				console.log("fetching user")
 				let user = await snow.user.cache.fetchUser(session.userID)
-				//TODO: un-hard-code shards
+				console.log("fetching guilds")
 				let {guilds, npguilds} = await ipc.requestAll({op: "GET_DASH_GUILDS", userID: session.userID}, "concatProps")
+				console.log("done")
 
 				let csrfToken = utils.generateCSRF()
 				let page = pugCache.get("pug/selectserver.pug")({user, npguilds, guilds, csrfToken})
@@ -119,7 +116,7 @@ module.exports = [
 					content: "Logging out...",
 					headers: {
 						"Location": "/dash",
-						"Set-Cookie": `token=-; path=/; expires=${new Date(0).toUTCString()}`
+						"Set-Cookie": `token=; path=/; expires=${new Date(0).toUTCString()}`
 					}
 				}
 			})

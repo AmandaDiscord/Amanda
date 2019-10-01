@@ -88,7 +88,8 @@ let utils = {
 
 	generateCSRF: function(loginToken = null) {
 		let token = crypto.randomBytes(32).toString("hex")
-		utils.sql.all("INSERT INTO CSRFTokens (token, loginToken) VALUES (?, ?)", [token, loginToken])
+		let expires = Date.now()+6*60*60*1000; // 6 hours
+		utils.sql.all("INSERT INTO CSRFTokens (token, loginToken, expires) VALUES (?, ?, ?)", [token, loginToken, expires])
 		return token
 	},
 
@@ -97,6 +98,8 @@ let utils = {
 		let row = await utils.sql.get("SELECT * FROM CSRFTokens WHERE token = ?", token)
 		// Token doesn't exist? Fail.
 		if (!row) result = false
+		// Expired? Fail.
+		else if (row.expires < Date.now()) result = false
 		// Checking against a loginToken, but row loginToken differs? Fail.
 		else if (loginToken && row.loginToken != loginToken) result = false
 		// Looking good.
