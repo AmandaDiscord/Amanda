@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, queueStore} = passthrough
+let {client, reloader, queueStore, ipc} = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -35,6 +35,7 @@ class Queue {
 		this.pausedAt = null
 		/** @type {songTypes.Song[]} */
 		this.songs = []
+		/** @type {boolean} */
 		this.auto = false
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
@@ -54,6 +55,7 @@ class Queue {
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
 				this.songStartTime = data.state.time - data.state.position
+				ipc.router.send.updateTime(this)
 			}
 		})
 		this.player.on("error", exception => {
@@ -213,6 +215,7 @@ class Queue {
 			this.pausedAt = Date.now()
 			this.player.pause()
 			this.npUpdater.stop(true)
+			ipc.router.send.updateTime(this)
 			return null
 		}
 	}
@@ -232,6 +235,7 @@ class Queue {
 			this.player.resume().then(() => {
 				this._startNPUpdates()
 			})
+			ipc.router.send.updateTime(this)
 			return 0
 		}
 	}
@@ -275,6 +279,7 @@ class Queue {
 		}
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
+		ipc.router.send.addSong(this, song, position)
 		if (this.songs.length == 2) song.prepare()
 		if (this.songs.length == 1) {
 			this.play()
@@ -503,6 +508,36 @@ class QueueWrapper {
 		if (context instanceof Discord.Message) {
 			if (result == 0) context.react("✅")
 			else if (result == 1) context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
+		}
+	}
+
+	getMembers() {
+		return this.queue.voiceChannel.members.map(m => ({
+			id: m.id,
+			name: m.displayName,
+			avatar: m.user.avatarURL({format: "png", size: 64}),
+			isAmanda: m.id == client.user.id
+		}))
+	}
+
+	getAttributes() {
+		return {
+			auto: this.queue.auto
+		}
+	}
+
+	getState() {
+		return {
+			guildID: this.queue.guildID,
+			playing: !this.queue.isPaused,
+			songStartTime: this.queue.songStartTime,
+			songs: this.queue.songs.map(s => s.getState()),
+			members: this.getMembers(),
+			voiceChannel: {
+				id: this.queue.voiceChannel.id,
+				name: this.queue.voiceChannel.name
+			},
+			attributes: this.getAttributes()
 		}
 	}
 }

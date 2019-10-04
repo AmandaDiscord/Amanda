@@ -3,7 +3,7 @@
 const Discord = require("discord.js");
 
 const passthrough = require("../../passthrough")
-let { client, reloader } = passthrough
+let {client, reloader, ipc} = passthrough
 
 const QueueFile = require("../../commands/music/queue")
 reloader.useSync("./commands/music/queue.js", QueueFile)
@@ -46,6 +46,7 @@ class QueueStore {
 		let guildID = voiceChannel.guild.id
 		let instance = new QueueFile.Queue(this, voiceChannel, textChannel)
 		this.store.set(guildID, instance)
+		ipc.router.send.newQueue(instance)
 		return instance
 	}
 	/**
@@ -54,6 +55,7 @@ class QueueStore {
 	 */
 	delete(guildID) {
 		this.store.delete(guildID)
+		ipc.router.send.deleteQueue(guildID)
 	}
 	save() {
 		return passthrough.nedb.queue.update({}, this.toObject(), {upsert: true})

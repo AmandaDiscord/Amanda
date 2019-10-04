@@ -10,7 +10,8 @@
  * @property {Map<string, (locals?: any) => string>} pugCache
  * @property {Map<string, string>} sassCache
  * @property {import("ws").Server} wss
- * @property {import("./modules/ipc")} ipc
+ * @property {import("./modules/ipcserver")} ipc
+ * @property {import("../modules/hotreload")} reloader
  */
 
 /**

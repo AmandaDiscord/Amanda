@@ -5,7 +5,7 @@ const crypto = require("crypto")
 const util = require("util")
 
 const passthrough = require("../passthrough")
-const {db} = passthrough
+const {db, ipc} = passthrough
 
 let utils = {
 	sql: {
@@ -69,6 +69,11 @@ let utils = {
 		return result
 	},
 
+	/**
+	 * Get a session from a token or a cookie map. Returns null if no session.
+	 * @param {string|Map<string, string>} token
+	 * @returns {Promise<{userID: string, token: string, staging: number}>}
+	 */
 	getSession: function(token) {
 		if (token instanceof Map) token = token.get("token")
 		if (token) return utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", token).then(row => {
@@ -105,6 +110,83 @@ let utils = {
 		// Looking good.
 		if (consume) await utils.sql.all("DELETE FROM CSRFTokens WHERE token = ?", token)
 		return result
+	},
+
+	AsyncValueCache:
+	/** @template T */
+	class AsyncValueCache {
+		/**
+		 * @param {() => Promise<T>} getter
+		 * @param {number} lifetime
+		 */
+		constructor(getter, lifetime = undefined) {
+			this.getter = getter
+			this.lifetime = lifetime
+			this.lifetimeTimeout = null
+			/** @type {Promise<T>} */
+			this.promise = null
+			/** @type {T} */
+			this.cache = null
+		}
+		clear() {
+			clearTimeout(this.lifetimeTimeout)
+			this.cache = null
+		}
+		get() {
+			if (this.cache) return Promise.resolve(this.cache)
+			if (this.promise) return this.promise
+			return this._getNew()
+		}
+		_getNew() {
+			return this.promise = this.getter().then(result => {
+				this.cache = result
+				this.promise = null
+				clearTimeout(this.lifetimeTimeout)
+				if (this.lifetime) this.lifetimeTimeout = setTimeout(() => this.clear(), this.lifetime)
+				return result
+			})
+		}
+	},
+
+	UpdatingValueCache:
+	/** @template T */
+	class UpdatingValueCache {
+		/**
+		 * @param {() => Promise<T>} getter
+		 */
+		constructor(getter) {
+			this.avc = new utils.AsyncValueCache(getter)
+			this.pending = []
+			this.pendingPromiseAdded = false
+			this.get()
+		}
+
+		/**
+		 * @param {(cache: T) => any} updateFn
+		 */
+		update(updateFn) {
+			if (this.avc.cache) {
+				this.avc.cache = updateFn(this.avc.cache)
+			} else {
+				this.pending.push(updateFn)
+				if (!this.pendingPromiseAdded) {
+					this.pendingPromiseAdded = true
+					this.avc.get().then(() => this.applyUpdates())
+				}
+			}
+		}
+
+		get() {
+			return this.avc.get()
+		}
+
+		applyUpdates() {
+			this.pending.forEach(updateFn => {
+				updateFn(this.avc.cache)
+			})
+			this.pending = []
+		}
 	}
 }
+
 module.exports = utils

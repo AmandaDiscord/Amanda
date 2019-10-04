@@ -33,6 +33,10 @@ let db = mysql.createPool({
 	Object.assign(passthrough, {config, client, db, reloader, youtube})
 	passthrough.reloadEvent = reloader.reloadEvent
 
+	const IPC = require("./modules/ipcbot.js")
+	const ipc = new IPC()
+	passthrough.ipc = ipc
+
 	reloader.setupWatch([
 		"./commands/music/common.js",
 		"./commands/music/playlistcommand.js",
@@ -61,10 +65,6 @@ let db = mysql.createPool({
 	passthrough.nedb = {
 		queue: nedb.create({filename: "saves/queue.db", autoload: true})
 	}
-
-	const IPC = require("./modules/ipc")
-	const ipc = new IPC()
-	passthrough.ipc = ipc
 
 	reloader.watchAndLoad([
 		"./commands/music/music.js",

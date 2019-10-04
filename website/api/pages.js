@@ -1,5 +1,7 @@
 //@ts-check
 
+const ipctypes = require("../../modules/ipctypes")
+
 const passthrough = require("../passthrough")
 const {pugCache, snow, config, ipc} = passthrough
 
@@ -29,11 +31,8 @@ module.exports = [
 			let session = await utils.getSession(cookies)
 
 			if (session) {
-				console.log("fetching user")
 				let user = await snow.user.cache.fetchUser(session.userID)
-				console.log("fetching guilds")
-				let {guilds, npguilds} = await ipc.requestAll({op: "GET_DASH_GUILDS", userID: session.userID}, "concatProps")
-				console.log("done")
+				let {guilds, npguilds} = await ipc.router.requestDashGuilds(session.userID, true)
 
 				let csrfToken = utils.generateCSRF()
 				let page = pugCache.get("pug/selectserver.pug")({user, npguilds, guilds, csrfToken})
@@ -131,34 +130,34 @@ module.exports = [
 	},
 	{
 		route: "/server/(\\d+)", methods: ["GET"], code: async ({req, fill}) => {
-			let cookies = utils.getCookies(req)
-			let session = await utils.getSession(cookies)
-			/*
+			const cookies = utils.getCookies(req)
+			const session = await utils.getSession(cookies)
+
+			const guildID = fill[0]
+
 			return new validators.Validator()
 			.do({
-				code: () => session === undefined
+				code: () => session == null
 				,expected: false
 			}).do({
-				code: (_) => _.guild = client.guilds.get(fill[0])
-				,expected: v => v != undefined
-			}).do({
-				code: (_) => _.guild.members.has(session.userID)
-				,expected: true
+				code: (_) => ipc.router.requestGuildForUser(session.userID, guildID)
+				,assign: "guild"
+				,expected: v => v != null
 			})
 			.go()
 			.then(async state => {
 				if (config.music_dash_enabled) {
-					let guild = state.guild
-					let user = await client.users.fetch(session.userID)
+					/** @type {ipctypes.FilteredGuild} */
+					const guild = state.guild
 
-					let page = pugCache.get("pug/server.pug")({guild, user})
+					const page = pugCache.get("pug/server.pug")({guild})
 					return {
 						statusCode: 200,
 						contentType: "text/html",
 						content: page
 					}
 				} else {
-					let page = pugCache.get("pug/dash_disabled.pug")()
+					const page = pugCache.get("pug/dash_disabled.pug")()
 					return {
 						statusCode: 200,
 						contentType: "text/html",
@@ -167,13 +166,13 @@ module.exports = [
 				}
 			})
 			.catch(() => {
-				let page = pugCache.get("pug/accessdenied.pug")({session})
+				const page = pugCache.get("pug/accessdenied.pug")({session})
 				return {
 					statusCode: 403,
 					contentType: "text/html",
 					content: page
 				}
-			})*/
+			})
 		}
 	}
 ]

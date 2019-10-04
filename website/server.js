@@ -4,13 +4,17 @@ const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
+const hotreload = require("../modules/hotreload")
 require("dnscache")({enable: true})
-
-const snow = new Snow(config.bot_token, {disableEveryone: true})
-snow.requestHandler.on("requestError", console.error)
 
 const passthrough = require("./passthrough")
 passthrough.config = config
+
+const reloader = new hotreload()
+passthrough.reloader = reloader
+
+const snow = new Snow(config.bot_token, {disableEveryone: true})
+snow.requestHandler.on("requestError", console.error)
 passthrough.snow = snow
 
 const db = mysql.createPool({
@@ -22,7 +26,7 @@ const db = mysql.createPool({
 })
 passthrough.db = db
 
-const IPC = require("./modules/ipc.js")
+const IPC = require("./modules/ipcserver.js")
 const ipc = new IPC("website", config.website_ipc_bind, 6544)
 passthrough.ipc = ipc
 

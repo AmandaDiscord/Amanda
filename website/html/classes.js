@@ -70,7 +70,7 @@ function ejs(string) {
 		line = line.replace(/^\s*/, "")
 		let r = /[.#]?[\w-]+/g
 		let element
-		let next 
+		let next
 		do {
 			next = r.exec(line)
 			if (next) {
@@ -169,10 +169,10 @@ class QueueItem extends ElemJS {
 		if (this.adding) return
 		this.adding = true
 		this.queue.addingCount++
-		
+
 		let style = window.getComputedStyle(this.element)
 		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
-		
+
 		let values = {}
 		props.forEach(key => {
 			values[key] = "0px"
@@ -180,7 +180,7 @@ class QueueItem extends ElemJS {
 		values.opacity = 0
 		values.marginBottom = "-10px"
 		values.easing = "ease"
-		
+
 		let endValues = {}
 		props.forEach(key => {
 			endValues[key] = style[key]
@@ -203,7 +203,7 @@ class QueueItem extends ElemJS {
 					this.element.style[entry[0]] = ""
 				})
 			})
-		}, this.queue.addingCount*70+400*this.queue.isFirstAdd)
+		}, this.queue.addingCount*70+20*this.queue.isFirstAdd)
 	}
 	animateRemove() {
 		if (this.removing) return
@@ -213,7 +213,7 @@ class QueueItem extends ElemJS {
 
 		let style = window.getComputedStyle(this.element)
 		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
-		
+
 		let values = {}
 		props.forEach(key => {
 			values[key] = style[key]
@@ -227,7 +227,7 @@ class QueueItem extends ElemJS {
 		})
 		endValues.opacity = 0
 		endValues.marginBottom = "-10px"
-		
+
 		this.element.animate([
 			values, endValues
 		], 400).addEventListener("finish", () => {
@@ -258,6 +258,7 @@ class Player extends ElemJS {
 	constructor(container, session) {
 		super(container)
 		this.song = null
+		this.thumbnailDisplayHeight = 94
 		this.attributes = {}
 		this.songSet = false
 		this.parts = {
@@ -294,8 +295,9 @@ class Player extends ElemJS {
 		this.clearChildren()
 		if (this.song) {
 			let thumbnail = new ElemJS(imageStore.get(this.song.thumbnail.src))
-			thumbnail.width = this.song.thumbnail.width
-			thumbnail.height = this.song.thumbnail.height
+			thumbnail.element.width = this.song.thumbnail.width
+			thumbnail.element.height = this.song.thumbnail.height
+			thumbnail.element.style.width = this.song.thumbnail.width/this.song.thumbnail.height*this.thumbnailDisplayHeight+"px"
 			this.child(
 				ejs`div`.child(
 					ejs`div.thumbnail`.child(
@@ -449,7 +451,7 @@ class VoiceMember extends ElemJS {
 		}
 	}
 	animateLeave() {
-		return Promise.all(Object.values(this.parts).map(part => 
+		return Promise.all(Object.values(this.parts).map(part =>
 			new Promise(resolve => {
 				part.element.animate([
 					{opacity: 1},

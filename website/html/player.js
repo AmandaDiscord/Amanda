@@ -12,7 +12,7 @@ ex.push({
 				this.player = new Player(q("#player-container"), this)
 				this.queue = new Queue(q("#queue-container"), this)
 				this.voiceInfo = new VoiceInfo(q("#voice-info"))
-		
+
 				const opcodeMethodMap = new Map([
 					[opcodes.ACKNOWLEDGE, "acknowledge"],
 					[opcodes.STATE, "updateState"],
@@ -24,7 +24,7 @@ ex.push({
 					[opcodes.MEMBERS_CHANGE, "membersChange"],
 					[opcodes.ATTRIBUTES_CHANGE, "attributesChange"]
 				])
-		
+
 				this.ws.addEventListener("open", () => this.onOpen())
 				this.ws.addEventListener("close", event => this.onClose(event))
 				this.ws.addEventListener("error", console.error)
@@ -34,26 +34,26 @@ ex.push({
 					this[opcodeMethodMap.get(data.op)](data)
 				})
 			}
-		
+
 			send(data) {
 				if (!data.nonce) data.nonce = generateNonce()
 				let message = JSON.stringify(data)
 				console.log("%c[WS →]", "color: #c00000", message)
 				this.ws.send(message)
 			}
-		
+
 			onOpen() {
 				this.send({op: opcodes.IDENTIFY, d: {cookie: document.cookie, guildID}})
 			}
-		
+
 			onClose(event) {
 				console.log("WebSocket closed.", event)
 			}
-		
+
 			acknowledge() {
-				this.send({op: opcodes.REQUEST_STATE})
+				//this.send({op: opcodes.REQUEST_STATE})
 			}
-		
+
 			updateState(data) {
 				this.state = data.d
 				if (this.state === null) {
@@ -81,7 +81,7 @@ ex.push({
 					this.voiceInfo.setMembers([])
 				}
 			}
-		
+
 			queueAdd(data) {
 				let song = data.d.song
 				let position = data.d.position
@@ -98,19 +98,19 @@ ex.push({
 					this.queue.addItem(song, position)
 				}
 			}
-			
+
 			queueRemove(data) {
 				let index = data.d.position
 				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
 			}
-		
+
 			next() {
 				this.state.songs.shift()
 				this.queue.shift()
 				this.resetTime()
 				this.player.setSong(this.state.songs[0] || null)
 			}
-		
+
 			songUpdate(data) {
 				let song = data.d.song
 				let index = data.d.index
@@ -134,7 +134,7 @@ ex.push({
 			updatePlayerTime() {
 				this.player.updateTime({
 					playing: this.state.playing,
-					time: this.state.time,
+					time: Date.now()-this.state.songStartTime,
 					maxTime: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].length : 0,
 					live: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].live : false
 				})
