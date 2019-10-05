@@ -301,8 +301,8 @@ class Session {
 	}
 
 	stop() {
-		/*let queue = this.getQueue()
-		if (queue) queue.wrapper.stop()*/
+		if (!this.loggedin) return
+		ipc.router.requestStop(this.guild.id)
 	}
 
 	requestQueueRemove(data) {

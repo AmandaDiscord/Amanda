@@ -111,6 +111,16 @@ class IPCRouter {
 		queue.wrapper.skip()
 		return true
 	}
+
+	/**
+	 * @param {string} guildID
+	 */
+	STOP(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		queue.wrapper.stop()
+		return true
+	}
 }
 
 class Send {

@@ -64,6 +64,15 @@ class IPCRouter {
 	requestSkip(guildID) {
 		return this.ipc.requestFromGuild(guildID, "SKIP", guildID)
 	}
+
+	/**
+	 * Ask a queue to stop.
+	 * @param {string} guildID
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
+	requestStop(guildID) {
+		return this.ipc.requestFromGuild(guildID, "STOP", guildID)
+	}
 }
 
 module.exports.router = IPCRouter
