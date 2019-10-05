@@ -126,7 +126,7 @@ ex.push({
 
 			resetTime() {
 				if (this.state) {
-					Object.assign(this.state, {time: 0, maxTime: 0, playing: false})
+					Object.assign(this.state, {songStartTime: 0, maxTime: 0, playing: false})
 					this.updatePlayerTime()
 				}
 			}
@@ -134,7 +134,7 @@ ex.push({
 			updatePlayerTime() {
 				this.player.updateTime({
 					playing: this.state.playing,
-					time: Date.now()-this.state.songStartTime,
+					songStartTime: this.state.songStartTime,
 					maxTime: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].length : 0,
 					live: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].live : false
 				})

@@ -127,18 +127,21 @@ let utils = {
 			this.promise = null
 			/** @type {T} */
 			this.cache = null
+			this.cacheExists = false
 		}
 		clear() {
 			clearTimeout(this.lifetimeTimeout)
 			this.cache = null
+			this.cacheExists = false
 		}
 		get() {
-			if (this.cache) return Promise.resolve(this.cache)
+			if (this.cacheExists) return Promise.resolve(this.cache)
 			if (this.promise) return this.promise
 			return this._getNew()
 		}
 		_getNew() {
 			return this.promise = this.getter().then(result => {
+				this.cacheExists = true
 				this.cache = result
 				this.promise = null
 				clearTimeout(this.lifetimeTimeout)
@@ -165,7 +168,7 @@ let utils = {
 		 * @param {(cache: T) => any} updateFn
 		 */
 		update(updateFn) {
-			if (this.avc.cache) {
+			if (this.avc.cacheExists) {
 				this.avc.cache = updateFn(this.avc.cache)
 			} else {
 				this.pending.push(updateFn)

@@ -54,8 +54,10 @@ class Queue {
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
-				this.songStartTime = data.state.time - data.state.position
-				ipc.router.send.updateTime(this)
+				let newSongStartTime = data.state.time - data.state.position
+				if (Math.abs(newSongStartTime - this.songStartTime) > 100) {
+					ipc.router.send.updateTime(this)
+				}
 			}
 		})
 		this.player.on("error", exception => {
@@ -159,6 +161,7 @@ class Queue {
 				if (related.length) {
 					this.songs.shift()
 					this.addSong(related[0])
+					ipc.router.send.nextSong(this)
 				}
 				// No related songs. Dissolve.
 				else {
@@ -177,6 +180,7 @@ class Queue {
 		// We have more songs. Move on.
 		else {
 			this.songs.shift()
+			ipc.router.send.nextSong(this)
 			this.play()
 		}
 	}

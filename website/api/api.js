@@ -68,6 +68,7 @@ ipc.addReceivers([
 	{
 		op: "NEW_QUEUE",
 		fn: ({guildID, state}) => {
+			//if (state && state.songs) console.log(`Queue replaced. It has ${state.songs.length} songs.`)
 			replaceState(guildID, state)
 			sessions.forEach(session => {
 				if (session.guild && session.guild.id == guildID) {
@@ -87,6 +88,8 @@ ipc.addReceivers([
 				} else {
 					cache.songs.splice(position, 0, song)
 				}
+				//console.log(cache)
+				//console.log(`Song added. There are now ${cache.songs.length} songs.`)
 				return cache
 			})
 			sessions.forEach(session => {
@@ -98,17 +101,33 @@ ipc.addReceivers([
 	},
 	{
 		op: "TIME_UPDATE",
-		fn: ({guildID, songStartTime, paused}) => {
+		fn: ({guildID, songStartTime, playing}) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
 				cache.songStartTime = songStartTime
-				cache.paused = paused
+				cache.playing = playing
 				return cache
 			})
 			sessions.forEach(session => {
 				if (session.guild && session.guild.id == guildID) {
-					session.timeUpdate({songStartTime, paused})
+					session.timeUpdate({songStartTime, playing})
+				}
+			})
+		}
+	},
+	{
+		op: "NEXT_SONG",
+		fn: ({guildID}) => {
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				cache.songs.shift()
+				return cache
+			})
+			sessions.forEach(session => {
+				if (session.guild && session.guild.id == guildID) {
+					session.next()
 				}
 			})
 		}

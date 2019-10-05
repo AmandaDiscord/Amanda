@@ -119,7 +119,14 @@ class Send {
 	 * @param {import("../commands/music/queue").Queue} queue
 	 */
 	updateTime(queue) {
-		this.ipc.send({op: "TIME_UPDATE", data: {guildID: queue.guildID, songStartTime: queue.songStartTime, paused: queue.isPaused}})
+		this.ipc.send({op: "TIME_UPDATE", data: {guildID: queue.guildID, songStartTime: queue.songStartTime, playing: !queue.isPaused}})
+	}
+
+	/**
+	 * @param {import("../commands/music/queue").Queue} queue
+	 */
+	nextSong(queue) {
+		this.ipc.send({op: "NEXT_SONG", data: {guildID: queue.guildID}})
 	}
 }
 
