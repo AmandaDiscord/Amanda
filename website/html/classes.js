@@ -383,7 +383,7 @@ class PlayerTime extends ElemJS {
 		let time
 		if (this.state.songStartTime == 0) time = 0
 		else time = this.getTime()
-		if (time > this.state.maxTime*1000) time = this.state.maxTime*1000
+		if (!this.state.live && time > this.state.maxTime*1000) time = this.state.maxTime*1000
 		this.children[1].text(prettySeconds(Math.floor(time/1000)))
 	}
 }

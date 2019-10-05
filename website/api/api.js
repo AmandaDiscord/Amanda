@@ -33,18 +33,6 @@ const opcodeMethodMap = new Map([
 	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"]
 ])
 
-const eventList = [
-	["queue", "queueAdd", "queueAdd"],
-	["manager", "new", "playerReplace"],
-	["queue", "next", "next"],
-	["queue", "songUpdate", "songUpdate"],
-	["queue", "dissolve", "queueDissolve"],
-	["queue", "timeUpdate", "timeUpdate"],
-	["queue", "queueRemove", "queueRemove"],
-	["queue", "membersChange", "membersChange"],
-	["queue", "attributes", "attributesChange"]
-]
-
 const {ipc, snow} = passthrough;
 
 /** @type {Session[]} */
@@ -131,6 +119,22 @@ ipc.addReceivers([
 				}
 			})
 		}
+	},
+	{
+		op: "SONG_UPDATE",
+		fn: ({guildID, song, index}) => {
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				cache.songs[index] = song
+				return cache
+			})
+			sessions.forEach(session => {
+				if (session.guild && session.guild.id == guildID) {
+					session.songUpdate(song, index)
+				}
+			})
+		}
 	}
 ])
 
@@ -213,11 +217,11 @@ class Session {
 		})
 	}
 
-	queueRemove(position) {
+	queueRemove(index) {
 		this.send({
 			op: opcodes.QUEUE_REMOVE,
 			d: {
-				position: position
+				index: index
 			}
 		})
 	}
@@ -228,15 +232,14 @@ class Session {
 		})
 	}
 
-	songUpdate(index) {
-		/*let song = this.getQueue().songs[index]
+	songUpdate(song, index) {
 		this.send({
 			op: opcodes.SONG_UPDATE,
 			d: {
-				index: index,
-				song: song.webInfo()
+				song: song,
+				index: index
 			}
-		})*/
+		})
 	}
 
 	membersChange() {
@@ -249,13 +252,6 @@ class Session {
 				}
 			})
 		}*/
-	}
-
-	queueDissolve() {
-		/*this.send({
-			op: opcodes.STATE,
-			d: null
-		})*/
 	}
 
 	timeUpdate(data) {

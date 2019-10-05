@@ -100,7 +100,7 @@ ex.push({
 			}
 
 			queueRemove(data) {
-				let index = data.d.position
+				let index = data.d.index
 				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
 			}
 
@@ -176,6 +176,6 @@ ex.push({
 			return new WebSocket(origin)
 		})()
 
-		let session = new Session(ws)
+		window.session = new Session(ws)
 	}
 })

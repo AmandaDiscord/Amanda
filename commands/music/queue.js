@@ -281,6 +281,7 @@ class Queue {
 			if (insert) position = 1 // if insert is true, insert
 			else position = -1 // otherwise, push
 		}
+		song.queue = this
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
 		ipc.router.send.addSong(this, song, position)

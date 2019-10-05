@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, frisky, config} = passthrough
+let {client, reloader, frisky, config, ipc} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -56,6 +56,11 @@ class Song {
 			width: 0,
 			height: 0
 		}
+		/**
+		 * might not be set!
+		 * @type {import("./queue").Queue}
+		 */
+		this.queue = null
 
 		this.validated = false
 		setTimeout(() => {
@@ -75,7 +80,7 @@ class Song {
 			title: this.title,
 			length: this.lengthSeconds,
 			thumbnail: this.thumbnail,
-			isLive: this.live
+			live: this.live
 		}
 	}
 	/**
@@ -415,6 +420,12 @@ class FriskySong extends Song {
 			//console.log(mix)
 			this.title = mix.data.title
 			this.thumbnail.src = mix.episode.data.thumbnail.url
+			this.thumbnail.width = mix.episode.data.thumbnail.image_width
+			this.thumbnail.height = mix.episode.data.thumbnail.image_height
+			if (this.queue) {
+				const index = this.queue.songs.indexOf(this)
+				if (index !== -1) ipc.router.send.updateSong(this.queue, this, index)
+			}
 		}).catch(reason => {
 			console.error(reason)
 		})
