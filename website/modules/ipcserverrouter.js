@@ -46,6 +46,10 @@ class IPCRouter {
 	requestState(guildID) {
 		return this.ipc.requestFromGuild(guildID, "GET_QUEUE_STATE", guildID)
 	}
+
+	requestTogglePlayback(guildID) {
+		return this.ipc.requestFromGuild(guildID, "TOGGLE_PLAYBACK", guildID)
+	}
 }
 
 module.exports.router = IPCRouter

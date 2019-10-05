@@ -291,8 +291,8 @@ class Session {
 	}
 
 	togglePlayback() {
-		/*let queue = this.getQueue()
-		if (queue) queue.wrapper.togglePlaying()*/
+		if (!this.loggedin) return
+		ipc.router.requestTogglePlayback(this.guild.id)
 	}
 
 	skip() {

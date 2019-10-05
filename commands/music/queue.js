@@ -432,16 +432,18 @@ class QueueWrapper {
 		}
 	}
 	togglePlaying(context) {
-		if (this.queue.isPaused) this.resume()
-		else this.pause(context)
+		if (this.queue.isPaused) return this.resume(context)
+		else return this.pause(context)
 	}
 	pause(context) {
 		let result = this.queue.pause()
 		if (result) {
 			if (context instanceof Discord.Message) {
 				context.channel.send(result)
-			} else if (context == "reaction") {
+			} else if (context === "reaction") {
 				this.queue.textChannel.send(result)
+			} else if (context === "web") {
+				return !result
 			}
 		}
 	}
@@ -451,6 +453,9 @@ class QueueWrapper {
 			if (context instanceof Discord.Message) {
 				context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
 			}
+		}
+		if (context === "web") {
+			return !result
 		}
 	}
 	skip(amount) {

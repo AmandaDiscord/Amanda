@@ -20,6 +20,14 @@ function filterGuild(guild) {
 	}
 }
 
+function getQueue(guildID) {
+	const queueStore = passthrough.queueStore
+	if (!queueStore) return null
+	const queue = queueStore.get(guildID)
+	if (!queue) return null
+	return queue
+}
+
 class IPCRouter {
 	/**
 	 * @param {import("./ipcbot")} ipc
@@ -80,11 +88,18 @@ class IPCRouter {
 	 * @param {string} guildID
 	 */
 	GET_QUEUE_STATE(guildID) {
-		const queueStore = passthrough.queueStore
-		if (!queueStore) return null
-		const queue = queueStore.get(guildID)
+		const queue = getQueue(guildID)
 		if (!queue) return null
 		return queue.wrapper.getState()
+	}
+
+	/**
+	 * @param {string} guildID
+	 */
+	TOGGLE_PLAYBACK(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		return queue.wrapper.togglePlaying("web")
 	}
 }
 
