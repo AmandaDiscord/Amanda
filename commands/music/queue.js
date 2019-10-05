@@ -476,6 +476,7 @@ class QueueWrapper {
 	/**
 	 * Permitted contexts:
 	 * - A message `&m q remove 2`. A reaction will be added, or an error message will be sent.
+	 * - The string "web". The return value will be a boolean indicating success.
 	 * @param {number} index One-based index.
 	 * @param {any} [context]
 	 */
@@ -486,6 +487,8 @@ class QueueWrapper {
 					"You need to tell me which song to remove. `&music queue remove <number>`"
 					+"\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
 				)
+			} else if (context === "web") {
+				return false
 			}
 		} else {
 			let result = this.queue.removeSong(index-1, true)
@@ -502,6 +505,8 @@ class QueueWrapper {
 				} else {
 					context.react("✅")
 				}
+			} else if (context === "web") {
+				return result !== 1
 			}
 		}
 	}

@@ -232,9 +232,11 @@ class Session {
 	async sendState(data) {
 		if (!this.loggedin) return
 		const state = await getState(this.guild.id)
+		let nonce = null
+		if (data && typeof data.nonce === "number") nonce = data.nonce
 		this.send({
 			op: opcodes.STATE,
-			nonce: data.nonce || null,
+			nonce: nonce,
 			d: state
 		})
 	}
@@ -306,7 +308,10 @@ class Session {
 	}
 
 	requestQueueRemove(data) {
-
+		if (!this.loggedin) return
+		if (data && data.d && typeof data.d.index === "number") {
+			ipc.router.requestQueueRemove(this.guild.id, data.d.index)
+		}
 	}
 
 	attributesChange() {

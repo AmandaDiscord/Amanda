@@ -158,7 +158,9 @@ class QueueItem extends ElemJS {
 		this.disable()
 		this.queue.session.send({
 			op: opcodes.REQUEST_QUEUE_REMOVE,
-			d: {index: index+1} // +1 because backend queue starts with currently playing
+			// +1 because backend queue starts with currently playing
+			// and +1 because this gets sent to QueueWrapper, which is 1-indexed
+			d: {index: index+2}
 		})
 	}
 	disable() {

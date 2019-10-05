@@ -121,6 +121,17 @@ class IPCRouter {
 		queue.wrapper.stop()
 		return true
 	}
+
+	/**
+	 * @param {object} input
+	 * @param {string} input.guildID
+	 * @param {number} input.index
+	 */
+	REMOVE_SONG({guildID, index}) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		return queue.wrapper.removeSong(index, "web")
+	}
 }
 
 class Send {

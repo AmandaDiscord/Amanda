@@ -44,9 +44,11 @@ class IPC {
 		ipc.config.id = shard
 		ipc.connectToNet("website", () => {
 			this.socket = ipc.of.website
+			this.socket.once("connect", () => {
+				this.socket.on("message", this.receive.bind(this))
+			})
 			this.socket.on("connect", () => {
 				this.socket.emit("shard", {total: client.options.totalShardCount, me: shards})
-				this.socket.on("message", this.receive.bind(this))
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {

@@ -73,6 +73,16 @@ class IPCRouter {
 	requestStop(guildID) {
 		return this.ipc.requestFromGuild(guildID, "STOP", guildID)
 	}
+
+	/**
+	 * Ask a queue to remove a song.
+	 * @param {string} guildID
+	 * @param {number} index
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
+	requestQueueRemove(guildID, index) {
+		return this.ipc.requestFromGuild(guildID, "REMOVE_SONG", {guildID, index})
+	}
 }
 
 module.exports.router = IPCRouter
