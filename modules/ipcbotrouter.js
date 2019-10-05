@@ -101,6 +101,16 @@ class IPCRouter {
 		if (!queue) return false
 		return queue.wrapper.togglePlaying("web")
 	}
+
+	/**
+	 * @param {string} guildID
+	 */
+	SKIP(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		queue.wrapper.skip()
+		return true
+	}
 }
 
 class Send {

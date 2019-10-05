@@ -47,8 +47,22 @@ class IPCRouter {
 		return this.ipc.requestFromGuild(guildID, "GET_QUEUE_STATE", guildID)
 	}
 
+	/**
+	 * Ask a queue to pause.
+	 * @param {string} guildID
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
 	requestTogglePlayback(guildID) {
 		return this.ipc.requestFromGuild(guildID, "TOGGLE_PLAYBACK", guildID)
+	}
+
+	/**
+	 * Ask a queue to skip.
+	 * @param {string} guildID
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
+	requestSkip(guildID) {
+		return this.ipc.requestFromGuild(guildID, "SKIP", guildID)
 	}
 }
 

@@ -296,8 +296,8 @@ class Session {
 	}
 
 	skip() {
-		/*let queue = this.getQueue()
-		if (queue) queue.wrapper.skip()*/
+		if (!this.loggedin) return
+		ipc.router.requestSkip(this.guild.id)
 	}
 
 	stop() {
