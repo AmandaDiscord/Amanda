@@ -16,7 +16,7 @@ const opcodes = {
 	"TOGGLE_PLAYBACK": 9,
 	"SKIP": 10,
 	"STOP": 11,
-	"QUEUE_REMOVE": 12,
+	"REMOVE_SONG": 12,
 	"REQUEST_QUEUE_REMOVE": 13,
 	"MEMBERS_CHANGE": 14,
 	"ATTRIBUTES_CHANGE": 15,
@@ -135,6 +135,22 @@ ipc.addReceivers([
 				}
 			})
 		}
+	},
+	{
+		op: "REMOVE_SONG",
+		fn: ({guildID, index}) => {
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				cache.songs.splice(index, 1)
+				return cache
+			})
+			sessions.forEach(session => {
+				if (session.guild && session.guild.id == guildID) {
+					session.removeSong(index)
+				}
+			})
+		}
 	}
 ])
 
@@ -217,9 +233,9 @@ class Session {
 		})
 	}
 
-	queueRemove(index) {
+	removeSong(index) {
 		this.send({
-			op: opcodes.QUEUE_REMOVE,
+			op: opcodes.REMOVE_SONG,
 			d: {
 				index: index
 			}
@@ -277,10 +293,7 @@ class Session {
 	}
 
 	requestQueueRemove(data) {
-		/*if (data && data.d && typeof(data.d.index) == "number" && !isNaN(data.d.index)) {
-			let queue = this.getQueue()
-			if (queue) queue.removeSong(data.d.index)
-		}*/
+
 	}
 
 	attributesChange() {

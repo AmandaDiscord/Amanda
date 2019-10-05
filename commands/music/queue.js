@@ -298,10 +298,15 @@ class Queue {
 	 * Returns 1 if the index is out of range.
 	 * Returns 2 if index exists, but removed item was undefined.
 	 * @param {number} index Zero-based index.
+	 * @param {boolean} broadcast Whether to send a WS event for this removal
 	 */
-	removeSong(index) {
+	removeSong(index, broadcast) {
+		// Validate index
 		if (index == 0) return 1
 		if (!this.songs[index]) return 1
+		// Broadcast
+		if (broadcast) ipc.router.send.removeSong(this, index)
+		// Actually remove
 		let removed = this.songs.splice(index, 1)[0]
 		if (!removed) return 2
 		return 0
@@ -476,7 +481,7 @@ class QueueWrapper {
 				)
 			}
 		} else {
-			let result = this.queue.removeSong(index-1)
+			let result = this.queue.removeSong(index-1, true)
 			if (context instanceof Discord.Message) {
 				if (result == 1) {
 					if (index == 1) {

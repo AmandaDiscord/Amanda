@@ -20,7 +20,7 @@ ex.push({
 					[opcodes.NEXT, "next"],
 					[opcodes.SONG_UPDATE, "songUpdate"],
 					[opcodes.TIME_UPDATE, "timeUpdate"],
-					[opcodes.QUEUE_REMOVE, "queueRemove"],
+					[opcodes.REMOVE_SONG, "removeSong"],
 					[opcodes.MEMBERS_CHANGE, "membersChange"],
 					[opcodes.ATTRIBUTES_CHANGE, "attributesChange"]
 				])
@@ -99,7 +99,7 @@ ex.push({
 				}
 			}
 
-			queueRemove(data) {
+			removeSong(data) {
 				let index = data.d.index
 				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
 			}
