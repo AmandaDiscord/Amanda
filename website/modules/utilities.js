@@ -169,7 +169,7 @@ let utils = {
 		 */
 		update(updateFn) {
 			if (this.avc.cacheExists) {
-				this.avc.cache = updateFn(this.avc.cache)
+				this.applyUpdate(updateFn)
 			} else {
 				this.pending.push(updateFn)
 				if (!this.pendingPromiseAdded) {
@@ -185,9 +185,14 @@ let utils = {
 
 		applyUpdates() {
 			this.pending.forEach(updateFn => {
-				updateFn(this.avc.cache)
+				this.applyUpdate(updateFn)
 			})
 			this.pending = []
+		}
+
+		applyUpdate(fn) {
+			this.avc.cache = fn(this.avc.cache)
+			if (this.avc.cache === undefined) console.log("UVC.update() returned undefined. This is probably not supposed to happen!")
 		}
 	}
 }

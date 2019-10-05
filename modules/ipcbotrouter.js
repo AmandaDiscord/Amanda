@@ -145,6 +145,13 @@ class Send {
 	removeSong(queue, index) {
 		this.ipc.send({op: "REMOVE_SONG", data: {guildID: queue.guildID, index: index}})
 	}
+
+	/**
+	 * @param {import("../commands/music/queue").Queue} queue
+	 */
+	updateMembers(queue) {
+		this.ipc.send({op: "MEMBERS_UPDATE", data: {guildID: queue.guildID, members: queue.wrapper.getMembers()}})
+	}
 }
 
 module.exports.router = IPCRouter

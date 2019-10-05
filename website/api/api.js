@@ -151,6 +151,22 @@ ipc.addReceivers([
 				}
 			})
 		}
+	},
+	{
+		op: "MEMBERS_UPDATE",
+		fn: ({guildID, members}) => {
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				cache.members = members
+				return cache
+			})
+			sessions.forEach(session => {
+				if (session.guild && session.guild.id == guildID) {
+					session.membersChange(members)
+				}
+			})
+		}
 	}
 ])
 
@@ -258,16 +274,13 @@ class Session {
 		})
 	}
 
-	membersChange() {
-		/*let queue = this.getQueue()
-		if (queue) {
-			this.send({
-				op: opcodes.MEMBERS_CHANGE,
-				d: {
-					members: queue.wrapper.getMembers()
-				}
-			})
-		}*/
+	membersChange(members) {
+		this.send({
+			op: opcodes.MEMBERS_CHANGE,
+			d: {
+				members: members
+			}
+		})
 	}
 
 	timeUpdate(data) {

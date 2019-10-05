@@ -412,6 +412,8 @@ class Queue {
 				})
 			}
 		}
+		// Broadcast to web
+		ipc.router.send.updateMembers(this)
 	}
 }
 
