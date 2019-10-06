@@ -419,10 +419,30 @@ class VoiceInfo extends ElemJS {
 	render() {
 		this.clearChildren()
 		if (this.members.length) {
-			this.element.style.visibility = "visible"
+			let visibility = "hidden"
 			this.memberStore.forEach(member => {
-				member.join(this)
+				if (member.parts.avatar.element.complete) {
+					visibility = "visible"
+				}
 			})
+			this.element.style.visibility = visibility
+			let newAmanda = false
+			this.memberStore.forEach(member => {
+				if (member.isNew && member.props.isAmanda) {
+					newAmanda = true
+					member.join(this).then(() => {
+						this.memberStore.forEach(member => {
+							member.join(this)
+						})
+					})
+				}
+			})
+			if (!newAmanda) {
+				this.memberStore.forEach(member => {
+					console.log("Adding", member)
+					member.join(this)
+				})
+			}
 		} else {
 			this.element.style.visibility = "hidden"
 		}
@@ -442,22 +462,40 @@ class VoiceMember extends ElemJS {
 		this.leaving = false
 	}
 	join(voiceInfo) {
+		if (this.isNew) {
+			this.isNew = false
+			if (this.parts.avatar.element.complete) {
+				this.addSelf(voiceInfo)
+				this.animateJoin()
+				return Promise.resolve()
+			} else {
+				return new Promise(resolve => {
+					this.parts.avatar.element.addEventListener("load", () => {
+						this.addSelf(voiceInfo)
+						this.animateJoin()
+						resolve()
+					})
+				})
+			}
+		} else {
+			this.addSelf(voiceInfo)
+			return Promise.resolve()
+		}
+	}
+	addSelf(voiceInfo) {
 		voiceInfo.child(this.parts.avatar, this.props.isAmanda ? 0 : -1)
 		voiceInfo.child(this.parts.name, this.props.isAmanda ? 1 : -1)
-		this.animateJoin()
+		voiceInfo.element.style.visibility = "visible"
 	}
 	leave() {
 		this.leaving = true
 		return this.animateLeave()
 	}
 	animateJoin() {
-		if (this.isNew) {
-			this.parts.avatar.element.animate([
-				{left: "-12px", filter: "brightness(2.5)", opacity: 0, easing: "ease-out"},
-				{left: "0px", filter: "brightness(1)", opacity: 1}
-			], 200)
-			this.isNew = false
-		}
+		this.parts.avatar.element.animate([
+			{left: "-12px", filter: "brightness(2.5)", opacity: 0, easing: "ease-out"},
+			{left: "0px", filter: "brightness(1)", opacity: 1}
+		], 200)
 	}
 	animateLeave() {
 		return Promise.all(Object.values(this.parts).map(part =>
