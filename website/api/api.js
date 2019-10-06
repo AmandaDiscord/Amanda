@@ -167,6 +167,22 @@ ipc.addReceivers([
 				}
 			})
 		}
+	},
+	{
+		op: "ATTRIBUTES_CHANGE",
+		fn: ({guildID, attributes}) => {
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				cache.attributes = attributes
+				return cache
+			})
+			sessions.forEach(session => {
+				if (session.guild && session.guild.id == guildID) {
+					session.attributesChange(attributes)
+				}
+			})
+		}
 	}
 ])
 
@@ -314,20 +330,18 @@ class Session {
 		}
 	}
 
-	attributesChange() {
-		/*this.send({
+	attributesChange(attributes) {
+		this.send({
 			op: opcodes.ATTRIBUTES_CHANGE,
-			d: this.getQueue().wrapper.getAttributes()
-		})*/
+			d: attributes
+		})
 	}
 
 	requestAttributesChange(data) {
-		/*let queue = this.getQueue()
-		if (queue) {
-			if (typeof(data) == "object" && typeof(data.d) == "object") {
-				if (typeof(data.d.auto) == "boolean" && queue.auto != data.d.auto) queue.wrapper.toggleAuto()
-			}
-		}*/
+		if (!this.loggedin) return
+		if (typeof(data) == "object" && typeof(data.d) == "object") {
+			if (typeof(data.d.auto) == "boolean") ipc.router.requestToggleAuto(this.guild.id)
+		}
 	}
 }
 

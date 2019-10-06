@@ -83,6 +83,15 @@ class IPCRouter {
 	requestQueueRemove(guildID, index) {
 		return this.ipc.requestFromGuild(guildID, "REMOVE_SONG", {guildID, index})
 	}
+
+	/**
+	 * Ask a queue to toggle the auto state.
+	 * @param {string} guildID
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
+	requestToggleAuto(guildID) {
+		return this.ipc.requestFromGuild(guildID, "TOGGLE_AUTO", guildID)
+	}
 }
 
 module.exports.router = IPCRouter

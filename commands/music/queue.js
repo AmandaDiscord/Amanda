@@ -262,6 +262,7 @@ class Queue {
 	}
 	toggleAuto() {
 		this.auto = !this.auto
+		ipc.router.send.updateAttributes(this)
 	}
 	/**
 	 * Add a song to the end of the queue.
@@ -429,6 +430,8 @@ class QueueWrapper {
 		let auto = this.queue.auto
 		if (context instanceof Discord.Message) {
 			context.channel.send("Auto mode is now turned "+(auto ? "on" : "off"))
+		} else if (context === "web") {
+			return true
 		}
 	}
 	togglePlaying(context) {

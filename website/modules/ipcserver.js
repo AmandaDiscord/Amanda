@@ -189,13 +189,13 @@ class IPC {
 					} else if (combineMethod === "concat") {
 						resolve([].concat(...parts))
 					} else if (combineMethod === "concatProps") {
-						console.log(parts)
+						//console.log(parts)
 						let result = {}
 						let keys = Object.keys(parts[0])
 						keys.forEach(k => {
 							result[k] = [].concat(...parts.map(p => p[k]))
 						})
-						console.log(result)
+						//console.log(result)
 						resolve(result)
 					} else if (combineMethod === "add") {
 						resolve(parts.reduce((acc, cur) => (acc + cur), 0))

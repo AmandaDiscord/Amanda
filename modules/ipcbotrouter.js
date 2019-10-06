@@ -132,6 +132,15 @@ class IPCRouter {
 		if (!queue) return false
 		return queue.wrapper.removeSong(index, "web")
 	}
+
+	/**
+	 * @param {string} guildID
+	 */
+	TOGGLE_AUTO(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		return queue.wrapper.toggleAuto("web")
+	}
 }
 
 class Send {
@@ -197,6 +206,13 @@ class Send {
 	 */
 	updateMembers(queue) {
 		this.ipc.send({op: "MEMBERS_UPDATE", data: {guildID: queue.guildID, members: queue.wrapper.getMembers()}})
+	}
+
+	/**
+	 * @param {import("../commands/music/queue").Queue} queue
+	 */
+	updateAttributes(queue) {
+		this.ipc.send({op: "ATTRIBUTES_CHANGE", data: {guildID: queue.guildID, attributes: queue.wrapper.getAttributes()}})
 	}
 }
 
