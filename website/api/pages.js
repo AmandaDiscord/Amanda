@@ -150,7 +150,7 @@ module.exports = [
 					/** @type {ipctypes.FilteredGuild} */
 					const guild = state.guild
 
-					const page = pugCache.get("pug/server.pug")({guild})
+					const page = pugCache.get("pug/server.pug")({guild, timestamp: Date.now()})
 					return {
 						statusCode: 200,
 						contentType: "text/html",

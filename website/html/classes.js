@@ -342,7 +342,7 @@ class PlayerTime extends ElemJS {
 		this.render()
 	}
 	getTime() {
-		return Date.now() - this.state.songStartTime
+		return Date.now() - this.state.songStartTime + serverTimeDiff
 	}
 	getMSRemaining() {
 		return Math.max(0, this.state.maxTime*1000 - this.getTime())
