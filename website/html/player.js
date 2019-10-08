@@ -102,7 +102,7 @@ ex.push({
 			removeSong(data) {
 				let index = data.d.index
 				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
-				this.state.songs.splice(index-1, 1) // same reason
+				this.state.songs.splice(index, 1) // same reason
 			}
 
 			next() {
