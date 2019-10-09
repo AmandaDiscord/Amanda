@@ -26,11 +26,11 @@
     "mysql2": "^1.7.0",
     "nedb-promises": "^4.0.0",
     "node-ipc": "^9.1.1",
-    "pinski": "file:../../Code/pinski",
+    "pinski": "github:cloudrac3r/pinski#v2",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "simple-git": "^1.126.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "file:../../Code/SnowTransfer"
+    "snowtransfer": "github:cloudrac3r/SnowTransfer"
   }
 }
