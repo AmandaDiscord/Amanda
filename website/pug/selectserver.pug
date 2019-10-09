@@ -27,17 +27,17 @@ html
 					input(type="hidden" name="csrftoken" value=csrfToken)
 					input(type="submit" value="Log out").logout-button
 
-			if npguilds
-				div.guilds
-					for guild in npguilds
-						+guild-selection(guild, true)
+			div.guilds
+				for guild in npguilds
+					+guild-selection(guild, true)
 
-			if guilds
-				div.guilds
-					for guild in guilds
-						+guild-selection(guild, false)
-			else
+			div.guilds
+				for guild in guilds
+					+guild-selection(guild, false)
+
+			if displayNoSharedServers
 				div.message
-					div We don't share any servers? Wha-!
 					div
-						a(href="https://discord-bots.ga/amanda") Want to add me to one?
+						div We don't share any servers? Wha-!
+						div
+							a(href="https://discord-bots.ga/amanda") Want to add me to one?
