@@ -91,12 +91,13 @@ async function manageMessage(msg) {
 	let self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
 	let server
 	if (msg.guild) server = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "language"])
-	if (self) langcode = self.setting
-	else if (server) langcode = server.setting
+	if (self) langcode = self.value
+	else if (server) langcode = server.value
 	else langcode = "en-us"
 
 	if (langcode == "en-us") lang = Lang.english
-	
+	if (langcode == "en-owo") lang = Lang.owo
+
 	if (cmd) {
 		try {
 			await cmd.process(msg, suffix, lang)

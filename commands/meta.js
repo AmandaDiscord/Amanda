@@ -12,14 +12,13 @@ const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
 const util = require("util")
 
+const emojis = require("../modules/emojis")
+
 const passthrough = require("../passthrough")
 let {client, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory} = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
-
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
 
 let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000*60*60 - (Date.now() % (1000*60*60)))
 console.log(`added timeout sendStatsTimeout`)
@@ -101,7 +100,7 @@ commands.assign({
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
 				`**❯ Songs Played Today:**\n${songsPlayed} songs\n`+
 				`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.songs.length, 0)} songs`, true)
-				.addField(lang.emoji.bl,
+				.addField(emojis.bl,
 				`**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n`+
 				`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc+cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -111,7 +110,7 @@ commands.assign({
 				.addField(`${client.user.tag} <:online:606664341298872324>`,
 					`**❯ Games Played Today:**\n${gamesPlayed} games\n`+
 					`**❯ Games In Progress:**\n${gameStore.store.size} games`, true)
-				.addField(lang.emoji.bl,
+				.addField(emojis.bl,
 					`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc+cur.receivedAnswers?cur.receivedAnswers.size:0, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
@@ -132,7 +131,7 @@ commands.assign({
 					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
 					`**❯ Uptime:**\n${utils.shortTime(process.uptime(), "sec")}\n`+
 					`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
-				.addField(lang.emoji.bl,
+				.addField(emojis.bl,
 					`**❯ User Count:**\n${client.users.size} users\n`+
 					`**❯ Guild Count:**\n${client.guilds.size} guilds\n`+
 					`**❯ Channel Count:**\n${client.channels.size} channels\n`+
@@ -190,11 +189,11 @@ commands.assign({
 		description: "Add Amanda to a server",
 		aliases: ["invite", "inv"],
 		category: "meta",
-		process: async function(msg) {
+		process: async function(msg, suffix, lang) {
 			let embed = new Discord.MessageEmbed()
-			.setTitle("I've been invited?")
+			.setTitle(lang.meta.invite.returns.invited)
 			.setDescription(
-				"Remember, you need **manage server** permissions to be able to add bots to a server."
+				lang.meta.invite.returns.notice
 				+"\nInvite link: https://discord-bots.ga/amanda"
 			)
 			.setColor(0x36393f)
@@ -206,19 +205,19 @@ commands.assign({
 		description: "Displays information about Amanda",
 		aliases: ["info", "inf"],
 		category: "meta",
-		process: async function(msg) {
+		process: async function(msg, suffix, lang) {
 			let [c1, c2] = await Promise.all([
 				client.users.fetch("320067006521147393", true),
 				client.users.fetch("176580265294954507", true)
 			])
 			let embed = new Discord.MessageEmbed()
 				.setAuthor("Amanda", client.user.avatarURL({format: "png", size: 32}))
-				.setDescription("Thank you for choosing me as your companion! :heart:\nHere's a little bit of info about me...")
-				.addField("Creators",
+				.setDescription(lang.meta.info.returns.thanks)
+				.addField(lang.meta.info.returns.creators,
 					`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>\n`+
 					`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`)
 				.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-				.addField("Links", `Visit Amanda's [website](${config.website_protocol}://${config.website_domain}/) or her [support server](https://discord.gg/zhthQjH)\nWanna donate? Check out her [Patreon](https://www.patreon.com/papiophidian) or make a 1 time donation through [PayPal](https://paypal.me/papiophidian).`)
+				.addField("Links", utils.replace(lang.meta.info.returns.links, {"website": `${config.website_protocol}://${config.website_domain}/`}))
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -228,19 +227,11 @@ commands.assign({
 		description: "Get information on how to donate",
 		aliases: ["donate", "patreon"],
 		category: "meta",
-		process: function(msg) {
+		process: function(msg, suffix, lang) {
 			let embed = new Discord.MessageEmbed()
 			.setColor(0x36393f)
-			.setTitle("Thinking of donating? ❤")
-			.setDescription(
-				"I'm excited that you're interested in supporting my creators!"
-				+"\n\nIf you're interested in making monthly donations, you can do so on [Patreon](https://www.patreon.com/papiophidian),"
-				+" or if you'd like to make a one time donation, you can donate through [PayPal](https://paypal.me/papiophidian)."
-				+"\n\nAll money donated will go back into development."
-				+"\nAccess to Amanda's features will not change regardless of your choice,"
-				+" but you will recieve a donor role in our [Support Server](https://discord.gg/zhthQjH)"
-				+" and get a distinguishing donor badge on &profile."
-			)
+			.setTitle(lang.meta.donate.returns.intro)
+			.setDescription(lang.meta.donate.returns.description)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -299,7 +290,7 @@ commands.assign({
 			let embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 			try {
 				await msg.author.send(embed)
-				if (msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg))
+				if (msg.channel.type != "dm") msg.channel.send("I sent you a DM")
 				return
 			} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed)) }
 		}
@@ -309,13 +300,13 @@ commands.assign({
 		description: "Provides information about a user",
 		aliases: ["user"],
 		category: "meta",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
-			if (!user) return msg.channel.send(`Couldn't find that user`)
+			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, {"username": msg.author.username}))
 			let embed = new Discord.MessageEmbed().setColor("36393E")
 			embed.addField("User ID:", user.id)
 			let userCreatedTime = user.createdAt.toUTCString()
@@ -349,7 +340,7 @@ commands.assign({
 		description: "Gets a user's avatar",
 		aliases: ["avatar", "pfp"],
 		category: "meta",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			let canEmbedLinks = true
 			if (msg.channel instanceof Discord.TextChannel) {
 				if (!msg.channel.permissionsFor(client.user).has("EMBED_LINKS")) {
@@ -366,7 +357,7 @@ commands.assign({
 			} else {
 				user = await utils.findUser(msg, suffix, true)
 			}
-			if (!user) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, {"username": msg.author.username}))
 			let isAnimated = user.displayAvatarURL().endsWith("gif")
 			let url = user.displayAvatarURL({format: isAnimated ? "gif" : "png", size: 2048})
 			if (canEmbedLinks) {
@@ -387,9 +378,9 @@ commands.assign({
 		process: function(msg, suffix) {
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!suffix) return msg.channel.send(lang.input.invalid(msg, "emoji"))
+			if (!suffix) return msg.channel.send(`That's not a valid emoji`)
 			let emoji = Discord.Util.parseEmoji(suffix)
-			if (emoji == null) return msg.channel.send(lang.input.invalid(msg, "emoji"))
+			if (emoji == null) return msg.channel.send(`That's not a valid emoji`)
 			let url = utils.emojiURL(emoji.id, emoji.animated)
 			let embed = new Discord.MessageEmbed()
 				.setImage(url)
@@ -403,15 +394,15 @@ commands.assign({
 		description: "Get profile information about someone",
 		aliases: ["profile"],
 		category: "meta",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			let user, member, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"))
+			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
-			if (!user) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, {"username": msg.author.username}))
 			msg.channel.sendTyping()
 
 			let [isOwner, isPremium, money, info, avatar, images] = await Promise.all([
@@ -609,7 +600,7 @@ commands.assign({
 			}
 
 			if (settingName == "language") {
-				if (!["en-us"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code`)
+				if (!["en-us", "en-owo"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code`)
 				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}
@@ -791,7 +782,7 @@ commands.assign({
 						else var promise = target.send(content)
 					}
 					promise.then(dm => {
-						if (where == "dm" && msg.channel.type != "dm") msg.channel.send(lang.dm.success(msg))
+						if (where == "dm" && msg.channel.type != "dm") msg.channel.send("I sent you a DM")
 						resolve(dm)
 					}).catch(reject)
 				})
