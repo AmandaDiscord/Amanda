@@ -26,9 +26,10 @@ if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
 utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent)
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
-	if (data && data.id && data.channel_id && data.content && data.author && data.member) {
+	if (data && data.id && data.channel_id && data.content && data.author) {
 		const channel = client.channels.get(data.channel_id)
-		if (channel instanceof Discord.TextChannel || channel instanceof Discord.DMChannel) {
+		// ensure channel is a message channel, and ensure member exists if is a guild channel
+		if (channel instanceof Discord.DMChannel || (channel instanceof Discord.TextChannel && data.member)) {
 			const message = new Discord.Message(client, data, channel)
 			manageMessage(message)
 		}
