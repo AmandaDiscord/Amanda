@@ -4,7 +4,7 @@ html
 		title= guild.name+" | Amanda"
 		script.
 			const guildID = "#{guild.id}"
-			const serverTimeDiff = #{timestamp}-Date.now()
+			let serverTimeDiff = #{timestamp}-Date.now()
 		script(defer src="/exports.js")
 		script(defer src="/player.js" data-ex="player")
 		script(defer src="/classes.js" data-ex="classes")

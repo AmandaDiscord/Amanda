@@ -222,7 +222,8 @@ class Session {
 	}
 
 	async identify(data) {
-		if (data && data.d && typeof(data.d.cookie) == "string" && typeof(data.d.guildID) == "string") {
+		if (data && data.d && typeof data.d.cookie === "string" && typeof data.d.guildID === "string" && typeof data.d.timestamp === "number") {
+			const serverTimeDiff = Date.now()-data.d.timestamp
 			// Check the user and guild are legit
 			let cookies = utils.getCookies({headers: {cookie: data.d.cookie}})
 			let session = await utils.getSession(cookies)
@@ -240,6 +241,9 @@ class Session {
 			this.send({
 				op: opcodes.ACKNOWLEDGE,
 				nonce: data.nonce || null,
+				d: {
+					serverTimeDiff: serverTimeDiff
+				}
 			})
 			this.sendState({})
 		}

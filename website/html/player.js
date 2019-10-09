@@ -43,15 +43,16 @@ ex.push({
 			}
 
 			onOpen() {
-				this.send({op: opcodes.IDENTIFY, d: {cookie: document.cookie, guildID}})
+				this.send({op: opcodes.IDENTIFY, d: {cookie: document.cookie, guildID, timestamp: Date.now()}})
 			}
 
 			onClose(event) {
 				console.log("WebSocket closed.", event)
 			}
 
-			acknowledge() {
-				//this.send({op: opcodes.REQUEST_STATE})
+			acknowledge(data) {
+				serverTimeDiff = data.d.serverTimeDiff
+				console.log("Time difference: "+serverTimeDiff)
 			}
 
 			updateState(data) {
