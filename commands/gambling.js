@@ -190,7 +190,7 @@ commands.assign({
 				let pick = args[1] == "h" ? "t" : "h"
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`)+
-					utils.replace(lang.gambling.betflip.returns.guess, {"string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` })+
+					utils.replace(lang.gambling.betflip.returns.guess, {"string1": `${strings[args[1]][0]}.\n${strings[pick][1]}`, "string2": `${strings[pick][0]}` })+
 					`.\n${lang.gambling.betflip.returns.lost}`
 				)
 				return utils.coinsManager.award(msg.author.id, -bet)
