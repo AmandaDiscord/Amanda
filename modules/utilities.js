@@ -684,28 +684,30 @@ const utils = {
 	paginate: async function(channel, pageCount, callback) {
 		let page = 0
 		let msg = await channel.send(callback(page))
-		let reactionMenuExpires
-		let reactionMenu = utils.reactionMenu(msg, [
-			{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
-				page--
-				if (page < 0) page = pageCount-1
-				msg.edit(callback(page))
-				makeTimeout()
-			}},
-			{emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
-				page++
-				if (page >= pageCount) page = 0
-				msg.edit(callback(page))
-				makeTimeout()
-			}}
-		])
-		function makeTimeout() {
-			clearTimeout(reactionMenuExpires)
-			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true)
-			}, 10*60*1000)
+		if (pageCount > 1) {
+			let reactionMenuExpires
+			let reactionMenu = utils.reactionMenu(msg, [
+				{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
+					page--
+					if (page < 0) page = pageCount-1
+					msg.edit(callback(page))
+					makeTimeout()
+				}},
+				{emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
+					page++
+					if (page >= pageCount) page = 0
+					msg.edit(callback(page))
+					makeTimeout()
+				}}
+			])
+			function makeTimeout() {
+				clearTimeout(reactionMenuExpires)
+				reactionMenuExpires = setTimeout(() => {
+					reactionMenu.destroy(true)
+				}, 10*60*1000)
+			}
+			makeTimeout()
 		}
-		makeTimeout()
 	},
 
 	/**

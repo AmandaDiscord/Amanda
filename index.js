@@ -77,6 +77,7 @@ let db = mysql.createPool({
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
+		"./commands/todo.js",
 		"./commands/traa.js",
 		"./modules/events.js",
 		"./modules/stdin.js",
