@@ -9,6 +9,7 @@ module.exports = {
 	chewey_api_key: "chewey bot api key here",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
+	website_ipc_bind: "localhost",
 	is_staging: true,
 	music_dash_enabled: false,
 	lavalink_password: "lavalink password here",
