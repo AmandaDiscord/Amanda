@@ -33,9 +33,9 @@ module.exports = [
 			if (session) {
 				let user = await snow.user.cache.fetchUser(session.userID)
 				let {guilds, npguilds} = await ipc.router.requestDashGuilds(session.userID, true)
-
+				let displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 				let csrfToken = utils.generateCSRF()
-				let page = pugCache.get("pug/selectserver.pug")({user, npguilds, guilds, csrfToken})
+				let page = pugCache.get("pug/selectserver.pug")({user, npguilds, displayNoSharedServers, guilds, csrfToken})
 				return {
 					statusCode: 200,
 					contentType: "text/html",

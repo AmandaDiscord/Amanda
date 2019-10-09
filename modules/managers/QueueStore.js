@@ -96,6 +96,7 @@ class QueueStore {
 				queue.np = message
 				queue._startNPUpdates()
 				queue._makeReactionMenu()
+				ipc.router.send.newQueue(queue)
 			}
 		})
 	}
