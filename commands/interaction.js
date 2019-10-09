@@ -7,6 +7,8 @@ const crypto = require("crypto")
 const rp = require("request-promise")
 const Discord = require("discord.js")
 
+const emojis = require("../modules/emojis")
+
 const passthrough = require("../passthrough")
 let { client, commands, reloader } = passthrough
 
@@ -14,9 +16,6 @@ let responses = ["That's not strange at all...", "W-What? Why?", "I find it stra
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
-
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
 
 /**
  * @type {Object.<string, import("../modules/managers/CommandStore").Command>}
@@ -27,19 +26,19 @@ let cmds = {
 		description: "Ships two people",
 		aliases: ["ship"],
 		category: "interaction",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"))
+			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			let args = suffix.split(" ")
-			if (args.length != 2) return msg.channel.send(`You need to provide two users as arguments`)
+			if (args.length != 2) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, {"username": msg.author.username}))
 			let mem1 = await msg.guild.findMember(msg, args[0])
 			let mem2 = await msg.guild.findMember(msg, args[1])
-			if (mem1 == null) return msg.channel.send(`The first member provided was not found`)
-			if (mem2 == null) return msg.channel.send(`The second member provided was not found`)
-			if (mem1.id == mem2.id) return msg.channel.send(`You can't ship someone with themselves, silly`)
+			if (mem1 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser1, {"username": msg.author.username}))
+			if (mem2 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser2, {"username": msg.author.username}))
+			if (mem1.id == mem2.id) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.selfShip, {"username": msg.author.username}))
 			msg.channel.sendTyping()
 			let canvas = await Jimp.read("./images/transparent/300x100.png")
 			//@ts-ignore
@@ -71,7 +70,7 @@ let cmds = {
 				let hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 				percentage = parseInt("0x"+hash)%101
 			}
-			return msg.channel.send(`Aww. I'd rate ${mem1.displayName} and ${mem2.displayName} being together a ${percentage}%`,{files: [image]})
+			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, {"display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage}), {files: [image]})
 		}
 	},
 	"waifu": {
@@ -79,10 +78,10 @@ let cmds = {
 		description: "Gets the waifu information about yourself or a user",
 		aliases: ["waifu"],
 		category: "interaction",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, {"username": msg.author.username}))
 			let member = await msg.guild.findMember(msg, suffix, true)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!member) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, {"username": msg.author.username}))
 			let info = await utils.waifu.get(member.id)
 			let embed = new Discord.MessageEmbed()
 				.setAuthor(member.displayTag, member.user.avatarURL({format: "png", size: 32}))
@@ -99,15 +98,15 @@ let cmds = {
 		description: "Claims someone as a waifu. Requires Discoins",
 		aliases: ["claim"],
 		category: "interaction",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, {"username": msg.author.username}))
 			let args = suffix.split(" ")
 			let usertxt = args.slice(1).join(" ")
-			if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send("The correct format is `&claim <amount> <user>`. Amount comes first, user comes last.")
-			if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, {"username": msg.author.username}))
+			if (!usertxt) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, {"username": msg.author.username}))
 			let member = await msg.guild.findMember(msg, usertxt)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
-			if (member.id == msg.author.id) return msg.channel.send("You can't claim yourself, silly")
+			if (!member) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, {"username": msg.author.username}))
+			if (member.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.selfClaim, {"username": msg.author.username}))
 			let [memberInfo, myInfo, money, memsettings, guildsettings] = await Promise.all([
 				utils.waifu.get(member.user.id),
 				utils.waifu.get(msg.author.id),
@@ -117,31 +116,31 @@ let cmds = {
 			])
 			let claim = 0
 			if (args[0] == "all" || args[0] == "half") {
-				if (!money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (!money) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.moneyInsufficient, {"username": msg.author.username}))
 				args[0] == "all"
 				? claim = money
 				: claim = Math.floor(money/2)
 			} else {
 				claim = Math.floor(Number(args[0]))
-				if (isNaN(claim)) return msg.channel.send(lang.external.money.insufficient(msg))
-				if (claim < 1) return msg.channel.send(lang.input.money.small(msg, "claim", 1))
-				if (claim > money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(claim)) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.moneyInsufficient, {"username": msg.author.username}))
+				if (claim < 1) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.claimSmall, {"username": msg.author.username}))
+				if (claim > money) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
-			if (memberInfo.price >= claim) return msg.channel.send(lang.input.waifu.claimedByOther(msg, memberInfo.price+1))
-			if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(lang.input.waifu.doubleClaim(msg))
+			if (memberInfo.price >= claim) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.claimedByOther, {"username": msg.author.username, "number": memberInfo.price+1}))
+			if (memberInfo.claimer && memberInfo.claimer.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.doubleClaim, {"username": msg.author.username}))
 			await utils.waifu.bind(msg.author.id, member.id, claim)
 			let faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"]
 			let face = utils.arrayRandom(faces)
 			let embed = new Discord.MessageEmbed()
-				.setDescription(`${String(msg.member)} has claimed ${String(member)} for ${claim} ${lang.emoji.discoin}`)
+				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, {"mention1": String(msg.author), "mention2": String(member), "number": claim}))
 				.setColor("36393E")
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()))
+				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(lang.interaction.claim.returns.dm, {"mention": String(msg.author), "number": claim})} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 				else return
 			}
-			return member.send(`${String(msg.member)} has claimed you for ${claim} ${lang.emoji.discoin} ${face}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()))
+			return member.send(`${utils.replace(lang.interaction.claim.returns.dm, {"mention": String(msg.author), "number": claim})} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 		}
 	},
 	"divorce": {
@@ -174,8 +173,8 @@ let cmds = {
 		description: "Gifts an amount of Discoins towards your waifu's price",
 		aliases: ["gift"],
 		category: "interaction",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.gift.prompts.guildOnly, {"username": msg.author.username}))
 			let args = suffix.split(" ")
 			let waifu = await utils.waifu.get(msg.author.id, { basic: true })
 			let money = await utils.coinsManager.get(msg.author.id)
@@ -183,15 +182,15 @@ let cmds = {
 			if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`)
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
-				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (money == 0) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.moneyInsufficient, {"username": msg.author.username}))
 				args[0] == "all"
 				? gift = money
 				: gift = Math.floor(money/2)
 			} else {
 				gift = Math.floor(Number(args[0]))
-				if (isNaN(gift)) return msg.channel.send(lang.input.invalid(msg, "gift"))
-				if (gift < 1) return msg.channel.send(lang.input.money.small(msg, "gift", 1))
-				if (gift > money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.invalidGift, {"username": msg.author.username}))
+				if (gift < 1) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.giftSmall, {"username": msg.author.username}))
+				if (gift > money) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
 			await utils.waifu.transact(msg.author.id, gift)
 			await utils.coinsManager.award(msg.author.id, -gift)
@@ -231,7 +230,7 @@ let cmds = {
 				.setTitle("Waifu leaderboard")
 				.setDescription(
 					all.map((row, index) =>
-						`${index+amount-9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${lang.emoji.discoin}`
+						`${index+amount-9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${emojis.discoin}`
 					).join("\n")
 				)
 				.setFooter(`Page ${amount/10}`)
@@ -244,15 +243,15 @@ let cmds = {
 		description: "Beans a user",
 		aliases: ["bean"],
 		category: "interaction",
-		process: async function(msg, suffix) {
-			if (msg.channel.type !== "text") return msg.channel.send("You can't bean someone in DMs, silly")
-			if (!suffix) return msg.channel.send(lang.input.invalid(msg, "user"))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type !== "text") return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, {"username": msg.author.username}))
+			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, {"username": msg.author.username}))
 			let member
 			member = await msg.guild.findMember(msg, suffix, true)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!member) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, {"username": msg.author.username}))
 			if (member.id == client.user.id) return msg.channel.send(`No u`)
-			if (member.id == msg.author.id) return msg.channel.send(`You can't bean yourself, silly`)
-			return msg.channel.send(`**${member.user.tag}** has been banned!`)
+			if (member.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.selfBean, {"username": msg.author.username}))
+			return msg.channel.send(utils.replace(lang.interaction.bean.returns.beaned, {"tag": `**${member.user.tag}**`}))
 		}
 	}
 }
@@ -355,7 +354,7 @@ async function doInteraction(msg, suffix, source) {
 	if (msg.channel.type == "dm") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`)
 	if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`)
 	let member = await msg.guild.findMember(msg, suffix)
-	if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
+	if (!member) return msg.channel.send(`Invalid user`)
 	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 	if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username))
 	let fetch, description = ""

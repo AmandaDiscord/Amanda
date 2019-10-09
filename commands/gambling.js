@@ -5,6 +5,8 @@
 const Jimp = require("jimp")
 const Discord = require("discord.js")
 
+const emojis = require("../modules/emojis")
+
 const passthrough = require("../passthrough")
 let { client, commands, reloader } = passthrough
 
@@ -13,9 +15,6 @@ const dailyCooldownTime = dailyCooldownHours*60*60*1000
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
-
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
 
 let imageStorage = new utils.JIMPStorage()
 imageStorage.save("font", "font", ".fonts/Whitney-20.fnt")
@@ -37,11 +36,11 @@ commands.assign({
 		description: "Runs a random slot machine for a chance at Discoins",
 		aliases: ["slot", "slots"],
 		category: "gambling",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"))
+			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			let args = suffix.split(" ")
 			let array = ['apple', 'cherries', 'watermelon', 'pear', "strawberry"] // plus heart, which is chosen seperately
@@ -88,32 +87,32 @@ commands.assign({
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
-				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, {"username": msg.author.username}))
 				args[0] == "all"
 				? bet = money
 				: bet = Math.floor(money/2)
 			} else {
 				bet = Math.floor(Number(args[0]))
-				if (isNaN(bet)) return msg.channel.send(lang.input.invalid(msg, "bet"))
-				if (bet < 2) return msg.channel.send(lang.input.money.small(msg, "bet", 2))
-				if (bet > money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.invalidBet, {"username": msg.author.username}))
+				if (bet < 2) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.betSmall, {"username": msg.author.username}))
+				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
 			let result, winning
 			if (slots.every(s => s == "heart")) {
 				winning = bet * 30
-				result = `WOAH! Triple :heart: You won ${bet * 30} ${lang.emoji.discoin}`
+				result = utils.replace(lang.gambling.slot.returns.heart3, {"number": bet*30})
 			} else if (slots.filter(s => s == "heart").length == 2) {
 				winning = bet * 4
-				result = `Wow! Double :heart: You won ${bet * 4} ${lang.emoji.discoin}`
+				result = utils.replace(lang.gambling.slot.returns.heart2, {"number": bet*4})
 			} else if (slots.filter(s => s == "heart").length == 1) {
 				winning = Math.floor(bet * 1.25)
-				result = `A single :heart: You won ${Math.floor(bet * 1.25)} ${lang.emoji.discoin}`
+				result = utils.replace(lang.gambling.slot.returns.heart1, {"number": Math.floor(bet*1.25)})
 			} else if (slots.slice(1).every(s => s == slots[0])) {
 				winning = bet * 10
-				result = `A triple. You won ${bet * 10} ${lang.emoji.discoin}`
+				result = utils.replace(lang.gambling.slot.returns.triple, {"number": bet*10})
 			} else {
 				winning = 0
-				result = `Sorry. You didn't get a match. You lost ${bet} ${lang.emoji.discoin}`
+				result = utils.replace(lang.gambling.slot.returns.lost, {"number": bet})
 			}
 			utils.coinsManager.award(msg.author.id, winning-bet)
 			canvas.print(font, 115, 523, winning)
@@ -138,11 +137,11 @@ commands.assign({
 		description: "Place a bet on a random flip for a chance of Discoins",
 		aliases: ["betflip", "bf"],
 		category: "gambling",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, {"username": msg.author.username}))
 			let args = suffix.split(" ")
 			let money = await utils.coinsManager.get(msg.author.id)
-			if (!args[0]) return msg.channel.send(`${msg.author.username}, you need to provide a bet and a side to bet on`)
+			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBetandSide, {"username": msg.author.username}))
 			if (args[0] == "h" || args[0] == "t") {
 				let t = args[0]
 				args[0] = args[1]
@@ -150,22 +149,22 @@ commands.assign({
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
-				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, {"username": msg.author.username}))
 				args[0] == "all"
 				? bet = money
 				: bet = Math.floor(money/2)
 			} else {
 				bet = Math.floor(Number(args[0]))
-				if (isNaN(bet)) return msg.channel.send(lang.input.invalid(msg, "bet"))
-				if (bet < 1) return msg.channel.send(lang.input.money.small(msg, "bet", 1))
-				if (bet > money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBet, {"username": msg.author.username}))
+				if (bet < 1) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.betSmall, {"username": msg.author.username}))
+				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
 			let selfChosenSide = false
 			if (!args[1]) {
 				args[1] = Math.random() < 0.5 ? "h" : "t"
 				selfChosenSide = true
 			}
-			if (args[1] != "h" && args[1] != "t") return msg.channel.send(`${msg.author.username}, that's not a valid side to bet on`)
+			if (args[1] != "h" && args[1] != "t") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidSide, {"username": msg.author.username}))
 			const cooldownInfo = {
 				max: 60,
 				min: 36,
@@ -182,15 +181,17 @@ commands.assign({
 			}
 			if (Math.random() < winChance/100) {
 				msg.channel.send(
-					(!selfChosenSide ? "" : "You didn't choose a side, so I picked one for you: "+strings[args[1]][0]+".\n")+
-					`You guessed ${strings[args[1]][0]}.\n${strings[args[1]][1]} I flipped ${strings[args[1]][0]}.\nYou guessed it! You got ${bet * 2} ${lang.emoji.discoin}`
+					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`)+
+					utils.replace(lang.gambling.betflip.returns.guess, {"string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` })+
+					`.\n${utils.replace(lang.gambling.betflip.returns.win, {"number": bet*2})}`
 				)
 				utils.coinsManager.award(msg.author.id, bet)
 			} else {
 				let pick = args[1] == "h" ? "t" : "h"
 				msg.channel.send(
-					(!selfChosenSide ? "" : "You didn't choose a side, so I picked one for you: "+strings[args[1]][0]+".\n")+
-					`You guessed ${strings[args[1]][0]}.\n${strings[pick][1]} I flipped ${strings[pick][0]}.\nSorry but you didn't guess correctly. Better luck next time.`
+					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`)+
+					utils.replace(lang.gambling.betflip.returns.guess, {"string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` })+
+					`.\n${lang.gambling.betflip.returns.lost}`
 				)
 				return utils.coinsManager.award(msg.author.id, -bet)
 			}
@@ -201,14 +202,14 @@ commands.assign({
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$"],
 		category: "gambling",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, {"username": msg.author.username}))
 			let member = await msg.guild.findMember(msg, suffix, true)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!member) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, {"username": msg.author.username}))
 			let money = await utils.coinsManager.get(member.id)
 			let embed = new Discord.MessageEmbed()
-				.setAuthor(`Coins for ${member.displayTag}`)
-				.setDescription(`${money} Discoins ${lang.emoji.discoin}`)
+				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, {"display": member.displayTag}))
+				.setDescription(`${money} Discoins ${emojis.discoin}`)
 				.setColor("F8E71C")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -218,8 +219,8 @@ commands.assign({
 		description: "A daily command that gives a random amount of Discoins",
 		aliases: ["daily"],
 		category: "gambling",
-		process: async function(msg) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, {"username": msg.author.username}))
 			let [row, donor] = await Promise.all([
 				utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
@@ -229,14 +230,14 @@ commands.assign({
 				if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500)+1
 				else amount = Math.floor(Math.random() * (500 - 100) + 100)+1
 				let embed = new Discord.MessageEmbed()
-					.setDescription(lang.external.money.dailyClaimed(msg, amount, dailyCooldownHours+" hours"))
+					.setDescription(utils.replace(lang.gambling.daily.returns.claimed, {"username": msg.author.username, "number": amount}))
 					.setColor("F8E71C")
 				msg.channel.send(utils.contentify(msg.channel, embed))
 				utils.coinsManager.award(msg.author.id, amount)
 				utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()])
 			} else {
 				let timeRemaining = utils.shortTime(row.lastClaim-Date.now()+dailyCooldownTime, "ms")
-				msg.channel.send(lang.external.money.dailyCooldown(msg, timeRemaining))
+				msg.channel.send(utils.replace(lang.gambling.daily.prompts.cooldown, {"username": msg.author.username, "number": timeRemaining}))
 			}
 		}
 	},
@@ -261,8 +262,8 @@ commands.assign({
 				let ranking = (index+offset+1)+". "
 				let user = client.users.get(row.userID)
 				let displayTag = user ? user.tag : row.userID
-				let botTag = user && user.bot ? lang.emoji.bot : ""
-				return `${ranking} ${displayTag} ${botTag} :: ${row.coins} ${lang.emoji.discoin}`
+				let botTag = user && user.bot ? emojis.bot : ""
+				return `${ranking} ${displayTag} ${botTag} :: ${row.coins} ${emojis.discoin}`
 			}))
 			.setFooter(`Page ${pagenum}`)
 			.setColor("F8E71C")
@@ -274,15 +275,15 @@ commands.assign({
 		description: "Gives discoins to a user from your account",
 		aliases: ["give"],
 		category: "gambling",
-		process: async function(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, {"username": msg.author.username}))
 			let args = suffix.split(" ")
-			if (!args[0]) return msg.channel.send(`${msg.author.username}, you have to provide an amount to give and then a user`)
+			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidAmountandUser, {"username": msg.author.username}))
 			let usertxt = suffix.slice(args[0].length + 1)
-			if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!usertxt) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidUser, {"username": msg.author.username}))
 			let member = await msg.guild.findMember(msg, usertxt)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
-			if (member.id == msg.author.id) return msg.channel.send(`You can't give coins to yourself, silly`)
+			if (!member) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidUser, {"username": msg.author.username}))
+			if (member.id == msg.author.id) return msg.channel.send(lang.gambling.give.prompts.cannotGiveSelf)
 			let [authorCoins, memsettings, guildsettings] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [member.id, "gamblingalert"]),
@@ -290,28 +291,28 @@ commands.assign({
 			])
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
-				if (authorCoins == 0) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (authorCoins == 0) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, {"username": msg.author.username}))
 				args[0] == "all"
 				? gift = authorCoins
 				: gift = Math.floor(authorCoins/2)
 			} else {
 				gift = Math.floor(Number(args[0]))
-				if (isNaN(gift)) return msg.channel.send(lang.input.invalid(msg, "gift"))
-				if (gift < 1) return msg.channel.send(lang.input.money.small(msg, "gift", 1))
-				if (gift > authorCoins) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidGift, {"username": msg.author.username}))
+				if (gift < 1) return msg.channel.send(utils.replace(lang.gambling.give.prompts.giftSmall, {"username": msg.author.username}))
+				if (gift > authorCoins) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
 			utils.coinsManager.award(msg.author.id, -gift)
 			utils.coinsManager.award(member.id, gift)
 			let embed = new Discord.MessageEmbed()
-				.setDescription(`${String(msg.author)} has given ${gift} Discoins to ${String(member)}`)
+				.setDescription(utils.replace(lang.gambling.give.returns.channel, {"mention1": String(msg.author), "number": gift, "mention2": String(member)}))
 				.setColor("F8E71C")
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()))
+				if (memsettings && memsettings.value == 1) return member.send(utils.replace(lang.gambling.give.returns.dm, {"mention": String(msg.author), "number": gift})).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 				else return
 			}
-			return member.send(`${String(msg.author)} has given you ${gift} ${lang.emoji.discoin}`).catch(() => msg.channel.send(lang.permissionOtherDMBlocked()))
+			return member.send(utils.replace(lang.gambling.give.returns.dm, {"mention": String(msg.author), "number": gift})).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 		}
 	},
 	"wheel": {
@@ -319,11 +320,11 @@ commands.assign({
 		description: "A Wheel of Fortune for a chance at making more Discoins",
 		aliases: ["wheel", "wof"],
 		category: "gambling",
-		async process(msg, suffix) {
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+		async process(msg, suffix, lang) {
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.permissionDeniedGeneric("attach files"))
+			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			let [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
@@ -331,18 +332,18 @@ commands.assign({
 				imageStorage.get("emoji-triangle")
 			])
 
-			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide an amount to spin the wheel with`)
+			if (!suffix) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmountWheel, {"username": msg.author.username}))
 			let amount
 			if (suffix == "all" || suffix == "half") {
-				if (money == 0) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, {"username": msg.author.username}))
 				suffix == "all"
 				? amount = money
 				: amount = Math.floor(money/2)
 			} else {
 				amount = Math.floor(Number(suffix))
-				if (isNaN(amount)) return msg.channel.send(lang.input.invalid(msg, "amount"))
-				if (amount < 2) return msg.channel.send(lang.input.money.small(msg, "amount", 2))
-				if (amount > money) return msg.channel.send(lang.external.money.insufficient(msg))
+				if (isNaN(amount)) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmount, {"username": msg.author.username}))
+				if (amount < 2) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.betSmall, {"username": msg.author.username}))
+				if (amount > money) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, {"username": msg.author.username}))
 			}
 
 			let choices = ["0.1", "0.2", "0.3", "0.5", "1.2", "1.5", "1.7", "2.4"]
@@ -369,7 +370,8 @@ commands.assign({
 			let buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			let image = new Discord.MessageAttachment(buffer, "wheel.png")
 			await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount))
-			return msg.channel.send(`${msg.author.tag} bet ${amount} discoins and got ${Math.round(amount * Number(choice))} back ${lang.emoji.discoin}`, {files: [image]})
+			utils.replace(lang.gambling.wheel.returns.winnings, {"tag": msg.author.tag, "number1": amount, "number2": Math.round(amount * Number(choice))})
+			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, {"tag": msg.author.tag, "number1": amount, "number2": Math.round(amount * Number(choice))}), {files: [image]})
 		}
 	}
 })

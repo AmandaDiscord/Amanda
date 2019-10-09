@@ -4,6 +4,9 @@ const rp = require("request-promise")
 const entities = require("entities")
 const Discord = require("discord.js")
 const path = require("path")
+const Lang = require("@amanda/lang")
+
+const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
 let { client, commands, reloader, gameStore } = passthrough
@@ -23,9 +26,6 @@ const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":sev
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
-
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
 
 class Game {
 	/**
@@ -59,12 +59,14 @@ class TriviaGame extends Game {
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {{response_code: number, results: Array<TriviaResponse>}} data
 	 * @param {number} category
+	 * @param {Lang.Lang} lang
 	 */
-	constructor(channel, data, category) {
+	constructor(channel, data, category, lang) {
 		super(channel, "trivia")
 		this.data = data.results[0]
 		this.category = category
 		this.earningsDisabled = false
+		this.lang = lang
 	}
 	start() {
 		let correctAnswer = this.data.correct_answer.trim()
@@ -164,12 +166,12 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.get(r.userID))} (+${r.winnings} ${lang.emoji.discoin})`).join("\n"))
+		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
 		else embed.addField("Winners", "No winners.")
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
 		else embed.addField(
 			"Next round",
-			lang.permissionDeniedGeneric("add reactions")
+			this.lang.games.trivia.prompts.permissionDenied
 			+"\n\nYou can type `&trivia` or `&t` for another round."
 		)
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
@@ -190,22 +192,23 @@ module.exports.TriviaGame = TriviaGame
 /**
  * @param {string} body
  * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @param {Lang.Lang} lang
  * @returns {Promise<[boolean, any]>}
  */
-async function JSONHelper(body, channel) {
+async function JSONHelper(body, channel, lang) {
 	try {
 		if (body.startsWith("http")) body = await rp(body)
 		return [true, JSON.parse(body)]
 	} catch (error) {
 		let embed = new Discord.MessageEmbed()
-		.setDescription(`There was an error parsing the data returned by the api\n${error} `+"```\n"+body+"```")
+		.setDescription(lang.games.trivia.prompts.parsingError)
 		.setColor(0xdd1d1d)
 		return [false, channel.send(utils.contentify(channel, embed))]
 	}
 }
 /**
  * @param {Discord.TextChannel|Discord.DMChannel} channel
- * @param {{suffix?: string, msg?: Discord.Message, category?: number}} options
+ * @param {{suffix?: string, msg?: Discord.Message, category?: number, lang?: Lang.Lang}} options
  */
 async function startGame(channel, options = {}) {
 	// Select category
@@ -216,7 +219,7 @@ async function startGame(channel, options = {}) {
 			success,
 			/** @type {{trivia_categories: {id: number, name: string}[]}} */
 			data
-		] = await JSONHelper("https://opentdb.com/api_category.php", channel)
+		] = await JSONHelper("https://opentdb.com/api_category.php", channel, options.lang)
 		if (!success) return
 		if (options.suffix.includes("categor")) {
 			options.msg.author.send(
@@ -224,38 +227,38 @@ async function startGame(channel, options = {}) {
 				.setTitle("Categories")
 				.setDescription(data.trivia_categories.map(c => c.name)
 				.join("\n")+"\n\n"+
-				"To select a category, use `&trivia <category name>`.")
+				options.lang.games.trivia.prompts.categorySelect)
 			).then(() => {
-				channel.send("I've sent you a DM with the list of categories.")
+				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, {"username": options.msg.author.username}))
 			}).catch(() => {
-				channel.send(lang.dm.failed(options.msg))
+				channel.send(`DM Error`)
 			})
 			return
 		} else {
 			let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()))
 			if (options.suffix.toLowerCase().endsWith("music")) f = data.trivia_categories.filter(c => c.name == "Entertainment: Music")
 			if (f.length == 0) {
-				return channel.send("Found no categories with that name. Use `&trivia categories` for the complete list of categories.")
+				return channel.send(utils.replace(options.lang.games.trivia.prompts.noCategory, {"username": options.msg.author.username}))
 			} else if (f.length >= 2) {
-				return channel.send("There are multiple categories with that name: **"+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.")
+				return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, {"username": "Hey", "string": (`**`+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.")})}`)
 			} else {
 				category = f[0].id
 			}
 		}
 	}
 	// Check games in progress
-	if (gameStore.store.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(`There's a game already in progress for this channel.`)
+	if (gameStore.store.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(options.lang.games.trivia.prompts.gameInProgress)
 	// Send typing
 	channel.sendTyping()
 	// Get new game data
 	/** @type {Array<{response_code: number, results: Array<TriviaResponse>}>} */
-	let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel)
+	let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel, options.lang)
 	if (!body[0]) return
 	let data = body[1]
 	// Error check new game data
-	if (data.response_code != 0) return channel.send(`There was an error from the api`)
+	if (data.response_code != 0) return channel.send(options.lang.games.trivia.prompts.APIError)
 	// Set up new game
-	new TriviaGame(channel, data, category).init()
+	new TriviaGame(channel, data, category, options.lang).init()
 }
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 async function answerDetector(msg) {
@@ -401,8 +404,8 @@ commands.assign({
 		description: "Play a game of trivia with other members and win Discoins",
 		aliases: ["trivia", "t"],
 		category: "games",
-		process: async function(msg, suffix) {
-			startGame(msg.channel, {suffix, msg})
+		process: async function(msg, suffix, lang) {
+			startGame(msg.channel, {suffix, msg, lang})
 		}
 	},
 	"minesweeper": {
@@ -410,7 +413,7 @@ commands.assign({
 		description: "Starts a game of minesweeper using the Discord spoiler system",
 		aliases: ["minesweeper", "ms"],
 		category: "games",
-		process: function(msg, suffix) {
+		process: function(msg, suffix, lang) {
 			let size = 8, difficulty = "easy"
 			let string, title
 			let sfx = suffix.toLowerCase()
@@ -426,12 +429,12 @@ commands.assign({
 
 			string = sweeper(difficulty, size)
 
-			title = `${difficulty} -- ${string.bombs} bombs, ${string.size}x${string.size} board`
-			if (string.error) title += "\nThe minimum size is 4 and the max is 14. Bounds have been adjusted to normals"
+			title = utils.replace(lang.games.minesweeper.returns.info, {"difficulty": difficulty, "number1": string.bombs, "number2": string.size})
+			if (string.error) title += `\n${lang.games.minesweeper.returns.error}`
 			let embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text)
 			if (sfx.includes("-r") || sfx.includes("--raw")) {
 				let rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|")
-				if (rawcontent.length > 1999) return msg.channel.send("The raw content exceeded the 2000 character limit. Consider using a smaller board size")
+				if (rawcontent.length > 1999) return msg.channel.send(lang.games.minesweeper.returns.rawTooLarge)
 				return msg.channel.send(rawcontent)
 			}
 			msg.channel.send(utils.contentify(msg.channel, embed))

@@ -3,6 +3,7 @@
 const Discord = require("discord.js")
 const path = require("path")
 const {PlayerManager} = require("discord.js-lavalink")
+const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
 let {client, config, commands, reloadEvent, reloader} = passthrough
@@ -85,9 +86,19 @@ async function manageMessage(msg) {
 	let cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	let cmd = commands.find(c => c.aliases.includes(cmdTxt))
+	let langcode, lang
+	let self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
+	let server
+	if (msg.guild) server = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "language"])
+	if (self) langcode = self.setting
+	else if (server) langcode = server.setting
+	else langcode = "en-us"
+
+	if (langcode == "en-us") lang = Lang.english
+	
 	if (cmd) {
 		try {
-			await cmd.process(msg, suffix)
+			await cmd.process(msg, suffix, lang)
 		} catch (e) {
 			if (e && e.code) {
 				if (e.code == 10008) return

@@ -498,6 +498,11 @@ commands.assign({
 					type: "string",
 					default: "[unset] (Recommended to be a 800x500px png/jpeg)",
 					scope: "self"
+				},
+				"language": {
+					type: "string",
+					default: "en-us",
+					scope: ["self", "server"]
 				}
 			}
 
@@ -600,6 +605,12 @@ commands.assign({
 				let buffer = await image.getBufferAsync(Jimp.MIME_PNG)
 				await fs.promises.writeFile(`./images/backgrounds/${msg.author.id}.png`, buffer)
 				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, 1])
+				return msg.channel.send("Setting updated.")
+			}
+
+			if (settingName == "language") {
+				if (!["en-us"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code`)
+				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}
 

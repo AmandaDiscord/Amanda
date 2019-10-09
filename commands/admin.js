@@ -11,9 +11,6 @@ let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/utilities.js", lang)
-
 let common = require("./music/common.js")
 reloader.useSync("./commands/music/common.js", common)
 
@@ -23,10 +20,10 @@ commands.assign({
 		description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 		aliases: ["evaluate", "eval"],
 		category: "admin",
-		process: async function (msg, suffix) {
+		process: async function (msg, suffix, lang) {
 			let allowed = await utils.hasPermission(msg.author, "eval")
 			if (allowed) {
-				if (!suffix) return msg.channel.send(`You didn't provide any input to evaluate, silly`)
+				if (!suffix) return msg.channel.send(lang.admin.evaluate.prompts.noInput)
 				let result, depth
 				depth = suffix.split("--depth:")[1]
 				depth?depth=depth.substring(0).split(" ")[0]:undefined
@@ -53,10 +50,10 @@ commands.assign({
 		description: "Executes a shell operation",
 		aliases: ["execute", "exec"],
 		category: "admin",
-		process: async function (msg, suffix) {
+		process: async function (msg, suffix, lang) {
 			let allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
-			if (!suffix) return msg.channel.send("You didn't provide anything to execute, silly")
+			if (!suffix) return msg.channel.send(lang.admin.execute.prompts.noInput)
 			await msg.channel.sendTyping()
 			require("child_process").exec(suffix, async (error, stdout, stderr) => {
 				let result
@@ -78,24 +75,24 @@ commands.assign({
 		description: "Awards a specific user ",
 		aliases: ["award"],
 		category: "admin",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			let allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
-			if (msg.channel.type == "dm") return msg.channel.send(lang.command.guildOnly(msg))
+			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.admin.award.prompts.guildOnly, {"username": msg.author.username}))
 			let args = suffix.split(" ")
-			if (!args[0]) return msg.channel.send(lang.input.invalid(msg, "amount to award"))
+			if (!args[0]) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, {"username": msg.author.username}))
 			let award = Math.floor(Number(args[0]))
-			if (isNaN(award)) return msg.channel.send(lang.input.invalid(msg, "amount to award"))
+			if (isNaN(award)) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, {"username": msg.author.username}))
 			let usertxt = suffix.slice(args[0].length + 1)
-			if (!usertxt) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!usertxt) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, {"username": msg.author.username}))
 			let member = await msg.guild.findMember(msg, usertxt)
-			if (!member) return msg.channel.send(lang.input.invalid(msg, "user"))
+			if (!member) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, {"username": msg.author.username}))
 			utils.coinsManager.award(member.id, award)
 			let embed = new Discord.MessageEmbed()
-				.setDescription(`**${String(msg.author)}** has awarded ${award} Discoins to **${String(member)}**`)
-				.setColor("F8E71C")
+				.setDescription(utils.replace(lang.admin.award.returns.channel, {"mention1": String(msg.author), "number": award, "mention2": String(member)}))
+				.setColor(0xf8e71c)
 			msg.channel.send(utils.contentify(msg.channel, embed))
-			return member.send(`**${String(msg.author)}** has awarded you ${award} ${lang.emoji.discoin}`).catch(() => msg.channel.send("I tried to DM that member but they may have DMs disabled from me"))
+			return member.send(utils.replace(lang.admin.award.returns.dm, {"mention": String(msg.author), "number": award})).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}
 	}
 })

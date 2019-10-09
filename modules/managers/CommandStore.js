@@ -1,6 +1,7 @@
 //@ts-check
 
 const Discord = require("discord.js")
+const Lang = require("@amanda/lang")
 
 /**
  * @extends Discord.Collection<string,Command>
@@ -37,5 +38,5 @@ module.exports = CommandStore
  * @property {string} description
  * @property {string[]} aliases
  * @property {string} category
- * @property {(msg: Discord.Message, suffix?: string) => any} process
+ * @property {(msg: Discord.Message, suffix?: string, lang?: Lang.Lang) => any} process
  */

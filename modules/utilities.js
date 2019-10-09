@@ -960,6 +960,20 @@ const utils = {
 	getFirstShard: function() {
 		if (typeof client.options.shards === "number") return client.options.shards
 		else return client.options.shards[0]
+	},
+
+	/**
+	 * A function to replace wildcard (%string) strings with information from lang
+	 * @param {string} string The string from lang
+	 * @param {Object.<string, any>} properties example: `{ "username": "PapiOphidian" }`
+	 * @returns {string}
+	 */
+	replace: function(string, properties = {}) {
+		Object.keys(properties).forEach(item => {
+			const index = string.indexOf("%"+item)
+			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index+item.length+1)
+		})
+		return string
 	}
 }
 

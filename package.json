@@ -13,6 +13,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
+    "@amanda/lang": "github:PapiOphidian/Amanda-Lang",
     "buffer-signature": "^1.1.0",
     "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
