@@ -70,7 +70,7 @@ function ejs(string) {
 		line = line.replace(/^\s*/, "")
 		let r = /[.#]?[\w-]+/g
 		let element
-		let next 
+		let next
 		do {
 			next = r.exec(line)
 			if (next) {
@@ -158,7 +158,9 @@ class QueueItem extends ElemJS {
 		this.disable()
 		this.queue.session.send({
 			op: opcodes.REQUEST_QUEUE_REMOVE,
-			d: {index: index+1} // +1 because backend queue starts with currently playing
+			// +1 because backend queue starts with currently playing
+			// and +1 because this gets sent to QueueWrapper, which is 1-indexed
+			d: {index: index+2}
 		})
 	}
 	disable() {
@@ -169,10 +171,10 @@ class QueueItem extends ElemJS {
 		if (this.adding) return
 		this.adding = true
 		this.queue.addingCount++
-		
+
 		let style = window.getComputedStyle(this.element)
 		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
-		
+
 		let values = {}
 		props.forEach(key => {
 			values[key] = "0px"
@@ -180,7 +182,7 @@ class QueueItem extends ElemJS {
 		values.opacity = 0
 		values.marginBottom = "-10px"
 		values.easing = "ease"
-		
+
 		let endValues = {}
 		props.forEach(key => {
 			endValues[key] = style[key]
@@ -203,7 +205,7 @@ class QueueItem extends ElemJS {
 					this.element.style[entry[0]] = ""
 				})
 			})
-		}, this.queue.addingCount*70+400*this.queue.isFirstAdd)
+		}, this.queue.addingCount*70+20*this.queue.isFirstAdd)
 	}
 	animateRemove() {
 		if (this.removing) return
@@ -213,7 +215,7 @@ class QueueItem extends ElemJS {
 
 		let style = window.getComputedStyle(this.element)
 		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
-		
+
 		let values = {}
 		props.forEach(key => {
 			values[key] = style[key]
@@ -227,7 +229,7 @@ class QueueItem extends ElemJS {
 		})
 		endValues.opacity = 0
 		endValues.marginBottom = "-10px"
-		
+
 		this.element.animate([
 			values, endValues
 		], 400).addEventListener("finish", () => {
@@ -258,6 +260,7 @@ class Player extends ElemJS {
 	constructor(container, session) {
 		super(container)
 		this.song = null
+		this.thumbnailDisplayHeight = 94
 		this.attributes = {}
 		this.songSet = false
 		this.parts = {
@@ -294,8 +297,9 @@ class Player extends ElemJS {
 		this.clearChildren()
 		if (this.song) {
 			let thumbnail = new ElemJS(imageStore.get(this.song.thumbnail.src))
-			thumbnail.width = this.song.thumbnail.width
-			thumbnail.height = this.song.thumbnail.height
+			thumbnail.element.width = this.song.thumbnail.width
+			thumbnail.element.height = this.song.thumbnail.height
+			thumbnail.element.style.width = this.song.thumbnail.width/this.song.thumbnail.height*this.thumbnailDisplayHeight+"px"
 			this.child(
 				ejs`div`.child(
 					ejs`div.thumbnail`.child(
@@ -327,7 +331,7 @@ class PlayerTime extends ElemJS {
 		this.class("progress")
 		this.animation = null
 		this.interval = null
-		this.state = {playing: false, time: 0, maxTime: 0, live: false}
+		this.state = {playing: false, songStartTime: 0, maxTime: 0, live: false}
 		this.child(new ElemJS("div").class("progressbar"))
 		this.child(new ElemJS("div"))
 		this.child(new ElemJS("div"))
@@ -337,15 +341,18 @@ class PlayerTime extends ElemJS {
 		Object.assign(this.state, data)
 		this.render()
 	}
+	getTime() {
+		return Date.now() - this.state.songStartTime + serverTimeDiff
+	}
 	getMSRemaining() {
-		return Math.max(0, this.state.maxTime*1000 - this.state.time)
+		return Math.max(0, this.state.maxTime*1000 - this.getTime())
 	}
 	getTransform() {
 		if (this.state.maxTime == 0 || this.state.live) {
 			if (this.state.playing) return `scaleX(1)`
 			else return `scaleX(0)`
 		} else {
-			let fraction = (this.state.time/1000) / this.state.maxTime
+			let fraction = (this.getTime()/1000) / this.state.maxTime
 			return `scaleX(${fraction})`
 		}
 	}
@@ -355,7 +362,9 @@ class PlayerTime extends ElemJS {
 		this.renderCurrentTime()
 		this.children[2].text(this.state.live ? "LIVE" : prettySeconds(this.state.maxTime))
 		this.children[0].element.style.transform = this.getTransform()
-		if (this.state.playing) {
+		if (this.state.songStartTime == 0) {
+			this.children[0].element.style.transform = "scaleX(0)"
+		} else if (this.state.playing) {
 			if (this.getMSRemaining()) {
 				this.animation = this.children[0].element.animate([
 					{transform: this.getTransform(), easing: "linear"},
@@ -364,18 +373,20 @@ class PlayerTime extends ElemJS {
 				this.animation.addEventListener("finish", () => {
 					this.children[0].element.style.transform = "scaleX(1)"
 					if (this.interval) clearInterval(this.interval)
-					this.state.time = this.state.maxTime * 1000
 					this.renderCurrentTime()
 				})
 			}
 			this.interval = setInterval(() => {
-				this.state.time += 1000
 				this.renderCurrentTime()
 			}, 1000)
 		}
 	}
 	renderCurrentTime() {
-		this.children[1].text(prettySeconds(Math.floor(this.state.time/1000)))
+		let time
+		if (this.state.songStartTime == 0) time = 0
+		else time = this.getTime()
+		if (!this.state.live && time > this.state.maxTime*1000) time = this.state.maxTime*1000
+		this.children[1].text(prettySeconds(Math.floor(time/1000)))
 	}
 }
 
@@ -408,10 +419,30 @@ class VoiceInfo extends ElemJS {
 	render() {
 		this.clearChildren()
 		if (this.members.length) {
-			this.element.style.visibility = "visible"
+			let visibility = "hidden"
 			this.memberStore.forEach(member => {
-				member.join(this)
+				if (member.parts.avatar.element.complete) {
+					visibility = "visible"
+				}
 			})
+			this.element.style.visibility = visibility
+			let newAmanda = false
+			this.memberStore.forEach(member => {
+				if (member.isNew && member.props.isAmanda) {
+					newAmanda = true
+					member.join(this).then(() => {
+						this.memberStore.forEach(member => {
+							member.join(this)
+						})
+					})
+				}
+			})
+			if (!newAmanda) {
+				this.memberStore.forEach(member => {
+					console.log("Adding", member)
+					member.join(this)
+				})
+			}
 		} else {
 			this.element.style.visibility = "hidden"
 		}
@@ -431,25 +462,43 @@ class VoiceMember extends ElemJS {
 		this.leaving = false
 	}
 	join(voiceInfo) {
+		if (this.isNew) {
+			this.isNew = false
+			if (this.parts.avatar.element.complete) {
+				this.addSelf(voiceInfo)
+				this.animateJoin()
+				return Promise.resolve()
+			} else {
+				return new Promise(resolve => {
+					this.parts.avatar.element.addEventListener("load", () => {
+						this.addSelf(voiceInfo)
+						this.animateJoin()
+						resolve()
+					})
+				})
+			}
+		} else {
+			this.addSelf(voiceInfo)
+			return Promise.resolve()
+		}
+	}
+	addSelf(voiceInfo) {
 		voiceInfo.child(this.parts.avatar, this.props.isAmanda ? 0 : -1)
 		voiceInfo.child(this.parts.name, this.props.isAmanda ? 1 : -1)
-		this.animateJoin()
+		voiceInfo.element.style.visibility = "visible"
 	}
 	leave() {
 		this.leaving = true
 		return this.animateLeave()
 	}
 	animateJoin() {
-		if (this.isNew) {
-			this.parts.avatar.element.animate([
-				{left: "-12px", filter: "brightness(2.5)", opacity: 0, easing: "ease-out"},
-				{left: "0px", filter: "brightness(1)", opacity: 1}
-			], 200)
-			this.isNew = false
-		}
+		this.parts.avatar.element.animate([
+			{left: "-12px", filter: "brightness(2.5)", opacity: 0, easing: "ease-out"},
+			{left: "0px", filter: "brightness(1)", opacity: 1}
+		], 200)
 	}
 	animateLeave() {
-		return Promise.all(Object.values(this.parts).map(part => 
+		return Promise.all(Object.values(this.parts).map(part =>
 			new Promise(resolve => {
 				part.element.animate([
 					{opacity: 1},

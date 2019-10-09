@@ -169,7 +169,9 @@ const subcommandsMap = new Map([
 		code: async (msg, args, {queue}) => {
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
 				let numberOfSongs = queue.songs.length-1
-				queue.songs = queue.songs.slice(0, 1)
+				for (let i = queue.songs.length-1; i >= 1; i--) {
+					queue.removeSong(i, true)
+				}
 				msg.channel.send(`Cleared the queue, removing ${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}.`)
 			} else if (args[1] == "r" || args[1] == "remove") {
 				let index = +args[2]

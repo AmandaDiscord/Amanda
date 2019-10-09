@@ -4,12 +4,13 @@ html
 		title= guild.name+" | Amanda"
 		script.
 			const guildID = "#{guild.id}"
+			const serverTimeDiff = #{timestamp}-Date.now()
 		script(defer src="/exports.js")
 		script(defer src="/player.js" data-ex="player")
 		script(defer src="/classes.js" data-ex="classes")
 		script(defer src="/utilities.js" data-ex="utilities")
 		script(defer src="/imagestore.js" data-ex="imagestore")
-	
+
 	body
 		include includes/nav.pug
 		+nav("dash")

@@ -1,6 +1,7 @@
 mixin user(userID, comment)
 	div.about
-		div= users.get(userID).tag + (comment ? " — "+comment : "")
+		- let user = users.get(userID)
+		div= user.username + "#" + user.discriminator + (comment ? " — "+comment : "")
 		div
 			block
 
@@ -8,7 +9,7 @@ doctype html
 html
 	include includes/head.pug
 		title About | Amanda
-	
+
 	body
 		include includes/nav.pug
 		+nav("about")

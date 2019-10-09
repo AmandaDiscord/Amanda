@@ -33,6 +33,10 @@ let db = mysql.createPool({
 	Object.assign(passthrough, {config, client, db, reloader, youtube})
 	passthrough.reloadEvent = reloader.reloadEvent
 
+	const IPC = require("./modules/ipcbot.js")
+	const ipc = new IPC()
+	passthrough.ipc = ipc
+
 	reloader.setupWatch([
 		"./commands/music/common.js",
 		"./commands/music/playlistcommand.js",
@@ -40,7 +44,6 @@ let db = mysql.createPool({
 		"./commands/music/songtypes.js",
 		"./modules/lang.js",
 		"./modules/utilities.js",
-		"./modules/validator.js",
 	])
 
 	const Frisky = require("frisky-client")
@@ -60,13 +63,12 @@ let db = mysql.createPool({
 		{field: "game_start", ttl: 86400e3}
 	])
 	passthrough.nedb = {
-		queue: nedb.create({filename: "saves/queue.db", autoload: true})
+		queue: nedb.create({filename: `saves/queue-${client.options.shards}.db`, autoload: true})
 	}
 
 	reloader.watchAndLoad([
 		"./commands/music/music.js",
 		"./commands/music/playlistcommand.js",
-		"./commands/web/server.js",
 		"./commands/admin.js",
 		"./commands/alerts.js",
 		"./commands/cleverai.js",

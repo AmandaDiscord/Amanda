@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, queueStore} = passthrough
+let {client, reloader, queueStore, ipc} = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -35,6 +35,7 @@ class Queue {
 		this.pausedAt = null
 		/** @type {songTypes.Song[]} */
 		this.songs = []
+		/** @type {boolean} */
 		this.auto = false
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
@@ -53,7 +54,10 @@ class Queue {
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
-				this.songStartTime = data.state.time - data.state.position
+				let newSongStartTime = data.state.time - data.state.position
+				if (Math.abs(newSongStartTime - this.songStartTime) > 100) {
+					ipc.router.send.updateTime(this)
+				}
 			}
 		})
 		this.player.on("error", exception => {
@@ -157,6 +161,7 @@ class Queue {
 				if (related.length) {
 					this.songs.shift()
 					this.addSong(related[0])
+					ipc.router.send.nextSong(this)
 				}
 				// No related songs. Dissolve.
 				else {
@@ -175,6 +180,7 @@ class Queue {
 		// We have more songs. Move on.
 		else {
 			this.songs.shift()
+			ipc.router.send.nextSong(this)
 			this.play()
 		}
 	}
@@ -213,6 +219,7 @@ class Queue {
 			this.pausedAt = Date.now()
 			this.player.pause()
 			this.npUpdater.stop(true)
+			ipc.router.send.updateTime(this)
 			return null
 		}
 	}
@@ -232,6 +239,7 @@ class Queue {
 			this.player.resume().then(() => {
 				this._startNPUpdates()
 			})
+			ipc.router.send.updateTime(this)
 			return 0
 		}
 	}
@@ -254,6 +262,7 @@ class Queue {
 	}
 	toggleAuto() {
 		this.auto = !this.auto
+		ipc.router.send.updateAttributes(this)
 	}
 	/**
 	 * Add a song to the end of the queue.
@@ -273,8 +282,10 @@ class Queue {
 			if (insert) position = 1 // if insert is true, insert
 			else position = -1 // otherwise, push
 		}
+		song.queue = this
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
+		ipc.router.send.addSong(this, song, position)
 		if (this.songs.length == 2) song.prepare()
 		if (this.songs.length == 1) {
 			this.play()
@@ -288,10 +299,15 @@ class Queue {
 	 * Returns 1 if the index is out of range.
 	 * Returns 2 if index exists, but removed item was undefined.
 	 * @param {number} index Zero-based index.
+	 * @param {boolean} broadcast Whether to send a WS event for this removal
 	 */
-	removeSong(index) {
+	removeSong(index, broadcast) {
+		// Validate index
 		if (index == 0) return 1
 		if (!this.songs[index]) return 1
+		// Broadcast
+		if (broadcast) ipc.router.send.removeSong(this, index)
+		// Actually remove
 		let removed = this.songs.splice(index, 1)[0]
 		if (!removed) return 2
 		return 0
@@ -397,6 +413,8 @@ class Queue {
 				})
 			}
 		}
+		// Broadcast to web
+		ipc.router.send.updateMembers(this)
 	}
 }
 
@@ -412,19 +430,23 @@ class QueueWrapper {
 		let auto = this.queue.auto
 		if (context instanceof Discord.Message) {
 			context.channel.send("Auto mode is now turned "+(auto ? "on" : "off"))
+		} else if (context === "web") {
+			return true
 		}
 	}
 	togglePlaying(context) {
-		if (this.queue.isPaused) this.resume()
-		else this.pause(context)
+		if (this.queue.isPaused) return this.resume(context)
+		else return this.pause(context)
 	}
 	pause(context) {
 		let result = this.queue.pause()
 		if (result) {
 			if (context instanceof Discord.Message) {
 				context.channel.send(result)
-			} else if (context == "reaction") {
+			} else if (context === "reaction") {
 				this.queue.textChannel.send(result)
+			} else if (context === "web") {
+				return !result
 			}
 		}
 	}
@@ -434,6 +456,9 @@ class QueueWrapper {
 			if (context instanceof Discord.Message) {
 				context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
 			}
+		}
+		if (context === "web") {
+			return !result
 		}
 	}
 	skip(amount) {
@@ -454,6 +479,7 @@ class QueueWrapper {
 	/**
 	 * Permitted contexts:
 	 * - A message `&m q remove 2`. A reaction will be added, or an error message will be sent.
+	 * - The string "web". The return value will be a boolean indicating success.
 	 * @param {number} index One-based index.
 	 * @param {any} [context]
 	 */
@@ -464,9 +490,11 @@ class QueueWrapper {
 					"You need to tell me which song to remove. `&music queue remove <number>`"
 					+"\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
 				)
+			} else if (context === "web") {
+				return false
 			}
 		} else {
-			let result = this.queue.removeSong(index-1)
+			let result = this.queue.removeSong(index-1, true)
 			if (context instanceof Discord.Message) {
 				if (result == 1) {
 					if (index == 1) {
@@ -480,6 +508,8 @@ class QueueWrapper {
 				} else {
 					context.react("✅")
 				}
+			} else if (context === "web") {
+				return result !== 1
 			}
 		}
 	}
@@ -503,6 +533,36 @@ class QueueWrapper {
 		if (context instanceof Discord.Message) {
 			if (result == 0) context.react("✅")
 			else if (result == 1) context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
+		}
+	}
+
+	getMembers() {
+		return this.queue.voiceChannel.members.map(m => ({
+			id: m.id,
+			name: m.displayName,
+			avatar: m.user.avatarURL({format: "png", size: 64}),
+			isAmanda: m.id == client.user.id
+		}))
+	}
+
+	getAttributes() {
+		return {
+			auto: this.queue.auto
+		}
+	}
+
+	getState() {
+		return {
+			guildID: this.queue.guildID,
+			playing: !this.queue.isPaused,
+			songStartTime: this.queue.songStartTime,
+			songs: this.queue.songs.map(s => s.getState()),
+			members: this.getMembers(),
+			voiceChannel: {
+				id: this.queue.voiceChannel.id,
+				name: this.queue.voiceChannel.name
+			},
+			attributes: this.getAttributes()
 		}
 	}
 }

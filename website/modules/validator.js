@@ -1,3 +1,5 @@
+//@ts-check
+
 /**
  * @typedef {Object} Operation
  * @property {(state: any, nextValue: any) => Promise<any>} code
@@ -31,18 +33,16 @@ class Validator {
 	go() {
 		if (this.promise) return this.promise
 		else return this.promise = new Promise((resolve, reject) => {
-			this._resolve = resolve
-			this._reject = reject
-			setImmediate(() => this._next())
+			setImmediate(() => this._next(resolve, reject))
 		})
 	}
 
-	_next() {
-		if (this.operations.length == 0) return this._resolve(this.state)
+	_next(resolve, reject) {
+		if (this.operations.length == 0) return resolve(this.state)
 
 		this.stage++
 		let input = this.operations.shift()
-		
+
 		const processSuccess = result => {
 			if (Object.keys(input).includes("expected")) {
 				if (typeof(input.expected) == "function") {
@@ -53,12 +53,12 @@ class Validator {
 			}
 			if (input.assign !== undefined) this.state[input.assign] = result
 			this.nextValue = result
-			this._next()
+			this._next(resolve, reject)
 		}
 
 		const processError = () => {
-			if (input.errorValue !== undefined) this._reject(input.errorValue)
-			else this._reject("Unlabelled error in validator stage "+this.stage)
+			if (input.errorValue !== undefined) reject(input.errorValue)
+			else reject("Unlabelled error in validator stage "+this.stage)
 		}
 
 		try {
@@ -80,11 +80,21 @@ class FormValidator extends Validator {
 		super()
 	}
 
+	/**
+	 * @param {object} input
+	 * @param {any} input.req
+	 * @param {any} input.body
+	 * @param {import("../../config")} input.config
+	 */
 	trust({req, body, config}) {
 		if (!req || !body || !config) throw new Error("Not all parameters were passed")
 		this.do(
 			() => req.headers["origin"] || req.headers["referer"] || ""
-			,v => v.startsWith(`${config.website_protocol}://${config.website_domain}`)
+			,v => {
+				if (v.startsWith(`${config.website_protocol}://${config.website_domain}`)) return true
+				if (config.website_domain.startsWith("localhost") && req.headers.host && v.startsWith("http://"+req.headers.host)) return true
+				return false
+			}
 			,[400, "Origin or referer must start with the current domain"]
 		).do(
 			() => req.headers["content-type"]
@@ -100,7 +110,7 @@ class FormValidator extends Validator {
 		})
 		return this
 	}
-	
+
 	ensureParams(list, matchMode="get") {
 		if (!(list instanceof Array)) list = [list]
 		list.forEach(item => {
@@ -112,7 +122,7 @@ class FormValidator extends Validator {
 		})
 		return this
 	}
-	
+
 	useCSRF(extra, loginToken) {
 		this.do(
 			() => extra.checkCSRF(this.state.params.get("csrftoken"), loginToken, true)

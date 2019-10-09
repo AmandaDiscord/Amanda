@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, frisky, config} = passthrough
+let {client, reloader, frisky, config, ipc} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -50,15 +50,37 @@ class Song {
 		this.error = ""
 		this.typeWhileGetRelated = true
 		this.id = ""
+		this.live = null
+		this.thumbnail = {
+			src: "",
+			width: 0,
+			height: 0
+		}
+		/**
+		 * might not be set!
+		 * @type {import("./queue").Queue}
+		 */
+		this.queue = null
 
 		this.validated = false
 		setTimeout(() => {
 			if (this.validated == false) this.validationError("must call validate() in constructor")
 		})
 	}
+	/**
+	 * @returns {any}
+	 */
 	toObject() {
 		return {
 			class: "Did not override generic toObject"
+		}
+	}
+	getState() {
+		return {
+			title: this.title,
+			length: this.lengthSeconds,
+			thumbnail: this.thumbnail,
+			live: this.live
 		}
 	}
 	/**
@@ -103,6 +125,8 @@ class Song {
 			if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
 		})
 		if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
+		if (!this.thumbnail.src) this.validationError("unset thumbnail src")
+		if (this.live === null) this.validationError("unset live")
 		this.validated = true
 	}
 	/**
@@ -134,12 +158,18 @@ class YouTubeSong extends Song {
 	constructor(id, title, lengthSeconds, track = undefined) {
 		super()
 		this.id = id
+		this.thumbnail = {
+			src: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+			width: 320,
+			height: 180
+		}
 		this.title = title
 		this.lengthSeconds = lengthSeconds
 		this.track = track || "!"
 		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
 		this.typeWhileGetRelated = true
+		this.live = false
 
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
@@ -252,6 +282,11 @@ class FriskySong extends Song {
 		if (!stationData.has(this.station)) throw new Error("Unsupported station: "+this.station)
 
 		this.id = this.station // designed for error reporting
+		this.thumbnail = {
+			src: `https://amanda.discord-bots.ga/images/frisky-small.png`,
+			width: 320,
+			height: 180
+		}
 		this.title = stationData.get(this.station).title
 		this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
 		this.track = data.track || "!"
@@ -259,6 +294,7 @@ class FriskySong extends Song {
 		this.npUpdateFrequency = 15000
 		this.typeWhileGetRelated = false
 		this.noPauseReason = "You can't pause live radio."
+		this.live = true
 
 		this.friskyStation = frisky.managers.stream.stations.get(this.station)
 		this.stationMixGetter = new utils.AsyncValueCache(
@@ -271,7 +307,7 @@ class FriskySong extends Song {
 
 				const attempt = () => {
 					const retry = (reason) => {
-						if (attempts < 3) {
+						if (attempts < 5) {
 							setTimeout(() => {
 								attempt()
 							}, 1000)
@@ -287,6 +323,8 @@ class FriskySong extends Song {
 					if (!mix) return retry("Current mix not available")
 					let data = mix.data
 					if (!data) return retry("Current mix data not available")
+					let episode = mix.episode
+					if (!episode) return retry("Current episode data not available")
 					//console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
 					return resolve(mix)
 				}
@@ -329,7 +367,7 @@ class FriskySong extends Song {
 				+"\nStation: "+stationCase
 			)
 			if (mix.episode) {
-				embed.setThumbnail(mix.episode.data.thumbnail.url)
+				embed.setThumbnail(this.thumbnail.src)
 			}
 			if (mix.data.track_list && mix.data.track_list.length) {
 				let trackList = mix.data.track_list
@@ -381,6 +419,13 @@ class FriskySong extends Song {
 		return this.stationMixGetter.get().then(mix => {
 			//console.log(mix)
 			this.title = mix.data.title
+			this.thumbnail.src = mix.episode.data.thumbnail.url
+			this.thumbnail.width = mix.episode.data.thumbnail.image_width
+			this.thumbnail.height = mix.episode.data.thumbnail.image_height
+			if (this.queue) {
+				const index = this.queue.songs.indexOf(this)
+				if (index !== -1) ipc.router.send.updateSong(this.queue, this, index)
+			}
 		}).catch(reason => {
 			console.error(reason)
 		})

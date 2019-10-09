@@ -16,6 +16,7 @@
     "buffer-signature": "^1.1.0",
     "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
+    "dnscache": "github:cloudrac3r/dnscache",
     "entities": "^2.0.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "gc-profiler": "^1.4.1",
@@ -24,10 +25,12 @@
     "mime": "^2.4.4",
     "mysql2": "^1.7.0",
     "nedb-promises": "^4.0.0",
-    "pinski": "github:cloudrac3r/pinski",
+    "node-ipc": "^9.1.1",
+    "pinski": "github:cloudrac3r/pinski#v2",
     "request": "^2.88.0",
     "request-promise": "^4.2.4",
     "simple-git": "^1.126.0",
-    "simple-youtube-api": "^5.2.1"
+    "simple-youtube-api": "^5.2.1",
+    "snowtransfer": "github:cloudrac3r/SnowTransfer"
   }
 }
