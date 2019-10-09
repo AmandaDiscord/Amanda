@@ -8,6 +8,9 @@ let {client, reloader, ipc} = passthrough
 const QueueFile = require("../../commands/music/queue")
 reloader.useSync("./commands/music/queue.js", QueueFile)
 
+const utils = require("../utilities")
+reloader.useSync("./modules/utilities.js", utils)
+
 class QueueStore {
 	constructor() {
 		/** @type {Discord.Collection<string, QueueFile.Queue>} */
@@ -16,7 +19,7 @@ class QueueStore {
 	}
 	toObject() {
 		return {
-			_id: "QueueStore",
+			_id: "QueueStore_"+utils.getFirstShard(),
 			queues: [...this.store.values()].map(q => q.toObject())
 		}
 	}
@@ -58,11 +61,11 @@ class QueueStore {
 		ipc.router.send.deleteQueue(guildID)
 	}
 	save() {
-		return passthrough.nedb.queue.update({}, this.toObject(), {upsert: true})
+		return passthrough.nedb.queue.update({_id: "QueueStore_"+utils.getFirstShard()}, this.toObject(), {upsert: true})
 	}
 	async restore() {
 		const songTypes = require("../../commands/music/songtypes")
-		let data = await passthrough.nedb.queue.findOne({_id: "QueueStore"})
+		let data = await passthrough.nedb.queue.findOne({_id: "QueueStore_"+utils.getFirstShard()})
 		data.queues.forEach(async q => {
 			console.log(q)
 			let guildID = q.guildID

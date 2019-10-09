@@ -87,7 +87,11 @@ client.once("prefixes", async (prefixes, statusPrefix) => {
 		//console.log(JSON.stringify(choices, null, 4))
 		let choice = utils.arrayRandom(choices)
 		if (choice) {
-			client.user.setActivity(`${choice.message} | ${statusPrefix}help`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
+			if (client.options.totalShardCount === 1) {
+				client.user.setActivity(`${choice.message} | ${statusPrefix}help`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
+			} else {
+				client.user.setActivity(`${choice.message} | ${statusPrefix}help | shard ${utils.getFirstShard()}`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
+			}
 			//console.log(`Set status: "${choice.message}" (${choice.type})`)
 		} else {
 			console.error("Warning: no status messages available!")

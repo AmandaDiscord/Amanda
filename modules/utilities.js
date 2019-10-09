@@ -423,7 +423,7 @@ const utils = {
 		else if (typeof(data) == "function") result = "(function)"
 		else if (typeof(data) == "string") result = `"${data}"`
 		else if (typeof(data) == "number") result = data.toString()
-		else if (data.constructor && data.constructor.name == "Promise") result = await utils.stringify(await data)
+		else if (data instanceof Promise) return utils.stringify(await data, depth)
 		else if (data.constructor && data.constructor.name && data.constructor.name.toLowerCase().includes("error")) {
 			let errorObject = {}
 			Object.entries(data).forEach(e => {
@@ -955,6 +955,11 @@ const utils = {
 		let promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
 		promise.catch(() => console.error)
 		return promise
+	},
+
+	getFirstShard: function() {
+		if (typeof client.options.shards === "number") return client.options.shards
+		else return client.options.shards[0]
 	}
 }
 

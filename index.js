@@ -63,7 +63,7 @@ let db = mysql.createPool({
 		{field: "game_start", ttl: 86400e3}
 	])
 	passthrough.nedb = {
-		queue: nedb.create({filename: "saves/queue.db", autoload: true})
+		queue: nedb.create({filename: `saves/queue-${client.options.shards}.db`, autoload: true})
 	}
 
 	reloader.watchAndLoad([

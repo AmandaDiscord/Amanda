@@ -39,9 +39,19 @@ reloadEvent.once(path.basename(__filename), () => {
 })
 
 client.once("prefixes", () => {
-	let cli = repl.start({prompt: "> ", eval: customEval, writer: s => s})
+	if (utils.getFirstShard() === 0) {
+		let cli = repl.start({prompt: "> ", eval: customEval, writer: s => s})
 
-	Object.assign(cli.context, passthrough, {Discord})
+		Object.assign(cli.context, passthrough, {Discord})
 
-	cli.once("exit", () => process.exit())
+		cli.once("exit", () => {
+			if (client.shard) {
+				client.shard.killAll()
+			} else {
+				process.exit()
+			}
+		})
+	} else {
+		console.log(`This is shard ${client.options.shards}. No REPL.`)
+	}
 })
