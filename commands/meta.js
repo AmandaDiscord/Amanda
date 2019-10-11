@@ -42,7 +42,7 @@ async function sendStats(msg) {
 	let uptime = process.uptime()
 	await utils.sql.all(
 		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard)"
-		+" VALUES (?, ?, ?, ?, ?, ?, ?, ? ?)"
+		+" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 		,[now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard])
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
