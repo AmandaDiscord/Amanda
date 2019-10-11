@@ -37,7 +37,7 @@ async function sendStats(msg) {
 	let users = client.users.size
 	let guilds = client.guilds.size
 	let channels = client.channels.size
-	let voiceConnections = client.voice.connections.size
+	let voiceConnections = client.lavalink.players.size
 	let uptime = process.uptime()
 	await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime])
 	if (msg) msg.react("👌")
