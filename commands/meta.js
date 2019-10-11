@@ -38,8 +38,12 @@ async function sendStats(msg) {
 	let guilds = client.guilds.size
 	let channels = client.channels.size
 	let voiceConnections = client.lavalink.players.size
+	let shard = utils.getFirstShard()
 	let uptime = process.uptime()
-	await utils.sql.all("INSERT INTO StatLogs VALUES (?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime])
+	await utils.sql.all(
+		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard)"
+		+" VALUES (?, ?, ?, ?, ?, ?, ?, ? ?)"
+		,[now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard])
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
 }
