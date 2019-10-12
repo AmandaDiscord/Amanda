@@ -27,7 +27,7 @@ async function sendImage(host, path, msg, emoji, footer) {
 	if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`
 	else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`
 	else return Promise.reject("Host provided not supported")
-	let data = await rp(url, {json: true})
+	let data = await rp(url, {json: true, timeout: 2000})
 	if (host == "chewey") var img = data.data
 	else if (host == "nekos") var img = data.url
 	let embed = new Discord.MessageEmbed()
@@ -89,7 +89,18 @@ commands.assign({
 		aliases: ["catgirl", "neko"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life")
+			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life").catch(() => {
+				let embed = new Discord.MessageEmbed()
+				.setTitle("Uh oh.")
+				.setDescription(
+					"Looks like the nekos.life API is currently offline."
+					+"\nWe aren't able to fetch new pictures at the moment."
+					+"\nHere's a sleepy catgirl while we wait for it to come back online."
+				)
+				.setImage("https://cdn.discordapp.com/attachments/413088092556361728/632513720593022997/6439473d9cea838eae9161dad09927ae.png")
+				.setColor(0x36393f)
+				msg.channel.send(embed)
+			})
 		}
 	}
 })
