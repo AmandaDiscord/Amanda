@@ -4,12 +4,40 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let { client, reloader } = passthrough
+let { client, reloader, commands } = passthrough
 
 let utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let messages, ranges, users
+let messages, ranges, users, prefix, updateInterval
+let enqueued
+
+commands.assign({
+	"announce": {
+		usage: "<duration: number (ms)> <message>",
+		description: "Make an announcement with the client activity",
+		category: "admin",
+		aliases: ["announce"],
+		process: async function(msg, suffix) {
+			let allowed = await utils.hasPermission(msg.author, "eval")
+			if (!allowed) return
+			if (enqueued) {
+				clearTimeout(enqueued)
+				enqueued = undefined
+			}
+			let args = suffix.split(" ")
+			let dur = args[0]
+			let duration = Number(dur)
+			let message = suffix.substring(args[0].length + 1)
+			clearInterval(updateInterval)
+			client.user.setActivity(message, { type: "PLAYING" })
+			enqueued = setTimeout(() => {
+				update()
+				updateInterval = setInterval(() => update(), 5*60*1000)
+			}, duration)
+		}
+	}
+})
 
 function refresh() {
 	return Promise.all([
@@ -26,81 +54,11 @@ function refresh() {
 client.once("prefixes", async (prefixes, statusPrefix) => {
 	await refresh()
 
-	/** @return {Array<string>} */
-	function getCurrentGroups() {
-		return users.filter(o => o.userID == client.user.id).map(o => o.label)
-	}
-
-	function getCurrentRanges() {
-		let date = new Date()
-		let currentMonth = date.getMonth()+1
-		let currentDate = date.getDate()
-		return ranges.filter(range => {
-			// Four types of matching:
-			// 1. If months specified and dates specified, convert DB data to timestamp and compare
-			// 2. If months specified and dates not, check month within range
-			// 3. If dates specified and months not, check dates within range
-			// 4. If nothing specified, date is always within range.
-			let monthSpecified = !(range.startmonth == null || range.endmonth == null)
-			let dateSpecified = !(range.startday == null || range.endday == null)
-			if (monthSpecified && dateSpecified) {
-				// Case 1
-				let startDate = new Date()
-				startDate.setHours(0, 0, 0)
-				startDate.setMonth(range.startmonth-1, range.startday)
-				let endDate = new Date()
-				endDate.setHours(0, 0, 0)
-				endDate.setMonth(range.endmonth-1, range.endday)
-				if (endDate < startDate) endDate.setFullYear(startDate.getFullYear()+1)
-				endDate.setTime(endDate.getTime() + 1000*60*60*24)
-				return startDate <= date && endDate > date
-			} else if (monthSpecified) {
-				// Case 2
-				return range.startmonth <= currentMonth && range.endmonth >= currentMonth
-			} else if (dateSpecified) {
-				// Case 3
-				return range.startday <= currentDate && range.endday >= currentDate
-			} else {
-				// Case 4
-				return true
-			}
-		}).map(range => range.label)
-	}
-
-	function getMatchingMessages() {
-		let currentRanges = getCurrentRanges()
-		let groupsBotIsIn = getCurrentGroups()
-		let regional = []
-		let constant = []
-		messages.forEach(message => {
-			if (message.dates && !currentRanges.includes(message.dates)) return false // criteria exists and didn't match
-			if (message.users && !groupsBotIsIn.includes(message.users)) return false // criteria exists and didn't match
-			if (message.dates) regional.push(message) // this is regional, it already matched, so it gets priority
-			if (!message.dates) constant.push(message) // this isn't regional, so it doesn't get priority
-		})
-		if (regional.length) constant = constant.filter(message => message.demote == 0) // if regional statuses are available, filter out demotable non-regional. (demote has no effect on regional)
-		return regional.concat(constant)
-	}
-
-	function update() {
-		let choices = getMatchingMessages()
-		//console.log(JSON.stringify(choices, null, 4))
-		let choice = utils.arrayRandom(choices)
-		if (choice) {
-			if (client.options.totalShardCount === 1) {
-				client.user.setActivity(`${choice.message} | ${statusPrefix}help`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
-			} else {
-				client.user.setActivity(`${choice.message} | ${statusPrefix}help | shard ${utils.getFirstShard()}`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
-			}
-			//console.log(`Set status: "${choice.message}" (${choice.type})`)
-		} else {
-			console.error("Warning: no status messages available!")
-		}
-	}
+	prefix = statusPrefix
 
 	update()
 
-	setInterval(() => update(), 5*60*1000)
+	updateInterval = setInterval(() => update(), 5*60*1000)
 	setInterval(() => refresh(), 15*60*1000)
 
 	// gross hack
@@ -109,3 +67,75 @@ client.once("prefixes", async (prefixes, statusPrefix) => {
 		update()
 	}
 })
+
+/** @return {Array<string>} */
+function getCurrentGroups() {
+	return users.filter(o => o.userID == client.user.id).map(o => o.label)
+}
+
+function getCurrentRanges() {
+	let date = new Date()
+	let currentMonth = date.getMonth()+1
+	let currentDate = date.getDate()
+	return ranges.filter(range => {
+		// Four types of matching:
+		// 1. If months specified and dates specified, convert DB data to timestamp and compare
+		// 2. If months specified and dates not, check month within range
+		// 3. If dates specified and months not, check dates within range
+		// 4. If nothing specified, date is always within range.
+		let monthSpecified = !(range.startmonth == null || range.endmonth == null)
+		let dateSpecified = !(range.startday == null || range.endday == null)
+		if (monthSpecified && dateSpecified) {
+			// Case 1
+			let startDate = new Date()
+			startDate.setHours(0, 0, 0)
+			startDate.setMonth(range.startmonth-1, range.startday)
+			let endDate = new Date()
+			endDate.setHours(0, 0, 0)
+			endDate.setMonth(range.endmonth-1, range.endday)
+			if (endDate < startDate) endDate.setFullYear(startDate.getFullYear()+1)
+			endDate.setTime(endDate.getTime() + 1000*60*60*24)
+			return startDate <= date && endDate > date
+		} else if (monthSpecified) {
+			// Case 2
+			return range.startmonth <= currentMonth && range.endmonth >= currentMonth
+		} else if (dateSpecified) {
+			// Case 3
+			return range.startday <= currentDate && range.endday >= currentDate
+		} else {
+			// Case 4
+			return true
+		}
+	}).map(range => range.label)
+}
+
+function getMatchingMessages() {
+	let currentRanges = getCurrentRanges()
+	let groupsBotIsIn = getCurrentGroups()
+	let regional = []
+	let constant = []
+	messages.forEach(message => {
+		if (message.dates && !currentRanges.includes(message.dates)) return false // criteria exists and didn't match
+		if (message.users && !groupsBotIsIn.includes(message.users)) return false // criteria exists and didn't match
+		if (message.dates) regional.push(message) // this is regional, it already matched, so it gets priority
+		if (!message.dates) constant.push(message) // this isn't regional, so it doesn't get priority
+	})
+	if (regional.length) constant = constant.filter(message => message.demote == 0) // if regional statuses are available, filter out demotable non-regional. (demote has no effect on regional)
+	return regional.concat(constant)
+}
+
+function update() {
+	let choices = getMatchingMessages()
+	//console.log(JSON.stringify(choices, null, 4))
+	let choice = utils.arrayRandom(choices)
+	if (choice) {
+		if (client.options.totalShardCount === 1) {
+			client.user.setActivity(`${choice.message} | ${prefix}help`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
+		} else {
+			client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
+		}
+		//console.log(`Set status: "${choice.message}" (${choice.type})`)
+	} else {
+		console.error("Warning: no status messages available!")
+	}
+}
