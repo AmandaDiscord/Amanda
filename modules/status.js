@@ -26,8 +26,11 @@ commands.assign({
 				enqueued = undefined
 			}
 			let args = suffix.split(" ")
+			if (!args[0]) return msg.channel.send("You need to provide a duration in ms and a message to announce")
 			let dur = args[0]
 			let duration = Number(dur)
+			if (isNaN(duration)) return msg.channel.send("That's not a valid duration")
+			if (!args[1]) return msg.channel.send("You need to provide a message to announce")
 			let message = suffix.substring(args[0].length + 1)
 			clearInterval(updateInterval)
 			client.user.setActivity(message, { type: "PLAYING" })
