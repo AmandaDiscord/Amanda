@@ -1,12 +1,9 @@
 //@ts-check
 
-const Discord = require("discord.js")
-const path = require("path")
-
 const passthrough = require("../passthrough")
-let { client, reloader, commands } = passthrough
+const { client, reloader, commands } = passthrough
 
-let utils = require("./utilities.js")
+const utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 let messages, ranges, users, prefix, updateInterval

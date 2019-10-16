@@ -10,7 +10,6 @@ const Jimp = require("jimp")
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
-const util = require("util")
 
 const emojis = require("../modules/emojis")
 
@@ -531,7 +530,7 @@ commands.assign({
 			if (!setting.scope.includes(scope)) return msg.channel.send("The setting `"+settingName+"` is not valid for the scope `"+scope+"`.")
 
 			let value = args[2]
-			if (value == undefined) {
+			if (!value) {
 				let row = await utils.sql.get("SELECT value FROM "+tableName+" WHERE keyID = ? AND setting = ?", [keyID, settingName])
 				if (scope == "server") {
 					value = row ? row.value : setting.default
@@ -768,8 +767,9 @@ commands.assign({
 				return new Promise((resolve, reject) => {
 					let target = where == "dm" ? msg.author : msg.channel
 					if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+					let promise
 					if (!permissions || permissions.has("EMBED_LINKS")) {
-						var promise = target.send(embed)
+						promise = target.send(embed)
 					} else {
 						let content = ""
 						function addPart(value) {
@@ -782,8 +782,8 @@ commands.assign({
 						addPart(embed.description)
 						addPart(embed.fields && embed.fields.map(f => f.name+"\n"+f.value).join("\n"))
 						addPart(embed.footer && embed.footer.text)
-						if (content.length >= 2000) var promise = target.send(`Please allow me to embed content`)
-						else var promise = target.send(content)
+						if (content.length >= 2000) promise = target.send(`Please allow me to embed content`)
+						else promise = target.send(content)
 					}
 					promise.then(dm => {
 						if (where == "dm" && msg.channel.type != "dm") msg.channel.send("I sent you a DM")

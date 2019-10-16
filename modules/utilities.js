@@ -199,7 +199,7 @@ const utils = {
 		 * @returns {Promise<{claimer: Discord.User, price: number, waifu: Discord.User, waifuID?: string, userID?: string, waifuPrice: number, gifts: {received: {list: Array<any>, emojis: string}, sent: {list: Array<any>, emojis: string}}}>}
 		 */
 		get: async function(userID, options) {
-			const emojiMap = {
+			/* const emojiMap = {
 				"Flowers": "🌻",
 				"Cupcake": "<:cupcake:501568778891427840>",
 				"Thigh highs": "<:socks:501569760559890432>",
@@ -207,7 +207,7 @@ const utils = {
 				"Fancy dinner": "🍝",
 				"Expensive pudding": "🍨",
 				"Trip to Timbuktu": "✈"
-			}
+			}*/
 			if (options) {
 				if (typeof options == "object") {
 					let { basic } = options
@@ -462,7 +462,7 @@ const utils = {
 	 */
 	playlistSection: function(items, startString, endString, shuffle) {
 		let from = startString == "-" ? 1 : (parseInt(startString) || 1)
-		let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length)
+		let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length) // idk how to fix this
 		from = Math.max(from, 1)
 		to = Math.min(items.length, to)
 		if (startString) items = items.slice(from-1, to)
@@ -574,8 +574,9 @@ const utils = {
 			}
 			while (currentItems < rows.length) {
 				let direction = getNextDirection()
-				if (direction == "left") var row = rows[leftOffset++]
-				else var row = rows[rows.length - 1 - rightOffset++]
+				let row
+				if (direction == "left") row = rows[leftOffset++]
+				else row = rows[rows.length - 1 - rightOffset++]
 				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
 					return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
 				}
@@ -946,12 +947,13 @@ const utils = {
 	 */
 	removeUncachedReaction: function(channelID, messageID, emoji, userID) {
 		if (!userID) userID = "@me"
+		let reaction
 		if (emoji.id) {
 			// Custom emoji, has name and ID
-			var reaction = emoji.name+":"+emoji.id
+			reaction = emoji.name+":"+emoji.id
 		} else {
 			// Default emoji, has name only
-			var reaction = encodeURIComponent(emoji.name)
+			reaction = encodeURIComponent(emoji.name)
 		}
 		//@ts-ignore: client.api is not documented
 		let promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()

@@ -302,7 +302,6 @@ class FriskySong extends Song {
 			 * @returns {Promise<import("frisky-client/lib/Mix")>}
 			 */
 			() => new Promise((resolve, reject) => {
-				let time = Date.now()
 				let attempts = 0
 
 				const attempt = () => {

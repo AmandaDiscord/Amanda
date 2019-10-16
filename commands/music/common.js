@@ -25,7 +25,7 @@ class VoiceStateCallback {
 		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
 		this.callback = callback
 		this.active = true
-		common.voiceStateCallbackManager.getAll(this.msg.author.id, this.msg.guild).forEach(o => o.cancel())
+		common.voiceStateCallbackManager.getAll(this.msg.author.id, this.msg.guild).forEach(o => o.cancel()) // this works? (common declared later)
 		this.add()
 	}
 	add() {
@@ -75,7 +75,7 @@ let common = {
 		let idString = id ? ` (index: ${item}, id: ${id})` : ""
 		if (!reason || !reason.message) {
 			return channel.send("An unknown error occurred."+idString)
-		} if (reason.message && reason.message.startsWith("No video id found:")) {
+		} else if (reason.message && reason.message.startsWith("No video id found:")) {
 			return channel.send(`That is not a valid YouTube video.`+idString)
 		} else if (reason.message && (
 				reason.message.includes("who has blocked it in your country")
@@ -258,7 +258,7 @@ let common = {
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
 		 */
-		function(song, textChannel, voiceChannel, insert = false, context) {
+		function(song, textChannel, voiceChannel, insert, context) {
 			let queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
 			let result = queue.addSong(song, insert)
 			if (context instanceof Discord.Message && result == 0) {

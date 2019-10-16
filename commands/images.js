@@ -28,8 +28,9 @@ async function sendImage(host, path, msg, emoji, footer) {
 	else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`
 	else return Promise.reject("Host provided not supported")
 	let data = await rp(url, {json: true, timeout: 2000})
-	if (host == "chewey") var img = data.data
-	else if (host == "nekos") var img = data.url
+	let img
+	if (host == "chewey") img = data.data
+	else if (host == "nekos") img = data.url
 	let embed = new Discord.MessageEmbed()
 		.setImage(img)
 		.setColor('36393E')

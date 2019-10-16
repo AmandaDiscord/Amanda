@@ -40,7 +40,7 @@ commands.assign({
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
+			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			let args = suffix.split(" ")
 			let array = ['apple', 'cherries', 'watermelon', 'pear', "strawberry"] // plus heart, which is chosen seperately
@@ -324,7 +324,7 @@ commands.assign({
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			let [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),

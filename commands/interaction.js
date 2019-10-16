@@ -30,7 +30,7 @@ let cmds = {
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, {"username": msg.author.username}))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
+			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			let args = suffix.split(" ")
 			if (args.length != 2) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, {"username": msg.author.username}))
@@ -107,9 +107,8 @@ let cmds = {
 			let member = await msg.guild.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, {"username": msg.author.username}))
 			if (member.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.selfClaim, {"username": msg.author.username}))
-			let [memberInfo, myInfo, money, memsettings, guildsettings] = await Promise.all([
+			let [memberInfo, money, memsettings, guildsettings] = await Promise.all([
 				utils.waifu.get(member.user.id),
-				utils.waifu.get(msg.author.id),
 				utils.coinsManager.get(msg.author.id),
 				utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [member.id, "waifualert"]),
 				utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
@@ -204,8 +203,7 @@ let cmds = {
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
 		process: async function(msg, suffix) {
-			let amount = 10, permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			let amount = 10
 			if (suffix) {
 				let num = Number(suffix)
 				if (num < 1) num = 1
@@ -357,7 +355,7 @@ async function doInteraction(msg, suffix, source) {
 	if (!member) return msg.channel.send(`Invalid user`)
 	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 	if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username))
-	let fetch, description = ""
+	let fetch
 	if (source.traaOverride) {
 		let g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
 		let g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
