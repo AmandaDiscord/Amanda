@@ -55,8 +55,20 @@ class Queue {
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
 				let newSongStartTime = data.state.time - data.state.position
-				if (Math.abs(newSongStartTime - this.songStartTime) > 100) {
+				if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
+					this.songStartTime = newSongStartTime
 					ipc.router.send.updateTime(this)
+				}
+				if (newSongStartTime > this.songStartTime+3500 && !this.isPaused && data.state.position === 0) {
+					if (!this.songs[0].error) {
+						console.log("Song didn't start. Region: "+client.guilds.get(this.guildID).region+", guildID: "+this.guildID)
+						this.songs[0].error =
+							"Hmm. Seems like the song isn't playing."
+							+"\n\n**This is probably an issue with Discord.**"
+							+"\nYou should try changing the server region."
+							+"\n\nTo report a problem, join our server: https://discord.gg/YMkZDsK"
+						this._reportError()
+					}
 				}
 			}
 		})
@@ -64,7 +76,7 @@ class Queue {
 			if (this.songs[0].error) {
 				this.songs[0].error = exception.error
 				this._reportError()
-				// This already automatically continues, presumably because the "end" event is also fired.
+				// This already automatically continues to the next song, presumably because the "end" event is also fired.
 			} else {
 				console.error(exception)
 			}
