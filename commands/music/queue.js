@@ -61,7 +61,7 @@ class Queue {
 				}
 				if (newSongStartTime > this.songStartTime+3500 && !this.isPaused && data.state.position === 0) {
 					if (!this.songs[0].error) {
-						console.log("Song didn't start. Region: "+client.guilds.get(this.guildID).region+", guildID: "+this.guildID)
+						console.log("Song didn't start. Region: "+client.guilds.get(this.guildID)?client.guilds.get(this.guildID).region:"Unknown"+", guildID: "+this.guildID)
 						this.songs[0].error =
 							"Hmm. Seems like the song isn't playing."
 							+"\n\n**This is probably an issue with Discord.**"
