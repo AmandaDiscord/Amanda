@@ -51,7 +51,7 @@ ex.push({
 			}
 
 			acknowledge(data) {
-				let serverTimeDiff = data.d.serverTimeDiff
+				serverTimeDiff = data.d.serverTimeDiff
 				console.log("Time difference: "+serverTimeDiff)
 			}
 

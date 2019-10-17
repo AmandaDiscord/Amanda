@@ -31,7 +31,7 @@ let generateNonce
 		let i = 0
 		while (true) {
 			yield ++i
-		} // you fix this :)
+		}
 	}
 	let genInstance = generator()
 	generateNonce = () => genInstance.next().value
