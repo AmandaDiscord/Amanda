@@ -22,7 +22,7 @@ let youtube = passthrough.youtube
 commands.assign({
 	playlist: {
 		aliases: ["playlist", "playlists", "pl"],
-		category: "music",
+		category: "audio",
 		description: "Create, play, and edit playlists.",
 		usage: "",
 		process: async function(msg, suffix) {

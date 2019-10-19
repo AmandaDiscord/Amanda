@@ -341,7 +341,7 @@ commands.assign({
 		usage: "[frisky|deep|chill|classics]",
 		description: "Frisky radio",
 		aliases: ["frisky"],
-		category: "music",
+		category: "audio",
 		process: async function(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
 			let voiceChannel = await common.detectVoiceChannel(msg, true)
@@ -356,7 +356,7 @@ commands.assign({
 		usage: "none",
 		description: "You're not supposed to see this",
 		aliases: ["music", "m"],
-		category: "music",
+		category: "audio",
 		process: async function(msg, suffix) {
 			// No DMs
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
