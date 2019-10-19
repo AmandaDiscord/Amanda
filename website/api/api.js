@@ -35,6 +35,8 @@ const opcodeMethodMap = new Map([
 
 const {ipc, snow} = passthrough;
 
+let fileHasReloaded = false;
+
 /** @type {Session[]} */
 const sessions = []
 const states = new Map()
@@ -52,6 +54,10 @@ function replaceState(guildID, data) {
 	states.set(guildID, state)
 }
 
+function shouldRemove() {
+	return fileHasReloaded
+}
+
 ipc.addReceivers([
 	{
 		op: "NEW_QUEUE",
@@ -63,7 +69,8 @@ ipc.addReceivers([
 					session.sendState({})
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "ADD_SONG",
@@ -85,7 +92,8 @@ ipc.addReceivers([
 					session.queueAdd(song, position)
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "TIME_UPDATE",
@@ -102,7 +110,8 @@ ipc.addReceivers([
 					session.timeUpdate({songStartTime, playing})
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "NEXT_SONG",
@@ -118,7 +127,8 @@ ipc.addReceivers([
 					session.next()
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "SONG_UPDATE",
@@ -126,6 +136,9 @@ ipc.addReceivers([
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
+				//console.log("Received SONG_UPDATE")
+				//console.log("Queue cache:", cache)
+				//console.log("New item:", song)
 				cache.songs[index] = song
 				return cache
 			})
@@ -134,7 +147,8 @@ ipc.addReceivers([
 					session.songUpdate(song, index)
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "REMOVE_SONG",
@@ -150,7 +164,8 @@ ipc.addReceivers([
 					session.removeSong(index)
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "MEMBERS_UPDATE",
@@ -166,7 +181,8 @@ ipc.addReceivers([
 					session.membersChange(members)
 				}
 			})
-		}
+		},
+		shouldRemove
 	},
 	{
 		op: "ATTRIBUTES_CHANGE",
@@ -182,7 +198,8 @@ ipc.addReceivers([
 					session.attributesChange(attributes)
 				}
 			})
-		}
+		},
+		shouldRemove
 	}
 ])
 
@@ -354,4 +371,9 @@ wss.on("connection", ws => {
 	new Session(ws)
 })
 
-module.exports = []
+console.log("API loaded")
+
+module.exports = [{cancel: true, code: () => {
+	fileHasReloaded = true
+	ipc.filterReceivers()
+}}]

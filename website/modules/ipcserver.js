@@ -86,7 +86,7 @@ class IPC {
 			})
 		})
 
-		/** @type {{op: string, fn: (data: any) => any}[]} */
+		/** @type {{op: string, fn: (data: any) => any, shouldRemove: () => boolean}[]} */
 		this.receivers = []
 	}
 
@@ -94,9 +94,15 @@ class IPC {
 		this.router = new IPCRouter.router(this)
 	}
 
-	/** @param {{op: string, fn: (data: any) => any}[]} receivers */
+	/** @param {{op: string, fn: (data: any) => any, shouldRemove: () => boolean}[]} receivers */
 	addReceivers(receivers) {
 		this.receivers = this.receivers.concat(receivers)
+		console.log(`Added ${receivers.length} receivers, total ${this.receivers.length}`)
+	}
+
+	filterReceivers() {
+		this.receivers = this.receivers.filter(r => !r.shouldRemove())
+		console.log(`Filtered receivers, ${this.receivers.length} remaining`)
 	}
 
 
