@@ -4,7 +4,7 @@ const rp = require("request-promise")
 const Discord = require("discord.js")
 
 const passthrough = require("../passthrough")
-let { config, client, commands, reloader } = passthrough
+let { config, commands, reloader } = passthrough
 
 const key = config.chewey_api_key
 

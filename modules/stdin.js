@@ -22,7 +22,7 @@ reloader.useSync("./modules/lang.js", lang)
  * @param {(err: Error|null, result: any) => any} callback
  */
 async function customEval(input, context, filename, callback) {
-	let depth = 0;
+	let depth = 0
 	if (input == "exit\n") return process.exit()
 	if (input.startsWith(":")) {
 		let [depthOverwrite, command] = input.split(" ")

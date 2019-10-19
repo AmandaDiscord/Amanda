@@ -1,0 +1,12 @@
+{
+  "name": "@amanda/modulus",
+  "version": "1.0.0",
+  "description": "Managers for Amanda",
+  "main": "index.js",
+  "types": "./typings/index.d.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "PapiOphidian",
+  "license": "UNLICENSED"
+}

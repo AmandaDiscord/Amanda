@@ -1,8 +1,6 @@
 //@ts-check
 
-const ipctypes = require("../../modules/ipctypes.js")
-
-const passthrough = require("../../passthrough")
+const types = require("../../typings")
 
 class IPCRouter {
 	/**
@@ -14,7 +12,7 @@ class IPCRouter {
 
 	/**
 	 * @param {string} guildID
-	 * @returns {Promise<ipctypes.FilteredGuild>}
+	 * @returns {Promise<types.FilteredGuild>}
 	 */
 	requestGuild(guildID) {
 		return this.ipc.requestFromGuild(guildID, "GET_GUILD", guildID)
@@ -33,7 +31,7 @@ class IPCRouter {
 	 * Request a guild, but only if the user is in that guild.
 	 * @param {string} userID
 	 * @param {string} guildID
-	 * @returns {Promise<ipctypes.FilteredGuild>}
+	 * @returns {Promise<types.FilteredGuild>}
 	 */
 	requestGuildForUser(userID, guildID) {
 		return this.ipc.requestFromGuild(guildID, "GET_GUILD_FOR_USER", {userID, guildID})

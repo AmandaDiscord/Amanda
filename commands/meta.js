@@ -169,8 +169,8 @@ commands.assign({
 		aliases: ["forcestatupdate"],
 		category: "admin",
 		process: async function(msg) {
-			let permissions = await utils.hasPermission(msg.author, "eval");
-			if (!permissions) return;
+			let permissions = await utils.hasPermission(msg.author, "eval")
+			if (!permissions) return
 			sendStats(msg)
 		}
 	},
@@ -543,7 +543,7 @@ commands.assign({
 						return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.")
 					}
 				} else if (scope == "self") {
-					let serverRow;
+					let serverRow
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
@@ -603,7 +603,8 @@ commands.assign({
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code`)
+				if (!["en-us", "en-owo", "es"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code. Supported language codes are`
+				+`\nen-us, en-owo, and es`)
 				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}

@@ -21,12 +21,15 @@ class CommandStore extends Discord.Collection {
 		Object.values(properties).forEach(i => {
 			if (this.get(i.aliases[0])) this.delete(i.aliases[0])
 			this.set(i.aliases[0], i)
+			this.categories.forEach(c => {
+				if (c.includes(i.aliases[0])) c.splice(c.indexOf(i.aliases[0]), 1)
+			})
 			let cat = this.categories.get(i.category)
 			if (!cat) this.categories.set(i.category, [i.aliases[0]])
 			else {
 				if (!cat.includes(i.aliases[0])) cat.push(i.aliases[0])
 			}
-		});
+		})
 	}
 }
 

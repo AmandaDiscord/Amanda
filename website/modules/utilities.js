@@ -93,7 +93,7 @@ let utils = {
 
 	generateCSRF: function(loginToken = null) {
 		let token = crypto.randomBytes(32).toString("hex")
-		let expires = Date.now()+6*60*60*1000; // 6 hours
+		let expires = Date.now()+6*60*60*1000 // 6 hours
 		utils.sql.all("INSERT INTO CSRFTokens (token, loginToken, expires) VALUES (?, ?, ?)", [token, loginToken, expires])
 		return token
 	},

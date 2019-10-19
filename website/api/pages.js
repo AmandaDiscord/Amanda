@@ -1,12 +1,12 @@
 //@ts-check
 
-const ipctypes = require("../../modules/ipctypes")
+const types = require("../../typings")
 
 const passthrough = require("../passthrough")
 const {pugCache, snow, config, ipc} = passthrough
 
-let utils = require("../modules/utilities.js");
-//reloader.useSync("./modules/utilities.js", utils);
+let utils = require("../modules/utilities.js")
+//reloader.useSync("./modules/utilities.js", utils)
 
 let validators = require("../modules/validator.js")()
 //reloader.useSync("./modules/validator.js", validators)
@@ -147,7 +147,7 @@ module.exports = [
 			.go()
 			.then(async state => {
 				if (config.music_dash_enabled) {
-					/** @type {ipctypes.FilteredGuild} */
+					/** @type {types.FilteredGuild} */
 					const guild = state.guild
 
 					const page = pugCache.get("pug/server.pug")({guild, timestamp: Date.now()})

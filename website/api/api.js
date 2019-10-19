@@ -33,7 +33,7 @@ const opcodeMethodMap = new Map([
 	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"]
 ])
 
-const {ipc, snow} = passthrough;
+const {ipc, snow} = passthrough
 
 /** @type {Session[]} */
 const sessions = []

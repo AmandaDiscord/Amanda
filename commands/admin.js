@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore } = passthrough
+let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus } = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -57,13 +57,13 @@ commands.assign({
 			await msg.channel.sendTyping()
 			require("child_process").exec(suffix, async (error, stdout, stderr) => {
 				let result
-				if (error) result = error
+				if (error) result = `cmd: ${error.cmd} killed: ${error.killed} code: ${error.code} signal: ${error.signal}`
 				else if (stdout) result = stdout
 				else if (stderr) result = stderr
 				else result = "No output"
-				result = result.toString()
-				if (result.length >= 2000) result = result.slice(0, 1993)+"…"
-				let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``)
+				result = await utils.stringify(result)
+				if (result.length >= 1993) result = result.slice(0, 1993)+"…"
+				let nmsg = await msg.channel.send(result)
 				let menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5*60*1000)
 			})

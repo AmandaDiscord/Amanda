@@ -1,14 +1,14 @@
 //@ts-check
 
-const Discord = require("discord.js");
+const Discord = require("discord.js")
 
-const passthrough = require("../../passthrough")
+const passthrough = require("../../../passthrough")
 let {client, reloader, ipc} = passthrough
 
-const QueueFile = require("../../commands/music/queue")
+const QueueFile = require("../../../commands/music/queue")
 reloader.useSync("./commands/music/queue.js", QueueFile)
 
-const utils = require("../utilities")
+const utils = require("../../utilities")
 reloader.useSync("./modules/utilities.js", utils)
 
 class QueueStore {
@@ -64,7 +64,7 @@ class QueueStore {
 		return passthrough.nedb.queue.update({_id: "QueueStore_"+utils.getFirstShard()}, this.toObject(), {upsert: true})
 	}
 	async restore() {
-		const songTypes = require("../../commands/music/songtypes")
+		const songTypes = require("../../../commands/music/songtypes")
 		let data = await passthrough.nedb.queue.findOne({_id: "QueueStore_"+utils.getFirstShard()})
 		data.queues.forEach(async q => {
 			console.log(q)

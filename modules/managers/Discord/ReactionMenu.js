@@ -1,9 +1,9 @@
 //@ts-check
 
 const Discord = require("discord.js")
-const passthrough = require("../passthrough")
+const menus = new Map()
 
-module.exports = class ReactionMenu {
+class ReactionMenu {
 	/**
 	 * @param {Discord.Message} message
 	 * @param {ReactionMenuAction[]} actions
@@ -11,7 +11,8 @@ module.exports = class ReactionMenu {
 	constructor(message, actions) {
 		this.message = message
 		this.actions = actions
-		passthrough.reactionMenus.set(this.message.id, this)
+		// @ts-ignore
+		menus.set(this.message.id, this)
 		this.react()
 	}
 	async react() {
@@ -25,10 +26,10 @@ module.exports = class ReactionMenu {
 	}
 	/**
 	 * Remove the menu from storage, and optionally delete its reactions.
-	 * @param {Boolean} [remove]
+	 * @param {boolean} [remove]
 	 */
 	destroy(remove) {
-		passthrough.reactionMenus.delete(this.message.id)
+		menus.delete(this.message.id)
 		if (remove) {
 			if (this.message.channel.type == "text") {
 				this._removeAll()
@@ -39,20 +40,24 @@ module.exports = class ReactionMenu {
 	}
 	/**
 	 * Call the endpoint to remove all reactions. Fall back to removing individually if this fails.
+	 * @private
 	 */
 	_removeAll() {
 		this.message.reactions.removeAll().catch(() => this._removeEach())
 	}
 	/**
 	 * For each action, remove the client's reaction.
+	 * @private
 	 */
 	_removeEach() {
 		this.actions.forEach(a => {
-			if (!a.messageReaction) return;
+			if (!a.messageReaction) return
 			a.messageReaction.users.remove().catch(() => {})
 		})
 	}
 }
+
+module.exports = { ReactionMenu, menus }
 
 /**
  * @callback ReactionMenuActionCallback

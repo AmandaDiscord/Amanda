@@ -18,7 +18,7 @@ let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 /**
- * @type {Object.<string, import("../modules/managers/CommandStore").Command>}
+ * @type {Object.<string, import("../modules/managers").Command>}
  */
 let cmds = {
 	"ship": {

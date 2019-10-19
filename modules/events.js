@@ -6,7 +6,7 @@ const {PlayerManager} = require("discord.js-lavalink")
 const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
-let {client, config, commands, reloadEvent, reloader} = passthrough
+let {client, config, commands, reloader} = passthrough
 
 let lastAttemptedLogins = []
 
@@ -96,7 +96,9 @@ async function manageMessage(msg) {
 	else langcode = "en-us"
 
 	if (langcode == "en-us") lang = Lang.english
-	if (langcode == "en-owo") lang = Lang.owo
+	else if (langcode == "en-owo") lang = Lang.owo
+	else if (Lang[langcode]) lang = Lang[langcode]
+	else lang = Lang.english
 
 	if (cmd) {
 		try {

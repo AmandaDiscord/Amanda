@@ -5,7 +5,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../../passthrough")
-let {config, client, reloadEvent, reloader, commands, queueStore} = passthrough
+let {config, client, reloader, commands, queueStore} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)

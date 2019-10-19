@@ -1,14 +1,13 @@
 //@ts-check
 
 const ipc = require("node-ipc")
-const path = require("path")
 
-const passthrough = require("../passthrough")
-const {client, config, queueStore, reloader} = passthrough
+const passthrough = require("../../../passthrough")
+const {client, config, reloader} = passthrough
 
 let IPCRouter = require("./ipcbotrouter.js")
-reloader.setupWatch(["./modules/ipcbotrouter.js"])
-reloader.useSync("./modules/ipcbotrouter.js", IPCRouter)
+reloader.setupWatch(["./modules/IPC/src/ipcbotrouter.js"])
+reloader.useSync("./modules/IPC/src/ipcbotrouter.js", IPCRouter)
 
 class IPC {
 	constructor() {

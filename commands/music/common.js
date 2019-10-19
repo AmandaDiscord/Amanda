@@ -83,7 +83,7 @@ let common = {
 			|| reason.message.includes("The uploader has not made this video available in your country")
 			|| reason.message.includes("copyright infringement")
 		)) {
-			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement.`+idString);
+			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement.`+idString)
 		} else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
