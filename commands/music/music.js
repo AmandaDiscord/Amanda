@@ -339,7 +339,7 @@ commands.assign({
 	},
 	"frisky": {
 		usage: "[frisky|deep|chill|classics]",
-		description: "Frisky radio",
+		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
 		category: "audio",
 		process: async function(msg, suffix) {
@@ -354,7 +354,7 @@ commands.assign({
 	},
 	"music": {
 		usage: "none",
-		description: "You're not supposed to see this",
+		description: "Play music from YouTube",
 		aliases: ["music", "m"],
 		category: "audio",
 		process: async function(msg, suffix) {
