@@ -471,8 +471,7 @@ commands.assign({
 		aliases: ["settings"],
 		category: "configuration",
 		process: async function(msg, suffix) {
-			let args = suffix.split(" "), permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			let args = suffix.split(" ")
 			if (msg.channel.type == "dm") {
 				if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`)
 			}
@@ -635,7 +634,7 @@ commands.assign({
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
-		process: async function (msg, suffix) {
+		process: async function (msg, suffix, lang) {
 			let embed, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (suffix) {
@@ -701,10 +700,17 @@ commands.assign({
 					send("dm").catch(() => send("channel"))
 				} else {
 					let command = commands.find(c => c.aliases.includes(suffix))
+					let info = { usage: command.usage, description: command.description }
+					if (lang[command.category]) {
+						let langcommand = lang[command.category][command.aliases[0]]
+						if (langcommand) {
+							info = { usage: langcommand.help.usage, description: langcommand.help.description }
+						}
+					}
 					if (command) {
 						embed = new Discord.MessageEmbed()
 						.setAuthor(`Help for ${command.aliases[0]}`)
-						.setDescription(`Arguments: ${command.usage}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
+						.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
 						.setColor("36393E")
 						send("channel")
 					} else {
