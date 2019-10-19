@@ -264,7 +264,11 @@ class Queue {
 	 * @param {number} [amount]
 	 */
 	skip(amount) {
-		if (amount) this.songs.splice(1, amount-1)
+		if (amount) {
+			for (let i = 1; i <= amount-1; i++) { // count from 1 to amount-1, inclusive
+				this.removeSong(1, true)
+			}
+		}
 		this.player.stop()
 	}
 	/**
