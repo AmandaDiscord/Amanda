@@ -77,7 +77,7 @@ let db = mysql.createPool({
 	])
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
-	require("./modules/status.js")
+	require("./commands/status.js")
 
 	client.login(config.bot_token)
 

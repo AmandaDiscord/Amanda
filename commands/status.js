@@ -3,8 +3,11 @@
 const passthrough = require("../passthrough")
 const { client, reloader, commands } = passthrough
 
-const utils = require("./utilities.js")
+const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
+
+const refreshTime = 15*60*1000
+const updateTime = 5*60*1000
 
 let messages, ranges, users, prefix, updateInterval
 let enqueued
@@ -26,14 +29,14 @@ commands.assign({
 			if (!args[0]) return msg.channel.send("You need to provide a duration in ms and a message to announce")
 			let dur = args[0]
 			let duration = Number(dur)
-			if (isNaN(duration)) return msg.channel.send("That's not a valid duration")
+			if (isNaN(duration) || duration === 0) return msg.channel.send("That's not a valid duration")
 			if (!args[1]) return msg.channel.send("You need to provide a message to announce")
 			let message = suffix.substring(args[0].length + 1)
 			clearInterval(updateInterval)
 			client.user.setActivity(message, { type: "PLAYING" })
 			enqueued = setTimeout(() => {
 				update()
-				updateInterval = setInterval(() => update(), 5*60*1000)
+				updateInterval = setInterval(() => update(), updateTime)
 			}, duration)
 		}
 	}
@@ -58,8 +61,8 @@ client.once("prefixes", async (prefixes, statusPrefix) => {
 
 	update()
 
-	updateInterval = setInterval(() => update(), 5*60*1000)
-	setInterval(() => refresh(), 15*60*1000)
+	updateInterval = setInterval(() => update(), updateTime)
+	setInterval(() => refresh(), refreshTime)
 
 	// gross hack
 	utils.updateStatus = async function() {
