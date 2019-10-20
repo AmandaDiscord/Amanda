@@ -8,7 +8,7 @@ const Frisky = require("frisky-client")
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
-const Reloader = require("./modules/Reloader")
+const Reloader = require("./modules/hotreload")
 
 const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0})
 const youtube = new YouTube(config.yt_api_key)

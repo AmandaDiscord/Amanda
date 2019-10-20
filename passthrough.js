@@ -11,7 +11,7 @@ process._ptcreated = true
  * @property {import("./config")} config
  * @property {import("./modules/managers/datastores/CommandStore")} commands
  * @property {import("mysql2/promise").PromisePool} db
- * @property {import("./modules/Reloader")} reloader
+ * @property {import("./modules/hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./modules/managers/datastores/GameStore")} gameStore
  * @property {Map<string, import("./modules/managers/Discord/ReactionMenu")>} reactionMenus

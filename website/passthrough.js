@@ -11,7 +11,7 @@
  * @property {Map<string, string>} sassCache
  * @property {import("ws").Server} wss
  * @property {import("./modules/ipcserver")} ipc
- * @property {import("../modules/Reloader")} reloader
+ * @property {import("../modules/hotreload")} reloader
  */
 
 /**

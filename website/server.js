@@ -4,7 +4,7 @@ const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
-const Reloader = require("../modules/Reloader")
+const Reloader = require("../modules/hotreload")
 require("dnscache")({enable: true})
 
 const passthrough = require("./passthrough")
