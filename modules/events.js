@@ -112,7 +112,7 @@ async function manageMessage(msg) {
 			let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e))
 			let embed = new Discord.MessageEmbed()
 			.setDescription(msgTxt)
-			.setColor("dd2d2d")
+			.setColor(0xdd2d2d)
 			if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
