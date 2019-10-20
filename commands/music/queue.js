@@ -87,7 +87,7 @@ class Queue {
 		})
 		/** @type {Discord.Message} */
 		this.np = null
-		/** @type {import("../../modules/managers").ReactionMenu} */
+		/** @type {import("../../modules/managers/Discord/ReactionMenu")} */
 		this.npMenu = null
 		this.npUpdater = new utils.FrequencyUpdater(() => {
 			if (this.np) {

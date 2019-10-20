@@ -1,7 +1,7 @@
 //@ts-check
 
 const Discord = require("discord.js")
-const menus = new Map()
+const reactionMenus = require("./reactionmenus")
 
 class ReactionMenu {
 	/**
@@ -12,7 +12,7 @@ class ReactionMenu {
 		this.message = message
 		this.actions = actions
 		// @ts-ignore
-		menus.set(this.message.id, this)
+		reactionMenus.set(this.message.id, this)
 		this.react()
 	}
 	async react() {
@@ -29,7 +29,7 @@ class ReactionMenu {
 	 * @param {boolean} [remove]
 	 */
 	destroy(remove) {
-		menus.delete(this.message.id)
+		reactionMenus.delete(this.message.id)
 		if (remove) {
 			if (this.message.channel.type == "text") {
 				this._removeAll()
@@ -57,7 +57,7 @@ class ReactionMenu {
 	}
 }
 
-module.exports = { ReactionMenu, menus }
+module.exports = ReactionMenu
 
 /**
  * @callback ReactionMenuActionCallback

@@ -8,7 +8,7 @@ const util = require("util")
 const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
 
-const ReactionMenu = require("./managers/Discord/ReactionMenu").ReactionMenu
+const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
 let {client, db, reloadEvent} = passthrough
@@ -803,7 +803,7 @@ const utils = {
 
 	/**
 	 * @param {Discord.Message} message
-	 * @param {import("./managers").ReactionMenuAction[]} actions
+	 * @param {import("./managers/Discord/ReactionMenu").ReactionMenuAction[]} actions
 	 */
 	reactionMenu: function(message, actions) {
 		return new ReactionMenu(message, actions)
