@@ -31,7 +31,7 @@ let db = mysql.createPool({
 
 	Object.assign(passthrough, {config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent})
 
-	const IPC = require("./modules/IPC").bot
+	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
 	passthrough.ipc = ipc
 

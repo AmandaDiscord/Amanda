@@ -21,7 +21,7 @@ process._ptcreated = true
  * @property {import("ws").Server} wss
  * @property {Object<string, import("nedb-promises")>} nedb
  * @property {import("frisky-client")} frisky
- * @property {import("./modules/IPC/src/ipcbot")} ipc
+ * @property {import("./modules/ipc/ipcbot")} ipc
  */
 
 /**
