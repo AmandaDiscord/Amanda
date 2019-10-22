@@ -8,9 +8,6 @@ let { config, commands, reloader } = passthrough
 
 const key = config.chewey_api_key
 
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 let utils = require("../modules/utilities")
 reloader.useSync("./modules/utilities.js", utils)
 

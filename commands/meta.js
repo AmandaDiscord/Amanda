@@ -602,8 +602,8 @@ commands.assign({
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo", "es"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code. Supported language codes are`
-				+`\nen-us, en-owo, and es`)
+				if (!["en-us", "en-owo", "es", "nl"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code. Supported language codes are`
+				+`\nen-us, en-owo, es, and nl`)
 				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}

@@ -10,9 +10,6 @@ const voiceEmptyDuration = 20000
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let lang = require("../../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 let songTypes = require("./songtypes.js")
 reloader.useSync("./commands/music/songtypes.js", songTypes)
 
