@@ -29,7 +29,7 @@ const db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent })
+	Object.assign(passthrough, { config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky() })
 
 	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
@@ -46,7 +46,6 @@ const db = mysql.createPool({
 
 	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")
 
-	passthrough.frisky = new Frisky()
 	passthrough.reactionMenus = reactionMenus
 	passthrough.commands = new CommandStore()
 	passthrough.gameStore = new GameStore()
