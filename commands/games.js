@@ -414,7 +414,7 @@ commands.assign({
 
 			const string = sweeper(difficulty, size)
 
-			title = utils.replace(lang.games.minesweeper.returns.info, { "difficulty": difficulty, "number1": string.bombs, "number2": string.size })
+			title = utils.replace(lang.games.minesweeper.returns.info, { "difficulty": difficulty, "number1": string.bombs, "number2": string.size, "number3": string.size })
 			if (string.error) title += `\n${lang.games.minesweeper.returns.error}`
 			const embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text)
 			if (sfx.includes("-r") || sfx.includes("--raw")) {
