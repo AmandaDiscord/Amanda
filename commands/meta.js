@@ -700,14 +700,14 @@ commands.assign({
 					send("dm").catch(() => send("channel"))
 				} else {
 					let command = commands.find(c => c.aliases.includes(suffix))
-					let info = { usage: command.usage, description: command.description }
-					if (lang[command.category]) {
-						let langcommand = lang[command.category][command.aliases[0]]
-						if (langcommand) {
-							info = { usage: langcommand.help.usage, description: langcommand.help.description }
-						}
-					}
 					if (command) {
+						let info = { usage: command.usage, description: command.description }
+						if (lang[command.category]) {
+							let langcommand = lang[command.category][command.aliases[0]]
+							if (langcommand) {
+								info = { usage: langcommand.help.usage, description: langcommand.help.description }
+							}
+						}
 						embed = new Discord.MessageEmbed()
 						.setAuthor(`Help for ${command.aliases[0]}`)
 						.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
