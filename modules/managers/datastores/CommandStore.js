@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const Lang = require("@amanda/lang")
@@ -24,11 +24,9 @@ class CommandStore extends Discord.Collection {
 			this.categories.forEach(c => {
 				if (c.includes(i.aliases[0])) c.splice(c.indexOf(i.aliases[0]), 1)
 			})
-			let cat = this.categories.get(i.category)
+			const cat = this.categories.get(i.category)
 			if (!cat) this.categories.set(i.category, [i.aliases[0]])
-			else {
-				if (!cat.includes(i.aliases[0])) cat.push(i.aliases[0])
-			}
+			else if (!cat.includes(i.aliases[0])) cat.push(i.aliases[0])
 		})
 	}
 }

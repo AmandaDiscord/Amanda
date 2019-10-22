@@ -1,11 +1,11 @@
-//@ts-check
+// @ts-check
 
 const types = require("../../typings")
 
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const {client} = passthrough
+const { client } = passthrough
 
 /**
  * @param {Discord.Guild} guild
@@ -41,12 +41,9 @@ class IPCRouter {
 	 * @param {string} guildID
 	 */
 	GET_GUILD(guildID) {
-		let guild = client.guilds.get(guildID)
-		if (guild) {
-			return filterGuild(guild)
-		} else {
-			return null
-		}
+		const guild = client.guilds.get(guildID)
+		if (guild) return filterGuild(guild)
+		else return null
 	}
 
 	/**
@@ -54,11 +51,11 @@ class IPCRouter {
 	 * @param {string} input.userID
 	 * @param {boolean} input.np
 	 */
-	GET_DASH_GUILDS({userID, np}) {
+	GET_DASH_GUILDS({ userID, np }) {
 		const queueStore = passthrough.queueStore
-		let guilds = []
-		let npguilds = []
-		for (let guild of client.guilds.values()) {
+		const guilds = []
+		const npguilds = []
+		for (const guild of client.guilds.values()) {
 			if (guild.members.has(userID)) {
 				let isNowPlaying = false
 				if (np) {
@@ -69,7 +66,7 @@ class IPCRouter {
 				else guilds.push(filterGuild(guild))
 			}
 		}
-		return {guilds, npguilds}
+		return { guilds, npguilds }
 	}
 
 	/**
@@ -77,7 +74,7 @@ class IPCRouter {
 	 * @param {string} input.userID
 	 * @param {string} input.guildID
 	 */
-	GET_GUILD_FOR_USER({userID, guildID}) {
+	GET_GUILD_FOR_USER({ userID, guildID }) {
 		const guild = client.guilds.get(guildID)
 		if (!guild) return null
 		if (!guild.members.has(userID)) return null
@@ -127,7 +124,7 @@ class IPCRouter {
 	 * @param {string} input.guildID
 	 * @param {number} input.index
 	 */
-	REMOVE_SONG({guildID, index}) {
+	REMOVE_SONG({ guildID, index }) {
 		const queue = getQueue(guildID)
 		if (!queue) return false
 		return queue.wrapper.removeSong(index, "web")
@@ -155,11 +152,11 @@ class Send {
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	newQueue(queue) {
-		this.ipc.send({op: "NEW_QUEUE", data: {guildID: queue.guildID, state: queue.wrapper.getState()}})
+		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guildID, state: queue.wrapper.getState() } })
 	}
 
 	deleteQueue(guildID) {
-		this.ipc.send({op: "NEW_QUEUE", data: {guildID, state: null}})
+		this.ipc.send({ op: "NEW_QUEUE", data: { guildID, state: null } })
 	}
 
 	/**
@@ -167,21 +164,21 @@ class Send {
 	 * @param {import("../../commands/music/songtypes").Song} song
 	 */
 	addSong(queue, song, position) {
-		this.ipc.send({op: "ADD_SONG", data: {guildID: queue.guildID, position, song: song.getState()}})
+		this.ipc.send({ op: "ADD_SONG", data: { guildID: queue.guildID, position, song: song.getState() } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateTime(queue) {
-		this.ipc.send({op: "TIME_UPDATE", data: {guildID: queue.guildID, songStartTime: queue.songStartTime, playing: !queue.isPaused}})
+		this.ipc.send({ op: "TIME_UPDATE", data: { guildID: queue.guildID, songStartTime: queue.songStartTime, playing: !queue.isPaused } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	nextSong(queue) {
-		this.ipc.send({op: "NEXT_SONG", data: {guildID: queue.guildID}})
+		this.ipc.send({ op: "NEXT_SONG", data: { guildID: queue.guildID } })
 	}
 
 	/**
@@ -190,7 +187,7 @@ class Send {
 	 * @param {number} index
 	 */
 	updateSong(queue, song, index) {
-		this.ipc.send({op: "SONG_UPDATE", data: {guildID: queue.guildID, song: song.getState(), index: index}})
+		this.ipc.send({ op: "SONG_UPDATE", data: { guildID: queue.guildID, song: song.getState(), index: index } })
 	}
 
 	/**
@@ -198,21 +195,21 @@ class Send {
 	 * @param {number} index
 	 */
 	removeSong(queue, index) {
-		this.ipc.send({op: "REMOVE_SONG", data: {guildID: queue.guildID, index: index}})
+		this.ipc.send({ op: "REMOVE_SONG", data: { guildID: queue.guildID, index: index } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateMembers(queue) {
-		this.ipc.send({op: "MEMBERS_UPDATE", data: {guildID: queue.guildID, members: queue.wrapper.getMembers()}})
+		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guildID, members: queue.wrapper.getMembers() } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateAttributes(queue) {
-		this.ipc.send({op: "ATTRIBUTES_CHANGE", data: {guildID: queue.guildID, attributes: queue.wrapper.getAttributes()}})
+		this.ipc.send({ op: "ATTRIBUTES_CHANGE", data: { guildID: queue.guildID, attributes: queue.wrapper.getAttributes() } })
 	}
 }
 

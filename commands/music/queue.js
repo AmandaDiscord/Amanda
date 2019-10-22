@@ -1,19 +1,19 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, queueStore, ipc} = passthrough
+const { client, reloader, queueStore, ipc } = passthrough
 
 const voiceEmptyDuration = 20000
 
-let utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let songTypes = require("./songtypes.js")
+const songTypes = require("./songtypes.js")
 reloader.useSync("./commands/music/songtypes.js", songTypes)
 
-let common = require("./common.js")
+const common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
 class Queue {
@@ -36,11 +36,11 @@ class Queue {
 		this.auto = false
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
-		.setCallback(() => {
-			this.textChannel.send("Everyone left, so I have as well.")
-			this._dissolve()
-		})
-		.setDelay(voiceEmptyDuration)
+			.setCallback(() => {
+				this.textChannel.send("Everyone left, so I have as well.")
+				this._dissolve()
+			})
+			.setDelay(voiceEmptyDuration)
 
 		this.voiceLeaveWarningMessagePromise = null
 		this.player = client.lavalink.join({
@@ -51,23 +51,23 @@ class Queue {
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
-				let newSongStartTime = data.state.time - data.state.position
+				const newSongStartTime = data.state.time - data.state.position
 				if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
 					this.songStartTime = newSongStartTime
 					ipc.router.send.updateTime(this)
 				}
-				if (newSongStartTime > this.songStartTime+3500 && !this.isPaused && data.state.position === 0) {
+				if (newSongStartTime > this.songStartTime + 3500 && !this.isPaused && data.state.position === 0) {
 					if (!this.songs[0].error) {
 						console.log(
-							`Song didn't start.`
-							+` Region: ${client.guilds.get(this.guildID) ? client.guilds.get(this.guildID).region : "unknown"}`
-							+`, guildID: ${this.guildID}`
+							"Song didn't start."
+							+ ` Region: ${client.guilds.get(this.guildID) ? client.guilds.get(this.guildID).region : "unknown"}`
+							+ `, guildID: ${this.guildID}`
 						)
 						this.songs[0].error =
 							"Hmm. Seems like the song isn't playing."
-							+"\n\n**This is probably an issue with Discord.**"
-							+"\nYou should try changing the server region."
-							+"\n\nTo report a problem, join our server: https://discord.gg/YMkZDsK"
+							+ "\n\n**This is probably an issue with Discord.**"
+							+ "\nYou should try changing the server region."
+							+ "\n\nTo report a problem, join our server: https://discord.gg/YMkZDsK"
 						this._reportError()
 					}
 				}
@@ -78,9 +78,7 @@ class Queue {
 				this.songs[0].error = exception.error
 				this._reportError()
 				// This already automatically continues to the next song, presumably because the "end" event is also fired.
-			} else {
-				console.error(exception)
-			}
+			} else console.error(exception)
 		})
 		/** @type {Discord.Message} */
 		this.np = null
@@ -88,7 +86,7 @@ class Queue {
 		this.npMenu = null
 		this.npUpdater = new utils.FrequencyUpdater(() => {
 			if (this.np) {
-				let embed = this._buildNPEmbed()
+				const embed = this._buildNPEmbed()
 				if (embed) this.np.edit(embed)
 			}
 		})
@@ -108,15 +106,12 @@ class Queue {
 	 * Start playing the top song in the queue.
 	 */
 	async play() {
-		let song = this.songs[0]
+		const song = this.songs[0]
 		if (this.songs[1]) this.songs[1].prepare()
 		await song.prepare()
 		if (!song.error) {
-			if (song.track == "!") {
-				song.error = "`song.track` is ! placeholder. This is a bug."
-			} else if (song.track == null) {
-				song.error = "`song.track` is null or undefined. This is a bug."
-			}
+			if (song.track == "!") song.error = "`song.track` is ! placeholder. This is a bug."
+			else if (song.track == null) song.error = "`song.track` is null or undefined. This is a bug."
 		}
 		if (song.error) {
 			this._reportError()
@@ -132,23 +127,23 @@ class Queue {
 	}
 	_reportError() {
 		const song = this.songs[0]
-		let embed = new Discord.MessageEmbed()
-		.setTitle("We couldn't play that song")
-		.setDescription(
-			`**${song.title}** (ID: ${song.id})`
-			+`\n${song.error}`
-		)
-		.setColor(0xdd2d2d)
+		const embed = new Discord.MessageEmbed()
+			.setTitle("We couldn't play that song")
+			.setDescription(
+				`**${song.title}** (ID: ${song.id})`
+			+ `\n${song.error}`
+			)
+			.setColor(0xdd2d2d)
 		this.textChannel.send(embed)
 	}
 	/**
 	 * Start updating the now playing message.
 	 */
 	_startNPUpdates() {
-		let frequency = this.songs[0].npUpdateFrequency
-		let timeUntilNext5 = frequency - ((Date.now() - this.songStartTime) % frequency)
-		let triggerNow = timeUntilNext5 > 1500
-		//console.log(frequency, Date.now(), this.songStartTime, timeUntilNext5, triggerNow)
+		const frequency = this.songs[0].npUpdateFrequency
+		const timeUntilNext5 = frequency - ((Date.now() - this.songStartTime) % frequency)
+		const triggerNow = timeUntilNext5 > 1500
+		// console.log(frequency, Date.now(), this.songStartTime, timeUntilNext5, triggerNow)
 		this.npUpdater.start(frequency, triggerNow, timeUntilNext5)
 	}
 	/**
@@ -167,31 +162,25 @@ class Queue {
 			// Is auto mode on?
 			if (this.auto) {
 				// Store the current song
-				let lastPlayed = this.songs[0]
+				const lastPlayed = this.songs[0]
 				// Get related
-				let related = await lastPlayed.getRelated()
+				const related = await lastPlayed.getRelated()
 				// Can we play a related song?
 				if (related.length) {
 					this.songs.shift()
 					this.addSong(related[0])
 					ipc.router.send.nextSong(this)
-				}
-				// No related songs. Dissolve.
-				else {
+				} else { // No related songs. Dissolve.
 					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
 					this.auto = false
 					this._clearSongs()
 					this._dissolve()
 				}
-			}
-			// Auto mode is off. Dissolve.
-			else {
+			} else { // Auto mode is off. Dissolve.
 				this._clearSongs()
 				this._dissolve()
 			}
-		}
-		// We have more songs. Move on.
-		else {
+		} else { // We have more songs. Move on.
 			this.songs.shift()
 			ipc.router.send.nextSong(this)
 			this.play()
@@ -224,11 +213,9 @@ class Queue {
 	 * @returns {String?} null on success, string reason on failure
 	 */
 	pause() {
-		if (this.songs[0].noPauseReason) {
-			return this.songs[0].noPauseReason
-		} else if (this.isPaused) {
-			return "Music is already paused. Use `&music resume` to resume."
-		} else {
+		if (this.songs[0].noPauseReason) return this.songs[0].noPauseReason
+		else if (this.isPaused) return "Music is already paused. Use `&music resume` to resume."
+		else {
 			this.pausedAt = Date.now()
 			this.player.pause()
 			this.npUpdater.stop(true)
@@ -243,10 +230,9 @@ class Queue {
 	 * @returns {0|1}
 	 */
 	resume() {
-		if (!this.isPaused) {
-			return 1
-		} else {
-			let pausedTime = Date.now() - this.pausedAt
+		if (!this.isPaused) return 1
+		else {
+			const pausedTime = Date.now() - this.pausedAt
 			this.songStartTime += pausedTime
 			this.pausedAt = null
 			this.player.resume().then(() => {
@@ -262,7 +248,7 @@ class Queue {
 	 */
 	skip(amount) {
 		if (amount) {
-			for (let i = 1; i <= amount-1; i++) { // count from 1 to amount-1, inclusive
+			for (let i = 1; i <= amount - 1; i++) { // count from 1 to amount-1, inclusive
 				this.removeSong(1, true)
 			}
 		}
@@ -293,9 +279,9 @@ class Queue {
 		let position // the actual position to insert into, `undefined` to push
 		if (insert == undefined) { // no insert? just push
 			position = -1
-		} else if (typeof(insert) == "number") { // number? insert into that point
+		} else if (typeof (insert) == "number") { // number? insert into that point
 			position = insert
-		} else if (typeof(insert) == "boolean") { // boolean?
+		} else if (typeof (insert) == "boolean") { // boolean?
 			if (insert) position = 1 // if insert is true, insert
 			else position = -1 // otherwise, push
 		}
@@ -307,9 +293,7 @@ class Queue {
 		if (this.songs.length == 1) {
 			this.play()
 			return 1
-		} else {
-			return 0
-		}
+		} else return 0
 	}
 	/**
 	 * Returns 0 on success.
@@ -325,7 +309,7 @@ class Queue {
 		// Broadcast
 		if (broadcast) ipc.router.send.removeSong(this, index)
 		// Actually remove
-		let removed = this.songs.splice(index, 1)[0]
+		const removed = this.songs.splice(index, 1)[0]
 		if (!removed) return 2
 		return 0
 	}
@@ -338,9 +322,9 @@ class Queue {
 	 * @returns {Promise<0|1>}
 	 */
 	async playRelated(index, insert) {
-		if (typeof(index) != "number" || isNaN(index) || index < 0 || Math.floor(index) != index) return 1
-		let related = await this.songs[0].getRelated()
-		let item = related[index]
+		if (typeof index != "number" || isNaN(index) || index < 0 || Math.floor(index) != index) return 1
+		const related = await this.songs[0].getRelated()
+		const item = related[index]
 		if (!item) return 1
 		this.addSong(item, insert)
 		return 0
@@ -363,14 +347,12 @@ class Queue {
 	 *	Returns null if no songs.
 	 */
 	_buildNPEmbed() {
-		let song = this.songs[0]
+		const song = this.songs[0]
 		if (song) {
 			return new Discord.MessageEmbed()
-			.setDescription(`Now playing: **${song.title}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
-			.setColor(0x36393f)
-		} else {
-			return null
-		}
+				.setDescription(`Now playing: **${song.title}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
+				.setColor(0x36393f)
+		} else return null
 	}
 	/**
 	 * Send a new now playing message and generate reactions on it. Destroy the previous reaction menu.
@@ -379,9 +361,8 @@ class Queue {
 	 * @returns {Promise<void>}
 	 */
 	sendNewNP(force = false) {
-		if (this.np && !force) {
-			return Promise.resolve()
-		} else {
+		if (this.np && !force) return Promise.resolve()
+		else {
 			return this.textChannel.send(this._buildNPEmbed()).then(x => {
 				this.np = x
 				this._makeReactionMenu()
@@ -391,18 +372,18 @@ class Queue {
 	_makeReactionMenu() {
 		if (this.npMenu) this.npMenu.destroy(true)
 		this.npMenu = utils.reactionMenu(this.np, [
-			{emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.togglePlaying("reaction")
-			}},
-			{emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+			} },
+			{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.skip()
-			}},
-			{emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+			} },
+			{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.wrapper.stop()
-			}}
+			} }
 		])
 	}
 	/**
@@ -411,15 +392,13 @@ class Queue {
 	 */
 	voiceStateUpdate(oldState, newState) {
 		// Update own channel
-		if (newState.member.id == client.user.id && newState.channelID != oldState.channelID && newState.channel) {
-			this.voiceChannel = newState.channel
-		}
+		if (newState.member.id == client.user.id && newState.channelID != oldState.channelID && newState.channel) this.voiceChannel = newState.channel
 		// Detect number of users left in channel
-		let count = this.voiceChannel.members.filter(m => !m.user.bot).size
+		const count = this.voiceChannel.members.filter(m => !m.user.bot).size
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
-				this.voiceLeaveWarningMessagePromise = this.textChannel.send("No users left in my voice channel. I will stop playing in "+(this.voiceLeaveTimeout.delay/1000)+" seconds if nobody rejoins.")
+				this.voiceLeaveWarningMessagePromise = this.textChannel.send("No users left in my voice channel. I will stop playing in " + (this.voiceLeaveTimeout.delay / 1000) + " seconds if nobody rejoins.")
 			}
 		} else {
 			this.voiceLeaveTimeout.clear()
@@ -444,39 +423,26 @@ class QueueWrapper {
 	}
 	toggleAuto(context) {
 		this.queue.toggleAuto()
-		let auto = this.queue.auto
-		if (context instanceof Discord.Message) {
-			context.channel.send("Auto mode is now turned "+(auto ? "on" : "off"))
-		} else if (context === "web") {
-			return true
-		}
+		const auto = this.queue.auto
+		if (context instanceof Discord.Message) context.channel.send("Auto mode is now turned " + (auto ? "on" : "off"))
+		else if (context === "web") return true
 	}
 	togglePlaying(context) {
 		if (this.queue.isPaused) return this.resume(context)
 		else return this.pause(context)
 	}
 	pause(context) {
-		let result = this.queue.pause()
+		const result = this.queue.pause()
 		if (result) {
-			if (context instanceof Discord.Message) {
-				context.channel.send(result)
-			} else if (context === "reaction") {
-				this.queue.textChannel.send(result)
-			} else if (context === "web") {
-				return !result
-			}
+			if (context instanceof Discord.Message) context.channel.send(result)
+			else if (context === "reaction") this.queue.textChannel.send(result)
+			else if (context === "web") return !result
 		}
 	}
 	resume(context) {
-		let result = this.queue.resume()
-		if (result == 1) {
-			if (context instanceof Discord.Message) {
-				context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
-			}
-		}
-		if (context === "web") {
-			return !result
-		}
+		const result = this.queue.resume()
+		if (result == 1) if (context instanceof Discord.Message) context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
+		if (context === "web") return !result
 	}
 	skip(amount) {
 		this.queue.skip(amount)
@@ -490,7 +456,7 @@ class QueueWrapper {
 	async showRelated(channel) {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
 		if (this.queue.songs[0].typeWhileGetRelated) channel.sendTyping()
-		let content = await this.queue.songs[0].showRelated()
+		const content = await this.queue.songs[0].showRelated()
 		channel.send(content)
 	}
 	/**
@@ -505,36 +471,28 @@ class QueueWrapper {
 			if (context instanceof Discord.Message) {
 				context.channel.send(
 					"You need to tell me which song to remove. `&music queue remove <number>`"
-					+"\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
+					+ "\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
 				)
-			} else if (context === "web") {
-				return false
-			}
+			} else if (context === "web") return false
 		} else {
-			let result = this.queue.removeSong(index-1, true)
+			const result = this.queue.removeSong(index - 1, true)
 			if (context instanceof Discord.Message) {
 				if (result == 1) {
 					if (index == 1) {
 						context.channel.send(
 							"Item 1 is the currently playing song. Use `&music skip` to skip it, "
-							+"or `&music queue remove 2` if you wanted to remove the song that's up next."
+							+ "or `&music queue remove 2` if you wanted to remove the song that's up next."
 						)
-					} else {
-						context.channel.send("There are "+this.queue.songs.length+" items in the queue. You can only remove items 2-"+this.queue.songs.length+".")
-					}
-				} else {
-					context.react("✅")
-				}
-			} else if (context === "web") {
-				return result !== 1
-			}
+					} else context.channel.send("There are " + this.queue.songs.length + " items in the queue. You can only remove items 2-" + this.queue.songs.length + ".")
+				} else context.react("✅")
+			} else if (context === "web") return result !== 1
 		}
 	}
 	/**
 	 * @param {Discord.TextChannel} channel
 	 */
 	async showInfo(channel) {
-		let content = await this.queue.songs[0].showInfo()
+		const content = await this.queue.songs[0].showInfo()
 		channel.send(content)
 	}
 	/**
@@ -546,7 +504,7 @@ class QueueWrapper {
 	 */
 	async playRelated(index, insert, context) {
 		index--
-		let result = await this.queue.playRelated(index, insert)
+		const result = await this.queue.playRelated(index, insert)
 		if (context instanceof Discord.Message) {
 			if (result == 0) context.react("✅")
 			else if (result == 1) context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
@@ -557,7 +515,7 @@ class QueueWrapper {
 		return this.queue.voiceChannel.members.map(m => ({
 			id: m.id,
 			name: m.displayName,
-			avatar: m.user.avatarURL({format: "png", size: 64}),
+			avatar: m.user.avatarURL({ format: "png", size: 64 }),
 			isAmanda: m.id == client.user.id
 		}))
 	}

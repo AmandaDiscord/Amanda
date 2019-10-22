@@ -1,25 +1,25 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const path = require("path")
-const {PlayerManager} = require("discord.js-lavalink")
+const { PlayerManager } = require("discord.js-lavalink")
 const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
-let {client, config, commands, reloader} = passthrough
+const { client, config, commands, reloader } = passthrough
 
-let lastAttemptedLogins = []
+const lastAttemptedLogins = []
 
 let prefixes = []
 let statusPrefix = "&"
 let starting = true
 if (client.readyAt != null) starting = false
 
-let lavalinknodes = [
-	{host: "amanda.discord-bots.ga", port: 10402, password: config.lavalink_password}
+const lavalinknodes = [
+	{ host: "amanda.discord-bots.ga", port: 10402, password: config.lavalink_password }
 ]
 
-let utils = require("./utilities.js")
+const utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
@@ -38,13 +38,13 @@ utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), d
 })
 utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (reason) => {
 	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`)
-	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now()-lastAttemptedLogins.slice(-1)[0]/1000)} seconds ago.`)
+	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now() - lastAttemptedLogins.slice(-1)[0] / 1000)} seconds ago.`)
 	lastAttemptedLogins.push(Date.now())
 	new Promise(resolve => {
 		if (lastAttemptedLogins.length >= 3) {
-			let oldest = lastAttemptedLogins.shift()
-			let timePassed = Date.now()-oldest
-			let timeout = 30000
+			const oldest = lastAttemptedLogins.shift()
+			const timePassed = Date.now() - oldest
+			const timeout = 30000
 			if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed)
 		}
 		return resolve()
@@ -68,11 +68,10 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
 utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
 	if (newMember.guild.id != "475599038536744960") return
 	if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) {
-		let row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
+		const row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
 		if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1])
 		else return
-	}
-	else return
+	} else return
 })
 
 /**
@@ -81,17 +80,17 @@ utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename
 async function manageMessage(msg) {
 	if (msg.author.bot) return
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`)
-	let prefix = prefixes.find(p => msg.content.startsWith(p))
+	const prefix = prefixes.find(p => msg.content.startsWith(p))
 	if (!prefix) return
 	if (msg.guild) await msg.guild.members.fetch(client.user)
-	let cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
-	let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
-	let cmd = commands.find(c => c.aliases.includes(cmdTxt))
+	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
+	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
+	const cmd = commands.find(c => c.aliases.includes(cmdTxt))
 	/** @type {string} */
 	let langcode
 	/** @type {Lang.Lang} */
 	let lang
-	let self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
+	const self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
 	let server
 	if (msg.guild) server = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "language"])
 	if (self) langcode = self.value
@@ -110,14 +109,14 @@ async function manageMessage(msg) {
 				if (e.code == 50013) return
 			}
 			// Report to original channel
-			let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e))
-			let embed = new Discord.MessageEmbed()
-			.setDescription(msgTxt)
-			.setColor(0xdd2d2d)
+			const msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n` + (await utils.stringify(e))
+			const embed = new Discord.MessageEmbed()
+				.setDescription(msgTxt)
+				.setColor(0xdd2d2d)
 			if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
-			let reportChannel = client.channels.get("512869106089852949")
+			const reportChannel = client.channels.get("512869106089852949")
 			if (reportChannel instanceof Discord.TextChannel && reportChannel.permissionsFor(client.user).has("VIEW_CHANNEL")) {
 				embed.setTitle("Command error occurred.")
 				let details = [
@@ -129,7 +128,7 @@ async function manageMessage(msg) {
 					details = details.concat([
 						["Guild", msg.guild.name],
 						["Guild ID", msg.guild.id],
-						["Channel", "#"+msg.channel.name],
+						["Channel", "#" + msg.channel.name],
 						["Channel ID", msg.channel.id]
 					])
 				} else {
@@ -137,32 +136,32 @@ async function manageMessage(msg) {
 						["DM", "Yes"]
 					])
 				}
-				let maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
-				let detailsString = details.map(row =>
-					"`"+row[0]+" ​".repeat(maxLength-row[0].length)+"` "+row[1] //SC: space + zwsp, wide space
+				const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
+				const detailsString = details.map(row =>
+					"`" + row[0] + " ​".repeat(maxLength - row[0].length) + "` " + row[1] // SC: space + zwsp, wide space
 				).join("\n")
 				embed.addField("Details", detailsString)
-				embed.addField("Message content", "```\n"+msg.content.replace(/`/g, "ˋ")+"```") //SC: IPA modifier grave U+02CB
+				embed.addField("Message content", "```\n" + msg.content.replace(/`/g, "ˋ") + "```") // SC: IPA modifier grave U+02CB
 				reportChannel.send(embed)
 			}
 		}
 	} else return
 }
 
-async function manageReady() {
-	let firstStart = starting
+function manageReady() {
+	const firstStart = starting
 	starting = false
 	utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
-		console.log("Loaded "+prefixes.length+" prefixes: "+prefixes.join(" "))
+		console.log("Loaded " + prefixes.length + " prefixes: " + prefixes.join(" "))
 		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
 	})
 	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
-		console.log(client.user.id+"/"+client.options.shards)
-		lavalinknodes.forEach(node => node.resumeKey = client.user.id+"/"+client.options.shards)
+		console.log(client.user.id + "/" + client.options.shards)
+		lavalinknodes.forEach(node => node.resumeKey = client.user.id + "/" + client.options.shards)
 		client.lavalink = new PlayerManager(this, lavalinknodes, {
 			user: client.user.id,
 			shards: client.options.totalShardCount
@@ -171,17 +170,16 @@ async function manageReady() {
 			console.log("Lavalink ready")
 		})
 		client.lavalink.on("error", (self, error) => {
-			console.error("Failed to initialise Lavalink: "+error.message)
+			console.error("Failed to initialise Lavalink: " + error.message)
 		})
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(row => {
-				let channel = client.channels.get(row.channelID)
-				if (channel instanceof Discord.TextChannel) {
-					channel.send("<@"+row.mentionID+"> Restarted! Uptime: "+utils.shortTime(process.uptime(), "sec"))
-				} else {
-					let user = client.users.get(row.mentionID)
+				const channel = client.channels.get(row.channelID)
+				if (channel instanceof Discord.TextChannel) channel.send("<@" + row.mentionID + "> Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
+				else {
+					const user = client.users.get(row.mentionID)
 					if (!user) console.log(`Could not notify ${row.mentionID}`)
-					else user.send("Restarted! Uptime: "+utils.shortTime(process.uptime(), "sec"))
+					else user.send("Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
 				}
 			})
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])
@@ -208,14 +206,14 @@ function reactionEvent(data, channel, user) {
 			name: string
 	*/
 	// Set up vars
-	let emoji = data.emoji
-	let menu = passthrough.reactionMenus.get(data.message_id)
+	const emoji = data.emoji
+	const menu = passthrough.reactionMenus.get(data.message_id)
 	// Quick conditions
 	if (user.id == client.user.id) return
 	if (!menu) return
 	// We now have a menu
-	let msg = menu.message
-	let action = menu.actions.find(a => utils.fixEmoji(a.emoji) == utils.fixEmoji(emoji))
+	const msg = menu.message
+	const action = menu.actions.find(a => utils.fixEmoji(a.emoji) == utils.fixEmoji(emoji))
 	// Make sure the emoji is actually an action
 	if (!action) return
 	// Make sure the user is allowed
@@ -226,7 +224,7 @@ function reactionEvent(data, channel, user) {
 	// Actually do stuff
 	switch (action.actionType) {
 	case "reply":
-		msg.channel.send(user.toString()+" "+action.actionData)
+		msg.channel.send(user.toString() + " " + action.actionData)
 		break
 	case "edit":
 		msg.edit(action.actionData)

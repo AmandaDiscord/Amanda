@@ -1,11 +1,11 @@
-//@ts-check
+// @ts-check
 
 const fs = require("fs")
 const path = require("path")
 const pj = path.join
 
-function localPath(path) {
-	return pj(__dirname, "..", path)
+function localPath(dir) {
+	return pj(__dirname, "..", dir)
 }
 
 const currentYear = new Date().getFullYear()
@@ -24,10 +24,10 @@ module.exports = class Reloader {
 		filenames.forEach(filename => {
 			filename = localPath(filename)
 			if (!this.watchers.has(filename)) {
-				console.log("Watching "+filename)
+				console.log("Watching " + filename)
 				this.watchers.set(filename,
 					fs.watchFile(filename, { interval: currentYear }, () => {
-						console.log("Changed "+filename)
+						console.log("Changed " + filename)
 						this._doSync(filename)
 					})
 				)
@@ -53,11 +53,12 @@ module.exports = class Reloader {
 	 */
 	useSync(filename, object) {
 		filename = localPath(filename)
-		if (!this.watchers.has(filename)) throw new Error(
-			`Reloader: asked to keep object in sync with ${filename}, `
-			+`but that file is not being watched.`
-		)
-		this.syncers.push({filename, object})
+		if (!this.watchers.has(filename)) {
+			throw new Error(
+				`Reloader: asked to keep object in sync with ${filename}, `
+			+ "but that file is not being watched.")
+		}
+		this.syncers.push({ filename, object })
 		return this
 	}
 	/**
@@ -67,9 +68,9 @@ module.exports = class Reloader {
 	 */
 	_doSync(filename) {
 		this.reloadEvent.emit(path.basename(filename))
-		let syncers = this.syncers.filter(o => o.filename == filename)
+		const syncers = this.syncers.filter(o => o.filename == filename)
 		delete require.cache[require.resolve(filename)]
-		let result = require(filename)
+		const result = require(filename)
 		syncers.forEach(syncer => Object.assign(syncer.object, result))
 	}
 }

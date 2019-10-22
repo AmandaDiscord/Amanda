@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const reactionMenus = require("./reactionmenus")
@@ -15,12 +15,13 @@ class ReactionMenu {
 		reactionMenus.set(this.message.id, this)
 		this.react()
 	}
-	async react() {
-		for (let a of this.actions) {
-			let promise = this.message.react(a.emoji)
+	react() {
+		for (const a of this.actions) {
+			const promise = this.message.react(a.emoji)
 			promise.then(reaction => {
 				a.messageReaction = reaction
 			})
+			// eslint-disable-next-line no-empty-function
 			promise.catch(() => {})
 		}
 	}
@@ -31,11 +32,8 @@ class ReactionMenu {
 	destroy(remove) {
 		reactionMenus.delete(this.message.id)
 		if (remove) {
-			if (this.message.channel.type == "text") {
-				this._removeAll()
-			} else if (this.message.channel.type == "dm") {
-				this._removeEach()
-			}
+			if (this.message.channel.type == "text") this._removeAll()
+			else if (this.message.channel.type == "dm") this._removeEach()
 		}
 	}
 	/**
@@ -52,6 +50,7 @@ class ReactionMenu {
 	_removeEach() {
 		this.actions.forEach(a => {
 			if (!a.messageReaction) return
+			// eslint-disable-next-line no-empty-function
 			a.messageReaction.users.remove().catch(() => {})
 		})
 	}

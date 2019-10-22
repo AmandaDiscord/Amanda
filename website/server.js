@@ -1,11 +1,11 @@
-//@ts-check
+// @ts-check
 
 const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
 const Reloader = require("../modules/hotreload")
-require("dnscache")({enable: true})
+require("dnscache")({ enable: true })
 
 const passthrough = require("./passthrough")
 passthrough.config = config
@@ -13,7 +13,7 @@ passthrough.config = config
 const reloader = new Reloader()
 passthrough.reloader = reloader
 
-const snow = new Snow(config.bot_token, {disableEveryone: true})
+const snow = new Snow(config.bot_token, { disableEveryone: true })
 snow.requestHandler.on("requestError", console.error)
 passthrough.snow = snow
 
@@ -32,10 +32,10 @@ passthrough.ipc = ipc
 
 const server = pinski({
 	pageHandlers: [
-		{web: "/", local: "pug/home.pug", type: "pug"},
-		{web: "/main.css", local: "sass/main.sass", type: "sass"},
-		{web: "/animation_demo.css", local: "sass/animation_demo.sass", type: "sass"},
-		{web: "/animation_demo", local: "web/pug/animation_demo.pug", type: "pug"}
+		{ web: "/", local: "pug/home.pug", type: "pug" },
+		{ web: "/main.css", local: "sass/main.sass", type: "sass" },
+		{ web: "/animation_demo.css", local: "sass/animation_demo.sass", type: "sass" },
+		{ web: "/animation_demo", local: "web/pug/animation_demo.pug", type: "pug" }
 	],
 	pugDir: "pug",
 	pugIncludeDirs: ["pug/includes"],

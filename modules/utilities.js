@@ -1,17 +1,17 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const events = require("events")
 const util = require("util")
 /** @type import("jimp").default */
-//@ts-ignore
+// @ts-ignore
 const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
 
 const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
-let {client, db, reloadEvent} = passthrough
+const { client, db, reloadEvent } = passthrough
 
 const startingCoins = 5000
 
@@ -58,7 +58,7 @@ const utils = {
 					try {
 						this.user.send(content, options).then(resolve)
 					} catch (reason) {
-						reject(`${this.user.tag} cannot recieve messsages from this client`)
+						reject(new Error(`${this.user.tag} cannot recieve messsages from this client`))
 					}
 				})
 			})
@@ -115,10 +115,10 @@ const utils = {
 		 */
 		save(name, type, value) {
 			if (type == "file") {
-				let promise = Jimp.read(value)
+				const promise = Jimp.read(value)
 				this.savePromise(name, promise)
 			} else if (type == "font") {
-				let promise = Jimp.loadFont(value)
+				const promise = Jimp.loadFont(value)
 				this.savePromise(name, promise)
 			}
 		}
@@ -137,7 +137,7 @@ const utils = {
 		 * @returns {Promise<any>}
 		 */
 		get(name) {
-			let value = this.store.get(name)
+			const value = this.store.get(name)
 			if (value instanceof Promise) return value
 			else return Promise.resolve(value)
 		}
@@ -146,7 +146,7 @@ const utils = {
 		 * @returns {Promise<Map<string, any>>}
 		 */
 		getAll(names) {
-			let result = new Map()
+			const result = new Map()
 			return Promise.all(names.map(name =>
 				this.get(name).then(value => result.set(name, value))
 			)).then(() => result)
@@ -162,11 +162,11 @@ const utils = {
 		 */
 		"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 			if (!connection) connection = db
-			if (prepared !== undefined && typeof(prepared) != "object") prepared = [prepared]
+			if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
 			return new Promise((resolve, reject) => {
 				if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
 				connection.execute(string, prepared).then(result => {
-					let rows = result[0]
+					const rows = result[0]
 					resolve(rows)
 				}).catch(err => {
 					console.error(err)
@@ -209,25 +209,25 @@ const utils = {
 			}*/
 			if (options) {
 				if (typeof options == "object") {
-					let { basic } = options
+					const { basic } = options
 					if (basic) {
-						let info = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", userID)
+						const info = await utils.sql.get("SELECT * FROM waifu WHERE userID =?", userID)
 						// @ts-ignore
 						return info
 					}
 				}
 			}
-			let [meRow, claimerRow, receivedGifts, sentGifts] = await Promise.all([
+			const [meRow, claimerRow, receivedGifts, sentGifts] = await Promise.all([
 				utils.sql.get("SELECT waifuID, price FROM waifu WHERE userID = ?", userID),
 				utils.sql.get("SELECT userID, price FROM waifu WHERE waifuID = ?", userID),
 				utils.sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
 				utils.sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
 			])
-			let claimer = claimerRow ? await client.users.fetch(claimerRow.userID) : undefined
-			let price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0
-			let waifu = meRow ? await client.users.fetch(meRow.waifuID) : undefined
-			let waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0
-			let gifts = {
+			const claimer = claimerRow ? await client.users.fetch(claimerRow.userID) : undefined
+			const price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0
+			const waifu = meRow ? await client.users.fetch(meRow.waifuID) : undefined
+			const waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0
+			const gifts = {
 				received: {
 					list: receivedGifts.map(g => g.type),
 					emojis: receivedGifts.map(g => utils.waifuGifts[g.type].emoji).join("").replace(/(.{10})/g, "$1\n").trim()
@@ -262,7 +262,7 @@ const utils = {
 		 * @param {number} amount
 		 */
 		transact: async function(user, amount) {
-			let waifu = await this.get(user, { basic: true })
+			const waifu = await this.get(user, { basic: true })
 			void await utils.sql.all("UPDATE waifu SET price =? WHERE userID =?", [waifu.price + amount, user])
 		}
 	},
@@ -272,7 +272,7 @@ const utils = {
 		 * @returns {Promise<number>}
 		 */
 		"get": async function(userID) {
-			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
+			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
 			if (row) return row.coins
 			else {
 				await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins])
@@ -284,24 +284,18 @@ const utils = {
 		 * @param {number} value
 		 */
 		"set": async function(userID, value) {
-			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
-			if (row) {
-				void utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID])
-			} else {
-				void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value])
-			}
+			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
+			if (row) void utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID])
+			else void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value])
 		},
 		/**
 		 * @param {string} userID
 		 * @param {number} value
 		 */
 		"award": async function(userID, value) {
-			let row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
-			if (row) {
-				void await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID])
-			} else {
-				void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value])
-			}
+			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
+			if (row) void await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID])
+			else void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value])
 		}
 	},
 	waifuGifts: {
@@ -355,11 +349,11 @@ const utils = {
 	 * @param {(...args: Array<any>) => any} code
 	 */
 	addTemporaryListener: function(target, name, filename, code) {
-		console.log("added event "+name)
+		console.log("added event " + name)
 		target.on(name, code)
 		reloadEvent.once(filename, () => {
 			target.removeListener(name, code)
-			console.log("removed event "+ name)
+			console.log("removed event " + name)
 		})
 	},
 	/**
@@ -379,14 +373,12 @@ const utils = {
 	 */
 	cooldownManager: async function(userID, command, info) {
 		let winChance = info.max
-		let cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command])
+		const cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command])
 		if (cooldown) {
-			winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now()-cooldown.date)/info.regen.time)*info.regen.amount))
-			let newValue = winChance - info.step
+			winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now() - cooldown.date) / info.regen.time) * info.regen.amount))
+			const newValue = winChance - info.step
 			utils.sql.all("UPDATE MoneyCooldown SET date = ?, value = ? WHERE userID = ? AND command = ?", [Date.now(), newValue, userID, command])
-		} else {
-			utils.sql.all("INSERT INTO MoneyCooldown VALUES (NULL, ?, ?, ?, ?)", [userID, command, Date.now(), info.max - info.step])
-		}
+		} else utils.sql.all("INSERT INTO MoneyCooldown VALUES (NULL, ?, ?, ?, ?)", [userID, command, Date.now(), info.max - info.step])
 		return winChance
 	},
 	/**
@@ -397,13 +389,14 @@ const utils = {
 	 */
 	progressBar: function(length, value, max, text) {
 		if (!text) text = ""
-		let textPosition = Math.floor(length/2) - Math.ceil(text.length/2) + 1
+		const textPosition = Math.floor(length / 2) - Math.ceil(text.length / 2) + 1
 		let result = ""
 		for (let i = 1; i <= length; i++) {
-			if (i >= textPosition && i < textPosition+text.length) {
-				result += text[i-textPosition]
-			} else {
-				if (value/max*length >= i) result += "="
+			if (i >= textPosition && i < textPosition + text.length)
+				result += text[i - textPosition]
+			else {
+				// eslint-disable-next-line no-lonely-if
+				if (value / max * length >= i) result += "="
 				else result += " ​" // space + zwsp to prevent shrinking
 			}
 		}
@@ -419,24 +412,21 @@ const utils = {
 		let result
 		if (data === undefined) result = "(undefined)"
 		else if (data === null) result = "(null)"
-		else if (typeof(data) == "function") result = "(function)"
-		else if (typeof(data) == "string") result = `"${data}"`
-		else if (typeof(data) == "number") result = data.toString()
+		else if (typeof (data) == "function") result = "(function)"
+		else if (typeof (data) == "string") result = `"${data}"`
+		else if (typeof (data) == "number") result = data.toString()
 		else if (data instanceof Promise) return utils.stringify(await data, depth)
 		else if (data.constructor && data.constructor.name && data.constructor.name.toLowerCase().includes("error")) {
-			let errorObject = {}
+			const errorObject = {}
 			Object.entries(data).forEach(e => {
 				errorObject[e[0]] = e[1]
 			})
-			result = "```\n"+data.stack+"``` "+(await utils.stringify(errorObject))
-		} else result = "```js\n"+util.inspect(data, { depth: depth })+"```"
+			result = "```\n" + data.stack + "``` " + (await utils.stringify(errorObject))
+		} else result = "```js\n" + util.inspect(data, { depth: depth }) + "```"
 
 		if (result.length >= 2000) {
-			if (result.startsWith("```")) {
-				result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")+"…```"
-			} else {
-				result = result.slice(0, 1998)+"…"
-			}
+			if (result.startsWith("```")) result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "") + "…```"
+			else result = result.slice(0, 1998) + "…"
 		}
 		return result
 	},
@@ -446,9 +436,9 @@ const utils = {
 	 * @param {string} seperator
 	 */
 	getSixTime: function(when, seperator) {
-		let d = new Date(when || Date.now())
+		const d = new Date(when || Date.now())
 		if (!seperator) seperator = ""
-		return d.getHours().toString().padStart(2, "0")+seperator+d.getMinutes().toString().padStart(2, "0")+seperator+d.getSeconds().toString().padStart(2, "0")
+		return d.getHours().toString().padStart(2, "0") + seperator + d.getMinutes().toString().padStart(2, "0") + seperator + d.getSeconds().toString().padStart(2, "0")
 	},
 
 	/**
@@ -464,10 +454,10 @@ const utils = {
 		let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length) // idk how to fix this
 		from = Math.max(from, 1)
 		to = Math.min(items.length, to)
-		if (startString) items = items.slice(from-1, to)
-		if (shuffle) {
+		if (startString) items = items.slice(from - 1, to)
+		if (shuffle)
 			utils.arrayShuffle(items)
-		}
+
 		if (!startString && !shuffle) items = items.slice() // make copy of array for consistent behaviour
 		return items
 	},
@@ -489,9 +479,9 @@ const utils = {
 		embed.setColor(0x36393f)
 		embed.setFooter(`Type a number from 1-${items.length} to select that item`)
 		// Send embed
-		let selectmessage = await channel.send(utils.contentify(channel, embed))
+		const selectmessage = await channel.send(utils.contentify(channel, embed))
 		// Make collector
-		let collector = channel.createMessageCollector((m => m.author.id == authorID), {max: 1, time: 60000})
+		const collector = channel.createMessageCollector((m => m.author.id == authorID), { max: 1, time: 60000 })
 		return collector.next.then(newmessage => {
 			// Collector got a message
 			let index = parseInt(newmessage.content)
@@ -501,7 +491,7 @@ const utils = {
 			// Is index in bounds?
 			if (index < 0 || index >= items.length) throw new Error() // just head off to the catch
 			// Edit to success
-			embed.setDescription("» "+items[index])
+			embed.setDescription("» " + items[index])
 			embed.setFooter("")
 			selectmessage.edit(utils.contentify(selectmessage.channel, embed))
 			return index
@@ -517,14 +507,11 @@ const utils = {
 
 	/** @param {Date} date */
 	upcomingDate: function(date) {
-		let currentHours = date.getUTCHours()
+		const currentHours = date.getUTCHours()
 		let textHours = ""
-		if (currentHours < 12) {
-			textHours += currentHours + " AM"
-		} else {
-			textHours = (currentHours - 12) + " PM"
-		}
-		return date.toUTCString().split(" ").slice(0, 4).join(" ")+" at "+textHours+" UTC"
+		if (currentHours < 12) textHours += currentHours + " AM"
+		else textHours = (currentHours - 12) + " PM"
+		return date.toUTCString().split(" ").slice(0, 4).join(" ") + " at " + textHours + " UTC"
 	},
 
 	compactRows: {
@@ -536,12 +523,12 @@ const utils = {
 		 */
 		removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
 			let currentLength = 0
-			let maxItems = 20
+			const maxItems = 20
 			for (let i = 0; i < rows.length; i++) {
-				let row = rows[i]
-				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
+				const row = rows[i]
+				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength)
 					return rows.slice(0, i).concat([endString])
-				}
+
 				currentLength += row.length + joinLength
 			}
 			return rows
@@ -556,13 +543,13 @@ const utils = {
 		removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
 			let currentLength = 0
 			let currentItems = 0
-			let maxItems = 20
+			const maxItems = 20
 			/**
 			 * Holds items for the left and right sides.
 			 * Items should flow into the left faster than the right.
 			 * At the end, the sides will be combined into the final list.
 			 */
-			let reconstruction = new Map([
+			const reconstruction = new Map([
 				["left", []],
 				["right", []]
 			])
@@ -572,13 +559,13 @@ const utils = {
 				return rightOffset * 3 > leftOffset ? "left" : "right"
 			}
 			while (currentItems < rows.length) {
-				let direction = getNextDirection()
+				const direction = getNextDirection()
 				let row
 				if (direction == "left") row = rows[leftOffset++]
 				else row = rows[rows.length - 1 - rightOffset++]
-				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
+				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength)
 					return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
-				}
+
 				reconstruction.get(direction).push(row)
 				currentLength += row.length + joinLength
 				currentItems++
@@ -594,19 +581,19 @@ const utils = {
 	 * @param {number} itemsPerPageTolerance
 	 */
 	createPages: function(rows, maxLength, itemsPerPage, itemsPerPageTolerance) {
-		let pages = []
+		const pages = []
 		let currentPage = []
 		let currentPageLength = 0
-		let currentPageMaxLength = maxLength
+		const currentPageMaxLength = maxLength
 		for (let i = 0; i < rows.length; i++) {
-			let row = rows[i]
-			if ((currentPage.length >= itemsPerPage && rows.length-i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
+			const row = rows[i]
+			if ((currentPage.length >= itemsPerPage && rows.length - i > itemsPerPageTolerance) || currentPageLength + row.length + 1 > currentPageMaxLength) {
 				pages.push(currentPage)
 				currentPage = []
 				currentPageLength = 0
 			}
 			currentPage.push(row)
-			currentPageLength += row.length+1
+			currentPageLength += row.length + 1
 		}
 		pages.push(currentPage)
 		return pages
@@ -619,15 +606,15 @@ const utils = {
 	 * @param {string} spacer
 	 * @returns {string[]}
 	 */
-	tableifyRows: function(rows, align, surround = () => "", spacer = " ") { //SC: en space
+	tableifyRows: function(rows, align, surround = () => "", spacer = " ") { // SC: en space
 		/** @type {string[]} */
-		let output = []
-		let maxLength = []
+		const output = []
+		const maxLength = []
 		for (let i = 0; i < rows[0].length; i++) {
 			let thisLength = 0
-			for (let j = 0; j < rows.length; j++) {
+			for (let j = 0; j < rows.length; j++)
 				if (thisLength < rows[j][i].length) thisLength = rows[j][i].length
-			}
+
 			maxLength.push(thisLength)
 		}
 		for (let i = 0; i < rows.length; i++) {
@@ -636,18 +623,18 @@ const utils = {
 				if (align[j] == "left" || align[j] == "right") {
 					line += surround(i)
 					if (align[j] == "left") {
-						let pad = " ​"
-						let padding = pad.repeat(maxLength[j] - rows[i][j].length)
+						const pad = " ​"
+						const padding = pad.repeat(maxLength[j] - rows[i][j].length)
 						line += rows[i][j] + padding
 					} else if (align[j] == "right") {
-						let pad = "​ "
-						let padding = pad.repeat(maxLength[j] - rows[i][j].length)
+						const pad = "​ "
+						const padding = pad.repeat(maxLength[j] - rows[i][j].length)
 						line += padding + rows[i][j]
 					}
 					line += surround(i)
-				} else {
+				} else
 					line += rows[i][j]
-				}
+
 				if (j < rows[0].length - 1) line += spacer
 			}
 			output.push(line)
@@ -662,16 +649,16 @@ const utils = {
 	 */
 	createPagination: function(channel, title, rows, align, maxLength) {
 		let alignedRows = utils.tableifyRows([title].concat(rows), align, () => "`")
-		let formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => "__**`"+sub+"`**__")
+		const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => "__**`" + sub + "`**__")
 		alignedRows = alignedRows.slice(1)
-		let pages = utils.createPages(alignedRows, maxLength-formattedTitle.length-1, 16, 4)
+		const pages = utils.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 		utils.paginate(channel, pages.length, page => {
 			return utils.contentify(channel,
 				new Discord.MessageEmbed()
-				.setTitle("Viewing all playlists")
-				.setColor(0x36393f)
-				.setDescription(formattedTitle + "\n" + pages[page].join("\n"))
-				.setFooter(`Page ${page+1} of ${pages.length}`)
+					.setTitle("Viewing all playlists")
+					.setColor(0x36393f)
+					.setDescription(formattedTitle + "\n" + pages[page].join("\n"))
+					.setFooter(`Page ${page + 1} of ${pages.length}`)
 			)
 		})
 	},
@@ -683,28 +670,29 @@ const utils = {
 	 */
 	paginate: async function(channel, pageCount, callback) {
 		let page = 0
-		let msg = await channel.send(callback(page))
+		const msg = await channel.send(callback(page))
 		if (pageCount > 1) {
 			let reactionMenuExpires
-			let reactionMenu = utils.reactionMenu(msg, [
-				{emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
+			const reactionMenu = utils.reactionMenu(msg, [
+				{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
 					page--
-					if (page < 0) page = pageCount-1
+					if (page < 0) page = pageCount - 1
 					msg.edit(callback(page))
 					makeTimeout()
-				}},
-				{emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
+				} },
+				{ emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
 					page++
 					if (page >= pageCount) page = 0
 					msg.edit(callback(page))
 					makeTimeout()
-				}}
+				} }
 			])
+			// eslint-disable-next-line no-inner-declarations
 			function makeTimeout() {
 				clearTimeout(reactionMenuExpires)
 				reactionMenuExpires = setTimeout(() => {
 					reactionMenu.destroy(true)
-				}, 10*60*1000)
+				}, 10 * 60 * 1000)
 			}
 			makeTimeout()
 		}
@@ -714,20 +702,20 @@ const utils = {
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {string|Discord.MessageEmbed} content
 	 */
-	contentify: function (channel, content) {
+	contentify: function(channel, content) {
 		if (channel.type != "text") return content
 		let value = ""
 		let permissions
 		if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user)
 		if (content instanceof Discord.MessageEmbed) {
 			if (permissions && !permissions.has("EMBED_LINKS")) {
-				value = `${content.author?content.author.name+"\n":""}${content.title?`${content.title}${content.url?` - ${content.url}`:""}\n`:""}${content.description?content.description+"\n":""}${content.fields.length>0?content.fields.map(f => f.name+"\n"+f.value).join("\n")+"\n":""}${content.image?content.image.url+"\n":""}${content.footer?content.footer.text:""}`
-				if (value.length > 2000) value = value.slice(0, 1960)+"…"
-				value+="\nPlease allow me to embed content"
+				value = `${content.author ? content.author.name + "\n" : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? content.description + "\n" : ""}${content.fields.length > 0 ? content.fields.map(f => f.name + "\n" + f.value).join("\n") + "\n" : ""}${content.image ? content.image.url + "\n" : ""}${content.footer ? content.footer.text : ""}`
+				if (value.length > 2000) value = value.slice(0, 1960) + "…"
+				value += "\nPlease allow me to embed content"
 			} else return content
-		} else if (typeof(content) == "string") {
+		} else if (typeof (content) == "string") {
 			value = content
-			if (value.length > 2000) value = value.slice(0, 1998)+"…"
+			if (value.length > 2000) value = value.slice(0, 1998) + "…"
 		}
 		return value
 	},
@@ -816,7 +804,7 @@ const utils = {
 	 * @template T
 	 */
 	arrayRandom: function(array) {
-		let index = Math.floor(Math.random()*array.length)
+		const index = Math.floor(Math.random() * array.length)
 		return array[index]
 	},
 
@@ -846,13 +834,13 @@ const utils = {
 		if (scale.toLowerCase() == "ms") number = Math.floor(number)
 		else if (scale.toLowerCase() == "sec") number = Math.floor(number * 1000)
 		else throw new TypeError("Invalid scale provided")
-		let days = Math.floor(number / 1000 / 60 / 60 / 24)
+		const days = Math.floor(number / 1000 / 60 / 60 / 24)
 		number -= days * 1000 * 60 * 60 * 24
-		let hours = Math.floor(number / 1000 / 60 / 60)
+		const hours = Math.floor(number / 1000 / 60 / 60)
 		number -= hours * 1000 * 60 * 60
-		let mins = Math.floor(number / 1000 / 60)
+		const mins = Math.floor(number / 1000 / 60)
 		number -= mins * 1000 * 60
-		let secs = Math.floor(number / 1000)
+		const secs = Math.floor(number / 1000)
 		let timestr = ""
 		if (days > 0) timestr += days + "d "
 		if (hours > 0) timestr += hours + "h "
@@ -867,7 +855,7 @@ const utils = {
 	 * @param {boolean} [animated]
 	 */
 	function(id, animated = false) {
-		let ext = animated ? "gif" : "png"
+		const ext = animated ? "gif" : "png"
 		return `https://cdn.discordapp.com/emojis/${id}.${ext}`
 	},
 
@@ -879,6 +867,7 @@ const utils = {
 	 * @returns {Promise<Discord.User>}
 	 */
 	function(message, string, self = false) {
+		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async resolve => {
 			let permissions
 			if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(this.user)
@@ -897,28 +886,30 @@ const utils = {
 				else return resolve(null)
 			} else {
 				if (client.users.get(string)) return resolve(client.users.get(string))
-				let list = []
+				const list = []
 				matchFunctions.forEach(i => client.users.filter(u => i(u)).forEach(us => { if (!list.includes(us) && list.length < 10) list.push(us) }))
 				if (list.length == 1) return resolve(list[0])
 				if (list.length == 0) return resolve(null)
-				let embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i+1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+				const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
 				let content
 				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.footer.text}`
 				else content = embed
-				let selectmessage = await message.channel.send(content)
-				let collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), {max: 1, time: 60000})
+				const selectmessage = await message.channel.send(content)
+				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
+				// eslint-disable-next-line no-return-await
 				return await collector.next.then(newmessage => {
-					let index = parseInt(newmessage.content)
-					if (!index || !list[index-1]) return resolve(null)
+					const index = parseInt(newmessage.content)
+					if (!index || !list[index - 1]) return resolve(null)
 					selectmessage.delete()
+					// eslint-disable-next-line no-empty-function
 					if (message.channel.type != "dm") newmessage.delete().catch(() => {})
-					return resolve(list[index-1])
+					return resolve(list[index - 1])
 				}).catch(() => {
-					let content
+					let cont
 					embed.setTitle("User selection cancelled").setDescription("").setFooter("")
-					if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.footer.text}`
-					else content = embed
-					selectmessage.edit(content)
+					if (permissions && !permissions.has("EMBED_LINKS")) cont = `${embed.title}\n${embed.description}\n${embed.footer.text}`
+					else cont = embed
+					selectmessage.edit(cont)
 					return resolve(null)
 				})
 			}
@@ -932,7 +923,7 @@ const utils = {
 	 */
 	fixEmoji: function(emoji) {
 		if (emoji && emoji.name) {
-			if (emoji.id != null) return emoji.name+":"+emoji.id
+			if (emoji.id != null) return emoji.name + ":" + emoji.id
 			else return emoji.name
 		}
 		return emoji
@@ -949,13 +940,13 @@ const utils = {
 		let reaction
 		if (emoji.id) {
 			// Custom emoji, has name and ID
-			reaction = emoji.name+":"+emoji.id
+			reaction = emoji.name + ":" + emoji.id
 		} else {
 			// Default emoji, has name only
 			reaction = encodeURIComponent(emoji.name)
 		}
-		//@ts-ignore: client.api is not documented
-		let promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
+		// @ts-ignore: client.api is not documented
+		const promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
 		promise.catch(() => console.error)
 		return promise
 	},
@@ -973,8 +964,8 @@ const utils = {
 	 */
 	replace: function(string, properties = {}) {
 		Object.keys(properties).forEach(item => {
-			const index = string.indexOf("%"+item)
-			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index+item.length+1)
+			const index = string.indexOf("%" + item)
+			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
 		})
 		return string
 	}

@@ -1,11 +1,11 @@
-//@ts-check
+// @ts-check
 
 const ipc = require("node-ipc")
 
 const passthrough = require("../../passthrough")
-const {client, config, reloader} = passthrough
+const { client, config, reloader } = passthrough
 
-let IPCRouter = require("./ipcbotrouter.js")
+const IPCRouter = require("./ipcbotrouter.js")
 reloader.setupWatch(["./modules/ipc/ipcbotrouter.js"])
 reloader.useSync("./modules/ipc/ipcbotrouter.js", IPCRouter)
 
@@ -25,20 +25,17 @@ class IPC {
 	}
 
 	addRouter() {
-		//console.log("Adding router")
+		// console.log("Adding router")
 		this.router = new IPCRouter.router(this)
 	}
 
 	connect() {
 		let shards
 		if (client.options.shards) {
-			if (typeof client.options.shards === "number") {
-				shards = [client.options.shards]
-			} else {
-				shards = client.options.shards
-			}
+			if (typeof client.options.shards === "number") shards = [client.options.shards]
+			else shards = client.options.shards
 		}
-		let shard = "shard-"+shards.join("_")
+		const shard = "shard-" + shards.join("_")
 
 		ipc.config.id = shard
 		ipc.connectToNet("website", () => {
@@ -47,7 +44,7 @@ class IPC {
 				this.socket.on("message", this.receive.bind(this))
 			})
 			this.socket.on("connect", () => {
-				this.socket.emit("shard", {total: client.options.totalShardCount, me: shards})
+				this.socket.emit("shard", { total: client.options.totalShardCount, me: shards })
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {
@@ -60,21 +57,19 @@ class IPC {
 	 * Called when the socket receives raw data.
 	 */
 	receive(raw) {
-		let response = this.router[raw.op](raw.data)
+		const response = this.router[raw.op](raw.data)
 		if (response instanceof Promise) {
 			response.then(data => {
 				this.reply(raw, data)
 			})
-		} else {
-			this.reply(raw, response)
-		}
+		} else this.reply(raw, response)
 	}
 
 	/**
 	 * Reply to raw data with response data.
 	 */
 	reply(rawOriginal, data) {
-		let rawResponse = {_id: rawOriginal._id, data: data}
+		const rawResponse = { _id: rawOriginal._id, data: data }
 		this.send(rawResponse)
 	}
 

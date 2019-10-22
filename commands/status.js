@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const passthrough = require("../passthrough")
 const { client, reloader, commands } = passthrough
@@ -6,8 +6,8 @@ const { client, reloader, commands } = passthrough
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-const refreshTime = 15*60*1000
-const updateTime = 5*60*1000
+const refreshTime = 15 * 60 * 1000
+const updateTime = 5 * 60 * 1000
 
 let messages, ranges, users, prefix, updateInterval
 let enqueued
@@ -19,19 +19,19 @@ commands.assign({
 		category: "admin",
 		aliases: ["announce"],
 		process: async function(msg, suffix) {
-			let allowed = await utils.hasPermission(msg.author, "eval")
+			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (enqueued) {
 				clearTimeout(enqueued)
 				enqueued = undefined
 			}
-			let args = suffix.split(" ")
+			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send("You need to provide a duration in ms and a message to announce")
-			let dur = args[0]
-			let duration = Number(dur)
+			const dur = args[0]
+			const duration = Number(dur)
 			if (isNaN(duration) || duration === 0) return msg.channel.send("That's not a valid duration")
 			if (!args[1]) return msg.channel.send("You need to provide a message to announce")
-			let message = suffix.substring(args[0].length + 1)
+			const message = suffix.substring(args[0].length + 1)
 			clearInterval(updateInterval)
 			client.user.setActivity(message, { type: "PLAYING" })
 			enqueued = setTimeout(() => {
@@ -77,27 +77,27 @@ function getCurrentGroups() {
 }
 
 function getCurrentRanges() {
-	let date = new Date()
-	let currentMonth = date.getMonth()+1
-	let currentDate = date.getDate()
+	const date = new Date()
+	const currentMonth = date.getMonth() + 1
+	const currentDate = date.getDate()
 	return ranges.filter(range => {
 		// Four types of matching:
 		// 1. If months specified and dates specified, convert DB data to timestamp and compare
 		// 2. If months specified and dates not, check month within range
 		// 3. If dates specified and months not, check dates within range
 		// 4. If nothing specified, date is always within range.
-		let monthSpecified = !(range.startmonth == null || range.endmonth == null)
-		let dateSpecified = !(range.startday == null || range.endday == null)
+		const monthSpecified = !(range.startmonth == null || range.endmonth == null)
+		const dateSpecified = !(range.startday == null || range.endday == null)
 		if (monthSpecified && dateSpecified) {
 			// Case 1
-			let startDate = new Date()
+			const startDate = new Date()
 			startDate.setHours(0, 0, 0)
-			startDate.setMonth(range.startmonth-1, range.startday)
-			let endDate = new Date()
+			startDate.setMonth(range.startmonth - 1, range.startday)
+			const endDate = new Date()
 			endDate.setHours(0, 0, 0)
-			endDate.setMonth(range.endmonth-1, range.endday)
-			if (endDate < startDate) endDate.setFullYear(startDate.getFullYear()+1)
-			endDate.setTime(endDate.getTime() + 1000*60*60*24)
+			endDate.setMonth(range.endmonth - 1, range.endday)
+			if (endDate < startDate) endDate.setFullYear(startDate.getFullYear() + 1)
+			endDate.setTime(endDate.getTime() + 1000 * 60 * 60 * 24)
 			return startDate <= date && endDate > date
 		} else if (monthSpecified) {
 			// Case 2
@@ -113,9 +113,9 @@ function getCurrentRanges() {
 }
 
 function getMatchingMessages() {
-	let currentRanges = getCurrentRanges()
-	let groupsBotIsIn = getCurrentGroups()
-	let regional = []
+	const currentRanges = getCurrentRanges()
+	const groupsBotIsIn = getCurrentGroups()
+	const regional = []
 	let constant = []
 	messages.forEach(message => {
 		if (message.dates && !currentRanges.includes(message.dates)) return false // criteria exists and didn't match
@@ -128,17 +128,15 @@ function getMatchingMessages() {
 }
 
 function update() {
-	let choices = getMatchingMessages()
-	//console.log(JSON.stringify(choices, null, 4))
-	let choice = utils.arrayRandom(choices)
+	const choices = getMatchingMessages()
+	// console.log(JSON.stringify(choices, null, 4))
+	const choice = utils.arrayRandom(choices)
 	if (choice) {
-		if (client.options.totalShardCount === 1) {
-			client.user.setActivity(`${choice.message} | ${prefix}help`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
-		} else {
-			client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, {type: choice.type, url: "https://www.twitch.tv/papiophidian/"})
-		}
-		//console.log(`Set status: "${choice.message}" (${choice.type})`)
-	} else {
+		if (client.options.totalShardCount === 1) client.user.setActivity(`${choice.message} | ${prefix}help`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
+		else client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
+
+		// console.log(`Set status: "${choice.message}" (${choice.type})`)
+	} else
 		console.error("Warning: no status messages available!")
-	}
+
 }

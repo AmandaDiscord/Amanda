@@ -1,8 +1,8 @@
-//@ts-check
+// @ts-check
 
-//@ts-ignore
+// @ts-ignore
 if (process._ptcreated) throw new Error("Do not reload the passthrough file.")
-//@ts-ignore
+// @ts-ignore
 process._ptcreated = true
 
 /**
@@ -27,7 +27,7 @@ process._ptcreated = true
 /**
  * @type {Passthrough}
  */
-//@ts-ignore
+// @ts-ignore
 const passthrough = {}
 
 module.exports = passthrough

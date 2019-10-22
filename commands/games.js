@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const rp = require("request-promise")
 const entities = require("entities")
@@ -9,7 +9,7 @@ const Lang = require("@amanda/lang")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-let { client, commands, reloader, gameStore } = passthrough
+const { client, commands, reloader, gameStore } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 
@@ -22,9 +22,9 @@ const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":sev
  * @property {string} correct_answer
  * @property {Array<string>} incorrect_answers
  */
+undefined
 
-
-let utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 class Game {
@@ -69,33 +69,32 @@ class TriviaGame extends Game {
 		this.lang = lang
 	}
 	start() {
-		let correctAnswer = this.data.correct_answer.trim()
-		let wrongAnswers = this.data.incorrect_answers.map(a => a.trim())
+		const correctAnswer = this.data.correct_answer.trim()
+		const wrongAnswers = this.data.incorrect_answers.map(a => a.trim())
 		this.answers = wrongAnswers
 			.map(answer => ({ correct: false, answer }))
 			.concat([{ correct: true, answer: correctAnswer }])
 		utils.arrayShuffle(this.answers)
-		this.answers = this.answers.map((answer, index) => Object.assign(answer, {letter: Buffer.from([0xf0, 0x9f, 0x85, 0x90+index]).toString()}))
+		this.answers = this.answers.map((answer, index) => Object.assign(answer, { letter: Buffer.from([0xf0, 0x9f, 0x85, 0x90 + index]).toString() }))
 		this.correctAnswer = entities.decodeHTML(correctAnswer)
 		// Answer Fields
-		let answerFields = [[], []]
-		this.answers.forEach((answer, index) => answerFields[index < this.answers.length/2 ? 0 : 1].push(answer))
+		const answerFields = [[], []]
+		this.answers.forEach((answer, index) => answerFields[index < this.answers.length / 2 ? 0 : 1].push(answer))
 		// Difficulty
 		this.difficulty = this.data.difficulty
-		this.color =
-				this.difficulty == "easy"
+		this.color = this.difficulty == "easy"
 			? 0x1ddd1d
 			: this.difficulty == "medium"
-			? 0xC0C000
-			: this.difficulty == "hard"
-			? 0xdd1d1d
-			: 0x3498DB
+				? 0xC0C000
+				: this.difficulty == "hard"
+					? 0xdd1d1d
+					: 0x3498DB
 		// Send Message
-		let embed = new Discord.MessageEmbed()
+		const embed = new Discord.MessageEmbed()
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
-			.setDescription("​\n"+entities.decodeHTML(this.data.question))
+			.setDescription("​\n" + entities.decodeHTML(this.data.question))
 			.setColor(this.color)
-		answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)} \n`).join("")+"​", true)) //SC: zero-width space and em space
+		answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", true)) // SC: zero-width space and em space
 		embed.setFooter("To answer, type a letter in chat. You have 20 seconds.")
 		this.channel.send(utils.contentify(this.channel, embed))
 		// Setup timer
@@ -114,31 +113,28 @@ class TriviaGame extends Game {
 		// Check answer is a single letter
 		if (msg.content.length != 1) return
 		// Get answer index
-		let index = msg.content.toUpperCase().charCodeAt(0)-65
+		const index = msg.content.toUpperCase().charCodeAt(0) - 65
 		// Check answer is within range
 		if (!this.answers[index]) return
 		// Validate user legitimacy
-		if (msg.author.bot && msg.guild.id == "497159726455455754") {
-			this.earningsDisabled = true
-		}
+		if (msg.author.bot && msg.guild.id == "497159726455455754") this.earningsDisabled = true
 		if (msg.author.bot) return
 		// Add to received answers
 		this.receivedAnswers.set(msg.author.id, index)
-		//msg.channel.send(`Added answer: ${msg.author.username}, ${index}`)
+		// msg.channel.send(`Added answer: ${msg.author.username}, ${index}`)
 	}
 	async end() {
 		// Clean up
 		clearTimeout(this.timer)
 		this.destroy()
 		// Check answers
-		let coins =
-			this.difficulty == "easy"
+		const coins = this.difficulty == "easy"
 			? 150
 			: this.difficulty == "medium"
-			? 250
-			: this.difficulty == "hard"
-			? 500
-			: 0 // excuse me what the fuck
+				? 250
+				: this.difficulty == "hard"
+					? 500
+					: 0 // excuse me what the fuck
 		// Award coins
 		const cooldownInfo = {
 			max: 10,
@@ -146,43 +142,34 @@ class TriviaGame extends Game {
 			step: 1,
 			regen: {
 				amount: 1,
-				time: 30*60*1000
+				time: 30 * 60 * 1000
 			}
 		}
-		let winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct)
-		let results = await Promise.all(winners.map(async w => {
-			let result = {}
+		const winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct)
+		const results = await Promise.all(winners.map(async w => {
+			const result = {}
 			result.userID = w[0]
-			let cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
-			result.winnings = Math.floor(coins * 0.8 ** (10-cooldownValue))
-			//result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
-			if (!this.earningsDisabled) {
-				utils.coinsManager.award(result.userID, result.winnings)
-			}
+			const cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
+			result.winnings = Math.floor(coins * 0.8 ** (10 - cooldownValue))
+			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
+			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings)
 			return result
 		}))
 		// Send message
-		let embed = new Discord.MessageEmbed()
+		const embed = new Discord.MessageEmbed()
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
 		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
 		else embed.addField("Winners", "No winners.")
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
-		else embed.addField(
-			"Next round",
-			this.lang.games.trivia.prompts.permissionDenied
-			+"\n\nYou can type `&trivia` or `&t` for another round."
-		)
+		else embed.addField("Next round", this.lang.games.trivia.prompts.permissionDenied + "\n\nYou can type `&trivia` or `&t` for another round.")
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 			utils.reactionMenu(msg, [
-				{emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (msg, emoji, user) => {
-					if (user.bot) {
-						msg.channel.send(user+" SHUT UP!!!!!!!!")
-					} else {
-						startGame(this.channel, {category: this.category})
-					}
-				}}
+				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
+					if (user.bot) message.channel.send(user + " SHUT UP!!!!!!!!")
+					else startGame(this.channel, { category: this.category })
+				} }
 			])
 		})
 	}
@@ -200,9 +187,9 @@ async function JSONHelper(body, channel, lang) {
 		if (body.startsWith("http")) body = await rp(body)
 		return [true, JSON.parse(body)]
 	} catch (error) {
-		let embed = new Discord.MessageEmbed()
-		.setDescription(lang.games.trivia.prompts.parsingError)
-		.setColor(0xdd1d1d)
+		const embed = new Discord.MessageEmbed()
+			.setDescription(lang.games.trivia.prompts.parsingError)
+			.setColor(0xdd1d1d)
 		return [false, channel.send(utils.contentify(channel, embed))]
 	}
 }
@@ -215,7 +202,7 @@ async function startGame(channel, options = {}) {
 	let category = options.category || null
 	if (options.suffix) {
 		channel.sendTyping()
-		let [
+		const [
 			success,
 			/** @type {{trivia_categories: {id: number, name: string}[]}} */
 			data
@@ -224,26 +211,21 @@ async function startGame(channel, options = {}) {
 		if (options.suffix.includes("categor")) {
 			options.msg.author.send(
 				new Discord.MessageEmbed()
-				.setTitle("Categories")
-				.setDescription(data.trivia_categories.map(c => c.name)
-				.join("\n")+"\n\n"+
+					.setTitle("Categories")
+					.setDescription(data.trivia_categories.map(c => c.name).join("\n") + "\n\n" +
 				options.lang.games.trivia.prompts.categorySelect)
 			).then(() => {
-				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, {"username": options.msg.author.username}))
+				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, { "username": options.msg.author.username }))
 			}).catch(() => {
-				channel.send(`DM Error`)
+				channel.send("DM Error")
 			})
 			return
 		} else {
 			let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()))
 			if (options.suffix.toLowerCase().endsWith("music")) f = data.trivia_categories.filter(c => c.name == "Entertainment: Music")
-			if (f.length == 0) {
-				return channel.send(utils.replace(options.lang.games.trivia.prompts.noCategory, {"username": options.msg.author.username}))
-			} else if (f.length >= 2) {
-				return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, {"username": "Hey", "string": (`**`+f[0].name+"**, **"+f[1].name+"**"+(f.length == 2 ? ". " : `, and ${f.length-2} more. `)+"Use `&trivia categories` for the list of available categories.")})}`)
-			} else {
-				category = f[0].id
-			}
+			if (f.length == 0) return channel.send(utils.replace(options.lang.games.trivia.prompts.noCategory, { "username": options.msg.author.username }))
+			else if (f.length >= 2) return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, { "username": "Hey", "string": ("**" + f[0].name + "**, **" + f[1].name + "**" + (f.length == 2 ? ". " : `, and ${f.length - 2} more. `) + "Use `&trivia categories` for the list of available categories.") })}`)
+			else category = f[0].id
 		}
 	}
 	// Check games in progress
@@ -252,20 +234,18 @@ async function startGame(channel, options = {}) {
 	channel.sendTyping()
 	// Get new game data
 	/** @type {Array<{response_code: number, results: Array<TriviaResponse>}>} */
-	let body = await JSONHelper("https://opentdb.com/api.php?amount=1"+(category ? `&category=${category}` : ""), channel, options.lang)
+	const body = await JSONHelper("https://opentdb.com/api.php?amount=1" + (category ? `&category=${category}` : ""), channel, options.lang)
 	if (!body[0]) return
-	let data = body[1]
+	const data = body[1]
 	// Error check new game data
 	if (data.response_code != 0) return channel.send(options.lang.games.trivia.prompts.APIError)
 	// Set up new game
 	new TriviaGame(channel, data, category, options.lang).init()
 }
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
-async function answerDetector(msg) {
-	let game = gameStore.store.find(g => g.id == msg.channel.id)
-	if (game instanceof TriviaGame) {
-		if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
-	}
+function answerDetector(msg) {
+	const game = gameStore.store.find(g => g.id == msg.channel.id)
+	if (game instanceof TriviaGame) if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
 }
 
 
@@ -276,14 +256,14 @@ async function answerDetector(msg) {
  */
 function sweeper(difficulty, size) {
 	let width = 8,
-			bombs = 6,
-			total = undefined,
-			rows = [],
-			board = [],
-			pieceWhite = "⬜",
-			pieceBomb = "💣",
-			str = "",
-			error = false
+		bombs = 6,
+		total = undefined,
+		str = "",
+		error = false
+	const rows = [],
+		board = [],
+		pieceWhite = "⬜",
+		pieceBomb = "💣"
 
 	if (difficulty) {
 		if (difficulty == "easy") bombs = 6
@@ -293,9 +273,14 @@ function sweeper(difficulty, size) {
 
 	if (size) {
 		let num
-		if (size < 4) num = 8, error = true
-		else if (size > 14) num = 8, error = true
-		else num = size
+		// eslint-disable-next-line no-sequences
+		if (size < 4) {
+			num = 8
+			error = true
+		} else if (size > 14) {
+			num = 8
+			error = true
+		} else num = size
 		width = num
 	}
 	total = width * width
@@ -309,8 +294,8 @@ function sweeper(difficulty, size) {
 
 	// Place bombs
 	let bombsPlaced = 0
-	let placement = () => {
-		let index = Math.floor(Math.random() * (total - 1) + 1)
+	const placement = () => {
+		const index = Math.floor(Math.random() * (total - 1) + 1)
 		if (board[index] == pieceBomb) placement()
 		else board[index] = pieceBomb
 	}
@@ -322,26 +307,26 @@ function sweeper(difficulty, size) {
 	// Create rows
 	let currow = 1
 	board.forEach((item, index) => {
-		let i = index+1
-		if (!rows[currow-1]) rows[currow-1] = []
-		rows[currow-1].push(item)
-		if (i%width == 0) currow++
+		const i = index + 1
+		if (!rows[currow - 1]) rows[currow - 1] = []
+		rows[currow - 1].push(item)
+		if (i % width == 0) currow++
 	})
 
 	// Generate numbers
 	rows.forEach((row, index) => {
 		row.forEach((item, iindex) => {
 			if (item == pieceBomb) {
-				let uprow = rows[index-1]
-				let downrow = rows[index+1]
-				let num = (it) => { return typeof it == "number" }
-				let bmb = (it) => { return it == pieceBomb }
-				let undef = (it) => { return it == undefined }
+				const uprow = rows[index - 1]
+				const downrow = rows[index + 1]
+				const num = (it) => { return typeof it == "number" }
+				const bmb = (it) => { return it == pieceBomb }
+				const undef = (it) => { return it == undefined }
 
 				if (uprow) {
-					if (!bmb(uprow[iindex-1])) {
-						if (num(uprow[iindex-1])) uprow[iindex-1]++
-						else if (!undef(uprow[iindex-1])) uprow[iindex-1] = 1
+					if (!bmb(uprow[iindex - 1])) {
+						if (num(uprow[iindex - 1])) uprow[iindex - 1]++
+						else if (!undef(uprow[iindex - 1])) uprow[iindex - 1] = 1
 					}
 
 					if (!bmb(uprow[iindex])) {
@@ -349,26 +334,26 @@ function sweeper(difficulty, size) {
 						else if (!undef(uprow[iindex])) uprow[iindex] = 1
 					}
 
-					if (!bmb(uprow[iindex+1])) {
-						if (num(uprow[iindex+1])) uprow[iindex+1]++
-						else if (!undef(uprow[iindex+1])) uprow[iindex+1] = 1
+					if (!bmb(uprow[iindex + 1])) {
+						if (num(uprow[iindex + 1])) uprow[iindex + 1]++
+						else if (!undef(uprow[iindex + 1])) uprow[iindex + 1] = 1
 					}
 				}
 
-				if (!bmb(row[iindex-1])) {
-					if (num(row[iindex-1])) row[iindex-1]++
-					else if (!undef(row[iindex-1])) row[iindex-1] = 1
+				if (!bmb(row[iindex - 1])) {
+					if (num(row[iindex - 1])) row[iindex - 1]++
+					else if (!undef(row[iindex - 1])) row[iindex - 1] = 1
 				}
 
-				if (!bmb(row[iindex+1])) {
-					if (num(row[iindex+1])) row[iindex+1]++
-					else if (!undef(row[iindex+1])) row[iindex+1] = 1
+				if (!bmb(row[iindex + 1])) {
+					if (num(row[iindex + 1])) row[iindex + 1]++
+					else if (!undef(row[iindex + 1])) row[iindex + 1] = 1
 				}
 
 				if (downrow) {
-					if (!bmb(downrow[iindex-1])) {
-						if (num(downrow[iindex-1])) downrow[iindex-1]++
-						else if (!undef(downrow[iindex-1])) downrow[iindex-1] = 1
+					if (!bmb(downrow[iindex - 1])) {
+						if (num(downrow[iindex - 1])) downrow[iindex - 1]++
+						else if (!undef(downrow[iindex - 1])) downrow[iindex - 1] = 1
 					}
 
 					if (!bmb(downrow[iindex])) {
@@ -376,9 +361,9 @@ function sweeper(difficulty, size) {
 						else if (!undef(downrow[iindex])) downrow[iindex] = 1
 					}
 
-					if (!bmb(downrow[iindex+1])) {
-						if (num(downrow[iindex+1])) downrow[iindex+1]++
-						else if (!undef(downrow[iindex+1])) downrow[iindex+1] = 1
+					if (!bmb(downrow[iindex + 1])) {
+						if (num(downrow[iindex + 1])) downrow[iindex + 1]++
+						else if (!undef(downrow[iindex + 1])) downrow[iindex + 1] = 1
 					}
 				}
 			}
@@ -389,7 +374,7 @@ function sweeper(difficulty, size) {
 	rows.forEach(row => {
 		row.forEach(item => {
 			let it
-			if (typeof item == "number") it = numbers[item-1]
+			if (typeof item == "number") it = numbers[item - 1]
 			else it = item
 			str += `||${it}||`
 		})
@@ -404,8 +389,8 @@ commands.assign({
 		description: "Play a game of trivia with other members and win Discoins",
 		aliases: ["trivia", "t"],
 		category: "games",
-		process: async function(msg, suffix, lang) {
-			startGame(msg.channel, {suffix, msg, lang})
+		process: function(msg, suffix, lang) {
+			startGame(msg.channel, { suffix, msg, lang })
 		}
 	},
 	"minesweeper": {
@@ -415,11 +400,11 @@ commands.assign({
 		category: "games",
 		process: function(msg, suffix, lang) {
 			let size = 8, difficulty = "easy"
-			let string, title
-			let sfx = suffix.toLowerCase()
+			let title
+			const sfx = suffix.toLowerCase()
 
 			if (sfx.includes("--size:")) {
-				let tsize = +sfx.split("--size:")[1].split(" ")[0]
+				const tsize = +sfx.split("--size:")[1].split(" ")[0]
 				if (isNaN(tsize)) size = 8
 				else size = Math.floor(Number(tsize))
 			}
@@ -427,13 +412,13 @@ commands.assign({
 			if (sfx.includes("medium")) difficulty = "medium"
 			else if (sfx.includes("hard")) difficulty = "hard"
 
-			string = sweeper(difficulty, size)
+			const string = sweeper(difficulty, size)
 
-			title = utils.replace(lang.games.minesweeper.returns.info, {"difficulty": difficulty, "number1": string.bombs, "number2": string.size})
+			title = utils.replace(lang.games.minesweeper.returns.info, { "difficulty": difficulty, "number1": string.bombs, "number2": string.size })
 			if (string.error) title += `\n${lang.games.minesweeper.returns.error}`
-			let embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text)
+			const embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text)
 			if (sfx.includes("-r") || sfx.includes("--raw")) {
-				let rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|")
+				const rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|")
 				if (rawcontent.length > 1999) return msg.channel.send(lang.games.minesweeper.returns.rawTooLarge)
 				return msg.channel.send(rawcontent)
 			}

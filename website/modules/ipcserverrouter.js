@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const types = require("../../typings")
 
@@ -24,7 +24,7 @@ class IPCRouter {
 	 * @returns {Promise<{guilds: ipctypes.FilteredGuild[], npguilds: ipctypes.FilteredGuild[]}>}
 	 */
 	requestDashGuilds(userID, np) {
-		return this.ipc.requestAll("GET_DASH_GUILDS", {userID, np}, "concatProps")
+		return this.ipc.requestAll("GET_DASH_GUILDS", { userID, np }, "concatProps")
 	}
 
 	/**
@@ -34,7 +34,7 @@ class IPCRouter {
 	 * @returns {Promise<types.FilteredGuild>}
 	 */
 	requestGuildForUser(userID, guildID) {
-		return this.ipc.requestFromGuild(guildID, "GET_GUILD_FOR_USER", {userID, guildID})
+		return this.ipc.requestFromGuild(guildID, "GET_GUILD_FOR_USER", { userID, guildID })
 	}
 
 	/**
@@ -79,7 +79,7 @@ class IPCRouter {
 	 * @returns {Promise<boolean>} Whether the request was successful
 	 */
 	requestQueueRemove(guildID, index) {
-		return this.ipc.requestFromGuild(guildID, "REMOVE_SONG", {guildID, index})
+		return this.ipc.requestFromGuild(guildID, "REMOVE_SONG", { guildID, index })
 	}
 
 	/**

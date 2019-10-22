@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const path = require("path")
@@ -7,9 +7,9 @@ const util = require("util")
 const vm = require("vm")
 
 const passthrough = require("../passthrough")
-let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore, frisky, nedb, periodicHistory } = passthrough
+const { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore, frisky, nedb, periodicHistory } = passthrough
 
-let utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 /**
@@ -22,12 +22,12 @@ async function customEval(input, context, filename, callback) {
 	let depth = 0
 	if (input == "exit\n") return process.exit()
 	if (input.startsWith(":")) {
-		let [depthOverwrite, command] = input.split(" ")
+		const [depthOverwrite, command] = input.split(" ")
 		depth = +depthOverwrite.slice(1)
 		input = command
 	}
-	let result = await eval(input)
-	let output = util.inspect(result, false, depth, true)
+	const result = await eval(input)
+	const output = util.inspect(result, false, depth, true)
 	return callback(undefined, output)
 }
 
@@ -37,18 +37,13 @@ reloadEvent.once(path.basename(__filename), () => {
 
 client.once("prefixes", () => {
 	if (utils.getFirstShard() === 0) {
-		let cli = repl.start({prompt: "> ", eval: customEval, writer: s => s})
+		const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 
-		Object.assign(cli.context, passthrough, {Discord})
+		Object.assign(cli.context, passthrough, { Discord })
 
 		cli.once("exit", () => {
-			if (client.shard) {
-				client.shard.killAll()
-			} else {
-				process.exit()
-			}
+			if (client.shard) client.shard.killAll()
+			else process.exit()
 		})
-	} else {
-		console.log(`This is shard ${client.options.shards}. No REPL.`)
-	}
+	} else console.log(`This is shard ${client.options.shards}. No REPL.`)
 })

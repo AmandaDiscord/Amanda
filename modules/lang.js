@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 
@@ -9,25 +9,25 @@ const passthrough = require("../passthrough")
  * @param {string} sentence
  */
 function authorString(msg, sentence) {
-	if (msg) return msg.author.username+", "+sentence
-	else return sentence[0].toUpperCase()+sentence.slice(1)
+	if (msg) return msg.author.username + ", " + sentence
+	else return sentence[0].toUpperCase() + sentence.slice(1)
 }
 
-let lang = {
+const lang = {
 	/** @param {Error} error */
-	apiError: error => "API did not return any data.```\n"+error+"```",
+	apiError: error => "API did not return any data.```\n" + error + "```",
 
 	dm: {
-		/**@param {Discord.Message} msg */
+		/** @param {Discord.Message} msg */
 		success: msg => authorString(msg, "I sent you a DM."),
-		/**@param {Discord.Message} msg */
+		/** @param {Discord.Message} msg */
 		failed: msg => authorString(msg, "you must allow me to DM you for that command to work. Either you've blocked me, or you need to turn on DMs in this server. (server settings → privacy → allow direct messages)")
 	},
 
 	command: {
-		/**@param {Discord.Message} msg */
+		/** @param {Discord.Message} msg */
 		dmOnly: msg => authorString(msg, "this command can only be used in DMs."),
-		/**@param {Discord.Message} msg */
+		/** @param {Discord.Message} msg */
 		guildOnly: msg => authorString(msg, "this command does not work in DMs.")
 	},
 
@@ -52,7 +52,7 @@ let lang = {
 			 */
 			claimedByOther: (msg, price) => authorString(msg, `this person has already been claimed by somebody else, for a higher price. You'll need to spend at least ${price} Discoins to steal them.`),
 			/** @param {Discord.Message} msg */
-			doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`"),
+			doubleClaim: msg => authorString(msg, "you've already claimed that person as your waifu. If you'd like to increase their price, use `&gift <amount>`")
 		},
 		music: {
 			/** @param {Discord.Message} msg */
@@ -60,7 +60,7 @@ let lang = {
 			/** @param {Discord.Message} msg */
 			playableRequired: msg => authorString(msg, "please provide either a YouTube video link or some words for me to search for."),
 			/** @param {Discord.Message} msg */
-			youTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID."),
+			youTubeRequired: msg => authorString(msg, "please provide a YouTube link or video ID.")
 		}
 	},
 
@@ -70,7 +70,7 @@ let lang = {
 			 * @param {Discord.Message} msg
 			 * @param {string} [string]
 			 */
-			insufficient: (msg, string) => authorString(msg, `you don't have that many Discoins${string ? " "+string : "."}`),
+			insufficient: (msg, string) => authorString(msg, `you don't have that many Discoins${string ? " " + string : "."}`),
 			/**
 			 * @param {Discord.Message} msg
 			 * @param {number} amount

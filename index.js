@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
@@ -10,11 +10,11 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const Reloader = require("./modules/hotreload")
 
-const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0})
+const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0 })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader()
 
-let db = mysql.createPool({
+const db = mysql.createPool({
 	host: config.mysql_domain,
 	user: "amanda",
 	password: config.mysql_password,
@@ -29,7 +29,7 @@ let db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, {config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent})
+	Object.assign(passthrough, { config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent })
 
 	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
@@ -41,7 +41,7 @@ let db = mysql.createPool({
 		"./commands/music/queue.js",
 		"./commands/music/songtypes.js",
 		"./modules/lang.js",
-		"./modules/utilities.js",
+		"./modules/utilities.js"
 	])
 
 	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")
@@ -52,11 +52,11 @@ let db = mysql.createPool({
 	passthrough.gameStore = new GameStore()
 	passthrough.queueStore = new QueueStore()
 	passthrough.periodicHistory = new PeriodicHistory([
-		{field: "song_start", ttl: 86400e3},
-		{field: "game_start", ttl: 86400e3}
+		{ field: "song_start", ttl: 86400e3 },
+		{ field: "game_start", ttl: 86400e3 }
 	])
 	passthrough.nedb = {
-		queue: nedb.create({filename: `saves/queue-${client.options.shards}.db`, autoload: true})
+		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
 	}
 
 	reloader.watchAndLoad([
@@ -73,7 +73,7 @@ let db = mysql.createPool({
 		"./commands/todo.js",
 		"./commands/traa.js",
 		"./modules/events.js",
-		"./modules/stdin.js",
+		"./modules/stdin.js"
 	])
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.

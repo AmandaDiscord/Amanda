@@ -1,18 +1,18 @@
-//@ts-check
+// @ts-check
 
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let {commands, reloader} = passthrough
+const { commands, reloader } = passthrough
 
-let utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let emptyNotifications = []
+const emptyNotifications = []
 
-//TODO: make this actually work lol
+// TODO: make this actually work lol
 
-/*utils.addTemporaryListener(queueManager.events, "remove", path.basename(__filename), () => {
+/* utils.addTemporaryListener(queueManager.events, "remove", path.basename(__filename), () => {
 	if (queueManager.storage.size == 0) {
 		emptyNotifications.forEach(({user, channel}) => {
 			channel.send(user+" All voice sessions have ended.")

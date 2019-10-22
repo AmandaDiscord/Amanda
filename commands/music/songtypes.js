@@ -1,15 +1,15 @@
-//@ts-check
+// @ts-check
 
 const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-let {reloader, frisky, config, ipc} = passthrough
+const { reloader, frisky, config, ipc } = passthrough
 
-let utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let common = require("./common.js")
+const common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
 const stationData = new Map([
@@ -115,16 +115,16 @@ class Song {
 	 * @param {string} message
 	 */
 	validationError(message) {
-		console.error("Song validation error: "+this.constructor.name+" "+message)
+		console.error("Song validation error: " + this.constructor.name + " " + message)
 	}
 	validate() {
 		["id", "track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
-			if (!this[key]) this.validationError("unset "+key)
+			if (!this[key]) this.validationError("unset " + key)
 		})
 		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject", "destroy"].forEach(key => {
-			if (this[key] === Song.prototype[key]) this.validationError("unset "+key)
+			if (this[key] === Song.prototype[key]) this.validationError("unset " + key)
 		})
-		if (typeof(this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
+		if (typeof (this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
 		if (!this.thumbnail.src) this.validationError("unset thumbnail src")
 		if (this.live === null) this.validationError("unset live")
 		this.validated = true
@@ -145,6 +145,7 @@ class Song {
 	 * Clean up event listeners and such when the song is removed
 	 */
 	destroy() {
+		return undefined
 	}
 }
 
@@ -173,30 +174,26 @@ class YouTubeSong extends Song {
 
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
-		() => {
-			return rp(`https://invidio.us/api/v1/videos/${this.id}`, {json: true}).then(data => {
-				this.typeWhileGetRelated = false
-				return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
+			() => {
+				return rp(`https://invidio.us/api/v1/videos/${this.id}`, { json: true }).then(data => {
+					this.typeWhileGetRelated = false
+					return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
+				})
 			})
-		})
 
-		this.prepareCache = new utils.AsyncValueCache(async () => {
+		this.prepareCache = new utils.AsyncValueCache(() => {
 			if (this.track == "!") {
 				if (config.use_invidious) { // Resolve track with Invidious
-					return common.invidious.getTrack(this.id).then(track => {
-						this.track = track
+					return common.invidious.getTrack(this.id).then(t => {
+						this.track = t
 					}).catch(error => {
 						this.error = `${error.name} - ${error.message}`
 					})
 				} else { // Resolve track with Lavalink
 					return common.getTracks(this.id).then(tracks => {
-						if (!tracks[0]) {
-							this.error = "No results for ID "+this.id
-						} else if (!tracks[0].track) {
-							this.error = "Missing track for ID "+this.id
-						} else {
-							this.track = tracks[0].track
-						}
+						if (!tracks[0]) this.error = "No results for ID " + this.id
+						else if (!tracks[0].track) this.error = "Missing track for ID " + this.id
+						else this.track = tracks[0].track
 					}).catch(message => {
 						this.error = message
 					})
@@ -220,40 +217,40 @@ class YouTubeSong extends Song {
 	 * @param {boolean} paused
 	 */
 	getProgress(time, paused) {
-		let max = this.lengthSeconds
-		let rightTime = common.prettySeconds(max)
+		const max = this.lengthSeconds
+		const rightTime = common.prettySeconds(max)
 		if (time > max) time = max
-		let leftTime = common.prettySeconds(time)
-		let bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
+		const leftTime = common.prettySeconds(time)
+		const bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
 		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 	}
 	async getRelated() {
-		let related = await this.related.get().catch(() => [])
+		const related = await this.related.get().catch(() => [])
 		return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
 	}
-	async showRelated() {
+	showRelated() {
 		return this.related.get().then(related => {
 			if (related.length) {
 				return new Discord.MessageEmbed()
-				.setTitle("Related content from YouTube")
-				.setDescription(
-					related.map((v, i) =>
-						`${i+1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
-						+`\n — ${v.author}`
+					.setTitle("Related content from YouTube")
+					.setDescription(
+						related.map((v, i) =>
+							`${i + 1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+						+ `\n — ${v.author}`
+						)
 					)
-				)
-				.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
-				.setColor(0x36393f)
-			} else {
+					.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
+					.setColor(0x36393f)
+			} else
 				return "No related content available for the current song."
-			}
+
 		}).catch(() => {
 			this.typeWhileGetRelated = false
 			return ""
-				+`Invidious didn't return valid data.`
-				+`\n<https://invidio.us/api/v1/videos/${this.id}>`
-				+`\n<https://invidio.us/v/${this.id}>`
-				+`\n<https://youtu.be/${this.id}>`
+				+ "Invidious didn't return valid data."
+				+ `\n<https://invidio.us/api/v1/videos/${this.id}>`
+				+ `\n<https://invidio.us/v/${this.id}>`
+				+ `\n<https://youtu.be/${this.id}>`
 		})
 	}
 	showInfo() {
@@ -266,6 +263,7 @@ class YouTubeSong extends Song {
 		return Promise.resolve()
 	}
 	destroy() {
+		return undefined
 	}
 }
 
@@ -279,11 +277,11 @@ class FriskySong extends Song {
 
 		this.station = station
 
-		if (!stationData.has(this.station)) throw new Error("Unsupported station: "+this.station)
+		if (!stationData.has(this.station)) throw new Error("Unsupported station: " + this.station)
 
 		this.id = this.station // designed for error reporting
 		this.thumbnail = {
-			src: `https://amanda.discord-bots.ga/images/frisky-small.png`,
+			src: "https://amanda.discord-bots.ga/images/frisky-small.png",
 			width: 320,
 			height: 180
 		}
@@ -310,21 +308,21 @@ class FriskySong extends Song {
 							setTimeout(() => {
 								attempt()
 							}, 1000)
-						} else {
+						} else
 							reject(reason)
-						}
+
 					}
 
 					attempts++
-					let index = this.friskyStation.findNowPlayingIndex()
+					const index = this.friskyStation.findNowPlayingIndex()
 					if (index == null) return retry("Current item is unknown")
-					let mix = this.friskyStation.getSchedule()[index].mix
+					const mix = this.friskyStation.getSchedule()[index].mix
 					if (!mix) return retry("Current mix not available")
-					let data = mix.data
-					if (!data) return retry("Current mix data not available")
-					let episode = mix.episode
+					const d = mix.data
+					if (!d) return retry("Current mix data not available")
+					const episode = mix.episode
 					if (!episode) return retry("Current episode data not available")
-					//console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
+					// console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
 					return resolve(mix)
 				}
 				attempt()
@@ -350,30 +348,30 @@ class FriskySong extends Song {
 	}
 	showInfo() {
 		return this.stationMixGetter.get().then(mix => {
-			let stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
-			let embed = new Discord.MessageEmbed()
-			.setColor(0x36393f)
-			.setTitle("FRISKY: "+mix.data.title)
-			.setURL("https://beta.frisky.fm/mix/"+mix.id)
-			//.setThumbnail(mix.data...)
-			.addField("Details",
-				`Show: ${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`
-				+`\nEpisode: ${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`
-				//+"\nArtist: "+data.episode.artist_title
-				+"\nGenre: "+mix.data.genre.join(", ")
-				//+"\nEpisode genres: "+data.episode.genre.join(", ")
-				//+"\nShow genres: "+data.show.genre.join(", ")
-				+"\nStation: "+stationCase
-			)
-			if (mix.episode) {
+			const stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
+			const embed = new Discord.MessageEmbed()
+				.setColor(0x36393f)
+				.setTitle("FRISKY: " + mix.data.title)
+				.setURL("https://beta.frisky.fm/mix/" + mix.id)
+			// .setThumbnail(mix.data...)
+				.addField("Details",
+					`Show: ${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`
+				+ `\nEpisode: ${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`
+				// +"\nArtist: "+data.episode.artist_title
+				+ "\nGenre: " + mix.data.genre.join(", ")
+				// +"\nEpisode genres: "+data.episode.genre.join(", ")
+				// +"\nShow genres: "+data.show.genre.join(", ")
+				+ "\nStation: " + stationCase
+				)
+			if (mix.episode)
 				embed.setThumbnail(this.thumbnail.src)
-			}
+
 			if (mix.data.track_list && mix.data.track_list.length) {
 				let trackList = mix.data.track_list
-				.slice(0, 6)
-				.map(track => track.artist + " - " + track.title)
-				.join("\n")
-				let hidden = mix.data.track_list.length-6
+					.slice(0, 6)
+					.map(track => track.artist + " - " + track.title)
+					.join("\n")
+				const hidden = mix.data.track_list.length - 6
 				if (hidden > 0) trackList += `\n_and ${hidden} more..._`
 				embed.addField("Track list", trackList)
 			}
@@ -384,13 +382,14 @@ class FriskySong extends Song {
 		})
 	}
 	getProgress(time, paused) {
-		let part = "= ⋄ ==== ⋄ ==="
-		let fragment = part.substr(7-this._filledBarOffset, 7)
-		let bar = "​"+fragment.repeat(5)+"​" //SC: ZWSP x 2
+		const part = "= ⋄ ==== ⋄ ==="
+		const fragment = part.substr(7 - this._filledBarOffset, 7)
+		const bar = "​" + fragment.repeat(5) + "​" // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
 		time = common.prettySeconds(time)
-		return `\`[ ${time} ​${bar}​ LIVE ]\`` //SC: ZWSP x 2
+		// eslint-disable-next-line no-irregular-whitespace
+		return `\`[ ${time} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
 	}
 	async prepare() {
 		if (!this.bound) {
@@ -400,23 +399,20 @@ class FriskySong extends Song {
 		}
 		if (this.track == "!") {
 			return common.getTracks(stationData.get(this.station).beta_url).then(tracks => {
-				if (tracks[0] && tracks[0].track) {
-					this.track = tracks[0].track
-				} else {
+				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
+				else {
 					console.error(tracks)
-					this.error = "No tracks available for station "+this.station
+					this.error = "No tracks available for station " + this.station
 				}
 			}).catch(message => {
 				this.error = message
 			})
-		} else {
-			return Promise.resolve()
-		}
+		} else return Promise.resolve()
 	}
 	stationUpdate() {
 		this.stationMixGetter.clear()
 		return this.stationMixGetter.get().then(mix => {
-			//console.log(mix)
+			// console.log(mix)
 			this.title = mix.data.title
 			this.thumbnail.src = mix.episode.data.thumbnail.url
 			this.thumbnail.width = mix.episode.data.thumbnail.image_width
@@ -438,11 +434,8 @@ class FriskySong extends Song {
 }
 
 function makeYouTubeSongFromData(data) {
-	if (config.use_invidious) {
-		return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000))
-	} else {
-		return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length/1000), data.track)
-	}
+	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000))
+	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
 }
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 
@@ -546,7 +539,7 @@ module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
  * @property {number} thumb_filesize
  */
 
- /**
+/**
  * @typedef {Object} FriskyMixResponse
  * @property {Object} data
  * @property {boolean} data.success

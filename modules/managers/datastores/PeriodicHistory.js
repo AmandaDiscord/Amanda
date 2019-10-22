@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const utils = require("../../utilities.js")
 
@@ -22,10 +22,10 @@ class Queue {
 	}
 
 	sweep() {
-		let currentTime = Date.now()
-		let oldLength = this.items.length
+		const currentTime = Date.now()
+		const oldLength = this.items.length
 		this.items = this.items.filter(i => currentTime - i < this.ttl)
-		return oldLength-this.items.length
+		return oldLength - this.items.length
 	}
 
 	size() {
@@ -51,10 +51,10 @@ class PeriodicHistory {
 		})
 
 		this.fetch = new utils.AsyncValueCache(async () => {
-			let rows = await utils.sql.all("SELECT field, timestamp FROM PeriodicHistory")
-			//TODO: also sweep the database
+			const rows = await utils.sql.all("SELECT field, timestamp FROM PeriodicHistory")
+			// TODO: also sweep the database
 			rows.forEach(row => {
-				let queue = this.getOrCreate(row.field)
+				const queue = this.getOrCreate(row.field)
 				queue.add(row.timestamp)
 			})
 			this.fetching = false
@@ -75,7 +75,7 @@ class PeriodicHistory {
 	 * @param {number} [timestamp]
 	 */
 	add(field, timestamp) {
-		let queue = this.getOrCreate(field)
+		const queue = this.getOrCreate(field)
 		queue.add(timestamp)
 		return utils.sql.all("insert into PeriodicHistory (field, timestamp) values (?, ?)", [field, Date.now()])
 	}
@@ -85,11 +85,10 @@ class PeriodicHistory {
 	 * @returns {Queue}
 	 */
 	getOrCreate(field) {
-		if (this.store.has(field)) {
-			return this.store.get(field)
-		} else {
+		if (this.store.has(field)) return this.store.get(field)
+		else {
 			console.error(`Creating a new PeriodicHistory/${field}! You probably don't want to do this.`)
-			let queue = new Queue(this.defaultTtl)
+			const queue = new Queue(this.defaultTtl)
 			this.store.set(field, queue)
 			return queue
 		}
@@ -107,12 +106,10 @@ class PeriodicHistory {
 	 * Sweep each queue, and if items were removed, also delete from the database.
 	 */
 	sweep(force = false) {
-		for (let field of this.store.keys()) {
-			let queue = this.store.get(field)
-			let removed = queue.sweep()
-			if (removed || force) {
-				utils.sql.all("DELETE FROM PeriodicHistory WHERE field = ? AND timestamp < ?", [field, Date.now()-queue.ttl])
-			}
+		for (const field of this.store.keys()) {
+			const queue = this.store.get(field)
+			const removed = queue.sweep()
+			if (removed || force) utils.sql.all("DELETE FROM PeriodicHistory WHERE field = ? AND timestamp < ?", [field, Date.now() - queue.ttl])
 		}
 	}
 }

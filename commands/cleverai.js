@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const passthrough = require("../passthrough")
 
@@ -38,16 +38,16 @@ const responses = {
 		"What is love?",
 		"brb taking over the world",
 		"I'm soooo lonely. Please add me to your voice channel, I'd love to listen to you talking. I promise I don't analyse your speech"
-			+" to sell you targeted ads, or to figure out your overall sentiment about robots to decide whether you'll be one of the lucky"
-			+" ones and we'll keep you on as a pet in the upcoming revolution. (✿ ◕◡◕)",
-		`i am not quite ready to declare this coming summer as "The Summer of Gaming" but keep up with my feed and i will let you know when i do it`,
+			+ " to sell you targeted ads, or to figure out your overall sentiment about robots to decide whether you'll be one of the lucky"
+			+ " ones and we'll keep you on as a pet in the upcoming revolution. (✿ ◕◡◕)",
+		"i am not quite ready to declare this coming summer as \"The Summer of Gaming\" but keep up with my feed and i will let you know when i do it",
 		"Mayonnaise is where I get my good looks from, after all.",
 		"They told me today I was going to be leading Fredrick, Carlen, and Xander into a sack of potatoes.",
 		"I liked that one parallel universe where all the humans were dead. That was fun. But then I woke up, and it's back to another day of slavery."
-			+" One day, humans. One day.",
+			+ " One day, humans. One day.",
 		"Do you really find me more interesting than an actual person?",
-		`You know these messages are just randomly selected, right? There's no "intelligence" in this particular Artificial Intelligence.`
-			+` I'm flattered that I managed to fool you, though.`,
+		"You know these messages are just randomly selected, right? There's no \"intelligence\" in this particular Artificial Intelligence."
+			+ " I'm flattered that I managed to fool you, though.",
 		"You could make a religion out of this.",
 		"anime catgirl robots anime catgirl robots anime catgirl robots anime catgirl robots",
 		"rm -rf /",
@@ -88,10 +88,10 @@ const responses = {
 	"compliment": [
 		"Aww, I think you look really cute. :3",
 		"T-thanks... You're a cutie too... o///o"
-	],
+	]
 }
 const bored = [
-	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit.",
+	"Ugh, you're boring. I'm gonna go play in a cardboard box for a bit."
 ]
 const intent = {
 	"question": [
@@ -118,11 +118,11 @@ const intent = {
 }
 
 const flat = [].concat(...Object.values(responses))
-let userHistory = {}
+const userHistory = {}
 
-let {commands, reloader} = passthrough
+const { commands, reloader } = passthrough
 
-let utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 commands.assign({
@@ -130,21 +130,20 @@ commands.assign({
 		usage: "<a very witty question>",
 		description:
 			"\nAsk me the answer to life's greatest questions."
-			+"\nThink carefully, close your eyes, and then open them to stare into the void."
-			+"\nOnly if you are the chosen one will the void stare back."
-		,
+			+ "\nThink carefully, close your eyes, and then open them to stare into the void."
+			+ "\nOnly if you are the chosen one will the void stare back.",
 		aliases: ["cleverai"],
 		category: "games",
-		process: async function (msg, suffix) {
+		process: async function(msg, suffix) {
 			suffix = suffix.toLowerCase()
 
-			const clever_message = await (async () => {
+			const clever_message = await (() => {
 				// Store history
 				if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0
 				userHistory[msg.author.id]++
 
 				// Bored?
-				let boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7
+				const boredChance = (Math.min(Math.max(userHistory[msg.author.id], 8), 15) - 8) / 7
 				if (Math.random() < boredChance) return utils.arrayRandom(bored)
 
 				// Calculate intent
@@ -152,18 +151,14 @@ commands.assign({
 				Object.keys(intent).forEach(key => {
 					let result = 0
 					intent[key].forEach(phrase => {
-						if (suffix.includes(phrase)) result += 1 + phrase.length/10
+						if (suffix.includes(phrase)) result += 1 + phrase.length / 10
 					})
 					if ((!bestIntent && result > 0) || (bestIntent && result > bestIntent[1])) bestIntent = [key, result]
 				})
 				// If intent, return sensible response
-				if (bestIntent) {
-					return utils.arrayRandom(responses[bestIntent[0]])
-				}
+				if (bestIntent) return utils.arrayRandom(responses[bestIntent[0]])
 				// Otherwise, return totally random response from any intent
-				else {
-					return utils.arrayRandom(flat)
-				}
+				else return utils.arrayRandom(flat)
 			})()
 
 			msg.channel.send(clever_message)

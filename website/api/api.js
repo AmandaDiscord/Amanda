@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 const passthrough = require("../passthrough")
 
@@ -33,9 +33,9 @@ const opcodeMethodMap = new Map([
 	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"]
 ])
 
-const {ipc, snow} = passthrough
+const { ipc, snow } = passthrough
 
-let fileHasReloaded = false;
+let fileHasReloaded = false
 
 /** @type {Session[]} */
 const sessions = []
@@ -61,43 +61,36 @@ function shouldRemove() {
 ipc.addReceivers([
 	{
 		op: "NEW_QUEUE",
-		fn: ({guildID, state}) => {
-			//if (state && state.songs) console.log(`Queue replaced. It has ${state.songs.length} songs.`)
+		fn: ({ guildID, state }) => {
+			// if (state && state.songs) console.log(`Queue replaced. It has ${state.songs.length} songs.`)
 			replaceState(guildID, state)
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
-					session.sendState({})
-				}
+				if (session.guild && session.guild.id == guildID) session.sendState({})
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "ADD_SONG",
-		fn: ({guildID, position, song}) => {
+		fn: ({ guildID, position, song }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
-				if (position == -1) {
-					cache.songs.push(song)
-				} else {
-					cache.songs.splice(position, 0, song)
-				}
-				//console.log(cache)
-				//console.log(`Song added. There are now ${cache.songs.length} songs.`)
+				if (position == -1) cache.songs.push(song)
+				else cache.songs.splice(position, 0, song)
+				// console.log(cache)
+				// console.log(`Song added. There are now ${cache.songs.length} songs.`)
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
-					session.queueAdd(song, position)
-				}
+				if (session.guild && session.guild.id == guildID) session.queueAdd(song, position)
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "TIME_UPDATE",
-		fn: ({guildID, songStartTime, playing}) => {
+		fn: ({ guildID, songStartTime, playing }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
@@ -106,16 +99,14 @@ ipc.addReceivers([
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
-					session.timeUpdate({songStartTime, playing})
-				}
+				if (session.guild && session.guild.id == guildID) session.timeUpdate({ songStartTime, playing })
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "NEXT_SONG",
-		fn: ({guildID}) => {
+		fn: ({ guildID }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
@@ -123,36 +114,36 @@ ipc.addReceivers([
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
+				if (session.guild && session.guild.id == guildID)
 					session.next()
-				}
+
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "SONG_UPDATE",
-		fn: ({guildID, song, index}) => {
+		fn: ({ guildID, song, index }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
-				//console.log("Received SONG_UPDATE")
-				//console.log("Queue cache:", cache)
-				//console.log("New item:", song)
+				// console.log("Received SONG_UPDATE")
+				// console.log("Queue cache:", cache)
+				// console.log("New item:", song)
 				cache.songs[index] = song
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
+				if (session.guild && session.guild.id == guildID)
 					session.songUpdate(song, index)
-				}
+
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "REMOVE_SONG",
-		fn: ({guildID, index}) => {
+		fn: ({ guildID, index }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
@@ -160,16 +151,16 @@ ipc.addReceivers([
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
+				if (session.guild && session.guild.id == guildID)
 					session.removeSong(index)
-				}
+
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "MEMBERS_UPDATE",
-		fn: ({guildID, members}) => {
+		fn: ({ guildID, members }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
@@ -177,16 +168,16 @@ ipc.addReceivers([
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
+				if (session.guild && session.guild.id == guildID)
 					session.membersChange(members)
-				}
+
 			})
 		},
 		shouldRemove
 	},
 	{
 		op: "ATTRIBUTES_CHANGE",
-		fn: ({guildID, attributes}) => {
+		fn: ({ guildID, attributes }) => {
 			const state = states.get(guildID)
 			if (!state) return // queue isn't cached yet, so no need to update it
 			state.update(cache => {
@@ -194,9 +185,9 @@ ipc.addReceivers([
 				return cache
 			})
 			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) {
+				if (session.guild && session.guild.id == guildID)
 					session.attributesChange(attributes)
-				}
+
 			})
 		},
 		shouldRemove
@@ -211,13 +202,12 @@ class Session {
 		this.guild = null
 		this.user = null
 
-		this.ws.on("message", async message => {
+		this.ws.on("message", message => {
 			try {
-				let data = JSON.parse(message)
-				let method = opcodeMethodMap.get(data.op)
-				if (method) {
-					this[method](data)
-				}
+				const data = JSON.parse(message)
+				const method = opcodeMethodMap.get(data.op)
+				if (method) this[method](data)
+			// eslint-disable-next-line no-empty
 			} catch (e) {}
 		})
 
@@ -233,17 +223,17 @@ class Session {
 	}
 
 	onClose() {
-		if (this.user) console.log("WebSocket disconnected: "+this.user.username)
+		if (this.user) console.log("WebSocket disconnected: " + this.user.username)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
 	}
 
 	async identify(data) {
 		if (data && data.d && typeof data.d.cookie === "string" && typeof data.d.guildID === "string" && typeof data.d.timestamp === "number") {
-			const serverTimeDiff = Date.now()-data.d.timestamp
+			const serverTimeDiff = Date.now() - data.d.timestamp
 			// Check the user and guild are legit
-			let cookies = utils.getCookies({headers: {cookie: data.d.cookie}})
-			let session = await utils.getSession(cookies)
+			const cookies = utils.getCookies({ headers: { cookie: data.d.cookie } })
+			const session = await utils.getSession(cookies)
 			if (!session) return
 			const guild = await ipc.router.requestGuildForUser(session.userID, data.d.guildID)
 			if (!guild) return
@@ -254,7 +244,7 @@ class Session {
 			this.loggedin = true
 			this.guild = guild
 			this.user = user
-			console.log("WebSocket identified: "+this.user.username)
+			console.log("WebSocket identified: " + this.user.username)
 			this.send({
 				op: opcodes.ACKNOWLEDGE,
 				nonce: data.nonce || null,
@@ -299,7 +289,7 @@ class Session {
 
 	next() {
 		this.send({
-			op: opcodes.NEXT,
+			op: opcodes.NEXT
 		})
 	}
 
@@ -346,9 +336,9 @@ class Session {
 
 	requestQueueRemove(data) {
 		if (!this.loggedin) return
-		if (data && data.d && typeof data.d.index === "number") {
+		if (data && data.d && typeof data.d.index === "number")
 			ipc.router.requestQueueRemove(this.guild.id, data.d.index)
-		}
+
 	}
 
 	attributesChange(attributes) {
@@ -360,9 +350,9 @@ class Session {
 
 	requestAttributesChange(data) {
 		if (!this.loggedin) return
-		if (typeof(data) == "object" && typeof(data.d) == "object") {
-			if (typeof(data.d.auto) == "boolean") ipc.router.requestToggleAuto(this.guild.id)
-		}
+		if (typeof (data) == "object" && typeof (data.d) == "object")
+			if (typeof (data.d.auto) == "boolean") ipc.router.requestToggleAuto(this.guild.id)
+
 	}
 }
 
@@ -373,7 +363,7 @@ wss.on("connection", ws => {
 
 console.log("API loaded")
 
-module.exports = [{cancel: true, code: () => {
+module.exports = [{ cancel: true, code: () => {
 	fileHasReloaded = true
 	ipc.filterReceivers()
-}}]
+} }]

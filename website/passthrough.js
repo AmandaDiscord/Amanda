@@ -1,4 +1,4 @@
-//@ts-check
+// @ts-check
 
 /**
  * @typedef {Object} Passthrough
@@ -17,7 +17,7 @@
 /**
  * @type {Passthrough}
  */
-//@ts-ignore
+// @ts-ignore
 const passthrough = {}
 
 module.exports = passthrough
