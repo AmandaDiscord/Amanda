@@ -6,13 +6,12 @@ const util = require("util")
 /** @type import("jimp").default */
 //@ts-ignore
 const Jimp = require("jimp")
-const path = require("path")
 const mysql = require("mysql2/promise")
 
-const ReactionMenu = require("./reactionmenu")
+const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
-let {client, db, reloadEvent, reactionMenus} = passthrough
+let {client, db, reloadEvent} = passthrough
 
 const startingCoins = 5000
 
@@ -804,7 +803,7 @@ const utils = {
 
 	/**
 	 * @param {Discord.Message} message
-	 * @param {import("./reactionmenu").ReactionMenuAction[]} actions
+	 * @param {import("./managers/Discord/ReactionMenu").ReactionMenuAction[]} actions
 	 */
 	reactionMenu: function(message, actions) {
 		return new ReactionMenu(message, actions)

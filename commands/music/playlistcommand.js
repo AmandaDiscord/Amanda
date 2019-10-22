@@ -122,8 +122,8 @@ commands.assign({
 				if (!args[2]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`)
 				msg.channel.sendTyping()
 				let match = common.inputToID(args.slice(2).join(" "))
-				let result;
-				if (match && match.type == "video") result = await common.getTracks(match.id);
+				let result
+				if (match && match.type == "video") result = await common.getTracks(match.id)
 				else if (match && match.type == "playlist") return msg.channel.send("Do not use playlist importing with `playlist add`. Use `playlist import` instead")
 				else if (!match) result = await common.getTracks(`ytsearch: ${args.slice(2).join(" ")}`);
 				(async () => {

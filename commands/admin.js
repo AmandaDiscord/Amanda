@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore } = passthrough
+let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus } = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -56,14 +56,28 @@ commands.assign({
 			if (!suffix) return msg.channel.send(lang.admin.execute.prompts.noInput)
 			await msg.channel.sendTyping()
 			require("child_process").exec(suffix, async (error, stdout, stderr) => {
-				let result
-				if (error) result = error
-				else if (stdout) result = stdout
-				else if (stderr) result = stderr
-				else result = "No output"
-				result = result.toString()
-				if (result.length >= 2000) result = result.slice(0, 1993)+"…"
-				let nmsg = await msg.channel.send(`\`\`\`\n${result}\n\`\`\``)
+				let result = new Discord.MessageEmbed()
+				if (error) {
+					result.setTitle(`Command exited with status code ${error.code}`)
+					result.setColor(0xdd2d2d)
+				} else {
+					result.setTitle(`Command exited with status code 0 (success)`)
+					result.setColor(0x2ddd2d)
+				}
+				function formatOutput(out) {
+					if (typeof out !== "string") out = ""
+					out = out.replace(/\x1B\[[0-9;]*[JKmsu]/g, "")
+					if (out.length > 1000) out = out.slice(0, 999)+"…"
+					return out
+				}
+				if (stdout) {
+					result.addField("stdout:", formatOutput(stdout))
+				}
+				if (stderr) {
+					result.addField("stderr:", formatOutput(stderr))
+				}
+				if (!stdout && !stderr) result.setDescription("No output.")
+				let nmsg = await msg.channel.send(result)
 				let menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5*60*1000)
 			})

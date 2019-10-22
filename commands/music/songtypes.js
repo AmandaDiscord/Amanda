@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-let {client, reloader, frisky, config, ipc} = passthrough
+let {reloader, frisky, config, ipc} = passthrough
 
 let utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)

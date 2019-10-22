@@ -1,15 +1,15 @@
 //@ts-check
 
-const ipctypes = require("./ipctypes")
+const types = require("../../typings")
 
 const Discord = require("discord.js")
 
-const passthrough = require("../passthrough")
+const passthrough = require("../../passthrough")
 const {client} = passthrough
 
 /**
  * @param {Discord.Guild} guild
- * @returns {ipctypes.FilteredGuild}
+ * @returns {types.FilteredGuild}
  */
 function filterGuild(guild) {
 	return {
@@ -152,7 +152,7 @@ class Send {
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	newQueue(queue) {
 		this.ipc.send({op: "NEW_QUEUE", data: {guildID: queue.guildID, state: queue.wrapper.getState()}})
@@ -163,30 +163,30 @@ class Send {
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
-	 * @param {import("../commands/music/songtypes").Song} song
+	 * @param {import("../../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/songtypes").Song} song
 	 */
 	addSong(queue, song, position) {
 		this.ipc.send({op: "ADD_SONG", data: {guildID: queue.guildID, position, song: song.getState()}})
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateTime(queue) {
 		this.ipc.send({op: "TIME_UPDATE", data: {guildID: queue.guildID, songStartTime: queue.songStartTime, playing: !queue.isPaused}})
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	nextSong(queue) {
 		this.ipc.send({op: "NEXT_SONG", data: {guildID: queue.guildID}})
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
-	 * @param {import("../commands/music/songtypes").Song} song
+	 * @param {import("../../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/songtypes").Song} song
 	 * @param {number} index
 	 */
 	updateSong(queue, song, index) {
@@ -194,7 +194,7 @@ class Send {
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 * @param {number} index
 	 */
 	removeSong(queue, index) {
@@ -202,14 +202,14 @@ class Send {
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateMembers(queue) {
 		this.ipc.send({op: "MEMBERS_UPDATE", data: {guildID: queue.guildID, members: queue.wrapper.getMembers()}})
 	}
 
 	/**
-	 * @param {import("../commands/music/queue").Queue} queue
+	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	updateAttributes(queue) {
 		this.ipc.send({op: "ATTRIBUTES_CHANGE", data: {guildID: queue.guildID, attributes: queue.wrapper.getAttributes()}})

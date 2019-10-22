@@ -12,9 +12,6 @@ let { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-let lang = require("../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 /**
  * @param {string} input
  * @param {vm.Context} context
@@ -22,7 +19,7 @@ reloader.useSync("./modules/lang.js", lang)
  * @param {(err: Error|null, result: any) => any} callback
  */
 async function customEval(input, context, filename, callback) {
-	let depth = 0;
+	let depth = 0
 	if (input == "exit\n") return process.exit()
 	if (input.startsWith(":")) {
 		let [depthOverwrite, command] = input.split(" ")

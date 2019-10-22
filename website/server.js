@@ -4,13 +4,13 @@ const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
-const hotreload = require("../modules/hotreload")
+const Reloader = require("../modules/hotreload")
 require("dnscache")({enable: true})
 
 const passthrough = require("./passthrough")
 passthrough.config = config
 
-const reloader = new hotreload()
+const reloader = new Reloader()
 passthrough.reloader = reloader
 
 const snow = new Snow(config.bot_token, {disableEveryone: true})

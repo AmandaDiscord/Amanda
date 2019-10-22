@@ -37,7 +37,7 @@ class Game {
 		this.type = type
 		this.manager = gameStore
 		this.id = channel.id
-		this.receivedAnswers = undefined;
+		this.receivedAnswers = undefined
 		if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
 		else this.permissions = undefined
 	}

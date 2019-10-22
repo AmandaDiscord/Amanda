@@ -6,7 +6,7 @@ const {PlayerManager} = require("discord.js-lavalink")
 const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
-let {client, config, commands, reloadEvent, reloader} = passthrough
+let {client, config, commands, reloader} = passthrough
 
 let lastAttemptedLogins = []
 
@@ -87,7 +87,10 @@ async function manageMessage(msg) {
 	let cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	let suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	let cmd = commands.find(c => c.aliases.includes(cmdTxt))
-	let langcode, lang
+	/** @type {string} */
+	let langcode
+	/** @type {Lang.Lang} */
+	let lang
 	let self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
 	let server
 	if (msg.guild) server = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "language"])
@@ -95,8 +98,8 @@ async function manageMessage(msg) {
 	else if (server) langcode = server.value
 	else langcode = "en-us"
 
-	if (langcode == "en-us") lang = Lang.english
-	if (langcode == "en-owo") lang = Lang.owo
+	if (Lang[langcode.replace("-", "_")]) lang = Lang[langcode.replace("-", "_")]
+	else lang = Lang.en_us
 
 	if (cmd) {
 		try {
@@ -110,7 +113,7 @@ async function manageMessage(msg) {
 			let msgTxt = `command ${cmdTxt} failed <:rip:401656884525793291>\n`+(await utils.stringify(e))
 			let embed = new Discord.MessageEmbed()
 			.setDescription(msgTxt)
-			.setColor("dd2d2d")
+			.setColor(0xdd2d2d)
 			if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log

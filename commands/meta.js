@@ -169,8 +169,8 @@ commands.assign({
 		aliases: ["forcestatupdate"],
 		category: "admin",
 		process: async function(msg) {
-			let permissions = await utils.hasPermission(msg.author, "eval");
-			if (!permissions) return;
+			let permissions = await utils.hasPermission(msg.author, "eval")
+			if (!permissions) return
 			sendStats(msg)
 		}
 	},
@@ -471,8 +471,7 @@ commands.assign({
 		aliases: ["settings"],
 		category: "configuration",
 		process: async function(msg, suffix) {
-			let args = suffix.split(" "), permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			let args = suffix.split(" ")
 			if (msg.channel.type == "dm") {
 				if (args[0].toLowerCase() == "server") return msg.channel.send(`You cannot modify a server's settings if you don't use the command in a server`)
 			}
@@ -543,7 +542,7 @@ commands.assign({
 						return msg.channel.send("Current value of `"+settingName+"` is not set in this server, so it inherits the default value, which is `"+value+"`.")
 					}
 				} else if (scope == "self") {
-					let serverRow;
+					let serverRow
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
@@ -603,7 +602,8 @@ commands.assign({
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code`)
+				if (!["en-us", "en-owo", "es", "nl"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code. Supported language codes are`
+				+`\nen-us, en-owo, es, and nl`)
 				await utils.sql.all("REPLACE INTO "+tableName+" (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}
@@ -634,7 +634,7 @@ commands.assign({
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
-		process: async function (msg, suffix) {
+		process: async function (msg, suffix, lang) {
 			let embed, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (suffix) {
@@ -700,10 +700,17 @@ commands.assign({
 					send("dm").catch(() => send("channel"))
 				} else {
 					let command = commands.find(c => c.aliases.includes(suffix))
+					let info = { usage: command.usage, description: command.description }
+					if (lang[command.category]) {
+						let langcommand = lang[command.category][command.aliases[0]]
+						if (langcommand) {
+							info = { usage: langcommand.help.usage, description: langcommand.help.description }
+						}
+					}
 					if (command) {
 						embed = new Discord.MessageEmbed()
 						.setAuthor(`Help for ${command.aliases[0]}`)
-						.setDescription(`Arguments: ${command.usage}\nDescription: ${command.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
+						.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => "`"+a+"`").join(", ")}\nCategory: ${command.category}`)
 						.setColor("36393E")
 						send("channel")
 					} else {

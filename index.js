@@ -1,18 +1,18 @@
 //@ts-check
 
-const passthrough = require("./passthrough")
-
 const mysql = require("mysql2/promise")
-const hotreload = require("./modules/hotreload.js")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
+const Frisky = require("frisky-client")
 
+const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
-
-// @ts-ignore
 const config = require("./config.js")
+const Reloader = require("./modules/hotreload")
+
 const client = new Amanda({disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0})
 const youtube = new YouTube(config.yt_api_key)
+const reloader = new Reloader()
 
 let db = mysql.createPool({
 	host: config.mysql_domain,
@@ -29,11 +29,9 @@ let db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	let reloader = new hotreload()
-	Object.assign(passthrough, {config, client, db, reloader, youtube})
-	passthrough.reloadEvent = reloader.reloadEvent
+	Object.assign(passthrough, {config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent})
 
-	const IPC = require("./modules/ipcbot.js")
+	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
 	passthrough.ipc = ipc
 
@@ -46,15 +44,10 @@ let db = mysql.createPool({
 		"./modules/utilities.js",
 	])
 
-	const Frisky = require("frisky-client")
+	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")
+
 	passthrough.frisky = new Frisky()
-
-	const CommandStore = require("./modules/managers/CommandStore")
-	const GameStore = require("./modules/managers/GameStore")
-	const QueueStore = require("./modules/managers/QueueStore")
-	const PeriodicHistory = require("./modules/managers/PeriodicHistory")
-
-	passthrough.reactionMenus = new Map()
+	passthrough.reactionMenus = reactionMenus
 	passthrough.commands = new CommandStore()
 	passthrough.gameStore = new GameStore()
 	passthrough.queueStore = new QueueStore()
@@ -84,7 +77,7 @@ let db = mysql.createPool({
 	])
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
-	require("./modules/status.js")
+	require("./commands/status.js")
 
 	client.login(config.bot_token)
 

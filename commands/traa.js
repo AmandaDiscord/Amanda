@@ -10,7 +10,7 @@ const bots = [
 	["160105994217586689", ">"]
 ]
 
-let { client, reloadEvent, reloader, commands } = passthrough
+let { client, reloader, commands } = passthrough
 
 let utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
