@@ -181,7 +181,8 @@ class YouTubeSong extends Song {
 				})
 			})
 
-		this.prepareCache = new utils.AsyncValueCache(() => {
+		// eslint-disable-next-line require-await
+		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.track == "!") {
 				if (config.use_invidious) { // Resolve track with Invidious
 					return common.invidious.getTrack(this.id).then(t => {
