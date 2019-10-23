@@ -242,9 +242,9 @@ class YouTubeSong extends Song {
 					)
 					.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
 					.setColor(0x36393f)
-			} else
+			} else {
 				return "No related content available for the current song."
-
+			}
 		}).catch(() => {
 			this.typeWhileGetRelated = false
 			return ""
@@ -309,9 +309,9 @@ class FriskySong extends Song {
 							setTimeout(() => {
 								attempt()
 							}, 1000)
-						} else
+						} else {
 							reject(reason)
-
+						}
 					}
 
 					attempts++
@@ -364,9 +364,9 @@ class FriskySong extends Song {
 				// +"\nShow genres: "+data.show.genre.join(", ")
 				+ "\nStation: " + stationCase
 				)
-			if (mix.episode)
+			if (mix.episode) {
 				embed.setThumbnail(this.thumbnail.src)
-
+			}
 			if (mix.data.track_list && mix.data.track_list.length) {
 				let trackList = mix.data.track_list
 					.slice(0, 6)

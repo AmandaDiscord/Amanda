@@ -666,8 +666,7 @@ commands.assign({
 						let info = { usage: command.usage, description: command.description }
 						if (lang[command.category]) {
 							const langcommand = lang[command.category][command.aliases[0]]
-							if (langcommand)
-								info = { usage: langcommand.help.usage, description: langcommand.help.description }
+							if (langcommand) info = { usage: langcommand.help.usage, description: langcommand.help.description }
 
 						}
 						embed = new Discord.MessageEmbed()
@@ -696,8 +695,7 @@ commands.assign({
 								.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
 								.setColor("36393E")
 							let content
-							if (msg.channel.type != "dm")
-								if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user)
+							if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user)
 
 							if (!permissions || permissions.has("EMBED_LINKS")) content = mobileEmbed
 							else {
@@ -737,9 +735,9 @@ commands.assign({
 					const target = where == "dm" ? msg.author : msg.channel
 					if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 					let promise
-					if (!permissions || permissions.has("EMBED_LINKS"))
+					if (!permissions || permissions.has("EMBED_LINKS")) {
 						promise = target.send(embed)
-					else {
+					} else {
 						let content = ""
 						// eslint-disable-next-line no-inner-declarations
 						function addPart(value) {

@@ -121,7 +121,7 @@ class IPC {
 	 * Get the socket that corresponds to a guild ID.
 	 */
 	getShardForGuild(id) {
-		let shardID = Number((BigInt(id) >> 22n) % BigInt(this.totalShards))
+		let shardID = Number((BigInt(id) >> BigInt(22)) % BigInt(this.totalShards))
 		return this.getShard(shardID)
 	}
 
