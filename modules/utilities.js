@@ -971,7 +971,7 @@ const utils = {
 	},
 
 	getStats: function() {
-		let ram = process.memoryUsage()
+		const ram = process.memoryUsage()
 		return {
 			ping: client.ws.ping,
 			uptime: process.uptime(),

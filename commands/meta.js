@@ -37,8 +37,8 @@ async function sendStats(msg) {
 	const shard = utils.getFirstShard()
 	await utils.sql.all(
 		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard)"
-		+" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-		,[now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
+		+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		, [now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
 	)
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
@@ -127,18 +127,18 @@ commands.assign({
 				const stats = utils.getStats()
 				const nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too")
 				embed
-				.addField(`${client.user.tag} <:online:606664341298872324>`,
-					`**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`+
-					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
-					`**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`+
-					`**❯ RAM Usage:**\n${bToMB(stats.ram)}`, true)
-				.addField(emojis.bl,
-					`**❯ User Count:**\n${stats.users} users\n`+
-					`**❯ Guild Count:**\n${stats.guilds} guilds\n`+
-					`**❯ Channel Count:**\n${stats.channels} channels\n`+
-					`**❯ Voice Connections:**\n${stats.connections} connections`, true)
+					.addField(`${client.user.tag} <:online:606664341298872324>`,
+						`**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`
+						+ `**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
+						+ `**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+						+ `**❯ RAM Usage:**\n${bToMB(stats.ram)}`, true)
+					.addField(emojis.bl,
+						`**❯ User Count:**\n${stats.users} users\n`
+						+ `**❯ Guild Count:**\n${stats.guilds} guilds\n`
+						+ `**❯ Channel Count:**\n${stats.channels} channels\n`
+						+ `**❯ Voice Connections:**\n${stats.connections} connections`, true)
 				const content = utils.contentify(msg.channel, embed)
-				if (typeof(content) == "string") nmsg.edit(content)
+				if (typeof content === "string") nmsg.edit(content)
 				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
 			}
 			function bToMB(number) {
