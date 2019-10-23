@@ -86,7 +86,7 @@ class IPC {
 			})
 		})
 
-		/** @type {{op: string, fn: (data: any) => any, shouldRemove: () => boolean}[]} */
+		/** @type {{op: string, fn: (data: any, socket: any) => any, shouldRemove: () => boolean}[]} */
 		this.receivers = []
 	}
 
@@ -94,7 +94,7 @@ class IPC {
 		this.router = new IPCRouter.router(this)
 	}
 
-	/** @param {{op: string, fn: (data: any) => any, shouldRemove: () => boolean}[]} receivers */
+	/** @param {{op: string, fn: (data: any, socket: any) => any, shouldRemove: () => boolean}[]} receivers */
 	addReceivers(receivers) {
 		this.receivers = this.receivers.concat(receivers)
 		console.log(`Added ${receivers.length} receivers, total ${this.receivers.length}`)
@@ -135,7 +135,7 @@ class IPC {
 		if (raw.op) {
 			this.receivers.forEach(receiver => {
 				if (receiver.op === raw.op) {
-					receiver.fn(raw.data)
+					receiver.fn(raw.data, socket)
 				}
 			})
 		}
@@ -180,6 +180,9 @@ class IPC {
 
 	/**
 	 * Request information from all sockets. Combines the data and returns the result.
+	 * @param {string} op
+	 * @param {any} data
+	 * @param {"truthy"|"concat"|"concatProps"|"add"|"addProps"|null} combineMethod
 	 */
 	requestAll(op, data, combineMethod = null) {
 		let _id = nextID()
@@ -205,6 +208,18 @@ class IPC {
 						resolve(result)
 					} else if (combineMethod === "add") {
 						resolve(parts.reduce((acc, cur) => (acc + cur), 0))
+					} else if (combineMethod === "addProps") {
+						const result = parts.reduce((acc, part) => {
+							Object.keys(part).forEach(key => {
+								if (acc[key]) {
+									acc[key] += part[key]
+								} else {
+									acc[key] = part[key]
+								}
+							})
+							return acc
+						}, {})
+						resolve(result)
 					} else {
 						resolve(parts)
 					}

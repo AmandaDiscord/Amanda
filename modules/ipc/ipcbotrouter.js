@@ -5,7 +5,10 @@ const types = require("../../typings")
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { client } = passthrough
+const { client, reloader } = passthrough
+
+const utils = require("../utilities.js")
+reloader.useSync("./modules/utilities.js", utils)
 
 /**
  * @param {Discord.Guild} guild
@@ -137,6 +140,10 @@ class IPCRouter {
 		const queue = getQueue(guildID)
 		if (!queue) return false
 		return queue.wrapper.toggleAuto("web")
+	}
+
+	GET_STATS() {
+		return utils.getStats()
 	}
 }
 

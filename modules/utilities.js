@@ -968,6 +968,19 @@ const utils = {
 			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
 		})
 		return string
+	},
+
+	getStats: function() {
+		let ram = process.memoryUsage()
+		return {
+			ping: client.ws.ping,
+			uptime: process.uptime(),
+			ram: ram.rss - (ram.heapTotal - ram.heapUsed),
+			users: client.users.size,
+			guilds: client.guilds.size,
+			channels: client.channels.size,
+			connections: client.lavalink.players.size
+		}
 	}
 }
 

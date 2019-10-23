@@ -30,18 +30,16 @@ function sendStatsTimeoutFunction() {
  */
 async function sendStats(msg) {
 	console.log("Sending stats...")
+	const stats = utils.getStats()
 	const now = Date.now()
 	const myid = client.user.id
-	const ramUsageKB = Math.floor(((process.memoryUsage().rss - (process.memoryUsage().heapTotal - process.memoryUsage().heapUsed)) / 1024))
-	const users = client.users.size
-	const guilds = client.guilds.size
-	const channels = client.channels.size
-	const voiceConnections = client.lavalink.players.size
+	const ramUsageKB = Math.floor(stats.ram / 1024)
 	const shard = utils.getFirstShard()
-	const uptime = process.uptime()
 	await utils.sql.all(
 		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard)"
-		+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", [now, myid, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard])
+		+" VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		,[now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
+	)
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
 }
@@ -93,7 +91,6 @@ commands.assign({
 		aliases: ["statistics", "stats"],
 		category: "meta",
 		process: async function(msg, suffix) {
-			const ram = process.memoryUsage()
 			const embed = new Discord.MessageEmbed().setColor(0x36393f)
 			if (!suffix) return defaultStats()
 			if (suffix.toLowerCase() == "music") {
@@ -118,6 +115,7 @@ commands.assign({
 			} else if (suffix.toLowerCase() == "gc") {
 				const allowed = await utils.hasPermission(msg.author, "eval")
 				if (!allowed) return
+				const ram = process.memoryUsage()
 				if (global.gc) global.gc()
 				else return msg.channel.send("The global Garbage Collector variable is not exposed")
 				profiler.once("gc", info => {
@@ -126,20 +124,21 @@ commands.assign({
 				})
 			} else return defaultStats()
 			async function defaultStats() {
+				const stats = utils.getStats()
 				const nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too")
 				embed
-					.addField(`${client.user.tag} <:online:606664341298872324>`,
-						`**❯ Heartbeat:**\n${client.ws.ping.toFixed(0)}ms\n` +
-						`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n` +
-						`**❯ Uptime:**\n${utils.shortTime(process.uptime(), "sec")}\n` +
-						`**❯ RAM Usage:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`, true)
-					.addField(emojis.bl,
-						`**❯ User Count:**\n${client.users.size} users\n` +
-						`**❯ Guild Count:**\n${client.guilds.size} guilds\n` +
-						`**❯ Channel Count:**\n${client.channels.size} channels\n` +
-						`**❯ Voice Connections:**\n${client.lavalink.players.size} connections`, true)
+				.addField(`${client.user.tag} <:online:606664341298872324>`,
+					`**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`+
+					`**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`+
+					`**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`+
+					`**❯ RAM Usage:**\n${bToMB(stats.ram)}`, true)
+				.addField(emojis.bl,
+					`**❯ User Count:**\n${stats.users} users\n`+
+					`**❯ Guild Count:**\n${stats.guilds} guilds\n`+
+					`**❯ Channel Count:**\n${stats.channels} channels\n`+
+					`**❯ Voice Connections:**\n${stats.connections} connections`, true)
 				const content = utils.contentify(msg.channel, embed)
-				if (typeof content == "string") nmsg.edit(content)
+				if (typeof(content) == "string") nmsg.edit(content)
 				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
 			}
 			function bToMB(number) {

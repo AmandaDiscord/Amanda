@@ -90,6 +90,34 @@ class IPCRouter {
 	requestToggleAuto(guildID) {
 		return this.ipc.requestFromGuild(guildID, "TOGGLE_AUTO", guildID)
 	}
+
+	async requestStats() {
+		const stats = await this.ipc.requestAll("GET_STATS", undefined, null)
+		const combined = {
+			ping: [],
+			uptime: [],
+			ram: [],
+			combinedRam: 0,
+			users: 0,
+			guilds: 0,
+			channels: 0,
+			connections: 0
+		}
+		Object.keys(combined).forEach(key => {
+			stats.forEach(s => {
+				// Special properties (key name is different)
+				if (key === "combinedRam") {
+					combined[key] += s.ram
+				}
+				// Other properties (key name is the same)
+				else {
+					if (combined[key] instanceof Array) combined[key].push(s[key])
+					else combined[key] += s[key]
+				}
+			})
+		})
+		return combined
+	}
 }
 
 module.exports.router = IPCRouter
