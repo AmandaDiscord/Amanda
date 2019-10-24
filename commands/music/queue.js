@@ -52,11 +52,12 @@ class Queue {
 		this.player.on("playerUpdate", data => {
 			if (!this.isPaused) {
 				const newSongStartTime = data.state.time - data.state.position
-				if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
+				// commenting this out: it may break the error check, but it will improve the web time
+				// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
 					this.songStartTime = newSongStartTime
 					ipc.router.send.updateTime(this)
-				}
-				if (newSongStartTime > this.songStartTime + 3500 && !this.isPaused && data.state.position === 0) {
+				// }
+				if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
 					if (!this.songs[0].error) {
 						console.log(
 							"Song didn't start."

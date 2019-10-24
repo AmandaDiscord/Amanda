@@ -3,6 +3,8 @@
 const passthrough = require("../passthrough")
 
 const utils = require("../modules/utilities")
+/** typescript is stupid */
+const UpdatingValueCache = utils.UpdatingValueCache
 
 const opcodes = {
 	"IDENTIFY": 1,
@@ -39,6 +41,7 @@ let fileHasReloaded = false
 
 /** @type {Session[]} */
 const sessions = []
+/** @type {Map<string, UpdatingValueCache>} */
 const states = new Map()
 
 function getState(guildID) {
@@ -356,13 +359,15 @@ class Session {
 }
 
 const wss = passthrough.wss
-wss.on("connection", ws => {
+function wsConnection(ws) {
 	new Session(ws)
-})
+}
+wss.on("connection", wsConnection)
 
 console.log("API loaded")
 
 module.exports = [{ cancel: true, code: () => {
 	fileHasReloaded = true
+	wss.removeListener("connection", wsConnection)
 	ipc.filterReceivers()
 } }]
