@@ -116,9 +116,11 @@ const cmds = {
 			let claim = 0
 			if (args[0] == "all" || args[0] == "half") {
 				if (!money) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.moneyInsufficient, { "username": msg.author.username }))
-				args[0] == "all"
-					? claim = money
-					: claim = Math.floor(money / 2)
+				if (args[0] == "all") {
+					claim = money
+				} else {
+					claim = Math.floor(money / 2)
+				}
 			} else {
 				claim = Math.floor(Number(args[0]))
 				if (isNaN(claim)) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.moneyInsufficient, { "username": msg.author.username }))
@@ -180,9 +182,11 @@ const cmds = {
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.moneyInsufficient, { "username": msg.author.username }))
-				args[0] == "all"
-					? gift = money
-					: gift = Math.floor(money / 2)
+				if (args[0] == "all") {
+					gift = money
+				} else {
+					gift = Math.floor(money / 2)
+				}
 			} else {
 				gift = Math.floor(Number(args[0]))
 				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.invalidGift, { "username": msg.author.username }))

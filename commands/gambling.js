@@ -85,9 +85,11 @@ commands.assign({
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, { "username": msg.author.username }))
-				args[0] == "all"
-					? bet = money
-					: bet = Math.floor(money / 2)
+				if (args[0] === "all") {
+					bet = money
+				} else {
+					bet = Math.floor(money / 2)
+				}
 			} else {
 				bet = Math.floor(Number(args[0]))
 				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.invalidBet, { "username": msg.author.username }))
@@ -147,9 +149,11 @@ commands.assign({
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, { "username": msg.author.username }))
-				args[0] == "all"
-					? bet = money
-					: bet = Math.floor(money / 2)
+				if (args[0] == "all") {
+					bet = money
+				} else {
+					bet = Math.floor(money / 2)
+				}
 			} else {
 				bet = Math.floor(Number(args[0]))
 				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBet, { "username": msg.author.username }))
@@ -289,9 +293,11 @@ commands.assign({
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
 				if (authorCoins == 0) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
-				args[0] == "all"
-					? gift = authorCoins
-					: gift = Math.floor(authorCoins / 2)
+				if (args[0] === "all") {
+					gift = authorCoins
+				} else {
+					gift = Math.floor(authorCoins / 2)
+				}
 			} else {
 				gift = Math.floor(Number(args[0]))
 				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidGift, { "username": msg.author.username }))
@@ -333,9 +339,11 @@ commands.assign({
 			let amount
 			if (suffix == "all" || suffix == "half") {
 				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, { "username": msg.author.username }))
-				suffix == "all"
-					? amount = money
-					: amount = Math.floor(money / 2)
+				if (suffix == "all") {
+					amount = money
+				} else {
+					amount = Math.floor(money / 2)
+				}
 			} else {
 				amount = Math.floor(Number(suffix))
 				if (isNaN(amount)) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmount, { "username": msg.author.username }))

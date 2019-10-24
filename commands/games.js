@@ -82,13 +82,11 @@ class TriviaGame extends Game {
 		this.answers.forEach((answer, index) => answerFields[index < this.answers.length / 2 ? 0 : 1].push(answer))
 		// Difficulty
 		this.difficulty = this.data.difficulty
-		this.color = this.difficulty == "easy"
-			? 0x1ddd1d
-			: this.difficulty == "medium"
-				? 0xC0C000
-				: this.difficulty == "hard"
-					? 0xdd1d1d
-					: 0x3498DB
+		this.color =
+			this.difficulty == "easy" ? 0x1ddd1d :
+			this.difficulty == "medium" ? 0xC0C000 :
+			this.difficulty == "hard" ? 0xdd1d1d :
+			0x3498DB
 		// Send Message
 		const embed = new Discord.MessageEmbed()
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
@@ -128,13 +126,11 @@ class TriviaGame extends Game {
 		clearTimeout(this.timer)
 		this.destroy()
 		// Check answers
-		const coins = this.difficulty == "easy"
-			? 150
-			: this.difficulty == "medium"
-				? 250
-				: this.difficulty == "hard"
-					? 500
-					: 0 // excuse me what the fuck
+		const coins =
+			this.difficulty == "easy" ? 150 :
+			this.difficulty == "medium" ? 250 :
+			this.difficulty == "hard" ? 500 :
+			0 // excuse me what the fuck
 		// Award coins
 		const cooldownInfo = {
 			max: 10,
