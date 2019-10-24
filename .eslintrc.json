@@ -25,6 +25,7 @@
 		"no-control-regex": "off",
 		"no-empty-function": "error",
 		"no-floating-decimal": "error",
+		"no-irregular-whitespace": ["error", { "skipTemplates": true }],
 		"no-lonely-if": "error",
 		"no-multi-spaces": "error",
 		"no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 1, "maxBOF": 0 }],

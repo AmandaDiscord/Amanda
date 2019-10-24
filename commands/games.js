@@ -92,7 +92,6 @@ class TriviaGame extends Game {
 		// Send Message
 		const embed = new Discord.MessageEmbed()
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
-			// eslint-disable-next-line no-irregular-whitespace
 			.setDescription(`​\n${entities.decodeHTML(this.data.question)}`)
 			.setColor(this.color)
 		answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", true)) // SC: zero-width space and em space

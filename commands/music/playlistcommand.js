@@ -84,7 +84,7 @@ commands.assign({
 			if (!playlistName) return msg.channel.send(`${msg.author.username}, you must name a playlist. Use \`&music playlists show\` to show all playlists.`)
 			if (playlistName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) {
 				return msg.channel.send(
-					msg.author.username + ", you can play a playlist directly! Just pass it to `&music play` like so:"
+					`${msg.author.username}, you can play a playlist directly! Just pass it to \`&music play\` like so:`
 					+ "\n`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`"
 					+ "\n\nIf you still want to import a playlist into Amanda, you must give it a friendly name first, like `bobs_songs`."
 				)
