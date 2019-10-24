@@ -13,5 +13,6 @@ module.exports = {
 	is_staging: true,
 	music_dash_enabled: false,
 	lavalink_password: "lavalink password here",
+	invidious_origin: "https://invidio.us",
 	use_invidious: false
 }

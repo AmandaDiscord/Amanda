@@ -157,7 +157,7 @@ const common = {
 		 * @param {string} id
 		 */
 		getData: function(id) {
-			return rp(`https://invidio.us/api/v1/videos/${id}`, { json: true }).then(data => {
+			return rp(`${config.invidious_origin}/api/v1/videos/${id}`, { json: true }).then(data => {
 				if (data.error) throw new Error(data.error)
 				return data
 			})

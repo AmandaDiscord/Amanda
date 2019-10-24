@@ -175,7 +175,7 @@ class YouTubeSong extends Song {
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
 			() => {
-				return rp(`https://invidio.us/api/v1/videos/${this.id}`, { json: true }).then(data => {
+				return rp(`${config.invidious_origin}/api/v1/videos/${this.id}`, { json: true }).then(data => {
 					this.typeWhileGetRelated = false
 					return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 				})
@@ -249,8 +249,8 @@ class YouTubeSong extends Song {
 			this.typeWhileGetRelated = false
 			return ""
 				+ "Invidious didn't return valid data."
-				+ `\n<https://invidio.us/api/v1/videos/${this.id}>`
-				+ `\n<https://invidio.us/v/${this.id}>`
+				+ `\n<${config.invidious_origin}/api/v1/videos/${this.id}>`
+				+ `\n<${config.invidious_origin}/v/${this.id}>`
 				+ `\n<https://youtu.be/${this.id}>`
 		})
 	}
