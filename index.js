@@ -31,6 +31,10 @@ const db = mysql.createPool({
 
 	Object.assign(passthrough, { config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky() })
 
+	reloader.setupWatch([
+		"./modules/utilities.js"
+	])
+
 	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
 	passthrough.ipc = ipc

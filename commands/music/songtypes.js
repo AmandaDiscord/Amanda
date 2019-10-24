@@ -175,7 +175,7 @@ class YouTubeSong extends Song {
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
 			() => {
-				return rp(`https://invidio.us/api/v1/videos/${this.id}`, { json: true }).then(data => {
+				return rp(`${config.invidious_origin}/api/v1/videos/${this.id}`, { json: true }).then(data => {
 					this.typeWhileGetRelated = false
 					return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 				})
@@ -242,15 +242,15 @@ class YouTubeSong extends Song {
 					)
 					.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
 					.setColor(0x36393f)
-			} else
+			} else {
 				return "No related content available for the current song."
-
+			}
 		}).catch(() => {
 			this.typeWhileGetRelated = false
 			return ""
 				+ "Invidious didn't return valid data."
-				+ `\n<https://invidio.us/api/v1/videos/${this.id}>`
-				+ `\n<https://invidio.us/v/${this.id}>`
+				+ `\n<${config.invidious_origin}/api/v1/videos/${this.id}>`
+				+ `\n<${config.invidious_origin}/v/${this.id}>`
 				+ `\n<https://youtu.be/${this.id}>`
 		})
 	}
@@ -309,9 +309,9 @@ class FriskySong extends Song {
 							setTimeout(() => {
 								attempt()
 							}, 1000)
-						} else
+						} else {
 							reject(reason)
-
+						}
 					}
 
 					attempts++
@@ -364,9 +364,9 @@ class FriskySong extends Song {
 				// +"\nShow genres: "+data.show.genre.join(", ")
 				+ `\nStation: ${stationCase}`
 				)
-			if (mix.episode)
+			if (mix.episode) {
 				embed.setThumbnail(this.thumbnail.src)
-
+			}
 			if (mix.data.track_list && mix.data.track_list.length) {
 				let trackList = mix.data.track_list
 					.slice(0, 6)

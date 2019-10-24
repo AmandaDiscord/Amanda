@@ -63,35 +63,6 @@ class VoiceStateCallback {
 
 const common = {
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
-	 * @param {Object} reason
-	 * @param {string} reason.message
-	 * @param {string} id
-	 * @param {number} item
-	 * @returns {Promise<Discord.Message>}
-	 */
-	manageYtdlGetInfoErrors: function(channel, reason, id, item) {
-		if (channel instanceof Discord.Message) channel = channel.channel
-		const idString = id ? ` (index: ${item}, id: ${id})` : ""
-		if (!reason || !reason.message) return channel.send(`An unknown error occurred. ${idString}`)
-		else if (reason.message && reason.message.startsWith("No video id found:")) return channel.send(`That is not a valid YouTube video. ${idString}`)
-		else if (reason.message && (
-			reason.message.includes("who has blocked it in your country")
-			|| reason.message.includes("This video is unavailable")
-			|| reason.message.includes("The uploader has not made this video available in your country")
-			|| reason.message.includes("copyright infringement")
-		))
-			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement. ${idString}`)
-		else {
-			return new Promise(resolve => {
-				utils.stringify(reason).then(result => {
-					channel.send(result).then(resolve)
-				})
-			})
-		}
-	},
-
-	/**
 	 * @param {number} seconds
 	 */
 	prettySeconds: function(seconds) {
@@ -103,9 +74,9 @@ const common = {
 		if (hours) {
 			output.push(hours)
 			output.push(minutes.toString().padStart(2, "0"))
-		} else
+		} else {
 			output.push(minutes)
-
+		}
 		output.push(seconds.toString().padStart(2, "0"))
 		return output.join(":")
 	},
@@ -186,7 +157,7 @@ const common = {
 		 * @param {string} id
 		 */
 		getData: function(id) {
-			return rp(`https://invidio.us/api/v1/videos/${id}`, { json: true }).then(data => {
+			return rp(`${config.invidious_origin}/api/v1/videos/${id}`, { json: true }).then(data => {
 				if (data.error) throw new Error(data.error)
 				return data
 			})
@@ -215,9 +186,9 @@ const common = {
 					console.error("Missing tracks from getTracks response")
 					console.error(tracks)
 					throw new Error("Missing tracks from getTracks response")
-				} else
+				} else {
 					return tracks[0].track
-
+				}
 			})
 		},
 
@@ -245,9 +216,9 @@ const common = {
 		function(song, textChannel, voiceChannel, insert, context) {
 			const queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
 			const result = queue.addSong(song, insert)
-			if (context instanceof Discord.Message && result == 0)
+			if (context instanceof Discord.Message && result == 0) {
 				context.react("✅")
-
+			}
 		},
 
 		fromData:
@@ -313,9 +284,9 @@ const common = {
 				if (config.use_invidious) {
 					const song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length / 1000))
 					common.inserters.handleSong(song, textChannel, voiceChannel, insert)
-				} else
+				} else {
 					common.inserters.fromData(textChannel, voiceChannel, track, insert)
-
+				}
 			})
 		}
 	},

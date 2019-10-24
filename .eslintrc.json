@@ -2,23 +2,27 @@
 	"extends": "eslint:recommended",
 	"env": {
 		"node": true,
-		"es6": true
+		"es6": true,
+		"browser": true
 	},
 	"parserOptions": {
 		"ecmaVersion": 2019
+	},
+	"globals": {
+		"BigInt": true
 	},
 	"rules": {
 		"brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 		"comma-dangle": ["error", "never"],
 		"comma-spacing": "error",
-		"curly": ["error", "multi-or-nest"],
+		"curly": ["error", "multi-line"],
 		"dot-location": ["error", "property"],
 		"handle-callback-err": "off",
 		"indent": ["error", "tab"],
 		"max-nested-callbacks": ["error", { "max": 4 }],
 		"max-statements-per-line": ["error", { "max": 2 }],
 		"no-console": "off",
-		"no-control-regex": "warn",
+		"no-control-regex": "off",
 		"no-empty-function": "error",
 		"no-floating-decimal": "error",
 		"no-lonely-if": "error",
@@ -34,7 +38,7 @@
 		"no-useless-concat": "error",
 		"no-var": "error",
 		"object-curly-spacing": ["error", "always"],
-		"prefer-const": "error",
+		"prefer-const": "warn",
 		"prefer-promise-reject-errors": "error",
 		"quotes": ["error", "double"],
 		"require-await": "error",

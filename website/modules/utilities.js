@@ -84,14 +84,6 @@ const utils = {
 		} else return Promise.resolve(null)
 	},
 
-	getURLEncoded: function(body) {
-		try {
-			return new URLSearchParams(body)
-		} catch (e) {
-			throw [400, { message: "Malformed URL encoded body" }]
-		}
-	},
-
 	generateCSRF: function(loginToken = null) {
 		const token = crypto.randomBytes(32).toString("hex")
 		const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours

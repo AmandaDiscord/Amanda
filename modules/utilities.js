@@ -392,9 +392,9 @@ const utils = {
 		const textPosition = Math.floor(length / 2) - Math.ceil(text.length / 2) + 1
 		let result = ""
 		for (let i = 1; i <= length; i++) {
-			if (i >= textPosition && i < textPosition + text.length)
+			if (i >= textPosition && i < textPosition + text.length) {
 				result += text[i - textPosition]
-			else {
+			} else {
 				// eslint-disable-next-line no-lonely-if
 				if (value / max * length >= i) result += "="
 				else result += " ​" // space + zwsp to prevent shrinking
@@ -455,9 +455,9 @@ const utils = {
 		from = Math.max(from, 1)
 		to = Math.min(items.length, to)
 		if (startString) items = items.slice(from - 1, to)
-		if (shuffle)
+		if (shuffle) {
 			utils.arrayShuffle(items)
-
+		}
 		if (!startString && !shuffle) items = items.slice() // make copy of array for consistent behaviour
 		return items
 	},
@@ -526,9 +526,9 @@ const utils = {
 			const maxItems = 20
 			for (let i = 0; i < rows.length; i++) {
 				const row = rows[i]
-				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength)
+				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
 					return rows.slice(0, i).concat([endString])
-
+				}
 				currentLength += row.length + joinLength
 			}
 			return rows
@@ -563,9 +563,9 @@ const utils = {
 				let row
 				if (direction == "left") row = rows[leftOffset++]
 				else row = rows[rows.length - 1 - rightOffset++]
-				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength)
+				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
 					return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
-
+				}
 				reconstruction.get(direction).push(row)
 				currentLength += row.length + joinLength
 				currentItems++
@@ -612,9 +612,9 @@ const utils = {
 		const maxLength = []
 		for (let i = 0; i < rows[0].length; i++) {
 			let thisLength = 0
-			for (let j = 0; j < rows.length; j++)
+			for (let j = 0; j < rows.length; j++) {
 				if (thisLength < rows[j][i].length) thisLength = rows[j][i].length
-
+			}
 			maxLength.push(thisLength)
 		}
 		for (let i = 0; i < rows.length; i++) {
@@ -632,9 +632,9 @@ const utils = {
 						line += padding + rows[i][j]
 					}
 					line += surround(i)
-				} else
+				} else {
 					line += rows[i][j]
-
+				}
 				if (j < rows[0].length - 1) line += spacer
 			}
 			output.push(line)
@@ -968,6 +968,19 @@ const utils = {
 			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
 		})
 		return string
+	},
+
+	getStats: function() {
+		const ram = process.memoryUsage()
+		return {
+			ping: client.ws.ping,
+			uptime: process.uptime(),
+			ram: ram.rss - (ram.heapTotal - ram.heapUsed),
+			users: client.users.size,
+			guilds: client.guilds.size,
+			channels: client.channels.size,
+			connections: client.lavalink.players.size
+		}
 	}
 }
 

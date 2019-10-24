@@ -194,7 +194,6 @@ ipc.addReceivers([
 	}
 ])
 
-
 class Session {
 	constructor(ws) {
 		this.ws = ws

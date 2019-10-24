@@ -134,10 +134,10 @@ commands.assign({
 			+ "\nOnly if you are the chosen one will the void stare back.",
 		aliases: ["cleverai"],
 		category: "games",
-		process: async function(msg, suffix) {
+		process: function(msg, suffix) {
 			suffix = suffix.toLowerCase()
 
-			const clever_message = await (() => {
+			const clever_message = (() => {
 				// Store history
 				if (!userHistory[msg.author.id]) userHistory[msg.author.id] = 0
 				userHistory[msg.author.id]++

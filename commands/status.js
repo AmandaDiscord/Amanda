@@ -136,7 +136,7 @@ function update() {
 		else client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
 
 		// console.log(`Set status: "${choice.message}" (${choice.type})`)
-	} else
+	} else {
 		console.error("Warning: no status messages available!")
-
+	}
 }
