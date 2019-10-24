@@ -398,7 +398,7 @@ class Queue {
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
-				this.voiceLeaveWarningMessagePromise = this.textChannel.send("No users left in my voice channel. I will stop playing in " + (this.voiceLeaveTimeout.delay / 1000) + " seconds if nobody rejoins.")
+				this.voiceLeaveWarningMessagePromise = this.textChannel.send(`No users left in my voice channel. I will stop playing in ${this.voiceLeaveTimeout.delay / 1000} seconds if nobody rejoins.`)
 			}
 		} else {
 			this.voiceLeaveTimeout.clear()
@@ -424,7 +424,7 @@ class QueueWrapper {
 	toggleAuto(context) {
 		this.queue.toggleAuto()
 		const auto = this.queue.auto
-		if (context instanceof Discord.Message) context.channel.send("Auto mode is now turned " + (auto ? "on" : "off"))
+		if (context instanceof Discord.Message) context.channel.send(`Auto mode is now turned ${auto ? "on" : "off"}`)
 		else if (context === "web") return true
 	}
 	togglePlaying(context) {
@@ -483,7 +483,7 @@ class QueueWrapper {
 							"Item 1 is the currently playing song. Use `&music skip` to skip it, "
 							+ "or `&music queue remove 2` if you wanted to remove the song that's up next."
 						)
-					} else context.channel.send("There are " + this.queue.songs.length + " items in the queue. You can only remove items 2-" + this.queue.songs.length + ".")
+					} else context.channel.send(`There are ${this.queue.songs.length} items in the queue. You can only remove items 2-${this.queue.songs.length}.`)
 				} else context.react("✅")
 			} else if (context === "web") return result !== 1
 		}

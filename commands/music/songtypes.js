@@ -115,14 +115,14 @@ class Song {
 	 * @param {string} message
 	 */
 	validationError(message) {
-		console.error("Song validation error: " + this.constructor.name + " " + message)
+		console.error(`Song validation error: ${this.constructor.name} ${message}`)
 	}
 	validate() {
 		["id", "track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
-			if (!this[key]) this.validationError("unset " + key)
+			if (!this[key]) this.validationError(`unset ${key}`)
 		})
 		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject", "destroy"].forEach(key => {
-			if (this[key] === Song.prototype[key]) this.validationError("unset " + key)
+			if (this[key] === Song.prototype[key]) this.validationError(`unset ${key}`)
 		})
 		if (typeof (this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
 		if (!this.thumbnail.src) this.validationError("unset thumbnail src")
@@ -192,8 +192,8 @@ class YouTubeSong extends Song {
 					})
 				} else { // Resolve track with Lavalink
 					return common.getTracks(this.id).then(tracks => {
-						if (!tracks[0]) this.error = "No results for ID " + this.id
-						else if (!tracks[0].track) this.error = "Missing track for ID " + this.id
+						if (!tracks[0]) this.error = `No results for ID ${this.id}`
+						else if (!tracks[0].track) this.error = `Missing track for ID ${this.id}`
 						else this.track = tracks[0].track
 					}).catch(message => {
 						this.error = message
@@ -278,7 +278,7 @@ class FriskySong extends Song {
 
 		this.station = station
 
-		if (!stationData.has(this.station)) throw new Error("Unsupported station: " + this.station)
+		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 
 		this.id = this.station // designed for error reporting
 		this.thumbnail = {
@@ -352,17 +352,17 @@ class FriskySong extends Song {
 			const stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
 			const embed = new Discord.MessageEmbed()
 				.setColor(0x36393f)
-				.setTitle("FRISKY: " + mix.data.title)
-				.setURL("https://beta.frisky.fm/mix/" + mix.id)
+				.setTitle(`FRISKY: ${mix.data.title}`)
+				.setURL(`https://beta.frisky.fm/mix/${mix.id}`)
 			// .setThumbnail(mix.data...)
 				.addField("Details",
 					`Show: ${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`
 				+ `\nEpisode: ${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`
 				// +"\nArtist: "+data.episode.artist_title
-				+ "\nGenre: " + mix.data.genre.join(", ")
+				+ `\nGenre: ${mix.data.genre.join(", ")}`
 				// +"\nEpisode genres: "+data.episode.genre.join(", ")
 				// +"\nShow genres: "+data.show.genre.join(", ")
-				+ "\nStation: " + stationCase
+				+ `\nStation: ${stationCase}`
 				)
 			if (mix.episode)
 				embed.setThumbnail(this.thumbnail.src)
@@ -370,7 +370,7 @@ class FriskySong extends Song {
 			if (mix.data.track_list && mix.data.track_list.length) {
 				let trackList = mix.data.track_list
 					.slice(0, 6)
-					.map(track => track.artist + " - " + track.title)
+					.map(track => `${track.artist} - ${track.title}`)
 					.join("\n")
 				const hidden = mix.data.track_list.length - 6
 				if (hidden > 0) trackList += `\n_and ${hidden} more..._`
@@ -385,7 +385,7 @@ class FriskySong extends Song {
 	getProgress(time, paused) {
 		const part = "= ⋄ ==== ⋄ ==="
 		const fragment = part.substr(7 - this._filledBarOffset, 7)
-		const bar = "​" + fragment.repeat(5) + "​" // SC: ZWSP x 2
+		const bar = `${fragment.repeat(5)}` // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
 		time = common.prettySeconds(time)
@@ -403,7 +403,7 @@ class FriskySong extends Song {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)
-					this.error = "No tracks available for station " + this.station
+					this.error = `No tracks available for station ${this.station}`
 				}
 			}).catch(message => {
 				this.error = message

@@ -68,7 +68,7 @@ const cmds = {
 			else if (strings == "312450203678539787 501820319481200650") percentage = 9999
 			else {
 				const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
-				percentage = parseInt("0x" + hash) % 101
+				percentage = parseInt(`0x${hash}`) % 101
 			}
 			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { files: [image] })
 		}
@@ -393,7 +393,7 @@ async function doInteraction(msg, suffix, source) {
 			.setColor("36393E")
 		if (source.footer) embed.setFooter(source.footer)
 		return msg.channel.send(utils.contentify(msg.channel, embed))
-	}).catch(error => { return msg.channel.send("There was an error: ```\n" + error + "```") })
+	}).catch(error => { return msg.channel.send(`There was an error: \`\`\`\n${error}\`\`\``) })
 }
 
 commands.assign(cmds)

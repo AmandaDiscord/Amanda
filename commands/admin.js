@@ -67,7 +67,7 @@ commands.assign({
 				function formatOutput(out) {
 					if (typeof out !== "string") out = ""
 					out = out.replace(/\x1B\[[0-9;]*[JKmsu]/g, "")
-					if (out.length > 1000) out = out.slice(0, 999) + "…"
+					if (out.length > 1000) out = `${out.slice(0, 999)}…`
 					return out
 				}
 				if (stdout) result.addField("stdout:", formatOutput(stdout))

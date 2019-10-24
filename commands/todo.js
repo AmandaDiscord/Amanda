@@ -38,11 +38,11 @@ function buildItemStrings(items, tags) {
 	})
 	const largestIDLength = ("" + largestID).length
 	const itemStrings = items.map(item => {
-		item.id = "" + item.id
+		item.id = `${item.id}`
 		let result = "`" + "​ ".repeat(largestIDLength - item.id.length) + item.id + "` " // SC: ZWSP
 		if (item.complete) result += "🔸"
 		else result += "▪"
-		result += " **" + item.name + "**"
+		result += ` **${item.name}**`
 		if (item.tags.length) {
 			result += " ("
 			result += item.tags.join(", ")
@@ -133,7 +133,7 @@ commands.assign({
 				paginateResults(msg.channel, itemStrings)
 			} else if (subcommand === "tags") {
 				const tags = (await utils.sql.all("SELECT DISTINCT tag FROM TodoTags")).map(row => row.tag)
-				msg.channel.send("All tags: " + tags.join(", "))
+				msg.channel.send(`All tags: ${tags.join(", ")}`)
 			} else if (subcommand === "complete") {
 				const allowed = await checkAdmin(msg)
 				if (!allowed) return

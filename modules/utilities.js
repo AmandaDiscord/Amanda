@@ -349,11 +349,11 @@ const utils = {
 	 * @param {(...args: Array<any>) => any} code
 	 */
 	addTemporaryListener: function(target, name, filename, code) {
-		console.log("added event " + name)
+		console.log(`added event ${name}`)
 		target.on(name, code)
 		reloadEvent.once(filename, () => {
 			target.removeListener(name, code)
-			console.log("removed event " + name)
+			console.log(`removed event ${name}`)
 		})
 	},
 	/**
@@ -421,12 +421,12 @@ const utils = {
 			Object.entries(data).forEach(e => {
 				errorObject[e[0]] = e[1]
 			})
-			result = "```\n" + data.stack + "``` " + (await utils.stringify(errorObject))
-		} else result = "```js\n" + util.inspect(data, { depth: depth }) + "```"
+			result = `\`\`\`\n${data.stack}\`\`\` ${await utils.stringify(errorObject)}`
+		} else result = `\`\`\`js${util.inspect(data, { depth: depth })}\`\`\``
 
 		if (result.length >= 2000) {
-			if (result.startsWith("```")) result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "") + "…```"
-			else result = result.slice(0, 1998) + "…"
+			if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
+			else result = `${result.slice(0, 1998)}…`
 		}
 		return result
 	},
@@ -491,7 +491,7 @@ const utils = {
 			// Is index in bounds?
 			if (index < 0 || index >= items.length) throw new Error() // just head off to the catch
 			// Edit to success
-			embed.setDescription("» " + items[index])
+			embed.setDescription(`» ${items[index]}`)
 			embed.setFooter("")
 			selectmessage.edit(utils.contentify(selectmessage.channel, embed))
 			return index
@@ -509,9 +509,9 @@ const utils = {
 	upcomingDate: function(date) {
 		const currentHours = date.getUTCHours()
 		let textHours = ""
-		if (currentHours < 12) textHours += currentHours + " AM"
-		else textHours = (currentHours - 12) + " PM"
-		return date.toUTCString().split(" ").slice(0, 4).join(" ") + " at " + textHours + " UTC"
+		if (currentHours < 12) textHours += `${currentHours} AM`
+		else textHours = `${currentHours - 12} PM`
+		return `${date.toUTCString().split(" ").slice(0, 4).join(" ")} at ${textHours} UTC`
 	},
 
 	compactRows: {
@@ -649,7 +649,7 @@ const utils = {
 	 */
 	createPagination: function(channel, title, rows, align, maxLength) {
 		let alignedRows = utils.tableifyRows([title].concat(rows), align, () => "`")
-		const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => "__**`" + sub + "`**__")
+		const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => `__**\`${sub}\`**__`)
 		alignedRows = alignedRows.slice(1)
 		const pages = utils.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 		utils.paginate(channel, pages.length, page => {
@@ -657,7 +657,7 @@ const utils = {
 				new Discord.MessageEmbed()
 					.setTitle("Viewing all playlists")
 					.setColor(0x36393f)
-					.setDescription(formattedTitle + "\n" + pages[page].join("\n"))
+					.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
 					.setFooter(`Page ${page + 1} of ${pages.length}`)
 			)
 		})
@@ -709,13 +709,13 @@ const utils = {
 		if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user)
 		if (content instanceof Discord.MessageEmbed) {
 			if (permissions && !permissions.has("EMBED_LINKS")) {
-				value = `${content.author ? content.author.name + "\n" : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? content.description + "\n" : ""}${content.fields.length > 0 ? content.fields.map(f => f.name + "\n" + f.value).join("\n") + "\n" : ""}${content.image ? content.image.url + "\n" : ""}${content.footer ? content.footer.text : ""}`
-				if (value.length > 2000) value = value.slice(0, 1960) + "…"
+				value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? content.fields.map(f => `${f.name}\n${f.value}`).join("\n") + "\n" : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
+				if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 				value += "\nPlease allow me to embed content"
 			} else return content
 		} else if (typeof (content) == "string") {
 			value = content
-			if (value.length > 2000) value = value.slice(0, 1998) + "…"
+			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
 		}
 		return value
 	},
@@ -842,10 +842,10 @@ const utils = {
 		number -= mins * 1000 * 60
 		const secs = Math.floor(number / 1000)
 		let timestr = ""
-		if (days > 0) timestr += days + "d "
-		if (hours > 0) timestr += hours + "h "
-		if (mins > 0) timestr += mins + "m "
-		if (secs > 0) timestr += secs + "s"
+		if (days > 0) timestr += `${days} d`
+		if (hours > 0) timestr += `${hours} h`
+		if (mins > 0) timestr += `${mins} m`
+		if (secs > 0) timestr += `${secs} s`
 		return timestr
 	},
 
@@ -923,7 +923,7 @@ const utils = {
 	 */
 	fixEmoji: function(emoji) {
 		if (emoji && emoji.name) {
-			if (emoji.id != null) return emoji.name + ":" + emoji.id
+			if (emoji.id != null) return `${emoji.name}:${emoji.id}`
 			else return emoji.name
 		}
 		return emoji
@@ -940,7 +940,7 @@ const utils = {
 		let reaction
 		if (emoji.id) {
 			// Custom emoji, has name and ID
-			reaction = emoji.name + ":" + emoji.id
+			reaction = `${emoji.name}:${emoji.id}`
 		} else {
 			// Default emoji, has name only
 			reaction = encodeURIComponent(emoji.name)
@@ -964,7 +964,7 @@ const utils = {
 	 */
 	replace: function(string, properties = {}) {
 		Object.keys(properties).forEach(item => {
-			const index = string.indexOf("%" + item)
+			const index = string.indexOf(`%${item}`)
 			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
 		})
 		return string

@@ -54,7 +54,7 @@ async function gifDetector(msg) {
 			const backlog = await utils.sql.all("SELECT url FROM GenderGifBacklog")
 			if (backlog.some(r => r.url == url)) return // skip if already in backlog
 
-			if (!backlog.length) cadence.send("New " + command + " GIF from " + msg.author.username + ":\n" + url)
+			if (!backlog.length) cadence.send(`New ${command} GIF from ${msg.author.username}:\n${url}`)
 
 			utils.sql.all("INSERT INTO GenderGifBacklog VALUES (NULL, ?, ?, ?)", [url, command, msg.author.username])
 		}
@@ -84,7 +84,7 @@ commands.assign({
 			new Promise(async resolve => {
 				if (existing.length) {
 					// @ts-ignore
-					const dmsg = await msg.channel.send("That GIF already exists with " + existing.sort((a, b) => (a - b)).map(e => "`" + e.gender + "`").join(", ") + ".")
+					const dmsg = await msg.channel.send(`That GIF already exists with ${existing.sort((a, b) => (a - b)).map(e => `\`${e.gender}\``).join(", ")}.`)
 					const menu = utils.reactionMenu(dmsg, [{ emoji: "🗑", ignore: "total", allowedUsers: [msg.author.id], actionType: "js", actionData: async () => {
 						await utils.sql.all("DELETE FROM GenderGifsV2 WHERE gifid = ?", existing[0].gifid)
 						await msg.channel.send("Deleted. Replacing...")

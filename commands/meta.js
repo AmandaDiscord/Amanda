@@ -194,7 +194,7 @@ commands.assign({
 		process: function(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
-				.setDescription(lang.meta.invite.returns.notice + "\nInvite link: https://discord-bots.ga/amanda")
+				.setDescription(`${lang.meta.invite.returns.notice}\nInvite link: https://discord-bots.ga/amanda`)
 				.setColor(0x36393f)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -257,15 +257,13 @@ commands.assign({
 							const result = { branch: status.current, latestCommitHash: log.latest.hash.slice(0, 7), logString:
 							log.all.slice(0, limit).map((line, index) => {
 								const date = new Date(line.date)
-								const dateString = date.toDateString() + " @ " + date.toTimeString().split(":").slice(0, 2).join(":")
+								const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
 								const diff =
-									diffs[index].files.length + " files changed, " +
-									diffs[index].insertions + " insertions, " +
-									diffs[index].deletions + " deletions."
-								return "" +
-												"`» " + line.hash.slice(0, 7) + ": " + dateString + " — " + (authorNameMap[line.author_name] || "Unknown") + "`\n" +
-												"`» " + diff + "`\n" +
-												line.message
+									`${diffs[index].files.length} files changed, ` +
+									`${diffs[index].insertions} insertions, ` +
+									`${diffs[index].deletions} deletions.`
+								return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
+												`\`» ${diff}\`\n${line.message}`
 							}).join("\n\n") }
 							r(result)
 						})
@@ -274,7 +272,7 @@ commands.assign({
 			})
 			const embed = new Discord.MessageEmbed()
 				.setTitle("Git info")
-				.addField("Status", "On branch " + res.branch + ", latest commit " + res.latestCommitHash)
+				.addField("Status", `On branch ${res.branch}, latest commit ${res.latestCommitHash}`)
 				.addField(`Commits (latest ${limit} entries)`, res.logString)
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -321,7 +319,7 @@ commands.assign({
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.activity.details}`
 				status = "<:streaming:606815351967318019>"
 			} else if (user.presence.activity) {
-				activity += user.activityPrefix + " **" + user.presence.activity.name + "**"
+				activity += `${user.activityPrefix} **${user.presence.activity.name}**`
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\n${user.presence.activity.details}`
 				if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
@@ -406,7 +404,7 @@ commands.assign({
 			avatar.resize(111, 111)
 
 			const heartType = getHeartType(user, info)
-			const heart = images.get("heart-" + heartType)
+			const heart = images.get(`heart-${heartType}`)
 
 			const badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
 			const mem = client.guilds.get("475599038536744960").members.get(user.id)
@@ -500,8 +498,8 @@ commands.assign({
 			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send("You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.")
 
 			const setting = settings[settingName]
-			if (!setting) return msg.channel.send(`Command syntax is \`&settings ${this.usage}\`. Your value for \`name\` was incorrect, it must be one of: ${Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => "`" + k + "`").join(", ")}`)
-			if (!setting.scope.includes(scope)) return msg.channel.send("The setting `" + settingName + "` is not valid for the scope `" + scope + "`.")
+			if (!setting) return msg.channel.send(`Command syntax is \`&settings ${this.usage}\`. Your value for \`name\` was incorrect, it must be one of: ${Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ")}`)
+			if (!setting.scope.includes(scope)) return msg.channel.send(`The setting \`${settingName}\` is not valid for the scope \`${scope}\`.`)
 
 			let value = args[2]
 			if (!value) {
@@ -509,8 +507,8 @@ commands.assign({
 				if (scope == "server") {
 					value = row ? row.value : setting.default
 					if (setting.type == "boolean") value = (!!+value) + ""
-					if (row) return msg.channel.send("Current value of `" + settingName + "` is `" + value + "`. This value was set for the server.")
-					else return msg.channel.send("Current value of `" + settingName + "` is not set in this server, so it inherits the default value, which is `" + value + "`.")
+					if (row) return msg.channel.send(`Current value of \`${settingName}\` is \`${value}\`. This value was set for the server.`)
+					else return msg.channel.send(`Current value of \`${settingName}\` is not set in this server, so it inherits the default value, which is \`${value}\`.`)
 				} else if (scope == "self") {
 					let serverRow
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
@@ -522,10 +520,10 @@ commands.assign({
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
 					const finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
 					return msg.channel.send(
-						"Default value: " + values[0] + "\n"
-						+ "Server value: " + (values[1] != null ? values[1] : "[unset]") + "\n"
-						+ "Your value: " + (values[2] != null ? values[2] : "[unset]") + "\n"
-						+ "Computed value: " + finalValue
+						`Default value: ${values[0]}\n`
+						+ `Server value: ${values[1] != null ? values[1] : "[unset]"}\n`
+						+ `Your value: ${values[2] != null ? values[2] : "[unset]"}\n`
+						+ `Computed value: ${finalValue}`
 					)
 				}
 			}
@@ -577,7 +575,7 @@ commands.assign({
 
 			if (setting.type == "boolean") {
 				value = args[2].toLowerCase()
-				if (!["true", "false"].includes(value)) return msg.channel.send("Command syntax is `&settings <scope> <name> <value>`. The setting `" + settingName + "` is a boolean, and so your `" + value + "` must be either `true` or `false`.")
+				if (!["true", "false"].includes(value)) return msg.channel.send(`Command syntax is \`&settings <scope> <name> <value>\`. The setting \`${settingName}\` is a boolean, and so your \`${value}\` must be either \`true\` or \`false\`.`)
 				const value_result = args[2] == "true" ? "1" : "0"
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result])
 				return msg.channel.send("Setting updated.")
@@ -588,7 +586,7 @@ commands.assign({
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 
-			} else throw new Error("Invalid reference data type for setting `" + settingName + "`")
+			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)
 		}
 	},
 	"help": {
@@ -672,7 +670,7 @@ commands.assign({
 						}
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
-							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => "`" + a + "`").join(", ")}\nCategory: ${command.category}`)
+							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}`)
 							.setColor("36393E")
 						send("channel")
 					} else if (commands.categories.get(suffix)) {
@@ -710,7 +708,7 @@ commands.assign({
 								}
 								addPart(mobileEmbed.author && `**${mobileEmbed.author.name}**`)
 								addPart(mobileEmbed.description)
-								addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => f.name + "\n" + f.value).join("\n"))
+								addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => `${f.name}\n${f.value}`).join("\n"))
 								addPart(mobileEmbed.footer && mobileEmbed.footer.text)
 							}
 							// @ts-ignore
@@ -750,7 +748,7 @@ commands.assign({
 						}
 						addPart(embed.author && `**${embed.author.name}**`)
 						addPart(embed.description)
-						addPart(embed.fields && embed.fields.map(f => f.name + "\n" + f.value).join("\n"))
+						addPart(embed.fields && embed.fields.map(f => `${f.name}\n${f.value}`).join("\n"))
 						addPart(embed.footer && embed.footer.text)
 						if (content.length >= 2000) promise = target.send("Please allow me to embed content")
 						else promise = target.send(content)

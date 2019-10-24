@@ -45,7 +45,7 @@ commands.assign({
 				playlists = playlists.map(p => {
 					p.ranking = "" // higher ascii value is better
 					function addRanking(r) {
-						p.ranking += r + "."
+						p.ranking += `${r}.`
 					}
 					if (p.author == msg.author.id) addRanking(1)
 					else addRanking(0)
@@ -64,7 +64,7 @@ commands.assign({
 					if (user) {
 						let username = user.username
 						if (username.length > 14) username = username.slice(0, 13) + "…"
-						return "`" + Discord.Util.escapeMarkdown(username) + "`"
+						return `\`${Discord.Util.escapeMarkdown(username)}\``
 					} else return "(?)"
 				}
 				return utils.createPagination(
@@ -81,7 +81,7 @@ commands.assign({
 					, 2000
 				)
 			}
-			if (!playlistName) return msg.channel.send(msg.author.username + ", you must name a playlist. Use `&music playlists show` to show all playlists.")
+			if (!playlistName) return msg.channel.send(`${msg.author.username}, you must name a playlist. Use \`&music playlists show\` to show all playlists.`)
 			const playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName)
 			if (!playlistRow) {
 				if (args[1] == "create") {
@@ -172,7 +172,7 @@ commands.assign({
 					.map((songss, index) => `${index + 1}. **${songss.name}** (${common.prettySeconds(songss.length)})`)
 					.filter(s => s.toLowerCase().includes(args.slice(2).join(" ").toLowerCase()))
 					.join("\n")
-				if (body.length > 2000) body = body.slice(0, 1998).split("\n").slice(0, -1).join("\n") + "\n…"
+				if (body.length > 2000) body = `${body.slice(0, 1998).split("\n").slice(0, -1).join("\n")}\n…`
 				const embed = new Discord.MessageEmbed()
 					.setDescription(body)
 					.setColor("36393E")
@@ -184,7 +184,7 @@ commands.assign({
 				if (rows.length) {
 					const songss = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
 					common.inserters.fromSongArray(msg.channel, voiceChannel, songss, false, msg)
-				} else msg.channel.send("That playlist is empty. Add some songs with `&music playlist " + playlistRow.name + " add <song>`!")
+				} else msg.channel.send(`That playlist is empty. Add some songs with \`&music playlist ${playlistRow.name} add <song>\`!`)
 			} else if (action.toLowerCase() == "import") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
 				if (args[2].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
@@ -229,7 +229,7 @@ commands.assign({
 			} else if (action.toLowerCase() == "delete") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(
-					"This action will permanently delete the playlist `" + playlistRow.name + "`. " +
+					`This action will permanently delete the playlist \`${playlistRow.name}\`. ` +
 					"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n" +
 					"You will not be able to undo this action.\n\n" +
 					"<:bn_del:331164186790854656> - confirm deletion\n" +
@@ -253,7 +253,7 @@ commands.assign({
 				if (client.users.get(playlistRow.author)) author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).avatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
 				const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${common.prettySeconds(s.length)})`)
-				const totalLength = "\nTotal length: " + common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))
+				const totalLength = `\nTotal length: ${common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])
 					.setColor("36393E")

@@ -122,7 +122,7 @@ const subcommandsMap = new Map([
 						/** Zero-indexed emoji choice */
 						const choice = emoji.name[3] - 1
 						// Edit the message to reflect the choice
-						embed.setDescription("» " + options[choice])
+						embed.setDescription(`» ${options[choice]}`)
 						nmsg.edit(embed)
 						// Now obey that choice
 						if (choice == 0) {
@@ -164,9 +164,9 @@ const subcommandsMap = new Map([
 				const index = +args[2]
 				queue.wrapper.removeSong(index, msg)
 			} else {
-				const rows = queue.songs.map((song, index) => `${index + 1}. ` + song.queueLine)
-				const totalLength = "\nTotal length: " + common.prettySeconds(queue.getTotalLength())
-				const body = utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n") + totalLength
+				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
+				const totalLength = `\nTotal length: ${common.prettySeconds(queue.getTotalLength())}`
+				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
 				msg.channel.send(
 					new Discord.MessageEmbed()
 						.setTitle(`Queue for ${Discord.Util.escapeMarkdown(msg.guild.name)}`)
@@ -284,7 +284,7 @@ commands.assign({
 					+ `\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
 					, true, true
 				).then(() => {
-					return send("`" + hash + "`", false, false)
+					return send(`\`${hash}\``, false, false)
 				// eslint-disable-next-line no-empty-function
 				}).catch(() => {})
 			} else {
@@ -295,7 +295,7 @@ commands.assign({
 						+ "\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
 						, true, true
 					).then(() => {
-						send("`" + existing.token + "`", false, false)
+						send(`\`${existing.token}\``, false, false)
 					// eslint-disable-next-line no-empty-function
 					}).catch(() => {})
 				} else send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")

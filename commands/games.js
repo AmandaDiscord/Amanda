@@ -92,7 +92,8 @@ class TriviaGame extends Game {
 		// Send Message
 		const embed = new Discord.MessageEmbed()
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
-			.setDescription("​\n" + entities.decodeHTML(this.data.question))
+			// eslint-disable-next-line no-irregular-whitespace
+			.setDescription(`​\n${entities.decodeHTML(this.data.question)}`)
 			.setColor(this.color)
 		answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", true)) // SC: zero-width space and em space
 		embed.setFooter("To answer, type a letter in chat. You have 20 seconds.")
@@ -163,11 +164,11 @@ class TriviaGame extends Game {
 		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
 		else embed.addField("Winners", "No winners.")
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
-		else embed.addField("Next round", this.lang.games.trivia.prompts.permissionDenied + "\n\nYou can type `&trivia` or `&t` for another round.")
+		else embed.addField("Next round", `${this.lang.games.trivia.prompts.permissionDenied}\n\nYou can type \`&trivia\` or \`&t\` for another round.`)
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 			utils.reactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
-					if (user.bot) message.channel.send(user + " SHUT UP!!!!!!!!")
+					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
 					else startGame(this.channel, { category: this.category })
 				} }
 			])
@@ -212,8 +213,7 @@ async function startGame(channel, options = {}) {
 			options.msg.author.send(
 				new Discord.MessageEmbed()
 					.setTitle("Categories")
-					.setDescription(data.trivia_categories.map(c => c.name).join("\n") + "\n\n" +
-				options.lang.games.trivia.prompts.categorySelect)
+					.setDescription(`${data.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
 			).then(() => {
 				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, { "username": options.msg.author.username }))
 			}).catch(() => {
@@ -234,7 +234,7 @@ async function startGame(channel, options = {}) {
 	channel.sendTyping()
 	// Get new game data
 	/** @type {Array<{response_code: number, results: Array<TriviaResponse>}>} */
-	const body = await JSONHelper("https://opentdb.com/api.php?amount=1" + (category ? `&category=${category}` : ""), channel, options.lang)
+	const body = await JSONHelper(`https://opentdb.com/api.php?amount=1${category ? `&category=${category}` : ""}`, channel, options.lang)
 	if (!body[0]) return
 	const data = body[1]
 	// Error check new game data

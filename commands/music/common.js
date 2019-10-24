@@ -73,15 +73,15 @@ const common = {
 	manageYtdlGetInfoErrors: function(channel, reason, id, item) {
 		if (channel instanceof Discord.Message) channel = channel.channel
 		const idString = id ? ` (index: ${item}, id: ${id})` : ""
-		if (!reason || !reason.message) return channel.send("An unknown error occurred." + idString)
-		else if (reason.message && reason.message.startsWith("No video id found:")) return channel.send("That is not a valid YouTube video." + idString)
+		if (!reason || !reason.message) return channel.send(`An unknown error occurred. ${idString}`)
+		else if (reason.message && reason.message.startsWith("No video id found:")) return channel.send(`That is not a valid YouTube video. ${idString}`)
 		else if (reason.message && (
 			reason.message.includes("who has blocked it in your country")
 			|| reason.message.includes("This video is unavailable")
 			|| reason.message.includes("The uploader has not made this video available in your country")
 			|| reason.message.includes("copyright infringement")
 		))
-			return channel.send("I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement." + idString)
+			return channel.send(`I'm not able to stream that video. It may have been deleted by the creator, made private, blocked in certain countries, or taken down for copyright infringement. ${idString}`)
 		else {
 			return new Promise(resolve => {
 				utils.stringify(reason).then(result => {
@@ -119,7 +119,7 @@ const common = {
 		input = input.replace(/(<|>)/g, "")
 		try {
 			let inputAsURL = input
-			if (inputAsURL.includes(".com/") && !inputAsURL.startsWith("http")) inputAsURL = "https://" + inputAsURL
+			if (inputAsURL.includes(".com/") && !inputAsURL.startsWith("http")) inputAsURL = `https://${inputAsURL}`
 			const url = new URL(inputAsURL)
 			// It's a URL.
 			if (url.hostname.startsWith("www.")) url.hostname = url.hostname.slice(4)
@@ -303,7 +303,7 @@ const common = {
 		 * @param {string} search
 		 */
 		async function(textChannel, voiceChannel, author, insert, search) {
-			let tracks = await common.getTracks("ytsearch:" + search)
+			let tracks = await common.getTracks(`ytsearch:${search}`)
 			if (tracks.length == 0) return textChannel.send("No results.")
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
