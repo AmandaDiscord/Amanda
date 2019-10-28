@@ -133,7 +133,19 @@ ipc.addReceivers([
 				// console.log("Received SONG_UPDATE")
 				// console.log("Queue cache:", cache)
 				// console.log("New item:", song)
-				cache.songs[index] = song
+				if (cache === null) {
+					console.error("Uh oh! How did we get here?")
+					console.error("Received SONG_UPDATE")
+					console.error("Queue cache:", cache)
+					console.error("New item:", song)
+					console.error("Index:", index)
+					console.error("guildID:", guildID)
+					console.log("\n---\n")
+					console.error("Complete state dump:")
+					console.error([...states.entries()].map(s => [s[0], s[1].avc.cache]))
+				} else {
+					cache.songs[index] = song
+				}
 				return cache
 			})
 			sessions.forEach(session => {
