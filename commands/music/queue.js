@@ -38,7 +38,7 @@ class Queue {
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
 				this.textChannel.send("Everyone left, so I have as well.")
-				this._dissolve()
+				this.stop()
 			})
 			.setDelay(voiceEmptyDuration)
 
@@ -54,8 +54,8 @@ class Queue {
 				const newSongStartTime = data.state.time - data.state.position
 				// commenting this out: it may break the error check, but it will improve the web time
 				// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
-					this.songStartTime = newSongStartTime
-					ipc.router.send.updateTime(this)
+				this.songStartTime = newSongStartTime
+				ipc.router.send.updateTime(this)
 				// }
 				if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
 					if (!this.songs[0].error) {
@@ -312,6 +312,7 @@ class Queue {
 		// Actually remove
 		const removed = this.songs.splice(index, 1)[0]
 		if (!removed) return 2
+		removed.destroy()
 		return 0
 	}
 	/**
