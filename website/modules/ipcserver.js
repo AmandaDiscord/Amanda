@@ -111,9 +111,9 @@ class IPC {
 	 */
 	getShard(id) {
 		if (ipc.of["shard-x"]) {
-			return ipc.of["shard-x"]
+			return ipc.of["shard-x"] || null
 		} else {
-			return this.shards.get(id)
+			return this.shards.get(id) || null
 		}
 	}
 
@@ -121,7 +121,7 @@ class IPC {
 	 * Get the socket that corresponds to a guild ID.
 	 */
 	getShardForGuild(id) {
-		let shardID = Number((BigInt(id) >> BigInt(22)) % BigInt(this.totalShards))
+		const shardID = Number((BigInt(id) >> BigInt(22)) % BigInt(this.totalShards))
 		return this.getShard(shardID)
 	}
 
@@ -145,7 +145,11 @@ class IPC {
 	 * Send raw data to a socket.
 	 */
 	send(socket, raw) {
-		this.server.emit(socket, "message", raw)
+		if (socket) {
+			this.server.emit(socket, "message", raw)
+		} else {
+			throw new Error("Socket does not exist. Did a shard disconnect?")
+		}
 	}
 
 	/**
@@ -185,6 +189,10 @@ class IPC {
 	 * @param {"truthy"|"concat"|"concatProps"|"add"|"addProps"|null} combineMethod
 	 */
 	requestAll(op, data, combineMethod = null) {
+		const connectedClientCount = this.server.sockets.length
+		if (connectedClientCount === 0) {
+			return Promise.reject(new Error("No clients connected, requestAll would never resolve."))
+		}
 		let _id = nextID()
 		let raw = {_id, op, data}
 		this.broadcast(raw)
@@ -192,7 +200,7 @@ class IPC {
 			let parts = []
 			this.requests.set(_id, part => {
 				parts.push(part)
-				if (parts.length == this.server.sockets.length) {
+				if (parts.length === connectedClientCount) {
 					if (combineMethod === "truthy") {
 						resolve(parts.find(p => p))
 					} else if (combineMethod === "concat") {

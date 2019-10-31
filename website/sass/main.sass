@@ -45,7 +45,7 @@ nav
 
 		&:hover
 			background-color: #444
-			
+
 		&.active
 			background: linear-gradient(to top, white 3px, #444 3px)
 			color: white
@@ -126,7 +126,7 @@ a.no-underline
 
 	.spaced-title-left
 		justify-self: left
-	
+
 	.spaced-title-right
 		justify-self: right
 
@@ -147,9 +147,18 @@ a.no-underline
 		@include box
 		max-width: 800px
 
+		&.wide
+			flex: 1
+
 		> *:not(:last-child)
 			margin-bottom: 8px
 
+.alert
+	color: #680505
+	background-color: rgba(255, 100, 100, 0.25)
+	border: 1px solid #222
+	border-left: 3px solid
+	padding: 8px
 
 .login-container
 	display: grid
@@ -323,7 +332,7 @@ a.no-underline
 			display: grid
 			grid-template-columns: auto auto 1fr auto
 			grid-gap: 6px
-			
+
 			img
 				width: 30px
 				height: 30px
@@ -368,7 +377,7 @@ a.no-underline
 			padding-right: 16px
 			margin: 3px
 
-			img 
+			img
 				width: 91px
 				height: 91px
 				border-radius: 50%

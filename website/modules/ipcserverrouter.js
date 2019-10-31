@@ -21,7 +21,7 @@ class IPCRouter {
 	/**
 	 * @param {string} userID
 	 * @param {boolean} np
-	 * @returns {Promise<{guilds: ipctypes.FilteredGuild[], npguilds: ipctypes.FilteredGuild[]}>}
+	 * @returns {Promise<{guilds: types.FilteredGuild[], npguilds: types.FilteredGuild[]}>}
 	 */
 	requestDashGuilds(userID, np) {
 		return this.ipc.requestAll("GET_DASH_GUILDS", { userID, np }, "concatProps")

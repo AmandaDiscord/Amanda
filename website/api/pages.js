@@ -32,15 +32,23 @@ module.exports = [
 
 			if (session) {
 				const user = await snow.user.cache.fetchUser(session.userID)
-				const { guilds, npguilds } = await ipc.router.requestDashGuilds(session.userID, true)
-				const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
-				const csrfToken = utils.generateCSRF()
-				const page = pugCache.get("pug/selectserver.pug")({ user, npguilds, displayNoSharedServers, guilds, csrfToken })
-				return {
-					statusCode: 200,
-					contentType: "text/html",
-					content: page
-				}
+				return ipc.router.requestDashGuilds(session.userID, true).then(({guilds, npguilds}) => {
+					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
+					const csrfToken = utils.generateCSRF()
+					const page = pugCache.get("pug/selectserver.pug")({ user, npguilds, displayNoSharedServers, guilds, csrfToken })
+					return {
+						statusCode: 200,
+						contentType: "text/html",
+						content: page
+					}
+				}).catch(() => {
+					const page = pugCache.get("pug/error.pug")({ message: "No clients connected for selectserver." })
+					return {
+						statusCode: 500,
+						contentType: "text/html",
+						content: page
+					}
+				})
 			} else {
 				const csrfToken = utils.generateCSRF()
 				const page = pugCache.get("pug/login.pug")({ csrfToken })
@@ -140,9 +148,14 @@ module.exports = [
 					code: () => session == null
 					, expected: false
 				}).do({
-					code: (_) => ipc.router.requestGuildForUser(session.userID, guildID)
+					code: () => ipc.getShardForGuild(guildID)
+					, expected: v => v != null
+					, errorValue: "Shard not available for server view."
+				}).do({
+					code: () => ipc.router.requestGuildForUser(session.userID, guildID)
 					, assign: "guild"
 					, expected: v => v != null
+					, errorValue: "USER_NOT_IN_GUILD"
 				})
 				.go()
 				.then(state => {
@@ -165,12 +178,21 @@ module.exports = [
 						}
 					}
 				})
-				.catch(() => {
-					const page = pugCache.get("pug/accessdenied.pug")({ session })
-					return {
-						statusCode: 403,
-						contentType: "text/html",
-						content: page
+				.catch(err => {
+					if (err === "USER_NOT_IN_GUILD") {
+						const page = pugCache.get("pug/accessdenied.pug")({ session })
+						return {
+							statusCode: 403,
+							contentType: "text/html",
+							content: page
+						}
+					} else {
+						const page = pugCache.get("pug/error.pug")({ message: err })
+						return {
+							statusCode: 500,
+							contentType: "text/html",
+							content: page
+						}
 					}
 				})
 		}

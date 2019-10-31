@@ -2,6 +2,7 @@
 
 const fs = require("fs")
 const path = require("path")
+const events = require("events")
 const pj = path.join
 
 function localPath(dir) {
@@ -14,7 +15,7 @@ module.exports = class Reloader {
 	constructor() {
 		this.watchers = new Map()
 		this.syncers = []
-		this.reloadEvent = new (require("events").EventEmitter)()
+		this.reloadEvent = new events.EventEmitter()
 	}
 	/**
 	 * Set up a file to be watched and reloaded in the future.

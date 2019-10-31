@@ -61,6 +61,47 @@ function shouldRemove() {
 	return fileHasReloaded
 }
 
+ipc.server.on("socket.disconnected", disconnectListener)
+function disconnectListener() {
+	console.log("Socket disconnected, clearing cached state")
+	sessions.forEach(session => {
+		session.cleanClose()
+	})
+	states.clear()
+}
+
+/**
+ * @param {{op: string, updateCallback: (cache: any, clientData: any) => any, sessionCallback: (session: Session, cache: any, clientData: any) => any}[]} processors
+ */
+function addProcessors(processors) {
+	ipc.addReceivers(processors.map(processor => ({
+		op: processor.op,
+		fn: clientData => {
+			const guildID = clientData.guildID
+			const state = states.get(guildID)
+			if (!state) return // queue isn't cached yet, so no need to update it
+			state.update(cache => {
+				if (cache == null) {
+					console.error(
+						"====="
+						+ "\nUh oh! How did we get here?"
+						+ `\nop: ${processor.op}`
+						+ "\ndata", clientData
+						, "\nQueue cache:", cache
+					)
+				} else {
+					cache = processor.updateCallback(cache, clientData)
+					sessions.forEach(session => {
+						if (session.guild && session.guild.id == guildID) processor.sessionCallback(session, cache, clientData)
+					})
+				}
+				return cache
+			})
+		},
+		shouldRemove
+	})))
+}
+
 ipc.addReceivers([
 	{
 		op: "NEW_QUEUE",
@@ -72,140 +113,81 @@ ipc.addReceivers([
 			})
 		},
 		shouldRemove
-	},
+	}
+])
+
+addProcessors([
 	{
 		op: "ADD_SONG",
-		fn: ({ guildID, position, song }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				if (position == -1) cache.songs.push(song)
-				else cache.songs.splice(position, 0, song)
-				// console.log(cache)
-				// console.log(`Song added. There are now ${cache.songs.length} songs.`)
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) session.queueAdd(song, position)
-			})
+		updateCallback: (cache, { position, song }) => {
+			if (position == -1) cache.songs.push(song)
+			else cache.songs.splice(position, 0, song)
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { position, song }) => {
+			session.queueAdd(song, position)
+		}
 	},
 	{
 		op: "TIME_UPDATE",
-		fn: ({ guildID, songStartTime, playing }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				cache.songStartTime = songStartTime
-				cache.playing = playing
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID) session.timeUpdate({ songStartTime, playing })
-			})
+		updateCallback: (cache, { songStartTime, playing }) => {
+			cache.songStartTime = songStartTime
+			cache.playing = playing
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { songStartTime, playing }) => {
+			session.timeUpdate({ songStartTime, playing })
+		}
 	},
 	{
 		op: "NEXT_SONG",
-		fn: ({ guildID }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				cache.songs.shift()
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID)
-					session.next()
-
-			})
+		updateCallback: (cache, {}) => {
+			cache.songs.shift()
+			return cache
 		},
-		shouldRemove
+		sessionCallback: session => {
+			session.next()
+		}
 	},
 	{
 		op: "SONG_UPDATE",
-		fn: ({ guildID, song, index }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				// console.log("Received SONG_UPDATE")
-				// console.log("Queue cache:", cache)
-				// console.log("New item:", song)
-				if (cache === null) {
-					console.error("Uh oh! How did we get here?")
-					console.error("Received SONG_UPDATE")
-					console.error("Queue cache:", cache)
-					console.error("New item:", song)
-					console.error("Index:", index)
-					console.error("guildID:", guildID)
-					console.log("\n---\n")
-					console.error("Complete state dump:")
-					console.error([...states.entries()].map(s => [s[0], s[1].avc.cache]))
-				} else {
-					cache.songs[index] = song
-				}
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID)
-					session.songUpdate(song, index)
-
-			})
+		updateCallback: (cache, { song, index }) => {
+			cache.songs[index] = song
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { song, index }) => {
+			session.songUpdate(song, index)
+		}
 	},
 	{
 		op: "REMOVE_SONG",
-		fn: ({ guildID, index }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				cache.songs.splice(index, 1)
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID)
-					session.removeSong(index)
-
-			})
+		updateCallback: (cache, { index }) => {
+			cache.songs.splice(index, 1)
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { index }) => {
+			session.removeSong(index)
+		}
 	},
 	{
 		op: "MEMBERS_UPDATE",
-		fn: ({ guildID, members }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				cache.members = members
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID)
-					session.membersChange(members)
-
-			})
+		updateCallback: (cache, { members }) => {
+			cache.members = members
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { members }) => {
+			session.membersChange(members)
+		}
 	},
 	{
 		op: "ATTRIBUTES_CHANGE",
-		fn: ({ guildID, attributes }) => {
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				cache.attributes = attributes
-				return cache
-			})
-			sessions.forEach(session => {
-				if (session.guild && session.guild.id == guildID)
-					session.attributesChange(attributes)
-
-			})
+		updateCallback: (cache, { attributes }) => {
+			cache.attributes = attributes
+			return cache
 		},
-		shouldRemove
+		sessionCallback: (session, cache, { attributes }) => {
+			session.attributesChange(attributes)
+		}
 	}
 ])
 
@@ -240,6 +222,7 @@ class Session {
 		if (this.user) console.log("WebSocket disconnected: " + this.user.username)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
+		console.log(`${sessions.length} sessions in memory`)
 	}
 
 	async identify(data) {
@@ -259,6 +242,7 @@ class Session {
 			this.guild = guild
 			this.user = user
 			console.log("WebSocket identified: " + this.user.username)
+			console.log(`${sessions.length} sessions in memory`)
 			this.send({
 				op: opcodes.ACKNOWLEDGE,
 				nonce: data.nonce || null,
@@ -280,6 +264,14 @@ class Session {
 			nonce: nonce,
 			d: state
 		})
+	}
+
+	cleanClose() {
+		this.send({
+			op: opcodes.STATE,
+			d: null
+		})
+		this.ws.close()
 	}
 
 	queueAdd(song, position) {
@@ -350,8 +342,9 @@ class Session {
 
 	requestQueueRemove(data) {
 		if (!this.loggedin) return
-		if (data && data.d && typeof data.d.index === "number")
+		if (data && data.d && typeof data.d.index === "number") {
 			ipc.router.requestQueueRemove(this.guild.id, data.d.index)
+		}
 
 	}
 
@@ -364,9 +357,9 @@ class Session {
 
 	requestAttributesChange(data) {
 		if (!this.loggedin) return
-		if (typeof (data) == "object" && typeof (data.d) == "object")
+		if (typeof (data) == "object" && typeof (data.d) == "object") {
 			if (typeof (data.d.auto) == "boolean") ipc.router.requestToggleAuto(this.guild.id)
-
+		}
 	}
 }
 
@@ -381,5 +374,9 @@ console.log("API loaded")
 module.exports = [{ cancel: true, code: () => {
 	fileHasReloaded = true
 	wss.removeListener("connection", wsConnection)
+	sessions.forEach(session => {
+		session.cleanClose()
+	})
+	ipc.server.off("socket.disconnected", disconnectListener)
 	ipc.filterReceivers()
 } }]
