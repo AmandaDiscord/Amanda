@@ -422,7 +422,7 @@ const utils = {
 				errorObject[e[0]] = e[1]
 			})
 			result = `\`\`\`\n${data.stack}\`\`\` ${await utils.stringify(errorObject)}`
-		} else result = `\`\`\`js${util.inspect(data, { depth: depth })}\`\`\``
+		} else result = `\`\`\`js\n${util.inspect(data, { depth: depth })}\`\`\``
 
 		if (result.length >= 2000) {
 			if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``

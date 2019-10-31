@@ -58,10 +58,9 @@ profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
 profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
 profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-profileStorage.save("badge-none", "file", "./images/36393E.png")
+profileStorage.save("circle-mask", "file", "./images/circle_mask.png")
 profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
 profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
-profileStorage.get("badge-none").then(badge => badge.resize(50, 50))
 profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 /**
@@ -318,7 +317,8 @@ commands.assign({
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.activity.details}`
 				status = "<:streaming:606815351967318019>"
 			} else if (user.presence.activity) {
-				activity += `${user.activityPrefix} **${user.presence.activity.name}**`
+				if (user.presence.activity.name.toLowerCase() == "custom status") activity += `**${user.presence.activity.name}**`
+				else activity += `${user.activityPrefix} **${user.presence.activity.name}**`
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\n${user.presence.activity.details}`
 				if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
@@ -397,22 +397,26 @@ commands.assign({
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.avatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "badge-none", "badge-hunter", "badge-booster"])
+				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"])
 			])
 
 			avatar.resize(111, 111)
+			avatar.mask(images.get("circle-mask"), 0, 0)
 
 			const heartType = getHeartType(user, info)
 			const heart = images.get(`heart-${heartType}`)
 
-			const badge = isOwner ? "badge-developer" : isPremium ? "badge-donator" : "badge-none"
+			let badge
+			if (isOwner) badge = "badge-developer"
+			else if (isPremium) badge = "badge-donator"
 			const mem = client.guilds.get("475599038536744960").members.get(user.id)
 			let boosting, hunter
 			if (mem) {
 				boosting = mem.roles.has("613685290938138625")
 				hunter = mem.roles.has("497586624390234112")
 			}
-			const badgeImage = images.get(badge)
+			let badgeImage
+			if (badge) badgeImage = images.get(badge)
 			/** @type {import("jimp").default} */
 			let canvas
 
@@ -425,9 +429,9 @@ commands.assign({
 			} else canvas = images.get("canvas").clone()
 			canvas.composite(avatar, 32, 85)
 			canvas.composite(images.get("profile"), 0, 0)
-			canvas.composite(badgeImage, 166, 113)
+			if (badgeImage) canvas.composite(badgeImage, 166, 113)
 			if (boosting) {
-				if (badge == "badge-none") canvas.composite(images.get("badge-booster"), 166, 115)
+				if (!badge) canvas.composite(images.get("badge-booster"), 166, 115)
 				else canvas.composite(images.get("badge-booster"), 216, 115)
 			}
 
