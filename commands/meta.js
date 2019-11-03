@@ -396,7 +396,7 @@ commands.assign({
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
-				Jimp.read(user.avatarURL({ format: "png", size: 128 })),
+				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
 				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"])
 			])
 
