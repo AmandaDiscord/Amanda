@@ -6,7 +6,7 @@ const { PlayerManager } = require("discord.js-lavalink")
 const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
-const { client, config, commands, reloader } = passthrough
+const { client, config, commands, reloader, reloadEvent } = passthrough
 
 const lastAttemptedLogins = []
 
@@ -21,6 +21,13 @@ const lavalinknodes = [
 
 const utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
+
+const dropPresenceCacheInterval = setInterval(dropPresenceCache, 1000 * 60 * 60 * 5)
+console.log("added interval dropPresenceCacheInterval")
+reloadEvent.once(path.basename(__filename), () => {
+	clearInterval(dropPresenceCacheInterval)
+	console.log("removed interval dropPresenceCacheInterval")
+})
 
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
@@ -73,6 +80,13 @@ utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename
 		else return
 	} else return
 })
+
+function dropPresenceCache() {
+	client.guilds.forEach(guild => guild.presences.clear())
+	client.users.forEach(user => {
+		if (user.presence) user.presence.activity = null
+	})
+}
 
 /**
  * @param {Discord.Message} msg
@@ -186,12 +200,7 @@ function manageReady() {
 		})
 
 		passthrough.ipc.connect()
-
-		// clear caches :)
-		client.guilds.forEach(guild => guild.presences.clear())
-		client.users.forEach(user => {
-			if (user.presence) user.presence.activity = null
-		})
+		dropPresenceCache()
 	}
 }
 
