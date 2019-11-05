@@ -310,8 +310,8 @@ commands.assign({
 				const guildJoinedTime = member.joinedAt.toUTCString()
 				embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime)
 			}
-			let status = user.activityEmoji
-			let activity = `*${user.activeOn}*\n`
+			let status = ""
+			/* const activity = `*${user.activeOn}*\n`
 			if (user.presence.activity && user.presence.activity.type == "STREAMING") {
 				activity += `Streaming [${user.presence.activity.name}](${user.presence.activity.url})`
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\nPlaying ${user.presence.activity.details}`
@@ -322,12 +322,12 @@ commands.assign({
 				if (user.presence.activity.details) activity += `<:RichPresence:477313641146744842>\n${user.presence.activity.details}`
 				if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
-			}
+			}*/
 			if (user.bot) status = "<:bot:412413027565174787>"
 			embed.setThumbnail(!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL())
 			embed.addField("Avatar URL:", `[Click Here](${!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL()})`)
-			embed.setTitle(`${user.tag}${status}`)
-			if (activity) embed.setDescription(activity)
+			embed.setTitle(`${user.tag} ${status}`)
+			// if (activity) embed.setDescription(activity)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},

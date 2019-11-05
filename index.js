@@ -10,7 +10,7 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const Reloader = require("./modules/hotreload")
 
-const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START"], messageCacheMaxSize: 0 })
+const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START", "PRESENCE_UPDATE"], messageCacheMaxSize: 0 })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader()
 

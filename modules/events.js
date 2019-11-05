@@ -186,6 +186,12 @@ function manageReady() {
 		})
 
 		passthrough.ipc.connect()
+
+		// clear caches :)
+		client.guilds.forEach(guild => guild.presences.clear())
+		client.users.forEach(user => {
+			if (user.presence) user.presence.activity = null
+		})
 	}
 }
 
