@@ -22,13 +22,6 @@ const lavalinknodes = [
 const utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-const dropPresenceCacheInterval = setInterval(dropPresenceCache, 1000 * 60 * 60 * 5)
-console.log("added interval dropPresenceCacheInterval")
-reloadEvent.once(path.basename(__filename), () => {
-	clearInterval(dropPresenceCacheInterval)
-	console.log("removed interval dropPresenceCacheInterval")
-})
-
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
@@ -80,13 +73,6 @@ utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename
 		else return
 	} else return
 })
-
-function dropPresenceCache() {
-	client.guilds.forEach(guild => guild.presences.clear())
-	client.users.forEach(user => {
-		if (user.presence) user.presence.activity = null
-	})
-}
 
 /**
  * @param {Discord.Message} msg
@@ -200,7 +186,6 @@ function manageReady() {
 		})
 
 		passthrough.ipc.connect()
-		dropPresenceCache()
 	}
 }
 
