@@ -98,11 +98,12 @@ commands.assign({
 			const member = await msg.guild.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
 			utils.coinsManager.award(member.id, award)
+			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": award, "mention2": String(member) }))
 				.setColor(0xf8e71c)
 			msg.channel.send(utils.contentify(msg.channel, embed))
-			return member.send(utils.replace(lang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
+			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}
 	}
 })

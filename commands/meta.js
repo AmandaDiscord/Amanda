@@ -437,11 +437,11 @@ commands.assign({
 
 			const font = images.get("font")
 			const font2 = images.get("font2")
-			canvas.print(font, 508, 72, user.username)
+			canvas.print(font, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
 			canvas.print(font2, 508, 104, `#${user.discriminator}`)
 			canvas.print(font2, 550, 163, money)
 			canvas.composite(heart, 508, 207)
-			canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag : "Nobody, yet")
+			canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
 			if (hunter) {
 				canvas.composite(images.get("badge-hunter"), 508, 250)
 				canvas.print(font2, 550, 260, "Amanda Bug Catcher")

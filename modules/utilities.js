@@ -7,6 +7,7 @@ const util = require("util")
 // @ts-ignore
 const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
+const Lang = require("@amanda/lang")
 
 const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
@@ -981,6 +982,23 @@ const utils = {
 			channels: client.channels.size,
 			connections: client.lavalink.players.size
 		}
+	},
+
+	/**
+	 * @param {string} userID
+	 * @param {"self"|"guild"} type
+	 * @returns {Promise<Lang.Lang>}
+	 */
+	getLang: async function(id, type) {
+		let langcode, lang, value
+		if (type == "self") lang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [id, "language"])
+		else if (type == "guild") lang = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [id, "language"])
+		if (lang) langcode = lang.value
+		else langcode = "en-us"
+
+		if (Lang[langcode.replace("-", "_")]) value = Lang[langcode.replace("-", "_")]
+		else value = Lang.en_us
+		return value
 	}
 }
 

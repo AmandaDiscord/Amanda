@@ -210,7 +210,7 @@ commands.assign({
 			const money = await utils.coinsManager.get(member.id)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member.displayTag }))
-				.setDescription(`${money} Discoins ${emojis.discoin}`)
+				.setDescription(`${money} ${emojis.discoin}`)
 				.setColor("F8E71C")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -306,16 +306,17 @@ commands.assign({
 			}
 			utils.coinsManager.award(msg.author.id, -gift)
 			utils.coinsManager.award(member.id, gift)
+			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": gift, "mention2": String(member) }))
 				.setColor("F8E71C")
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(utils.replace(lang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 				else return
 			}
-			return member.send(utils.replace(lang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
+			return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 		}
 	},
 	"wheel": {

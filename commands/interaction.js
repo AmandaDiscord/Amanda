@@ -132,16 +132,17 @@ const cmds = {
 			await utils.waifu.bind(msg.author.id, member.id, claim)
 			const faces = ["°˖✧◝(⁰▿⁰)◜✧˖°", "(⋈◍＞◡＜◍)。✧♡", "♡〜٩( ╹▿╹ )۶〜♡", "( ´͈ ॢꇴ `͈ॢ)･*♡", "❤⃛῍̻̩✧(´͈ ૢᐜ `͈ૢ)"]
 			const face = utils.arrayRandom(faces)
+			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, { "mention1": String(msg.author), "mention2": String(member), "number": claim }))
 				.setColor("36393E")
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(lang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 				else return
 			}
-			return member.send(`${utils.replace(lang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
+			return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 		}
 	},
 	"divorce": {
@@ -149,22 +150,23 @@ const cmds = {
 		description: "Divorces a user",
 		aliases: ["divorce"],
 		category: "interaction",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			const info = await utils.waifu.get(msg.author.id)
-			if (!info.waifu) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to divorce, silly`)
+			if (!info.waifu) return msg.channel.send(utils.replace(lang.interaction.divorce.prompts.noWaifu, { "username": msg.author.username }))
 			const faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"]
 			const face = utils.arrayRandom(faces)
 			await utils.waifu.unbind(msg.author.id)
-			msg.channel.send(`${msg.author.tag} has filed for a divorce from ${info.waifu.tag} with ${suffix ? `reason: ${suffix}` : "no reason specified"}`)
+			msg.channel.send(utils.replace(lang.interaction.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": info.waifu.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
 			const memsettings = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [info.waifu.id, "waifualert"])
 			let guildsettings
+			const memlang = await utils.getLang(info.waifu.id, "self")
 			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`))
+				if (memsettings && memsettings.value == 1) return info.waifu.send(`${utils.replace(memlang.interaction.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
 				else return
 			}
-			return info.waifu.send(`${msg.author.tag} has filed for a divorce from you with ${suffix ? `reason: ${suffix}` : "no reason specified"} ${face}`).catch(() => msg.channel.send(`I tried to DM ${info.waifu.tag} about the divorce but they may have DMs disabled from me`))
+			return info.waifu.send(`${utils.replace(memlang.interaction.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
 		}
 	},
 	"gift": {
@@ -177,8 +179,8 @@ const cmds = {
 			const args = suffix.split(" ")
 			const waifu = await utils.waifu.get(msg.author.id, { basic: true })
 			const money = await utils.coinsManager.get(msg.author.id)
-			if (!waifu || !waifu.waifuID) return msg.channel.send(`${msg.author.username}, you don't even have a waifu to gift Discoins to, silly`)
-			if (!args[0]) return msg.channel.send(`${msg.author.username}, you didn't provide a gift amount`)
+			if (!waifu || !waifu.waifuID) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.noWaifu, { "username": msg.author.username }))
+			if (!args[0]) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.noGift, { "username": msg.author.username }))
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
 				if (money == 0) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.moneyInsufficient, { "username": msg.author.username }))
@@ -196,7 +198,7 @@ const cmds = {
 			await utils.waifu.transact(msg.author.id, gift)
 			await utils.coinsManager.award(msg.author.id, -gift)
 			const user = await client.users.fetch(waifu.waifuID)
-			return msg.channel.send(`${msg.author.username} has gifted ${gift} Discoins towards ${user.tag}'s price`)
+			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": gift, "tag2": user.tag }))
 		}
 	},
 	"waifuleaderboard": {

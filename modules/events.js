@@ -86,19 +86,11 @@ async function manageMessage(msg) {
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	const cmd = commands.find(c => c.aliases.includes(cmdTxt))
-	/** @type {string} */
-	let langcode
-	/** @type {Lang.Lang} */
 	let lang
-	const self = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
-	let server
-	if (msg.guild) server = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "language"])
-	if (self) langcode = self.value
-	else if (server) langcode = server.value
-	else langcode = "en-us"
-
-	if (Lang[langcode.replace("-", "_")]) lang = Lang[langcode.replace("-", "_")]
-	else lang = Lang.en_us
+	const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
+	if (selflang) lang = await utils.getLang(msg.author.id, "self")
+	else if (msg.guild) lang = await utils.getLang(msg.guild.id, "guild")
+	else lang = await utils.getLang(msg.author.id, "self")
 
 	if (cmd) {
 		try {
