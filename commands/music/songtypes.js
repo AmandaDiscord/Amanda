@@ -154,9 +154,9 @@ class YouTubeSong extends Song {
 	 * @param {string} id
 	 * @param {string} title
 	 * @param {number} lengthSeconds
-	 * @param {string?} track
+	 * @param {string} track
 	 */
-	constructor(id, title, lengthSeconds, track = undefined) {
+	constructor(id, title, lengthSeconds, track = null) {
 		super()
 		this.id = id
 		this.thumbnail = {
@@ -166,6 +166,7 @@ class YouTubeSong extends Song {
 		}
 		this.title = title
 		this.lengthSeconds = lengthSeconds
+		/** @type {string} */ // the vscode type checker is dumb, it would seem
 		this.track = track || "!"
 		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
@@ -296,9 +297,9 @@ class FriskySong extends Song {
 		this.live = true
 
 		this.friskyStation = frisky.managers.stream.stations.get(this.station)
-		this.stationMixGetter = new utils.AsyncValueCache(
+		this.stationInfoGetter = new utils.AsyncValueCache(
 			/**
-			 * @returns {Promise<import("frisky-client/lib/Mix")>}
+			 * @returns {Promise<import("frisky-client/lib/Stream")>}
 			 */
 			() => new Promise((resolve, reject) => {
 				let attempts = 0
@@ -317,14 +318,15 @@ class FriskySong extends Song {
 					attempts++
 					const index = this.friskyStation.findNowPlayingIndex()
 					if (index == null) return retry("Current item is unknown")
-					const mix = this.friskyStation.getSchedule()[index].mix
-					if (!mix) return retry("Current mix not available")
-					const d = mix.data
-					if (!d) return retry("Current mix data not available")
-					const episode = mix.episode
-					if (!episode) return retry("Current episode data not available")
+					const stream = this.friskyStation.getSchedule()[index]
+					if (!stream) return retry("Current stream not available")
+					if (!stream.mix) return retry("Current mix not available")
+					if (!stream.mix.data) return retry("Current mix data not available")
+					const episode = stream.mix.episode
+					if (!episode) return retry("Current episode not available")
+					if (!episode.data) return retry("Current episode data not available")
 					// console.log("Retrieved Frisky station data in "+(Date.now()-time)+"ms")
-					return resolve(mix)
+					return resolve(stream)
 				}
 				attempt()
 			})
@@ -348,21 +350,28 @@ class FriskySong extends Song {
 		return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
 	}
 	showInfo() {
-		return this.stationMixGetter.get().then(mix => {
+		return this.stationInfoGetter.get().then(stream => {
+			const mix = stream.mix
 			const stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
+			let percentPassed = Math.floor(((-stream.getTimeUntil()) / (stream.data.duration * 1000)) * 100)
+			if (percentPassed < 0) percentPassed = 0
+			if (percentPassed > 100) percentPassed = 100
 			const embed = new Discord.MessageEmbed()
 				.setColor(0x36393f)
 				.setTitle(`FRISKY: ${mix.data.title}`)
 				.setURL(`https://beta.frisky.fm/mix/${mix.id}`)
-			// .setThumbnail(mix.data...)
 				.addField("Details",
-					`Show: ${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`
-				+ `\nEpisode: ${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`
-				// +"\nArtist: "+data.episode.artist_title
-				+ `\nGenre: ${mix.data.genre.join(", ")}`
-				// +"\nEpisode genres: "+data.episode.genre.join(", ")
-				// +"\nShow genres: "+data.show.genre.join(", ")
-				+ `\nStation: ${stationCase}`
+					utils.tableifyRows(
+						[
+							["Show", `${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`],
+							["Episode", `${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`],
+							["Genre", mix.data.genre.join(", ")],
+							["Station", stationCase],
+							["Schedule", `started ${utils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"])} ago, ${utils.shortTime(stream.getTimeUntil() + stream.data.duration * 1000, "ms", ["d", "h", "m"])} remaining (${percentPassed}%)`]
+						],
+						["left", ""],
+						() => "`"
+					)
 				)
 			if (mix.episode) {
 				embed.setThumbnail(this.thumbnail.src)
@@ -411,13 +420,14 @@ class FriskySong extends Song {
 		} else return Promise.resolve()
 	}
 	stationUpdate() {
-		this.stationMixGetter.clear()
-		return this.stationMixGetter.get().then(mix => {
+		this.stationInfoGetter.clear()
+		return this.stationInfoGetter.get().then(stream => {
+			const mix = stream.mix
 			// console.log(mix)
 			this.title = mix.data.title
-			this.thumbnail.src = mix.episode.data.thumbnail.url
-			this.thumbnail.width = mix.episode.data.thumbnail.image_width
-			this.thumbnail.height = mix.episode.data.thumbnail.image_height
+			this.thumbnail.src = mix.episode.data.album_art.url
+			this.thumbnail.width = mix.episode.data.album_art.image_width
+			this.thumbnail.height = mix.episode.data.album_art.image_height
 			if (this.queue) {
 				const index = this.queue.songs.indexOf(this)
 				if (index !== -1) ipc.router.send.updateSong(this.queue, this, index)
@@ -438,118 +448,8 @@ function makeYouTubeSongFromData(data) {
 	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000))
 	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
 }
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
-
-/**
- * @typedef {Object} FriskyNowPlayingItem
- * @property {string} station
- * @property {{currentlisteners: number, peaklisteners: number, maxlisteners: number, uniquelisteners: number, averagetime: number, servergenre: string, serverurl: string, servertitle: string, songtitle: string, nexttitle: string, streamhits: number, streamstatus: number, backupstatus: number, streamsource: string, streampath: string, streamuptime: number, bitrate: number, content: string, version: string}} server
- * @property {string} title
- * @property {FriskyEpisode} episode
- * @property {FriskyShow} show
- */
-
-/**
- * @typedef {Object} FriskyEpisode
- * @property {number} id
- * @property {string} title
- * @property {string} url
- * @property {string} full_url
- * @property {number} artist_id
- * @property {Array<string>} genre
- * @property {Array<string>} track_list
- * @property {{url: string, mime: string, filename: string, filesize: number, s3_filename: string}} mix_url
- * @property {{url: string, mime: string, filename: string, filesize: number, s3_filename: string}} mix_url_64k
- * @property {number} show_id
- * @property {string} included_as
- * @property {string} allow_playing
- * @property {number} reach
- * @property {string} artist_title
- * @property {string} [artist_url]
- * @property {string} [artist_home_city]
- * @property {string} [artist_residency]
- * @property {string} artist_genre
- * @property {string} artist_biography
- * @property {FriskyThumb} artist_photo
- * @property {string} [artist_facebook_url]
- * @property {string} [artist_myspace_url]
- * @property {string} [artist_twitter_url]
- * @property {string} [artist_website_url]
- * @property {string} [artist_musical_influences]
- * @property {string} [artist_favorite_venues]
- * @property {string} [artist_status]
- * @property {string} show_title
- * @property {string} show_url
- * @property {string} show_summary
- * @property {Array<string>} show_genre
- * @property {number} show_artist_id
- * @property {FriskyThumb} show_image
- * @property {FriskyThumb} show_thumbnail
- * @property {FriskyThumb} show_album_art
- * @property {string} show_type
- * @property {string} show_status
- * @property {number} occurrence_id
- * @property {string} occurrence_title
- * @property {string} occurrence_url
- * @property {string} occurrence_summary
- * @property {string} occurrence_genre
- * @property {number} occurrence_artist_id
- * @property {FriskyThumb} occurrence_image
- * @property {FriskyThumb} occurrence_thumbnail
- * @property {FriskyThumb} occurrence_album_art
- * @property {string} occurrence_status
- * @property {string} occurrence_location
- * @property {string} occurrence_type
- * @property {string} show_location
- * @property {string} show_channel_title
- */
-
-/**
- * @typedef {Object} FriskyShow
- * @property {number} id
- * @property {string} title
- * @property {string} url
- * @property {string} summary
- * @property {Array<string>} genre
- * @property {number} artist_id
- * @property {FriskyThumb} image
- * @property {FriskyThumb} thumbnail
- * @property {FriskyThumb} album_art
- * @property {string} type
- * @property {string} status
- * @property {string} channel_title
- * @property {Date} modification_time
- * @property {string} location
- * @property {Date} next_episode
- */
-
-/**
- * @typedef {Object} FriskyThumb
- * @property {string} url
- * @property {string} mime
- * @property {string} filename
- * @property {number} filesize
- * @property {string} thumb_url
- * @property {string} custom_url
- * @property {number} image_width
- * @property {string} s3_filename
- * @property {number} thumb_width
- * @property {number} image_height
- * @property {string} s3_thumbname
- * @property {number} thumb_height
- * @property {number} thumb_filesize
- */
-
-/**
- * @typedef {Object} FriskyMixResponse
- * @property {Object} data
- * @property {boolean} data.success
- * @property {string} data.error
- * @property {Object} data.mp3_url
- * @property {number} data.mp3_url.expires
- * @property {string} data.mp3_url.path
- */
-
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
 module.exports.FriskySong = FriskySong

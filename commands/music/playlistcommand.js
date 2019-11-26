@@ -258,7 +258,7 @@ commands.assign({
 				])
 			} else {
 				const author = []
-				if (client.users.get(playlistRow.author)) author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).avatarURL({ format: "png", size: 32 }))
+				if (client.users.get(playlistRow.author)) author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
 				const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\nTotal length: ${common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))}`
