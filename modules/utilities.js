@@ -26,6 +26,7 @@ const utils = {
 		 */
 		constructor(userID) {
 			this.userID = userID
+			/** @type {Discord.User} */
 			this.user = undefined
 			this.events = new events.EventEmitter()
 			this.fetch()
@@ -829,7 +830,7 @@ const utils = {
 	 * @param {number} number
 	 * @param {string} scale ms or sec
 	 */
-	function(number, scale) {
+	function(number, scale, precision = ["d", "h", "m", "s"]) {
 		if (isNaN(number)) throw new TypeError("Input provided is NaN")
 		if (!scale) throw new RangeError("Missing scale")
 		if (scale.toLowerCase() == "ms") number = Math.floor(number)
@@ -843,10 +844,11 @@ const utils = {
 		number -= mins * 1000 * 60
 		const secs = Math.floor(number / 1000)
 		let timestr = ""
-		if (days > 0) timestr += `${days}d `
-		if (hours > 0) timestr += `${hours}h `
-		if (mins > 0) timestr += `${mins}m `
-		if (secs > 0) timestr += `${secs}s`
+		if (days > 0 && precision.includes("d")) timestr += `${days}d `
+		if (hours > 0 && precision.includes("h")) timestr += `${hours}h `
+		if (mins > 0 && precision.includes("m")) timestr += `${mins}m `
+		if (secs > 0 && precision.includes("s")) timestr += `${secs}s`
+		if (!timestr) timestr = "0" + precision.slice(-1)[0]
 		return timestr
 	},
 
