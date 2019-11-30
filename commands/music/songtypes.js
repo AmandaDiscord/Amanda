@@ -363,8 +363,8 @@ class FriskySong extends Song {
 				.addField("Details",
 					utils.tableifyRows(
 						[
-							["Show", `${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`],
 							["Episode", `${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`],
+							["Show", `${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`],
 							["Genre", mix.data.genre.join(", ")],
 							["Station", stationCase],
 							["Schedule", `started ${utils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"])} ago, ${utils.shortTime(stream.getTimeUntil() + stream.data.duration * 1000, "ms", ["d", "h", "m"])} remaining (${percentPassed}%)`]

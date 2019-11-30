@@ -5,7 +5,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, commands, queueStore } = passthrough
+const { config, client, reloader, commands, queueStore, frisky } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -316,18 +316,123 @@ commands.assign({
 		}
 	},
 	"frisky": {
-		usage: "[frisky|deep|chill|classics]",
+		usage: "[original|deep|chill|classics]",
 		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
 		category: "audio",
 		process: async function(msg, suffix) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
-			const voiceChannel = await common.detectVoiceChannel(msg, true)
-			if (!voiceChannel) return
-			if (suffix == "classic") suffix = "classics" // alias
-			const station = ["frisky", "deep", "chill", "classics"].includes(suffix) ? suffix : "frisky"
-			const song = new songTypes.FriskySong(station)
-			return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg)
+			if (suffix === "classic") suffix = "classics" // alias
+			if (suffix === "originals") suffix = "original" // alias
+			if (["original", "deep", "chill", "classics"].includes(suffix)) { // valid station?
+				const voiceChannel = await common.detectVoiceChannel(msg, true)
+				if (!voiceChannel) return
+				const song = new songTypes.FriskySong(suffix)
+				return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg)
+			} else { // show overview
+				/*
+					**`Chill    `**     `ɴᴏᴡ →`  [Zero Gravity](https://beta.frisky.fm/mix/48428) (Nov)
+					\_\_\_\_\_\_\_\_\_\_      ` 34m `  [Extents](https://beta.frisky.fm/mix/44871) (Feb)
+					spacing without underscores: >​                           ​<
+					**`Classics `**     `ɴᴏᴡ →`  [Sextronic](https://beta.frisky.fm/mix/21336) (Jun 2013)
+					\_\_\_\_\_\_\_\_\_\_      `  1h `  [Floorjam](https://beta.frisky.fm/mix/24433) (Mar 2014)
+				*/
+
+				function makeZWSP(length) {
+					return Array(length).fill(" ").join("​") // SC: U+200B zero-width space
+				}
+
+				/** @type {import("frisky-client/lib/StreamManager")} */ // type detection PLEASE
+				frisky.managers.stream
+				const stations = frisky.managers.stream.stations
+				// first column
+				const stationNameLength = 9
+				const stationPostSpacing = makeZWSP(2)
+				const underscores = `\\_\\_\\_\\_\\_\\_\\_\\_\\_\\_${makeZWSP(2)} ` // SC: U+2005 four-per-em space
+				const spacing = makeZWSP(25)
+				// second column
+				const timePadding = 4 // does not include spaces on right
+				const timeSpacingRight = " "
+				const timePostSpacing = makeZWSP(2)
+
+				const descriptionLines = new Map()
+				// for each station
+				for (const stationName of frisky.managers.stream.stations.keys()) {
+					// set up constants
+					const station = stations.get(stationName)
+					const index = station.findNowPlayingIndex()
+					const schedule = station.getSchedule()
+					const availableCount = schedule.length - index
+					const willUseCount = Math.min(availableCount, 3)
+					descriptionLines.set(stationName, [])
+
+					// for each stream
+					for (let i = index; i < index + willUseCount; i++) {
+						const stream = schedule[i]
+						if (stream.mix && stream.mix.data) { // ignore streams that don't have a loaded mix
+							// add the time
+							const timeUntil = stream.getTimeUntil()
+							let item = ""
+							if (timeUntil <= 0) { // now playing
+								item += "`ɴᴏᴡ →`"
+							} else { // show time until
+								let timeString = ""
+								if (timeUntil < 1000*60*60) { // less than one hour, so scale to minutes
+									timeString = Math.floor(timeUntil/1000/60) + "m"
+								} else { // more than one hour, so scale to hours
+									timeString = Math.floor(timeUntil/1000/60/60) + "h"
+								}
+								item += "`" + timeString.padStart(timePadding) + timeSpacingRight + "`"
+							}
+							item += timePostSpacing
+
+							// add the name and date
+							const title = stream.mix.data.title // inFlowmotion - August 2019 - DepGlobe
+							const [name, dateString] = title.split(" - ")
+							const date = new Date(dateString+" UTC")
+							let displayDate = date.toUTCString().split(" ")[2] // extract month
+							if (date.getUTCFullYear() !== new Date().getUTCFullYear()) { // different year, so should also display year
+								displayDate += " " + date.getUTCFullYear()
+							}
+							item += `[${name}](https://beta.frisky.fm/mix/${stream.mix.data.id}) (${displayDate})`
+
+							// item is prepared, add it to the description
+							descriptionLines.get(stationName).push(item)
+						}
+					} // end stream loop
+				} // end station loop
+
+				// turn lines into actual description
+				let description = ""
+				for (const stationName of descriptionLines.keys()) {
+					const stationDisplayName = stationName === "frisky" ? "original" : stationName
+					const lines = descriptionLines.get(stationName)
+					for (let i = 0; i < lines.length; i++) {
+						const line = lines[i]
+						if (i === 0) {
+							description += `**\`${stationDisplayName.padEnd(stationNameLength)}\`**${stationPostSpacing}`
+						}
+						// last: underscores
+						else if (i === lines.length - 1) {
+							description += underscores
+						}
+						// middle: space
+						else {
+							description += spacing
+						}
+						description += line + "\n"
+					}
+				}
+				description = description.slice(0, -1) // cut off final newline
+
+				msg.channel.send(
+					new Discord.MessageEmbed()
+					.setColor(0x36393f)
+					.setTitle("Frisky Radio ­— Schedule")
+					.setDescription(description)
+					.setFooter("Use &frisky <station> to play a station")
+				)
+			}
 		}
 	},
 	"music": {
