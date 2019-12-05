@@ -147,6 +147,7 @@ module.exports = [
 				.do({
 					code: () => session == null
 					, expected: false
+					, errorValue: "NO_SESSION"
 				}).do({
 					code: () => ipc.getShardForGuild(guildID)
 					, expected: v => v != null
@@ -179,7 +180,7 @@ module.exports = [
 					}
 				})
 				.catch(err => {
-					if (err === "USER_NOT_IN_GUILD") {
+					if (err === "USER_NOT_IN_GUILD" || err === "NO_SESSION") {
 						const page = pugCache.get("pug/accessdenied.pug")({ session })
 						return {
 							statusCode: 403,
