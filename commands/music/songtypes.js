@@ -13,27 +13,31 @@ const common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
 const stationData = new Map([
-	["frisky", {
-		title: "Frisky Radio",
-		queue: "Frisky Radio: Frisky",
+	["original", {
+		title: "Frisky Radio: Original",
+		queue: "Frisky Radio: Original",
+		client_name: "frisky",
 		url: "http://stream.friskyradio.com/frisky_mp3_hi", // 44100Hz 2ch 128k MP3
 		beta_url: "http://stream.friskyradio.com/frisky_mp3_hi" // 44100Hz 2ch 128k MP3
 	}],
 	["deep", {
 		title: "Frisky Radio: Deep",
 		queue: "Frisky Radio: Deep",
+		client_name: "deep",
 		url: "http://deep.friskyradio.com/friskydeep_acchi", // 32000Hz 2ch 128k MP3 (!)
 		beta_url: "http://deep.friskyradio.com/friskydeep_aachi" // 32000Hz 2ch 128k MP3 (!)
 	}],
 	["chill", {
 		title: "Frisky Radio: Chill",
 		queue: "Frisky Radio: Chill",
+		client_name: "chill",
 		url: "http://chill.friskyradio.com/friskychill_mp3_high", // 44100Hz 2ch 128k MP3
 		beta_url: "https://stream.chill.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
 	}],
 	["classics", {
 		title: "Frisky Radio: Classics",
 		queue: "Frisky Radio: Classics",
+		client_name: "classics",
 		url: "https://stream.classics.friskyradio.com/mp3_high", // 44100Hz 2ch 128k MP3
 		beta_url: "https://stream.classics.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
 	}]
@@ -280,6 +284,7 @@ class FriskySong extends Song {
 		this.station = station
 
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
+		this.stationData = stationData.get(this.station)
 
 		this.id = this.station // designed for error reporting
 		this.thumbnail = {
@@ -287,8 +292,8 @@ class FriskySong extends Song {
 			width: 320,
 			height: 180
 		}
-		this.title = stationData.get(this.station).title
-		this.queueLine = `**${stationData.get(this.station).queue}** (LIVE)`
+		this.title = this.stationData.title
+		this.queueLine = `**${this.stationData.queue}** (LIVE)`
 		this.track = data.track || "!"
 		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
@@ -296,7 +301,7 @@ class FriskySong extends Song {
 		this.noPauseReason = "You can't pause live radio."
 		this.live = true
 
-		this.friskyStation = frisky.managers.stream.stations.get(this.station)
+		this.friskyStation = frisky.managers.stream.stations.get(this.stationData.client_name)
 		this.stationInfoGetter = new utils.AsyncValueCache(
 			/**
 			 * @returns {Promise<import("frisky-client/lib/Stream")>}
@@ -408,7 +413,7 @@ class FriskySong extends Song {
 			await this.stationUpdate()
 		}
 		if (this.track == "!") {
-			return common.getTracks(stationData.get(this.station).beta_url).then(tracks => {
+			return common.getTracks(this.stationData.beta_url).then(tracks => {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)
