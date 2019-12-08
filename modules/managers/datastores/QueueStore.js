@@ -1,6 +1,7 @@
 // @ts-check
 
 const Discord = require("discord.js")
+const {EventEmitter} = require("events")
 
 const passthrough = require("../../../passthrough")
 const { client, reloader, ipc } = passthrough
@@ -16,6 +17,7 @@ class QueueStore {
 		/** @type {Discord.Collection<string, QueueFile.Queue>} */
 		this.store = new Discord.Collection()
 		this.songsPlayed = 0
+		this.events = new EventEmitter()
 	}
 	toObject() {
 		return {
@@ -50,6 +52,7 @@ class QueueStore {
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel)
 		this.store.set(guildID, instance)
 		ipc.router.send.newQueue(instance)
+		this.events.emit("create", instance)
 		return instance
 	}
 	/**
@@ -59,6 +62,7 @@ class QueueStore {
 	delete(guildID) {
 		this.store.delete(guildID)
 		ipc.router.send.deleteQueue(guildID)
+		this.events.emit("delete", guildID)
 	}
 	save() {
 		return passthrough.nedb.queue.update({ _id: "QueueStore_" + utils.getFirstShard() }, this.toObject(), { upsert: true })
