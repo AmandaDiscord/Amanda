@@ -22,9 +22,9 @@ async function customEval(input, context, filename, callback) {
 	let depth = 0
 	if (input == "exit\n") return process.exit()
 	if (input.startsWith(":")) {
-		const [depthOverwrite, command] = input.split(" ")
+		const depthOverwrite = input.split(" ")[0]
 		depth = +depthOverwrite.slice(1)
-		input = command
+		input = input.slice(depthOverwrite.length + 1)
 	}
 	const result = await eval(input)
 	const output = util.inspect(result, false, depth, true)
