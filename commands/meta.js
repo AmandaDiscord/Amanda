@@ -555,7 +555,6 @@ commands.assign({
 					)
 				}
 			}
-			value = value.toLowerCase()
 
 			if (value === "null") {
 				if (settingName == "profilebackground") {
