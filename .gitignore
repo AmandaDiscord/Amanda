@@ -7,5 +7,5 @@ csak-timelog.json
 nohup.out
 *.sqlite
 dblimg.png
-/images/backgrounds
+/images/backgrounds/cache
 /saves

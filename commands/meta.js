@@ -43,14 +43,39 @@ async function sendStats(msg) {
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
 }
+updateCache()
+let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+console.log("added timeout cacheUpdateTimeout")
+function cacheUpdateTimeoutFunction() {
+	updateCache()
+	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
+}
+async function updateCache() {
+	const rows = await utils.sql.all("SELECT * FROM SettingsSelf WHERE setting = ?", "profilebackground")
+	for (const row of rows) {
+		let image
+		try {
+			image = await Jimp.read(row.value)
+		} catch (e) {
+			await utils.sql.all("DELETE FROM SettingsSelf WHERE setting =? AND keyID =?", ["profilebackground", row.keyID])
+			return console.log(`Image cache update for ${row.keyID} failed. Deleted entry`)
+		}
+		image.cover(800, 500)
+		const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
+		await fs.promises.writeFile(`./images/backgrounds/cache/${row.keyID}.png`, buffer)
+	}
+	console.log("Background cache update complete")
+}
 
 reloadEvent.once(path.basename(__filename), () => {
 	clearTimeout(sendStatsTimeout)
+	clearTimeout(cacheUpdateTimeout)
 	console.log("removed Timeout sendStatsTimeout")
+	console.log("removed Timeout cacheUpdateTimeout")
 })
 
 const profileStorage = new utils.JIMPStorage()
-profileStorage.save("canvas", "file", "./images/defaultbg.png")
+profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
 profileStorage.save("profile", "file", "./images/profile.png")
 profileStorage.save("font", "font", ".fonts/Whitney-25.fnt")
 profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
@@ -115,12 +140,12 @@ commands.assign({
 				const allowed = await utils.hasPermission(msg.author, "eval")
 				if (!allowed) return
 				const ram = process.memoryUsage()
-				if (global.gc) global.gc()
-				else return msg.channel.send("The global Garbage Collector variable is not exposed")
 				profiler.once("gc", info => {
 					const now = process.memoryUsage()
 					return msg.channel.send(`Garbage Collection completed in ${info.duration}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
 				})
+				if (global.gc) global.gc()
+				else return msg.channel.send("The global Garbage Collector variable is not exposed")
 			} else return defaultStats()
 			async function defaultStats() {
 				const stats = utils.getStats()
@@ -422,7 +447,7 @@ commands.assign({
 
 			if (isOwner || isPremium) {
 				try {
-					canvas = await Jimp.read(`./images/backgrounds/${user.id}.png`)
+					canvas = await Jimp.read(`./images/backgrounds/cache/${user.id}.png`)
 				} catch (e) {
 					canvas = images.get("canvas").clone()
 				}
@@ -561,12 +586,12 @@ commands.assign({
 					return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.")
 				}
 				const type = bs.identify(data)
-				if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may not set a background which is not a PNG or a JPEG")
+				if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may only set a background of a PNG or a JPEG")
 				const image = await Jimp.read(value)
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
-				await fs.promises.writeFile(`./images/backgrounds/${msg.author.id}.png`, buffer)
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, 1])
+				await fs.promises.writeFile(`./images/backgrounds/cache/${msg.author.id}.png`, buffer)
+				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send("Setting updated.")
 			}
 

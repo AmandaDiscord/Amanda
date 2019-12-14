@@ -146,7 +146,7 @@ commands.assign({
 				})
 			} else if (action.toLowerCase() == "remove") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
-				let index = parseInt(args[2])
+				let index = Number(args[2])
 				if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`)
 				index = index - 1
 				if (!orderedSongs[index]) return msg.channel.send(lang.genericIndexOutOfRange(msg))
@@ -158,8 +158,8 @@ commands.assign({
 				return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`)
 			} else if (action.toLowerCase() == "move") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
-				let from = parseInt(args[2])
-				let to = parseInt(args[3])
+				let from = Number(args[2])
+				let to = Number(args[3])
 				if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`)
 				from--; to--
 				if (!orderedSongs[from]) return msg.channel.send(lang.genericIndexOutOfRange(msg))

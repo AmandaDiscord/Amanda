@@ -34,30 +34,32 @@ const cmds = {
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
 			if (args.length != 2) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
-			const mem1 = await msg.guild.findMember(msg, args[0])
-			const mem2 = await msg.guild.findMember(msg, args[1])
+			const [mem1, mem2] = await Promise.all([
+				msg.guild.findMember(msg, args[0]),
+				msg.guild.findMember(msg, args[1])
+			])
 			if (mem1 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser1, { "username": msg.author.username }))
 			if (mem2 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser2, { "username": msg.author.username }))
 			if (mem1.id == mem2.id) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.selfShip, { "username": msg.author.username }))
 			msg.channel.sendTyping()
-			const canvas = await Jimp.read("./images/transparent/300x100.png")
-			// @ts-ignore
-			const pfp1 = await Jimp.read({ url: mem1.user.displayAvatarURL({ format: "png" }) })
-			// @ts-ignore
-			const pfp2 = await Jimp.read({ url: mem2.user.displayAvatarURL({ format: "png" }) })
-			const heart = await Jimp.read("./images/emojis/heart.png")
+			const canvas = new Jimp(300, 100)
+			const [pfp1, pfp2, heart] = await Promise.all([
+				Jimp.read(mem1.user.displayAvatarURL({ format: "png" })),
+				Jimp.read(mem2.user.displayAvatarURL({ format: "png" })),
+				Jimp.read("./images/emojis/heart.png")
+			])
 
-			await pfp1.resize(100, 100)
-			await pfp2.resize(100, 100)
-			await heart.resize(80, 80)
+			pfp1.resize(100, 100)
+			pfp2.resize(100, 100)
+			heart.resize(80, 80)
 
-			await canvas.composite(pfp1, 0, 0)
-			await canvas.composite(heart, 110, 10)
-			await canvas.composite(pfp2, 200, 0)
+			canvas.composite(pfp1, 0, 0)
+			canvas.composite(heart, 110, 10)
+			canvas.composite(pfp2, 200, 0)
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, `ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g, "") + ".png")
-			const strings = [mem1.id, mem2.id].sort((a, b) => parseInt(a) - parseInt(b)).join(" ")
+			const strings = [mem1.id, mem2.id].sort((a, b) => Number(a) - Number(b)).join(" ")
 			let percentage = undefined
 
 			/* Custom Percentages */
@@ -68,7 +70,7 @@ const cmds = {
 			else if (strings == "312450203678539787 501820319481200650") percentage = 9999
 			else {
 				const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
-				percentage = parseInt(`0x${hash}`) % 101
+				percentage = Number(`0x${hash}`) % 101
 			}
 			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { files: [image] })
 		}
@@ -102,7 +104,7 @@ const cmds = {
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const usertxt = args.slice(1).join(" ")
-			if (args[0] == undefined || isNaN(parseInt(args[0]))) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
+			if (args[0] == undefined || isNaN(Number(args[0]))) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
 			if (!usertxt) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))

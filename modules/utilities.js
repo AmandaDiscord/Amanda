@@ -163,10 +163,12 @@ const utils = {
 		 * @returns {Promise<Array<import("../typings").BinaryRow>>}
 		 */
 		"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
+			// @ts-ignore
 			if (!connection) connection = db
 			if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
 			return new Promise((resolve, reject) => {
 				if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
+				// @ts-ignore
 				connection.execute(string, prepared).then(result => {
 					const rows = result[0]
 					resolve(rows)
@@ -452,8 +454,8 @@ const utils = {
 	 * @template T
 	 */
 	playlistSection: function(items, startString, endString, shuffle) {
-		let from = startString == "-" ? 1 : (parseInt(startString) || 1)
-		let to = endString == "-" ? items.length : (parseInt(endString) || from || items.length) // idk how to fix this
+		let from = startString == "-" ? 1 : (Number(startString) || 1)
+		let to = endString == "-" ? items.length : (Number(endString) || from || items.length) // idk how to fix this
 		from = Math.max(from, 1)
 		to = Math.min(items.length, to)
 		if (startString) items = items.slice(from - 1, to)
@@ -486,7 +488,7 @@ const utils = {
 		const collector = channel.createMessageCollector((m => m.author.id == authorID), { max: 1, time: 60000 })
 		return collector.next.then(newmessage => {
 			// Collector got a message
-			let index = parseInt(newmessage.content)
+			let index = Number(newmessage.content)
 			// Is index a number?
 			if (isNaN(index)) throw new Error()
 			index--
@@ -901,7 +903,7 @@ const utils = {
 				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
 				// eslint-disable-next-line no-return-await
 				return await collector.next.then(newmessage => {
-					const index = parseInt(newmessage.content)
+					const index = Number(newmessage.content)
 					if (!index || !list[index - 1]) return resolve(null)
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
