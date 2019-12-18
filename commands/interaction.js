@@ -269,7 +269,7 @@ const interactionSources = [
 		description: "Noms someone",
 		verb: "nommed",
 		shortcut: "durl", // Dynamic URL: call the function "url" and use its response as the GIF URL. Not async.
-		url: () => `https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/nom/nom${Math.floor(Math.random() * (10 - 1) + 1)}.gif`,
+		url: () => { return getGif("nom") },
 		amanda: () => "owie"
 	},
 	{
@@ -307,7 +307,7 @@ const interactionSources = [
 		description: "Boops someone",
 		verb: "booped",
 		shortcut: "durl",
-		url: () => `https://raw.githubusercontent.com/bitsnake/resources/master/Bot/Interactions/boop/boop${Math.floor(Math.random() * (10 - 1) + 1)}.gif`,
+		url: () => { return getGif("boop") },
 		amanda: () => "Dun boop me ; ^ ;"
 	},
 	{
@@ -354,7 +354,7 @@ const genderMap = new Map([
 /**
  * @param {Discord.Message} msg
  * @param {string} suffix
- * @param {{name: string, description: string, verb: string, shortcut: string, fetch?: () => Promise<string>, amanda: (name: string) => string, footer?: string, traaOverride?: boolean, url?: () => string}} source
+ * @param {{name: string, description: string, verb: string, shortcut: string, fetch?: () => Promise<string>, amanda: (name: string) => string, footer?: string, traaOverride?: boolean, url?: () => Promise<string>}} source
  */
 async function doInteraction(msg, suffix, source) {
 	if (msg.channel.type == "dm") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`)
@@ -391,7 +391,7 @@ async function doInteraction(msg, suffix, source) {
 					resolve(data.url)
 				}).catch(reject)
 			})
-		} else if (source.shortcut == "durl") fetch = Promise.resolve(source.url())
+		} else if (source.shortcut == "durl") fetch = source.url()
 		else fetch = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
 	fetch.then(url => {
@@ -402,6 +402,15 @@ async function doInteraction(msg, suffix, source) {
 		if (source.footer) embed.setFooter(source.footer)
 		return msg.channel.send(utils.contentify(msg.channel, embed))
 	}).catch(error => { return msg.channel.send(`There was an error: \`\`\`\n${error}\`\`\``) })
+}
+
+/**
+ * @param {string} type
+ * @returns {Promise<string>}
+ */
+async function getGif(type) {
+	const gif = await utils.sql.get("SELECT * FROM InteractionGifs WHERE type =? ORDER BY RAND()", type)
+	return gif.url
 }
 
 commands.assign(cmds)
