@@ -73,12 +73,14 @@ reloadEvent.once(path.basename(__filename), () => {
 	console.log("removed Timeout sendStatsTimeout")
 	console.log("removed Timeout cacheUpdateTimeout")
 })
+const JIMPStorage = utils.JIMPStorage
 
+/** @type {JIMPStorage<import("jimp").default>} */
 const profileStorage = new utils.JIMPStorage()
+/** @type {JIMPStorage<import("jimp").Font>} */
+const fontStorage = new utils.JIMPStorage()
 profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
 profileStorage.save("profile", "file", "./images/profile.png")
-profileStorage.save("font", "font", ".fonts/Whitney-25.fnt")
-profileStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
 profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
 profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
@@ -87,6 +89,8 @@ profileStorage.save("circle-mask", "file", "./images/circle_mask.png")
 profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
 profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
 profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
+fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
+fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
 
 /**
  * @param {Discord.User} user
@@ -416,13 +420,14 @@ commands.assign({
 			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
 			msg.channel.sendTyping()
 
-			const [isOwner, isPremium, money, info, avatar, images] = await Promise.all([
+			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
 				utils.hasPermission(user, "owner"),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "profile", "font", "font2", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"])
+				profileStorage.getAll(["canvas", "profile", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"]),
+				fontStorage.getAll(["font", "font2"])
 			])
 
 			avatar.resize(111, 111)
@@ -460,8 +465,8 @@ commands.assign({
 				else canvas.composite(images.get("badge-booster"), 216, 115)
 			}
 
-			const font = images.get("font")
-			const font2 = images.get("font2")
+			const font = fonts.get("font")
+			const font2 = fonts.get("font2")
 			canvas.print(font, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
 			canvas.print(font2, 508, 104, `#${user.discriminator}`)
 			canvas.print(font2, 550, 163, money)

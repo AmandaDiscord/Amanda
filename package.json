@@ -32,7 +32,8 @@
     "request-promise": "^4.2.4",
     "simple-git": "^1.126.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:cloudrac3r/SnowTransfer"
+    "snowtransfer": "github:cloudrac3r/SnowTransfer",
+    "typescript": "~3.6.4"
   },
   "devDependencies": {
     "eslint": "^6.7.1"

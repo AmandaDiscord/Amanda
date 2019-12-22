@@ -15,9 +15,12 @@ const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
+const JIMPStorage = utils.JIMPStorage
 
+/** @type {JIMPStorage<import("jimp").default>} */
 const imageStorage = new utils.JIMPStorage()
-imageStorage.save("font", "font", ".fonts/Whitney-20.fnt")
+/** @type {JIMPStorage<import("jimp").Font>} */
+const fontStorage = new utils.JIMPStorage()
 imageStorage.save("slot-canvas", "file", "./images/slot.png")
 imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png")
 imageStorage.save("emoji-cherries", "file", "./images/emojis/cherries.png")
@@ -29,6 +32,7 @@ imageStorage.save("wheel-canvas", "file", "./images/wheel.png")
 imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png");
 ["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach(i => imageStorage.get(`emoji-${i}`).then(image => image.resize(85, 85)))
 imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))
+fontStorage.save("font", "font", ".fonts/Whitney-20.fnt")
 
 commands.assign({
 	"slot": {
@@ -53,10 +57,11 @@ commands.assign({
 					time: 3 * 60 * 1000
 				}
 			}
-			const [money, winChance, images] = await Promise.all([
+			const [money, winChance, images, font] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.cooldownManager(msg.author.id, "slot", cooldownInfo),
-				imageStorage.getAll(["slot-canvas", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"])
+				imageStorage.getAll(["slot-canvas", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"]),
+				fontStorage.get("font")
 			])
 			const slots = []
 			for (let i = 0; i < 3; i++) {
@@ -71,8 +76,6 @@ commands.assign({
 			canvas.composite(pieces[0], 120, 360)
 			canvas.composite(pieces[1], 258, 360)
 			canvas.composite(pieces[2], 392, 360)
-
-			const font = images.get("font")
 
 			let buffer, image
 			if (!args[0]) {
@@ -370,7 +373,7 @@ commands.assign({
 			const [rotation, x, y] = coords
 
 			arrow.rotate(rotation)
-
+			// @ts-ignore
 			canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY)
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)

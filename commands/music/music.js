@@ -1,3 +1,4 @@
+/* eslint-disable no-irregular-whitespace */
 // @ts-check
 
 const crypto = require("crypto")
@@ -338,6 +339,7 @@ commands.assign({
 					\_\_\_\_\_\_\_\_\_\_      `  1h `  [Floorjam](https://beta.frisky.fm/mix/24433) (Mar 2014)
 				*/
 
+				// eslint-disable-next-line no-inner-declarations
 				function makeZWSP(length) {
 					return Array(length).fill(" ").join("​") // SC: U+200B zero-width space
 				}
@@ -377,10 +379,10 @@ commands.assign({
 								item += "`ɴᴏᴡ →`"
 							} else { // show time until
 								let timeString = ""
-								if (timeUntil < 1000*60*60) { // less than one hour, so scale to minutes
-									timeString = Math.floor(timeUntil/1000/60) + "m"
+								if (timeUntil < 1000 * 60 * 60) { // less than one hour, so scale to minutes
+									timeString = Math.floor(timeUntil / 1000 / 60) + "m"
 								} else { // more than one hour, so scale to hours
-									timeString = Math.floor(timeUntil/1000/60/60) + "h"
+									timeString = Math.floor(timeUntil / 1000 / 60 / 60) + "h"
 								}
 								item += "`" + timeString.padStart(timePadding) + timeSpacingRight + "`"
 							}
@@ -389,7 +391,7 @@ commands.assign({
 							// add the name and date
 							const title = stream.mix.data.title // inFlowmotion - August 2019 - DepGlobe
 							const [name, dateString] = title.split(" - ")
-							const date = new Date(dateString+" UTC")
+							const date = new Date(`${dateString} UTC`)
 							let displayDate = date.toUTCString().split(" ")[2] // extract month
 							if (date.getUTCFullYear() !== new Date().getUTCFullYear()) { // different year, so should also display year
 								displayDate += " " + date.getUTCFullYear()
@@ -409,13 +411,9 @@ commands.assign({
 					const lines = descriptionLines.get(stationName)
 					for (let i = 0; i < lines.length; i++) {
 						const line = lines[i]
-						if (i === 0) {
-							description += `**\`${stationDisplayName.padEnd(stationNameLength)}\`**${stationPostSpacing}`
-						}
+						if (i === 0) description += `**\`${stationDisplayName.padEnd(stationNameLength)}\`**${stationPostSpacing}`
 						// last: underscores
-						else if (i === lines.length - 1) {
-							description += underscores
-						}
+						else if (i === lines.length - 1) description += underscores
 						// middle: space
 						else {
 							description += spacing
@@ -427,10 +425,10 @@ commands.assign({
 
 				msg.channel.send(
 					new Discord.MessageEmbed()
-					.setColor(0x36393f)
-					.setTitle("Frisky Radio ­— Schedule")
-					.setDescription(description)
-					.setFooter("Use &frisky <station> to play a station")
+						.setColor(0x36393f)
+						.setTitle("Frisky Radio ­— Schedule")
+						.setDescription(description)
+						.setFooter("Use &frisky <station> to play a station")
 				)
 			}
 		}

@@ -1,7 +1,7 @@
 // @ts-check
 
 const Discord = require("discord.js")
-const {EventEmitter} = require("events")
+const { EventEmitter } = require("events")
 
 const passthrough = require("../../../passthrough")
 const { client, reloader, ipc } = passthrough

@@ -103,10 +103,14 @@ const utils = {
 			clearTimeout(this.timeout)
 		}
 	},
-	JIMPStorage: class JIMPStorage {
+	JIMPStorage:
+	/**
+	 * @template T
+	 */
+	class JIMPStorage {
 		constructor() {
 			/**
-			 * @type {Map<string, any>}
+			 * @type {Map<string, T>}
 			 */
 			this.store = new Map()
 		}
@@ -118,17 +122,20 @@ const utils = {
 		save(name, type, value) {
 			if (type == "file") {
 				const promise = Jimp.read(value)
+				// @ts-ignore
 				this.savePromise(name, promise)
 			} else if (type == "font") {
 				const promise = Jimp.loadFont(value)
+				// @ts-ignore
 				this.savePromise(name, promise)
 			}
 		}
 		/**
 		 * @param {string} name
-		 * @param {Promise<any>} promise
+		 * @param {Promise<T>} promise
 		 */
 		savePromise(name, promise) {
+			// @ts-ignore
 			this.store.set(name, promise)
 			promise.then(result => {
 				this.store.set(name, result)
@@ -136,7 +143,7 @@ const utils = {
 		}
 		/**
 		 * @param {string} name
-		 * @returns {Promise<any>}
+		 * @returns {Promise<T>}
 		 */
 		get(name) {
 			const value = this.store.get(name)
@@ -145,13 +152,12 @@ const utils = {
 		}
 		/**
 		 * @param {Array<string>} names
-		 * @returns {Promise<Map<string, any>>}
+		 * @returns {Promise<Map<string, T>>}
 		 */
-		getAll(names) {
+		async getAll(names) {
 			const result = new Map()
-			return Promise.all(names.map(name =>
-				this.get(name).then(value => result.set(name, value))
-			)).then(() => result)
+			await Promise.all(names.map(name => this.get(name).then(value => result.set(name, value))))
+			return result
 		}
 	},
 	sql: {
