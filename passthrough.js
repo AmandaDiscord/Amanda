@@ -10,7 +10,7 @@ process._ptcreated = true
  * @property {import("./modules/structures/Discord/Amanda")} client
  * @property {import("./config")} config
  * @property {import("./modules/managers/datastores/CommandStore")} commands
- * @property {import("mysql2/promise").PromisePool} db
+ * @property {import("mysql2/promise").Pool} db
  * @property {import("./modules/hotreload")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./modules/managers/datastores/GameStore")} gameStore

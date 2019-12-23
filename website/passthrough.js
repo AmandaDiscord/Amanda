@@ -3,7 +3,7 @@
 /**
  * @typedef {Object} Passthrough
  * @property {import("../config")} config
- * @property {import("mysql2/promise").PromisePool} db
+ * @property {import("mysql2/promise").Pool} db
  * @property {import("snowtransfer")} snow
  * @property {() => {}} loadAPI
  * @property {(page: any) => Promise<any>} resolveTemplates

@@ -164,9 +164,9 @@ const utils = {
 		/**
 		 * @param {string} string
 		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
-		 * @param {mysql.PromisePool|mysql.PromisePoolConnection} [connection=undefined]
+		 * @param {mysql.Pool|mysql.PoolConnection} [connection=undefined]
 		 * @param {number} [attempts=2]
-		 * @returns {Promise<Array<import("../typings").BinaryRow>>}
+		 * @returns {Promise<Array<mysql.RowDataPacket>>}
 		 */
 		"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
 			// @ts-ignore
@@ -174,9 +174,9 @@ const utils = {
 			if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
 			return new Promise((resolve, reject) => {
 				if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
-				// @ts-ignore
 				connection.execute(string, prepared).then(result => {
 					const rows = result[0]
+					// @ts-ignore
 					resolve(rows)
 				}).catch(err => {
 					console.error(err)
@@ -189,15 +189,13 @@ const utils = {
 		/**
 		 * @param {string} string
 		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
-		 * @param {mysql.PromisePool|mysql.PromisePoolConnection} [connection=undefined]
+		 * @param {mysql.Pool|mysql.PoolConnection} [connection=undefined]
+		 * @returns {Promise<mysql.RowDataPacket>}
 		 */
 		"get": async function(string, prepared = undefined, connection = undefined) {
 			return (await utils.sql.all(string, prepared, connection))[0]
 		}
 	},
-	/**
-	 * @returns {mysql.PromisePoolConnection}
-	 */
 	getConnection: function() {
 		return db.getConnection()
 	},
