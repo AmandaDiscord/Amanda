@@ -43,12 +43,15 @@ class IPC {
 		ipc.config.networkPort = port
 		ipc.config.retry = 1000
 		ipc.config.silent = true
+		/** @type {string} */
+		this.clientID = null
 
 		ipc.serveNet(() => {
 			this.server.on("message", this.receive.bind(this))
 			this.server.on("shard", (data, socket) => {
-				const {total, me} = data
-				console.log("Socket identified as "+me.join(" ")+", total "+total)
+				const {clientID, total, me} = data
+				console.log(`Socket identified as ${me.join(" ")}, total ${total} (${clientID})`)
+				this.clientID = clientID
 				this.totalShards = total
 				me.forEach(id => {
 					this.shards.set(id, socket)

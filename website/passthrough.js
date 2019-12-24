@@ -12,6 +12,7 @@
  * @property {import("ws").Server} wss
  * @property {import("./modules/ipcserver")} ipc
  * @property {import("../modules/hotreload")} reloader
+ * @property {import("discord-bot-analytics")} analytics
  */
 
 /**

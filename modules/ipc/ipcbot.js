@@ -44,7 +44,7 @@ class IPC {
 				this.socket.on("message", this.receive.bind(this))
 			})
 			this.socket.on("connect", () => {
-				this.socket.emit("shard", { total: client.options.totalShardCount, me: shards })
+				this.socket.emit("shard", { clientID: client.user.id, total: client.options.totalShardCount, me: shards })
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {

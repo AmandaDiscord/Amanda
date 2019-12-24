@@ -15,6 +15,7 @@
   "dependencies": {
     "@amanda/lang": "github:PapiOphidian/Amanda-Lang",
     "buffer-signature": "^1.1.0",
+    "discord-bot-analytics": "^1.0.9",
     "discord.js": "github:cloudrac3r/discord.js#amanda-v12",
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
     "dnscache": "github:cloudrac3r/dnscache",

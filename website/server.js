@@ -4,6 +4,7 @@ const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
+const dba = require("discord-bot-analytics")
 const Reloader = require("../modules/hotreload")
 require("dnscache")({ enable: true })
 
@@ -29,6 +30,9 @@ passthrough.db = db
 const IPC = require("./modules/ipcserver.js")
 const ipc = new IPC("website", config.website_ipc_bind, 6544)
 passthrough.ipc = ipc
+
+const analytics = new dba(config.chewey_api_key, null)
+passthrough.analytics = analytics
 
 const server = pinski({
 	pageHandlers: [
