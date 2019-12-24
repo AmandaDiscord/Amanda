@@ -15,7 +15,11 @@ class Amanda extends Discord.Client {
 		/** @type {Lavalink.PlayerManager} */
 		this.lavalink
 
-		/** @type {any} do not use this. */
+		/**
+		 * Do not use this
+		 * @type {import("../../../passthrough")}
+		 * @private
+		 */
 		this.passthrough = passthrough
 	}
 }

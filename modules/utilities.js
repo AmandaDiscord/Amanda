@@ -725,7 +725,7 @@ const utils = {
 			value = content
 			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
 		}
-		return value
+		return value.replace(/\u202E/g, "")
 	},
 
 	AsyncValueCache:
@@ -900,10 +900,7 @@ const utils = {
 				if (list.length == 1) return resolve(list[0])
 				if (list.length == 0) return resolve(null)
 				const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
-				let content
-				if (permissions && !permissions.has("EMBED_LINKS")) content = `${embed.title}\n${embed.description}\n${embed.footer.text}`
-				else content = embed
-				const selectmessage = await message.channel.send(content)
+				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed))
 				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
 				// eslint-disable-next-line no-return-await
 				return await collector.next.then(newmessage => {
@@ -914,11 +911,8 @@ const utils = {
 					if (message.channel.type != "dm") newmessage.delete().catch(() => {})
 					return resolve(list[index - 1])
 				}).catch(() => {
-					let cont
 					embed.setTitle("User selection cancelled").setDescription("").setFooter("")
-					if (permissions && !permissions.has("EMBED_LINKS")) cont = `${embed.title}\n${embed.description}\n${embed.footer.text}`
-					else cont = embed
-					selectmessage.edit(cont)
+					selectmessage.edit(utils.contentify(selectmessage.channel, embed))
 					return resolve(null)
 				})
 			}
@@ -972,11 +966,13 @@ const utils = {
 	 * @returns {string}
 	 */
 	replace: function(string, properties = {}) {
+		/** @type {string} */
+		let value
 		Object.keys(properties).forEach(item => {
 			const index = string.indexOf(`%${item}`)
-			if (index != -1) string = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
+			if (index != -1) value = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
 		})
-		return string
+		return value.replace(/\u202E/g, "")
 	},
 
 	getStats: function() {

@@ -73,7 +73,7 @@ commands.assign({
 				if (stdout) result.addField("stdout:", formatOutput(stdout))
 				if (stderr) result.addField("stderr:", formatOutput(stderr))
 				if (!stdout && !stderr) result.setDescription("No output.")
-				const nmsg = await msg.channel.send(result)
+				const nmsg = await msg.channel.send(utils.contentify(msg.channel, result))
 				const menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			})

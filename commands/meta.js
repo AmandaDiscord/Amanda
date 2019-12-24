@@ -516,16 +516,18 @@ commands.assign({
 
 			const tableNames = { self: "SettingsSelf", server: "SettingsGuild" }
 
-			const scope = args[0].toLowerCase()
+			let scope = args[0].toLowerCase()
+			scope = Discord.Util.escapeMarkdown(scope).replace(/\u202E/g, "")
 			if (!["self", "server"].includes(scope)) return msg.channel.send("Command syntax is `&settings <scope> <name> <value>`. Your value for `scope` was incorrect, it must be either `self` or `server`.")
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
-			const settingName = args[1] ? args[1].toLowerCase() : ""
+			let settingName = args[1] ? args[1].toLowerCase() : ""
+			settingName = Discord.Util.escapeMarkdown(settingName).replace(/\u202E/g, "")
 			if (args[1] == "view") {
 				const all = await utils.sql.all("SELECT * FROM " + tableName + " WHERE keyID =?", keyID)
 				if (all.length == 0) return msg.channel.send(`There are no settings set for scope ${scope}`)
-				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
+				return msg.channel.send(all.map(a => `${a.setting}: ${a.value.replace(/\u202E/g, "")}`).join("\n"))
 			}
 
 			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send("You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.")
@@ -539,6 +541,7 @@ commands.assign({
 				const row = await utils.sql.get("SELECT value FROM " + tableName + " WHERE keyID = ? AND setting = ?", [keyID, settingName])
 				if (scope == "server") {
 					value = row ? row.value : setting.default
+					value = value.replace(/\u202E/g, "")
 					if (setting.type == "boolean") value = (!!+value) + ""
 					if (row) return msg.channel.send(`Current value of \`${settingName}\` is \`${value}\`. This value was set for the server.`)
 					else return msg.channel.send(`Current value of \`${settingName}\` is not set in this server, so it inherits the default value, which is \`${value}\`.`)
@@ -547,8 +550,8 @@ commands.assign({
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
-						serverRow ? serverRow.value : null,
-						row ? row.value : null
+						serverRow ? serverRow.value.replace(/\u202E/g, "") : null,
+						row ? row.value.replace(/\u202E/g, "") : null
 					]
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
 					const finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
@@ -560,6 +563,8 @@ commands.assign({
 					)
 				}
 			}
+
+			value = value.replace(/\u202E/g, "")
 
 			if (value === "null") {
 				if (settingName == "profilebackground") {
@@ -655,7 +660,7 @@ commands.assign({
 						.addField("stop", "Empty the queue and leave the voice channel.\n`&music stop`")
 						.addField("playlist", "Manage playlists. Try `&help playlist` for more info.")
 						.setColor("36393E")
-					send("dm").catch(() => send("channel"))
+					msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)))
 				} else if (suffix.includes("playlist")) {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
@@ -689,7 +694,7 @@ commands.assign({
 						"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
 						.setColor("36393E")
-					send("dm").catch(() => send("channel"))
+					msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)))
 				} else {
 					const command = commands.find(c => c.aliases.includes(suffix))
 					if (command) {
@@ -697,13 +702,12 @@ commands.assign({
 						if (lang[command.category]) {
 							const langcommand = lang[command.category][command.aliases[0]]
 							if (langcommand) info = { usage: langcommand.help.usage, description: langcommand.help.description }
-
 						}
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
 							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}`)
 							.setColor("36393E")
-						send("channel")
+						msg.channel.send(utils.contentify(msg.channel, embed))
 					} else if (commands.categories.get(suffix)) {
 						const cat = commands.categories.get(suffix)
 						const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
@@ -714,7 +718,7 @@ commands.assign({
 							"\n\nType `&help <command>` to see more information about a command.")
 							.setColor("36393E")
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.")
-						send("dm").then(mobile).catch(() => send("channel").then(mobile))
+						msg.author.send(embed).then(mobile).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)).then(mobile))
 						/**
 						 * @param {Discord.Message} message
 						 */
@@ -724,30 +728,13 @@ commands.assign({
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
 								.setColor("36393E")
-							let content
-							if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user)
-
-							if (!permissions || permissions.has("EMBED_LINKS")) content = mobileEmbed
-							else {
-								// eslint-disable-next-line no-inner-declarations
-								function addPart(value) {
-									if (value) {
-										if (content) content += "\n"
-										content += value
-									}
-								}
-								addPart(mobileEmbed.author && `**${mobileEmbed.author.name}**`)
-								addPart(mobileEmbed.description)
-								addPart(mobileEmbed.fields && mobileEmbed.fields.map(f => `${f.name}\n${f.value}`).join("\n"))
-								addPart(mobileEmbed.footer && mobileEmbed.footer.text)
-							}
 							// @ts-ignore
-							const menu = utils.reactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: content }])
+							const menu = utils.reactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						}
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000")
-						send("channel")
+						msg.channel.send(utils.contentify(msg.channel, embed))
 					}
 				}
 			} else {
@@ -758,36 +745,7 @@ commands.assign({
 					"Type `&help <category>` to see all commands in that category.\n" +
 					"Type `&help <command>` to see more information about a command.")
 					.setColor("36393E")
-				send("dm").catch(() => send("channel").catch(console.error))
-			}
-			function send(where) {
-				return new Promise((resolve, reject) => {
-					const target = where == "dm" ? msg.author : msg.channel
-					if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-					let promise
-					if (!permissions || permissions.has("EMBED_LINKS")) {
-						promise = target.send(embed)
-					} else {
-						let content = ""
-						// eslint-disable-next-line no-inner-declarations
-						function addPart(value) {
-							if (value) {
-								if (content) content += "\n"
-								content += value
-							}
-						}
-						addPart(embed.author && `**${embed.author.name}**`)
-						addPart(embed.description)
-						addPart(embed.fields && embed.fields.map(f => `${f.name}\n${f.value}`).join("\n"))
-						addPart(embed.footer && embed.footer.text)
-						if (content.length >= 2000) promise = target.send("Please allow me to embed content")
-						else promise = target.send(content)
-					}
-					promise.then(dm => {
-						if (where == "dm" && msg.channel.type != "dm") msg.channel.send("I sent you a DM")
-						resolve(dm)
-					}).catch(reject)
-				})
+				msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)).catch(console.error))
 			}
 		}
 	}
