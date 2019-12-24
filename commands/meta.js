@@ -634,6 +634,10 @@ commands.assign({
 		process: function(msg, suffix, lang) {
 			let embed, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			/**
+			 * @param {Discord.Message} mesg
+			 */
+			const reply = (mesg) => { if (mesg.channel.type != "dm") return mesg.channel.send("I sent you a DM") }
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
@@ -660,7 +664,11 @@ commands.assign({
 						.addField("stop", "Empty the queue and leave the voice channel.\n`&music stop`")
 						.addField("playlist", "Manage playlists. Try `&help playlist` for more info.")
 						.setColor("36393E")
-					msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)))
+					try {
+						msg.author.send(embed).then(m => reply(msg))
+					} catch (e) {
+						msg.channel.send(utils.contentify(msg.channel, embed))
+					}
 				} else if (suffix.includes("playlist")) {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
@@ -694,7 +702,11 @@ commands.assign({
 						"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
 						.setColor("36393E")
-					msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)))
+					try {
+						msg.author.send(embed).then(m => reply(msg))
+					} catch (e) {
+						msg.channel.send(utils.contentify(msg.channel, embed))
+					}
 				} else {
 					const command = commands.find(c => c.aliases.includes(suffix))
 					if (command) {
@@ -718,7 +730,11 @@ commands.assign({
 							"\n\nType `&help <command>` to see more information about a command.")
 							.setColor("36393E")
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.")
-						msg.author.send(embed).then(mobile).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)).then(mobile))
+						try {
+							msg.author.send(embed).then(mobile).then(() => reply(msg))
+						} catch (e) {
+							msg.channel.send(utils.contentify(msg.channel, embed)).then(mobile)
+						}
 						/**
 						 * @param {Discord.Message} message
 						 */
@@ -745,7 +761,11 @@ commands.assign({
 					"Type `&help <category>` to see all commands in that category.\n" +
 					"Type `&help <command>` to see more information about a command.")
 					.setColor("36393E")
-				msg.author.send(embed).catch(() => msg.channel.send(utils.contentify(msg.channel, embed)).catch(console.error))
+				try {
+					msg.author.send(embed).then(m => reply(msg))
+				} catch (e) {
+					msg.channel.send(utils.contentify(msg.channel, embed)).catch(console.error)
+				}
 			}
 		}
 	}
