@@ -966,11 +966,10 @@ const utils = {
 	 * @returns {string}
 	 */
 	replace: function(string, properties = {}) {
-		/** @type {string} */
-		let value
+		let value = string.slice(0, string.length)
 		Object.keys(properties).forEach(item => {
-			const index = string.indexOf(`%${item}`)
-			if (index != -1) value = string.slice(0, index) + properties[item] + string.slice(index + item.length + 1)
+			const index = value.indexOf(`%${item}`)
+			if (index != -1) value = value.slice(0, index) + properties[item] + value.slice(index + item.length + 1)
 		})
 		return value.replace(/\u202E/g, "")
 	},
