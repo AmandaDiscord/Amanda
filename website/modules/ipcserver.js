@@ -241,6 +241,18 @@ class IPC {
 			return result
 		})
 	}
+
+	/**
+	 * @returns {Promise<string>}
+	 */
+	waitForClientID() {
+		if (this.clientID) return Promise.resolve(this.clientID)
+		else return new Promise(resolve => {
+			this.server.once("shard", ({clientID}) => {
+				resolve(clientID)
+			})
+		})
+	}
 }
 
 module.exports = IPC

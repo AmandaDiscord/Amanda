@@ -6,7 +6,6 @@ let cancelled = false
 
 async function report() {
 	const stats = await ipc.router.requestStats()
-	console.log("Sending report:", stats)
 	return analytics.sendReport({
 		servers: stats.guilds,
 		channels: stats.channels,
@@ -23,11 +22,16 @@ async function reportAndSetTimeout() {
 	setTimeout(reportAndSetTimeout, 10*60*1000)
 }
 
-if (ipc.clientID === "405208699313848330") {
-	setTimeout(() => {
-		reportAndSetTimeout()
-	}, 1000)
-}
+ipc.waitForClientID().then(clientID => {
+	if (clientID === "405208699313848330") {
+		console.log("Stat reporting active")
+		setTimeout(() => {
+			reportAndSetTimeout()
+		}, 1000)
+	} else {
+		console.log("Stat reporting would be active, but wrong client ID")
+	}
+})
 
 module.exports = [
 	{cancel: true, code: () => {
