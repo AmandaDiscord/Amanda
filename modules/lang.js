@@ -9,7 +9,7 @@ const passthrough = require("../passthrough")
  * @param {string} sentence
  */
 function authorString(msg, sentence) {
-	if (msg) return msg.author.username + ", " + sentence
+	if (msg) return `${msg.author.username}, ${sentence}`.replace(/\u202E/g, "")
 	else return sentence[0].toUpperCase() + sentence.slice(1)
 }
 
