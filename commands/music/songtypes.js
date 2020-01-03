@@ -4,7 +4,7 @@ const Discord = require("discord.js")
 const rp = require("request-promise")
 
 const passthrough = require("../../passthrough")
-const { reloader, frisky, config, ipc } = passthrough
+const { constants, reloader, frisky, config, ipc } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -288,7 +288,7 @@ class FriskySong extends Song {
 
 		this.id = this.station // designed for error reporting
 		this.thumbnail = {
-			src: "https://amanda.discord-bots.ga/images/frisky-small.png",
+			src: constants.frisky_placeholder,
 			width: 320,
 			height: 180
 		}

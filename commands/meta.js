@@ -14,7 +14,7 @@ const profiler = require("gc-profiler")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory } = passthrough
+const { client, constants, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -221,7 +221,7 @@ commands.assign({
 		process: function(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
-				.setDescription(`${lang.meta.invite.returns.notice}\nInvite link: https://discord-bots.ga/amanda`)
+				.setDescription(`${lang.meta.invite.returns.notice}\nInvite link: ${constants.add}`)
 				.setColor(0x36393f)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -243,7 +243,7 @@ commands.assign({
 					`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>\n` +
 					`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`)
 				.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-				.addField("Links", utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": `${config.website_protocol}://${config.website_domain}/stats` }))
+				.addField("Links", utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }))
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -257,7 +257,7 @@ commands.assign({
 			const embed = new Discord.MessageEmbed()
 				.setColor(0x36393f)
 				.setTitle(lang.meta.donate.returns.intro)
-				.setDescription(lang.meta.donate.returns.description)
+				.setDescription(utils.replace(lang.meta.donate.returns.description, { "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }))
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},

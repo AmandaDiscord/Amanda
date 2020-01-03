@@ -9,6 +9,7 @@ process._ptcreated = true
  * @typedef {Object} Passthrough
  * @property {import("./modules/structures/Discord/Amanda")} client
  * @property {import("./config")} config
+ * @property {import("./constants")} constants
  * @property {import("./modules/managers/datastores/CommandStore")} commands
  * @property {import("mysql2/promise").Pool} db
  * @property {import("./modules/hotreload")} reloader

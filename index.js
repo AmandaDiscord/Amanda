@@ -8,6 +8,7 @@ const Frisky = require("frisky-client")
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
+const constants = require("./constants.js")
 const Reloader = require("./modules/hotreload")
 
 const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START", "PRESENCE_UPDATE"], messageCacheMaxSize: 0 })
@@ -29,7 +30,7 @@ const db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky() })
+	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky() })
 
 	reloader.setupWatch([
 		"./modules/utilities.js"
