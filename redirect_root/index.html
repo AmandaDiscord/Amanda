@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>We've moved! | Amanda</title>
+	<style>
+		body {
+			background-color: #ffeee0;
+			color: #222;
+			font-size: 20px;
+			max-width: 700px;
+			margin: 8vh auto 0;
+			font-family: "Noto Sans","Droid Sans","Roboto","Liberation Sans","San Francisco","Helvetica","Arial",sans-serif;
+			line-height: 1.5;
+		}
+		h1 {
+			font-size: 1.5em;
+			margin: 0.6em 0;
+		}
+		p {
+			margin: 1.5em 0;
+		}
+		a, a:visited {
+			color: #0045e8;
+		}
+		#redirect {
+			font-weight: bold;
+		}
+		code {
+			padding: 2px 4px;
+			border-radius: 5px;
+			font-size: 0.9em;
+			background-color: #d4d4d4;
+		}
+	</style>
+</head>
+<body>
+	<h1>We've moved domains!</h1>
+	<p><code>amanda.discord-bots.ga</code> is now <code>amanda.moe</code>.</p>
+	<p>If you have any bookmarks or links to <code>amanda.discord-bots.ga</code>, please edit them so that they point to <code>amanda.moe</code>.</p>
+	<p><a id="redirect" href="https://amanda.moe">Continue to where you were going...&ensp;→</a></p>
+	<script>
+		var redirect = document.getElementById("redirect");
+		var url = new URL(window.location);
+		url.host = "amanda.moe";
+		url.protocol = "https:";
+		redirect.href = url.toString();
+	</script>
+</body>
+</html>
