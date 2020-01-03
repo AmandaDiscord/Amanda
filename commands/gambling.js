@@ -129,9 +129,9 @@ commands.assign({
 		description: "Flips a coin",
 		aliases: ["flip"],
 		category: "gambling",
-		process: function(msg) {
+		process: function(msg, suffix, lang) {
 			const flip = utils.arrayRandom(["heads <:coinH:402219464348925954>", "tails <:coinT:402219471693021196>"])
-			return msg.channel.send(`You flipped ${flip}`)
+			return msg.channel.send(utils.replace(lang.gambling.flip.returns.flip, { "flip": flip }))
 		}
 	},
 	"betflip": {

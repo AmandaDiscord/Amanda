@@ -259,63 +259,47 @@ const interactionSources = [
 	{
 		name: "hug", // Command object key and text filler
 		description: "Hugs someone", // Command description
-		verb: "hugs", // x "verbed" @y in the command response
 		shortcut: "nekos.life", // nekos.life: use the command name as the endpoint
-		amanda: name => `**Hugs ${name} back** :heart:`, // Response when used on the bot itself
 		traaOverride: true // don't set this true for newly added types
 	},
 	{
 		name: "nom",
 		description: "Noms someone",
-		verb: "nommed",
 		shortcut: "durl", // Dynamic URL: call the function "url" and use its response as the GIF URL. Not async.
-		url: () => { return getGif("nom") },
-		amanda: () => "owie"
+		url: () => { return getGif("nom") }
 	},
 	{
 		name: "kiss",
 		description: "Kisses someone",
-		verb: "kissed",
 		shortcut: "nekos.life",
-		amanda: name => `**Kisses ${name} back** :heart:`,
 		traaOverride: true
 	},
 	{
 		name: "cuddle",
 		description: "Cuddles someone",
-		verb: "cuddles",
 		shortcut: "nekos.life",
-		amanda: name => `**Cuddles ${name} back** :heart:`,
 		traaOverride: true
 	},
 	{
 		name: "poke",
 		description: "Pokes someone",
-		verb: "poked",
-		shortcut: "nekos.life",
-		amanda: () => "Don't poke me ; ^ ;"
+		shortcut: "nekos.life"
 	},
 	{
 		name: "slap",
 		description: "Slaps someone",
-		verb: "slapped",
-		shortcut: "nekos.life",
-		amanda: name => `**Slaps ${name} back** That hurt me ; ^ ;`
+		shortcut: "nekos.life"
 	},
 	{
 		name: "boop",
 		description: "Boops someone",
-		verb: "booped",
 		shortcut: "durl",
-		url: () => { return getGif("boop") },
-		amanda: () => "Dun boop me ; ^ ;"
+		url: () => { return getGif("boop") }
 	},
 	{
 		name: "pat",
 		description: "Pats someone",
-		verb: "patted",
 		shortcut: "nekos.life",
-		amanda: () => "≥ w ≤",
 		traaOverride: true
 	}
 ]
@@ -330,8 +314,9 @@ for (const source of interactionSources) {
 			/**
 			 * @param {Discord.Message} msg
 			 * @param {string} suffix
+			 * @param {import("@amanda/lang").Lang} lang
 			 */
-			process: (msg, suffix) => doInteraction(msg, suffix, source)
+			process: (msg, suffix, lang) => doInteraction(msg, suffix, source, lang)
 		}
 	}
 	commands.assign(newCommand)
@@ -354,15 +339,16 @@ const genderMap = new Map([
 /**
  * @param {Discord.Message} msg
  * @param {string} suffix
- * @param {{name: string, description: string, verb: string, shortcut: string, fetch?: () => Promise<string>, amanda: (name: string) => string, footer?: string, traaOverride?: boolean, url?: () => Promise<string>}} source
+ * @param {{name: string, description: string, shortcut: string, fetch?: () => Promise<string>, footer?: string, traaOverride?: boolean, url?: () => Promise<string>}} source
+ * @param {import("@amanda/lang").Lang} lang
  */
-async function doInteraction(msg, suffix, source) {
-	if (msg.channel.type == "dm") return msg.channel.send(`Why would you want to ${source.name} someone in DMs?`)
-	if (!suffix) return msg.channel.send(`You have to tell me who you wanna ${source.name}!`)
+async function doInteraction(msg, suffix, source, lang) {
+	if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.dm, { "action": source.name }))
+	if (!suffix) return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.noUser, { "action": source.name }))
 	const member = await msg.guild.findMember(msg, suffix)
 	if (!member) return msg.channel.send("Invalid user")
 	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
-	if (member.user.id == client.user.id) return msg.channel.send(source.amanda(msg.author.username))
+	if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
 	let fetch
 	if (source.traaOverride) {
 		const g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
@@ -396,7 +382,7 @@ async function doInteraction(msg, suffix, source) {
 	}
 	fetch.then(url => {
 		const embed = new Discord.MessageEmbed()
-			.setDescription(`${msg.author.username} ${source.verb} <@${member.user.id}>`)
+			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": `<@${member.id}>` }))
 			.setImage(url)
 			.setColor("36393E")
 		if (source.footer) embed.setFooter(source.footer)

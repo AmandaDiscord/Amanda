@@ -43,8 +43,7 @@ const db = mysql.createPool({
 		"./commands/music/common.js",
 		"./commands/music/playlistcommand.js",
 		"./commands/music/queue.js",
-		"./commands/music/songtypes.js",
-		"./modules/lang.js"
+		"./commands/music/songtypes.js"
 	])
 
 	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")

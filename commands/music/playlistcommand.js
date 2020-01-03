@@ -8,9 +8,6 @@ const { client, reloader, commands } = passthrough
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-const lang = require("../../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 const common = require("./common.js")
 reloader.useSync("./commands/music/common.js", common)
 
@@ -25,8 +22,8 @@ commands.assign({
 		category: "audio",
 		description: "Create, play, and edit playlists.",
 		usage: "",
-		process: async function(msg, suffix) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]
 			if (playlistName == "show") {
@@ -81,21 +78,17 @@ commands.assign({
 					, 2000
 				)
 			}
-			if (!playlistName) return msg.channel.send(`${msg.author.username}, you must name a playlist. Use \`&music playlists show\` to show all playlists.`)
+			if (!playlistName) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameRequired, { "username": msg.author.username }))
 			if (playlistName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) {
-				return msg.channel.send(
-					`${msg.author.username}, you can play a playlist directly! Just pass it to \`&music play\` like so:`
-					+ "\n`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`"
-					+ "\n\nIf you still want to import a playlist into Amanda, you must give it a friendly name first, like `bobs_songs`."
-				)
+				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": "`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`" }))
 			}
-			if (playlistName.length > 24) return msg.channel.send(msg.author.username + ", the playlist name must be 24 characters or less.")
+			if (playlistName.length > 24) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameLimit, { "username": msg.author.username }))
 			const playlistRow = await utils.sql.get("SELECT * FROM Playlists WHERE name = ?", playlistName)
 			if (!playlistRow) {
 				if (args[1] == "create") {
 					await utils.sql.all("INSERT INTO Playlists (author, name) VALUES (?, ?)", [msg.author.id, playlistName])
-					return msg.channel.send(`${msg.author.username}, Created playlist **${playlistName}**`)
-				} else return msg.channel.send(`${msg.author.username}, That playlist does not exist. Use \`&music playlist ${playlistName} create\` to create it.`)
+					return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistCreated, { "username": msg.author.username, "playlist": playlistName }))
+				} else return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotExist, { "username": msg.author.username, "playlist": playlistName }))
 			}
 			const songs = await utils.sql.all("SELECT * FROM PlaylistSongs INNER JOIN Songs ON Songs.videoID = PlaylistSongs.videoID WHERE playlistID = ?", playlistRow.playlistID)
 			const orderedSongs = []
@@ -119,51 +112,51 @@ commands.assign({
 					return utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index + 1] ? songs[index + 1].videoID : null), row.playlistID, row.videoID])
 				}))
 				await utils.sql.all("END TRANSACTION")
-				return msg.channel.send(`${msg.author.username}, The database entries for that playlist are inconsistent. The inconsistencies have been resolved by resetting the order of the songs in that playlist. Apart from the song order, no data was lost. Other playlists were not affected.`)
+				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.databaseFixed, { "username": msg.author.username }))
 			}
 			const action = args[1] || ""
 			if (action.toLowerCase() == "add") {
-				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
-				if (!args[2]) return msg.channel.send(`${msg.author.username}, You must provide a YouTube link or some search terms`)
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
+				if (!args[2]) return msg.channel.send(utils.replace(lang.audio.music.prompts.playableRequired, { "username": msg.author.username }))
 				msg.channel.sendTyping()
 				const match = common.inputToID(args.slice(2).join(" "))
 				let result
 				if (match && match.type == "video") result = await common.getTracks(match.id)
-				else if (match && match.type == "playlist") return msg.channel.send("Do not use playlist importing with `playlist add`. Use `playlist import` instead")
+				else if (match && match.type == "playlist") return msg.channel.send(lang.audio.playlist.prompts.usePlaylistAdd)
 				else if (!match) result = await common.getTracks(`ytsearch: ${args.slice(2).join(" ")}`);
 				(async () => {
 					if (!result || result && !result[0]) throw new Error()
 					const data = result[0]
-					if (orderedSongs.some(row => row.videoID == data.info.identifier)) return msg.channel.send(lang.playlistDuplicateItem(msg))
+					if (orderedSongs.some(row => row.videoID == data.info.identifier)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistDuplicateSong, { "username": msg.author.username }))
 					await Promise.all([
 						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [data.info.identifier, data.info.title, Math.floor(data.info.length / 1000), data.info.identifier]),
 						utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, data.info.identifier]),
 						utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [data.info.identifier, playlistRow.playlistID, data.info.identifier])
 					])
-					return msg.channel.send(`${msg.author.username}, Added **${data.info.title}** to playlist **${playlistName}**`)
+					return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistRemoved, { "username": msg.author.username, "song": data.info.title, "playlist": playlistName }))
 				})().catch(() => {
-					msg.channel.send(`${msg.author.username}, That is not a valid YouTube link`)
+					msg.channel.send(utils.replace(lang.audio.playlist.prompts.youtubeLinkInvalid, { "username": msg.author.username }))
 				})
 			} else if (action.toLowerCase() == "remove") {
-				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				let index = Number(args[2])
-				if (!index) return msg.channel.send(`${msg.author.username}, Please provide the index of the item to remove`)
+				if (!index) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.indexRequired, { "username": msg.author.username }))
 				index = index - 1
-				if (!orderedSongs[index]) return msg.channel.send(lang.genericIndexOutOfRange(msg))
+				if (!orderedSongs[index]) return msg.channel.send("Out of range")
 				const toRemove = orderedSongs[index]
 				await Promise.all([
 					utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
 					utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ? AND videoID = ?", [playlistRow.playlistID, toRemove.videoID])
 				])
-				return msg.channel.send(`${msg.author.username}, Removed **${toRemove.name}** from playlist **${playlistName}**`)
+				return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistRemoved, { "username": msg.author.username, "song": toRemove.name, "playlist": playlistName }))
 			} else if (action.toLowerCase() == "move") {
-				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				let from = Number(args[2])
 				let to = Number(args[3])
-				if (!from || !to) return msg.channel.send(`${msg.author.username}, Please provide an index to move from and an index to move to.`)
+				if (!from || !to) return msg.channel.send(lang.audio.playlist.prompts.indexMoveRequired)
 				from--; to--
-				if (!orderedSongs[from]) return msg.channel.send(lang.genericIndexOutOfRange(msg))
-				if (!orderedSongs[to]) return msg.channel.send(lang.genericIndexOutOfRange(msg))
+				if (!orderedSongs[from]) return msg.channel.send("Out of range")
+				if (!orderedSongs[to]) return msg.channel.send("Out of range")
 				const fromRow = orderedSongs[from], toRow = orderedSongs[to]
 				if (from < to) {
 					await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]) // update row before item
@@ -174,7 +167,7 @@ commands.assign({
 					await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.videoID, fromRow.playlistID, toRow.videoID]) // update row before moved item
 					await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [toRow.videoID, fromRow.playlistID, fromRow.videoID]) // update moved item
 				} else return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`)
-				return msg.channel.send(`${msg.author.username}, Moved **${fromRow.name}** to position **${to + 1}**`)
+				return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistMoved, { "username": msg.author.username, "song": fromRow.name, "index": to + 1 }))
 			} else if (action.toLowerCase() == "search" || action.toLowerCase() == "find") {
 				let body = orderedSongs
 					.map((songss, index) => `${index + 1}. **${songss.name}** (${common.prettySeconds(songss.length)})`)
@@ -186,15 +179,15 @@ commands.assign({
 					.setColor("36393E")
 				msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
-				const voiceChannel = await common.detectVoiceChannel(msg, true)
+				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 				if (!voiceChannel) return
 				const rows = utils.playlistSection(orderedSongs, args[2], args[3], action.toLowerCase()[0] == "s")
 				if (rows.length) {
 					const songss = rows.map(row => new songTypes.YouTubeSong(row.videoID, row.name, row.length))
 					common.inserters.fromSongArray(msg.channel, voiceChannel, songss, false, msg)
-				} else msg.channel.send(`That playlist is empty. Add some songs with \`&music playlist ${playlistRow.name} add <song>\`!`)
+				} else msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistEmpty, { "playlist": playlistName }))
 			} else if (action.toLowerCase() == "import") {
-				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (args[2].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
 					const playlist = await youtube.getPlaylist(args[2])
 					let videos = await playlist.getVideos()
@@ -204,10 +197,10 @@ commands.assign({
 						else if (videos.slice(0, i).some(v => v.id == video.id)) return false
 						else return true
 					})
-					const editmsg = await msg.channel.send("Importing playlist. This could take a moment...\n(Fetching song info)")
+					const editmsg = await msg.channel.send(lang.audio.playlist.prompts.playlistImporting)
 					const fullvideos = await Promise.all(videos.map(video => common.getTracks(video.id).then(r => r[0])))
-					if (!fullvideos.length) return editmsg.edit(`${msg.author.username}, all videos in that playlist have already been imported.`)
-					await editmsg.edit("Importing playlist. This could take a moment...\n(Updating database)")
+					if (!fullvideos.length) return editmsg.edit(utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }))
+					await editmsg.edit(lang.audio.playlist.prompts.playlistImportingDatabase)
 					for (let i = 0; i < fullvideos.length; i++) {
 						const video = fullvideos[i]
 						promises.push(utils.sql.all(
@@ -232,17 +225,11 @@ commands.assign({
 						[fullvideos[0].info.identifier, playlistRow.playlistID, fullvideos.slice(-1)[0].info.identifier]
 					))
 					await Promise.all(promises)
-					editmsg.edit(`All done! Check out your playlist with **&music playlist ${playlistName}**.`)
-				} else return msg.channel.send(`${msg.author.username}, please provide a YouTube playlist link.`)
+					editmsg.edit(utils.replace(lang.audio.playlist.returns.playlistImportDone, { "username": msg.author.username, "playlist": playlistName }))
+				} else return msg.channel.send(utils.replace(lang.audio.music.prompts.youtubeRequired, { "username": msg.author.username }))
 			} else if (action.toLowerCase() == "delete") {
-				if (playlistRow.author != msg.author.id) return msg.channel.send(lang.playlistNotOwned(msg))
-				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(
-					`This action will permanently delete the playlist \`${playlistRow.name}\`. ` +
-					"After deletion, you will not be able to play, display, or modify the playlist, and anyone will be able to create a new playlist with the same name.\n" +
-					"You will not be able to undo this action.\n\n" +
-					"<:bn_del:331164186790854656> - confirm deletion\n" +
-					"<:bn_ti:327986149203116032> - ignore"
-				)
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
+				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
 				utils.reactionMenu(message, [
 					{ emoji: client.emojis.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
@@ -250,7 +237,7 @@ commands.assign({
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 						])
-						deletePromptEmbed.setDescription("Playlist deleted.")
+						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed))
 					} },
 					// @ts-ignore: actionData is normally a function, but actionType here is "edit".

@@ -10,9 +10,6 @@ const { client, reloader, config } = passthrough
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-const lang = require("../../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 class VoiceStateCallback {
 	/**
 	 * @param {Discord.Message} msg
@@ -38,9 +35,14 @@ class VoiceStateCallback {
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 */
-	trigger(voiceChannel) {
+	async trigger(voiceChannel) {
+		let lang
+		const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [this.msg.author.id, "language"])
+		if (selflang) lang = await utils.getLang(this.msg.author.id, "self")
+		else if (this.msg.guild) lang = await utils.getLang(this.msg.guild.id, "guild")
+		else lang = await utils.getLang(this.msg.author.id, "self")
 		if (this.active) {
-			const checkedVoiceChannel = common.verifyVoiceChannel(voiceChannel, this.msg)
+			const checkedVoiceChannel = common.verifyVoiceChannel(voiceChannel, this.msg, lang)
 			if (checkedVoiceChannel) {
 				// All good!
 				this.active = false
@@ -326,25 +328,26 @@ const common = {
 	 * **This responds to the user on failure, and also checks if the client has permission to join and speak.**
 	 * @param {Discord.Message} msg
 	 * @param {boolean} wait If false, return immediately. If true, wait up to 30 seconds for the member to connect.
+	 * @param {import("@amanda/lang").Lang} lang
 	 * @returns {Promise<(Discord.VoiceChannel|null)>}
 	 */
-	detectVoiceChannel: async function(msg, wait) {
+	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		if (msg.member.voice.channel) return common.verifyVoiceChannel(msg.member.voice.channel, msg)
+		if (msg.member.voice.channel) return common.verifyVoiceChannel(msg.member.voice.channel, msg, lang)
 		// Not in a voice channel, and not waiting? Quit.
 		if (!wait) {
-			msg.channel.send(lang.voiceMustJoin(msg))
+			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceChannelRequired, { "username": msg.author.username }))
 			return null
 		}
 		// Tell the user to join.
-		const prompt = await msg.channel.send(lang.voiceChannelWaiting(msg))
+		const prompt = await msg.channel.send(utils.replace(lang.audio.music.prompts.voiceChannelWaiting, { "username": msg.author.username }))
 		// Return a promise which waits for them.
 		return common.getPromiseVoiceStateCallback(msg, 30000).then(voiceChannel => {
 			if (voiceChannel) {
 				prompt.delete()
 				return voiceChannel
 			} else {
-				prompt.edit(lang.voiceMustJoin(msg))
+				prompt.edit(utils.replace(lang.audio.music.prompts.voiceChannelRequired, { "username": msg.author.username }))
 				return null
 			}
 		})
@@ -356,15 +359,16 @@ const common = {
 	 * If it can't, send an error in chat and return null.
 	 * @param {Discord.VoiceChannel} voiceChannel Voice channel to check
 	 * @param {Discord.Message} msg Message to direct errors at
+	 * @param {import("@amanda/lang").Lang} lang
 	 * @return {(Discord.VoiceChannel|null)}
 	 */
-	verifyVoiceChannel: function(voiceChannel, msg) {
+	verifyVoiceChannel: function(voiceChannel, msg, lang) {
 		if (!voiceChannel.joinable) {
-			msg.channel.send(lang.voiceCannotJoin(msg))
+			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))
 			return null
 		}
 		if (!voiceChannel.speakable) {
-			msg.channel.send(lang.voiceCannotSpeak(msg))
+			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantSpeak, { "username": msg.author.username }))
 			return null
 		}
 		// All good!

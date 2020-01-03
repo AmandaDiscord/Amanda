@@ -11,9 +11,6 @@ const { config, client, reloader, commands, queueStore, frisky } = passthrough
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-const lang = require("../../modules/lang.js")
-reloader.useSync("./modules/lang.js", lang)
-
 const songTypes = require("./songtypes.js")
 reloader.useSync("./commands/music/songtypes.js", songTypes)
 
@@ -32,13 +29,13 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 })
 
 /**
- * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue})) => any}>}
+ * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue, lang: import("@amanda/lang").Lang})) => any}>}
  */
 const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
-		code: async (msg, args, { voiceChannel }) => {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+		code: async (msg, args, { voiceChannel, lang }) => {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const insert = args[0][0] == "i"
 			const search = args.slice(1).join(" ")
 			const match = common.inputToID(search)
@@ -101,19 +98,19 @@ const subcommandsMap = new Map([
 						"<:bn_3:327896452363976704>"
 					]
 					const options = [
-						"Play the entire playlist from the start",
-						"Play the playlist, starting at the linked song",
-						"Only play the linked song"
+						lang.audio.playlist.prompts.playFromStart,
+						lang.audio.playlist.prompts.playFromLinked,
+						lang.audio.playlist.prompts.playOnlyLinked
 					]
 					// Make an embed
 					const embed = new Discord.MessageEmbed()
 						.setTitle("Playlist section")
 						.setColor(0x36393f)
 						.setDescription(
-							`You linked to this song in the playlist: **${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**`
-						+ "\nWhat would you like to do?"
+							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
+						+ `\n${lang.audio.playlist.prompts.query}`
 						+ options.map((o, i) => `\n${buttons[i]} ${o}`).join("")
-						+ "\nTo play a more specific range from the playlist, use `&music play <link> <start> <end>`. See `&help playlist` for more information."
+						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
 						)
 					// Send the embed
 					const nmsg = await msg.channel.send(embed)
@@ -156,11 +153,11 @@ const subcommandsMap = new Map([
 	}],
 	["queue", {
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, lang }) => {
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
 				const numberOfSongs = queue.songs.length - 1
 				for (let i = queue.songs.length - 1; i >= 1; i--) queue.removeSong(i, true)
-				msg.channel.send(`Cleared the queue, removing ${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}.`)
+				msg.channel.send(utils.replace(lang.audio.music.returns.queueClear, { "number": `${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}` }))
 			} else if (args[1] == "r" || args[1] == "remove") {
 				const index = +args[2]
 				queue.wrapper.removeSong(index, msg)
@@ -180,13 +177,13 @@ const subcommandsMap = new Map([
 	["skip", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, lang }) => {
 			let amount
 			if (args[1]) {
 				amount = Math.floor(Number(args[1]))
-				if (isNaN(amount)) return msg.channel.send("That is not a valid amount of songs to skip")
-				if (amount < 1) return msg.channel.send("You have to skip 1 or more songs")
-				if (queue.songs.length < amount) return msg.channel.send("You cannot skip more songs than are in the queue!")
+				if (isNaN(amount)) return msg.channel.send(lang.audio.music.prompts.invalidSkips)
+				if (amount < 1) return msg.channel.send(lang.audio.music.prompts.invalidSkipsAmount)
+				if (queue.songs.length < amount) return msg.channel.send(lang.audio.music.prompts.tooManySkips)
 				if (queue.songs.length == amount) return queue.wrapper.stop()
 			}
 			queue.wrapper.skip(amount)
@@ -201,15 +198,15 @@ const subcommandsMap = new Map([
 	}],
 	["now", {
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, lang }) => {
 			if (msg.channel.id == queue.textChannel.id) queue.sendNewNP(true)
-			else msg.channel.send(`The current music session is over in ${queue.textChannel}. Go there to see what's playing!`)
+			else msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.textChannel }))
 		}
 	}],
 	["info", {
 		queue: "required",
-		code: (msg, args, { queue }) => {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+		code: (msg, args, { queue, lang }) => {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			queue.wrapper.showInfo(msg.channel)
 		}
 	}],
@@ -230,8 +227,8 @@ const subcommandsMap = new Map([
 	["related", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+		code: (msg, args, { queue, lang }) => {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (args[1] == "play" || args[1] == "insert" || args[1] == "p" || args[1] == "i") {
 				const insert = args[1][0] == "i"
 				const index = +args[2]
@@ -241,11 +238,11 @@ const subcommandsMap = new Map([
 	}],
 	["playlist", {
 		voiceChannel: "provide",
-		code: (msg, args, { voiceChannel }) => {
+		code: (msg, args, { voiceChannel, lang }) => {
 			if (commands.has("playlist")) {
 				const suffix = args.slice(1).join(" ")
 				const command = commands.get("playlist")
-				return command.process(msg, suffix)
+				return command.process(msg, suffix, lang)
 			} else throw new Error("Playlist command not loaded")
 		}
 	}]
@@ -271,19 +268,15 @@ commands.assign({
 		description: "Obtain a web dashboard login token",
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
 		category: "meta",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			if (suffix == "delete") {
 				await deleteAll()
-				msg.author.send("Deleted all your tokens. Use `&musictoken new` to generate a new one.")
+				msg.author.send(lang.audio.musictoken.returns.deleted)
 			} else if (suffix == "new") {
 				await deleteAll()
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
 				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1])
-				send(
-					"Your existing tokens were deleted, and a new one was created."
-					+ "\nDo not share this token with anyone. If you do accidentally share it, you can use `&musictoken delete` to delete it and keep you safe."
-					+ `\nYou can now log in! ${config.website_protocol}://${config.website_domain}/dash`
-					, true, true
+				send(utils.replace(lang.audio.musictoken.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
 				).then(() => {
 					return send(`\`${hash}\``, false, false)
 				// eslint-disable-next-line no-empty-function
@@ -291,15 +284,11 @@ commands.assign({
 			} else {
 				const existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
 				if (existing) {
-					send(
-						"Here is the token you generated previously:"
-						+ "\nYou can use `&musictoken delete` to delete it, and `&musictoken new` to regenerate it."
-						, true, true
-					).then(() => {
+					send(lang.audio.musictoken.returns.generated, true, true).then(() => {
 						send(`\`${existing.token}\``, false, false)
 					// eslint-disable-next-line no-empty-function
 					}).catch(() => {})
-				} else send("You do not currently have any tokens. Use `&musictoken new` to generate a new one.")
+				} else send(lang.audio.musictoken.prompts.none)
 			}
 
 			function deleteAll() {
@@ -308,9 +297,9 @@ commands.assign({
 
 			function send(text, announce = true, throwFailed = false) {
 				return msg.author.send(text).then(() => {
-					if (msg.channel.type == "text" && announce) msg.channel.send(lang.dm.success(msg))
+					if (msg.channel.type == "text" && announce) msg.channel.send(lang.audio.musictoken.returns.dmSuccess)
 				}).catch(() => {
-					if (announce) msg.channel.send(lang.dm.failed(msg))
+					if (announce) msg.channel.send(lang.audio.musictoken.prompts.dmFailed)
 					if (throwFailed) throw new Error("DM failed")
 				})
 			}
@@ -321,12 +310,12 @@ commands.assign({
 		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
 		category: "audio",
-		process: async function(msg, suffix) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+		process: async function(msg, suffix, lang) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
 			if (["original", "deep", "chill", "classics"].includes(suffix)) { // valid station?
-				const voiceChannel = await common.detectVoiceChannel(msg, true)
+				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 				if (!voiceChannel) return
 				const song = new songTypes.FriskySong(suffix)
 				return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg)
@@ -426,9 +415,9 @@ commands.assign({
 				msg.channel.send(
 					new Discord.MessageEmbed()
 						.setColor(0x36393f)
-						.setTitle("Frisky Radio ­— Schedule")
+						.setTitle(lang.audio.frisky.returns.schedule)
 						.setDescription(description)
-						.setFooter("Use &frisky <station> to play a station")
+						.setFooter(lang.audio.frisky.returns.footer)
 				)
 			}
 		}
@@ -438,32 +427,33 @@ commands.assign({
 		description: "Play music from YouTube",
 		aliases: ["music", "m"],
 		category: "audio",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			// No DMs
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.command.guildOnly(msg))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args
 			const args = suffix.split(" ")
 			// Find subcommand
 			const subcommand = args[0] ? args[0].trim().toLowerCase() : ""
 			const key = subcommandAliasMap.get(subcommand)
 			const subcommandObject = subcommandsMap.get(key)
-			if (!subcommandObject) return msg.channel.send(lang.input.music.invalidAction(msg))
+			if (!subcommandObject) return msg.channel.send(utils.replace(lang.audio.music.prompts.invalidAction, { "username": msg.author.username }))
 			// Create data for subcommand
 			const subcommmandData = {}
+			subcommmandData.lang = lang
 			// Provide a queue?
 			if (subcommandObject.queue == "required") {
 				const queue = queueStore.get(msg.guild.id)
-				if (!queue) return msg.channel.send(lang.voiceNothingPlaying(msg))
+				if (!queue) return msg.channel.send(utils.replace(lang.audio.music.prompts.nothingPlaying, { "username": msg.author.username }))
 				subcommmandData.queue = queue
 			}
 			// Provide a voice channel?
 			if (subcommandObject.voiceChannel) {
 				if (subcommandObject.voiceChannel == "required") {
-					const voiceChannel = await common.detectVoiceChannel(msg, false)
+					const voiceChannel = await common.detectVoiceChannel(msg, false, lang)
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "ask") {
-					const voiceChannel = await common.detectVoiceChannel(msg, true)
+					const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {

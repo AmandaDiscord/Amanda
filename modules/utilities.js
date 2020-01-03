@@ -725,7 +725,7 @@ const utils = {
 			value = content
 			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
 		}
-		return value.replace(/\u202E/g, "")
+		return value.replace(/\u202E/g, "").replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
 	},
 
 	AsyncValueCache:

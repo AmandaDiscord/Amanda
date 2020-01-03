@@ -243,7 +243,7 @@ commands.assign({
 					`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>\n` +
 					`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`)
 				.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-				.addField("Links", utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/` }))
+				.addField("Links", utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": `${config.website_protocol}://${config.website_domain}/stats` }))
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -627,7 +627,7 @@ commands.assign({
 		}
 	},
 	"help": {
-		usage: "[command]",
+		usage: "[command|category]",
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
@@ -727,9 +727,9 @@ commands.assign({
 							.setAuthor(`Command Category: ${suffix}`)
 							.setDescription(
 								cat.map(c =>`\`${commands.get(c).aliases[0]}${" ​".repeat(maxLength - commands.get(c).aliases[0].length)}\` ${commands.get(c).description}`).join("\n") +
-							"\n\nType `&help <command>` to see more information about a command.")
+							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor("36393E")
-						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for a mobile-compatible view.")
+						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
 						try {
 							msg.author.send(embed).then(mobile).then(() => reply(msg))
 						} catch (e) {
@@ -749,7 +749,7 @@ commands.assign({
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						}
 					} else {
-						embed = new Discord.MessageEmbed().setDescription(`**${msg.author.tag}**, I couldn't find the help panel for that command`).setColor("B60000")
+						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor("B60000")
 						msg.channel.send(utils.contentify(msg.channel, embed))
 					}
 				}
@@ -757,9 +757,8 @@ commands.assign({
 				embed = new Discord.MessageEmbed()
 					.setAuthor("Command Categories")
 					.setDescription(
-						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n` +
-					"Type `&help <category>` to see all commands in that category.\n" +
-					"Type `&help <command>` to see more information about a command.")
+						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n`
+						+ lang.meta.help.returns.main)
 					.setColor("36393E")
 				try {
 					msg.author.send(embed).then(m => reply(msg))
