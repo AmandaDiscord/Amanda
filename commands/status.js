@@ -1,7 +1,7 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
-const { client, reloader, commands } = passthrough
+const { client, constants, reloader, commands } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -132,7 +132,7 @@ function update() {
 	// console.log(JSON.stringify(choices, null, 4))
 	const choice = utils.arrayRandom(choices)
 	if (choice) {
-		if (client.options.totalShardCount === 1) client.user.setActivity(`${choice.message} | ${prefix}help`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
+		if (client.options.shardCount === 1) client.user.setActivity(`${choice.message} | ${prefix}help`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
 		else client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
 
 		// console.log(`Set status: "${choice.message}" (${choice.type})`)

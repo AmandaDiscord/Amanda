@@ -156,7 +156,7 @@ function manageReady() {
 		lavalinknodes.forEach(node => node.resumeKey = client.user.id + "/" + client.options.shards)
 		client.lavalink = new PlayerManager(this, lavalinknodes, {
 			user: client.user.id,
-			shards: client.options.totalShardCount
+			shards: client.options.shardCount
 		})
 		client.lavalink.on("ready", () => {
 			console.log("Lavalink ready")
