@@ -21,7 +21,7 @@ reloader.useSync("./modules/utilities.js", utils)
  */
 async function sendImage(host, path, msg, emoji, footer) {
 	let url
-	if (host == "chewey") url = `https://api.chewey-bot.ga/${path}?auth=${key}`
+	if (host == "chewey") url = `https://api.chewey-bot.top/${path}?auth=${key}`
 	else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await rp(url, { json: true, timeout: 2000 })
@@ -42,7 +42,7 @@ commands.assign({
 		aliases: ["cat"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga")
+			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
 		}
 	},
 	"dog": {
@@ -51,7 +51,7 @@ commands.assign({
 		aliases: ["dog", "doggo"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga")
+			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
 		}
 	},
 	"space": {
@@ -60,7 +60,7 @@ commands.assign({
 		aliases: ["space"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.ga")
+			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.top")
 		}
 	},
 	"snek": {
@@ -69,7 +69,7 @@ commands.assign({
 		aliases: ["snek", "snake"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga")
+			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
 		}
 	},
 	"birb": {
@@ -78,7 +78,7 @@ commands.assign({
 		aliases: ["birb", "bird"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.ga")
+			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
 		}
 	},
 	"catgirl": {
