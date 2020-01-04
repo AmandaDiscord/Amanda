@@ -4,9 +4,10 @@ const rp = require("request-promise")
 const Discord = require("discord.js")
 
 const passthrough = require("../passthrough")
-const { config, commands, reloader } = passthrough
+const { constants, config, commands, reloader } = passthrough
 
 const key = config.chewey_api_key
+const poweredbychewey = `Powered by ${constants.chewey_api}`.replace("https://", "")
 
 const utils = require("../modules/utilities")
 reloader.useSync("./modules/utilities.js", utils)
@@ -21,7 +22,7 @@ reloader.useSync("./modules/utilities.js", utils)
  */
 async function sendImage(host, path, msg, emoji, footer) {
 	let url
-	if (host == "chewey") url = `https://api.chewey-bot.top/${path}?auth=${key}`
+	if (host == "chewey") url = `${constants.chewey_api}/${path}?auth=${key}`
 	else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await rp(url, { json: true, timeout: 2000 })
@@ -42,7 +43,7 @@ commands.assign({
 		aliases: ["cat"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
+			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
 	"dog": {
@@ -51,7 +52,7 @@ commands.assign({
 		aliases: ["dog", "doggo"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
+			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
 	"space": {
@@ -60,7 +61,7 @@ commands.assign({
 		aliases: ["space"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", "Powered by api.chewey-bot.top")
+			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", poweredbychewey)
 		}
 	},
 	"snek": {
@@ -69,7 +70,7 @@ commands.assign({
 		aliases: ["snek", "snake"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
+			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
 	"birb": {
@@ -78,7 +79,7 @@ commands.assign({
 		aliases: ["birb", "bird"],
 		category: "images",
 		process: function(msg) {
-			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", "Powered by api.chewey-bot.top")
+			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
 	"catgirl": {

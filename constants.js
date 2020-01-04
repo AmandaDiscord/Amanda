@@ -9,5 +9,6 @@ module.exports = {
 	server: `${baseURL}/to/server`,
 	stats: `${baseURL}/to/stats`,
 	frisky_placeholder: `${baseURL}/images/frisky-small.png`,
-	avatar: `${baseURL}/images/amanda.png`
+	avatar: `${baseURL}/images/amanda.png`,
+	chewey_api: "https://api.chewey-bot.top"
 }
