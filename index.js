@@ -24,6 +24,7 @@ const db = mysql.createPool({
 });
 
 (async () => {
+	// DB
 
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
@@ -36,9 +37,20 @@ const db = mysql.createPool({
 		"./modules/utilities.js"
 	])
 
+	// IPC
+
 	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
 	passthrough.ipc = ipc
+
+	reloader.watchAndLoad([
+		"./modules/ipc/ipcbotreplier.js"
+	])
+	reloader.setupWatch([
+		"./modules/ipc/ipcreplier.js"
+	])
+
+	// Music parts
 
 	reloader.setupWatch([
 		"./commands/music/common.js",
@@ -46,6 +58,8 @@ const db = mysql.createPool({
 		"./commands/music/queue.js",
 		"./commands/music/songtypes.js"
 	])
+
+	// Passthrough managers
 
 	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")
 
@@ -60,6 +74,8 @@ const db = mysql.createPool({
 	passthrough.nedb = {
 		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
 	}
+
+	// Commands
 
 	reloader.watchAndLoad([
 		"./commands/music/music.js",

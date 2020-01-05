@@ -32,7 +32,7 @@ module.exports = [
 
 			if (session) {
 				const user = await snow.user.cache.fetchUser(session.userID)
-				return ipc.router.requestDashGuilds(session.userID, true).then(({guilds, npguilds}) => {
+				return ipc.replier.requestGetDashGuilds(session.userID, true).then(({guilds, npguilds}) => {
 					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 					const csrfToken = utils.generateCSRF()
 					const page = pugCache.get("pug/selectserver.pug")({ user, npguilds, displayNoSharedServers, guilds, csrfToken })
@@ -149,11 +149,11 @@ module.exports = [
 					, expected: false
 					, errorValue: "NO_SESSION"
 				}).do({
-					code: () => ipc.getShardForGuild(guildID)
+					code: () => ipc.replier.getShardIDForGuild(guildID)
 					, expected: v => v != null
 					, errorValue: "Shard not available for server view."
 				}).do({
-					code: () => ipc.router.requestGuildForUser(session.userID, guildID)
+					code: () => ipc.replier.requestGetGuildForUser(session.userID, guildID)
 					, assign: "guild"
 					, expected: v => v != null
 					, errorValue: "USER_NOT_IN_GUILD"

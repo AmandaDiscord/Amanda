@@ -24,3 +24,8 @@ export interface SQLWrapper {
 	get(string: string, prepared?: string|number|symbol, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<MySQL.RowDataPacket>;
 	get(string: string, prepared?: Array<(string|number|symbol)>, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<MySQL.RowDataPacket>;
 }
+
+export interface IPCReceiver {
+	op: string;
+	fn: (data: any) => any;
+}

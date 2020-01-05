@@ -5,9 +5,8 @@ const ipc = require("node-ipc")
 const passthrough = require("../../passthrough")
 const { client, config, reloader } = passthrough
 
-const IPCRouter = require("./ipcbotrouter.js")
-reloader.setupWatch(["./modules/ipc/ipcbotrouter.js"])
-reloader.useSync("./modules/ipc/ipcbotrouter.js", IPCRouter)
+const utils = require("../utilities")
+reloader.useSync("./modules/utilities.js", utils)
 
 class IPC {
 	constructor() {
@@ -16,39 +15,36 @@ class IPC {
 		ipc.config.retry = 1500
 		ipc.config.silent = true
 		this.socket = null
-		this.addRouter()
-		reloader.reloadEvent.on("ipcbotrouter.js", () => {
-			setTimeout(() => { // wait for object sync
-				this.addRouter()
-			})
-		})
+		this.replier = null
 	}
 
-	addRouter() {
-		// console.log("Adding router")
-		this.router = new IPCRouter.router(this)
+	/**
+	 * @param {import("./ipcbotreplier")} replier
+	 */
+	setReplier(replier) {
+		this.replier = replier
 	}
 
 	connect() {
-		let shards
-		if (client.options.shards) {
-			if (typeof client.options.shards === "number") shards = [client.options.shards]
-			else shards = client.options.shards
-		}
-		const shard = "shard-" + shards.join("_")
-
+		const shard = "shard-" + utils.getShardsArray().join("_")
 		ipc.config.id = shard
+		let shouldBeConnected = true // for ensuring that only one disconnect warning is sent
 		ipc.connectToNet("website", () => {
 			this.socket = ipc.of.website
 			this.socket.once("connect", () => {
+				shouldBeConnected = true
 				this.socket.on("message", this.receive.bind(this))
 			})
 			this.socket.on("connect", () => {
-				this.socket.emit("shard", { clientID: client.user.id, total: client.options.shardCount, me: shards })
+				shouldBeConnected = true
+				this.socket.emit("shard", { clientID: client.user.id, total: client.options.shardCount, me: utils.getShardsArray() })
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {
-				console.log("Disconnected from web. This should not happen!")
+				if (shouldBeConnected === true) {
+					console.log("Disconnected from web. This should not happen!")
+				}
+				shouldBeConnected = false
 			})
 		})
 	}
@@ -57,20 +53,7 @@ class IPC {
 	 * Called when the socket receives raw data.
 	 */
 	receive(raw) {
-		const response = this.router[raw.op](raw.data)
-		if (response instanceof Promise) {
-			response.then(data => {
-				this.reply(raw, data)
-			})
-		} else this.reply(raw, response)
-	}
-
-	/**
-	 * Reply to raw data with response data.
-	 */
-	reply(rawOriginal, data) {
-		const rawResponse = { _id: rawOriginal._id, data: data }
-		this.send(rawResponse)
+		this.replier.baseOnMessage(raw, rawReply => this.send(rawReply))
 	}
 
 	/**

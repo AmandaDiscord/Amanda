@@ -9,6 +9,7 @@ const shardingManager = new Discord.ShardingManager(
 	pj(__dirname, "index.js"),
 	{
 		totalShards: 2,
+		// shardList: [0],
 		mode: "process",
 		respawn: true,
 		token: config.bot_token

@@ -356,9 +356,9 @@ const utils = {
 	 * @param {string} filename
 	 * @param {(...args: Array<any>) => any} code
 	 */
-	addTemporaryListener: function(target, name, filename, code) {
+	addTemporaryListener: function(target, name, filename, code, targetListenMethod = "on") {
 		console.log(`added event ${name}`)
-		target.on(name, code)
+		target[targetListenMethod](name, code)
 		reloadEvent.once(filename, () => {
 			target.removeListener(name, code)
 			console.log(`removed event ${name}`)
@@ -955,8 +955,13 @@ const utils = {
 	},
 
 	getFirstShard: function() {
-		if (typeof client.options.shards === "number") return client.options.shards
-		else return client.options.shards[0]
+		if (client.shard) return client.shard.ids[0]
+		else return 0
+	},
+
+	getShardsArray: function() {
+		if (client.shard) return client.shard.ids
+		else return [0]
 	},
 
 	/**

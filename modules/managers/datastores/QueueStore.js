@@ -51,7 +51,7 @@ class QueueStore {
 		const guildID = voiceChannel.guild.id
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel)
 		this.store.set(guildID, instance)
-		ipc.router.send.newQueue(instance)
+		ipc.replier.sendNewQueue(instance)
 		this.events.emit("create", instance)
 		return instance
 	}
@@ -61,7 +61,7 @@ class QueueStore {
 	 */
 	delete(guildID) {
 		this.store.delete(guildID)
-		ipc.router.send.deleteQueue(guildID)
+		ipc.replier.sendDeleteQueue(guildID)
 		this.events.emit("delete", guildID)
 	}
 	save() {
@@ -100,7 +100,7 @@ class QueueStore {
 				queue.np = message
 				queue._startNPUpdates()
 				queue._makeReactionMenu()
-				ipc.router.send.newQueue(queue)
+				ipc.replier.sendNewQueue(queue)
 			}
 		})
 	}

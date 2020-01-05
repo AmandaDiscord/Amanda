@@ -1,11 +1,11 @@
 // @ts-check
 
-const {analytics, ipc} = require("../passthrough")
+const { analytics, ipc, reloader } = require("../../passthrough")
 
 let cancelled = false
 
 async function report() {
-	const stats = await ipc.router.requestStats()
+	const stats = await ipc.replier.requestGetStats()
 	return analytics.sendReport({
 		servers: stats.guilds,
 		channels: stats.channels,
@@ -33,8 +33,6 @@ ipc.waitForClientID().then(clientID => {
 	}
 })
 
-module.exports = [
-	{cancel: true, code: () => {
-		cancelled = true
-	}}
-]
+reloader.reloadEvent.once("cheweystats.js", () => {
+	cancelled = true
+})

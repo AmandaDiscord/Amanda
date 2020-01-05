@@ -1,5 +1,6 @@
 // @ts-check
 
+const fs = require("fs")
 const pinski = require("pinski")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
@@ -8,15 +9,23 @@ const dba = require("discord-bot-analytics")
 const Reloader = require("../modules/hotreload")
 require("dnscache")({ enable: true })
 
+// Passthrough
+
 const passthrough = require("./passthrough")
 passthrough.config = config
+
+// Reloader
 
 const reloader = new Reloader()
 passthrough.reloader = reloader
 
+// Snow
+
 const snow = new Snow(config.bot_token, { disableEveryone: true })
 snow.requestHandler.on("requestError", console.error)
 passthrough.snow = snow
+
+// DB
 
 const db = mysql.createPool({
 	host: config.mysql_domain,
@@ -27,9 +36,17 @@ const db = mysql.createPool({
 })
 passthrough.db = db
 
+// Utils
+
+reloader.setupWatch(["./website/modules/utilities.js"])
+
+// IPC (which requires utils)
+
 const IPC = require("./modules/ipcserver.js")
 const ipc = new IPC("website", config.website_ipc_bind, 6544)
 passthrough.ipc = ipc
+reloader.setupWatch(["./modules/ipc/ipcreplier.js"])
+reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
 
 const analytics = new dba(config.chewey_api_key, null)
 passthrough.analytics = analytics
@@ -60,6 +77,9 @@ Object.assign(passthrough, server)
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 	server.loadAPI()
-})()
 
-require("./modules/stdin.js")
+	const files = await fs.promises.readdir("modules/services")
+	reloader.watchAndLoad(files.map(f => `./website/modules/services/${f}`))
+
+	require("./modules/stdin.js")
+})()

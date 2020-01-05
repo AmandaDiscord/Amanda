@@ -45,5 +45,5 @@ client.once("prefixes", () => {
 			if (client.shard) client.shard.killAll()
 			else process.exit()
 		})
-	} else console.log(`This is shard ${client.options.shards}. No REPL.`)
+	} else console.log(`This is shard ${utils.getShardsArray()}. No REPL.`)
 })

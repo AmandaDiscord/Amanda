@@ -17,6 +17,7 @@ module.exports = class Reloader {
 		this.syncers = []
 		this.reloadEvent = new events.EventEmitter()
 	}
+
 	/**
 	 * Set up a file to be watched and reloaded in the future.
 	 * @param {Array<string>} filenames
@@ -36,6 +37,7 @@ module.exports = class Reloader {
 		})
 		return this
 	}
+
 	/**
 	 * Load files and watch them so they can be reloaded automatically. This is for commands.
 	 * @param {Array<string>} filenames
@@ -47,6 +49,7 @@ module.exports = class Reloader {
 		})
 		return this
 	}
+
 	/**
 	 * Keep an object in sync with its file contents
 	 * @param {string} filename
@@ -62,6 +65,7 @@ module.exports = class Reloader {
 		this.syncers.push({ filename, object })
 		return this
 	}
+
 	/**
 	 * Perform a synchronization with the previously registered objects
 	 * @param {string} filename
@@ -73,5 +77,18 @@ module.exports = class Reloader {
 		delete require.cache[require.resolve(filename)]
 		const result = require(filename)
 		syncers.forEach(syncer => Object.assign(syncer.object, result))
+	}
+
+	/**
+	 * Force a file to reload
+	 * @param {string} filename
+	 */
+	forceResync(filename) {
+		filename = localPath(filename)
+		if (!this.watchers.has(filename)) {
+			throw new Error(`Reloader: asked to force resync ${filename}, but that file is not being watched.\n(Could resync, but what's the point? Likely the wrong filename.)`)
+		}
+		console.log("Force resync " + filename)
+		this._doSync(filename)
 	}
 }

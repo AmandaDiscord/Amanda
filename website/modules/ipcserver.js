@@ -3,22 +3,6 @@
 const ipc = require("node-ipc")
 const Server = require("node-ipc/dao/socketServer")
 
-const passthrough = require("../passthrough")
-const {config, reloader} = passthrough
-
-let IPCRouter = require("./ipcserverrouter.js")
-reloader.setupWatch(["./website/modules/ipcserverrouter.js"])
-reloader.useSync("./website/modules/ipcserverrouter.js", IPCRouter)
-
-function* idGenerator() {
-	let i = 0
-	while (true) yield i++
-}
-const ids = idGenerator()
-function nextID() {
-	return ids.next().value
-}
-
 /**
  * original ipc server doesn't have complete typings
  * this should not be instantiated
@@ -28,6 +12,7 @@ class IPCServerWithBroadcast extends Server {
 		super()
 		/** @type {any[]} */
 		this.sockets
+		throw new Error("This class should not be instantiated.")
 	}
 	/**
 	 * @param {string} type
@@ -80,34 +65,16 @@ class IPC {
 		this.shards = new Map()
 		this.totalShards = 1
 
-		this.requests = new Map()
-
-		this.addRouter()
-		reloader.reloadEvent.on("ipcserverrouter.js", () => {
-			setTimeout(() => { // wait for object sync
-				this.addRouter()
-			})
-		})
-
-		/** @type {{op: string, fn: (data: any, socket: any) => any, shouldRemove: () => boolean}[]} */
-		this.receivers = []
+		this.replier = null
 	}
 
-	addRouter() {
-		this.router = new IPCRouter.router(this)
+	/**
+	 * @param {import("./ipcserverreplier")} replier
+	 */
+	setReplier(replier) {
+		this.replier = replier
+		// console.log("Set IPC replier")
 	}
-
-	/** @param {{op: string, fn: (data: any, socket: any) => any, shouldRemove: () => boolean}[]} receivers */
-	addReceivers(receivers) {
-		this.receivers = this.receivers.concat(receivers)
-		console.log(`Added ${receivers.length} receivers, total ${this.receivers.length}`)
-	}
-
-	filterReceivers() {
-		this.receivers = this.receivers.filter(r => !r.shouldRemove())
-		console.log(`Filtered receivers, ${this.receivers.length} remaining`)
-	}
-
 
 	/**
 	 * Get the socket that corresponds to a shard ID.
@@ -121,26 +88,11 @@ class IPC {
 	}
 
 	/**
-	 * Get the socket that corresponds to a guild ID.
-	 */
-	getShardForGuild(id) {
-		const shardID = Number((BigInt(id) >> BigInt(22)) % BigInt(this.totalShards))
-		return this.getShard(shardID)
-	}
-
-	/**
 	 * Called when the server receives raw data.
 	 */
 	receive(raw, socket) {
-		if (this.requests.has(raw._id)) {
-			this.requests.get(raw._id)(raw.data)
-		}
-		if (raw.op) {
-			this.receivers.forEach(receiver => {
-				if (receiver.op === raw.op) {
-					receiver.fn(raw.data, socket)
-				}
-			})
+		if (this.replier) {
+			this.replier.onMessage(socket, raw)
 		}
 	}
 
@@ -160,86 +112,6 @@ class IPC {
 	 */
 	broadcast(raw) {
 		this.server.broadcast("message", raw)
-	}
-
-	/**
-	 * Request information from a socket. Returns the data.
-	 */
-	request(socket, op, data) {
-		let _id = nextID()
-		let raw = {_id, op, data}
-		this.send(socket, raw)
-		return new Promise(resolve => {
-			this.requests.set(_id, resolve)
-		}).then(data => {
-			this.requests.delete(_id)
-			return data
-		})
-	}
-
-	/**
-	 * Request information from the socket for a guild. Returns the data.
-	 */
-	requestFromGuild(guildID, op, data) {
-		const socket = this.getShardForGuild(guildID)
-		return this.request(socket, op, data)
-	}
-
-	/**
-	 * Request information from all sockets. Combines the data and returns the result.
-	 * @param {string} op
-	 * @param {any} data
-	 * @param {"truthy"|"concat"|"concatProps"|"add"|"addProps"|null} combineMethod
-	 */
-	requestAll(op, data, combineMethod = null) {
-		const connectedClientCount = this.server.sockets.length
-		if (connectedClientCount === 0) {
-			return Promise.reject(new Error("No clients connected, requestAll would never resolve."))
-		}
-		let _id = nextID()
-		let raw = {_id, op, data}
-		this.broadcast(raw)
-		return new Promise(resolve => {
-			let parts = []
-			this.requests.set(_id, part => {
-				parts.push(part)
-				if (parts.length === connectedClientCount) {
-					if (combineMethod === "truthy") {
-						resolve(parts.find(p => p))
-					} else if (combineMethod === "concat") {
-						resolve([].concat(...parts))
-					} else if (combineMethod === "concatProps") {
-						//console.log(parts)
-						let result = {}
-						let keys = Object.keys(parts[0])
-						keys.forEach(k => {
-							result[k] = [].concat(...parts.map(p => p[k]))
-						})
-						//console.log(result)
-						resolve(result)
-					} else if (combineMethod === "add") {
-						resolve(parts.reduce((acc, cur) => (acc + cur), 0))
-					} else if (combineMethod === "addProps") {
-						const result = parts.reduce((acc, part) => {
-							Object.keys(part).forEach(key => {
-								if (acc[key]) {
-									acc[key] += part[key]
-								} else {
-									acc[key] = part[key]
-								}
-							})
-							return acc
-						}, {})
-						resolve(result)
-					} else {
-						resolve(parts)
-					}
-				}
-			})
-		}).then(result => {
-			this.requests.delete(_id)
-			return result
-		})
 	}
 
 	/**

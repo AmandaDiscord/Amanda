@@ -152,8 +152,8 @@ function manageReady() {
 	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
-		console.log(client.user.id + "/" + client.options.shards)
-		lavalinknodes.forEach(node => node.resumeKey = client.user.id + "/" + client.options.shards)
+		console.log(client.user.id + "/" + utils.getShardsArray())
+		lavalinknodes.forEach(node => node.resumeKey = client.user.id + "/" + utils.getShardsArray())
 		client.lavalink = new PlayerManager(this, lavalinknodes, {
 			user: client.user.id,
 			shards: client.options.shardCount

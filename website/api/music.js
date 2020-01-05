@@ -37,8 +37,6 @@ const opcodeMethodMap = new Map([
 
 const { ipc, snow } = passthrough
 
-let fileHasReloaded = false
-
 /** @type {Session[]} */
 const sessions = []
 /** @type {Map<string, UpdatingValueCache>} */
@@ -46,7 +44,7 @@ const states = new Map()
 
 function getState(guildID) {
 	if (states.has(guildID)) return states.get(guildID).get()
-	const state = new utils.UpdatingValueCache(() => ipc.router.requestState(guildID))
+	const state = new utils.UpdatingValueCache(() => ipc.replier.requestGetQueueState(guildID))
 	states.set(guildID, state)
 	return state.get()
 }
@@ -55,10 +53,6 @@ function replaceState(guildID, data) {
 	if (states.has(guildID)) return states.get(guildID).update(() => data)
 	const state = new utils.UpdatingValueCache(() => Promise.resolve(data))
 	states.set(guildID, state)
-}
-
-function shouldRemove() {
-	return fileHasReloaded
 }
 
 ipc.server.on("socket.disconnected", disconnectListener)
@@ -74,36 +68,37 @@ function disconnectListener() {
  * @param {{op: string, updateCallback: (cache: any, clientData: any) => any, sessionCallback: (session: Session, cache: any, clientData: any) => any}[]} processors
  */
 function addProcessors(processors) {
-	ipc.addReceivers(processors.map(processor => ({
-		op: processor.op,
-		fn: clientData => {
-			const guildID = clientData.guildID
-			const state = states.get(guildID)
-			if (!state) return // queue isn't cached yet, so no need to update it
-			state.update(cache => {
-				if (cache == null) {
-					console.error(
-						"====="
-						+ "\nUh oh! How did we get here?"
-						+ `\nop: ${processor.op}`
-						+ "\ndata", clientData
-						, "\nQueue cache:", cache
-					)
-				} else {
-					cache = processor.updateCallback(cache, clientData)
-					sessions.forEach(session => {
-						if (session.guild && session.guild.id == guildID) processor.sessionCallback(session, cache, clientData)
-					})
-				}
-				return cache
-			})
-		},
-		shouldRemove
-	})))
+	ipc.replier.addReceivers(processors.map(processor =>
+		["api_processor_"+processor.op, {
+			op: processor.op,
+			fn: clientData => {
+				const guildID = clientData.guildID
+				const state = states.get(guildID)
+				if (!state) return // queue isn't cached yet, so no need to update it
+				state.update(cache => {
+					if (cache == null) {
+						console.error(
+							"====="
+							+ "\nUh oh! How did we get here?"
+							+ `\nop: ${processor.op}`
+							+ "\ndata", clientData
+							, "\nQueue cache:", cache
+						)
+					} else {
+						cache = processor.updateCallback(cache, clientData)
+						sessions.forEach(session => {
+							if (session.guild && session.guild.id == guildID) processor.sessionCallback(session, cache, clientData)
+						})
+					}
+					return cache
+				})
+			}
+		}]
+	))
 }
 
-ipc.addReceivers([
-	{
+ipc.replier.addReceivers([
+	["NEW_QUEUE", {
 		op: "NEW_QUEUE",
 		fn: ({ guildID, state }) => {
 			// if (state && state.songs) console.log(`Queue replaced. It has ${state.songs.length} songs.`)
@@ -111,9 +106,8 @@ ipc.addReceivers([
 			sessions.forEach(session => {
 				if (session.guild && session.guild.id == guildID) session.sendState({})
 			})
-		},
-		shouldRemove
-	}
+		}
+	}]
 ])
 
 addProcessors([
@@ -232,7 +226,7 @@ class Session {
 			const cookies = utils.getCookies({ headers: { cookie: data.d.cookie } })
 			const session = await utils.getSession(cookies)
 			if (!session) return
-			const guild = await ipc.router.requestGuildForUser(session.userID, data.d.guildID)
+			const guild = await ipc.replier.requestGetGuildForUser(session.userID, data.d.guildID)
 			if (!guild) return
 			const user = await snow.user.cache.fetchUser(session.userID)
 			if (!user) return
@@ -327,23 +321,23 @@ class Session {
 
 	togglePlayback() {
 		if (!this.loggedin) return
-		ipc.router.requestTogglePlayback(this.guild.id)
+		ipc.replier.requestTogglePlayback(this.guild.id)
 	}
 
 	skip() {
 		if (!this.loggedin) return
-		ipc.router.requestSkip(this.guild.id)
+		ipc.replier.requestSkip(this.guild.id)
 	}
 
 	stop() {
 		if (!this.loggedin) return
-		ipc.router.requestStop(this.guild.id)
+		ipc.replier.requestStop(this.guild.id)
 	}
 
 	requestQueueRemove(data) {
 		if (!this.loggedin) return
 		if (data && data.d && typeof data.d.index === "number") {
-			ipc.router.requestQueueRemove(this.guild.id, data.d.index)
+			ipc.replier.requestQueueRemove(this.guild.id, data.d.index)
 		}
 
 	}
@@ -358,7 +352,7 @@ class Session {
 	requestAttributesChange(data) {
 		if (!this.loggedin) return
 		if (typeof (data) == "object" && typeof (data.d) == "object") {
-			if (typeof (data.d.auto) == "boolean") ipc.router.requestToggleAuto(this.guild.id)
+			if (typeof (data.d.auto) == "boolean") ipc.replier.requestToggleAuto(this.guild.id)
 		}
 	}
 }
@@ -372,11 +366,9 @@ wss.on("connection", wsConnection)
 console.log("API loaded")
 
 module.exports = [{ cancel: true, code: () => {
-	fileHasReloaded = true
 	wss.removeListener("connection", wsConnection)
 	sessions.forEach(session => {
 		session.cleanClose()
 	})
 	ipc.server.off("socket.disconnected", disconnectListener)
-	ipc.filterReceivers()
 } }]

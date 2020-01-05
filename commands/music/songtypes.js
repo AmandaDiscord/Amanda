@@ -193,7 +193,8 @@ class YouTubeSong extends Song {
 					return common.invidious.getTrack(this.id).then(t => {
 						this.track = t
 					}).catch(error => {
-						this.error = `${error.name} - ${error.message}`
+						if (typeof error === "string") this.error = error
+						else this.error = `${error.name} - ${error.message}`
 					})
 				} else { // Resolve track with Lavalink
 					return common.getTracks(this.id).then(tracks => {
@@ -435,7 +436,7 @@ class FriskySong extends Song {
 			this.thumbnail.height = mix.episode.data.album_art.image_height
 			if (this.queue) {
 				const index = this.queue.songs.indexOf(this)
-				if (index !== -1) ipc.router.send.updateSong(this.queue, this, index)
+				if (index !== -1) ipc.replier.sendSongUpdate(this.queue, this, index)
 			}
 		}).catch(reason => {
 			console.error(reason)

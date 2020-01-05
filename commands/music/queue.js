@@ -55,7 +55,7 @@ class Queue {
 				// commenting this out: it may break the error check, but it will improve the web time
 				// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
 				this.songStartTime = newSongStartTime
-				ipc.router.send.updateTime(this)
+				ipc.replier.sendTimeUpdate(this)
 				// }
 				if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
 					if (!this.songs[0].error) {
@@ -170,7 +170,7 @@ class Queue {
 				if (related.length) {
 					this.songs.shift()
 					this.addSong(related[0])
-					ipc.router.send.nextSong(this)
+					ipc.replier.sendNextSong(this)
 				} else { // No related songs. Dissolve.
 					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
 					this.auto = false
@@ -183,7 +183,7 @@ class Queue {
 			}
 		} else { // We have more songs. Move on.
 			this.songs.shift()
-			ipc.router.send.nextSong(this)
+			ipc.replier.sendNextSong(this)
 			this.play()
 		}
 	}
@@ -220,7 +220,7 @@ class Queue {
 			this.pausedAt = Date.now()
 			this.player.pause()
 			this.npUpdater.stop(true)
-			ipc.router.send.updateTime(this)
+			ipc.replier.sendTimeUpdate(this)
 			return null
 		}
 	}
@@ -239,7 +239,7 @@ class Queue {
 			this.player.resume().then(() => {
 				this._startNPUpdates()
 			})
-			ipc.router.send.updateTime(this)
+			ipc.replier.sendTimeUpdate(this)
 			return 0
 		}
 	}
@@ -266,7 +266,7 @@ class Queue {
 	}
 	toggleAuto() {
 		this.auto = !this.auto
-		ipc.router.send.updateAttributes(this)
+		ipc.replier.sendAttributesChange(this)
 	}
 	/**
 	 * Add a song to the end of the queue.
@@ -289,7 +289,7 @@ class Queue {
 		song.queue = this
 		if (position == -1) this.songs.push(song)
 		else this.songs.splice(position, 0, song)
-		ipc.router.send.addSong(this, song, position)
+		ipc.replier.sendAddSong(this, song, position)
 		if (this.songs.length == 2) song.prepare()
 		if (this.songs.length == 1) {
 			this.play()
@@ -308,7 +308,7 @@ class Queue {
 		if (index == 0) return 1
 		if (!this.songs[index]) return 1
 		// Broadcast
-		if (broadcast) ipc.router.send.removeSong(this, index)
+		if (broadcast) ipc.replier.sendRemoveSong(this, index)
 		// Actually remove
 		const removed = this.songs.splice(index, 1)[0]
 		if (!removed) return 2
@@ -412,7 +412,7 @@ class Queue {
 			}
 		}
 		// Broadcast to web
-		ipc.router.send.updateMembers(this)
+		ipc.replier.sendMembersUpdate(this)
 	}
 }
 
@@ -435,10 +435,10 @@ class QueueWrapper {
 	}
 	pause(context) {
 		const result = this.queue.pause()
+		if (context === "web") return !result
 		if (result) {
 			if (context instanceof Discord.Message) context.channel.send(result)
 			else if (context === "reaction") this.queue.textChannel.send(result)
-			else if (context === "web") return !result
 		}
 	}
 	resume(context) {
