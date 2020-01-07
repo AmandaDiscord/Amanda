@@ -24,6 +24,7 @@ class SingleUseMap extends Map {
 class Replier {
 	constructor() {
 		this.outgoing = new SingleUseMap()
+		this.outgoingPersist = new Set()
 
 		/** @type {Map<string, types.IPCReceiver>} */
 		this.receivers = new Map()
@@ -32,10 +33,11 @@ class Replier {
 	}
 
 	nextThreadID() {
-		return ++this.lastThreadID
+		return process.pid + "_" + (++this.lastThreadID)
 	}
 
-	async baseOnMessage({ op, data, threadID }, replyFn) {
+	async baseOnMessage(raw, replyFn) {
+		const { op, data, threadID } = raw
 		// 5. receive request for stats
 		if (op) {
 			if (threadID) {
@@ -69,7 +71,10 @@ class Replier {
 			// receives something like {threadID: 1, data: {stats: []}}
 			// this has a thread and no op, and is therefore a reply to something we sent earlier
 			// 8. response to get stats arrives. call the promise resolve from the outgoing map and delete the key
-			this.outgoing.use(threadID)(data)
+			if (this.outgoing.has(threadID)) {
+				if (this.outgoingPersist.has(threadID)) this.outgoing.get(threadID)(data)
+				else this.outgoing.use(threadID)(data)
+			} else console.error("threadID has no outgoing! This should not happen. Incoming message:", raw)
 		}
 	}
 

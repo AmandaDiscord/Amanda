@@ -68,6 +68,7 @@ class ServerReplier extends Replier {
 		this.ipc.broadcast(raw)
 		return new Promise(resolve => {
 			const parts = []
+			this.outgoingPersist.add(raw.threadID)
 			this.outgoing.set(raw.threadID, part => {
 				parts.push(part)
 				if (parts.length === connectedClientCount) {
@@ -105,6 +106,7 @@ class ServerReplier extends Replier {
 			})
 		}).then(result => {
 			this.outgoing.delete(raw.threadID)
+			this.outgoingPersist.delete(raw.threadID)
 			return result
 		})
 	}
