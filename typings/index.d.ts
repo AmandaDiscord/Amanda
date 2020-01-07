@@ -29,3 +29,14 @@ export interface IPCReceiver {
 	op: string;
 	fn: (data: any) => any;
 }
+
+export interface CombinedShardStats {
+	ping: number[],
+	uptime: number[],
+	ram: number[],
+	combinedRam: number,
+	users: number,
+	guilds: number,
+	channels: number,
+	connections: number
+}

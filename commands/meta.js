@@ -148,24 +148,28 @@ commands.assign({
 		category: "meta",
 		process: async function(msg, suffix) {
 			const embed = new Discord.MessageEmbed().setColor(0x36393f)
-			if (!suffix) return defaultStats()
+			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard()+1} of ${client.options.shardCount}`
+			const leadingSpace = `${emojis.bl}\n​`
+			function bothStats(stats, allStats, key) {
+				return `${allStats[key]} total, _${stats[key]} shard_` // SC: U+2004 THREE-PER-EM SPACE
+			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
 				embed
-					.addField(`${client.user.tag} <:online:606664341298872324>`,
+					.addField(leadingIdentity,
 						`**❯ Songs Played Today:**\n${songsPlayed} songs\n` +
 						`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`, true)
-					.addField(emojis.bl,
+					.addField(leadingSpace,
 						`**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n` +
 						`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "games") {
 				const gamesPlayed = periodicHistory.getSize("game_start")
 				embed
-					.addField(`${client.user.tag} <:online:606664341298872324>`,
+					.addField(leadingIdentity,
 						`**❯ Games Played Today:**\n${gamesPlayed} games\n` +
 						`**❯ Games In Progress:**\n${gameStore.store.size} games`, true)
-					.addField(emojis.bl,
+					.addField(leadingSpace,
 						`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`, true)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
@@ -178,21 +182,21 @@ commands.assign({
 				})
 				if (global.gc) global.gc()
 				else return msg.channel.send("The global Garbage Collector variable is not exposed")
-			} else return defaultStats()
-			async function defaultStats() {
+			} else {
 				const stats = utils.getStats()
+				const allStats = await ipc.replier.requestGetAllStats()
 				const nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too")
 				embed
-					.addField(`${client.user.tag} <:online:606664341298872324>`,
+					.addField(leadingIdentity,
 						`**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`
 						+ `**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
 						+ `**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 						+ `**❯ RAM Usage:**\n${bToMB(stats.ram)}`, true)
-					.addField(emojis.bl,
-						`**❯ User Count:**\n${stats.users} users\n`
-						+ `**❯ Guild Count:**\n${stats.guilds} guilds\n`
-						+ `**❯ Channel Count:**\n${stats.channels} channels\n`
-						+ `**❯ Voice Connections:**\n${stats.connections} connections`, true)
+					.addField(leadingSpace,
+						`**❯ User Count:**\n${bothStats(stats, allStats, "users")}\n`
+						+ `**❯ Guild Count:**\n${bothStats(stats, allStats, "guilds")}\n`
+						+ `**❯ Channel Count:**\n${bothStats(stats, allStats, "channels")}\n`
+						+ `**❯ Voice Connections:**\n${bothStats(stats, allStats, "connections")}`, true)
 				const content = utils.contentify(msg.channel, embed)
 				if (typeof content === "string") nmsg.edit(content)
 				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)

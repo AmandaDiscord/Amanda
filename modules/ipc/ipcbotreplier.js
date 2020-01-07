@@ -185,6 +185,14 @@ class ClientReplier extends Replier {
 	}
 
 	/**
+	 * Request and combine stats from all shards.
+	 * @returns {Promise<types.CombinedShardStats>}
+	 */
+	requestGetAllStats() {
+		return this.request("GET_ALL_STATS", null)
+	}
+
+	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendNewQueue(queue) {

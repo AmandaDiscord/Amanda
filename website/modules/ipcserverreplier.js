@@ -121,6 +121,10 @@ class ServerReplier extends Replier {
 		return true
 	}
 
+	REPLY_GET_ALL_STATS() {
+		return this.requestGetStats()
+	}
+
 	RECEIVE_BACKGROUND_UPDATE_REQUIRED() {
 		this.broadcast("BACKGROUND_UPDATE_REQUIRED", null)
 	}
@@ -216,6 +220,10 @@ class ServerReplier extends Replier {
 		return this.requestFromGuild(guildID, "TOGGLE_AUTO", guildID)
 	}
 
+	/**
+	 * Request and combine stats from all shards.
+	 * @returns {Promise<types.CombinedShardStats>}
+	 */
 	async requestGetStats() {
 		const stats = await this.requestAll("GET_STATS", undefined, null)
 		const combined = {
