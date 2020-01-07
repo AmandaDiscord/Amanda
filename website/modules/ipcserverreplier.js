@@ -48,6 +48,11 @@ class ServerReplier extends Replier {
 		return this.requestFromShard(this.getShardIDForGuild(guildID), op, data)
 	}
 
+	broadcast(op, data) {
+		const raw = { op, data }
+		this.ipc.broadcast(raw)
+	}
+
 	/**
 	 * Request information from all sockets. Combines the data and returns the result.
 	 * @param {string} op
@@ -112,6 +117,10 @@ class ServerReplier extends Replier {
 
 	REPLY_PING() {
 		return true
+	}
+
+	RECEIVE_BACKGROUND_UPDATE_REQUIRED() {
+		this.broadcast("BACKGROUND_UPDATE_REQUIRED", null)
 	}
 
 	async requestPing() {

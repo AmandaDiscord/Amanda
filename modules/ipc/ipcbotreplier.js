@@ -247,6 +247,10 @@ class ClientReplier extends Replier {
 	sendAttributesChange(queue) {
 		this.ipc.send({ op: "ATTRIBUTES_CHANGE", data: { guildID: queue.guildID, attributes: queue.wrapper.getAttributes() } })
 	}
+
+	sendBackgroundUpdateRequired() {
+		this.ipc.send({ op: "BACKGROUND_UPDATE_REQUIRED", data: null })
+	}
 }
 
 const replier = new ClientReplier()

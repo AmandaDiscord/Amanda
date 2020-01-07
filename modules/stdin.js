@@ -32,11 +32,11 @@ async function customEval(input, context, filename, callback) {
 }
 
 reloadEvent.once(path.basename(__filename), () => {
-	process.exit()
+	console.log("stdin.js does not auto-reload.")
 })
 
 client.once("prefixes", () => {
-	if (utils.getFirstShard() === 0) {
+	if (utils.isFirstShardOnMachine()) {
 		const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 
 		Object.assign(cli.context, passthrough, { Discord })
@@ -45,5 +45,5 @@ client.once("prefixes", () => {
 			if (client.shard) client.shard.killAll()
 			else process.exit()
 		})
-	} else console.log(`This is shard ${utils.getShardsArray()}. No REPL.`)
+	} else console.log(`This is shard ${utils.getShardsArray()}, which is not the first shard on this machine. No REPL.`)
 })

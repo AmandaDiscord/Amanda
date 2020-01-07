@@ -12,7 +12,7 @@ const Lang = require("@amanda/lang")
 const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
-const { client, db, reloadEvent } = passthrough
+const { config, client, db, reloadEvent } = passthrough
 
 const startingCoins = 5000
 
@@ -962,6 +962,15 @@ const utils = {
 	getShardsArray: function() {
 		if (client.shard) return client.shard.ids
 		else return [0]
+	},
+
+	getFirstShardForMachine: function() {
+		if (config.shard_list) return config.shard_list[0]
+		else return 0
+	},
+
+	isFirstShardOnMachine: function() {
+		return utils.getFirstShard() === utils.getFirstShardForMachine()
 	},
 
 	/**

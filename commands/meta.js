@@ -43,35 +43,63 @@ async function sendStats(msg) {
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
 }
-updateCache()
-let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
-console.log("added timeout cacheUpdateTimeout")
+
+async function updateCache() {
+	const backgroundRows = await utils.sql.all("SELECT keyID, value FROM SettingsSelf WHERE setting = 'profilebackground'")
+	const mineRows = await utils.sql.all("SELECT userID, url FROM BackgroundSync WHERE machineID = ?", config.machine_id)
+	const mineMap = new Map(mineRows.map(r => [r.userID, r.url]))
+	const updatedPrepared = []
+	let updatedQuery = ""
+	await Promise.all(backgroundRows.map(async row => {
+		const mine = mineMap.get(row.keyID)
+		if (!mine || mine !== row.value) {
+			let image
+			try {
+				image = await Jimp.read(row.value)
+			} catch (e) {
+				//await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = ? AND keyID = ?", ["profilebackground", row.keyID])
+				return console.log(`Image cache update for ${row.keyID} failed. Deleted entry`)
+			}
+			image.cover(800, 500)
+			// jimp automatically converts the buffer to the format specified by the file extension
+			await image.writeAsync(`./images/backgrounds/cache/${row.keyID}.png`)
+			updatedPrepared.push(config.machine_id, row.keyID, row.value)
+			if (updatedQuery) updatedQuery += ", "
+			updatedQuery += "(?, ?, ?)"
+			console.log("Saved background for "+row.keyID)
+		}
+	}))
+	if (updatedPrepared.length) {
+		await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES "+updatedQuery, updatedPrepared)
+		console.log("Background cache update complete")
+	} else {
+		console.log("No changes to backgrounds since last call")
+	}
+}
+let cacheUpdateTimeout
+if (utils.isFirstShardOnMachine()) {
+	updateCache()
+	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+	console.log("added timeout cacheUpdateTimeout")
+	ipc.replier.addReceivers([
+		["update_background_cache_BACKGROUND_UPDATE_REQUIRED", {
+			op: "BACKGROUND_UPDATE_REQUIRED",
+			fn: () => {
+				updateCache()
+			}
+		}]
+	])
+}
 function cacheUpdateTimeoutFunction() {
 	updateCache()
 	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
-}
-async function updateCache() {
-	const rows = await utils.sql.all("SELECT * FROM SettingsSelf WHERE setting = ?", "profilebackground")
-	for (const row of rows) {
-		let image
-		try {
-			image = await Jimp.read(row.value)
-		} catch (e) {
-			await utils.sql.all("DELETE FROM SettingsSelf WHERE setting =? AND keyID =?", ["profilebackground", row.keyID])
-			return console.log(`Image cache update for ${row.keyID} failed. Deleted entry`)
-		}
-		image.cover(800, 500)
-		const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
-		await fs.promises.writeFile(`./images/backgrounds/cache/${row.keyID}.png`, buffer)
-	}
-	console.log("Background cache update complete")
 }
 
 reloadEvent.once(path.basename(__filename), () => {
 	clearTimeout(sendStatsTimeout)
 	clearTimeout(cacheUpdateTimeout)
-	console.log("removed Timeout sendStatsTimeout")
-	console.log("removed Timeout cacheUpdateTimeout")
+	console.log("removed timeout sendStatsTimeout")
+	console.log("removed timeout cacheUpdateTimeout")
 })
 const JIMPStorage = utils.JIMPStorage
 
@@ -485,7 +513,7 @@ commands.assign({
 	"settings": {
 		usage: "<self|server> <view|setting name> [value]",
 		description: "Modify settings Amanda will use for yourself or server wide",
-		aliases: ["settings"],
+		aliases: ["settings", "setting"],
 		category: "configuration",
 		process: async function(msg, suffix) {
 			const args = suffix.split(" ")
@@ -592,15 +620,18 @@ commands.assign({
 				try {
 					data = await rp(value, { encoding: null })
 				} catch (e) {
+					console.log("Failed to fetch new background URL in settings command: " + value)
 					return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.")
 				}
 				const type = bs.identify(data)
 				if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may only set a background of a PNG or a JPEG")
-				const image = await Jimp.read(value)
+				const image = await Jimp.read(data)
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
 				await fs.promises.writeFile(`./images/backgrounds/cache/${msg.author.id}.png`, buffer)
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
+				await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES (?, ?, ?)", [config.machine_id, keyID, value])
+				ipc.replier.sendBackgroundUpdateRequired()
 				return msg.channel.send("Setting updated.")
 			}
 
@@ -626,6 +657,17 @@ commands.assign({
 			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)
 		}
 	},
+
+	"background": {
+		usage: "<url>",
+		description: "Set the background displayed on &profile",
+		aliases: ["background", "profilebackground"],
+		category: "meta",
+		process: function(msg, suffix, lang) {
+			commands.get("settings").process(msg, "self profilebackground "+suffix, lang)
+		}
+	},
+
 	"help": {
 		usage: "[command|category]",
 		description: "Your average help command",
