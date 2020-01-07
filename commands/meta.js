@@ -57,7 +57,7 @@ async function updateCache() {
 			try {
 				image = await Jimp.read(row.value)
 			} catch (e) {
-				//await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = ? AND keyID = ?", ["profilebackground", row.keyID])
+				// await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = ? AND keyID = ?", ["profilebackground", row.keyID])
 				return console.log(`Image cache update for ${row.keyID} failed. Deleted entry`)
 			}
 			image.cover(800, 500)
@@ -66,11 +66,11 @@ async function updateCache() {
 			updatedPrepared.push(config.machine_id, row.keyID, row.value)
 			if (updatedQuery) updatedQuery += ", "
 			updatedQuery += "(?, ?, ?)"
-			console.log("Saved background for "+row.keyID)
+			console.log("Saved background for " + row.keyID)
 		}
 	}))
 	if (updatedPrepared.length) {
-		await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES "+updatedQuery, updatedPrepared)
+		await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES " + updatedQuery, updatedPrepared)
 		console.log("Background cache update complete")
 	} else {
 		console.log("No changes to backgrounds since last call")
@@ -664,7 +664,7 @@ commands.assign({
 		aliases: ["background", "profilebackground"],
 		category: "meta",
 		process: function(msg, suffix, lang) {
-			commands.get("settings").process(msg, "self profilebackground "+suffix, lang)
+			commands.get("settings").process(msg, "self profilebackground " + suffix, lang)
 		}
 	},
 

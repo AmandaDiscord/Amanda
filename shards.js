@@ -9,10 +9,11 @@ const shardingManager = new Discord.ShardingManager(
 	pj(__dirname, "index.js"),
 	{
 		totalShards: 2,
-		// shardList: [0],
+		shardList: config.shard_list,
 		mode: "process",
 		respawn: true,
-		token: config.bot_token
+		token: config.bot_token,
+		execArgv: ["--expose-gc", "--optimize_for_size"]
 	}
 )
 
