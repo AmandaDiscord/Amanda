@@ -14,7 +14,7 @@ const profiler = require("gc-profiler")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, constants, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory } = passthrough
+const { client, constants, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory, ipc } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -439,11 +439,11 @@ commands.assign({
 			let badge
 			if (isOwner) badge = "badge-developer"
 			else if (isPremium) badge = "badge-donator"
-			const mem = client.guilds.get("475599038536744960").members.get(user.id)
+			const mem = await ipc.replier.requestGetGuildMember("475599038536744960", member.id)
 			let boosting, hunter
 			if (mem) {
-				boosting = mem.roles.has("613685290938138625")
-				hunter = mem.roles.has("497586624390234112")
+				boosting = mem.roles.includes("613685290938138625")
+				hunter = mem.roles.includes("497586624390234112")
 			}
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
