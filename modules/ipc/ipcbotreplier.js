@@ -251,6 +251,10 @@ class ClientReplier extends Replier {
 	sendBackgroundUpdateRequired() {
 		this.ipc.send({ op: "BACKGROUND_UPDATE_REQUIRED", data: null })
 	}
+
+	sendPresenceAnnouncement(duration, message) {
+		this.ipc.send({ op: "PRESENCE_ANNOUNCEMENT", data: { duration, message } })
+	}
 }
 
 const replier = new ClientReplier()

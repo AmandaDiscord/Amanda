@@ -1,7 +1,7 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
-const { client, constants, reloader, commands } = passthrough
+const { client, constants, reloader, ipc, commands } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -11,6 +11,28 @@ const updateTime = 5 * 60 * 1000
 
 let messages, ranges, users, prefix, updateInterval
 let enqueued
+
+/**
+ * @param {number} duration
+ * @param {string} message
+ */
+function startAnnouncement(duration, message) {
+	clearInterval(updateInterval)
+	client.user.setActivity(message, { type: "PLAYING" })
+	enqueued = setTimeout(() => {
+		update()
+		updateInterval = setInterval(() => update(), updateTime)
+	}, duration)
+}
+
+ipc.replier.addReceivers([
+	["apply_announcement_PRESENCE_ANNOUNCEMENT", {
+		op: "PRESENCE_ANNOUNCEMENT",
+		fn: ({ duration, message }) => {
+			startAnnouncement(duration, message)
+		}
+	}]
+])
 
 commands.assign({
 	"announce": {
@@ -32,12 +54,8 @@ commands.assign({
 			if (isNaN(duration) || duration === 0) return msg.channel.send("That's not a valid duration")
 			if (!args[1]) return msg.channel.send("You need to provide a message to announce")
 			const message = suffix.substring(args[0].length + 1)
-			clearInterval(updateInterval)
-			client.user.setActivity(message, { type: "PLAYING" })
-			enqueued = setTimeout(() => {
-				update()
-				updateInterval = setInterval(() => update(), updateTime)
-			}, duration)
+			// The announcement gets beamed to all shards including us, so don't trigger a change here since it'll come in anyway.
+			ipc.replier.sendPresenceAnnouncement(duration, message)
 		}
 	}
 })

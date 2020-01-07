@@ -125,6 +125,10 @@ class ServerReplier extends Replier {
 		this.broadcast("BACKGROUND_UPDATE_REQUIRED", null)
 	}
 
+	RECEIVE_PRESENCE_ANNOUNCEMENT(data) {
+		this.broadcast("PRESENCE_ANNOUNCEMENT", data)
+	}
+
 	async requestPing() {
 		const d = Date.now()
 		await this.requestAll("PING", undefined, null)
