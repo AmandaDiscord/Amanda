@@ -148,7 +148,7 @@ commands.assign({
 		category: "meta",
 		process: async function(msg, suffix) {
 			const embed = new Discord.MessageEmbed().setColor(0x36393f)
-			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard()+1} of ${client.options.shardCount}`
+			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
 				return `${allStats[key]} total, _${stats[key]} shard_` // SC: U+2004 THREE-PER-EM SPACE
@@ -715,7 +715,7 @@ commands.assign({
 					} catch (e) {
 						msg.channel.send(utils.contentify(msg.channel, embed))
 					}
-				} else if (suffix.includes("playlist")) {
+				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. " +
