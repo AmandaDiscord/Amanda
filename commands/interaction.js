@@ -27,9 +27,8 @@ const cmds = {
 		aliases: ["ship"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
-			let permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
+			const permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
@@ -81,7 +80,7 @@ const cmds = {
 		aliases: ["waifu"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
 			const info = await utils.waifu.get(member.id)
@@ -101,10 +100,10 @@ const cmds = {
 		aliases: ["claim"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const usertxt = args.slice(1).join(" ")
-			if (args[0] == undefined || isNaN(Number(args[0]))) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
+			if (!args[0]) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
 			if (!usertxt) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))
@@ -177,7 +176,7 @@ const cmds = {
 		aliases: ["gift"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction.gift.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const waifu = await utils.waifu.get(msg.author.id, { basic: true })
 			const money = await utils.coinsManager.get(msg.author.id)
@@ -204,21 +203,38 @@ const cmds = {
 		}
 	},
 	"waifuleaderboard": {
-		usage: "[page]",
+		usage: "[page: number|local] [?page: number]",
 		description: "Displays the leaderboard of the top waifus",
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			let amount = 10
-			if (suffix) {
-				let num = Number(suffix)
+			const args = suffix.split(" ")
+			let all = await utils.sql.all("SELECT * FROM waifu ORDER BY price DESC LIMIT ?", amount)
+			if (args[0] && args[0] != "local") {
+				let num = Number(args[0])
 				if (num < 1) num = 1
 				if (num > 50) num = 50
+				// eslint-disable-next-line require-atomic-updates
 				if (isNaN(num)) amount = 10
+				// eslint-disable-next-line require-atomic-updates
 				else amount = Math.floor(num) * 10
+				if (amount > 10) all = all.slice(amount - 10, amount)
+			} else if (args[0] == "local") {
+				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
+				if (args[1]) {
+					let num = Number(args[1])
+					if (num < 1) num = 1
+					if (num > 50) num = 50
+					// eslint-disable-next-line require-atomic-updates
+					if (isNaN(num)) amount = 10
+					// eslint-disable-next-line require-atomic-updates
+					else amount = Math.floor(num) * 10
+				}
+				const local = await Promise.all(msg.guild.members.map(member => utils.sql.get("SELECT * FROM waifu WHERE userID =?", member.id)))
+				all = local.filter(row => !!row).sort((a, b) => a.price - b.price).reverse()
+				if (all.length > amount) all = all.slice(amount - 10, amount)
 			}
-			let all = await utils.sql.all("SELECT * FROM waifu ORDER BY price DESC LIMIT ?", amount)
-			if (amount > 10) all = all.slice(amount - 10, amount)
 			const users = []
 			for (const row of all) for (const key of ["userID", "waifuID"]) if (!users.includes(row[key])) users.push(row[key])
 			const userObjectMap = new Map()
@@ -227,7 +243,7 @@ const cmds = {
 				userObjectMap.set(userID, userObject)
 			}))
 			const embed = new Discord.MessageEmbed()
-				.setTitle("Waifu leaderboard")
+				.setTitle(`${args[0] == "local" ? "Local " : ""}Waifu leaderboard`)
 				.setDescription(
 					all.map((row, index) =>
 						`${index + amount - 9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${emojis.discoin}`
@@ -244,7 +260,7 @@ const cmds = {
 		aliases: ["bean"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type !== "text") return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
 			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))

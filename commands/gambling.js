@@ -41,7 +41,7 @@ commands.assign({
 		aliases: ["slot", "slots"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
@@ -140,7 +140,7 @@ commands.assign({
 		aliases: ["betflip", "bf"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const money = await utils.coinsManager.get(msg.author.id)
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBetandSide, { "username": msg.author.username }))
@@ -207,7 +207,7 @@ commands.assign({
 		aliases: ["coins", "$"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
 			const money = await utils.coinsManager.get(member.id)
@@ -224,7 +224,7 @@ commands.assign({
 		aliases: ["daily"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
 			const [row, donor] = await Promise.all([
 				utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
@@ -246,30 +246,48 @@ commands.assign({
 		}
 	},
 	"leaderboard": {
-		usage: "[page]",
+		usage: "[page: number|local] [?page: number]",
 		description: "Gets the leaderboard for people with the most coins",
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
-		process: async function(msg, suffix) {
-			const pagesize = 10
-			let pagenum = 1
-			if (suffix) {
-				let inputnum = Number(suffix)
-				inputnum = Math.min(Math.max(inputnum, 1), 50)
-				if (!isNaN(inputnum)) pagenum = inputnum
+		process: async function(msg, suffix, lang) {
+			let amount = 10
+			const args = suffix.split(" ")
+			let all = await utils.sql.all("SELECT userID, coins FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id)
+			if (args[0] && args[0] != "local") {
+				let num = Number(args[0])
+				if (num < 1) num = 1
+				if (num > 50) num = 50
+				// eslint-disable-next-line require-atomic-updates
+				if (isNaN(num)) amount = 10
+				// eslint-disable-next-line require-atomic-updates
+				else amount = Math.floor(num) * 10
+				if (amount > 10) all = all.slice(amount - 10, amount)
+			} else if (args[0] == "local") {
+				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (args[1]) {
+					let num = Number(args[1])
+					if (num < 1) num = 1
+					if (num > 50) num = 50
+					// eslint-disable-next-line require-atomic-updates
+					if (isNaN(num)) amount = 10
+					// eslint-disable-next-line require-atomic-updates
+					else amount = Math.floor(num) * 10
+				}
+				const local = await Promise.all(msg.guild.members.map(member => utils.sql.get("SELECT userID, coins FROM money WHERE userID =?", member.id)))
+				all = local.filter(row => row && row.userID != client.user.id).sort((a, b) => a.coins - b.coins).reverse()
 			}
-			const offset = (pagenum - 1) * pagesize
-			const all = await utils.sql.all("SELECT userID, coins FROM money WHERE userID != ? ORDER BY coins DESC LIMIT ? OFFSET ?", [client.user.id, pagesize, offset])
+			if (all.length > amount) all = all.slice(amount - 10, amount)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor("Leaderboard")
+				.setAuthor(`${args[0] == "local" ? "Local " : ""}Leaderboard`)
 				.setDescription(all.map((row, index) => {
-					const ranking = (index + offset + 1) + ". "
+					const ranking = (index + amount - 9) + ". "
 					const user = client.users.get(row.userID)
 					const displayTag = user ? user.tag : row.userID
 					const botTag = user && user.bot ? emojis.bot : ""
 					return `${ranking} ${displayTag} ${botTag} :: ${row.coins} ${emojis.discoin}`
 				}))
-				.setFooter(`Page ${pagenum}`)
+				.setFooter(`Page ${amount / 10}`)
 				.setColor("F8E71C")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -280,7 +298,7 @@ commands.assign({
 		aliases: ["give"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidAmountandUser, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
@@ -328,9 +346,8 @@ commands.assign({
 		aliases: ["wheel", "wof"],
 		category: "gambling",
 		async process(msg, suffix, lang) {
-			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
-			let permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
+			const permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
