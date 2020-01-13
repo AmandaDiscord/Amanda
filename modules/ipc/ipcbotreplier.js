@@ -181,7 +181,12 @@ class ClientReplier extends Replier {
 	 * @return {Promise<import("snowtransfer/src/methods/Guilds").GuildMember>}
 	 */
 	requestGetGuildMember(guildID, userID) {
-		return this.request("GET_GUILD_MEMBER", { guildID, userID })
+		return new Promise((resolve, reject) => {
+			this.request("GET_GUILD_MEMBER", { guildID, userID }).then(result => {
+				if (result.status == "ok") resolve(result.data)
+				else reject(result.data)
+			})
+		})
 	}
 
 	/**

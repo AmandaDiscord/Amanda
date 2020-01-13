@@ -471,7 +471,14 @@ commands.assign({
 			let badge
 			if (isOwner) badge = "badge-developer"
 			else if (isPremium) badge = "badge-donator"
-			const mem = await ipc.replier.requestGetGuildMember("475599038536744960", member.id)
+			/** @type {import("snowtransfer/src/methods/Guilds").GuildMember} */
+			let mem
+			try {
+				mem = await ipc.replier.requestGetGuildMember("475599038536744960", user.id)
+			} catch(e) {
+				// @ts-ignore
+				mem = { roles: [] }
+			}
 			let boosting, hunter
 			if (mem) {
 				boosting = mem.roles.includes("613685290938138625")
