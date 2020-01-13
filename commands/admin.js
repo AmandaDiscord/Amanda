@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-const { config, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus, frisky } = passthrough
+const { config, constants, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus, frisky } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -101,7 +101,7 @@ commands.assign({
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": award, "mention2": String(member) }))
-				.setColor(0xf8e71c)
+				.setColor(constants.money_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}

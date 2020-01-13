@@ -8,7 +8,7 @@ const Discord = require("discord.js")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, commands, reloader } = passthrough
+const { constants, client, commands, reloader } = passthrough
 
 const dailyCooldownHours = 20
 const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
@@ -214,7 +214,7 @@ commands.assign({
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member.displayTag }))
 				.setDescription(`${money} ${emojis.discoin}`)
-				.setColor("F8E71C")
+				.setColor(constants.money_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -235,7 +235,7 @@ commands.assign({
 				else amount = Math.floor(Math.random() * (500 - 100) + 100) + 1
 				const embed = new Discord.MessageEmbed()
 					.setDescription(utils.replace(lang.gambling.daily.returns.claimed, { "username": msg.author.username, "number": amount }))
-					.setColor("F8E71C")
+					.setColor(constants.money_embed_color)
 				msg.channel.send(utils.contentify(msg.channel, embed))
 				utils.coinsManager.award(msg.author.id, amount)
 				utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()])
@@ -330,7 +330,7 @@ commands.assign({
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": gift, "mention2": String(member) }))
-				.setColor("F8E71C")
+				.setColor(constants.money_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {

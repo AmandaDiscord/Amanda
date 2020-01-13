@@ -10,7 +10,7 @@ const Discord = require("discord.js")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, commands, reloader } = passthrough
+const { constants, client, commands, reloader } = passthrough
 
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
@@ -203,7 +203,7 @@ const cmds = {
 		}
 	},
 	"waifuleaderboard": {
-		usage: "[page: number|local] [?page: number]",
+		usage: "[local] [page: number]",
 		description: "Displays the leaderboard of the top waifus",
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
@@ -215,9 +215,7 @@ const cmds = {
 				let num = Number(args[0])
 				if (num < 1) num = 1
 				if (num > 50) num = 50
-				// eslint-disable-next-line require-atomic-updates
 				if (isNaN(num)) amount = 10
-				// eslint-disable-next-line require-atomic-updates
 				else amount = Math.floor(num) * 10
 				if (amount > 10) all = all.slice(amount - 10, amount)
 			} else if (args[0] == "local") {
@@ -226,9 +224,7 @@ const cmds = {
 					let num = Number(args[1])
 					if (num < 1) num = 1
 					if (num > 50) num = 50
-					// eslint-disable-next-line require-atomic-updates
 					if (isNaN(num)) amount = 10
-					// eslint-disable-next-line require-atomic-updates
 					else amount = Math.floor(num) * 10
 				}
 				const local = await Promise.all(msg.guild.members.map(member => utils.sql.get("SELECT * FROM waifu WHERE userID =?", member.id)))
@@ -250,7 +246,7 @@ const cmds = {
 					).join("\n")
 				)
 				.setFooter(`Page ${amount / 10}`)
-				.setColor("F8E71C")
+				.setColor(constants.money_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},

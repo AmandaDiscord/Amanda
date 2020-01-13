@@ -10,5 +10,6 @@ module.exports = {
 	stats: `${baseURL}/to/stats`,
 	frisky_placeholder: `${baseURL}/images/frisky-small.png`,
 	avatar: `${baseURL}/images/amanda.png`,
-	chewey_api: "https://api.chewey-bot.top"
+	chewey_api: "https://api.chewey-bot.top",
+	money_embed_color: 0xf8e71c
 }
