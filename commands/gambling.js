@@ -246,50 +246,88 @@ commands.assign({
 		}
 	},
 	"leaderboard": {
-		usage: "[page: number|local] [?page: number]",
+		usage: "[local] [page: number]",
 		description: "Gets the leaderboard for people with the most coins",
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
-			let amount = 10
+			const maxPages = 20
+			const itemsPerPage = 10
+			const isLargeGuild = msg.guild.members.size >= 1000 // members for a "large guild". read further down
+
 			const args = suffix.split(" ")
-			let all = await utils.sql.all("SELECT userID, coins FROM money WHERE userID != ? ORDER BY coins DESC", client.user.id)
-			if (args[0] && args[0] != "local") {
-				let num = Number(args[0])
-				if (num < 1) num = 1
-				if (num > 50) num = 50
-				// eslint-disable-next-line require-atomic-updates
-				if (isNaN(num)) amount = 10
-				// eslint-disable-next-line require-atomic-updates
-				else amount = Math.floor(num) * 10
-				if (amount > 10) all = all.slice(amount - 10, amount)
-			} else if (args[0] == "local") {
+
+			// Set up local
+			const isLocal = ["local", "guild", "server"].includes(args[0])
+			if (isLocal) {
+				args.shift() // if it exists, page number will now definitely be in args[0]
 				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
-				if (args[1]) {
-					let num = Number(args[1])
-					if (num < 1) num = 1
-					if (num > 50) num = 50
-					// eslint-disable-next-line require-atomic-updates
-					if (isNaN(num)) amount = 10
-					// eslint-disable-next-line require-atomic-updates
-					else amount = Math.floor(num) * 10
-				}
-				const local = await Promise.all(msg.guild.members.map(member => utils.sql.get("SELECT userID, coins FROM money WHERE userID =?", member.id)))
-				all = local.filter(row => row && row.userID != client.user.id).sort((a, b) => a.coins - b.coins).reverse()
 			}
-			if (all.length > amount) all = all.slice(amount - 10, amount)
-			const embed = new Discord.MessageEmbed()
-				.setAuthor(`${args[0] == "local" ? "Local " : ""}Leaderboard`)
-				.setDescription(all.map((row, index) => {
-					const ranking = (index + amount - 9) + ". "
-					const user = client.users.get(row.userID)
-					const displayTag = user ? user.tag : row.userID
-					const botTag = user && user.bot ? emojis.bot : ""
-					return `${ranking} ${displayTag} ${botTag} :: ${row.coins} ${emojis.discoin}`
+
+			// Set up page number
+			let pageNumber = +args[0]
+			if (!isNaN(pageNumber)) {
+				pageNumber = Math.max(Math.floor(pageNumber), 1)
+			} else {
+				pageNumber = 1
+			}
+
+			if (pageNumber > maxPages) {
+				return msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": maxPages }))
+			}
+
+			// Get all the rows
+			let rows = null
+			let availableRowCount = null
+			const offset = (pageNumber - 1) * itemsPerPage
+			if (isLocal && !isLargeGuild) {
+				// using small guild method:
+				// request rows for everyone in the guild
+				const memberIDs = [...msg.guild.members.keys()] // cache so it doesn't change during sql execution
+				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
+				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
+			} else if (isLocal) {
+				// using large guild method:
+				// request top pages from database then filter to guild members then slice to page
+				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ?", [maxPages * itemsPerPage])
+				rows = rows.filter(row => msg.guild.members.has(row.userID))
+				availableRowCount = rows.length
+				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
+			} else {
+				// using global:
+				// request exact page from database and do no filtering
+				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ? OFFSET ?", [itemsPerPage, offset])
+				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM money")).count
+			}
+
+			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
+			const title = isLocal ? "Local Leaderboard" : "Leaderboard"
+
+			if (rows.length) {
+				// Load usernames
+				const displayRows = await Promise.all(rows.map(async ({ userID, coins }, index) => {
+					const [tag, isBot] = await client.users.fetch(userID, false) // don't cache. let's not waste memory on something we probably won't need again.
+						.then(user => [user.tag, user.bot])
+						.catch(() => [userID, false]) // fall back to userID if user no longer exists
+					const botTag = isBot ? emojis.bot : ""
+					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
+					return `${ranking}. ${tag} ${botTag} :: ${coins} ${emojis.discoin}`
 				}))
-				.setFooter(`Page ${amount / 10}`)
-				.setColor("F8E71C")
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+
+				// Display results
+				const embed = new Discord.MessageEmbed()
+					.setAuthor(title)
+					.setDescription(displayRows.join("\n"))
+					.setFooter(`Page ${pageNumber} of ${lastAvailablePage}`)
+					.setColor(constants.money_embed_color)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
+			} else {
+				const embed = new Discord.MessageEmbed()
+					.setAuthor(title)
+					.setDescription(utils.replace(lang.gambling.leaderboard.returns.emptyPage, { "lastPage": lastAvailablePage }))
+					.setColor(constants.money_embed_color)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
+			}
 		}
 	},
 	"give": {
