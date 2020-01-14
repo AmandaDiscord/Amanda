@@ -34,6 +34,8 @@ class Queue {
 		this.songs = []
 		/** @type {boolean} */
 		this.auto = false
+		this.errorChain = 0
+		this.shouldDisplayErrors = true
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
@@ -127,15 +129,33 @@ class Queue {
 		}
 	}
 	_reportError() {
-		const song = this.songs[0]
-		const embed = new Discord.MessageEmbed()
-			.setTitle("We couldn't play that song")
-			.setDescription(
-				`**${song.title}** (ID: ${song.id})`
-			+ `\n${song.error}`
-			)
-			.setColor(0xdd2d2d)
-		this.textChannel.send(embed)
+		this.errorChain++
+		if (this.shouldDisplayErrors) {
+			const song = this.songs[0]
+			const embed = new Discord.MessageEmbed()
+				.setTitle("We couldn't play that song")
+				.setDescription(
+					`**${song.title}** (ID: ${song.id})`
+				+ `\n${song.error}`
+				)
+				.setColor(0xdd2d2d)
+			this.textChannel.send(embed)
+			if (this.errorChain >= 3) {
+				this.shouldDisplayErrors = false
+				this.textChannel.send(
+					utils.contentify(
+						this.textChannel,
+						new Discord.MessageEmbed()
+							.setTitle("Too many errors!")
+							.setDescription(
+								"Future errors from this queue will be silenced."
+								+ "\nIf any more songs fail, they will be skipped with no message."
+								+ "\nTo report a bug, join our server: https://discord.gg/YMkZDsK")
+							.setColor(0xff2ee7)
+					)
+				)
+			}
+		}
 	}
 	/**
 	 * Start updating the now playing message.
