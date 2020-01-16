@@ -22,7 +22,6 @@ passthrough.reloader = reloader
 // Snow
 
 const snow = new Snow(config.bot_token, { disableEveryone: true })
-snow.requestHandler.on("requestError", console.error)
 passthrough.snow = snow
 
 // DB
