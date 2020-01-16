@@ -21,7 +21,7 @@
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
     "dnscache": "github:cloudrac3r/dnscache",
     "entities": "^2.0.0",
-    "frisky-client": "github:cloudrac3r/frisky-client",
+    "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "gc-profiler": "^1.4.1",
     "heapdump": "^0.3.15",
     "jimp": "^0.x",
