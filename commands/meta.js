@@ -296,7 +296,7 @@ commands.assign({
 	"commits": {
 		usage: "None",
 		description: "Gets the latest git commits to Amanda",
-		aliases: ["commits", "commit", "git"],
+		aliases: ["commits", "commit", "git", "changes", "changelog"],
 		category: "meta",
 		process: async function(msg) {
 			msg.channel.sendTyping()
