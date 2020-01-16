@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, commands } = passthrough
+const { client, config, reloader, commands } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -107,11 +107,12 @@ commands.assign({
 				return
 			}
 			async function unbreakDatabase() {
-				await utils.sql.all("BEGIN TRANSACTION")
+				console.log("unbreakDatabase was called!")
+				//await utils.sql.all("BEGIN TRANSACTION") apparently transactions are only optimal for HUGE volumes of data, see: https://stackoverflow.com/questions/14675147/why-does-transaction-commit-improve-performance-so-much-with-php-mysql-innodb#comment57894347_35084678
 				await Promise.all(songs.map((row, index) => {
 					return utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index + 1] ? songs[index + 1].videoID : null), row.playlistID, row.videoID])
 				}))
-				await utils.sql.all("END TRANSACTION")
+				//await utils.sql.all("END TRANSACTION")
 				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.databaseFixed, { "username": msg.author.username }))
 			}
 			const action = args[1] || ""
@@ -119,22 +120,47 @@ commands.assign({
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (!args[2]) return msg.channel.send(utils.replace(lang.audio.music.prompts.playableRequired, { "username": msg.author.username }))
 				msg.channel.sendTyping()
-				const match = common.inputToID(args.slice(2).join(" "))
-				let result
-				if (match && match.type == "video") result = await common.getTracks(match.id)
-				else if (match && match.type == "playlist") return msg.channel.send(lang.audio.playlist.prompts.usePlaylistAdd)
-				else if (!match) result = await common.getTracks(`ytsearch: ${args.slice(2).join(" ")}`);
-				(async () => {
-					if (!result || result && !result[0]) throw new Error()
-					const data = result[0]
-					if (orderedSongs.some(row => row.videoID == data.info.identifier)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistDuplicateSong, { "username": msg.author.username }))
-					await Promise.all([
-						utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [data.info.identifier, data.info.title, Math.floor(data.info.length / 1000), data.info.identifier]),
-						utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, data.info.identifier]),
-						utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [data.info.identifier, playlistRow.playlistID, data.info.identifier])
-					])
-					return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistRemoved, { "username": msg.author.username, "song": data.info.title, "playlist": playlistName }))
+
+				const search = args.slice(2).join(" ")
+				const match = common.inputToID(search)
+				if (match && match.type === "playlist") return msg.channel.send(lang.audio.playlist.prompts.usePlaylistAdd)
+
+				// Resolve the content
+				/** @type {{id: string, title: string, lengthSeconds: number}|null} */
+				let result = await (async () => {
+					if (!match || !match.id || match.type !== "video") throw "Not an ID, search instead"
+					if (config.use_invidious) { // Resolve tracks with Invidious
+						return common.invidious.getData(match.id).then(async data => {
+							return { id: data.videoID, title: data.title, lengthSeconds: data.lengthSeconds }
+						})
+					} else { // Resolve tracks with Lavalink
+						return common.getTracks(match.id).then(tracks => {
+							if (tracks && tracks[0]) {
+								// If the ID worked, add the song
+								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: tracks[0].info.length }
+							} else throw "Lavalink returned no tracks"
+						})
+					}
 				})().catch(() => {
+					// Treating as ID failed, so start a search
+					return common.getTracks(`ytsearch:${search}`).then(tracks => {
+						if (tracks && tracks[0]) {
+							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length/1000) }
+						} else return null // no results
+					})
+				}) // errors that reach here are actual errors, not failed requests
+
+				if (!result) return msg.channel.send("No results.")
+
+				if (orderedSongs.some(row => row.videoID == result.id)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistDuplicateSong, { "username": msg.author.username }))
+
+				Promise.all([
+					utils.sql.all("INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)", [result.id, result.title, result.lengthSeconds, result.id]),
+					utils.sql.all("INSERT INTO PlaylistSongs VALUES (?, ?, NULL)", [playlistRow.playlistID, result.id]),
+					utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?", [result.id, playlistRow.playlistID, result.id])
+				]).then(() => {
+					msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistAdded, { "username": msg.author.username, "song": result.title, "playlist": playlistName }))
+				}).catch(() => {
 					msg.channel.send(utils.replace(lang.audio.playlist.prompts.youtubeLinkInvalid, { "username": msg.author.username }))
 				})
 			} else if (action.toLowerCase() == "remove") {
@@ -176,7 +202,7 @@ commands.assign({
 				if (body.length > 2000) body = `${body.slice(0, 1998).split("\n").slice(0, -1).join("\n")}\n…`
 				const embed = new Discord.MessageEmbed()
 					.setDescription(body)
-					.setColor("36393E")
+					.setColor(0x36393f)
 				msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
