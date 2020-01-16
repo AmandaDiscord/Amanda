@@ -208,46 +208,80 @@ const cmds = {
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
 		process: async function(msg, suffix, lang) {
-			let amount = 10
+			const maxPages = 20
+			const itemsPerPage = 10
+
 			const args = suffix.split(" ")
-			let all = await utils.sql.all("SELECT * FROM waifu ORDER BY price DESC LIMIT ?", amount)
-			if (args[0] && args[0] != "local") {
-				let num = Number(args[0])
-				if (num < 1) num = 1
-				if (num > 50) num = 50
-				if (isNaN(num)) amount = 10
-				else amount = Math.floor(num) * 10
-				if (amount > 10) all = all.slice(amount - 10, amount)
-			} else if (args[0] == "local") {
-				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
-				if (args[1]) {
-					let num = Number(args[1])
-					if (num < 1) num = 1
-					if (num > 50) num = 50
-					if (isNaN(num)) amount = 10
-					else amount = Math.floor(num) * 10
-				}
-				const local = await Promise.all(msg.guild.members.map(member => utils.sql.get("SELECT * FROM waifu WHERE userID =?", member.id)))
-				all = local.filter(row => !!row).sort((a, b) => a.price - b.price).reverse()
-				if (all.length > amount) all = all.slice(amount - 10, amount)
+
+			// Set up local
+			const inputLocalArg = args[0]
+			const isLocal = ["local", "guild", "server"].includes(args[0])
+			if (isLocal) {
+				args.shift() // if it exists, page number will now definitely be in args[0]
+				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			}
-			const users = []
-			for (const row of all) for (const key of ["userID", "waifuID"]) if (!users.includes(row[key])) users.push(row[key])
-			const userObjectMap = new Map()
-			await Promise.all(users.map(async userID => {
-				const userObject = await client.users.fetch(userID)
-				userObjectMap.set(userID, userObject)
-			}))
-			const embed = new Discord.MessageEmbed()
-				.setTitle(`${args[0] == "local" ? "Local " : ""}Waifu leaderboard`)
-				.setDescription(
-					all.map((row, index) =>
-						`${index + amount - 9}. ${userObjectMap.get(row.userID).tag} claimed ${userObjectMap.get(row.waifuID).tag} for ${row.price} ${emojis.discoin}`
-					).join("\n")
-				)
-				.setFooter(`Page ${amount / 10}`)
-				.setColor(constants.money_embed_color)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+
+			// Set up page number
+			let pageNumber = +args[0]
+			if (!isNaN(pageNumber)) {
+				pageNumber = Math.max(Math.floor(pageNumber), 1)
+			} else {
+				pageNumber = 1
+			}
+
+			if (pageNumber > maxPages) {
+				return msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": maxPages }))
+			}
+
+			// Get all the rows
+			let rows = null
+			let availableRowCount = null
+			const offset = (pageNumber - 1) * itemsPerPage
+			if (isLocal) {
+				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
+				const memberIDs = [...msg.guild.members.keys()]
+				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
+				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
+			} else {
+				rows = await utils.sql.all("SELECT * FROM waifu ORDER BY price DESC LIMIT ? OFFSET ?", [itemsPerPage, offset])
+				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM waifu")).count
+			}
+
+			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
+			const title = isLocal ? "Local Waifu Leaderboard" : "Waifu Leaderboard"
+			const footerHelp = isLocal ? `&waifulb ${inputLocalArg} [page]` : `&waifulb [page]`
+
+			if (rows.length) {
+				const usersToResolve = new Set()
+				const userTagMap = new Map()
+				for (const row of rows) {
+					usersToResolve.add(row.userID)
+					usersToResolve.add(row.waifuID)
+				}
+				await Promise.all([...usersToResolve].map(userID =>
+					client.users.fetch(userID, false)
+						.then(user => user.tag)
+						.catch(() => userID) // fall back to userID if user no longer exists
+						.then(display => userTagMap.set(userID, display))
+				))
+				const displayRows = rows.map((row, index) => {
+					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
+					return `${ranking}. ${userTagMap.get(row.userID)} claimed ${userTagMap.get(row.waifuID)} for ${row.price} ${emojis.discoin}`
+				})
+				const embed = new Discord.MessageEmbed()
+					.setTitle(title)
+					.setDescription(displayRows.join("\n"))
+					.setFooter(`Page ${pageNumber} of ${lastAvailablePage} | ${footerHelp}`) // SC: U+2002 EN SPACE
+					.setColor(constants.money_embed_color)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
+			} else {
+				const embed = new Discord.MessageEmbed()
+					.setAuthor(title)
+					.setDescription(utils.replace(lang.interaction.waifuleaderboard.returns.emptyPage, { "lastPage": lastAvailablePage }))
+					.setFooter(footerHelp)
+					.setColor(constants.money_embed_color)
+				return msg.channel.send(utils.contentify(msg.channel, embed))
+			}
 		}
 	},
 	"bean": {
