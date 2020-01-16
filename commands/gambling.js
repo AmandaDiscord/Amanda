@@ -204,7 +204,7 @@ commands.assign({
 	"coins": {
 		usage: "[user]",
 		description: "Returns the amount of Discoins you or another user has",
-		aliases: ["coins", "$"],
+		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
 		process: async function(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
