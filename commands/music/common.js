@@ -262,9 +262,13 @@ const common = {
 		 */
 		function(textChannel, voiceChannel, songs, insert, context) {
 			if (insert) songs.reverse()
-			songs.forEach(song => {
-				common.inserters.handleSong(song, textChannel, voiceChannel, insert, context)
+			const queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
+			const results = songs.map(song => {
+				return queue.addSong(song, insert)
 			})
+			if (context instanceof Discord.Message && results[0] === 0) {
+				context.react("✅")
+			}
 		},
 
 		fromSearch:
