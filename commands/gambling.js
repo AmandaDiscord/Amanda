@@ -253,15 +253,17 @@ commands.assign({
 		process: async function(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
-			const isLargeGuild = msg.guild.members.size >= 1000 // members for a "large guild". read further down
+			let isLargeGuild = false
 
 			const args = suffix.split(" ")
 
 			// Set up local
+			const inputLocalArg = args[0]
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 			if (isLocal) {
-				args.shift() // if it exists, page number will now definitely be in args[0]
 				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				args.shift() // if it exists, page number will now definitely be in args[0]
+				isLargeGuild = msg.guild.members.size >= 1000 // members for a "large guild". read further down
 			}
 
 			// Set up page number
@@ -302,6 +304,7 @@ commands.assign({
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Leaderboard" : "Leaderboard"
+			const footerHelp = isLocal ? `&lb ${inputLocalArg} [page]` : `&lb [page]`
 
 			if (rows.length) {
 				// Load usernames
@@ -318,7 +321,7 @@ commands.assign({
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(title)
 					.setDescription(displayRows.join("\n"))
-					.setFooter(`Page ${pageNumber} of ${lastAvailablePage}`)
+					.setFooter(`Page ${pageNumber} of ${lastAvailablePage} | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else {
