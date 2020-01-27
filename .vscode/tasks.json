@@ -11,6 +11,16 @@
 			"problemMatcher": [
 				"$eslint-stylish"
 			]
+		},
+		{
+			"type": "npm",
+			"script": "start",
+			"problemMatcher": []
+		},
+		{
+			"type": "npm",
+			"script": "website",
+			"problemMatcher": []
 		}
 	]
 }
