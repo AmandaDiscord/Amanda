@@ -3,20 +3,54 @@
 const Discord = require("discord.js")
 const passthrough = require("../passthrough")
 
-const { reloader, commands } = passthrough
+const { config, reloader, commands } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
+commands.assign({
+	"todo": {
+		aliases: ["todo", "trello", "tasks"],
+		category: "meta",
+		description: "See Amanda's to-do list",
+		usage: "None",
+		process: function(msg, suffix) {
+			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
+		}
+	}
+})
+
+/* eslint no-multiple-empty-lines: "off", no-irregular-whitespace: "off" */
+
+/*
+
+
+	        /----\
+	    /--/      \--\
+	/--/              \--\
+	|                    |
+	| This tombstone is  |
+	| dedicated to the   |
+	| retired todo list. |
+	|                    |
+	|     2019-2020      |
+	|                    |
+	|   Rest In Peace    |
+	|                    |
+	|__∩⁔_⁔~⁔__⁔~~∩__⁔_~_|
+	======================
+
+
+
 /**
  * @param {string[]} words
- */
+ /
 function extractTags(words, enableRemove = false) {
-	/** @type {string[]} */
+	/** @type {string[]} /
 	const addTags = []
-	/** @type {string[]} */
+	/** @type {string[]} /
 	const removeTags = []
-	/** @type {string[]} */
+	/** @type {string[]} /
 	const filteredWords = []
 	words.forEach(word => {
 		if (word.startsWith("+") && word.length >= 2) addTags.push(word.slice(1))
@@ -56,7 +90,7 @@ function buildItemStrings(items, tags) {
 /**
  * @param {Discord.TextChannel|Discord.DMChannel} channel
  * @param {string[]} itemStrings
- */
+ /
 function paginateResults(channel, itemStrings) {
 	if (itemStrings.length === 0) return channel.send("No matches.")
 	const pages = utils.createPages(itemStrings, 2000, 15, 5)
@@ -71,7 +105,7 @@ function paginateResults(channel, itemStrings) {
 /**
  * @param {Discord.Message} msg
  * @returns {Promise<boolean>}
- */
+ /
 async function checkAdmin(msg) {
 	const result = await utils.hasPermission(msg.author, "eval")
 	if (result) return true
@@ -114,7 +148,7 @@ commands.assign({
 				const filter = words.join(" ").trim()
 				if (!filter) return msg.channel.send(`Usage: &todo ${subcommand} <tag> [anothertag...]`)
 				const tagMatch = Array(words.length).fill("tag = ?").join(" OR ")
-				/** @type {any[]} */
+				/** @type {any[]} /
 				const params = words
 				params.push(words.length)
 				const items = await utils.sql.all(
@@ -162,3 +196,4 @@ commands.assign({
 		}
 	}
 })
+*/

@@ -15,7 +15,8 @@ module.exports = [
 	["/to/patreon", "https://www.patreon.com/papiophidian"],
 	["/to/paypal", "https://paypal.me/papiophidian"],
 	["/to/server", "https://discord.gg/zhthQjH"],
-	["/to/add", "https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot"]
+	["/to/add", "https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot"],
+	["/to/todo", "https://trello.com/b/vFRcbEE4/amanda"]
 ].map(entry => ({
 	route: entry[0],
 	methods: ["GET"],

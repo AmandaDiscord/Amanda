@@ -108,11 +108,11 @@ commands.assign({
 			}
 			async function unbreakDatabase() {
 				console.log("unbreakDatabase was called!")
-				//await utils.sql.all("BEGIN TRANSACTION") apparently transactions are only optimal for HUGE volumes of data, see: https://stackoverflow.com/questions/14675147/why-does-transaction-commit-improve-performance-so-much-with-php-mysql-innodb#comment57894347_35084678
+				// await utils.sql.all("BEGIN TRANSACTION") apparently transactions are only optimal for HUGE volumes of data, see: https://stackoverflow.com/questions/14675147/why-does-transaction-commit-improve-performance-so-much-with-php-mysql-innodb#comment57894347_35084678
 				await Promise.all(songs.map((row, index) => {
 					return utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND videoID = ?", [(songs[index + 1] ? songs[index + 1].videoID : null), row.playlistID, row.videoID])
 				}))
-				//await utils.sql.all("END TRANSACTION")
+				// await utils.sql.all("END TRANSACTION")
 				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.databaseFixed, { "username": msg.author.username }))
 			}
 			const action = args[1] || ""
@@ -125,12 +125,18 @@ commands.assign({
 				const match = common.inputToID(search)
 				if (match && match.type === "playlist") return msg.channel.send(lang.audio.playlist.prompts.usePlaylistAdd)
 
+				// Out-of-band symbols that can be thrown and matched to detect specific errors
+				const NOT_AN_ID = Symbol("NOT_AN_ID")
+				const NO_TRACKS = Symbol("NO_TRACKS")
+
 				// Resolve the content
 				/** @type {{id: string, title: string, lengthSeconds: number}|null} */
-				let result = await (async () => {
-					if (!match || !match.id || match.type !== "video") throw "Not an ID, search instead"
+				// Just trust me on this eslint control:
+				// eslint-disable-next-line require-await
+				const result = await (async () => {
+					if (!match || !match.id || match.type !== "video") throw NOT_AN_ID
 					if (config.use_invidious) { // Resolve tracks with Invidious
-						return common.invidious.getData(match.id).then(async data => {
+						return common.invidious.getData(match.id).then(data => {
 							return { id: data.videoID, title: data.title, lengthSeconds: data.lengthSeconds }
 						})
 					} else { // Resolve tracks with Lavalink
@@ -138,14 +144,14 @@ commands.assign({
 							if (tracks && tracks[0]) {
 								// If the ID worked, add the song
 								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: tracks[0].info.length }
-							} else throw "Lavalink returned no tracks"
+							} else throw NO_TRACKS
 						})
 					}
 				})().catch(() => {
 					// Treating as ID failed, so start a search
 					return common.getTracks(`ytsearch:${search}`).then(tracks => {
 						if (tracks && tracks[0]) {
-							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length/1000) }
+							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
 						} else return null // no results
 					})
 				}) // errors that reach here are actual errors, not failed requests

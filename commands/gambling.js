@@ -304,7 +304,7 @@ commands.assign({
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Leaderboard" : "Leaderboard"
-			const footerHelp = isLocal ? `&lb ${inputLocalArg} [page]` : `&lb [page]`
+			const footerHelp = isLocal ? `&lb ${inputLocalArg} [page]` : "&lb [page]"
 
 			if (rows.length) {
 				// Load usernames

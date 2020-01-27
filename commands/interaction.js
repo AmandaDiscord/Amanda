@@ -249,7 +249,7 @@ const cmds = {
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Waifu Leaderboard" : "Waifu Leaderboard"
-			const footerHelp = isLocal ? `&waifulb ${inputLocalArg} [page]` : `&waifulb [page]`
+			const footerHelp = isLocal ? `&waifulb ${inputLocalArg} [page]` : "&waifulb [page]"
 
 			if (rows.length) {
 				const usersToResolve = new Set()
