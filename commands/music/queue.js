@@ -77,7 +77,7 @@ class Queue {
 			}
 		})
 		this.player.on("error", exception => {
-			if (this.songs[0].error) {
+			if (this.songs[0] && this.songs[0].error) {
 				this.songs[0].error = exception.error
 				this._reportError()
 				// This already automatically continues to the next song, presumably because the "end" event is also fired.
