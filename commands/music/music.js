@@ -200,7 +200,7 @@ const subcommandsMap = new Map([
 		queue: "required",
 		code: (msg, args, { queue, lang }) => {
 			if (msg.channel.id == queue.textChannel.id) queue.sendNewNP(true)
-			else msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.textChannel }))
+			else msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": `<#${queue.textChannel.id}>` }))
 		}
 	}],
 	["info", {
