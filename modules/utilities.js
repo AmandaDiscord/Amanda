@@ -879,13 +879,13 @@ const utils = {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async resolve => {
 			let permissions
-			if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(this.user)
+			if (message.channel instanceof Discord.TextChannel) permissions = message.channel.permissionsFor(client.user)
 			string = string.toLowerCase()
 			if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
 			/** @type {Array<(user: Discord.User) => boolean>} */
 			let matchFunctions = []
 			matchFunctions = matchFunctions.concat([
-				user => user.id.includes(string),
+				user => user.id == string,
 				user => user.tag.toLowerCase() == string,
 				user => user.username.toLowerCase() == string,
 				user => user.username.toLowerCase().includes(string)
@@ -896,7 +896,10 @@ const utils = {
 			} else {
 				if (client.users.get(string)) return resolve(client.users.get(string))
 				const list = []
-				matchFunctions.forEach(i => client.users.filter(u => i(u)).forEach(us => { if (!list.includes(us) && list.length < 10) list.push(us) }))
+				matchFunctions.forEach(i => client.users.filter(u => i(u))
+					.forEach(us => {
+						if (!list.includes(us) && list.length < 10) list.push(us)
+					}))
 				if (list.length == 1) return resolve(list[0])
 				if (list.length == 0) return resolve(null)
 				const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
@@ -1016,6 +1019,66 @@ const utils = {
 		if (Lang[langcode.replace("-", "_")]) value = Lang[langcode.replace("-", "_")]
 		else value = Lang.en_us
 		return value
+	},
+	findChannel:
+	/**
+	 * Find a channel in a guild
+	 * @param {Discord.Message} message Message Object
+	 * @param {string} string String to search channels by
+	 * @param {boolean} [self=false] If the function should return `message`.channel
+	 * @returns {Promise<Discord.TextChannel | Discord.VoiceChannel>}
+	 */
+	function(message, string, self) {
+		// eslint-disable-next-line no-async-promise-executor
+		return new Promise(async resolve => {
+			if (message.channel instanceof Discord.DMChannel) return resolve(null)
+			const permissions = message.channel.permissionsFor(client.user)
+			string = string.toLowerCase()
+			if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
+			/** @type {Array<(channel: Discord.TextChannel | Discord.VoiceChannel) => boolean>} */
+			let matchFunctions = []
+			matchFunctions = matchFunctions.concat([
+				channel => channel.id == string,
+				channel => channel.name.toLowerCase() == string,
+				channel => channel.name.toLowerCase().includes(string)
+			])
+			if (!string) {
+				// @ts-ignore
+				if (self) resolve(message.channel)
+				else resolve(null)
+			} else {
+				// @ts-ignore
+				if (message.guild.channels.get(string)) return resolve(message.guild.channels.get(string))
+				/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
+				const list = []
+				const channels = message.guild.channels.filter(c => c.type == "text" || c.type == "voice")
+				matchFunctions.forEach(i => channels
+					// @ts-ignore
+					.filter(c => i(c))
+					.forEach(ch => {
+						// @ts-ignore
+						if (!list.includes(ch) && list.length < 10) list.push(ch)
+					}))
+				if (list.length == 1) return resolve(list[0])
+				if (list.length == 0) return resolve(null)
+				const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed))
+				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
+				// eslint-disable-next-line no-return-await
+				return await collector.next.then(newmessage => {
+					const index = Number(newmessage.content)
+					if (!index || !list[index - 1]) return resolve(null)
+					selectmessage.delete()
+					// eslint-disable-next-line no-empty-function
+					newmessage.delete().catch(() => {})
+					return resolve(list[index - 1])
+				}).catch(() => {
+					embed.setTitle("Channel selection cancelled").setDescription("").setFooter("")
+					selectmessage.edit(utils.contentify(selectmessage.channel, embed))
+					return resolve(null)
+				})
+			}
+		})
 	}
 }
 

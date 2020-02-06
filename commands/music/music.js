@@ -305,6 +305,31 @@ commands.assign({
 			}
 		}
 	},
+	"debug": {
+		usage: "[Channel]",
+		description: "Provides debugging information for if audio commands are not working as intended",
+		aliases: ["debug"],
+		category: "audio",
+		process: async function(msg, suffix) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("You cannot debug music in a DM channel")
+			const channel = await utils.findChannel(msg, suffix, true)
+			if (!channel) return msg.channel.send("Channel not found")
+			const types = {
+				text: [["Read Messages", "VIEW_CHANNEL"], ["Read Message History", "READ_MESSAGE_HISTORY"], ["Send Messages", "SEND_MESSAGES"], ["Embed Content", "EMBED_LINKS"], ["Add Reactions", "ADD_REACTIONS"]],
+				voice: [["View Channel", "VIEW_CHANNEL"], ["Join", "CONNECT"], ["Speak", "SPEAK"]]
+			}
+			/** @type {Array<[string, Discord.BitFieldResolvable<Discord.PermissionString>]>} */
+			// @ts-ignore
+			const perms = channel.type == "text" ? types.text : types.voice
+			const permissions = channel.permissionsFor(client.user)
+			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
+			const details = new Discord.MessageEmbed().setColor("36393E").setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))
+				.addField("Permissions", perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
+				.addField("Player", `Method: ${config.use_invidious ? "Invidious" : "LavaLink"}\nInvidious Domain: ${new URL(config.invidious_origin).hostname}`)
+			if (channel.type == "text") details.addField("Tip", "On top of Read Message and Add Reaction permissions, bots must also have Read Message History permissions to add reactions to messages")
+			return msg.channel.send(utils.contentify(msg.channel, details))
+		}
+	},
 	"frisky": {
 		usage: "[original|deep|chill|classics]",
 		description: "Play Frisky Radio: https://friskyradio.com",
