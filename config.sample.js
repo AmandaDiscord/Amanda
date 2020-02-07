@@ -12,9 +12,12 @@ module.exports = {
 	website_domain: "localhost:10400",
 	website_ipc_bind: "localhost",
 	invidious_origin: "https://invidio.us",
+	machine_id: "lmao_dev_compname",
 
 	// Settings
 	music_dash_enabled: true,
 	use_invidious: false,
-	fake_token: "write something here to be displayed when the token is evaled"
+	fake_token: "write something here to be displayed when the token is evaled",
+	shards_list: [0, 1],
+	allow_ai: false
 }

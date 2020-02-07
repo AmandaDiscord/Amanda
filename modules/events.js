@@ -137,7 +137,28 @@ async function manageMessage(msg) {
 				reportChannel.send(embed)
 			}
 		}
-	} else return
+	} else {
+		if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
+			if (!config.allow_ai) return
+			const username = msg.guild ? msg.guild.me.displayName : client.user.username
+			const chat = msg.cleanContent.replace(new RegExp(`@${username},?`), "").trim()
+			if (!chat) return
+			msg.channel.sendTyping()
+			if (chat.toLowerCase().startsWith("say")) return
+			try {
+				require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(res => {
+					const data = JSON.parse(res)
+					if (!data.output || !data.output[0] || !data.output[0].actions) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?")
+					let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, "PapiOphidian")
+					if (text.length >= 2000) text = text.slice(0, 1999) + "…"
+					if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no")
+					if (text == "IE=edge,chrome=1 (Answers.com)" && data.output[0].actions.source && data.output[0].actions.source.url) text = "I believe you can find the answer here: " + data.output[0].actions.source.url
+					if (["sex", "fuck", "cock"].find(word => text.toLowerCase().includes(word))) return msg.channel.send("I think I misunderstood what you said. My response was a bit unprofessional. Let's talk about something else")
+					msg.channel.send(text)
+				})
+			} catch (error) { msg.channel.send(error) }
+		} else return
+	}
 }
 
 function manageReady() {
