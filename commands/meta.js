@@ -673,7 +673,7 @@ commands.assign({
 		usage: "<url>",
 		description: "Set the background displayed on &profile",
 		aliases: ["background", "profilebackground"],
-		category: "meta",
+		category: "configuration",
 		process: function(msg, suffix, lang) {
 			commands.get("settings").process(msg, "self profilebackground " + suffix, lang)
 		}
@@ -716,6 +716,7 @@ commands.assign({
 						.addField("skip", "Skip the current song and move to the next item in the queue.\n`&music skip`")
 						.addField("stop", "Empty the queue and leave the voice channel.\n`&music stop`")
 						.addField("playlist", "Manage playlists. Try `&help playlist` for more info.")
+						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor("36393E")
 					try {
 						msg.author.send(embed).then(m => reply(msg))
@@ -754,6 +755,7 @@ commands.assign({
 						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n" +
 						"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
 						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
+						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor("36393E")
 					try {
 						msg.author.send(embed).then(m => reply(msg))
@@ -771,6 +773,7 @@ commands.assign({
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
 							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}`)
+							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor("36393E")
 						msg.channel.send(utils.contentify(msg.channel, embed))
 					} else if (commands.categories.get(suffix)) {
@@ -779,7 +782,13 @@ commands.assign({
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Command Category: ${suffix}`)
 							.setDescription(
-								cat.map(c =>`\`${commands.get(c).aliases[0]}${" ​".repeat(maxLength - commands.get(c).aliases[0].length)}\` ${commands.get(c).description}`).join("\n") +
+								cat.map(c => {
+									const cmd = commands.get(c)
+									let desc
+									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
+									else desc = cmd.description
+									return `\`${cmd.aliases[0]}${" ​".repeat(maxLength - cmd.aliases[0].length)}\` ${desc}`
+								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor("36393E")
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
@@ -795,7 +804,13 @@ commands.assign({
 						function mobile(message) {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
-								.setDescription(cat.map(c => `**${commands.get(c).aliases[0]}**\n${commands.get(c).description}`).join("\n\n"))
+								.setDescription(cat.map(c => {
+									const cmd = commands.get(c)
+									let desc
+									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
+									else desc = cmd.description
+									return `**${cmd.aliases[0]}**\n${desc}`
+								}).join("\n\n"))
 								.setColor("36393E")
 							// @ts-ignore
 							const menu = utils.reactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
