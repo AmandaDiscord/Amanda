@@ -156,7 +156,7 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
+		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
 		else embed.addField("Winners", "No winners.")
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
 		else embed.addField("Next round", `${this.lang.games.trivia.prompts.permissionDenied}\n\nYou can type \`&trivia\` or \`&t\` for another round.`)

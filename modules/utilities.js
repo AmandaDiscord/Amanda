@@ -894,9 +894,9 @@ const utils = {
 				if (self) return resolve(message.author)
 				else return resolve(null)
 			} else {
-				if (client.users.get(string)) return resolve(client.users.get(string))
+				if (client.users.cache.get(string)) return resolve(client.users.cache.get(string))
 				const list = []
-				matchFunctions.forEach(i => client.users.filter(u => i(u))
+				matchFunctions.forEach(i => client.users.cache.filter(u => i(u))
 					.forEach(us => {
 						if (!list.includes(us) && list.length < 10) list.push(us)
 					}))
@@ -997,9 +997,9 @@ const utils = {
 			ping: client.ws.ping,
 			uptime: process.uptime(),
 			ram: ram.rss - (ram.heapTotal - ram.heapUsed),
-			users: client.users.size,
-			guilds: client.guilds.size,
-			channels: client.channels.size,
+			users: client.users.cache.size,
+			guilds: client.guilds.cache.size,
+			channels: client.channels.cache.size,
 			connections: client.lavalink.players.size
 		}
 	},
@@ -1051,7 +1051,7 @@ const utils = {
 				if (message.guild.channels.get(string)) return resolve(message.guild.channels.get(string))
 				/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
 				const list = []
-				const channels = message.guild.channels.filter(c => c.type == "text" || c.type == "voice")
+				const channels = message.guild.channels.cache.filter(c => c.type == "text" || c.type == "voice")
 				matchFunctions.forEach(i => channels
 					// @ts-ignore
 					.filter(c => i(c))

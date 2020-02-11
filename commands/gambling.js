@@ -263,7 +263,7 @@ commands.assign({
 			if (isLocal) {
 				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				isLargeGuild = msg.guild.members.size >= 1000 // members for a "large guild". read further down
+				isLargeGuild = msg.guild.members.cache.size >= 1000 // members for a "large guild". read further down
 			}
 
 			// Set up page number
@@ -285,14 +285,14 @@ commands.assign({
 			if (isLocal && !isLargeGuild) {
 				// using small guild method:
 				// request rows for everyone in the guild
-				const memberIDs = [...msg.guild.members.keys()] // cache so it doesn't change during sql execution
+				const memberIDs = [...msg.guild.members.cache.keys()] // cache so it doesn't change during sql execution
 				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else if (isLocal) {
 				// using large guild method:
 				// request top pages from database then filter to guild members then slice to page
 				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ?", [maxPages * itemsPerPage])
-				rows = rows.filter(row => msg.guild.members.has(row.userID))
+				rows = rows.filter(row => msg.guild.members.cache.has(row.userID))
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {

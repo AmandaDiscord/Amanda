@@ -57,7 +57,7 @@ commands.assign({
 				})
 				// eslint-disable-next-line no-inner-declarations
 				function getAuthor(author) {
-					const user = client.users.get(author)
+					const user = client.users.cache.get(author)
 					if (user) {
 						let username = user.username
 						if (username.length > 14) username = username.slice(0, 13) + "…"
@@ -264,7 +264,7 @@ commands.assign({
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
 				utils.reactionMenu(message, [
-					{ emoji: client.emojis.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
+					{ emoji: client.emojis.cache.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
@@ -277,7 +277,7 @@ commands.assign({
 				])
 			} else {
 				const author = []
-				if (client.users.get(playlistRow.author)) author.push(`${client.users.get(playlistRow.author).tag} — ${playlistName}`, client.users.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
+				if (client.users.cache.get(playlistRow.author)) author.push(`${client.users.cache.get(playlistRow.author).tag} — ${playlistName}`, client.users.cache.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
 				const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\nTotal length: ${common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))}`

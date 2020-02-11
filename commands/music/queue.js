@@ -63,7 +63,7 @@ class Queue {
 					if (!this.songs[0].error) {
 						console.log(
 							"Song didn't start."
-							+ ` Region: ${client.guilds.get(this.guildID) ? client.guilds.get(this.guildID).region : "unknown"}`
+							+ ` Region: ${client.guilds.cache.get(this.guildID) ? client.guilds.cache.get(this.guildID).region : "unknown"}`
 							+ `, guildID: ${this.guildID}`
 						)
 						this.songs[0].error =

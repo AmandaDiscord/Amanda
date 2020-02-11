@@ -239,7 +239,7 @@ const cmds = {
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
 				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
-				const memberIDs = [...msg.guild.members.keys()]
+				const memberIDs = [...msg.guild.members.cache.keys()]
 				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else {
@@ -397,8 +397,8 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
 	let fetch
 	if (source.traaOverride) {
-		const g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
-		const g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
+		const g1 = msg.member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
+		const g2 = member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
 		// console.log(msg.member.user.username, g1, member.user.username, g2)
 		if (g1 != "_" || g2 != "_") {
 			let found = false

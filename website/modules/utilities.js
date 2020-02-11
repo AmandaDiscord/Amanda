@@ -13,7 +13,7 @@ const utils = {
 		/**
 		 * @param {string} string
 		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-		 * @param {mysql.PromisePool|mysql.PromisePoolConnection} [connection]
+		 * @param {mysql.Pool|mysql.PoolConnection} [connection]
 		 * @param {number} [attempts=2]
 		 * @returns {Promise<Array<any>>}
 		 */
@@ -24,6 +24,7 @@ const utils = {
 				if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
 				connection.execute(string, prepared).then(result => {
 					const rows = result[0]
+					// @ts-ignore
 					resolve(rows)
 				}).catch(err => {
 					console.error(err)
@@ -36,7 +37,7 @@ const utils = {
 		/**
 		 * @param {string} string
 		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-		 * @param {mysql.PromisePool|mysql.PromisePoolConnection} [connection]
+		 * @param {mysql.Pool|mysql.PoolConnection} [connection]
 		 */
 		"get": async function(string, prepared = undefined, connection = undefined) {
 			return (await utils.sql.all(string, prepared, connection))[0]
@@ -59,7 +60,7 @@ const utils = {
 	},
 
 	/**
-	 * @returns {mysql.PromisePoolConnection}
+	 * @returns {Promise<mysql.PoolConnection>}
 	 */
 	getConnection: function() {
 		return db.getConnection()

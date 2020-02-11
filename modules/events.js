@@ -3,7 +3,6 @@
 const Discord = require("discord.js")
 const path = require("path")
 const { PlayerManager } = require("discord.js-lavalink")
-const Lang = require("@amanda/lang")
 
 const passthrough = require("../passthrough")
 const { client, config, commands, reloader, reloadEvent } = passthrough
@@ -28,7 +27,7 @@ else utils.addTemporaryListener(client, "ready", path.basename(__filename), mana
 utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent)
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
 	if (data && data.id && data.channel_id && data.content && data.author) {
-		const channel = client.channels.get(data.channel_id)
+		const channel = client.channels.cache.get(data.channel_id)
 		// ensure channel is a message channel, and ensure member exists if is a guild channel
 		if (channel instanceof Discord.DMChannel || (channel instanceof Discord.TextChannel && data.member)) {
 			const message = new Discord.Message(client, data, channel)
@@ -108,7 +107,7 @@ async function manageMessage(msg) {
 			if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
-			const reportChannel = client.channels.get("512869106089852949")
+			const reportChannel = client.channels.cache.get("512869106089852949")
 			if (reportChannel instanceof Discord.TextChannel && reportChannel.permissionsFor(client.user).has("VIEW_CHANNEL")) {
 				embed.setTitle("Command error occurred.")
 				let details = [
@@ -187,10 +186,10 @@ function manageReady() {
 		})
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(row => {
-				const channel = client.channels.get(row.channelID)
+				const channel = client.channels.cache.get(row.channelID)
 				if (channel instanceof Discord.TextChannel) channel.send("<@" + row.mentionID + "> Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
 				else {
-					const user = client.users.get(row.mentionID)
+					const user = client.users.cache.get(row.mentionID)
 					if (!user) console.log(`Could not notify ${row.mentionID}`)
 					else user.send("Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
 				}
@@ -268,9 +267,10 @@ function reactionEvent(data, channel, user) {
 		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji)
 		break
 	case "all":
-		msg.reactions.clear()
+		msg.reactions.removeAll()
 		break
 	case "message":
+		console.log("Remove message")
 		menu.destroy(true)
 		msg.delete()
 		break
