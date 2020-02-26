@@ -1,7 +1,9 @@
 // @ts-check
 
 const Discord = require("discord.js")
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 
 const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
@@ -180,9 +182,10 @@ class YouTubeSong extends Song {
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
 			() => {
-				return rp(`${config.invidious_origin}/api/v1/videos/${this.id}`, { json: true }).then(data => {
+				return fetch(`${config.invidious_origin}/api/v1/videos/${this.id}`).then(async data => {
+					const json = await data.json()
 					this.typeWhileGetRelated = false
-					return data.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
+					return json.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 				})
 			})
 

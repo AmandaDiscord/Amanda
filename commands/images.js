@@ -1,6 +1,8 @@
 // @ts-check
 
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 const Discord = require("discord.js")
 
 const passthrough = require("../passthrough")
@@ -25,7 +27,7 @@ async function sendImage(host, path, msg, emoji, footer) {
 	if (host == "chewey") url = `${constants.chewey_api}/${path}?auth=${key}`
 	else if (host == "nekos") url = `https://nekos.life/api/v2/img/${path}`
 	else return Promise.reject(new Error("Host provided not supported"))
-	const data = await rp(url, { json: true, timeout: 2000 })
+	const data = await fetch(url, { timeout: 2000 }).then(d => d.json())
 	let img
 	if (host == "chewey") img = data.data
 	else if (host == "nekos") img = data.url

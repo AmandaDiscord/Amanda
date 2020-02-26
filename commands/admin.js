@@ -1,7 +1,7 @@
 // @ts-check
 
 const Discord = require("discord.js")
-const rp = require("request-promise")
+const fetch = require("node-fetch")
 const util = require("util")
 const path = require("path")
 

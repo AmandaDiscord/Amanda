@@ -1,6 +1,8 @@
 // @ts-check
 
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 const Discord = require("discord.js")
 const path = require("path")
 
@@ -141,15 +143,14 @@ const common = {
 		const params = new URLSearchParams()
 		params.append("identifier", input)
 
-		return rp({
-			url: `http://${node.host}:${node.port}/loadtracks?${params.toString()}`,
+		return fetch(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`, {
 			headers: {
 				"Authorization": node.password
-			},
-			json: true
-		}).then(data => {
-			if (data.exception) throw data.exception.message
-			else return data.tracks
+			}
+		}).then(async data => {
+			const json = await data.json()
+			if (json.exception) throw json.exception.message
+			else return json.tracks
 		})
 	},
 
@@ -159,9 +160,10 @@ const common = {
 		 * @param {string} id
 		 */
 		getData: function(id) {
-			return rp(`${config.invidious_origin}/api/v1/videos/${id}`, { json: true }).then(data => {
-				if (data.error) throw new Error(data.error)
-				return data
+			return fetch(`${config.invidious_origin}/api/v1/videos/${id}`).then(async data => {
+				const json = await data.json()
+				if (json.error) throw new Error(json.error)
+				else return json
 			})
 		},
 

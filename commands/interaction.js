@@ -4,7 +4,9 @@
 // @ts-ignore
 const Jimp = require("jimp")
 const crypto = require("crypto")
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 const Discord = require("discord.js")
 
 const emojis = require("../modules/emojis")
@@ -395,7 +397,7 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (!member) return msg.channel.send("Invalid user")
 	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 	if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
-	let fetch
+	let fetched
 	if (source.traaOverride) {
 		const g1 = msg.member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
 		const g2 = member.roles.map(r => genderMap.get(r.id)).find(r => r) || "_"
@@ -406,27 +408,27 @@ async function doInteraction(msg, suffix, source, lang) {
 			while (!found && i < attempts.length) {
 				const rows = await attempts[i](source.name, g1, g2)
 				if (rows.length) {
-					fetch = Promise.resolve(utils.arrayRandom(rows).url)
+					fetched = Promise.resolve(utils.arrayRandom(rows).url)
 					found = true
 				}
 				i++
 			}
 		}
 	}
-	if (!fetch) {
-		if (source.fetch) fetch = source.fetch()
+	if (!fetched) {
+		if (source.fetch) fetched = source.fetch()
 		if (source.shortcut == "nekos.life") {
 			source.footer = "Powered by nekos.life"
-			fetch = new Promise((resolve, reject) => {
-				rp(`https://nekos.life/api/v2/img/${source.name}`).then(body => {
-					const data = JSON.parse(body)
+			fetched = new Promise((resolve, reject) => {
+				fetch(`https://nekos.life/api/v2/img/${source.name}`).then(async body => {
+					const data = await body.json()
 					resolve(data.url)
 				}).catch(reject)
 			})
-		} else if (source.shortcut == "durl") fetch = source.url()
-		else fetch = Promise.reject(new Error("Shortcut didn't match a function."))
+		} else if (source.shortcut == "durl") fetched = source.url()
+		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
-	fetch.then(url => {
+	fetched.then(url => {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": `<@${member.id}>` }))
 			.setImage(url)

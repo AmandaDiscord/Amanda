@@ -4,6 +4,9 @@ const Discord = require("discord.js")
 const path = require("path")
 const { PlayerManager } = require("discord.js-lavalink")
 const Lang = require("@amanda/lang")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 
 const passthrough = require("../passthrough")
 const { client, config, commands, reloader, reloadEvent } = passthrough
@@ -146,8 +149,8 @@ async function manageMessage(msg) {
 			msg.channel.sendTyping()
 			if (chat.toLowerCase().startsWith("say")) return
 			try {
-				require("request-promise")(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(res => {
-					const data = JSON.parse(res)
+				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
+					const data = await res.json()
 					if (!data.output || !data.output[0] || !data.output[0].actions) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?")
 					let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, "PapiOphidian")
 					if (text.length >= 2000) text = text.slice(0, 1999) + "…"

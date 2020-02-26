@@ -1,6 +1,8 @@
 // @ts-check
 
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 const entities = require("entities")
 const Discord = require("discord.js")
 const path = require("path")
@@ -180,8 +182,8 @@ module.exports.TriviaGame = TriviaGame
  */
 async function JSONHelper(body, channel, lang) {
 	try {
-		if (body.startsWith("http")) body = await rp(body)
-		return [true, JSON.parse(body)]
+		if (body.startsWith("http")) body = await fetch(body).then(data => data.json())
+		return [true, body]
 	} catch (error) {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(lang.games.trivia.prompts.parsingError)
