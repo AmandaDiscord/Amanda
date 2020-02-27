@@ -12,7 +12,7 @@ const Discord = require("discord.js")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { constants, client, commands, reloader } = passthrough
+const { constants, client, commands, reloader, weeb } = passthrough
 
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
@@ -307,36 +307,35 @@ const interactionSources = [
 	{
 		name: "hug", // Command object key and text filler
 		description: "Hugs someone", // Command description
-		shortcut: "nekos.life", // nekos.life: use the command name as the endpoint
+		shortcut: "weeb.sh", // nekos.life: use the command name as the endpoint
 		traaOverride: true // don't set this true for newly added types
 	},
 	{
 		name: "nom",
 		description: "Noms someone",
-		shortcut: "durl", // Dynamic URL: call the function "url" and use its response as the GIF URL. Not async.
-		url: () => { return getGif("nom") }
+		shortcut: "weeb.sh"
 	},
 	{
 		name: "kiss",
 		description: "Kisses someone",
-		shortcut: "nekos.life",
+		shortcut: "weeb.sh",
 		traaOverride: true
 	},
 	{
 		name: "cuddle",
 		description: "Cuddles someone",
-		shortcut: "nekos.life",
+		shortcut: "weeb.sh",
 		traaOverride: true
 	},
 	{
 		name: "poke",
 		description: "Pokes someone",
-		shortcut: "nekos.life"
+		shortcut: "weeb.sh"
 	},
 	{
 		name: "slap",
 		description: "Slaps someone",
-		shortcut: "nekos.life"
+		shortcut: "weeb.sh"
 	},
 	{
 		name: "boop",
@@ -347,7 +346,7 @@ const interactionSources = [
 	{
 		name: "pat",
 		description: "Pats someone",
-		shortcut: "nekos.life",
+		shortcut: "weeb.sh",
 		traaOverride: true
 	}
 ]
@@ -424,6 +423,13 @@ async function doInteraction(msg, suffix, source, lang) {
 					const data = await body.json()
 					resolve(data.url)
 				}).catch(reject)
+			})
+		} else if (source.shortcut == "weeb.sh") {
+			source.footer = "Powered by weeb.sh"
+			fetched = new Promise((resolve, reject) => {
+				weeb.toph.getRandomImage(source.name, { nsfw: false, fileType: "gif" }).then(data => {
+					resolve(data.url)
+				})
 			})
 		} else if (source.shortcut == "durl") fetched = source.url()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))

@@ -4,6 +4,7 @@ const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
+const WeebSH = require("taihou")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
@@ -14,6 +15,8 @@ const Reloader = require("./modules/hotreload")
 const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START", "PRESENCE_UPDATE"], messageCacheMaxSize: 0 })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader()
+// @ts-ignore
+const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
 
 const db = mysql.createPool({
 	host: config.mysql_domain,
@@ -31,7 +34,7 @@ const db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky() })
+	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky(), weeb })
 
 	reloader.setupWatch([
 		"./modules/utilities.js"

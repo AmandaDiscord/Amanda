@@ -23,6 +23,7 @@ process._ptcreated = true
  * @property {Object<string, import("nedb-promises")>} nedb
  * @property {import("frisky-client")} frisky
  * @property {import("./modules/ipc/ipcbot")} ipc
+ * @property {import("taihou")} weeb
  */
 
 /**

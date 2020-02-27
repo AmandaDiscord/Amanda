@@ -34,6 +34,7 @@
     "simple-git": "^1.129.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:cloudrac3r/SnowTransfer",
+    "taihou": "^2.0.3",
     "typescript": "~3.6.4"
   },
   "devDependencies": {
