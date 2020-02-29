@@ -292,7 +292,7 @@ commands.assign({
 				client.users.fetch("176580265294954507", true)
 			])
 			const embed = new Discord.MessageEmbed()
-				.setAuthor("Amanda", client.user.avatarURL({ format: "png", size: 32 }))
+				.setAuthor("Amanda", client.user.displayAvatarURL({ format: "png", size: 32 }))
 				.setDescription(lang.meta.info.returns.thanks)
 				.addFields([
 					{

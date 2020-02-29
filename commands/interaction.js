@@ -85,7 +85,7 @@ const cmds = {
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
 			const info = await utils.waifu.get(member.id)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(member.displayTag, member.user.avatarURL({ format: "png", size: 32 }))
+				.setAuthor(member.displayTag, member.user.displayAvatarURL({ format: "png", size: 32 }))
 				.addFields([
 					{ name: "Price:", value: info.price },
 					{ name: "Claimed by:", value: info.claimer ? info.claimer.tag : "(nobody)" },

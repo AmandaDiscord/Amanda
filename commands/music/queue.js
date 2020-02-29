@@ -537,7 +537,7 @@ class QueueWrapper {
 		return this.queue.voiceChannel.members.map(m => ({
 			id: m.id,
 			name: m.displayName,
-			avatar: m.user.avatarURL({ format: "png", size: 64 }),
+			avatar: m.user.displayAvatarURL({ format: "png", size: 64 }),
 			isAmanda: m.id == client.user.id
 		}))
 	}
