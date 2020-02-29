@@ -156,21 +156,36 @@ commands.assign({
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
 				embed
-					.addField(leadingIdentity,
-						`**❯ Songs Played Today:**\n${songsPlayed} songs\n` +
-						`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`, true)
-					.addField(leadingSpace,
-						`**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n` +
-						`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`, true)
+					.addFields([
+						{
+							name: leadingIdentity,
+							value: `**❯ Songs Played Today:**\n${songsPlayed} songs\n` +
+								`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`,
+							inline: true
+						},
+						{
+							name: leadingSpace,
+							value: `**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n` +
+								`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`,
+							inline: true
+						}
+					])
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "games") {
 				const gamesPlayed = periodicHistory.getSize("game_start")
-				embed
-					.addField(leadingIdentity,
-						`**❯ Games Played Today:**\n${gamesPlayed} games\n` +
-						`**❯ Games In Progress:**\n${gameStore.store.size} games`, true)
-					.addField(leadingSpace,
-						`**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`, true)
+				embed.addFields([
+					{
+						name: leadingIdentity,
+						value: `**❯ Games Played Today:**\n${gamesPlayed} games\n` +
+							`**❯ Games In Progress:**\n${gameStore.store.size} games`,
+						inline: true
+					},
+					{
+						name: leadingSpace,
+						value: `**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`,
+						inline: true
+					}
+				])
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
 				const allowed = await utils.hasPermission(msg.author, "eval")
@@ -187,16 +202,24 @@ commands.assign({
 				const allStats = await ipc.replier.requestGetAllStats()
 				const nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too")
 				embed
-					.addField(leadingIdentity,
-						`**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`
-						+ `**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
-						+ `**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`
-						+ `**❯ RAM Usage:**\n${bToMB(stats.ram)}`, true)
-					.addField(leadingSpace,
-						`**❯ User Count:**\n${bothStats(stats, allStats, "users")}\n`
-						+ `**❯ Guild Count:**\n${bothStats(stats, allStats, "guilds")}\n`
-						+ `**❯ Channel Count:**\n${bothStats(stats, allStats, "channels")}\n`
-						+ `**❯ Voice Connections:**\n${bothStats(stats, allStats, "connections")}`, true)
+					.addFields([
+						{
+							name: leadingIdentity,
+							value: `**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`
+							+ `**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
+							+ `**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+							+ `**❯ RAM Usage:**\n${bToMB(stats.ram)}`,
+							inline: true
+						},
+						{
+							name: leadingSpace,
+							value: `**❯ User Count:**\n${bothStats(stats, allStats, "users")}\n`
+							+ `**❯ Guild Count:**\n${bothStats(stats, allStats, "guilds")}\n`
+							+ `**❯ Channel Count:**\n${bothStats(stats, allStats, "channels")}\n`
+							+ `**❯ Voice Connections:**\n${bothStats(stats, allStats, "connections")}`,
+							inline: true
+						}
+					])
 				const content = utils.contentify(msg.channel, embed)
 				if (typeof content === "string") nmsg.edit(content)
 				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -215,7 +238,7 @@ commands.assign({
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addField("❯ Heartbeat:", `${client.ws.ping.toFixed(0)}ms`, true).addField("❯ Latency:", `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, true).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "❯ Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "❯ Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter("W-Wait... It's called table tennis").setColor("36393E")
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -271,11 +294,21 @@ commands.assign({
 			const embed = new Discord.MessageEmbed()
 				.setAuthor("Amanda", client.user.avatarURL({ format: "png", size: 32 }))
 				.setDescription(lang.meta.info.returns.thanks)
-				.addField(lang.meta.info.returns.creators,
-					`${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>\n` +
-					`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`)
-				.addField("Code", `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`)
-				.addField("Links", utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }))
+				.addFields([
+					{
+						name: lang.meta.info.returns.creators,
+						value: `${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>\n` +
+							`${c2.tag} <:brilliance:479939329104412672> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`
+					},
+					{
+						name: "Code",
+						value: `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`
+					},
+					{
+						name: "Links",
+						value: utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal })
+					}
+				])
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -331,8 +364,7 @@ commands.assign({
 			})
 			const embed = new Discord.MessageEmbed()
 				.setTitle("Git info")
-				.addField("Status", `On branch ${res.branch}, latest commit ${res.latestCommitHash}`)
-				.addField(`Commits (latest ${limit} entries)`, res.logString)
+				.addFields([{ name: "Status", value:`On branch ${res.branch}, latest commit ${res.latestCommitHash}` }, { name: `Commits (latest ${limit} entries)`, value: res.logString }])
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -364,12 +396,10 @@ commands.assign({
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor("36393E")
-			embed.addField("User ID:", user.id)
-			const userCreatedTime = user.createdAt.toUTCString()
-			embed.addField("Account created at:", userCreatedTime)
+			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
 			if (member) {
 				const guildJoinedTime = member.joinedAt.toUTCString()
-				embed.addField(`Joined ${msg.guild.name} at:`, guildJoinedTime)
+				embed.addFields({ name: `Joined ${msg.guild.name} at:`, value: guildJoinedTime })
 			}
 			let status = ""
 			/* const activity = `*${user.activeOn}*\n`
@@ -386,7 +416,7 @@ commands.assign({
 			}*/
 			if (user.bot) status = "<:bot:412413027565174787>"
 			embed.setThumbnail(!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL())
-			embed.addField("Avatar URL:", `[Click Here](${!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL()})`)
+			embed.addFields({ name: "Avatar URL:", value: `[Click Here](${!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL()})` })
 			embed.setTitle(`${user.tag} ${status}`)
 			// if (activity) embed.setDescription(activity)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -696,26 +726,62 @@ commands.assign({
 				if (suffix == "music" || suffix == "m") {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music: command help (aliases: music, m)")
-						.addField("play", "Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs` or\n`&music play despacito`")
-						.addField("insert", "Works the same as play, but inserts the song at the start of the queue instead of at the end.\n`&music insert https://youtube.com/watch?v=e53GDo-wnSs`")
-						.addField("now", "Show the current song.\n`&music now`")
-						.addField("pause", "Pause playback.\n`&music pause`")
-						.addField("resume", "Resume playback. (Unpause.)\n`&music resume`")
-						.addField("info", "Shows information about the current song/Frisky station\n`&music info`")
-						.addField("related [play|insert] [index]",
-							"Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n" +
-						"`&music related` (shows related songs)\n" +
-						"`&music rel play 8` (adds related song #8 to the end of the queue)")
-						.addField("auto", "Enable or disable auto mode.\n" +
-						"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n" +
-						"`&music auto`")
-						.addField("queue [remove|clear] [index]",
-							"Display or edit the current queue.\n" +
-						"`&music queue`\n" +
-						"`&music queue remove 2`")
-						.addField("skip", "Skip the current song and move to the next item in the queue.\n`&music skip`")
-						.addField("stop", "Empty the queue and leave the voice channel.\n`&music stop`")
-						.addField("playlist", "Manage playlists. Try `&help playlist` for more info.")
+						.addFields([
+							{
+								name: "play",
+								value: "Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs` or\n`&music play despacito`"
+							},
+							{
+								name: "insert",
+								value: "Works the same as play, but inserts the song at the start of the queue instead of at the end.\n`&music insert https://youtube.com/watch?v=e53GDo-wnSs`"
+							},
+							{
+								name: "now",
+								value: "Show the current song.\n`&music now`"
+							},
+							{
+								name: "pause",
+								value: "Pause playback.\n`&music pause`"
+							},
+							{
+								name: "resume",
+								value: "Resume playback. (Unpause.)\n`&music resume`"
+							},
+							{
+								name: "info",
+								value: "Shows information about the current song/Frisky station\n`&music info`"
+							},
+							{
+								name: "related [play|insert] [index]",
+								value: "Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n" +
+									"`&music related` (shows related songs)\n" +
+									"`&music rel play 8` (adds related song #8 to the end of the queue)"
+							},
+							{
+								name: "auto",
+								value: "Enable or disable auto mode.\n" +
+									"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n" +
+									"`&music auto`"
+							},
+							{
+								name: "queue [remove|clear] [index]",
+								value: "Display or edit the current queue.\n" +
+									"`&music queue`\n" +
+									"`&music queue remove 2`"
+							},
+							{
+								name: "skip",
+								value: "Skip the current song and move to the next item in the queue.\n`&music skip`"
+							},
+							{
+								name: "stop",
+								value: "Empty the queue and leave the voice channel.\n`&music stop`"
+							},
+							{
+								name: "playlist",
+								value: "Manage playlists. Try `&help playlist` for more info."
+							}
+						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor("36393E")
 					try {
@@ -729,32 +795,64 @@ commands.assign({
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. " +
 						"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n" +
 						"Note that using `add`, `remove`, `move`, `import` and `delete` require you to be the owner (creator) of a playlist.")
-						.addField("show", "Show a list of all playlists.\n`&music playlist show`")
-						.addField("(just a playlist name)", "List all songs in a playlist.\n`&music playlist xi`")
-						.addField("play [start] [end]", "Play a playlist.\n" +
-						"Optionally, specify values for start and end to play specific songs from a playlist. " +
-						"Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\n" +
-						"`&music playlist xi play` (plays the entire playlist named `xi`)\n" +
-						"`&music playlist xi play 32` (plays item #32 from the playlist)\n" +
-						"`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\n" +
-						"`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)")
-						.addField("shuffle [start] [end]", "Play the songs from a playlist, but shuffle them into a random order before queuing them. Works exactly like `play`.\n`&music playlist xi shuffle`")
-						.addField("add <url>", "Add a song to a playlist. Specify a URL the same as `&music play`.\n" +
-						"`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`")
-						.addField("remove <index>", "Remove a song from a playlist.\n" +
-						"`index` is the index of the item to be removed.\n" +
-						"`&music playlist xi remove 12`")
-						.addField("move <index1> <index2>", "Move items around within a playlist. " +
-						"`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\n" +
-						"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. " +
-						"If you don't understand what this means, try it out yourself.\n" +
-						"`&music playlist xi move 12 13`")
-						.addField("find", "Find specific items in a playlist.\n" +
-						"Provide some text to search for, and matching songs will be shown.\n" +
-						"`&music playlist undertale find hopes and dreams`")
-						.addField("import <url>", "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n" +
-						"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`")
-						.addField("delete", "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`")
+						.addFields([
+							{
+								name: "show",
+								value: "Show a list of all playlists.\n`&music playlist show`"
+							},
+							{
+								name: "(just a playlist name)",
+								value: "List all songs in a playlist.\n`&music playlist xi`"
+							},
+							{
+								name: "play [start] [end]",
+								value: "Play a playlist.\n" +
+									"Optionally, specify values for start and end to play specific songs from a playlist. " +
+									"Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\n" +
+									"`&music playlist xi play` (plays the entire playlist named `xi`)\n" +
+									"`&music playlist xi play 32` (plays item #32 from the playlist)\n" +
+									"`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\n" +
+									"`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)"
+							},
+							{
+								name: "shuffle [start] [end]",
+								value: "Play the songs from a playlist, but shuffle them into a random order before queuing them. Works exactly like `play`.\n`&music playlist xi shuffle`"
+							},
+							{
+								name: "add <url>",
+								value: "Add a song to a playlist. Specify a URL the same as `&music play`.\n" +
+									"`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`"
+							},
+							{
+								name: "remove <index>",
+								value: "Remove a song from a playlist.\n" +
+									"`index` is the index of the item to be removed.\n" +
+									"`&music playlist xi remove 12`"
+							},
+							{
+								name: "move <index1> <index2>",
+								value: "Move items around within a playlist. " +
+									"`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\n" +
+									"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. " +
+									"If you don't understand what this means, try it out yourself.\n" +
+									"`&music playlist xi move 12 13`"
+							},
+							{
+								name: "find",
+								value: "Find specific items in a playlist.\n" +
+									"Provide some text to search for, and matching songs will be shown.\n" +
+									"`&music playlist undertale find hopes and dreams`"
+							},
+							{
+								name: "import <url>",
+								value: "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n" +
+									"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`"
+							},
+							{
+								name: "delete",
+								value: "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`"
+							}
+						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor("36393E")
 					try {

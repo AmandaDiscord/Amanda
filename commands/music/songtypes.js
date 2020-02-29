@@ -366,8 +366,9 @@ class FriskySong extends Song {
 				.setColor(0x36393f)
 				.setTitle(`FRISKY: ${mix.data.title}`)
 				.setURL(`https://beta.frisky.fm/mix/${mix.id}`)
-				.addField("Details",
-					utils.tableifyRows(
+				.addFields({
+					name: "Details",
+					value: utils.tableifyRows(
 						[
 							["Episode", `${mix.data.title} / [view](https://beta.frisky.fm/mix/${mix.id})`],
 							["Show", `${mix.data.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix.data.show_id.id})`],
@@ -378,7 +379,7 @@ class FriskySong extends Song {
 						["left", ""],
 						() => "`"
 					)
-				)
+				})
 			if (mix.episode) {
 				embed.setThumbnail(this.thumbnail.src)
 			}
@@ -389,7 +390,7 @@ class FriskySong extends Song {
 					.join("\n")
 				const hidden = mix.data.track_list.length - 6
 				if (hidden > 0) trackList += `\n_and ${hidden} more..._`
-				embed.addField("Track list", trackList)
+				embed.addFields({ name: "Track list", value: trackList })
 			}
 			return embed
 		}).catch(reason => {

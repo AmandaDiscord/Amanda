@@ -92,7 +92,7 @@ class TriviaGame extends Game {
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
 			.setDescription(`​\n${entities.decodeHTML(this.data.question)}`) // SC: zero-width space
 			.setColor(this.color)
-		answerFields.forEach(f => embed.addField("​", f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", true)) // SC: zero-width space and em space
+		answerFields.forEach(f => embed.addFields({ name: "​", value: f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", inline: true }))
 		embed.setFooter("To answer, type a letter in chat. You have 20 seconds.")
 		this.channel.send(utils.contentify(this.channel, embed))
 		// Setup timer
@@ -156,10 +156,10 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addField("Winners", results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n"))
-		else embed.addField("Winners", "No winners.")
+		if (results.length) embed.addFields({ name: "Winners", value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n") })
+		else embed.addFields({ name: "Winners", value: "No winners." })
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
-		else embed.addField("Next round", `${this.lang.games.trivia.prompts.permissionDenied}\n\nYou can type \`&trivia\` or \`&t\` for another round.`)
+		else embed.addFields({ name: "Next round", value: `${this.lang.games.trivia.prompts.permissionDenied}\n\nYou can type \`&trivia\` or \`&t\` for another round.` })
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 			utils.reactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {

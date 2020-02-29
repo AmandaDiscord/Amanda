@@ -86,10 +86,12 @@ const cmds = {
 			const info = await utils.waifu.get(member.id)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(member.displayTag, member.user.avatarURL({ format: "png", size: 32 }))
-				.addField("Price:", info.price)
-				.addField("Claimed by:", info.claimer ? info.claimer.tag : "(nobody)")
-				.addField("Waifu:", info.waifu ? info.waifu.tag : "(nobody)")
-				.addField("Gifts:", info.gifts.received.emojis || "(none)")
+				.addFields([
+					{ name: "Price:", value: info.price },
+					{ name: "Claimed by:", value: info.claimer ? info.claimer.tag : "(nobody)" },
+					{ name: "Waifu", value: info.waifu ? info.waifu.tag : "(nobody)" },
+					{ name: "Gifts:", value: info.gifts.received.emojis || "(none)" }
+				])
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}

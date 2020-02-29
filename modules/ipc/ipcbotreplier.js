@@ -65,7 +65,7 @@ class ClientReplier extends Replier {
 	 * @param {string} guildID
 	 */
 	REPLY_GET_GUILD(guildID) {
-		const guild = client.guilds.get(guildID)
+		const guild = client.guilds.cache.get(guildID)
 		if (guild) return filterGuild(guild)
 		else return null
 	}
@@ -79,12 +79,12 @@ class ClientReplier extends Replier {
 		const queueStore = passthrough.queueStore
 		const guilds = []
 		const npguilds = []
-		for (const guild of client.guilds.values()) {
-			if (guild.members.has(userID)) {
+		for (const guild of client.guilds.cache.values()) {
+			if (guild.members.cache.has(userID)) {
 				let isNowPlaying = false
 				if (np) {
 					if (queueStore && queueStore.store.has(guild.id)) isNowPlaying = true
-					if (guild.members.get(userID).voice.channelID) isNowPlaying = true
+					if (guild.members.cache.get(userID).voice.channelID) isNowPlaying = true
 				}
 				if (isNowPlaying) npguilds.push(filterGuild(guild))
 				else guilds.push(filterGuild(guild))
@@ -99,9 +99,9 @@ class ClientReplier extends Replier {
 	 * @param {string} input.guildID
 	 */
 	REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
-		const guild = client.guilds.get(guildID)
+		const guild = client.guilds.cache.get(guildID)
 		if (!guild) return null
-		if (!guild.members.has(userID)) return null
+		if (!guild.members.cache.has(userID)) return null
 		return filterGuild(guild)
 	}
 

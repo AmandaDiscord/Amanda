@@ -4,6 +4,7 @@ const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
+const Discord = require("discord.js")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
@@ -11,7 +12,8 @@ const config = require("./config.js")
 const constants = require("./constants.js")
 const Reloader = require("./modules/hotreload")
 
-const client = new Amanda({ disableEveryone: true, disabledEvents: ["TYPING_START", "PRESENCE_UPDATE"], messageCacheMaxSize: 0 })
+const intents = new Discord.Intents(["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"])
+const client = new Amanda({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents: intents } })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader()
 

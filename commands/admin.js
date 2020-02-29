@@ -70,8 +70,8 @@ commands.assign({
 					if (out.length > 1000) out = `${out.slice(0, 999)}…`
 					return out
 				}
-				if (stdout) result.addField("stdout:", formatOutput(stdout))
-				if (stderr) result.addField("stderr:", formatOutput(stderr))
+				if (stdout) result.addFields({ name: "stdout:", value: formatOutput(stdout) })
+				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
 				const nmsg = await msg.channel.send(utils.contentify(msg.channel, result))
 				const menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
@@ -104,6 +104,26 @@ commands.assign({
 				.setColor(constants.money_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
+		}
+	},
+	"test": {
+		usage: "None",
+		description: "No",
+		aliases: ["test"],
+		category: "admin",
+		process: function(msg, suffix) {
+			const message =
+			"<@320067006521147393>\n" + // mention myself
+			"<@!320067006521147393>\n" + // ! in mention
+			"<@&682819687259963622>\n" + // role
+			"<#682818889993814078>\n" + // channel
+			"@everyone\n" + // standard everyone
+			"@here\n" + // standard here
+			"@‮everyone\n" + // RTLO everyone
+			"@‮here\n" + // RTLO here
+			"@ everyone\n" + // everyone with space
+			"@ here\n" // here with space
+			msg.channel.send(message)
 		}
 	}
 })

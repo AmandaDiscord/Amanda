@@ -73,8 +73,8 @@ class QueueStore {
 		data.queues.forEach(async q => {
 			console.log(q)
 			const guildID = q.guildID
-			const voiceChannel = client.channels.get(q.voiceChannelID)
-			const textChannel = client.channels.get(q.textChannelID)
+			const voiceChannel = client.channels.cache.get(q.voiceChannelID)
+			const textChannel = client.channels.cache.get(q.textChannelID)
 			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
 			console.log("Making queue for voice channel " + voiceChannel.name)
 			const exists = this.has(guildID)

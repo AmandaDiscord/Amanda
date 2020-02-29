@@ -66,7 +66,7 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
 })
 utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
 	if (newMember.guild.id != "475599038536744960") return
-	if (!oldMember.roles.get("475599593879371796") && newMember.roles.get("475599593879371796")) {
+	if (!oldMember.roles.cache.get("475599593879371796") && newMember.roles.cache.get("475599593879371796")) {
 		const row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
 		if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1])
 		else return
@@ -131,8 +131,10 @@ async function manageMessage(msg) {
 				const detailsString = details.map(row =>
 					"`" + row[0] + " ​".repeat(maxLength - row[0].length) + "` " + row[1] // SC: space + zwsp, wide space
 				).join("\n")
-				embed.addField("Details", detailsString)
-				embed.addField("Message content", "```\n" + msg.content.replace(/`/g, "ˋ") + "```") // SC: IPA modifier grave U+02CB
+				embed.addFields([
+					{ name: "Details", value: detailsString },
+					{ name: "Message content", value: "```\n" + msg.content.replace(/`/g, "ˋ") + "```" }
+				])
 				reportChannel.send(embed)
 			}
 		}
