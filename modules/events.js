@@ -272,7 +272,6 @@ function reactionEvent(data, channel, user) {
 		msg.reactions.removeAll()
 		break
 	case "message":
-		console.log("Remove message")
 		menu.destroy(true)
 		msg.delete()
 		break
