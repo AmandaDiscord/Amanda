@@ -395,7 +395,7 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.dm, { "action": source.name }))
 	if (!suffix) return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.noUser, { "action": source.name }))
 	const member = await msg.guild.findMember(msg, suffix)
-	if (!member) return msg.channel.send("Invalid user")
+	if (!member) return msg.channel.send(`I couldn't figure out who you wanna ${source.name}! Say their name or mention them.`)
 	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 	if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
 	let fetched
