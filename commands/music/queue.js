@@ -123,6 +123,7 @@ class Queue {
 			passthrough.periodicHistory.add("song_start")
 			this.player.play(song.track).then(() => {
 				this.songStartTime = Date.now()
+				this.pausedAt = null
 				this._startNPUpdates()
 				this.sendNewNP()
 			})
@@ -238,7 +239,7 @@ class Queue {
 		else if (this.isPaused) return "Music is already paused. Use `&music resume` to resume."
 		else {
 			this.pausedAt = Date.now()
-			this.player.pause()
+			this.player.pause(true)
 			this.npUpdater.stop(true)
 			ipc.replier.sendTimeUpdate(this)
 			return null

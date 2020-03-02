@@ -18,7 +18,7 @@
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:cloudrac3r/discord.js#824f20b3e809f6f791b379b5b09a73e0c0709a0d",
-    "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#e403cdd9010ba70995d0a2201df82877abfe8455",
+    "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#faa5481f1c2b763ce8db107b42e24a8fdc8fd7d5",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.0.0",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
