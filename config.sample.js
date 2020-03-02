@@ -15,6 +15,7 @@ module.exports = {
 	invidious_origin: "https://invidio.us",
 	machine_id: "lmao_dev_compname",
 	weeb_identifier: "Amanda/1.0.0/prod",
+	additional_intents: [],
 
 	// Settings
 	music_dash_enabled: true,
