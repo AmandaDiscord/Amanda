@@ -18,8 +18,8 @@
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:cloudrac3r/discord.js#0cbde7a326ff4442ea73030a762849add56a46fa",
-    "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
-    "dnscache": "github:cloudrac3r/dnscache",
+    "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#e403cdd9010ba70995d0a2201df82877abfe8455",
+    "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.0.0",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "gc-profiler": "^1.4.1",
@@ -34,7 +34,8 @@
     "request-promise": "^4.2.5",
     "simple-git": "^1.129.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:cloudrac3r/SnowTransfer",
+    "snowtransfer": "github:cloudrac3r/SnowTransfer#b43a90158d9f6dfe07a7b079a5e595a35cd86398",
+    "taihou": "^2.0.3",
     "typescript": "~3.6.4"
   },
   "devDependencies": {
