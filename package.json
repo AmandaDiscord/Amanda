@@ -17,7 +17,7 @@
     "@amanda/lang": "github:PapiOphidian/Amanda-Lang#d231fd2f99669383809dd16a947c08a9f3c20d8f",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
-    "discord.js": "github:cloudrac3r/discord.js#2a945e64c1ab46d0b11f4eae3d49d4b51fc1b3f0",
+    "discord.js": "github:cloudrac3r/discord.js#0cbde7a326ff4442ea73030a762849add56a46fa",
     "discord.js-lavalink": "github:cloudrac3r/discord.js-lavalink#v3",
     "dnscache": "github:cloudrac3r/dnscache",
     "entities": "^2.0.0",
