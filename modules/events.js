@@ -18,7 +18,7 @@ let starting = true
 if (client.readyAt != null) starting = false
 
 const lavalinknodes = [
-	{ host: "amanda.discord-bots.ga", port: 10402, password: config.lavalink_password }
+	{ host: "amanda.moe", port: 10402, password: config.lavalink_password }
 ]
 
 const utils = require("./utilities.js")
