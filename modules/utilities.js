@@ -725,7 +725,7 @@ const utils = {
 			value = content
 			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
 		}
-		return value.replace(/\u202E/g, "").replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
+		return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
 	},
 
 	AsyncValueCache:
@@ -988,7 +988,7 @@ const utils = {
 			const index = value.indexOf(`%${item}`)
 			if (index != -1) value = value.slice(0, index) + properties[item] + value.slice(index + item.length + 1)
 		})
-		return value.replace(/\u202E/g, "")
+		return value
 	},
 
 	getStats: function() {

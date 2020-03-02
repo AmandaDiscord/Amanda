@@ -588,17 +588,17 @@ commands.assign({
 			const tableNames = { self: "SettingsSelf", server: "SettingsGuild" }
 
 			let scope = args[0].toLowerCase()
-			scope = Discord.Util.escapeMarkdown(scope).replace(/\u202E/g, "")
+			scope = Discord.Util.escapeMarkdown(scope)
 			if (!["self", "server"].includes(scope)) return msg.channel.send("Command syntax is `&settings <scope> <name> <value>`. Your value for `scope` was incorrect, it must be either `self` or `server`.")
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
 			let settingName = args[1] ? args[1].toLowerCase() : ""
-			settingName = Discord.Util.escapeMarkdown(settingName).replace(/\u202E/g, "")
+			settingName = Discord.Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
 				const all = await utils.sql.all("SELECT * FROM " + tableName + " WHERE keyID =?", keyID)
 				if (all.length == 0) return msg.channel.send(`There are no settings set for scope ${scope}`)
-				return msg.channel.send(all.map(a => `${a.setting}: ${a.value.replace(/\u202E/g, "")}`).join("\n"))
+				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
 
 			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send("You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.")
@@ -612,7 +612,6 @@ commands.assign({
 				const row = await utils.sql.get("SELECT value FROM " + tableName + " WHERE keyID = ? AND setting = ?", [keyID, settingName])
 				if (scope == "server") {
 					value = row ? row.value : setting.default
-					value = value.replace(/\u202E/g, "")
 					if (setting.type == "boolean") value = (!!+value) + ""
 					if (row) return msg.channel.send(`Current value of \`${settingName}\` is \`${value}\`. This value was set for the server.`)
 					else return msg.channel.send(`Current value of \`${settingName}\` is not set in this server, so it inherits the default value, which is \`${value}\`.`)
@@ -621,8 +620,8 @@ commands.assign({
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
-						serverRow ? serverRow.value.replace(/\u202E/g, "") : null,
-						row ? row.value.replace(/\u202E/g, "") : null
+						serverRow ? serverRow.value : null,
+						row ? row.value : null
 					]
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
 					const finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
@@ -634,8 +633,6 @@ commands.assign({
 					)
 				}
 			}
-
-			value = value.replace(/\u202E/g, "")
 
 			if (value === "null") {
 				if (settingName == "profilebackground") {
