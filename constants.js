@@ -2,6 +2,7 @@ const config = require("./config.js")
 const baseURL = `${config.website_protocol}://${config.website_domain}`
 
 module.exports = {
+	baseURL: baseURL,
 	patreon: `${baseURL}/to/patreon`,
 	paypal: `${baseURL}/to/paypal`,
 	twitch: "https://www.twitch.tv/papiophidian",

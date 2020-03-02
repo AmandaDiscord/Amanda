@@ -1,12 +1,12 @@
 // @ts-check
 
 const Discord = require("discord.js")
-const rp = require("request-promise")
+const fetch = require("node-fetch")
 const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-const { config, constants, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus, frisky } = passthrough
+const { config, constants, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus, frisky, weeb } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)

@@ -1,6 +1,8 @@
 // @ts-check
 
-const rp = require("request-promise")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("discord.js")
@@ -659,7 +661,7 @@ commands.assign({
 				if (!allowed) return msg.channel.send("You must be a donor to modify this setting.")
 				let data
 				try {
-					data = await rp(value, { encoding: null })
+					data = await fetch(value).then(d => d.buffer())
 				} catch (e) {
 					console.log("Failed to fetch new background URL in settings command: " + value)
 					return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.")
