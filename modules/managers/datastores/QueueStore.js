@@ -103,6 +103,7 @@ class QueueStore {
 				ipc.replier.sendNewQueue(queue)
 			}
 		})
+		setTimeout(() => passthrough.nedb.queue.update({ _id: "QueueStore_" + utils.getFirstShard() }, { _id: "QueueStore_" + utils.getFirstShard(), queues: [] }, { upsert: true }), 1000 * 60 * 2)
 	}
 }
 
