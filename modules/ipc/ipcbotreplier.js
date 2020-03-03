@@ -154,6 +154,10 @@ class ClientReplier extends Replier {
 		return queue.wrapper.removeSong(index, "web")
 	}
 
+	async REPLY_SAVE_QUEUES() {
+		return passthrough.queueStore.save()
+	}
+
 	/**
 	 * @param {string} guildID
 	 */

@@ -251,6 +251,10 @@ class ServerReplier extends Replier {
 		})
 		return combined
 	}
+
+	requestSaveQueues() {
+		return this.requestAll("SAVE_QUEUES", null, "concat")
+	}
 }
 
 const replier = new ServerReplier(ipc)

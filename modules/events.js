@@ -184,14 +184,12 @@ function manageReady() {
 			user: client.user.id,
 			shards: client.options.shardCount
 		})
-		client.lavalink.on("ready", async () => {
+		client.lavalink.once("ready", async () => {
 			console.log("Lavalink ready")
-			if (firstStart) {
-				/** @type {{ queues: Array<any> }} */
-				const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
-				if (!data) return
-				if (data.queues.length > 0) passthrough.queueStore.restore()
-			}
+			/** @type {{ queues: Array<any> }} */
+			const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
+			if (!data) return
+			if (data.queues.length > 0) passthrough.queueStore.restore()
 		})
 		client.lavalink.on("error", (self, error) => {
 			console.error("Failed to initialise Lavalink: " + error.message)
