@@ -57,16 +57,14 @@ utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename
 utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 	if (reason) console.error(reason)
 })
-if (new Discord.Intents(client.options.ws.intents).has("GUILD_PRESENCES")) {
-	utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
-		if (newMember.guild.id != "475599038536744960") return
-		if (!oldMember.roles.cache.get("475599593879371796") && newMember.roles.cache.get("475599593879371796")) {
-			const row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
-			if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1])
-			else return
-		} else return
-	})
-}
+utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
+	if (newMember.guild.id != "475599038536744960") return
+	if (!oldMember.roles.cache.get("475599593879371796") && newMember.roles.cache.get("475599593879371796")) {
+		const row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
+		if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1])
+		else return
+	} else return
+})
 utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 	let shouldIgnore = false
 	if (reason && reason.code) {
