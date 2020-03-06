@@ -133,14 +133,22 @@ class Queue {
 		this.errorChain++
 		if (this.shouldDisplayErrors) {
 			const song = this.songs[0]
-			const embed = new Discord.MessageEmbed()
-				.setTitle("We couldn't play that song")
-				.setDescription(
-					`**${song.title}** (ID: ${song.id})`
-				+ `\n${song.error}`
-				)
-				.setColor(0xdd2d2d)
-			this.textChannel.send(embed)
+			if (song) {
+				const embed = new Discord.MessageEmbed()
+					.setTitle("We couldn't play that song")
+					.setDescription(
+						`**${song.title}** (ID: ${song.id})`
+					+ `\n${song.error}`
+					)
+					.setColor(0xdd2d2d)
+				this.textChannel.send(embed)
+			} else {
+				const embed = new Discord.MessageEmbed()
+					.setTitle("We ran into an error")
+					.setDescription(String(song.error))
+					.setColor(0xdd2d2d)
+				this.textChannel.send(embed)
+			}
 			if (this.errorChain >= 3) {
 				this.shouldDisplayErrors = false
 				this.textChannel.send(
