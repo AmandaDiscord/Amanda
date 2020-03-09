@@ -40,3 +40,45 @@ export interface CombinedShardStats {
 	channels: number,
 	connections: number
 }
+
+export interface InvidiousPlaylistAuthorThumbnail {
+	url: string,
+	width: number,
+	height: number
+}
+
+export interface InvidiousPlaylistVideoThumbnail {
+	quality: string,
+	url: string,
+	width: number,
+	height: number
+}
+
+export interface InvidiousPlaylistVideo {
+	title: string,
+	videoId: string,
+	author: string,
+	authorId: string,
+	authorUrl: string,
+	videoThumbnails: InvidiousPlaylistVideoThumbnail[],
+	index: number,
+	lengthSeconds: number
+}
+
+export interface InvidiousPlaylist {
+	type: "playlist",
+	title: string,
+	playlistid: string,
+	playlistThumbnail: string,
+	author: string,
+	authorId: string,
+	authorUrl: string,
+	authorThumbnails: InvidiousPlaylistAuthorThumbnail[],
+	description: string,
+	descriptionHtml: string,
+	videoCount: number,
+	viewCount: number,
+	updated: number,
+	isListed: boolean,
+	videos: InvidiousPlaylistVideo[]
+}

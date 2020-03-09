@@ -168,6 +168,36 @@ const common = {
 		},
 
 		/**
+		 * @param {string} id
+		 * @param {number} [pageNumber] 1-indexed
+		 * @returns {Promise<import("../../typings").InvidiousPlaylist>}
+		 */
+		getPlaylistPage: function(id, pageNumber = 1) {
+			return fetch(`${config.invidious_origin}/api/v1/playlists/${id}?page=${pageNumber}`).then(res => res.json())
+		},
+
+		getPlaylist: function(id) {
+			const pageSize = 100 // max number of videos returned in a page, magic number
+			/** @type {import("../../typings").InvidiousPlaylistVideo[]} */
+			let videos = []
+
+			return common.invidious.getPlaylistPage(id).then(async root => {
+				videos = videos.concat(root.videos)
+				if (root.videoCount > pageSize) {
+					const additionalResponses = await Promise.all(
+						Array(Math.ceil(root.videoCount / pageSize) - 1).fill(undefined).map((_, page) => {
+							return common.invidious.getPlaylistPage(id, page+2)
+						})
+					)
+					for (const response of additionalResponses) {
+						videos = videos.concat(response.videos)
+					}
+				}
+				return videos
+			})
+		},
+
+		/**
 		 * Find the best audio stream URL in a data object. Throw if the data is bad.
 		 */
 		dataToURL: function(data) {

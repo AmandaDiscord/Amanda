@@ -14,6 +14,7 @@ reloader.useSync("./commands/music/common.js", common)
 const songTypes = require("./songtypes.js")
 reloader.useSync("./commands/music/songtypes.js", songTypes)
 
+const YouTube = require("simple-youtube-api")
 const youtube = passthrough.youtube
 
 commands.assign({
@@ -221,40 +222,41 @@ commands.assign({
 			} else if (action.toLowerCase() == "import") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (args[2].match(/^https?:\/\/(www.youtube.com|youtube.com)\/playlist(.*)$/)) {
-					const playlist = await youtube.getPlaylist(args[2])
-					let videos = await playlist.getVideos()
+					const playlistURL = args[2]
+					const playlistID = YouTube.Playlist.extractID(playlistURL)
+					const editmsg = await msg.channel.send(lang.audio.playlist.prompts.playlistImporting)
+					let videos = await common.invidious.getPlaylist(playlistID)
+					// console.log(videos.map(v => typeof v === "object" ? v.videoId : v).join("\n"))
 					const promises = []
 					videos = videos.filter((video, i) => {
-						if (orderedSongs.some(row => row.videoID == video.id)) return false
-						else if (videos.slice(0, i).some(v => v.id == video.id)) return false
+						if (orderedSongs.some(row => row.videoID == video.videoId)) return false
+						else if (videos.slice(0, i).some(v => v.videoId == video.videoId)) return false
 						else return true
 					})
-					const editmsg = await msg.channel.send(lang.audio.playlist.prompts.playlistImporting)
-					const fullvideos = await Promise.all(videos.map(video => common.getTracks(video.id).then(r => r[0])))
-					if (!fullvideos.length) return editmsg.edit(utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }))
+					if (!videos.length) return editmsg.edit(utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }))
 					await editmsg.edit(lang.audio.playlist.prompts.playlistImportingDatabase)
-					for (let i = 0; i < fullvideos.length; i++) {
-						const video = fullvideos[i]
+					for (let i = 0; i < videos.length; i++) {
+						const video = videos[i]
 						promises.push(utils.sql.all(
 							"INSERT INTO Songs SELECT ?, ?, ? WHERE NOT EXISTS (SELECT 1 FROM Songs WHERE videoID = ?)",
-							[video.info.identifier, video.info.title, video.info.length, video.info.identifier]
+							[video.videoId, video.title, video.lengthSeconds, video.videoId]
 						))
-						if (i != fullvideos.length - 1) {
-							const nextVideo = fullvideos[i + 1]
+						if (i != videos.length - 1) {
+							const nextVideo = videos[i + 1]
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, ?)",
-								[playlistRow.playlistID, video.info.identifier, nextVideo.info]
+								[playlistRow.playlistID, video.videoId, nextVideo.videoId]
 							))
 						} else {
 							promises.push(utils.sql.all(
 								"INSERT INTO PlaylistSongs VALUES (?, ?, NULL)",
-								[playlistRow.playlistID, video.info.identifier]
+								[playlistRow.playlistID, video.videoId]
 							))
 						}
 					}
 					promises.push(utils.sql.all(
 						"UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next IS NULL AND videoID != ?",
-						[fullvideos[0].info.identifier, playlistRow.playlistID, fullvideos.slice(-1)[0].info.identifier]
+						[videos[0].videoId, playlistRow.playlistID, videos.slice(-1)[0].videoId]
 					))
 					await Promise.all(promises)
 					editmsg.edit(utils.replace(lang.audio.playlist.returns.playlistImportDone, { "username": msg.author.username, "playlist": playlistName }))
