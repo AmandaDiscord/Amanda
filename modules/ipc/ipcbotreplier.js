@@ -167,6 +167,15 @@ class ClientReplier extends Replier {
 		return queue.wrapper.toggleAuto("web")
 	}
 
+	/**
+	 * @param {string} guildID
+	 */
+	REPLY_CLEAR_QUEUE(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		return queue.wrapper.removeAllSongs("web")
+	}
+
 	REPLY_GET_STATS() {
 		return utils.getStats()
 	}
@@ -249,6 +258,13 @@ class ClientReplier extends Replier {
 	 */
 	sendRemoveSong(queue, index) {
 		this.ipc.send({ op: "REMOVE_SONG", data: { guildID: queue.guildID, index: index } })
+	}
+
+	/**
+	 * @param {import("../../commands/music/queue").Queue} queue
+	 */
+	sendRemoveAllSongs(queue) {
+		this.ipc.send({ op: "REMOVE_ALL_SONGS", data: { guildID: queue.guildID } })
 	}
 
 	/**

@@ -22,7 +22,9 @@ const opcodes = {
 	"REQUEST_QUEUE_REMOVE": 13,
 	"MEMBERS_CHANGE": 14,
 	"ATTRIBUTES_CHANGE": 15,
-	"REQUEST_ATTRIBUTES_CHANGE": 16
+	"REQUEST_ATTRIBUTES_CHANGE": 16,
+	"REQUEST_CLEAR_QUEUE": 17,
+	"REMOVE_ALL_SONGS": 18
 }
 
 const opcodeMethodMap = new Map([
@@ -32,7 +34,8 @@ const opcodeMethodMap = new Map([
 	[opcodes.SKIP, "skip"],
 	[opcodes.STOP, "stop"],
 	[opcodes.REQUEST_QUEUE_REMOVE, "requestQueueRemove"],
-	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"]
+	[opcodes.REQUEST_ATTRIBUTES_CHANGE, "requestAttributesChange"],
+	[opcodes.REQUEST_CLEAR_QUEUE, "requestClearQueue"]
 ])
 
 const { ipc, snow } = passthrough
@@ -164,6 +167,16 @@ addProcessors([
 		}
 	},
 	{
+		op: "REMOVE_ALL_SONGS",
+		updateCallback: cache => {
+			cache.songs.splice(1)
+			return cache
+		},
+		sessionCallback: session => {
+			session.removeAllSongs()
+		}
+	},
+	{
 		op: "MEMBERS_UPDATE",
 		updateCallback: (cache, { members }) => {
 			cache.members = members
@@ -287,6 +300,13 @@ class Session {
 		})
 	}
 
+	removeAllSongs() {
+		this.send({
+			op: opcodes.REMOVE_ALL_SONGS,
+			d: null
+		})
+	}
+
 	next() {
 		this.send({
 			op: opcodes.NEXT
@@ -339,7 +359,6 @@ class Session {
 		if (data && data.d && typeof data.d.index === "number") {
 			ipc.replier.requestQueueRemove(this.guild.id, data.d.index)
 		}
-
 	}
 
 	attributesChange(attributes) {
@@ -354,6 +373,11 @@ class Session {
 		if (typeof (data) == "object" && typeof (data.d) == "object") {
 			if (typeof (data.d.auto) == "boolean") ipc.replier.requestToggleAuto(this.guild.id)
 		}
+	}
+
+	requestClearQueue() {
+		if (!this.loggedin) return
+		ipc.replier.requestClearQueue(this.guild.id)
 	}
 }
 

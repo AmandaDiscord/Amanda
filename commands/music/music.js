@@ -155,9 +155,7 @@ const subcommandsMap = new Map([
 		queue: "required",
 		code: (msg, args, { queue, lang }) => {
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
-				const numberOfSongs = queue.songs.length - 1
-				for (let i = queue.songs.length - 1; i >= 1; i--) queue.removeSong(i, true)
-				msg.channel.send(utils.replace(lang.audio.music.returns.queueClear, { "number": `${numberOfSongs} ${numberOfSongs == 1 ? "song" : "songs"}` }))
+				queue.wrapper.removeAllSongs({msg, lang})
 			} else if (args[1] == "r" || args[1] == "remove") {
 				const index = +args[2]
 				queue.wrapper.removeSong(index, msg)

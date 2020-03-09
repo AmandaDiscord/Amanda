@@ -1,3 +1,5 @@
+// @ts-check
+
 var ex = ex || []
 ex.push({
 	name: "classes",
@@ -91,16 +93,35 @@ class Queue extends ElemJS {
 		super(container)
 		this.session = session
 		this.addingCount = 0
+		this.animateMax = 12
 		this.isFirstAdd = true
 	}
 	addItem(data, position) {
+		let shouldAnimate = this.addingCount < this.animateMax
 		let e = new QueueItem(data, this)
-		this.child(e, position)
-		e.animateAdd()
+		if (shouldAnimate) {
+			this.child(e, position)
+			e.animateAdd()
+		} else {
+			setTimeout(() => {
+				this.child(e, position)
+			}, 1300)
+		}
 	}
 	removeIndex(index) {
 		let removed = this.children.splice(index, 1)[0]
 		if (removed) removed.animateRemove()
+	}
+	removeAllSongs() {
+		// queue does not include now playing, so clear the queue by removing all
+		if (this.children.length <= this.animateMax) {
+			for (const item of this.children) {
+				item.animateRemove()
+			}
+			this.children.length = 0
+		} else {
+			this.clearChildren()
+		}
 	}
 	shift() {
 		let removed = this.children.shift()
@@ -114,6 +135,9 @@ class Queue extends ElemJS {
 }
 
 class QueueItem extends ElemJS {
+	/**
+	 * @param {Queue} queue
+	 */
 	constructor(data, queue) {
 		super("div")
 		this.class("queue-item")
@@ -169,43 +193,57 @@ class QueueItem extends ElemJS {
 	}
 	animateAdd() {
 		if (this.adding) return
+		const addOffsetPerItem = 70
+		const animationTime = 400
+		const addOffsetForFirst = 200
+
 		this.adding = true
-		this.queue.addingCount++
+		// backup animation check, but this should always pass
+		let shouldAnimate = this.queue.addingCount < this.queue.animateMax
+		if (shouldAnimate) {
+			// this is where the count is actually increased
+			this.queue.addingCount++
 
-		let style = window.getComputedStyle(this.element)
-		let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
+			let style = window.getComputedStyle(this.element)
+			let props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
 
-		let values = {}
-		props.forEach(key => {
-			values[key] = "0px"
-		})
-		values.opacity = 0
-		values.marginBottom = "-10px"
-		values.easing = "ease"
-
-		let endValues = {}
-		props.forEach(key => {
-			endValues[key] = style[key]
-		})
-		if (this.element.children[2].getBoundingClientRect().height < 1)
-			endValues.height = parseInt(endValues.height)+24+"px"
-		endValues.opacity = 1
-
-		Object.entries(values).forEach(entry => {
-			this.element.style[entry[0]] = entry[1]
-		})
-
-		setTimeout(() => {
-			this.element.animate([
-				values, endValues
-			], 400).addEventListener("finish", () => {
-				this.adding = false
-				this.queue.addingCount--
-				Object.entries(values).forEach(entry => {
-					this.element.style[entry[0]] = ""
-				})
+			let values = {}
+			props.forEach(key => {
+				values[key] = "0px"
 			})
-		}, this.queue.addingCount*70+20*this.queue.isFirstAdd)
+			values.opacity = 0
+			values.marginBottom = "-10px"
+			values.easing = "ease"
+
+			let endValues = {}
+			props.forEach(key => {
+				endValues[key] = style[key]
+			})
+			if (this.element.children[2].getBoundingClientRect().height < 1)
+				endValues.height = parseInt(endValues.height)+24+"px"
+			endValues.opacity = 1
+
+			Object.entries(values).forEach(entry => {
+				this.element.style[entry[0]] = entry[1]
+			})
+
+			setTimeout(() => {
+				this.element.animate([
+					values, endValues
+				], animationTime).addEventListener("finish", () => {
+					this.adding = false
+					if (shouldAnimate) this.queue.addingCount--
+					Object.entries(values).forEach(entry => {
+						this.element.style[entry[0]] = ""
+					})
+				})
+			}, this.queue.addingCount*addOffsetPerItem+(+this.queue.isFirstAdd*addOffsetForFirst))
+		} else {
+			this.element.style.display = "none"
+			setTimeout(() => {
+				this.element.style.display = ""
+			}, this.queue.addingCount*addOffsetPerItem+(+this.queue.isFirstAdd*addOffsetForFirst+animationTime))
+		}
 	}
 	animateRemove() {
 		if (this.removing) return
@@ -342,6 +380,7 @@ class PlayerTime extends ElemJS {
 		this.render()
 	}
 	getTime() {
+		// @ts-ignore This exists, I promise.
 		return Date.now() - this.state.songStartTime + serverTimeDiff
 	}
 	getMSRemaining() {
@@ -388,6 +427,98 @@ class PlayerTime extends ElemJS {
 		if (time < 0) time = 0
 		if (!this.state.live && time > this.state.maxTime*1000) time = this.state.maxTime*1000
 		this.children[1].text(prettySeconds(Math.floor(time/1000)))
+	}
+}
+
+class SideControl extends ElemJS {
+	/**
+	 * @param {SideControls} sideControls
+	 */
+	constructor(sideControls, name, image) {
+		super("button")
+		this.disabled = false
+		this.sideControls = sideControls
+		this.class("control")
+		this.child(new ElemJS("img").class("icon").attribute("src", `/images/${image}.svg`))
+		this.child(new ElemJS("span").class("name").text(name))
+	}
+
+	render() {
+		this.element.disabled = this.disabled
+		this.element.style.filter = `grayscale(${+this.disabled})`
+		this.element.style.cursor = this.disabled ? "auto" : "pointer"
+	}
+}
+
+class AddSongControl extends SideControl {
+	constructor(sideControls) {
+		super(sideControls, "Add song", "add-shaped")
+		this.disabled = true
+		// this.element.addEventListener("click", event => this.onClick(event))
+	}
+
+	onClick(event) {
+		document.write("lol")
+	}
+}
+
+class SongInfoControl extends SideControl {
+	constructor(sideControls) {
+		super(sideControls, "Song information", "information-shaped")
+	}
+
+	render() {
+		// this.disabled = !this.sideControls.session.state
+		this.disabled = true // because it's not implemented.
+		super.render()
+	}
+}
+
+class ClearQueueControl extends SideControl {
+	constructor(sideControls) {
+		super(sideControls, "Clear queue", "remove-shaped")
+		this.element.addEventListener("click", event => this.onClick())
+		this.disabled = true
+	}
+
+	onClick() {
+		this.sideControls.session.send({
+			op: opcodes.CLEAR_QUEUE,
+			// vvv do these comments mean anything? I think not vvv
+			// +1 because backend queue starts with currently playing
+			// and +1 because this gets sent to QueueWrapper, which is 1-indexed
+			d: null
+		})
+	}
+
+	render() {
+		this.disabled = !this.sideControls.session.state
+		super.render()
+	}
+}
+
+class SideControls extends ElemJS {
+	constructor(container, session) {
+		super(container)
+		this.session = session
+		this.mainLoaded = false
+		/** @type {{[x: string]: SideControl}} */
+		this.parts = {}
+		this.child(this.parts.add = new AddSongControl(this))
+		this.child(this.parts.info = new SongInfoControl(this))
+		this.child(this.parts.clear = new ClearQueueControl(this))
+		this.child(this.parts.playlist = new SideControl(this, "Playlist editor", "fastforward-shaped"))
+		this.partsList = Object.values(this.parts)
+		this.render()
+	}
+
+	render() {
+		if (!this.mainLoaded) {
+			this.element.style.visibility = "hidden"
+		} else {
+			this.element.style.visibility = "visible"
+		}
+		this.partsList.forEach(part => part.render())
 	}
 }
 
@@ -440,7 +571,6 @@ class VoiceInfo extends ElemJS {
 			})
 			if (!newAmanda) {
 				this.memberStore.forEach(member => {
-					console.log("Adding", member)
 					member.join(this)
 				})
 			}

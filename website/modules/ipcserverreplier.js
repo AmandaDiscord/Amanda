@@ -255,6 +255,14 @@ class ServerReplier extends Replier {
 	requestSaveQueues() {
 		return this.requestAll("SAVE_QUEUES", null, "concat")
 	}
+
+	/**
+	 * Clear all songs in a queue, except the currently playing one.
+	 * @param {string} guildID
+	 */
+	requestClearQueue(guildID) {
+		return this.requestFromGuild(guildID, "CLEAR_QUEUE", guildID)
+	}
 }
 
 const replier = new ServerReplier(ipc)

@@ -263,10 +263,12 @@ a.no-underline
 	padding: 12px
 
 .player-grid
+	$gap: 20px
+
 	display: grid
 	grid-template-columns: 5fr 3fr
 	margin: 20px
-	grid-gap: 20px
+	grid-gap: $gap
 
 	.player-controls
 		@include player-box
@@ -334,6 +336,7 @@ a.no-underline
 			grid-gap: 6px
 
 			img
+				cursor: pointer
 				width: 30px
 				height: 30px
 
@@ -345,7 +348,7 @@ a.no-underline
 
 		.queue-item
 			@include player-box
-			margin-bottom: 20px
+			margin-bottom: $gap
 			display: grid
 			grid-template-columns: 1fr auto
 			font-size: 18px
@@ -365,6 +368,7 @@ a.no-underline
 				grid-template-columns: 1fr auto
 
 				img
+					cursor: pointer
 					width: 24px
 					margin-right: 4px
 
@@ -391,9 +395,43 @@ a.no-underline
 			> *
 				padding: 5px 0px
 
+	.right-panels
+		align-self: start
+		display: flex
+		flex-direction: column
+
+	.side-controls
+		@include player-box
+		margin-bottom: $gap
+		visibility: hidden
+
+		.control
+			appearance: none
+			-moz-appearance: none
+			padding: 0px
+			display: flex
+			align-items: center
+			border: 2px solid #222
+			// border-radius: 5px // this is for rounded buttons but I don't think I like them after all
+			background: linear-gradient(to right, #3b88c3 15px, white 15px)
+			cursor: pointer
+
+			.icon
+				$size: 30px
+
+				width: $size
+				height: $size
+				margin-right: 10px
+
+			.name
+				font-size: 18px
+				margin-right: 10px
+
+			&:not(:last-child)
+				margin-bottom: 8px
+
 	.voice-info
 		@include player-box
-		align-self: start
 		display: grid
 		grid-template-columns: auto 1fr
 		align-items: center

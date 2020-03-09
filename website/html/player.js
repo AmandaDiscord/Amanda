@@ -12,6 +12,7 @@ ex.push({
 				this.player = new Player(q("#player-container"), this)
 				this.queue = new Queue(q("#queue-container"), this)
 				this.voiceInfo = new VoiceInfo(q("#voice-info"))
+				this.sideControls = new SideControls(q("#side-controls"), this)
 
 				const opcodeMethodMap = new Map([
 					[opcodes.ACKNOWLEDGE, "acknowledge"],
@@ -22,7 +23,8 @@ ex.push({
 					[opcodes.TIME_UPDATE, "timeUpdate"],
 					[opcodes.REMOVE_SONG, "removeSong"],
 					[opcodes.MEMBERS_CHANGE, "membersChange"],
-					[opcodes.ATTRIBUTES_CHANGE, "attributesChange"]
+					[opcodes.ATTRIBUTES_CHANGE, "attributesChange"],
+					[opcodes.REMOVE_ALL_SONGS, "removeAllSongs"]
 				])
 
 				this.ws.addEventListener("open", () => this.onOpen())
@@ -53,6 +55,8 @@ ex.push({
 			acknowledge(data) {
 				serverTimeDiff = data.d.serverTimeDiff
 				console.log("Time difference: "+serverTimeDiff)
+				this.sideControls.mainLoaded = true
+				this.sideControls.render()
 			}
 
 			updateState(data) {
@@ -71,6 +75,7 @@ ex.push({
 					this.queue.isFirstAdd = false
 					this.updatePlayerTime()
 				}
+				this.sideControls.render()
 				this.membersChange(data)
 			}
 
@@ -104,6 +109,11 @@ ex.push({
 				let index = data.d.index
 				this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
 				this.state.songs.splice(index, 1) // same reason
+			}
+
+			removeAllSongs() {
+				this.queue.removeAllSongs()
+				this.state.songs.splice(1)
 			}
 
 			next() {

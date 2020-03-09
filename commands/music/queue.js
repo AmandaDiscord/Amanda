@@ -345,6 +345,18 @@ class Queue {
 		return 0
 	}
 	/**
+	 * Remove all songs from the queue except for the currently playing one.
+	 * @returns {number} Number of removed items.
+	 */
+	removeAllSongs() {
+		const removed = this.songs.splice(1)
+		for (const item of removed) {
+			item.destroy()
+		}
+		ipc.replier.sendRemoveAllSongs(this)
+		return removed.length
+	}
+	/**
 	 * Play something from the list of related items.
 	 * Returns 0 on success.
 	 * Returns 1 if the index is out of range.
@@ -517,6 +529,21 @@ class QueueWrapper {
 					} else context.channel.send(`There are ${this.queue.songs.length} items in the queue. You can only remove items 2-${this.queue.songs.length}.`)
 				} else context.react("✅")
 			} else if (context === "web") return result !== 1
+		}
+	}
+	/**
+	 * Remove all songs from the queue except for the currently playing one.
+	 */
+	removeAllSongs(context) {
+		const numberOfSongs = this.queue.removeAllSongs()
+		if (context && context.msg && context.msg instanceof Discord.Message) {
+			context.msg.channel.send(
+				utils.replace(context.lang.audio.music.returns.queueClear, {
+					"number": `${numberOfSongs} ${numberOfSongs === 1 ? "song" : "songs"}`
+				})
+			)
+		} else if (context === "web") {
+			return true
 		}
 	}
 	/**
