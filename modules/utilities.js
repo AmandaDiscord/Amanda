@@ -16,6 +16,8 @@ const { config, client, db, reloadEvent } = passthrough
 
 const startingCoins = 5000
 
+const uncachedChannelSendBlacklist = new Set()
+
 /**
  * @namespace
  */
@@ -60,7 +62,7 @@ const utils = {
 					try {
 						this.user.send(content, options).then(resolve)
 					} catch (reason) {
-						reject(new Error(`${this.user.tag} cannot recieve messsages from this client`))
+						reject(new Error(`${this.user.tag} cannot recieve messages from this client`))
 					}
 				})
 			})
@@ -1078,6 +1080,33 @@ const utils = {
 					return resolve(null)
 				})
 			}
+		})
+	},
+
+	/**
+	 * discord.js is hilarious(ly awful)
+	 * @param {string} channelID
+	 * @param {boolean} useBlacklist refuse to send more messages to channels with missing access
+	 * @param {Discord.MessageOptions|Discord.MessageAdditions} content
+	 */
+	sendToUncachedChannel: function(channelID, useBlacklist, content) {
+		if (useBlacklist) {
+			if (uncachedChannelSendBlacklist.has(channelID)) return Promise.reject(new Error("Channel is blacklisted because you did not have permission last time."))
+		} else {
+			uncachedChannelSendBlacklist.delete(channelID)
+		}
+		// @ts-ignore holy shit, remove this and see what happens. it's so so cursed
+		return client.api.channels[channelID].messages.post(
+			Discord.APIMessage.create(
+				// @ts-ignore xd
+				{id: channelID, client: client},
+				content
+			).resolveData()
+		).catch(error => {
+			if (error && error.name === "DiscordAPIError" && error.code === 50001) { // missing access
+				uncachedChannelSendBlacklist.add(channelID)
+			}
+			throw error
 		})
 	}
 }

@@ -77,7 +77,7 @@ class Queue {
 			}
 		})
 		this.player.on("error", exception => {
-			if (this.songs[0] && this.songs[0].error) {
+			if (this.songs[0] && !this.songs[0].error) {
 				this.songs[0].error = exception.error
 				this._reportError()
 				// This already automatically continues to the next song, presumably because the "end" event is also fired.
@@ -130,6 +130,33 @@ class Queue {
 		}
 	}
 	_reportError() {
+		const sendReport = (contents) => {
+			// Report to original channel
+			this.textChannel.send(contents)
+			// Report to #amanda-error-log
+			const reportTarget = "512869106089852949"
+			const embed = new Discord.MessageEmbed()
+			embed.setTitle("Music error occurred.")
+			embed.setDescription("The next message is the message that was sent to the user.")
+			const details = [
+				["Guild", client.guilds.cache.get(this.guildID).name],
+				["Guild ID", this.guildID],
+				["Text channel ID", this.textChannel.id],
+				["Voice channel ID", this.voiceChannel.id]
+			]
+			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
+			const detailsString = details.map(row =>
+				"`" + row[0] + " ​".repeat(maxLength - row[0].length) + "` " + row[1] // SC: space + zwsp, wide space
+			).join("\n")
+			embed.addField(
+				"Details",
+				detailsString
+			)
+			embed.setColor(0xff2ee7)
+			utils.sendToUncachedChannel(reportTarget, true, embed).then(() => {
+				return utils.sendToUncachedChannel(reportTarget, true, contents)
+			}).catch(() => {}) // probably missing access error
+		}
 		this.errorChain++
 		if (this.shouldDisplayErrors) {
 			const song = this.songs[0]
@@ -141,13 +168,13 @@ class Queue {
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
-				this.textChannel.send(embed)
+				sendReport(embed)
 			} else {
 				const embed = new Discord.MessageEmbed()
 					.setTitle("We ran into an error")
-					.setDescription(String(song.error))
+					.setDescription(`Song is not an object: ${song}`)
 					.setColor(0xdd2d2d)
-				this.textChannel.send(embed)
+				sendReport(embed)
 			}
 			if (this.errorChain >= 3) {
 				this.shouldDisplayErrors = false
