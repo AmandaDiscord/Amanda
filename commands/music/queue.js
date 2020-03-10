@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, queueStore, ipc } = passthrough
+const { config, client, reloader, queueStore, ipc } = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -139,10 +139,13 @@ class Queue {
 			embed.setTitle("Music error occurred.")
 			embed.setDescription("The next message is the message that was sent to the user.")
 			const details = [
+				["Shard", String(utils.getFirstShard())],
 				["Guild", client.guilds.cache.get(this.guildID).name],
 				["Guild ID", this.guildID],
-				["Text channel ID", this.textChannel.id],
-				["Voice channel ID", this.voiceChannel.id]
+				["Text channel", this.textChannel.id],
+				["Voice channel", this.voiceChannel.id],
+				["Using Invidious", String(config.use_invidious)],
+				["Invidious origin", "`" + config.invidious_origin + "`"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>
