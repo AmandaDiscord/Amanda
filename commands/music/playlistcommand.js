@@ -138,7 +138,7 @@ commands.assign({
 					if (!match || !match.id || match.type !== "video") throw NOT_AN_ID
 					if (config.use_invidious) { // Resolve tracks with Invidious
 						return common.invidious.getData(match.id).then(data => {
-							return { id: data.videoID, title: data.title, lengthSeconds: data.lengthSeconds }
+							return { id: data.videoId, title: data.title, lengthSeconds: data.lengthSeconds }
 						})
 					} else { // Resolve tracks with Lavalink
 						return common.getTracks(match.id).then(tracks => {
