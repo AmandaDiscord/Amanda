@@ -263,6 +263,14 @@ class ServerReplier extends Replier {
 	requestClearQueue(guildID) {
 		return this.requestFromGuild(guildID, "CLEAR_QUEUE", guildID)
 	}
+
+	/**
+	 * Apply settings to the config of all connected shards.
+	 * @param {any} data data to apply over config
+	 */
+	sendUpdateConfig(data) {
+		return this.broadcast("UPDATE_CONFIG", data)
+	}
 }
 
 const replier = new ServerReplier(ipc)

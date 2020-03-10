@@ -6,7 +6,7 @@ const path = require("path")
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, ipc } = passthrough
+const { config, client, reloader, ipc } = passthrough
 
 const utils = require("../utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -182,6 +182,13 @@ class ClientReplier extends Replier {
 
 	REPLY_PING() {
 		return true
+	}
+
+	/**
+	 * @param {any} data data to apply over config
+	 */
+	RECEIVE_UPDATE_CONFIG(data) {
+		Object.assign(config, data)
 	}
 
 	async requestPing() {
