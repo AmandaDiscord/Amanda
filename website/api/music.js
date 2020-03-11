@@ -370,8 +370,9 @@ class Session {
 
 	requestAttributesChange(data) {
 		if (!this.loggedin) return
-		if (typeof (data) == "object" && typeof (data.d) == "object") {
-			if (typeof (data.d.auto) == "boolean") ipc.replier.requestToggleAuto(this.guild.id)
+		if (typeof data === "object" && typeof data.d === "object") {
+			if (typeof data.d.auto === "boolean") ipc.replier.requestToggleAuto(this.guild.id)
+			if (typeof data.d.loop === "boolean") ipc.replier.requestToggleLoop(this.guild.id)
 		}
 	}
 

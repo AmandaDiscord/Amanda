@@ -221,6 +221,15 @@ class ServerReplier extends Replier {
 	}
 
 	/**
+	 * Ask a queue to toggle the loop state.
+	 * @param {string} guildID
+	 * @returns {Promise<boolean>} Whether the request was successful
+	 */
+	requestToggleLoop(guildID) {
+		return this.requestFromGuild(guildID, "TOGGLE_LOOP", guildID)
+	}
+
+	/**
 	 * Request and combine stats from all shards.
 	 * @returns {Promise<types.CombinedShardStats>}
 	 */

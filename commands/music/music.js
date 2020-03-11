@@ -194,6 +194,13 @@ const subcommandsMap = new Map([
 			queue.wrapper.toggleAuto(msg)
 		}
 	}],
+	["loop", {
+		voiceChannel: "required",
+		queue: "required",
+		code: (msg, args, { queue }) => {
+			queue.wrapper.toggleLoop(msg)
+		}
+	}],
 	["now", {
 		queue: "required",
 		code: (msg, args, { queue, lang }) => {
@@ -256,7 +263,9 @@ const subcommandAliasMap = new Map([
 	["n", "now"],
 	["rel", "related"],
 	["pl", "playlist"],
-	["playlists", "playlist"]
+	["playlists", "playlist"],
+	["repeat", "loop"],
+	["l", "loop"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 

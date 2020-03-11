@@ -34,6 +34,7 @@ class Queue {
 		this.songs = []
 		/** @type {boolean} */
 		this.auto = false
+		this.loop = false
 		this.errorChain = 0
 		this.shouldDisplayErrors = true
 
@@ -215,9 +216,15 @@ class Queue {
 		this._nextSong()
 	}
 	async _nextSong() {
-		// Destroy current song
-		if (this.songs[0]) this.songs[0].destroy()
-		// Out of songs?
+		// Special case for loop 1
+		if (this.songs.length === 1 && this.loop) {
+			this.play()
+			return
+		}
+
+		// Destroy current song (if loop is disabled)
+		if (!this.loop && this.songs[0]) this.songs[0].destroy()
+		// Out of songs? (This should only pass if loop mode is also disabled.)
 		if (this.songs.length <= 1) {
 			// Is auto mode on?
 			if (this.auto) {
@@ -241,8 +248,12 @@ class Queue {
 				this._dissolve()
 			}
 		} else { // We have more songs. Move on.
-			this.songs.shift()
+			const removed = this.songs.shift()
 			ipc.replier.sendNextSong(this)
+			// In loop mode, add the just played song back to the end of the queue.
+			if (this.loop) {
+				this.addSong(removed)
+			}
 			this.play()
 		}
 	}
@@ -319,12 +330,17 @@ class Queue {
 	 */
 	stop() {
 		this._clearSongs()
+		this.loop = false
 		this.auto = false
 		this.player.stop()
 		this._dissolve()
 	}
 	toggleAuto() {
 		this.auto = !this.auto
+		ipc.replier.sendAttributesChange(this)
+	}
+	toggleLoop() {
+		this.loop = !this.loop
 		ipc.replier.sendAttributesChange(this)
 	}
 	/**
@@ -500,6 +516,12 @@ class QueueWrapper {
 		if (context instanceof Discord.Message) context.channel.send(`Auto mode is now turned ${auto ? "on" : "off"}`)
 		else if (context === "web") return true
 	}
+	toggleLoop(context) {
+		this.queue.toggleLoop()
+		const loop = this.queue.loop
+		if (context instanceof Discord.Message) context.channel.send(`Loop mode is now turned ${loop ? "on" : "off"}`)
+		else if (context === "web") return true
+	}
 	togglePlaying(context) {
 		if (this.queue.isPaused) return this.resume(context)
 		else return this.pause(context)
@@ -610,7 +632,8 @@ class QueueWrapper {
 
 	getAttributes() {
 		return {
-			auto: this.queue.auto
+			auto: this.queue.auto,
+			loop: this.queue.loop
 		}
 	}
 

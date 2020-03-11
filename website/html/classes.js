@@ -294,9 +294,34 @@ class QueueItem extends ElemJS {
 	}
 }
 
+class AttributeButton extends ElemJS {
+	/**
+	 * @param {Player} player
+	 * @param {string} propertyName
+	 */
+	constructor(player, propertyName) {
+		super("img")
+		this.player = player
+		this.propertyName = propertyName
+
+		this.direct("onclick", () => {
+			this.player.updateAttributes({[propertyName]: !this.player.attributes[propertyName]})
+			this.player.session.requestAttributesChange(this.player.attributes)
+		})
+
+		this.render()
+	}
+
+	render() {
+		this.direct("src", `/images/${this.propertyName}_${this.player.attributes[this.propertyName] ? "active" : "inactive"}.svg`)
+	}
+}
+
 class Player extends ElemJS {
 	constructor(container, session) {
 		super(container)
+		this.session = session
+
 		this.song = null
 		this.thumbnailDisplayHeight = 94
 		this.attributes = {}
@@ -306,12 +331,10 @@ class Player extends ElemJS {
 			time: new PlayerTime()
 		}
 		;["playpause", "skip", "stop"].forEach(icon => {
-			this.parts.controls.child(new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => session[icon]()))
+			this.parts.controls.child(new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => this.session[icon]()))
 		})
-		this.parts.controls.child(this.parts.autoButton = new ElemJS("img").direct("src", "/images/auto_inactive.svg").direct("onclick", () => {
-			this.updateAttributes({auto: !this.attributes.auto})
-			session.requestAttributesChange(this.attributes)
-		}))
+		this.parts.controls.child(this.parts.loopButton = new AttributeButton(this, "loop"))
+		this.parts.controls.child(this.parts.autoButton = new AttributeButton(this, "auto"))
 		this.render()
 	}
 	setSong(song) {
@@ -329,7 +352,8 @@ class Player extends ElemJS {
 	}
 	updateAttributes(data) {
 		this.attributes = data
-		this.parts.autoButton.direct("src", `/images/auto_${this.attributes.auto ? "active" : "inactive"}.svg`)
+		this.parts.autoButton.render()
+		this.parts.loopButton.render()
 	}
 	render() {
 		this.clearChildren()

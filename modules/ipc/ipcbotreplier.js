@@ -170,6 +170,15 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {string} guildID
 	 */
+	REPLY_TOGGLE_LOOP(guildID) {
+		const queue = getQueue(guildID)
+		if (!queue) return false
+		return queue.wrapper.toggleLoop("web")
+	}
+
+	/**
+	 * @param {string} guildID
+	 */
 	REPLY_CLEAR_QUEUE(guildID) {
 		const queue = getQueue(guildID)
 		if (!queue) return false
