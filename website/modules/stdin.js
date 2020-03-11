@@ -31,9 +31,9 @@ async function customEval(input, context, filename, callback) {
 	if (input == "save\n") return friendlySaveQueues(callback)
 	if (input == "exit\n") return process.exit()
 	if (input.startsWith(":")) {
-		const [depthOverwrite, command] = input.split(" ")
-		depth = +depthOverwrite.slice(1)
-		input = command
+		const splitPoint = input.indexOf(" ")
+		depth = +input.slice(0, splitPoint)
+		input = input.slice(splitPoint+1)
 	}
 	const result = await eval(input)
 	const output = util.inspect(result, false, depth, true)
