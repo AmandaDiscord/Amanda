@@ -187,8 +187,9 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {any} data data to apply over config
 	 */
-	RECEIVE_UPDATE_CONFIG(data) {
+	REPLY_UPDATE_CONFIG(data) {
 		Object.assign(config, data)
+		return config
 	}
 
 	async requestPing() {

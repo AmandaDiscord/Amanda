@@ -268,8 +268,8 @@ class ServerReplier extends Replier {
 	 * Apply settings to the config of all connected shards.
 	 * @param {any} data data to apply over config
 	 */
-	sendUpdateConfig(data) {
-		return this.broadcast("UPDATE_CONFIG", data)
+	requestUpdateConfig(data) {
+		return this.requestAll("UPDATE_CONFIG", data, "concat")
 	}
 }
 
