@@ -144,7 +144,7 @@ commands.assign({
 						return common.getTracks(match.id).then(tracks => {
 							if (tracks && tracks[0]) {
 								// If the ID worked, add the song
-								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: tracks[0].info.length }
+								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
 							} else throw NO_TRACKS
 						})
 					}
