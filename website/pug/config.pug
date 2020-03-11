@@ -1,0 +1,43 @@
+doctype html
+html
+	include includes/head.pug
+		title Config | Amanda
+
+	body
+		include includes/nav.pug
+		+nav("")
+
+		div.title
+			div.box Config
+		div.config-overview
+			h2 Current config
+			table.config-table
+				thead
+					tr
+						th(scope="col") Shard #
+						th(scope="col") Using Invidious
+						th(scope="col") Invidious origin
+				tbody
+					each config, index in configs
+						tr
+							td= index
+							td
+								div.use-invidious
+									div(class=(config.use_invidious ? "true" : "")).status
+									= config.use_invidious
+							td.invidious-origin= config.invidious_origin
+			h2 Update all shards to...
+			form(method="post" action="/formapi/updateconfig").form-with-rows
+				label.form-row-label
+					span Use Invidious
+					input(type="checkbox" name="use-invidious" checked=configs[0].use_invidious)
+				label.form-row-label
+					span Invidious origin
+					input(type="text" name="invidious-origin" autocomplete="off" value=configs[0].invidious_origin list="suggested-instances").normal-text-input
+					datalist(id="suggested-instances")
+						option(value="https://invidio.us")
+						option(value="http://cadence.moe:3000")
+						option(value="https://invidious.snopyta.org")
+						option(value="https://invidious.13ad.de")
+						option(value="http://localhost:3000")
+				input(type="submit" value="Apply")

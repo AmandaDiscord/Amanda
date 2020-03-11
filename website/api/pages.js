@@ -98,6 +98,75 @@ module.exports = [
 		}
 	},
 	{
+		route: "/admin/config", methods: ["GET"], code: async ({req}) => {
+			const cookies = utils.getCookies(req)
+			const session = await utils.getSession(cookies)
+
+			let allowed = false
+			if (session && session.userID) {
+				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = ?", session.userID)
+				if (row && row.eval) allowed = true
+			}
+
+			if (allowed) {
+				const configs = await ipc.replier.requestUpdateConfig({})
+				const page = pugCache.get("pug/config.pug")({ configs })
+				return {
+					statusCode: 200,
+					contentType: "text/html",
+					content: page
+				}
+			} else {
+				const csrfToken = utils.generateCSRF()
+				const page = pugCache.get("pug/login.pug")({ message: "You must log in.", csrfToken })
+				return {
+					statusCode: 401,
+					contentType: "text/html",
+					content: page
+				}
+			}
+		}
+	},
+	{
+		route: "/formapi/updateconfig", methods: ["POST"], code: async ({req, body}) => {
+			const cookies = utils.getCookies(req)
+			const session = await utils.getSession(cookies)
+
+			let allowed = false
+			if (session && session.userID) {
+				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = ?", session.userID)
+				if (row && row.eval) allowed = true
+			}
+
+			if (allowed) {
+				return new validators.FormValidator()
+				.trust({ req, body, config })
+				.go()
+				.then(async state => {
+					/** @type {URLSearchParams} */
+					const params = state.params
+					const newConfig = {
+						use_invidious: params.has("use-invidious"),
+						invidious_origin: params.get("invidious-origin")
+					}
+
+					await ipc.replier.requestUpdateConfig(newConfig)
+
+					return {
+						statusCode: 303,
+						contentType: "text/html",
+						headers: {
+							"Location": "/admin/config"
+						},
+						content: "Redirecting..."
+					}
+				})
+			} else {
+				return [401, "Unauthorised"]
+			}
+		}
+	},
+	{
 		route: "/logout", methods: ["GET"], code: () => {
 			return {
 				statusCode: 303,

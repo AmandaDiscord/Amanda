@@ -138,6 +138,39 @@ a.no-underline
 		margin-bottom: 16px
 		color: #111
 
+.config-overview
+	@include fatbox
+	font-size: 18px
+
+	.config-table
+		border-collapse: collapse
+		background: #fff
+
+		td, th
+			padding: 8px
+
+		&, td, th
+			border: 2px solid #222
+
+		.use-invidious
+			display: flex
+			line-height: 1
+
+			.status
+				width: 18px
+				height: 18px
+				border-radius: 3px
+				border: 1px solid #252729
+				background-color: #ccc
+				margin-right: 8px
+
+				&.true
+					background-color: #2ddd2d
+
+		.invidious-origin
+			font-family: "Noto Mono", monospace
+			font-size: 0.9em
+
 .message
 	@include flex-center
 	font-size: 18px
@@ -451,3 +484,24 @@ a.no-underline
 				width: 16px
 				height: 17px
 				margin-right: 4px
+
+
+.form-with-rows
+	max-width: 500px
+
+	.form-row-label
+		margin: 10px 0px
+		line-height: 1
+		display: flex
+		align-items: center
+
+		> *:first-child
+			margin-right: 10px
+
+	.normal-text-input
+		border: 1px solid #444
+		background: #fff
+		border-radius: 0px
+		margin: 0px
+		padding: 4px
+		font-size: inherit
