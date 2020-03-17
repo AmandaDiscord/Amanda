@@ -14,7 +14,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#d231fd2f99669383809dd16a947c08a9f3c20d8f",
+    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#c51e02ad4afffcd392e8cda158ce5043ff1619e4",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:cloudrac3r/discord.js#824f20b3e809f6f791b379b5b09a73e0c0709a0d",
@@ -27,7 +27,7 @@
     "jimp": "^0.x",
     "mime": "^2.4.4",
     "mysql2": "^2.0.2",
-    "nedb-promises": "^4.0.0",
+    "nedb-promises": "^4.0.1",
     "node-fetch": "^2.6.0",
     "node-ipc": "^9.1.1",
     "pinski": "github:cloudrac3r/pinski#v2",

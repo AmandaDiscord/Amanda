@@ -558,9 +558,9 @@ commands.assign({
 		description: "Modify settings Amanda will use for yourself or server wide",
 		aliases: ["settings", "setting"],
 		category: "configuration",
-		process: async function(msg, suffix) {
+		process: async function(msg, suffix, lang) {
 			const args = suffix.split(" ")
-			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send("You cannot modify a server's settings if you don't use the command in a server")
+			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
 			const settings = {
 				"waifualert": {
@@ -575,7 +575,7 @@ commands.assign({
 				},
 				"profilebackground": {
 					type: "string",
-					default: "[unset] (Recommended to be a 800x500px png/jpeg)",
+					default: `[unset] (${lang.configuration.settings.prompts.backgroundRecommended})`,
 					scope: "self"
 				},
 				"language": {
@@ -589,7 +589,7 @@ commands.assign({
 
 			let scope = args[0].toLowerCase()
 			scope = Discord.Util.escapeMarkdown(scope)
-			if (!["self", "server"].includes(scope)) return msg.channel.send("Command syntax is `&settings <scope> <name> <value>`. Your value for `scope` was incorrect, it must be either `self` or `server`.")
+			if (!["self", "server"].includes(scope)) return msg.channel.send(lang.configuration.settings.prompts.invalidSyntaxScope)
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
@@ -597,15 +597,15 @@ commands.assign({
 			settingName = Discord.Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
 				const all = await utils.sql.all("SELECT * FROM " + tableName + " WHERE keyID =?", keyID)
-				if (all.length == 0) return msg.channel.send(`There are no settings set for scope ${scope}`)
+				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
 
-			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send("You must have either the Manage Server or Administrator permission to modify Amanda's settings on this server.")
+			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(lang.configuration.settings.prompts.manageServer)
 
 			const setting = settings[settingName]
-			if (!setting) return msg.channel.send(`Command syntax is \`&settings ${this.usage}\`. Your value for \`name\` was incorrect, it must be one of: ${Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ")}`)
-			if (!setting.scope.includes(scope)) return msg.channel.send(`The setting \`${settingName}\` is not valid for the scope \`${scope}\`.`)
+			if (!setting) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxName, { "usage": lang.configuration.settings.help.usage, "settings": Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ") }))
+			if (!setting.scope.includes(scope)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSettingScope, { "setting": settingName, "scope": scope }))
 
 			let value = args[2]
 			if (!value) {
@@ -613,8 +613,8 @@ commands.assign({
 				if (scope == "server") {
 					value = row ? row.value : setting.default
 					if (setting.type == "boolean") value = (!!+value) + ""
-					if (row) return msg.channel.send(`Current value of \`${settingName}\` is \`${value}\`. This value was set for the server.`)
-					else return msg.channel.send(`Current value of \`${settingName}\` is not set in this server, so it inherits the default value, which is \`${value}\`.`)
+					if (row) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueServer, { "setting": settingName, "value": value }))
+					else return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueInherited, { "setting": settingName, "value": value }))
 				} else if (scope == "self") {
 					let serverRow
 					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
@@ -639,11 +639,11 @@ commands.assign({
 					try {
 						await fs.promises.unlink(`./images/backgrounds/${msg.author.id}.png`)
 					} catch (e) {
-						return msg.channel.send("You didn't have a profile background image. No action was taken.")
+						return msg.channel.send(lang.configuration.settings.prompts.noBackground)
 					}
 				}
 				await utils.sql.all("DELETE FROM " + tableName + " WHERE keyID = ? AND setting = ?", [keyID, settingName])
-				return msg.channel.send("Setting deleted.")
+				return msg.channel.send(lang.configuration.settings.returns.deleted)
 			}
 
 			if (settingName == "profilebackground") {
@@ -655,13 +655,13 @@ commands.assign({
 				let allowed = false
 				if (isEval) allowed = true
 				if (isPremium) allowed = true
-				if (!allowed) return msg.channel.send("You must be a donor to modify this setting.")
+				if (!allowed) return msg.channel.send(lang.configuration.settings.prompts.donorRequired)
 				let data
 				try {
 					data = await fetch(value).then(d => d.buffer())
 				} catch (e) {
 					console.log("Failed to fetch new background URL in settings command: " + value)
-					return msg.channel.send("There was an error trying to fetch the data from the link provided. Please make sure the link is valid.")
+					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)
 				}
 				const type = bs.identify(data)
 				if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may only set a background of a PNG or a JPEG")
@@ -672,27 +672,27 @@ commands.assign({
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES (?, ?, ?)", [config.machine_id, keyID, value])
 				ipc.replier.sendBackgroundUpdateRequired()
-				return msg.channel.send("Setting updated.")
+				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo", "es", "nl"].includes(value)) return msg.channel.send(`${msg.author.username}, that is not a valid or supported language code. Supported language codes are\nen-us, en-owo, es, and nl`)
+				if (!["en-us", "en-owo", "es", "nl"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "usagename": msg.author.username, "codes": "\nen-us, en-owo, es, and nl" }))
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
-				return msg.channel.send("Setting updated.")
+				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (setting.type == "boolean") {
 				value = args[2].toLowerCase()
-				if (!["true", "false"].includes(value)) return msg.channel.send(`Command syntax is \`&settings <scope> <name> <value>\`. The setting \`${settingName}\` is a boolean, and so your \`${value}\` must be either \`true\` or \`false\`.`)
+				if (!["true", "false"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxBoolean, { "setting": settingName, "value": value }))
 				const value_result = args[2] == "true" ? "1" : "0"
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result])
-				return msg.channel.send("Setting updated.")
+				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else if (setting.type == "string") {
 				value = args[2].toLowerCase()
-				if (value.length > 50) return msg.channel.send("That setting value is too long. It must not be more than 50 characters.")
+				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
-				return msg.channel.send("Setting updated.")
+				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)
 		}

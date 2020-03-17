@@ -60,7 +60,7 @@ const subcommandsMap = new Map([
 						}
 					}).catch(() => {
 						// Otherwise, start a search
-						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search, lang)
 					})
 				} else { // Resolve tracks with Lavalink
 					common.getTracks(match.id, voiceChannel.guild.region).then(tracks => {
@@ -70,7 +70,7 @@ const subcommandsMap = new Map([
 						} else throw new Error("No tracks available")
 					}).catch(() => {
 						// Otherwise, start a search
-						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
+						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search, lang)
 					})
 				}
 			} else if (match && match.type == "playlist" && match.list) { // Linked to a playlist. `list` is set, `id` may or may not be.
@@ -141,7 +141,7 @@ const subcommandsMap = new Map([
 						return Object.assign({ emoji }, action)
 					}))
 				}
-			} else common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search) // User input wasn't a playlist and wasn't a video. Start a search.
+			} else common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang) // User input wasn't a playlist and wasn't a video. Start a search.
 		}
 	}],
 	["stop", {
@@ -161,11 +161,11 @@ const subcommandsMap = new Map([
 				queue.wrapper.removeSong(index, msg)
 			} else {
 				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
-				const totalLength = `\nTotal length: ${common.prettySeconds(queue.getTotalLength())}`
+				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(queue.getTotalLength()) })}`
 				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
 				msg.channel.send(
 					new Discord.MessageEmbed()
-						.setTitle(`Queue for ${Discord.Util.escapeMarkdown(msg.guild.name)}`)
+						.setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(msg.guild.name) }))
 						.setDescription(body)
 						.setColor(0x36393f)
 				)
@@ -317,10 +317,10 @@ commands.assign({
 		description: "Provides debugging information for if audio commands are not working as intended",
 		aliases: ["debug"],
 		category: "audio",
-		process: async function(msg, suffix) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("You cannot debug music in a DM channel")
+		process: async function(msg, suffix, lang) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.findChannel(msg, suffix, true)
-			if (!channel) return msg.channel.send("Channel not found")
+			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
 			const types = {
 				text: [["Read Messages", "VIEW_CHANNEL"], ["Read Message History", "READ_MESSAGE_HISTORY"], ["Send Messages", "SEND_MESSAGES"], ["Embed Content", "EMBED_LINKS"], ["Add Reactions", "ADD_REACTIONS"]],
 				voice: [["View Channel", "VIEW_CHANNEL"], ["Join", "CONNECT"], ["Speak", "SPEAK"]]
@@ -333,10 +333,10 @@ commands.assign({
 			const node = client.regionMap.find(region => region.regions.includes(msg.guild.region))
 			const details = new Discord.MessageEmbed().setColor("36393E").setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))
 				.addFields([
-					{ name: "Permissions", value: perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n") },
-					{ name: "Player", value: `Method: ${config.use_invidious ? "Invidious" : "LavaLink"}\nLavaLink node: ${node ? node.name : client.regionMap.find(region => region.host == client.lavalink.nodes.first().host).name}\nInvidious Domain: ${new URL(config.invidious_origin).hostname}` }
+					{ name: "Permissions:", value: perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n") },
+					{ name: "Player:", value: `Method: ${config.use_invidious ? "Invidious" : "LavaLink"}\nLavaLink Node: ${node ? node.name : client.regionMap.find(region => region.host == client.lavalink.nodes.first().host).name}\nInvidious Domain: ${new URL(config.invidious_origin).hostname}` }
 				])
-			if (channel.type == "text") details.addFields({ name: "Tip", value: "On top of Read Message and Add Reaction permissions, bots must also have Read Message History permissions to add reactions to messages" })
+			if (channel.type == "text") details.addFields({ name: lang.audio.debug.returns.tip, value: lang.audio.debug.returns.tipValue })
 			return msg.channel.send(utils.contentify(msg.channel, details))
 		}
 	},

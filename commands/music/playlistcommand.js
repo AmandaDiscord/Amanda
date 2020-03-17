@@ -282,7 +282,7 @@ commands.assign({
 				if (client.users.cache.get(playlistRow.author)) author.push(`${client.users.cache.get(playlistRow.author).tag} — ${playlistName}`, client.users.cache.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
 				const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${common.prettySeconds(s.length)})`)
-				const totalLength = `\nTotal length: ${common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))}`
+				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])
 					.setColor("36393E")
