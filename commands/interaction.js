@@ -394,25 +394,28 @@ const genderMap = new Map([
 async function doInteraction(msg, suffix, source, lang) {
 	if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.dm, { "action": source.name }))
 	if (!suffix) return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.noUser, { "action": source.name }))
-	const member = await msg.guild.findMember(msg, suffix)
-	if (!member) return msg.channel.send(`I couldn't figure out who you wanna ${source.name}! Say their name or mention them.`)
-	if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
-	if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
+	/** @type {Discord.GuildMember | string} */
+	let member = await msg.guild.findMember(msg, suffix)
+	if (!member) member = suffix
 	let fetched
-	if (source.traaOverride) {
-		const g1 = msg.member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
-		const g2 = member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
-		// console.log(msg.member.user.username, g1, member.user.username, g2)
-		if (g1 != "_" || g2 != "_") {
-			let found = false
-			let i = 0
-			while (!found && i < attempts.length) {
-				const rows = await attempts[i](source.name, g1, g2)
-				if (rows.length) {
-					fetched = Promise.resolve(utils.arrayRandom(rows).url)
-					found = true
+	if (typeof member != "string") {
+		if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
+		if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
+		if (source.traaOverride) {
+			const g1 = msg.member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
+			const g2 = member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
+			// console.log(msg.member.user.username, g1, member.user.username, g2)
+			if (g1 != "_" || g2 != "_") {
+				let found = false
+				let i = 0
+				while (!found && i < attempts.length) {
+					const rows = await attempts[i](source.name, g1, g2)
+					if (rows.length) {
+						fetched = Promise.resolve(utils.arrayRandom(rows).url)
+						found = true
+					}
+					i++
 				}
-				i++
 			}
 		}
 	}
@@ -438,7 +441,7 @@ async function doInteraction(msg, suffix, source, lang) {
 	}
 	fetched.then(url => {
 		const embed = new Discord.MessageEmbed()
-			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": `<@${member.id}>` }))
+			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": typeof member == "string" ? member : `<@${member.id}>` }))
 			.setImage(url)
 			.setColor("36393E")
 		if (source.footer) embed.setFooter(source.footer)
