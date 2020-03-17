@@ -46,10 +46,11 @@ class Queue {
 			.setDelay(voiceEmptyDuration)
 
 		this.voiceLeaveWarningMessagePromise = null
+		const node = client.regionMap.find(region => region.regions.includes(this.voiceChannel.guild.region))
 		this.player = client.lavalink.join({
 			guild: this.guildID,
 			channel: this.voiceChannel.id,
-			host: client.lavalink.nodes.first().host
+			host: node ? node.host : client.lavalink.nodes.first().host
 		})
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
@@ -159,6 +160,7 @@ class Queue {
 			embed.setColor(0xff2ee7)
 			utils.sendToUncachedChannel(reportTarget, true, embed).then(() => {
 				return utils.sendToUncachedChannel(reportTarget, true, contents)
+			// eslint-disable-next-line no-empty-function
 			}).catch(() => {}) // probably missing access error
 		}
 		this.errorChain++

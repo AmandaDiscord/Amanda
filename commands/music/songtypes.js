@@ -200,7 +200,7 @@ class YouTubeSong extends Song {
 						else this.error = `${error.name} - ${error.message}`
 					})
 				} else { // Resolve track with Lavalink
-					return common.getTracks(this.id).then(tracks => {
+					return common.getTracks(this.id, this.queue.textChannel.guild.region).then(tracks => {
 						if (!tracks[0]) this.error = `No results for ID ${this.id}`
 						else if (!tracks[0].track) this.error = `Missing track for ID ${this.id}`
 						else this.track = tracks[0].track
@@ -418,7 +418,7 @@ class FriskySong extends Song {
 			await this.stationUpdate()
 		}
 		if (this.track == "!") {
-			return common.getTracks(this.stationData.beta_url).then(tracks => {
+			return common.getTracks(this.stationData.beta_url, this.queue.textChannel.guild.region).then(tracks => {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)

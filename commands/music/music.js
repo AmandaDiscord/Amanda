@@ -52,7 +52,7 @@ const subcommandsMap = new Map([
 						// If it does, we'll end up in the catch block to search instead.
 						const url = common.invidious.dataToURL(data)
 						// The ID worked. Add the song
-						const track = await common.invidious.urlToTrack(url)
+						const track = await common.invidious.urlToTrack(url, voiceChannel.guild.region)
 						if (track) {
 							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
 							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
@@ -63,7 +63,7 @@ const subcommandsMap = new Map([
 						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search)
 					})
 				} else { // Resolve tracks with Lavalink
-					common.getTracks(match.id).then(tracks => {
+					common.getTracks(match.id, voiceChannel.guild.region).then(tracks => {
 						if (tracks[0]) {
 							// If the ID worked, add the song
 							common.inserters.fromData(channel, voiceChannel, tracks[0], insert, msg)
@@ -75,7 +75,7 @@ const subcommandsMap = new Map([
 				}
 			} else if (match && match.type == "playlist" && match.list) { // Linked to a playlist. `list` is set, `id` may or may not be.
 				// Get the tracks
-				let tracks = await common.getTracks(match.list)
+				let tracks = await common.getTracks(match.list, voiceChannel.guild.region)
 				// Figure out what index was linked to, if any
 				/** @type {number} */
 				let linkedIndex = null
@@ -155,7 +155,7 @@ const subcommandsMap = new Map([
 		queue: "required",
 		code: (msg, args, { queue, lang }) => {
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
-				queue.wrapper.removeAllSongs({msg, lang})
+				queue.wrapper.removeAllSongs({ msg, lang })
 			} else if (args[1] == "r" || args[1] == "remove") {
 				const index = +args[2]
 				queue.wrapper.removeSong(index, msg)

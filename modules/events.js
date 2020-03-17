@@ -18,7 +18,8 @@ let starting = true
 if (client.readyAt != null) starting = false
 
 const lavalinknodes = [
-	{ host: "amanda.moe", port: 10402, password: config.lavalink_password }
+	{ host: "amanda.moe", port: 10402, password: config.lavalink_password },
+	{ host: "139.99.90.94", port: 10402, password: config.lavalink_password }
 ]
 
 const utils = require("./utilities.js")

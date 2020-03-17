@@ -135,10 +135,12 @@ const common = {
 	 * Call /loadtracks on the first node using the passed identifier.
 	 * Throws exception.message.
 	 * @param {string} input
+	 * @param {string} [region="us-west"]
 	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
 	 */
-	getTracks: function(input) {
-		const node = client.lavalink.nodes.first()
+	getTracks: function(input, region = "us-west") {
+		const host = client.regionMap.find(r => r.regions.includes(region))
+		const node = host ? client.lavalink.nodes.get(host.host) : client.lavalink.nodes.first()
 
 		const params = new URLSearchParams()
 		params.append("identifier", input)
@@ -186,7 +188,7 @@ const common = {
 				if (root.videoCount > pageSize) {
 					const additionalResponses = await Promise.all(
 						Array(Math.ceil(root.videoCount / pageSize) - 1).fill(undefined).map((_, page) => {
-							return common.invidious.getPlaylistPage(id, page+2)
+							return common.invidious.getPlaylistPage(id, page + 2)
 						})
 					)
 					for (const response of additionalResponses) {
@@ -213,9 +215,9 @@ const common = {
 		/**
 		 * Promise to get the track. Errors are rejected.
 		 */
-		urlToTrack: function(url) {
+		urlToTrack: function(url, region = "us-west") {
 			if (!url) throw new Error("url parameter in urlToTrack is falsy")
-			return common.getTracks(url).then(tracks => {
+			return common.getTracks(url, region).then(tracks => {
 				if (!tracks || !tracks[0]) {
 					console.error("Missing tracks from getTracks response")
 					console.error(tracks)
@@ -312,7 +314,7 @@ const common = {
 		 * @param {string} search
 		 */
 		async function(textChannel, voiceChannel, author, insert, search) {
-			let tracks = await common.getTracks(`ytsearch:${search}`)
+			let tracks = await common.getTracks(`ytsearch:${search}`, textChannel.guild.region)
 			if (tracks.length == 0) return textChannel.send("No results.")
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
