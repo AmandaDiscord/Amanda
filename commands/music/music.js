@@ -330,10 +330,11 @@ commands.assign({
 			const perms = channel.type == "text" ? types.text : types.voice
 			const permissions = channel.permissionsFor(client.user)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
+			const node = client.regionMap.find(region => region.regions.includes(msg.guild.region))
 			const details = new Discord.MessageEmbed().setColor("36393E").setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))
 				.addFields([
 					{ name: "Permissions", value: perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n") },
-					{ name: "Player", value: `Method: ${config.use_invidious ? "Invidious" : "LavaLink"}\nInvidious Domain: ${new URL(config.invidious_origin).hostname}` }
+					{ name: "Player", value: `Method: ${config.use_invidious ? "Invidious" : "LavaLink"}\nLavaLink node: ${node ? node.name : client.regionMap.find(region => region.host == client.lavalink.nodes.first().host).name}\nInvidious Domain: ${new URL(config.invidious_origin).hostname}` }
 				])
 			if (channel.type == "text") details.addFields({ name: "Tip", value: "On top of Read Message and Add Reaction permissions, bots must also have Read Message History permissions to add reactions to messages" })
 			return msg.channel.send(utils.contentify(msg.channel, details))
