@@ -88,7 +88,7 @@ class Queue {
 			}
 			console.error("Lavalink error event at", new Date().toUTCString(), details)
 			if (this.songs[0]) {
-				this.songs[0].error = "```js\n" + JSON.stringify(details, null, 4) + "```"
+				this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
 				console.log("Song error call B")
 				this._reportError()
 				// This may automatically continue to the next song, presumably because the end event may also be fired.
