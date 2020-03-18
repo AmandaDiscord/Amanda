@@ -35,9 +35,12 @@ html
 				for guild in guilds
 					+guild-selection(guild, false)
 
+			div.message.missing-servers-message
+				div Missing servers? Join a voice channel in a server we share to make it appear here.
+
 			if displayNoSharedServers
-				div.message
+				div.message.missing-servers-message
 					div
 						div We don't share any servers? Wha-!
 						div
-							a(href="https://discord-bots.ga/amanda") Want to add me to one?
+							a(href="https://amanda.moe/to/add") Want to add me to one?
