@@ -836,7 +836,7 @@ const utils = {
 	shortTime:
 	/**
 	 * @param {number} number
-	 * @param {string} scale ms or sec
+	 * @param {"ms" | "sec"} scale
 	 */
 	function(number, scale, precision = ["d", "h", "m", "s"]) {
 		if (isNaN(number)) throw new TypeError("Input provided is NaN")
@@ -1099,7 +1099,7 @@ const utils = {
 		return client.api.channels[channelID].messages.post(
 			Discord.APIMessage.create(
 				// @ts-ignore xd
-				{id: channelID, client: client},
+				{ id: channelID, client: client },
 				content
 			).resolveData()
 		).catch(error => {
