@@ -61,7 +61,7 @@ commands.assign({
 					const user = client.users.cache.get(author)
 					if (user) {
 						let username = user.username
-						if (username.length > 14) username = username.slice(0, 13) + "…"
+						if (username.length > 14) username = `${username.slice(0, 13)}…`
 						return `\`${Discord.Util.escapeMarkdown(username)}\``
 					} else return "(?)"
 				}

@@ -221,7 +221,7 @@ async function startGame(channel, options = {}) {
 			let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()))
 			if (options.suffix.toLowerCase().endsWith("music")) f = data.trivia_categories.filter(c => c.name == "Entertainment: Music")
 			if (f.length == 0) return channel.send(utils.replace(options.lang.games.trivia.prompts.noCategory, { "username": options.msg.author.username }))
-			else if (f.length >= 2) return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, { "username": "Hey", "string": ("**" + f[0].name + "**, **" + f[1].name + "**" + (f.length == 2 ? ". " : `, and ${f.length - 2} more. `) + "Use `&trivia categories` for the list of available categories.") })}`)
+			else if (f.length >= 2) return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, { "username": "Hey", "string": (`**${f[0].name}**, **${f[1].name}**${(f.length == 2 ? ". " : `, and ${f.length - 2} more. `)}Use \`&trivia categories\` for the list of available categories.`) })}`)
 			else category = f[0].id
 		}
 	}

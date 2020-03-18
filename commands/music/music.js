@@ -404,11 +404,11 @@ commands.assign({
 							} else { // show time until
 								let timeString = ""
 								if (timeUntil < 1000 * 60 * 60) { // less than one hour, so scale to minutes
-									timeString = Math.floor(timeUntil / 1000 / 60) + "m"
+									timeString = `${Math.floor(timeUntil / 1000 / 60)}m`
 								} else { // more than one hour, so scale to hours
-									timeString = Math.floor(timeUntil / 1000 / 60 / 60) + "h"
+									timeString = `${Math.floor(timeUntil / 1000 / 60 / 60)}h`
 								}
-								item += "`" + timeString.padStart(timePadding) + timeSpacingRight + "`"
+								item += `\`${timeString.padStart(timePadding) + timeSpacingRight}\``
 							}
 							item += timePostSpacing
 
@@ -442,7 +442,7 @@ commands.assign({
 						else {
 							description += spacing
 						}
-						description += line + "\n"
+						description += `${line}\n`
 					}
 				}
 				description = description.slice(0, -1) // cut off final newline

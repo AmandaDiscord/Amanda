@@ -161,7 +161,7 @@ class Queue {
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>
-				"`" + row[0] + " ​".repeat(maxLength - row[0].length) + "` " + row[1] // SC: space + zwsp, wide space
+				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
 			embed.addField(
 				"Details",
