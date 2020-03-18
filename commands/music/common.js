@@ -319,7 +319,7 @@ const common = {
 			if (tracks.length == 0) return textChannel.send("No results.")
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
-			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCancelled, results).then(index => {
+			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
 				if (typeof index != "number") return
 				const track = tracks[index]
 				if (config.use_invidious) {

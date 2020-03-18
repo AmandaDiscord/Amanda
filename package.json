@@ -14,7 +14,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#c51e02ad4afffcd392e8cda158ce5043ff1619e4",
+    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#65e3053770db4609bbb0d62257951e9f4e96044e",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:cloudrac3r/discord.js#824f20b3e809f6f791b379b5b09a73e0c0709a0d",
