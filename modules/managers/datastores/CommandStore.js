@@ -29,6 +29,19 @@ class CommandStore extends Discord.Collection {
 			else if (!cat.includes(i.aliases[0])) cat.push(i.aliases[0])
 		})
 	}
+	/**
+	 * @param {Array<string>} commands
+	 */
+	remove(commands) {
+		for (const command of commands) {
+			if (this.get(command)) {
+				this.delete(command)
+				this.categories.forEach(c => {
+					if (c.includes(command)) c.splice(c.indexOf(command), 1)
+				})
+			}
+		}
+	}
 }
 
 module.exports = CommandStore
