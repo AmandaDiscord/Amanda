@@ -73,14 +73,17 @@ class Queue {
 							+ "\n\n**This is probably an issue with Discord.**"
 							+ "\nYou should try changing the server region."
 							+ "\n\nTo report a problem, join our server: https://discord.gg/YMkZDsK"
-						this._reportError()
 					}
+					console.log("Song error call A")
+					this._reportError()
 				}
 			}
 		})
 		this.player.on("error", exception => {
+			console.error("Lavalink error event at", new Date().toUTCString(), exception)
 			if (this.songs[0] && !this.songs[0].error) {
 				this.songs[0].error = exception.error
+				console.log("Song error call B")
 				this._reportError()
 				// This already automatically continues to the next song, presumably because the "end" event is also fired.
 			} else console.error(exception)
@@ -119,6 +122,7 @@ class Queue {
 			else if (song.track == null) song.error = "`song.track` is null or undefined. This is a bug."
 		}
 		if (song.error) {
+			console.log("Song error call C")
 			this._reportError()
 			this._nextSong()
 		} else {
