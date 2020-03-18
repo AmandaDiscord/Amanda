@@ -79,14 +79,20 @@ class Queue {
 				}
 			}
 		})
-		this.player.on("error", exception => {
-			console.error("Lavalink error event at", new Date().toUTCString(), exception)
-			if (this.songs[0] && !this.songs[0].error) {
-				this.songs[0].error = exception.error
+		this.player.on("error", details => {
+			if (details.op === "event" && details.code === 4014 && details.byRemote === true && details.type === "WebSocketClosedEvent") {
+				// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
+				// Simply respond by stopping the queue, since that was the intention.
+				// This should therefore clean up the queueStore and the website correctly.
+				return this.stop()
+			}
+			console.error("Lavalink error event at", new Date().toUTCString(), details)
+			if (this.songs[0]) {
+				this.songs[0].error = "```js\n"+JSON.stringify(details, null, 4)+"```"
 				console.log("Song error call B")
 				this._reportError()
-				// This already automatically continues to the next song, presumably because the "end" event is also fired.
-			} else console.error(exception)
+				// This may automatically continue to the next song, presumably because the end event may also be fired.
+			}
 		})
 		/** @type {Discord.Message} */
 		this.np = null
