@@ -305,8 +305,9 @@ class AttributeButton extends ElemJS {
 		this.propertyName = propertyName
 
 		this.direct("onclick", () => {
-			this.player.updateAttributes({[propertyName]: !this.player.attributes[propertyName]})
-			this.player.session.requestAttributesChange(this.player.attributes)
+			this.player.attributes[propertyName] = !this.player.attributes[propertyName]
+			this.player.session.requestAttributesChange({[propertyName]: true}) // this actually toggles
+			this.render()
 		})
 
 		this.render()
