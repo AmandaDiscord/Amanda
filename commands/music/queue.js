@@ -107,7 +107,7 @@ class Queue {
 	}
 	getUsedLavalinkNode() {
 		// Find the node in constants rather than using the node from the player because constants has the friendly name
-		return constants.lavalinkNodes.find(n => n.host === this.player.node.host)
+		return constants.lavalinkNodes.find(n => n.host === this.player.node.host) || null
 	}
 	toObject() {
 		return {
@@ -154,6 +154,7 @@ class Queue {
 			const embed = new Discord.MessageEmbed()
 			embed.setTitle("Music error occurred.")
 			embed.setDescription("The next message is the message that was sent to the user.")
+			const usedNode = this.getUsedLavalinkNode()
 			const details = [
 				["Shard", String(utils.getFirstShard())],
 				["Guild", client.guilds.cache.get(this.guildID).name],
@@ -161,7 +162,8 @@ class Queue {
 				["Text channel", this.textChannel.id],
 				["Voice channel", this.voiceChannel.id],
 				["Using Invidious", String(config.use_invidious)],
-				["Invidious origin", "`" + config.invidious_origin + "`"]
+				["Invidious origin", "`" + config.invidious_origin + "`"],
+				["Queue node", usedNode ? usedNode.name : "Unnamed"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>

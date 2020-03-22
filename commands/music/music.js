@@ -336,7 +336,8 @@ commands.assign({
 			if (currentQueue) {
 				const currentQueueNode = currentQueue.getUsedLavalinkNode()
 				if (currentQueueNode !== node) {
-					extraNodeInfo = `\n↳ However, the current queue is using ${currentQueueNode.name}`
+					const name = currentQueueNode ? currentQueueNode.name : "an unnamed node"
+					extraNodeInfo = `\n↳ However, the current queue is using ${name}`
 				}
 			}
 			const invidiousHostname = new URL(config.invidious_origin).hostname
