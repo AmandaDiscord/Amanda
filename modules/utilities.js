@@ -12,7 +12,7 @@ const Lang = require("@amanda/lang")
 const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
-const { config, constants, client, db, reloadEvent } = passthrough
+const { config, constants, client, db, queueStore, reloadEvent } = passthrough
 
 const startingCoins = 5000
 
@@ -1142,6 +1142,28 @@ const utils = {
 			}
 		}
 		return [removedCount, addedCount]
+	},
+
+	timeUntilSongsEnd: function() {
+		let total = 0
+		for (const queue of queueStore.store.values()) {
+			if (queue.songs[0] && queue.songs[0].lengthSeconds >= 0) {
+				total += queue.songs[0].lengthSeconds
+			}
+		}
+		return total
+	},
+
+	timeUntilQueuesEnd: function() {
+		let total = 0
+		for (const queue of queueStore.store.values()) {
+			for (const song of queue.songs) {
+				if (song.lengthSeconds >= 0) {
+					total += song.lengthSeconds
+				}
+			}
+		}
+		return total
 	}
 }
 

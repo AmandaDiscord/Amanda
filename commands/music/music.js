@@ -331,14 +331,23 @@ commands.assign({
 			const permissions = channel.permissionsFor(client.user)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
 			const node = utils.getLavalinkNodeByRegion(msg.guild.region)
+			const currentQueue = queueStore.get(msg.guild.id)
+			let extraNodeInfo = ""
+			if (currentQueue) {
+				const currentQueueNode = currentQueue.getUsedLavalinkNode()
+				if (currentQueueNode !== node) {
+					extraNodeInfo = `\n↳ However, the current queue is using ${currentQueueNode.name}`
+				}
+			}
 			const invidiousHostname = new URL(config.invidious_origin).hostname
 			const details = new Discord.MessageEmbed()
 				.setColor(0x36393f)
 				.setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))
-				.addField("Permissions", perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
-				.addField("Player",
+				.addField("Permissions:", perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
+				.addField("Player:",
 					`Method: ${config.use_invidious ? "Invidious" : "LavaLink"}`
 					+`\nLavaLink Node: ${node.name}`
+					+extraNodeInfo
 					+`\nInvidious Domain: ${invidiousHostname}`
 				)
 			if (channel.type === "text") details.addFields({ name: lang.audio.debug.returns.tip, value: lang.audio.debug.returns.tipValue })

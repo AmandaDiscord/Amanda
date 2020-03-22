@@ -71,7 +71,7 @@ class QueueStore {
 		const songTypes = require("../../../commands/music/songtypes")
 		const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
 		data.queues.forEach(async q => {
-			console.log(q)
+			// console.log(q)
 			const guildID = q.guildID
 			const voiceChannel = client.channels.cache.get(q.voiceChannelID)
 			const textChannel = client.channels.cache.get(q.textChannelID)

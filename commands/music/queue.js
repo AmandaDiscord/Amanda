@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, queueStore, ipc } = passthrough
+const { config, constants, client, reloader, queueStore, ipc } = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -104,6 +104,10 @@ class Queue {
 				if (embed) this.np.edit(embed)
 			}
 		})
+	}
+	getUsedLavalinkNode() {
+		// Find the node in constants rather than using the node from the player because constants has the friendly name
+		return constants.lavalinkNodes.find(n => n.host === this.player.node.host)
 	}
 	toObject() {
 		return {
