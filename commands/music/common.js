@@ -135,12 +135,11 @@ const common = {
 	 * Call /loadtracks on the first node using the passed identifier.
 	 * Throws exception.message.
 	 * @param {string} input
-	 * @param {string} [region="us-west"]
+	 * @param {string} [region]
 	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
 	 */
-	getTracks: function(input, region = "us-west") {
-		const host = client.regionMap.find(r => r.regions.includes(region))
-		const node = host ? client.lavalink.nodes.get(host.host) : client.lavalink.nodes.first()
+	getTracks: function(input, region = "") {
+		const node = utils.getLavalinkNodeByRegion(region)
 
 		const params = new URLSearchParams()
 		params.append("identifier", input)

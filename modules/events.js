@@ -8,7 +8,7 @@ const { PlayerManager } = require("discord.js-lavalink")
 const fetch = require("node-fetch")
 
 const passthrough = require("../passthrough")
-const { client, config, commands, reloader, reloadEvent } = passthrough
+const { client, config, constants, commands, reloader, reloadEvent } = passthrough
 
 const lastAttemptedLogins = []
 
@@ -16,11 +16,6 @@ let prefixes = []
 let statusPrefix = "&"
 let starting = true
 if (client.readyAt != null) starting = false
-
-const lavalinknodes = [
-	{ host: "amanda.moe", port: 10402, password: config.lavalink_password },
-	{ host: "139.99.90.94", port: 10402, password: config.lavalink_password }
-]
 
 const utils = require("./utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -178,8 +173,8 @@ function manageReady() {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
 		console.log(client.user.id + "/" + utils.getShardsArray())
-		lavalinknodes.forEach(node => node.resumeKey = client.user.id + "/" + utils.getShardsArray())
-		client.lavalink = new PlayerManager(this, lavalinknodes, {
+		constants.lavalinkNodes.forEach(node => node.resumeKey = client.user.id + "/" + utils.getShardsArray())
+		client.lavalink = new PlayerManager(this, constants.lavalinkNodes, {
 			user: client.user.id,
 			shards: client.options.shardCount
 		})

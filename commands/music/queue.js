@@ -46,11 +46,11 @@ class Queue {
 			.setDelay(voiceEmptyDuration)
 
 		this.voiceLeaveWarningMessagePromise = null
-		const node = client.regionMap.find(region => region.regions.includes(this.voiceChannel.guild.region))
+		const node = utils.getLavalinkNodeByRegion(this.voiceChannel.guild.region)
 		this.player = client.lavalink.join({
 			guild: this.guildID,
 			channel: this.voiceChannel.id,
-			host: node ? node.host : client.lavalink.nodes.first().host
+			host: node.host
 		})
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {

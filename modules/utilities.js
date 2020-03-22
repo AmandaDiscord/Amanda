@@ -12,7 +12,7 @@ const Lang = require("@amanda/lang")
 const ReactionMenu = require("./managers/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
-const { config, client, db, reloadEvent } = passthrough
+const { config, constants, client, db, reloadEvent } = passthrough
 
 const startingCoins = 5000
 
@@ -1108,6 +1108,40 @@ const utils = {
 			}
 			throw error
 		})
+	},
+
+	/**
+	 * @param {string} region
+	 */
+	getLavalinkNodeByRegion: function(region) {
+		if (region) {
+			for (const node of constants.lavalinkNodes) {
+				if (node.regions.includes(region)) return node
+			}
+		}
+		return constants.lavalinkNodes[0]
+	},
+
+	/**
+	 * @returns {[number, number]} removedCount, addedCount
+	 */
+	applyLavalinkNodeChanges: function() {
+		let removedCount = 0
+		let addedCount = 0
+		for (const node of client.lavalink.nodes.values()) {
+			if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
+				removedCount++
+				client.lavalink.removeNode(node.host)
+			}
+		}
+
+		for (const node of constants.lavalinkNodes) {
+			if (!client.lavalink.nodes.has(node.host)) {
+				addedCount++
+				client.lavalink.createNode(node)
+			}
+		}
+		return [removedCount, addedCount]
 	}
 }
 
