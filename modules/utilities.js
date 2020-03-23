@@ -435,7 +435,7 @@ const utils = {
 		} else result = `\`\`\`js\n${util.inspect(data, { depth: depth })}\`\`\``
 
 		if (result.length >= 2000) {
-			if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
+			if (result.startsWith("```")) result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "") + "…```"
 			else result = `${result.slice(0, 1998)}…`
 		}
 		return result
@@ -1122,26 +1122,43 @@ const utils = {
 		return constants.lavalinkNodes[0]
 	},
 
-	/**
-	 * @returns {[number, number]} removedCount, addedCount
-	 */
-	applyLavalinkNodeChanges: function() {
-		let removedCount = 0
-		let addedCount = 0
-		for (const node of client.lavalink.nodes.values()) {
-			if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
-				removedCount++
-				client.lavalink.removeNode(node.host)
+	editLavalinkNodes: {
+		/**
+		 * @returns {[number, number]} removedCount, addedCount
+		 */
+		applyChanges: function() {
+			let removedCount = 0
+			let addedCount = 0
+			for (const node of client.lavalink.nodes.values()) {
+				if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
+					removedCount++
+					const nodeInstance = client.lavalink.nodes.get(node.host)
+					client.lavalink.removeNode(node.host)
+					nodeInstance.destroy()
+				}
 			}
-		}
 
-		for (const node of constants.lavalinkNodes) {
-			if (!client.lavalink.nodes.has(node.host)) {
-				addedCount++
-				client.lavalink.createNode(node)
+			for (const node of constants.lavalinkNodes) {
+				if (!client.lavalink.nodes.has(node.host)) {
+					addedCount++
+					client.lavalink.createNode(node)
+				}
 			}
+			return [removedCount, addedCount]
+		},
+
+		/**
+		 * @param {string} name
+		 */
+		removeByName: function(name) {
+			constants.lavalinkNodes = constants.lavalinkNodes.filter(node => node.name !== name)
+			return utils.editLavalinkNodes.applyChanges()
+		},
+
+		add: function(data) {
+			constants.lavalinkNodes.push(data)
+			return utils.editLavalinkNodes.applyChanges()
 		}
-		return [removedCount, addedCount]
 	},
 
 	timeUntilSongsEnd: function() {
