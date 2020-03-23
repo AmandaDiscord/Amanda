@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-const { config, constants, client, commands, db, reloader, reloadEvent, gameStore, queueStore, reactionMenus, frisky, weeb } = passthrough
+const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, reactionMenus, frisky, weeb } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -14,8 +14,8 @@ reloader.useSync("./modules/utilities.js", utils)
 const common = require("./music/common.js")
 reloader.useSync("./commands/music/common.js", common)
 
-commands.assign({
-	"evaluate": {
+commands.assign([
+	{
 		usage: "<code>",
 		description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 		aliases: ["evaluate", "eval"],
@@ -45,7 +45,7 @@ commands.assign({
 			} else return
 		}
 	},
-	"execute": {
+	{
 		usage: "<code>",
 		description: "Executes a shell operation",
 		aliases: ["execute", "exec"],
@@ -80,7 +80,7 @@ commands.assign({
 			return
 		}
 	},
-	"award": {
+	{
 		usage: "<amount> <user>",
 		description: "Awards a specific user ",
 		aliases: ["award"],
@@ -105,25 +105,5 @@ commands.assign({
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}
-	},
-	"test": {
-		usage: "None",
-		description: "No",
-		aliases: ["test"],
-		category: "admin",
-		process: function(msg, suffix) {
-			const message =
-			"<@320067006521147393>\n" + // mention myself
-			"<@!320067006521147393>\n" + // ! in mention
-			"<@&682819687259963622>\n" + // role
-			"<#682818889993814078>\n" + // channel
-			"@everyone\n" + // standard everyone
-			"@here\n" + // standard here
-			"@‮everyone\n" + // RTLO everyone
-			"@‮here\n" + // RTLO here
-			"@ everyone\n" + // everyone with space
-			"@ here\n" // here with space
-			msg.channel.send(message)
-		}
 	}
-})
+])

@@ -6,7 +6,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, commands, queueStore, frisky } = passthrough
+const { config, client, reloader, commands, queues, frisky } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -24,7 +24,7 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 	// Pass on to queue for leave timeouts
 	const channel = oldState.channel || newState.channel
 	if (!channel || !channel.guild) return
-	const queue = queueStore.get(channel.guild.id)
+	const queue = queues.cache.get(channel.guild.id)
 	if (queue) queue.voiceStateUpdate(oldState, newState)
 })
 
@@ -244,9 +244,9 @@ const subcommandsMap = new Map([
 	["playlist", {
 		voiceChannel: "provide",
 		code: (msg, args, { voiceChannel, lang }) => {
-			if (commands.has("playlist")) {
+			if (commands.cache.has("playlist")) {
 				const suffix = args.slice(1).join(" ")
-				const command = commands.get("playlist")
+				const command = commands.cache.get("playlist")
 				return command.process(msg, suffix, lang)
 			} else throw new Error("Playlist command not loaded")
 		}
@@ -269,8 +269,8 @@ const subcommandAliasMap = new Map([
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
-commands.assign({
-	"musictoken": {
+commands.assign([
+	{
 		usage: "[new|delete]",
 		description: "Obtain a web dashboard login token",
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
@@ -312,7 +312,7 @@ commands.assign({
 			}
 		}
 	},
-	"debug": {
+	{
 		usage: "[Channel]",
 		description: "Provides debugging information for if audio commands are not working as intended",
 		aliases: ["debug"],
@@ -331,7 +331,7 @@ commands.assign({
 			const permissions = channel.permissionsFor(client.user)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
 			const node = utils.getLavalinkNodeByRegion(msg.guild.region)
-			const currentQueue = queueStore.get(msg.guild.id)
+			const currentQueue = queues.cache.get(msg.guild.id)
 			let extraNodeInfo = ""
 			if (currentQueue) {
 				const currentQueueNode = currentQueue.getUsedLavalinkNode()
@@ -347,15 +347,15 @@ commands.assign({
 				.addField("Permissions:", perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
 				.addField("Player:",
 					`Method: ${config.use_invidious ? "Invidious" : "LavaLink"}`
-					+`\nLavaLink Node: ${node.name}`
-					+extraNodeInfo
-					+`\nInvidious Domain: ${invidiousHostname}`
+					+ `\nLavaLink Node: ${node.name}`
+					+ extraNodeInfo
+					+ `\nInvidious Domain: ${invidiousHostname}`
 				)
 			if (channel.type === "text") details.addFields({ name: lang.audio.debug.returns.tip, value: lang.audio.debug.returns.tipValue })
 			return msg.channel.send(utils.contentify(msg.channel, details))
 		}
 	},
-	"frisky": {
+	{
 		usage: "[original|deep|chill|classics]",
 		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
@@ -472,7 +472,7 @@ commands.assign({
 			}
 		}
 	},
-	"music": {
+	{
 		usage: "none",
 		description: "Play music from YouTube",
 		aliases: ["music", "m"],
@@ -492,7 +492,7 @@ commands.assign({
 			subcommmandData.lang = lang
 			// Provide a queue?
 			if (subcommandObject.queue == "required") {
-				const queue = queueStore.get(msg.guild.id)
+				const queue = queues.cache.get(msg.guild.id)
 				if (!queue) return msg.channel.send(utils.replace(lang.audio.music.prompts.nothingPlaying, { "username": msg.author.username }))
 				subcommmandData.queue = queue
 			}
@@ -515,4 +515,4 @@ commands.assign({
 			subcommandObject.code(msg, args, subcommmandData)
 		}
 	}
-})
+])

@@ -34,8 +34,8 @@ ipc.replier.addReceivers([
 	}]
 ])
 
-commands.assign({
-	"announce": {
+commands.assign([
+	{
 		usage: "<duration: number (ms)> <message>",
 		description: "Make an announcement with the client activity",
 		category: "admin",
@@ -58,7 +58,7 @@ commands.assign({
 			ipc.replier.sendPresenceAnnouncement(duration, message)
 		}
 	}
-})
+])
 
 function refresh() {
 	return Promise.all([

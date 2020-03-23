@@ -32,9 +32,9 @@ function filterGuild(guild) {
 }
 
 function getQueue(guildID) {
-	const queueStore = passthrough.queueStore
+	const queueStore = passthrough.queues
 	if (!queueStore) return null
-	const queue = queueStore.get(guildID)
+	const queue = queueStore.cache.get(guildID)
 	if (!queue) return null
 	return queue
 }
@@ -76,14 +76,14 @@ class ClientReplier extends Replier {
 	 * @param {boolean} input.np
 	 */
 	REPLY_GET_DASH_GUILDS({ userID, np }) {
-		const queueStore = passthrough.queueStore
+		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
 		for (const guild of client.guilds.cache.values()) {
 			if (guild.members.cache.has(userID)) {
 				let isNowPlaying = false
 				if (np) {
-					if (queueStore && queueStore.store.has(guild.id)) isNowPlaying = true
+					if (manager && manager.cache.has(guild.id)) isNowPlaying = true
 					if (guild.members.cache.get(userID).voice.channelID) isNowPlaying = true
 				}
 				if (isNowPlaying) npguilds.push(filterGuild(guild))
@@ -154,8 +154,9 @@ class ClientReplier extends Replier {
 		return queue.wrapper.removeSong(index, "web")
 	}
 
+	// eslint-disable-next-line require-await
 	async REPLY_SAVE_QUEUES() {
-		return passthrough.queueStore.save()
+		return passthrough.queues.save()
 	}
 
 	/**

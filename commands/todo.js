@@ -8,17 +8,17 @@ const { config, reloader, commands } = passthrough
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-commands.assign({
-	"todo": {
+commands.assign([
+	{
+		usage: "None",
+		description: "See Amanda's to-do list",
 		aliases: ["todo", "trello", "tasks"],
 		category: "meta",
-		description: "See Amanda's to-do list",
-		usage: "None",
 		process: function(msg, suffix) {
 			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}
 	}
-})
+])
 
 /* eslint no-multiple-empty-lines: "off", no-irregular-whitespace: "off" */
 

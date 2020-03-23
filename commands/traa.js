@@ -61,8 +61,8 @@ async function gifDetector(msg) {
 	}
 }
 
-commands.assign({
-	"storegif": {
+commands.assign([
+	{
 		usage: "<`gif url`> <type> <gender> [gender] [...]",
 		description: "Store a GIF in the database",
 		aliases: ["storegif"],
@@ -124,4 +124,4 @@ commands.assign({
 			})
 		}
 	}
-})
+])

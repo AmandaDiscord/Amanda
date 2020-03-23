@@ -67,12 +67,16 @@ const db = mysql.createPool({
 
 	// Passthrough managers
 
-	const { CommandStore, GameStore, PeriodicHistory, QueueStore, reactionMenus } = require("./modules/managers")
+	const CommandManager = require("./modules/managers/CommandManager")
+	const GameManager = require("./modules/managers/GameManager")
+	const QueueManager = require("./modules/managers/QueueManager")
+	const PeriodicHistory = require("./modules/structures/PeriodicHistory")
+	const reactionMenus = require("./modules/structures/Discord/reactionmenus")
 
 	passthrough.reactionMenus = reactionMenus
-	passthrough.commands = new CommandStore()
-	passthrough.gameStore = new GameStore()
-	passthrough.queueStore = new QueueStore()
+	passthrough.commands = new CommandManager()
+	passthrough.games = new GameManager()
+	passthrough.queues = new QueueManager()
 	passthrough.periodicHistory = new PeriodicHistory([
 		{ field: "song_start", ttl: 86400e3 },
 		{ field: "game_start", ttl: 86400e3 }

@@ -125,8 +125,8 @@ const { commands, reloader } = passthrough
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
-commands.assign({
-	"cleverai": {
+commands.assign([
+	{
 		usage: "<a very witty question>",
 		description:
 			"\nAsk me the answer to life's greatest questions."
@@ -164,4 +164,4 @@ commands.assign({
 			msg.channel.send(clever_message)
 		}
 	}
-})
+])

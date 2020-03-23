@@ -82,7 +82,7 @@ async function manageMessage(msg) {
 	if (msg.guild) await msg.guild.members.fetch(client.user)
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
-	const cmd = commands.find(c => c.aliases.includes(cmdTxt))
+	const cmd = commands.cache.find(c => c.aliases.includes(cmdTxt))
 	let lang
 	const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
 	if (selflang) lang = await utils.getLang(msg.author.id, "self")
@@ -183,7 +183,7 @@ function manageReady() {
 			/** @type {{ queues: Array<any> }} */
 			const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
 			if (!data) return
-			if (data.queues.length > 0) passthrough.queueStore.restore()
+			if (data.queues.length > 0) passthrough.queues.restore()
 		})
 		client.lavalink.on("error", (self, error) => {
 			console.error("Failed to initialise Lavalink: " + error.message)

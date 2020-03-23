@@ -16,7 +16,7 @@ const profiler = require("gc-profiler")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, constants, config, commands, reloadEvent, reloader, gameStore, queueStore, periodicHistory, ipc } = passthrough
+const { client, constants, config, commands, reloadEvent, reloader, games, queues, periodicHistory, ipc } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -142,8 +142,8 @@ function getHeartType(user, info) {
 	return "broken"
 }
 
-commands.assign({
-	"statistics": {
+commands.assign([
+	{
 		usage: "[music|games]",
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
@@ -162,13 +162,13 @@ commands.assign({
 						{
 							name: leadingIdentity,
 							value: `**❯ Songs Played Today:**\n${songsPlayed} songs\n` +
-								`**❯ Songs Queued:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`,
+								`**❯ Songs Queued:**\n${[...queues.cache.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`,
 							inline: true
 						},
 						{
 							name: leadingSpace,
 							value: `**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n` +
-								`**❯ Users Listening:**\n${[...queueStore.store.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`,
+								`**❯ Users Listening:**\n${[...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`,
 							inline: true
 						}
 					])
@@ -179,12 +179,12 @@ commands.assign({
 					{
 						name: leadingIdentity,
 						value: `**❯ Games Played Today:**\n${gamesPlayed} games\n` +
-							`**❯ Games In Progress:**\n${gameStore.store.size} games`,
+							`**❯ Games In Progress:**\n${games.cache.size} games`,
 						inline: true
 					},
 					{
 						name: leadingSpace,
-						value: `**❯ Users Playing:**\n${gameStore.store.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`,
+						value: `**❯ Users Playing:**\n${games.cache.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`,
 						inline: true
 					}
 				])
@@ -231,7 +231,7 @@ commands.assign({
 			}
 		}
 	},
-	"ping": {
+	{
 		usage: "None",
 		description: "Gets latency to Discord",
 		aliases: ["ping", "pong"],
@@ -246,7 +246,7 @@ commands.assign({
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
 		}
 	},
-	"forcestatupdate": {
+	{
 		usage: "None",
 		description: "",
 		aliases: ["forcestatupdate"],
@@ -257,7 +257,7 @@ commands.assign({
 			sendStats(msg)
 		}
 	},
-	"restartnotify": {
+	{
 		usage: "None",
 		description: "",
 		aliases: ["restartnotify"],
@@ -270,7 +270,7 @@ commands.assign({
 			msg.react("✅")
 		}
 	},
-	"invite": {
+	{
 		usage: "None",
 		description: "Add Amanda to a server",
 		aliases: ["invite", "inv"],
@@ -283,7 +283,7 @@ commands.assign({
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"info": {
+	{
 		usage: "None",
 		description: "Displays information about Amanda",
 		aliases: ["info", "inf"],
@@ -315,7 +315,7 @@ commands.assign({
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"donate": {
+	{
 		usage: "None",
 		description: "Get information on how to donate",
 		aliases: ["donate", "patreon"],
@@ -328,7 +328,7 @@ commands.assign({
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"commits": {
+	{
 		usage: "None",
 		description: "Gets the latest git commits to Amanda",
 		aliases: ["commits", "commit", "git", "changes", "changelog"],
@@ -371,7 +371,7 @@ commands.assign({
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"privacy": {
+	{
 		usage: "None",
 		description: "Details Amanda's privacy statement",
 		aliases: ["privacy"],
@@ -385,7 +385,7 @@ commands.assign({
 			} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed)) }
 		}
 	},
-	"user": {
+	{
 		usage: "[user]",
 		description: "Provides information about a user",
 		aliases: ["user"],
@@ -424,7 +424,7 @@ commands.assign({
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"avatar": {
+	{
 		usage: "[user]",
 		description: "Gets a user's avatar",
 		aliases: ["avatar", "pfp"],
@@ -449,7 +449,7 @@ commands.assign({
 			} else msg.channel.send(url)
 		}
 	},
-	"wumbo": {
+	{
 		usage: "<emoji>",
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
@@ -468,7 +468,7 @@ commands.assign({
 			return msg.channel.send(embed)
 		}
 	},
-	"profile": {
+	{
 		usage: "[user]",
 		description: "Get profile information about someone",
 		aliases: ["profile"],
@@ -553,7 +553,7 @@ commands.assign({
 			return msg.channel.send({ files: [image] })
 		}
 	},
-	"settings": {
+	{
 		usage: "<self|server> <view|setting name> [value]",
 		description: "Modify settings Amanda will use for yourself or server wide",
 		aliases: ["settings", "setting"],
@@ -698,17 +698,17 @@ commands.assign({
 		}
 	},
 
-	"background": {
+	{
 		usage: "<url>",
 		description: "Set the background displayed on &profile",
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
 		process: function(msg, suffix, lang) {
-			commands.get("settings").process(msg, "self profilebackground " + suffix, lang)
+			commands.cache.get("settings").process(msg, "self profilebackground " + suffix, lang)
 		}
 	},
 
-	"help": {
+	{
 		usage: "[command|category]",
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
@@ -860,7 +860,7 @@ commands.assign({
 						msg.channel.send(utils.contentify(msg.channel, embed))
 					}
 				} else {
-					const command = commands.find(c => c.aliases.includes(suffix))
+					const command = commands.cache.find(c => c.aliases.includes(suffix))
 					if (command) {
 						let info = { usage: command.usage, description: command.description }
 						if (lang[command.category]) {
@@ -880,7 +880,7 @@ commands.assign({
 							.setAuthor(`Command Category: ${suffix}`)
 							.setDescription(
 								cat.map(c => {
-									const cmd = commands.get(c)
+									const cmd = commands.cache.get(c)
 									let desc
 									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
 									else desc = cmd.description
@@ -902,7 +902,7 @@ commands.assign({
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => {
-									const cmd = commands.get(c)
+									const cmd = commands.cache.get(c)
 									let desc
 									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
 									else desc = cmd.description
@@ -933,4 +933,4 @@ commands.assign({
 			}
 		}
 	}
-})
+])

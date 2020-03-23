@@ -9,7 +9,7 @@ const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
 const Lang = require("@amanda/lang")
 
-const ReactionMenu = require("./managers/Discord/ReactionMenu")
+const ReactionMenu = require("./structures/Discord/ReactionMenu")
 
 const passthrough = require("../passthrough")
 const { config, constants, client, db, reloadEvent } = passthrough
@@ -801,7 +801,7 @@ const utils = {
 
 	/**
 	 * @param {Discord.Message} message
-	 * @param {import("./managers/Discord/ReactionMenu").ReactionMenuAction[]} actions
+	 * @param {import("./structures/Discord/ReactionMenu").ReactionMenuAction[]} actions
 	 */
 	reactionMenu: function(message, actions) {
 		return new ReactionMenu(message, actions)
@@ -1145,9 +1145,9 @@ const utils = {
 	},
 
 	timeUntilSongsEnd: function() {
-		const queueStore = passthrough.queueStore // file load order means queueStore cannot be extracted at top of file
+		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
 		let max = 0
-		for (const queue of queueStore.store.values()) {
+		for (const queue of queueStore.cache.values()) {
 			if (queue.songs[0] && queue.songs[0].lengthSeconds >= 0) {
 				if (queue.songs[0].lengthSeconds > max) max = queue.songs[0].lengthSeconds
 			}
@@ -1156,9 +1156,9 @@ const utils = {
 	},
 
 	timeUntilQueuesEnd: function() {
-		const queueStore = passthrough.queueStore // file load order means queueStore cannot be extracted at top of file
+		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
 		let max = 0
-		for (const queue of queueStore.store.values()) {
+		for (const queue of queueStore.cache.values()) {
 			let total = 0
 			for (const song of queue.songs) {
 				if (song.lengthSeconds >= 0) total += song.lengthSeconds

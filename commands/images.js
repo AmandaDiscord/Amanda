@@ -38,8 +38,8 @@ async function sendImage(host, path, msg, emoji, footer) {
 	return msg.channel.send(utils.contentify(msg.channel, embed))
 }
 
-commands.assign({
-	"cat": {
+commands.assign([
+	{
 		usage: "None",
 		description: "Returns an image of a cute cat",
 		aliases: ["cat"],
@@ -48,7 +48,7 @@ commands.assign({
 			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
-	"dog": {
+	{
 		usage: "None",
 		description: "Returns an image of a cute doggo",
 		aliases: ["dog", "doggo"],
@@ -57,7 +57,7 @@ commands.assign({
 			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
-	"space": {
+	{
 		usage: "None",
 		description: "Returns an image of space",
 		aliases: ["space"],
@@ -66,7 +66,7 @@ commands.assign({
 			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", poweredbychewey)
 		}
 	},
-	"snek": {
+	{
 		usage: "None",
 		description: "Returns an image of a snek",
 		aliases: ["snek", "snake"],
@@ -75,7 +75,7 @@ commands.assign({
 			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
-	"birb": {
+	{
 		usage: "None",
 		description: "Returns an image of a birb",
 		aliases: ["birb", "bird"],
@@ -84,7 +84,7 @@ commands.assign({
 			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
 	},
-	"catgirl": {
+	{
 		usage: "None",
 		description: "Returns an image of a catgirl (ฅ’ω’ฅ)",
 		aliases: ["catgirl", "neko"],
@@ -103,4 +103,4 @@ commands.assign({
 			})
 		}
 	}
-})
+])

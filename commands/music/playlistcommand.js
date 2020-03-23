@@ -17,8 +17,8 @@ reloader.useSync("./commands/music/songtypes.js", songTypes)
 const YouTube = require("simple-youtube-api")
 const youtube = passthrough.youtube
 
-commands.assign({
-	playlist: {
+commands.assign([
+	{
 		aliases: ["playlist", "playlists", "pl"],
 		category: "audio",
 		description: "Create, play, and edit playlists.",
@@ -316,4 +316,4 @@ commands.assign({
 			}
 		}
 	}
-})
+])

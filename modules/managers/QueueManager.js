@@ -3,36 +3,27 @@
 const Discord = require("discord.js")
 const { EventEmitter } = require("events")
 
-const passthrough = require("../../../passthrough")
+const passthrough = require("../../passthrough")
 const { client, reloader, ipc } = passthrough
 
-const QueueFile = require("../../../commands/music/queue")
+const QueueFile = require("../../commands/music/queue")
 reloader.useSync("./commands/music/queue.js", QueueFile)
 
-const utils = require("../../utilities")
+const utils = require("../utilities")
 reloader.useSync("./modules/utilities.js", utils)
 
-class QueueStore {
+class QueueManager {
 	constructor() {
 		/** @type {Discord.Collection<string, QueueFile.Queue>} */
-		this.store = new Discord.Collection()
+		this.cache = new Discord.Collection()
 		this.songsPlayed = 0
 		this.events = new EventEmitter()
 	}
 	toObject() {
 		return {
 			_id: "QueueStore_" + utils.getFirstShard(),
-			queues: [...this.store.values()].map(q => q.toObject())
+			queues: [...this.cache.values()].map(q => q.toObject())
 		}
-	}
-	/**
-	 * @param {string} guildID
-	 */
-	has(guildID) {
-		return this.store.has(guildID)
-	}
-	get(guildID) {
-		return this.store.get(guildID)
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
@@ -40,7 +31,7 @@ class QueueStore {
 	 */
 	getOrCreate(voiceChannel, textChannel) {
 		const guildID = voiceChannel.guild.id
-		if (this.store.has(guildID)) return this.store.get(guildID)
+		if (this.cache.has(guildID)) return this.cache.get(guildID)
 		else return this.create(voiceChannel, textChannel)
 	}
 	/**
@@ -50,7 +41,7 @@ class QueueStore {
 	create(voiceChannel, textChannel) {
 		const guildID = voiceChannel.guild.id
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel)
-		this.store.set(guildID, instance)
+		this.cache.set(guildID, instance)
 		ipc.replier.sendNewQueue(instance)
 		this.events.emit("create", instance)
 		return instance
@@ -60,7 +51,7 @@ class QueueStore {
 	 * @param {string} guildID
 	 */
 	delete(guildID) {
-		this.store.delete(guildID)
+		this.cache.delete(guildID)
 		ipc.replier.sendDeleteQueue(guildID)
 		this.events.emit("delete", guildID)
 	}
@@ -68,7 +59,7 @@ class QueueStore {
 		return passthrough.nedb.queue.update({ _id: "QueueStore_" + utils.getFirstShard() }, this.toObject(), { upsert: true })
 	}
 	async restore() {
-		const songTypes = require("../../../commands/music/songtypes")
+		const songTypes = require("../../commands/music/songtypes")
 		const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
 		data.queues.forEach(async q => {
 			// console.log(q)
@@ -77,7 +68,7 @@ class QueueStore {
 			const textChannel = client.channels.cache.get(q.textChannelID)
 			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
 			console.log("Making queue for voice channel " + voiceChannel.name)
-			const exists = this.has(guildID)
+			const exists = this.cache.has(guildID)
 			if (exists) console.log("Queue already in store! Skipping.")
 			else {
 				const queue = this.getOrCreate(voiceChannel, textChannel)
@@ -109,4 +100,4 @@ class QueueStore {
 	}
 }
 
-module.exports = QueueStore
+module.exports = QueueManager

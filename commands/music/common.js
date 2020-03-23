@@ -153,10 +153,10 @@ const common = {
 			if (json.exception) throw json.exception.message
 			// sometimes the track length can be extremely long and it doesn't play.
 			// length > 24h is probably the glitch, and for some reason we can avoid it by searching for the track instead
-			if (input.length === 11 && json.tracks && json.tracks[0] && json.tracks[0].info && json.tracks[0].info.length > 24*60*60*1000) {
+			if (input.length === 11 && json.tracks && json.tracks[0] && json.tracks[0].info && json.tracks[0].info.length > 24 * 60 * 60 * 1000) {
 				const searchTracks = await common.getTracks(`ytsearch:${input}`, region)
 				const filteredTracks = searchTracks.filter(t => t.info.identifier === json.tracks[0].info.identifier)
-				if (filteredTracks.length) Object.assign(json, {tracks: filteredTracks})
+				if (filteredTracks.length) Object.assign(json, { tracks: filteredTracks })
 			}
 			return json.tracks
 		})
@@ -256,7 +256,7 @@ const common = {
 		 * @param {Discord.Message} [context]
 		 */
 		function(song, textChannel, voiceChannel, insert, context) {
-			const queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
+			const queue = passthrough.queues.getOrCreate(voiceChannel, textChannel)
 			const result = queue.addSong(song, insert)
 			if (context instanceof Discord.Message && result == 0) {
 				context.react("✅")
@@ -302,7 +302,7 @@ const common = {
 		 */
 		function(textChannel, voiceChannel, songs, insert, context) {
 			if (insert) songs.reverse()
-			const queue = passthrough.queueStore.getOrCreate(voiceChannel, textChannel)
+			const queue = passthrough.queues.getOrCreate(voiceChannel, textChannel)
 			const results = songs.map(song => {
 				return queue.addSong(song, insert)
 			})

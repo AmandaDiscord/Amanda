@@ -3,24 +3,25 @@
 const Discord = require("discord.js")
 const Lang = require("@amanda/lang")
 
-/**
- * @extends Discord.Collection<string,Command>
- */
-class CommandStore extends Discord.Collection {
+
+class CommandManager {
 	constructor() {
-		super()
+		/**
+		 * @type {Discord.Collection<string, Command>}
+		 */
+		this.cache = new Discord.Collection()
 		/**
 		 * @type {Map<string, Array<string>>}
 		 */
 		this.categories = new Map()
 	}
 	/**
-	 * @param {Object.<string, Command>} properties
+	 * @param {Array<Command>} properties
 	 */
 	assign(properties) {
-		Object.values(properties).forEach(i => {
-			if (this.get(i.aliases[0])) this.delete(i.aliases[0])
-			this.set(i.aliases[0], i)
+		properties.forEach(i => {
+			if (this.cache.get(i.aliases[0])) this.cache.delete(i.aliases[0])
+			this.cache.set(i.aliases[0], i)
 			this.categories.forEach(c => {
 				if (c.includes(i.aliases[0])) c.splice(c.indexOf(i.aliases[0]), 1)
 			})
@@ -34,8 +35,8 @@ class CommandStore extends Discord.Collection {
 	 */
 	remove(commands) {
 		for (const command of commands) {
-			if (this.get(command)) {
-				this.delete(command)
+			if (this.cache.get(command)) {
+				this.cache.delete(command)
 				this.categories.forEach(c => {
 					if (c.includes(command)) c.splice(c.indexOf(command), 1)
 				})
@@ -44,7 +45,7 @@ class CommandStore extends Discord.Collection {
 	}
 }
 
-module.exports = CommandStore
+module.exports = CommandManager
 
 /**
  * @typedef {Object} Command
@@ -52,5 +53,6 @@ module.exports = CommandStore
  * @property {string} description
  * @property {string[]} aliases
  * @property {string} category
+ * @property {string} [example]
  * @property {(msg: Discord.Message, suffix?: string, lang?: Lang.Lang) => any} process
  */

@@ -20,10 +20,10 @@ const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 
 /**
- * @type {Object.<string, import("../modules/managers/datastores/CommandStore").Command>}
+ * @type {Array<import("../modules/managers/CommandManager").Command>}
  */
-const cmds = {
-	"ship": {
+const cmds = [
+	{
 		usage: "<user 1> <user 2>",
 		description: "Ships two people",
 		aliases: ["ship"],
@@ -76,7 +76,7 @@ const cmds = {
 			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { files: [image] })
 		}
 	},
-	"waifu": {
+	{
 		usage: "[user]",
 		description: "Gets the waifu information about yourself or a user",
 		aliases: ["waifu"],
@@ -98,7 +98,7 @@ const cmds = {
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"claim": {
+	{
 		usage: "<amount: number|all|half> <user>",
 		description: "Claims someone as a waifu. Requires Discoins",
 		aliases: ["claim"],
@@ -150,7 +150,7 @@ const cmds = {
 			return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 		}
 	},
-	"divorce": {
+	{
 		usage: "[reason]",
 		description: "Divorces a user",
 		aliases: ["divorce"],
@@ -174,7 +174,7 @@ const cmds = {
 			return info.waifu.send(`${utils.replace(memlang.interaction.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
 		}
 	},
-	"gift": {
+	{
 		usage: "<amount: number|all|half>",
 		description: "Gifts an amount of Discoins towards your waifu's price",
 		aliases: ["gift"],
@@ -206,7 +206,7 @@ const cmds = {
 			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": gift, "tag2": user.tag }))
 		}
 	},
-	"waifuleaderboard": {
+	{
 		usage: "[local] [page: number]",
 		description: "Displays the leaderboard of the top waifus",
 		aliases: ["waifuleaderboard", "waifulb"],
@@ -288,7 +288,7 @@ const cmds = {
 			}
 		}
 	},
-	"bean": {
+	{
 		usage: "<user>",
 		description: "Beans a user",
 		aliases: ["bean"],
@@ -303,7 +303,7 @@ const cmds = {
 			return msg.channel.send(utils.replace(lang.interaction.bean.returns.beaned, { "tag": `**${member.user.tag}**` }))
 		}
 	}
-}
+]
 
 const interactionSources = [
 	{
@@ -355,20 +355,18 @@ const interactionSources = [
 
 for (const source of interactionSources) {
 	const newCommand = {
-		"interaction-command": {
-			usage: "<user>",
-			description: source.description,
-			aliases: [source.name],
-			category: "interaction",
-			/**
-			 * @param {Discord.Message} msg
-			 * @param {string} suffix
-			 * @param {import("@amanda/lang").Lang} lang
-			 */
-			process: (msg, suffix, lang) => doInteraction(msg, suffix, source, lang)
-		}
+		usage: "<user>",
+		description: source.description,
+		aliases: [source.name],
+		category: "interaction",
+		/**
+		 * @param {Discord.Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		process: (msg, suffix, lang) => doInteraction(msg, suffix, source, lang)
 	}
-	commands.assign(newCommand)
+	cmds.push(newCommand)
 }
 
 const attempts = [

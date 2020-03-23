@@ -34,8 +34,8 @@ imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png");
 imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))
 fontStorage.save("font", "font", ".fonts/Whitney-20.fnt")
 
-commands.assign({
-	"slot": {
+commands.assign([
+	{
 		usage: "[amount: number|all|half]",
 		description: "Runs a random slot machine for a chance at Discoins",
 		aliases: ["slot", "slots"],
@@ -124,7 +124,7 @@ commands.assign({
 			return msg.channel.send(result, { files: [image] })
 		}
 	},
-	"flip": {
+	{
 		usage: "None",
 		description: "Flips a coin",
 		aliases: ["flip"],
@@ -134,7 +134,7 @@ commands.assign({
 			return msg.channel.send(utils.replace(lang.gambling.flip.returns.flip, { "flip": flip }))
 		}
 	},
-	"betflip": {
+	{
 		usage: "<amount: number|all|half> [h|t]",
 		description: "Place a bet on a random flip for a chance of Discoins",
 		aliases: ["betflip", "bf"],
@@ -201,7 +201,7 @@ commands.assign({
 			}
 		}
 	},
-	"coins": {
+	{
 		usage: "[user]",
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
@@ -218,7 +218,7 @@ commands.assign({
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
-	"daily": {
+	{
 		usage: "None",
 		description: "A daily command that gives a random amount of Discoins",
 		aliases: ["daily"],
@@ -245,7 +245,7 @@ commands.assign({
 			}
 		}
 	},
-	"leaderboard": {
+	{
 		usage: "[local] [page: number]",
 		description: "Gets the leaderboard for people with the most coins",
 		aliases: ["leaderboard", "lb"],
@@ -333,7 +333,7 @@ commands.assign({
 			}
 		}
 	},
-	"give": {
+	{
 		usage: "<amount: number|all|half> <user>",
 		description: "Gives discoins to a user from your account",
 		aliases: ["give"],
@@ -381,7 +381,7 @@ commands.assign({
 			return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 		}
 	},
-	"wheel": {
+	{
 		usage: "[amount: number|all|half]",
 		description: "A Wheel of Fortune for a chance at making more Discoins",
 		aliases: ["wheel", "wof"],
@@ -441,4 +441,4 @@ commands.assign({
 			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": amount, "number2": Math.round(amount * Number(choice)) }), { files: [image] })
 		}
 	}
-})
+])

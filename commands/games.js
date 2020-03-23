@@ -11,7 +11,7 @@ const Lang = require("@amanda/lang")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, commands, reloader, gameStore } = passthrough
+const { client, commands, reloader, games } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 
@@ -37,18 +37,18 @@ class Game {
 	constructor(channel, type) {
 		this.channel = channel
 		this.type = type
-		this.manager = gameStore
+		this.manager = games
 		this.id = channel.id
 		this.receivedAnswers = undefined
 		if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
 		else this.permissions = undefined
 	}
 	init() {
-		this.manager.addGame(this)
+		this.manager.add(this)
 		this.start()
 	}
 	destroy() {
-		this.manager.store.delete(this.id)
+		this.manager.cache.delete(this.id)
 	}
 	start() {
 		// intentionally empty
@@ -226,7 +226,7 @@ async function startGame(channel, options = {}) {
 		}
 	}
 	// Check games in progress
-	if (gameStore.store.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(options.lang.games.trivia.prompts.gameInProgress)
+	if (games.cache.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(options.lang.games.trivia.prompts.gameInProgress)
 	// Send typing
 	channel.sendTyping()
 	// Get new game data
@@ -241,7 +241,7 @@ async function startGame(channel, options = {}) {
 }
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 function answerDetector(msg) {
-	const game = gameStore.store.find(g => g.id == msg.channel.id)
+	const game = games.cache.find(g => g.id == msg.channel.id)
 	if (game instanceof TriviaGame) if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
 }
 
@@ -380,8 +380,8 @@ function sweeper(difficulty, size) {
 	return { text: str, size: width, bombs: bombs, error: error }
 }
 
-commands.assign({
-	"trivia": {
+commands.assign([
+	{
 		usage: "[category]",
 		description: "Play a game of trivia with other members and win Discoins",
 		aliases: ["trivia", "t"],
@@ -390,7 +390,7 @@ commands.assign({
 			startGame(msg.channel, { suffix, msg, lang })
 		}
 	},
-	"minesweeper": {
+	{
 		usage: "[easy|medium|hard] [--raw] [--size:number]",
 		description: "Starts a game of minesweeper using the Discord spoiler system",
 		aliases: ["minesweeper", "ms"],
@@ -422,4 +422,4 @@ commands.assign({
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	}
-})
+])

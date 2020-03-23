@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, queueStore, ipc } = passthrough
+const { config, constants, client, reloader, queues, ipc } = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -18,12 +18,12 @@ reloader.useSync("./commands/music/common.js", common)
 
 class Queue {
 	/**
-	 * @param {queueStore} store
+	 * @param {queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.TextChannel} textChannel
 	 */
-	constructor(store, voiceChannel, textChannel) {
-		this.store = store
+	constructor(manager, voiceChannel, textChannel) {
+		this.manager = manager
 		this.guildID = voiceChannel.guild.id
 		this.voiceChannel = voiceChannel
 		this.textChannel = textChannel
@@ -96,7 +96,7 @@ class Queue {
 		})
 		/** @type {Discord.Message} */
 		this.np = null
-		/** @type {import("../../modules/managers/Discord/ReactionMenu")} */
+		/** @type {import("../../modules/structures/Discord/ReactionMenu")} */
 		this.npMenu = null
 		this.npUpdater = new utils.FrequencyUpdater(() => {
 			if (this.np) {
@@ -295,7 +295,7 @@ class Queue {
 		this.npUpdater.stop(false)
 		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guildID)
-		this.store.delete(this.guildID)
+		this.manager.delete(this.guildID)
 	}
 	/**
 	 * Pause playback.
