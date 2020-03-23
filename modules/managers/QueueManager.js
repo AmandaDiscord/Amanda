@@ -28,19 +28,21 @@ class QueueManager {
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.TextChannel} textChannel
+	 * @param {string} [host]
 	 */
-	getOrCreate(voiceChannel, textChannel) {
+	getOrCreate(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
 		if (this.cache.has(guildID)) return this.cache.get(guildID)
-		else return this.create(voiceChannel, textChannel)
+		else return this.create(voiceChannel, textChannel, host)
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.TextChannel} textChannel
+	 * @param {string} [host]
 	 */
-	create(voiceChannel, textChannel) {
+	create(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
-		const instance = new QueueFile.Queue(this, voiceChannel, textChannel)
+		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, host)
 		this.cache.set(guildID, instance)
 		ipc.replier.sendNewQueue(instance)
 		this.events.emit("create", instance)
@@ -66,12 +68,13 @@ class QueueManager {
 			const guildID = q.guildID
 			const voiceChannel = client.channels.cache.get(q.voiceChannelID)
 			const textChannel = client.channels.cache.get(q.textChannelID)
+			const host = q.host
 			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
 			console.log("Making queue for voice channel " + voiceChannel.name)
 			const exists = this.cache.has(guildID)
 			if (exists) console.log("Queue already in store! Skipping.")
 			else {
-				const queue = this.getOrCreate(voiceChannel, textChannel)
+				const queue = this.getOrCreate(voiceChannel, textChannel, host)
 				q.songs.forEach(s => {
 					if (s.class == "YouTubeSong") {
 						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
