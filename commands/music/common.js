@@ -151,7 +151,14 @@ const common = {
 		}).then(async data => {
 			const json = await data.json()
 			if (json.exception) throw json.exception.message
-			else return json.tracks
+			// sometimes the track length can be extremely long and it doesn't play.
+			// length > 24h is probably the glitch, and for some reason we can avoid it by searching for the track instead
+			if (input.length === 11 && json.tracks && json.tracks[0] && json.tracks[0].info && json.tracks[0].info.length > 24*60*60*1000) {
+				const searchTracks = await common.getTracks(`ytsearch:${input}`, region)
+				const filteredTracks = searchTracks.filter(t => t.info.identifier === json.tracks[0].info.identifier)
+				if (filteredTracks.length) Object.assign(json, {tracks: filteredTracks})
+			}
+			return json.tracks
 		})
 	},
 
@@ -214,7 +221,7 @@ const common = {
 		/**
 		 * Promise to get the track. Errors are rejected.
 		 */
-		urlToTrack: function(url, region = "us-west") {
+		urlToTrack: function(url, region = "") {
 			if (!url) throw new Error("url parameter in urlToTrack is falsy")
 			return common.getTracks(url, region).then(tracks => {
 				if (!tracks || !tracks[0]) {
