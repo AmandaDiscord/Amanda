@@ -21,8 +21,9 @@ class Queue {
 	 * @param {queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.TextChannel} textChannel
+	 * @param {string} [host]
 	 */
-	constructor(manager, voiceChannel, textChannel) {
+	constructor(manager, voiceChannel, textChannel, host = null) {
 		this.manager = manager
 		this.guildID = voiceChannel.guild.id
 		this.voiceChannel = voiceChannel
@@ -46,11 +47,14 @@ class Queue {
 			.setDelay(voiceEmptyDuration)
 
 		this.voiceLeaveWarningMessagePromise = null
-		const node = utils.getLavalinkNodeByRegion(this.voiceChannel.guild.region)
+		if (!host) {
+			const node = utils.getLavalinkNodeByRegion(this.voiceChannel.guild.region)
+			host = node.host
+		}
 		this.player = client.lavalink.join({
 			guild: this.guildID,
 			channel: this.voiceChannel.id,
-			host: node.host
+			host
 		})
 		this.player.on("end", event => this._onEnd(event))
 		this.player.on("playerUpdate", data => {
@@ -117,7 +121,8 @@ class Queue {
 			songStartTime: this.songStartTime,
 			pausedAt: this.pausedAt,
 			npID: this.np ? this.np.id : null,
-			songs: this.songs.map(s => s.toObject())
+			songs: this.songs.map(s => s.toObject()),
+			host: this.player.node.host
 		}
 	}
 	/**
