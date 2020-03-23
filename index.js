@@ -91,7 +91,6 @@ const db = mysql.createPool({
 		"./commands/music/music.js",
 		"./commands/music/playlistcommand.js",
 		"./commands/admin.js",
-		"./commands/alerts.js",
 		"./commands/cleverai.js",
 		"./commands/gambling.js",
 		"./commands/games.js",
