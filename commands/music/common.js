@@ -226,11 +226,10 @@ const common = {
 			formats = formats
 				.filter(f => f.type.includes("audio"))
 				.sort((a, b) => {
-					let abitrate = a.bitrate + (a.type.includes("audio/webm") ? 1e6 : 0)
-					let bbitrate = b.bitrate + (b.type.includes("audio/webm") ? 1e6 : 0)
+					const abitrate = a.bitrate + (a.type.includes("audio/webm") ? 1e6 : 0)
+					const bbitrate = b.bitrate + (b.type.includes("audio/webm") ? 1e6 : 0)
 					return bbitrate - abitrate
 				})
-			console.log(formats)
 			if (formats[0]) return formats[0].url
 			throw new Error("Invidious did not return any audio formats. Sadly, we cannot play this song.")
 		},
