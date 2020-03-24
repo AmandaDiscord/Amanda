@@ -182,7 +182,7 @@ class YouTubeSong extends Song {
 		this.related = new utils.AsyncValueCache(
 		/** @returns {Promise<any[]>} */
 			() => {
-				return fetch(`${config.invidious_origin}/api/v1/videos/${this.id}`).then(async data => {
+				return fetch(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).then(async data => {
 					const json = await data.json()
 					this.typeWhileGetRelated = false
 					return json.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
@@ -193,7 +193,13 @@ class YouTubeSong extends Song {
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.track == "!") {
 				if (config.use_invidious) { // Resolve track with Invidious
-					return common.invidious.getTrack(this.id).then(t => {
+					let host = null
+					let region = null
+					if (this.queue) {
+						host = this.queue.player.node.host
+						region = this.queue.voiceChannel.guild.region
+					}
+					return common.invidious.getTrack(this.id, host, region).then(t => {
 						this.track = t
 					}).catch(error => {
 						if (typeof error === "string") this.error = error
@@ -258,10 +264,13 @@ class YouTubeSong extends Song {
 			this.typeWhileGetRelated = false
 			return ""
 				+ "Invidious didn't return valid data."
-				+ `\n<${config.invidious_origin}/api/v1/videos/${this.id}>`
-				+ `\n<${config.invidious_origin}/v/${this.id}>`
+				+ `\n<${this.getInvidiousOrigin()}/api/v1/videos/${this.id}>`
+				+ `\n<${this.getInvidiousOrigin()}/v/${this.id}>`
 				+ `\n<https://youtu.be/${this.id}>`
 		})
+	}
+	getInvidiousOrigin() {
+		return common.invidious.getOrigin(this.queue && this.queue.player.node.host)
 	}
 	showInfo() {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)

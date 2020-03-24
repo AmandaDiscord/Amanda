@@ -46,7 +46,9 @@ const subcommandsMap = new Map([
 			if (match && match.type == "video" && match.id) {
 				// Get the track
 				if (config.use_invidious) { // Resolve tracks with Invidious
-					common.invidious.getData(match.id).then(async data => {
+					const queue = queues.cache.get(msg.guild.id)
+					const node = (queue && queue.getUsedLavalinkNode()) || utils.getLavalinkNodeByRegion(msg.guild.region)
+					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
@@ -331,16 +333,14 @@ commands.assign([
 			const permissions = channel.permissionsFor(client.user)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
 			const node = utils.getLavalinkNodeByRegion(msg.guild.region)
-			const currentQueue = queues.cache.get(msg.guild.id)
 			let extraNodeInfo = ""
-			if (currentQueue) {
-				const currentQueueNode = currentQueue.getUsedLavalinkNode()
-				if (currentQueueNode !== node) {
-					const name = currentQueueNode ? currentQueueNode.name : "an unnamed node"
-					extraNodeInfo = `\n↳ However, the current queue is using ${name}`
-				}
+			const currentQueue = queues.cache.get(msg.guild.id)
+			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
+			if (currentQueueNode && currentQueueNode !== node) {
+				const name = currentQueueNode ? currentQueueNode.name : "an unnamed node"
+				extraNodeInfo = `\n↳ However, the current queue is using ${name}`
 			}
-			const invidiousHostname = new URL(config.invidious_origin).hostname
+			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node).host)).hostname
 			const details = new Discord.MessageEmbed()
 				.setColor(0x36393f)
 				.setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))

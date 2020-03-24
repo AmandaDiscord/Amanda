@@ -7,7 +7,7 @@ const Discord = require("discord.js")
 const path = require("path")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, config } = passthrough
+const { client, reloader, config, constants } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
@@ -164,11 +164,22 @@ const common = {
 
 	invidious: {
 		/**
+		 * Get the Invidious origin that should be used with a specific Lavalink node.
+		 * @param {string} host
+		 * @returns {string}
+		 */
+		getOrigin: function(host) {
+			const node = constants.lavalinkNodes.find(n => n.host === host) || constants.lavalinkNodes[0]
+			return node.invidious_origin
+		},
+
+		/**
 		 * Return a request promise. This is chained to reject if data.error is set.
 		 * @param {string} id
+		 * @param {string} [host] host of lavalink node that will be used with this data
 		 */
-		getData: function(id) {
-			return fetch(`${config.invidious_origin}/api/v1/videos/${id}`).then(async data => {
+		getData: function(id, host = null) {
+			return fetch(`${common.invidious.getOrigin(host)}/api/v1/videos/${id}`).then(async data => {
 				const json = await data.json()
 				if (json.error) throw new Error(json.error)
 				else return json
@@ -178,10 +189,11 @@ const common = {
 		/**
 		 * @param {string} id
 		 * @param {number} [pageNumber] 1-indexed
+		 * @param {string} [host] host of lavalink node that will be used with this data
 		 * @returns {Promise<import("../../typings").InvidiousPlaylist>}
 		 */
-		getPlaylistPage: function(id, pageNumber = 1) {
-			return fetch(`${config.invidious_origin}/api/v1/playlists/${id}?page=${pageNumber}`).then(res => res.json())
+		getPlaylistPage: function(id, pageNumber = 1, host = null) {
+			return fetch(`${common.invidious.getOrigin(host)}/api/v1/playlists/${id}?page=${pageNumber}`).then(res => res.json())
 		},
 
 		getPlaylist: function(id) {
@@ -213,7 +225,12 @@ const common = {
 			if (!formats || !formats[0]) throw new Error("This video has probably been deleted. (Invidious returned no formats.)")
 			formats = formats
 				.filter(f => f.type.includes("audio"))
-				.sort((a, b) => (b.bitrate - a.bitrate))
+				.sort((a, b) => {
+					let abitrate = a.bitrate + (a.type.includes("audio/webm") ? 1e6 : 0)
+					let bbitrate = b.bitrate + (b.type.includes("audio/webm") ? 1e6 : 0)
+					return bbitrate - abitrate
+				})
+			console.log(formats)
 			if (formats[0]) return formats[0].url
 			throw new Error("Invidious did not return any audio formats. Sadly, we cannot play this song.")
 		},
@@ -237,12 +254,14 @@ const common = {
 		/**
 		 * Promise to get data to URL to track. Errors produced anywhere in the chain are rejected.
 		 * @param {string} id
+		 * @param {string} [host] host of lavalink node that will be used with this data
+		 * @param {string} [region] region of lavalink node that will be used with this data
 		 * @returns {Promise<string>}
 		 */
-		getTrack: function(id) {
-			return common.invidious.getData(id)
+		getTrack: function(id, host = null, region = null) {
+			return common.invidious.getData(id, host)
 				.then(common.invidious.dataToURL)
-				.then(common.invidious.urlToTrack)
+				.then(url => common.invidious.urlToTrack(url, region))
 		}
 	},
 
