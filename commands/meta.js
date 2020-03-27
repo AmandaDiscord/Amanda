@@ -848,6 +848,10 @@ commands.assign([
 									"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`"
 							},
 							{
+								name: "bulk",
+								value: "Easily add many songs at once through a menu interface."
+							},
+							{
 								name: "delete",
 								value: "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`"
 							}

@@ -20,7 +20,7 @@ module.exports = {
 			host: "amanda.moe",
 			port: 10402,
 			password: config.lavalink_password,
-			invidious_origin: "https://invidio.us",
+			invidious_origin: "http://cadence.moe:3000",
 			regions: ["brazil", "us-central", "us-south", "us-east", "us-west", "eu-central", "europe", "eu-west", "sydney", "southafrica"]
 		},
 		{

@@ -24,6 +24,7 @@ process._ptcreated = true
  * @property {import("frisky-client")} frisky
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
+ * @property {string} statusPrefix
  */
 
 /**

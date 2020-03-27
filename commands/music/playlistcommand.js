@@ -1,6 +1,7 @@
 // @ts-check
 
 const Discord = require("discord.js")
+const path = require("path")
 
 const passthrough = require("../../passthrough")
 const { client, config, reloader, commands } = passthrough
@@ -16,6 +17,8 @@ reloader.useSync("./commands/music/songtypes.js", songTypes)
 
 const YouTube = require("simple-youtube-api")
 const youtube = passthrough.youtube
+
+const bulkAddCollectionChannels = new Set()
 
 commands.assign([
 	{
@@ -117,7 +120,46 @@ commands.assign([
 				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.databaseFixed, { "username": msg.author.username }))
 			}
 			const action = args[1] || ""
-			if (action.toLowerCase() == "add") {
+			if (action.toLowerCase() === "bulk" || action.toLowerCase() === "bulkadd") {
+				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
+				if (bulkAddCollectionChannels.has(msg.channel.id)) return msg.channel.send("You already have a menu open in here. Type `stop` to stop it.")
+				bulkAddCollectionChannels.add(msg.channel.id)
+				const confirmation = await msg.channel.send(
+					new Discord.MessageEmbed()
+					.setTitle("Okay, I'm listening...")
+					.setDescription(
+						"» Type anything to add it to the playlist."
+						+`\n» Commands starting with \`${passthrough.statusPrefix}\` will only run the command.`
+						+"\n» Type `undo` to remove the last item in the playlist.\u2002🧹"
+						+"\n» Type `stop` when you're done. You can keep adding things until you type `stop`.\u2002🛑"
+					)
+					.setColor(0x22dddd)
+				)
+				const collector = msg.channel.createMessageCollector(m => m.author.id === msg.author.id, { dispose: true, idle: 120e3 })
+				/** @param {Discord.Message} msg */
+				const callback = msg => {
+					collector.handleDispose(msg) // don't cache the message inside the collector
+					if (msg.content.startsWith(passthrough.statusPrefix)) {
+						return // ignore commands
+					} else if ([".", "stop", "end", "cancel", "done"].includes(msg.content)) {
+						collector.stop()
+					} else if (msg.content === "undo") {
+						commands.cache.get("playlist").process(msg, `${playlistName} remove last`, lang)
+					} else {
+						commands.cache.get("playlist").process(msg, `${playlistName} add ${msg.content}`, lang)
+					}
+				}
+				collector.on("collect", callback)
+				const fileSaveCallback = () => collector.stop()
+				reloader.reloadEvent.once(path.basename(__filename), fileSaveCallback)
+				collector.once("end", () => {
+					collector.removeListener("collect", callback)
+					reloader.reloadEvent.removeListener(path.basename(__filename), fileSaveCallback)
+					msg.channel.send("All done! I won't add anything else to the playlist.")
+					confirmation.edit("(There used to be a menu here, but it's gone now.)", {embed: null})
+					bulkAddCollectionChannels.delete(msg.channel.id)
+				})
+			} else if (action.toLowerCase() == "add") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (!args[2]) return msg.channel.send(utils.replace(lang.audio.music.prompts.playableRequired, { "username": msg.author.username }))
 				msg.channel.sendTyping()
@@ -148,7 +190,7 @@ commands.assign([
 							} else throw NO_TRACKS
 						})
 					}
-				})().catch(() => {
+				})().catch(error => {
 					// Treating as ID failed, so start a search
 					return common.getTracks(`ytsearch:${search}`, msg.guild.region).then(tracks => {
 						if (tracks && tracks[0]) {
@@ -172,7 +214,7 @@ commands.assign([
 				})
 			} else if (action.toLowerCase() == "remove") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
-				let index = Number(args[2])
+				let index = args[2] === "last" ? orderedSongs.length : Number(args[2])
 				if (!index) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.indexRequired, { "username": msg.author.username }))
 				index = index - 1
 				if (!orderedSongs[index]) return msg.channel.send("Out of range")

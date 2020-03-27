@@ -166,6 +166,7 @@ function manageReady() {
 	utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
+		passthrough.statusPrefix = statusPrefix
 		console.log("Loaded " + prefixes.length + " prefixes: " + prefixes.join(" "))
 		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
 	})
