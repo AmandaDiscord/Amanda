@@ -30,7 +30,7 @@
     "nedb-promises": "^4.0.1",
     "node-fetch": "^2.6.0",
     "node-ipc": "^9.1.1",
-    "pinski": "github:cloudrac3r/pinski#v2",
+    "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "simple-git": "^1.129.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:cloudrac3r/SnowTransfer#b43a90158d9f6dfe07a7b079a5e595a35cd86398",

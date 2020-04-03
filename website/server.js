@@ -1,7 +1,8 @@
 // @ts-check
 
 const fs = require("fs")
-const pinski = require("pinski")
+const {Pinski} = require("pinski")
+const {setInstance} = require("pinski/plugins")
 const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
@@ -50,32 +51,33 @@ reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
 const analytics = new dba(config.chewey_api_key, null)
 passthrough.analytics = analytics
 
-const server = pinski({
-	pageHandlers: [
-		{ web: "/", local: "pug/home.pug", type: "pug" },
-		{ web: "/main.css", local: "sass/main.sass", type: "sass" },
-		{ web: "/animation_demo.css", local: "sass/animation_demo.sass", type: "sass" },
-		{ web: "/animation_demo", local: "web/pug/animation_demo.pug", type: "pug" }
-	],
-	pugDir: "pug",
-	pugIncludeDirs: ["pug/includes"],
-	sassDir: "sass",
-	apiDir: "api",
+const server = new Pinski({
 	relativeRoot: __dirname,
 	filesDir: "html",
-	httpPort: 10400,
-	httpsPort: null,
-	ws: true
+	port: 10400
 })
+setInstance(server)
 
-Object.assign(passthrough, server)
+Object.assign(passthrough, server.getExports())
 
 ;(async () => {
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
 		db.query("SET CHARACTER SET utf8mb4")
 	])
-	server.loadAPI()
+
+	server.addSassDir("sass")
+	server.addRoute("/main.css", "sass/main.sass", "sass")
+
+	server.addPugDir("pug", ["pug/includes"])
+	server.addRoute("/", "pug/home.pug", "pug")
+
+	server.startServer()
+
+	server.enableWS()
+	passthrough.wss = server.wss
+
+	server.addAPIDir("api")
 
 	const files = await fs.promises.readdir("modules/services")
 	reloader.watchAndLoad(files.map(f => `./website/modules/services/${f}`))
