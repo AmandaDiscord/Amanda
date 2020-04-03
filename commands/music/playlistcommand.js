@@ -126,27 +126,27 @@ commands.assign([
 				bulkAddCollectionChannels.add(msg.channel.id)
 				const confirmation = await msg.channel.send(
 					new Discord.MessageEmbed()
-					.setTitle("Okay, I'm listening...")
-					.setDescription(
-						"» Type anything to add it to the playlist."
-						+`\n» Commands starting with \`${passthrough.statusPrefix}\` will only run the command.`
-						+"\n» Type `undo` to remove the last item in the playlist.\u2002🧹"
-						+"\n» Type `stop` when you're done. You can keep adding things until you type `stop`.\u2002🛑"
-					)
-					.setColor(0x22dddd)
+						.setTitle("Okay, I'm listening...")
+						.setDescription(
+							"» Type anything to add it to the playlist."
+						+ `\n» Commands starting with \`${passthrough.statusPrefix}\` will only run the command.`
+						+ "\n» Type `undo` to remove the last item in the playlist.\u2002🧹"
+						+ "\n» Type `stop` when you're done. You can keep adding things until you type `stop`.\u2002🛑"
+						)
+						.setColor(0x22dddd)
 				)
 				const collector = msg.channel.createMessageCollector(m => m.author.id === msg.author.id, { dispose: true, idle: 120e3 })
-				/** @param {Discord.Message} msg */
-				const callback = msg => {
-					collector.handleDispose(msg) // don't cache the message inside the collector
-					if (msg.content.startsWith(passthrough.statusPrefix)) {
+				/** @param {Discord.Message} msgg */
+				const callback = msgg => {
+					collector.handleDispose(msgg) // don't cache the message inside the collector
+					if (msgg.content.startsWith(passthrough.statusPrefix)) {
 						return // ignore commands
-					} else if ([".", "stop", "end", "cancel", "done"].includes(msg.content)) {
+					} else if ([".", "stop", "end", "cancel", "done"].includes(msgg.content)) {
 						collector.stop()
-					} else if (msg.content === "undo") {
-						commands.cache.get("playlist").process(msg, `${playlistName} remove last`, lang)
+					} else if (msgg.content === "undo") {
+						commands.cache.get("playlist").process(msgg, `${playlistName} remove last`, lang)
 					} else {
-						commands.cache.get("playlist").process(msg, `${playlistName} add ${msg.content}`, lang)
+						commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang)
 					}
 				}
 				collector.on("collect", callback)
@@ -156,7 +156,7 @@ commands.assign([
 					collector.removeListener("collect", callback)
 					reloader.reloadEvent.removeListener(path.basename(__filename), fileSaveCallback)
 					msg.channel.send("All done! I won't add anything else to the playlist.")
-					confirmation.edit("(There used to be a menu here, but it's gone now.)", {embed: null})
+					confirmation.edit("(There used to be a menu here, but it's gone now.)", { embed: null })
 					bulkAddCollectionChannels.delete(msg.channel.id)
 				})
 			} else if (action.toLowerCase() == "add") {
