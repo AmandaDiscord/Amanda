@@ -426,7 +426,7 @@ const common = {
 	 * @return {(Discord.VoiceChannel|null)}
 	 */
 	verifyVoiceChannel: function(voiceChannel, msg, lang) {
-		if (!voiceChannel.joinable) {
+		if (!voiceChannel.joinable && !voiceChannel.members.get(client.user.id)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))
 			return null
 		}
