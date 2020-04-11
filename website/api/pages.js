@@ -43,7 +43,7 @@ module.exports = [
 		}
 	},
 	{
-		route: "/dash", methods: ["POST"], code: ({ req, body }) => {
+		route: "/dash", methods: ["POST"], upload: true, code: ({ req, body }) => {
 			return new validators.FormValidator()
 			.trust({ req, body, config })
 			.ensureParams(["token", "csrftoken"])
@@ -95,7 +95,7 @@ module.exports = [
 		}
 	},
 	{
-		route: "/formapi/updateconfig", methods: ["POST"], code: async ({req, body}) => {
+		route: "/formapi/updateconfig", methods: ["POST"], upload: true, code: async ({req, body}) => {
 			const cookies = utils.getCookies(req)
 			const session = await utils.getSession(cookies)
 
@@ -146,7 +146,7 @@ module.exports = [
 		}
 	},
 	{
-		route: "/logout", methods: ["POST"], code: ({ req, body }) => {
+		route: "/logout", methods: ["POST"], upload: true, code: ({ req, body }) => {
 			return new validators.FormValidator()
 			.trust({ req, body, config })
 			.ensureParams(["csrftoken"])
