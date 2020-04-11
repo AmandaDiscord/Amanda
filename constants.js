@@ -9,6 +9,7 @@ module.exports = {
 	twitch: "https://www.twitch.tv/papiophidian",
 	add: `${baseURL}/to/add`,
 	server: `${baseURL}/to/server`,
+	invite_link_for_help: "https://discord.gg/X5naRFu",
 	stats: `${baseURL}/to/stats`,
 	frisky_placeholder: `${baseURL}/images/frisky-small.png`,
 	avatar: `${baseURL}/images/amanda.png`,

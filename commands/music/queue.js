@@ -191,7 +191,7 @@ class Queue {
 				const embed = new Discord.MessageEmbed()
 					.setTitle("We couldn't play that song")
 					.setDescription(
-						`**${song.title}** (ID: ${song.id})`
+						`**${Discord.Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
@@ -462,7 +462,7 @@ class Queue {
 		const song = this.songs[0]
 		if (song) {
 			return new Discord.MessageEmbed()
-				.setDescription(`Now playing: **${song.title}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
+				.setDescription(`Now playing: **${Discord.Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
 				.setColor(0x36393f)
 		} else return null
 	}

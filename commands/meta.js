@@ -236,11 +236,11 @@ commands.assign([
 		description: "Gets latency to Discord",
 		aliases: ["ping", "pong"],
 		category: "meta",
-		process: async function(msg) {
+		process: async function(msg, suffix, lang) {
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "❯ Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "❯ Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter("W-Wait... It's called table tennis").setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "❯ Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "❯ Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -262,11 +262,11 @@ commands.assign([
 		description: "",
 		aliases: ["restartnotify"],
 		category: "admin",
-		process: async function(msg) {
+		process: async function(msg, suffix, lang) {
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
-			if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send("Alright. You'll be notified of the next time I restart")
+			if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
 	},
@@ -376,11 +376,11 @@ commands.assign([
 		description: "Details Amanda's privacy statement",
 		aliases: ["privacy"],
 		category: "meta",
-		process: async function(msg) {
+		process: async function(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 			try {
 				await msg.author.send(embed)
-				if (msg.channel.type != "dm") msg.channel.send("I sent you a DM")
+				if (msg.channel.type != "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
 				return
 			} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed)) }
 		}
@@ -396,7 +396,7 @@ commands.assign([
 				member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
-			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
+			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor("36393E")
 			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
 			if (member) {
@@ -438,7 +438,7 @@ commands.assign([
 				const member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
-			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
+			if (!user) return msg.channel.send(utils.replace(lang.meta.avatar.prompts.invalidUser, { "username": msg.author.username }))
 			const isAnimated = user.displayAvatarURL().endsWith("gif")
 			const url = user.displayAvatarURL({ format: isAnimated ? "gif" : "png", size: 2048 })
 			if (canEmbedLinks) {
@@ -454,12 +454,12 @@ commands.assign([
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
 		category: "meta",
-		process: function(msg, suffix) {
+		process: function(msg, suffix, lang) {
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (!suffix) return msg.channel.send("That's not a valid emoji")
+			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const emoji = Discord.Util.parseEmoji(suffix)
-			if (emoji == null) return msg.channel.send("That's not a valid emoji")
+			if (emoji == null) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const url = utils.emojiURL(emoji.id, emoji.animated)
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
@@ -476,12 +476,12 @@ commands.assign([
 		process: async function(msg, suffix, lang) {
 			let user, member, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
-			if (!user) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
+			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))
 			msg.channel.sendTyping()
 
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
@@ -926,8 +926,7 @@ commands.assign([
 				embed = new Discord.MessageEmbed()
 					.setAuthor("Command Categories")
 					.setDescription(
-						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n`
-						+ lang.meta.help.returns.main)
+						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${lang.meta.help.returns.main}\n\n${utils.replace(lang.meta.help.returns.info, { "link": constants.invite_link_for_help })}`)
 					.setColor("36393E")
 				try {
 					msg.author.send(embed).then(m => reply(msg))

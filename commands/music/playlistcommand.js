@@ -126,12 +126,8 @@ commands.assign([
 				bulkAddCollectionChannels.add(msg.channel.id)
 				const confirmation = await msg.channel.send(
 					new Discord.MessageEmbed()
-						.setTitle("Okay, I'm listening...")
-						.setDescription(
-							"» Type anything to add it to the playlist."
-						+ `\n» Commands starting with \`${passthrough.statusPrefix}\` will only run the command.`
-						+ "\n» Type `undo` to remove the last item in the playlist.\u2002🧹"
-						+ "\n» Type `stop` when you're done. You can keep adding things until you type `stop`.\u2002🛑"
+						.setTitle(lang.audio.playlist.prompts.bulkListening)
+						.setDescription(utils.replace(lang.audio.playlist.prompts.bulkDescription, { "prefix": passthrough.statusPrefix })
 						)
 						.setColor(0x22dddd)
 				)
@@ -155,8 +151,8 @@ commands.assign([
 				collector.once("end", () => {
 					collector.removeListener("collect", callback)
 					reloader.reloadEvent.removeListener(path.basename(__filename), fileSaveCallback)
-					msg.channel.send("All done! I won't add anything else to the playlist.")
-					confirmation.edit("(There used to be a menu here, but it's gone now.)", { embed: null })
+					msg.channel.send(lang.audio.playlist.returns.bulkDone)
+					confirmation.edit(lang.audio.playlist.returns.bulkMenuGone, { embed: null })
 					bulkAddCollectionChannels.delete(msg.channel.id)
 				})
 			} else if (action.toLowerCase() == "add") {
@@ -199,7 +195,7 @@ commands.assign([
 					})
 				}) // errors that reach here are actual errors, not failed requests
 
-				if (!result) return msg.channel.send("No results.")
+				if (!result) return msg.channel.send(lang.audio.music.prompts.noResults)
 
 				if (orderedSongs.some(row => row.videoID == result.id)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistDuplicateSong, { "username": msg.author.username }))
 
@@ -217,7 +213,7 @@ commands.assign([
 				let index = args[2] === "last" ? orderedSongs.length : Number(args[2])
 				if (!index) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.indexRequired, { "username": msg.author.username }))
 				index = index - 1
-				if (!orderedSongs[index]) return msg.channel.send("Out of range")
+				if (!orderedSongs[index]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
 				const toRemove = orderedSongs[index]
 				await Promise.all([
 					utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [toRemove.next, toRemove.playlistID, toRemove.videoID]),
@@ -230,8 +226,8 @@ commands.assign([
 				let to = Number(args[3])
 				if (!from || !to) return msg.channel.send(lang.audio.playlist.prompts.indexMoveRequired)
 				from--; to--
-				if (!orderedSongs[from]) return msg.channel.send("Out of range")
-				if (!orderedSongs[to]) return msg.channel.send("Out of range")
+				if (!orderedSongs[from]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
+				if (!orderedSongs[to]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
 				const fromRow = orderedSongs[from], toRow = orderedSongs[to]
 				if (from < to) {
 					await utils.sql.all("UPDATE PlaylistSongs SET next = ? WHERE playlistID = ? AND next = ?", [fromRow.next, fromRow.playlistID, fromRow.videoID]) // update row before item
@@ -323,7 +319,7 @@ commands.assign([
 				const author = []
 				if (client.users.cache.get(playlistRow.author)) author.push(`${client.users.cache.get(playlistRow.author).tag} — ${playlistName}`, client.users.cache.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
-				const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${common.prettySeconds(s.length)})`)
+				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])

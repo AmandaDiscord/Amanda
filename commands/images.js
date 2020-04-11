@@ -89,14 +89,11 @@ commands.assign([
 		description: "Returns an image of a catgirl (ฅ’ω’ฅ)",
 		aliases: ["catgirl", "neko"],
 		category: "images",
-		process: function(msg) {
+		process: function(msg, suffix, lang) {
 			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life").catch(() => {
 				const embed = new Discord.MessageEmbed()
 					.setTitle("Uh oh.")
-					.setDescription(
-						"Looks like the nekos.life API is currently offline."
-						+ "\nWe aren't able to fetch new pictures at the moment."
-						+ "\nHere's a sleepy catgirl while we wait for it to come back online.")
+					.setDescription(lang.images.catgirl.returns.offline)
 					.setImage("https://cdn.discordapp.com/attachments/413088092556361728/632513720593022997/6439473d9cea838eae9161dad09927ae.png")
 					.setColor(0x36393f)
 				msg.channel.send(embed)

@@ -14,7 +14,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#65e3053770db4609bbb0d62257951e9f4e96044e",
+    "@amanda/lang": "github:PapiOphidian/Amanda-Lang#90028d8c9d3394c371ac58c88e763514c333a63b",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:cloudrac3r/discord.js#824f20b3e809f6f791b379b5b09a73e0c0709a0d",
@@ -26,12 +26,12 @@
     "heapdump": "^0.3.15",
     "jimp": "^0.x",
     "mime": "^2.4.4",
-    "mysql2": "^2.0.2",
+    "mysql2": "^2.1.0",
     "nedb-promises": "^4.0.1",
     "node-fetch": "^2.6.0",
     "node-ipc": "^9.1.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "simple-git": "^1.129.0",
+    "simple-git": "^1.132.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:cloudrac3r/SnowTransfer#b43a90158d9f6dfe07a7b079a5e595a35cd86398",
     "taihou": "^2.0.3",

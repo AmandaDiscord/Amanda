@@ -280,12 +280,12 @@ commands.assign([
 		process: async function(msg, suffix, lang) {
 			if (suffix == "delete") {
 				await deleteAll()
-				msg.author.send(lang.audio.musictoken.returns.deleted)
+				msg.author.send(lang.audio.token.returns.deleted)
 			} else if (suffix == "new") {
 				await deleteAll()
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
 				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1])
-				send(utils.replace(lang.audio.musictoken.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
+				send(utils.replace(lang.audio.token.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
 				).then(() => {
 					return send(`\`${hash}\``, false, false)
 				// eslint-disable-next-line no-empty-function
@@ -293,11 +293,11 @@ commands.assign([
 			} else {
 				const existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
 				if (existing) {
-					send(lang.audio.musictoken.returns.generated, true, true).then(() => {
+					send(lang.audio.token.returns.generated, true, true).then(() => {
 						send(`\`${existing.token}\``, false, false)
 					// eslint-disable-next-line no-empty-function
 					}).catch(() => {})
-				} else send(lang.audio.musictoken.prompts.none)
+				} else send(lang.audio.token.prompts.none)
 			}
 
 			function deleteAll() {
@@ -306,9 +306,9 @@ commands.assign([
 
 			function send(text, announce = true, throwFailed = false) {
 				return msg.author.send(text).then(() => {
-					if (msg.channel.type == "text" && announce) msg.channel.send(lang.audio.musictoken.returns.dmSuccess)
+					if (msg.channel.type == "text" && announce) msg.channel.send(lang.audio.token.returns.dmSuccess)
 				}).catch(() => {
-					if (announce) msg.channel.send(lang.audio.musictoken.prompts.dmFailed)
+					if (announce) msg.channel.send(lang.audio.token.prompts.dmFailed)
 					if (throwFailed) throw new Error("DM failed")
 				})
 			}
@@ -337,16 +337,16 @@ commands.assign([
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
 			if (currentQueueNode && currentQueueNode !== node) {
-				const name = currentQueueNode ? currentQueueNode.name : "an unnamed node"
-				extraNodeInfo = `\n↳ However, the current queue is using ${name}`
+				const name = currentQueueNode ? currentQueueNode.name : lang.audio.debug.returns.unnamedNode
+				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
 			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node).host)).hostname
 			const details = new Discord.MessageEmbed()
 				.setColor(0x36393f)
-				.setAuthor(`Debugging info for ${channel.name}`, utils.emojiURL(emoji))
-				.addField("Permissions:", perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
+				.setAuthor(utils.replace(lang.audio.debug.returns.infoFor, { "channel": channel.name }), utils.emojiURL(emoji))
+				.addField(lang.audio.debug.returns.permissions, perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
 				.addField("Player:",
-					`Method: ${config.use_invidious ? "Invidious" : "LavaLink"}`
+					`${lang.audio.debug.returns.method} ${config.use_invidious ? "Invidious" : "LavaLink"}`
 					+ `\nLavaLink Node: ${node.name}`
 					+ extraNodeInfo
 					+ `\nInvidious Domain: ${invidiousHostname}`
