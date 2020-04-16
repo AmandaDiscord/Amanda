@@ -137,7 +137,8 @@ class Queue {
 			else if (song.track == null) song.error = "`song.track` is null or undefined. This is a bug."
 		}
 		if (song.error) {
-			console.log("Song error call C")
+			console.error("Song error call C:")
+			console.error("id:", song.id, "/ error:", song.error)
 			this._reportError()
 			this._nextSong()
 		} else {
@@ -240,13 +241,13 @@ class Queue {
 	}
 	async _nextSong() {
 		// Special case for loop 1
-		if (this.songs.length === 1 && this.loop) {
+		if (this.songs.length === 1 && this.loop && !this.songs[0].error) {
 			this.play()
 			return
 		}
 
 		// Destroy current song (if loop is disabled)
-		if (!this.loop && this.songs[0]) this.songs[0].destroy()
+		if (this.songs[0] && (!this.loop || this.songs[0].error)) this.songs[0].destroy()
 		// Out of songs? (This should only pass if loop mode is also disabled.)
 		if (this.songs.length <= 1) {
 			// Is auto mode on?
@@ -274,7 +275,7 @@ class Queue {
 			const removed = this.songs.shift()
 			ipc.replier.sendNextSong(this)
 			// In loop mode, add the just played song back to the end of the queue.
-			if (this.loop) {
+			if (this.loop && !removed.error) {
 				this.addSong(removed)
 			}
 			this.play()
