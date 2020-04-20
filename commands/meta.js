@@ -439,8 +439,24 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.avatar.prompts.invalidUser, { "username": msg.author.username }))
-			const isAnimated = user.displayAvatarURL().endsWith("gif")
-			const url = user.displayAvatarURL({ format: isAnimated ? "gif" : "png", size: 2048 })
+			const url = user.displayAvatarURL({ format: "png", size: 2048, dynamic: true })
+			if (canEmbedLinks) {
+				const embed = new Discord.MessageEmbed()
+					.setImage(url)
+					.setColor(0x36393f)
+				msg.channel.send(embed)
+			} else msg.channel.send(url)
+		}
+	},
+	{
+		usage: "None",
+		description: "Gets a server's icon",
+		aliases: ["icon"],
+		category: "meta",
+		process: function(msg, suffix, lang) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("Guild Only")
+			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
+			const canEmbedLinks = msg.channel.permissionsFor(client.user).has("EMBED_LINKS")
 			if (canEmbedLinks) {
 				const embed = new Discord.MessageEmbed()
 					.setImage(url)
