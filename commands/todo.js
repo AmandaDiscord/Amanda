@@ -14,7 +14,7 @@ commands.assign([
 		description: "See Amanda's to-do list",
 		aliases: ["todo", "trello", "tasks"],
 		category: "meta",
-		process: function(msg, suffix) {
+		process(msg, suffix) {
 			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}
 	}
@@ -119,7 +119,7 @@ commands.assign({
 		category: "admin",
 		description: "See Amanda's to-do list",
 		usage: "[list|tag|tags|add|remove|complete|incomplete]",
-		process: async function(msg, suffix) {
+		async process(msg, suffix) {
 			const words = suffix.split(" ")
 			const subcommand = words.shift()
 			if (subcommand === "add") {

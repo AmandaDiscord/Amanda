@@ -28,7 +28,7 @@ const cmds = [
 		description: "Ships two people",
 		aliases: ["ship"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
 			const permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
@@ -81,7 +81,7 @@ const cmds = [
 		description: "Gets the waifu information about yourself or a user",
 		aliases: ["waifu"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
@@ -103,7 +103,7 @@ const cmds = [
 		description: "Claims someone as a waifu. Requires Discoins",
 		aliases: ["claim"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const usertxt = args.slice(1).join(" ")
@@ -155,7 +155,7 @@ const cmds = [
 		description: "Divorces a user",
 		aliases: ["divorce"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const info = await utils.waifu.get(msg.author.id)
 			if (!info.waifu) return msg.channel.send(utils.replace(lang.interaction.divorce.prompts.noWaifu, { "username": msg.author.username }))
 			const faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"]
@@ -179,7 +179,7 @@ const cmds = [
 		description: "Gifts an amount of Discoins towards your waifu's price",
 		aliases: ["gift"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const waifu = await utils.waifu.get(msg.author.id, { basic: true })
@@ -211,7 +211,7 @@ const cmds = [
 		description: "Displays the leaderboard of the top waifus",
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
 
@@ -293,7 +293,7 @@ const cmds = [
 		description: "Beans a user",
 		aliases: ["bean"],
 		category: "interaction",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
 			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)

@@ -277,7 +277,7 @@ commands.assign([
 		description: "Obtain a web dashboard login token",
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (suffix == "delete") {
 				await deleteAll()
 				msg.author.send(lang.audio.token.returns.deleted)
@@ -319,7 +319,7 @@ commands.assign([
 		description: "Provides debugging information for if audio commands are not working as intended",
 		aliases: ["debug"],
 		category: "audio",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.findChannel(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
@@ -360,7 +360,7 @@ commands.assign([
 		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
 		category: "audio",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
@@ -477,7 +477,7 @@ commands.assign([
 		description: "Play music from YouTube",
 		aliases: ["music", "m"],
 		category: "audio",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			// No DMs
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args

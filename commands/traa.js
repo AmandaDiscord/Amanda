@@ -67,7 +67,7 @@ commands.assign([
 		description: "Store a GIF in the database",
 		aliases: ["storegif"],
 		category: "admin",
-		process: async function(msg, suffix) {
+		async process(msg, suffix) {
 			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return msg.channel.send("not you")
 			if (suffix == "") {

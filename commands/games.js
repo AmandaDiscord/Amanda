@@ -386,7 +386,7 @@ commands.assign([
 		description: "Play a game of trivia with other members and win Discoins",
 		aliases: ["trivia", "t"],
 		category: "games",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			startGame(msg.channel, { suffix, msg, lang })
 		}
 	},
@@ -395,7 +395,7 @@ commands.assign([
 		description: "Starts a game of minesweeper using the Discord spoiler system",
 		aliases: ["minesweeper", "ms"],
 		category: "games",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			let size = 8, difficulty = "easy"
 			let title
 			const sfx = suffix.toLowerCase()

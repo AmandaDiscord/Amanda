@@ -40,7 +40,7 @@ commands.assign([
 		description: "Make an announcement with the client activity",
 		category: "admin",
 		aliases: ["announce"],
-		process: async function(msg, suffix) {
+		async process(msg, suffix) {
 			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (enqueued) {

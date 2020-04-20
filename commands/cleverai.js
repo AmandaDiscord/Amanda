@@ -134,7 +134,7 @@ commands.assign([
 			+ "\nOnly if you are the chosen one will the void stare back.",
 		aliases: ["cleverai"],
 		category: "games",
-		process: function(msg, suffix) {
+		process(msg, suffix) {
 			suffix = suffix.toLowerCase()
 
 			const clever_message = (() => {

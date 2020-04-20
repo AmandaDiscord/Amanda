@@ -148,7 +148,7 @@ commands.assign([
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
-		process: async function(msg, suffix) {
+		async process(msg, suffix) {
 			const embed = new Discord.MessageEmbed().setColor(0x36393f)
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
 			const leadingSpace = `${emojis.bl}\n​`
@@ -236,7 +236,7 @@ commands.assign([
 		description: "Gets latency to Discord",
 		aliases: ["ping", "pong"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
@@ -251,7 +251,7 @@ commands.assign([
 		description: "",
 		aliases: ["forcestatupdate"],
 		category: "admin",
-		process: async function(msg) {
+		async process(msg) {
 			const permissions = await utils.hasPermission(msg.author, "eval")
 			if (!permissions) return
 			sendStats(msg)
@@ -262,7 +262,7 @@ commands.assign([
 		description: "",
 		aliases: ["restartnotify"],
 		category: "admin",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
@@ -275,7 +275,7 @@ commands.assign([
 		description: "Add Amanda to a server",
 		aliases: ["invite", "inv"],
 		category: "meta",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
 				.setDescription(`${lang.meta.invite.returns.notice}\nInvite link: ${constants.add}`)
@@ -288,7 +288,7 @@ commands.assign([
 		description: "Displays information about Amanda",
 		aliases: ["info", "inf"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const [c1, c2] = await Promise.all([
 				client.users.fetch("320067006521147393", true),
 				client.users.fetch("176580265294954507", true)
@@ -320,7 +320,7 @@ commands.assign([
 		description: "Get information on how to donate",
 		aliases: ["donate", "patreon"],
 		category: "meta",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setColor(0x36393f)
 				.setTitle(lang.meta.donate.returns.intro)
@@ -333,7 +333,7 @@ commands.assign([
 		description: "Gets the latest git commits to Amanda",
 		aliases: ["commits", "commit", "git", "changes", "changelog"],
 		category: "meta",
-		process: async function(msg) {
+		async process(msg) {
 			msg.channel.sendTyping()
 			const limit = 5
 			const authorNameMap = {
@@ -376,7 +376,7 @@ commands.assign([
 		description: "Details Amanda's privacy statement",
 		aliases: ["privacy"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
 			try {
 				await msg.author.send(embed)
@@ -390,7 +390,7 @@ commands.assign([
 		description: "Provides information about a user",
 		aliases: ["user"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
@@ -429,7 +429,7 @@ commands.assign([
 		description: "Gets a user's avatar",
 		aliases: ["avatar", "pfp"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
 			if (msg.channel instanceof Discord.TextChannel) if (!msg.channel.permissionsFor(client.user).has("EMBED_LINKS")) canEmbedLinks = false
 			/** @type {Discord.User} */
@@ -453,7 +453,7 @@ commands.assign([
 		description: "Gets a server's icon",
 		aliases: ["icon"],
 		category: "meta",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("Guild Only")
 			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
 			const canEmbedLinks = msg.channel.permissionsFor(client.user).has("EMBED_LINKS")
@@ -470,7 +470,7 @@ commands.assign([
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
 		category: "meta",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			let permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
@@ -489,7 +489,7 @@ commands.assign([
 		description: "Get profile information about someone",
 		aliases: ["profile"],
 		category: "meta",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			let user, member, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
@@ -574,7 +574,7 @@ commands.assign([
 		description: "Modify settings Amanda will use for yourself or server wide",
 		aliases: ["settings", "setting"],
 		category: "configuration",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
 			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
@@ -719,7 +719,7 @@ commands.assign([
 		description: "Set the background displayed on &profile",
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, "self profilebackground " + suffix, lang)
 		}
 	},
@@ -729,7 +729,7 @@ commands.assign([
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
-		process: function(msg, suffix, lang) {
+		process(msg, suffix, lang) {
 			let embed, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			/**

@@ -26,7 +26,7 @@ commands.assign([
 		category: "audio",
 		description: "Create, play, and edit playlists.",
 		usage: "",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]

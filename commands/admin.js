@@ -20,7 +20,7 @@ commands.assign([
 		description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 		aliases: ["evaluate", "eval"],
 		category: "admin",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (allowed) {
 				if (!suffix) return msg.channel.send(lang.admin.evaluate.prompts.noInput)
@@ -50,7 +50,7 @@ commands.assign([
 		description: "Executes a shell operation",
 		aliases: ["execute", "exec"],
 		category: "admin",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (!suffix) return msg.channel.send(lang.admin.execute.prompts.noInput)
@@ -85,7 +85,7 @@ commands.assign([
 		description: "Awards a specific user ",
 		aliases: ["award"],
 		category: "admin",
-		process: async function(msg, suffix, lang) {
+		async process(msg, suffix, lang) {
 			const allowed = await utils.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.admin.award.prompts.guildOnly, { "username": msg.author.username }))
