@@ -6,9 +6,8 @@ const fetch = require("node-fetch")
 const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("discord.js")
-/** @type {import("jimp").default} */
-// @ts-ignore
 const Jimp = require("jimp")
+const JimpProto = Jimp.prototype
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
@@ -105,9 +104,9 @@ reloadEvent.once(path.basename(__filename), () => {
 })
 const JIMPStorage = utils.JIMPStorage
 
-/** @type {JIMPStorage<import("jimp").default>} */
+/** @type {JIMPStorage<typeof JimpProto>} */
 const profileStorage = new utils.JIMPStorage()
-/** @type {JIMPStorage<import("jimp").Font>} */
+/** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
 const fontStorage = new utils.JIMPStorage()
 profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
 profileStorage.save("profile", "file", "./images/profile.png")
@@ -454,7 +453,7 @@ commands.assign([
 		aliases: ["icon"],
 		category: "meta",
 		process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send("Guild Only")
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
 			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
 			const canEmbedLinks = msg.channel.permissionsFor(client.user).has("EMBED_LINKS")
 			if (canEmbedLinks) {
@@ -534,7 +533,7 @@ commands.assign([
 			}
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
-			/** @type {import("jimp").default} */
+			/** @type {import("jimp")} */
 			let canvas
 
 			if (isOwner || isPremium) {

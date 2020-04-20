@@ -1,7 +1,5 @@
 // @ts-check
 
-/** @type {import("jimp").default} */
-// @ts-ignore
 const Jimp = require("jimp")
 const crypto = require("crypto")
 /** @type {import("node-fetch").default} */

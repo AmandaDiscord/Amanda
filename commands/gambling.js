@@ -1,8 +1,7 @@
 // @ts-check
 
-/** @type {import("jimp").default} */
-// @ts-ignore
 const Jimp = require("jimp")
+const JimpProto = Jimp.prototype
 const Discord = require("discord.js")
 
 const emojis = require("../modules/emojis")
@@ -17,9 +16,9 @@ const utils = require("../modules/utilities.js")
 reloader.useSync("./modules/utilities.js", utils)
 const JIMPStorage = utils.JIMPStorage
 
-/** @type {JIMPStorage<import("jimp").default>} */
+/** @type {JIMPStorage<typeof JimpProto>} */
 const imageStorage = new utils.JIMPStorage()
-/** @type {JIMPStorage<import("jimp").Font>} */
+/** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
 const fontStorage = new utils.JIMPStorage()
 imageStorage.save("slot-canvas", "file", "./images/slot.png")
 imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png")
