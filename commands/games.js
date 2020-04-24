@@ -166,7 +166,7 @@ class TriviaGame extends Game {
 			utils.reactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
 					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
-					else startGame(this.channel, { category: this.category })
+					else startGame(this.channel, { category: this.category, lang: this.lang })
 				} }
 			])
 		})
@@ -193,16 +193,16 @@ async function JSONHelper(body, channel, lang) {
 }
 /**
  * @param {Discord.TextChannel|Discord.DMChannel} channel
- * @param {{suffix?: string, msg?: Discord.Message, category?: number, lang?: Lang.Lang}} options
+ * @param {{ suffix?: string, msg?: Discord.Message, category?: number, lang: Lang.Lang }} options
  */
-async function startGame(channel, options = {}) {
+async function startGame(channel, options = { lang: undefined }) {
 	// Select category
 	let category = options.category || null
 	if (options.suffix) {
 		channel.sendTyping()
 		const [
 			success,
-			/** @type {{trivia_categories: {id: number, name: string}[]}} */
+			/** @type {{ trivia_categories: {id: number, name: string}[] }} */
 			data
 		] = await JSONHelper("https://opentdb.com/api_category.php", channel, options.lang)
 		if (!success) return
