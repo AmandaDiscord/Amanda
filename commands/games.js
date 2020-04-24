@@ -195,7 +195,7 @@ async function JSONHelper(body, channel, lang) {
  * @param {Discord.TextChannel|Discord.DMChannel} channel
  * @param {{ suffix?: string, msg?: Discord.Message, category?: number, lang: Lang.Lang }} options
  */
-async function startGame(channel, options = { lang: undefined }) {
+async function startGame(channel, options) {
 	// Select category
 	let category = options.category || null
 	if (options.suffix) {
