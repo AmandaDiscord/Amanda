@@ -122,7 +122,7 @@ commands.assign([
 			const action = args[1] || ""
 			if (action.toLowerCase() === "bulk" || action.toLowerCase() === "bulkadd") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
-				if (bulkAddCollectionChannels.has(msg.channel.id)) return msg.channel.send("You already have a menu open in here. Type `stop` to stop it.")
+				if (bulkAddCollectionChannels.has(msg.channel.id)) return msg.channel.send(lang.audio.playlist.prompts.bulkMenuOpen)
 				bulkAddCollectionChannels.add(msg.channel.id)
 				const confirmation = await msg.channel.send(
 					new Discord.MessageEmbed()
@@ -313,7 +313,7 @@ commands.assign([
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed))
 					} },
 					// @ts-ignore: actionData is normally a function, but actionType here is "edit".
-					{ emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.MessageEmbed().setColor("36393e").setDescription("Playlist deletion cancelled")) }
+					{ emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.MessageEmbed().setColor("36393e").setDescription(lang.audio.playlist.returns.playlistDeleteCancelled)) }
 				])
 			} else {
 				const author = []
@@ -346,7 +346,7 @@ commands.assign([
 					}
 					pages.push(currentPage)
 					utils.paginate(msg.channel, pages.length, page => {
-						embed.setFooter(`Page ${page + 1} of ${pages.length}`)
+						embed.setFooter(utils.replace(lang.audio.playlist.prompts.playlistPages, { "number": page + 1, "total": pages.length }))
 						embed.setDescription(pages[page].join("\n") + totalLength)
 						return utils.contentify(msg.channel, embed)
 					})

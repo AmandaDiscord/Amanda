@@ -1005,7 +1005,7 @@ const utils = {
 	},
 
 	/**
-	 * @param {string} userID
+	 * @param {string} id
 	 * @param {"self"|"guild"} type
 	 * @returns {Promise<Lang.Lang>}
 	 */

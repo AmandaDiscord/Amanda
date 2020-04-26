@@ -106,7 +106,7 @@ const subcommandsMap = new Map([
 					]
 					// Make an embed
 					const embed = new Discord.MessageEmbed()
-						.setTitle("Playlist section")
+						.setTitle(lang.audio.playlist.prompts.playlistSection)
 						.setColor(0x36393f)
 						.setDescription(
 							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })

@@ -87,10 +87,10 @@ const cmds = [
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(member.displayTag, member.user.displayAvatarURL({ format: "png", size: 32 }))
 				.addFields([
-					{ name: "Price:", value: info.price },
-					{ name: "Claimed by:", value: info.claimer ? info.claimer.tag : "(nobody)" },
-					{ name: "Waifu", value: info.waifu ? info.waifu.tag : "(nobody)" },
-					{ name: "Gifts:", value: info.gifts.received.emojis || "(none)" }
+					{ name: lang.interaction.waifu.returns.price, value: info.price },
+					{ name: lang.interaction.waifu.returns.claimedBy, value: info.claimer ? info.claimer.tag : lang.interaction.waifu.returns.nobody },
+					{ name: lang.interaction.waifu.returns.waifu, value: info.waifu ? info.waifu.tag : lang.interaction.waifu.returns.nobody },
+					{ name: lang.interaction.waifu.returns.gifts, value: info.gifts.received.emojis || lang.interaction.waifu.returns.none }
 				])
 				.setColor("36393E")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -251,7 +251,7 @@ const cmds = [
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Waifu Leaderboard" : "Waifu Leaderboard"
-			const footerHelp = isLocal ? `&waifulb ${inputLocalArg} [page]` : "&waifulb [page]"
+			const footerHelp = lang.interaction.waifuleaderboard.help.usage
 
 			if (rows.length) {
 				const usersToResolve = new Set()
@@ -268,7 +268,7 @@ const cmds = [
 				))
 				const displayRows = rows.map((row, index) => {
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${userTagMap.get(row.userID)} claimed ${userTagMap.get(row.waifuID)} for ${row.price} ${emojis.discoin}`
+					return `${ranking}. ${utils.replace(lang.interaction.waifuleaderboard.returns.claimEntry, { "user1": userTagMap.get(row.userID), "user2": userTagMap.get(row.waifuID), "price": row.price })}`
 				})
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)

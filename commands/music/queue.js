@@ -1,6 +1,7 @@
 // @ts-check
 
 const Discord = require("discord.js")
+const Lang = require("@amanda/lang")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, queues, ipc } = passthrough
@@ -38,10 +39,12 @@ class Queue {
 		this.loop = false
 		this.errorChain = 0
 		this.shouldDisplayErrors = true
+		/** @type {import("@amanda/lang").Lang} */
+		this.langCache = undefined
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
-				this.textChannel.send("Everyone left, so I have as well.")
+				this.getLang().then(lang => this.textChannel.send(lang.audio.music.prompts.everyoneLeft))
 				this.stop()
 			})
 			.setDelay(voiceEmptyDuration)
@@ -57,7 +60,8 @@ class Queue {
 			host
 		})
 		this.player.on("end", event => this._onEnd(event))
-		this.player.on("playerUpdate", data => {
+		this.player.on("playerUpdate", async data => {
+			const lang = await this.getLang()
 			if (!this.isPaused) {
 				const newSongStartTime = data.state.time - data.state.position
 				// commenting this out: it may break the error check, but it will improve the web time
@@ -72,11 +76,7 @@ class Queue {
 							+ ` Region: ${client.guilds.cache.get(this.guildID) ? client.guilds.cache.get(this.guildID).region : "unknown"}`
 							+ `, guildID: ${this.guildID}`
 						)
-						this.songs[0].error =
-							"Hmm. Seems like the song isn't playing."
-							+ "\n\n**This is probably an issue with Discord.**"
-							+ "\nYou should try changing the server region."
-							+ "\n\nTo report a problem, join our server: https://discord.gg/YMkZDsK"
+						this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
 					}
 					console.log("Song error call A")
 					this._reportError()
@@ -108,6 +108,11 @@ class Queue {
 				if (embed) this.np.edit(embed)
 			}
 		})
+		this.getLang().then(lng => this.langCache = lng)
+	}
+	getLang() {
+		if (this.langCache) return Promise.resolve(this.langCache)
+		return utils.getLang(this.guildID, "guild")
 	}
 	getUsedLavalinkNode() {
 		// Find the node in constants rather than using the node from the player because constants has the friendly name
@@ -129,12 +134,13 @@ class Queue {
 	 * Start playing the top song in the queue.
 	 */
 	async play() {
+		const lang = await this.getLang()
 		const song = this.songs[0]
 		if (this.songs[1]) this.songs[1].prepare()
 		await song.prepare()
 		if (!song.error) {
-			if (song.track == "!") song.error = "`song.track` is ! placeholder. This is a bug."
-			else if (song.track == null) song.error = "`song.track` is null or undefined. This is a bug."
+			if (song.track == "!") song.error = lang.audio.music.prompts.songErrorExclaimation
+			else if (song.track == null) song.error = lang.audio.music.prompts.songErrorNull
 		}
 		if (song.error) {
 			console.error("Song error call C:")
@@ -151,7 +157,8 @@ class Queue {
 			})
 		}
 	}
-	_reportError() {
+	async _reportError() {
+		const lang = await this.getLang()
 		const sendReport = (contents) => {
 			// Report to original channel
 			this.textChannel.send(contents)
@@ -190,7 +197,7 @@ class Queue {
 			const song = this.songs[0]
 			if (song) {
 				const embed = new Discord.MessageEmbed()
-					.setTitle("We couldn't play that song")
+					.setTitle(lang.audio.music.prompts.songNotPlayable)
 					.setDescription(
 						`**${Discord.Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
 					+ `\n${song.error}`
@@ -199,8 +206,8 @@ class Queue {
 				sendReport(embed)
 			} else {
 				const embed = new Discord.MessageEmbed()
-					.setTitle("We ran into an error")
-					.setDescription(`Song is not an object: ${song}`)
+					.setTitle(lang.audio.music.prompts.errorOccured)
+					.setDescription(utils.replace(lang.audio.music.prompts.songErrorNotObject, { "song": song }))
 					.setColor(0xdd2d2d)
 				sendReport(embed)
 			}
@@ -210,11 +217,8 @@ class Queue {
 					utils.contentify(
 						this.textChannel,
 						new Discord.MessageEmbed()
-							.setTitle("Too many errors!")
-							.setDescription(
-								"Future errors from this queue will be silenced."
-								+ "\nIf any more songs fail, they will be skipped with no message."
-								+ "\nTo report a bug, join our server: https://discord.gg/YMkZDsK")
+							.setTitle(lang.audio.music.prompts.tooManyErrors)
+							.setDescription(lang.audio.music.prompts.errorsSuppressed)
 							.setColor(0xff2ee7)
 					)
 				)
@@ -240,6 +244,7 @@ class Queue {
 		this._nextSong()
 	}
 	async _nextSong() {
+		const lang = await this.getLang()
 		// Special case for loop 1
 		if (this.songs.length === 1 && this.loop && !this.songs[0].error) {
 			this.play()
@@ -262,7 +267,7 @@ class Queue {
 					this.addSong(related[0])
 					ipc.replier.sendNextSong(this)
 				} else { // No related songs. Dissolve.
-					this.textChannel.send("Auto mode is on, but we ran out of related songs and had to stop playback.")
+					this.textChannel.send(lang.audio.music.prompts.autoRanOut)
 					this.auto = false
 					this._clearSongs()
 					this._dissolve()
@@ -305,12 +310,14 @@ class Queue {
 	}
 	/**
 	 * Pause playback.
-	 * @returns {String?} null on success, string reason on failure
+	 * @returns {?string} null on success, string reason on failure
 	 */
 	pause() {
 		if (this.songs[0].noPauseReason) return this.songs[0].noPauseReason
-		else if (this.isPaused) return "Music is already paused. Use `&music resume` to resume."
-		else {
+		else if (this.isPaused) {
+			if (this.langCache) return this.langCache.audio.music.prompts.queueAlreadyPaused
+			else return "Music is already paused. Use `&music resume` to resume."
+		} else {
 			this.pausedAt = Date.now()
 			this.player.pause(true)
 			this.npUpdater.stop(true)
@@ -462,9 +469,11 @@ class Queue {
 	_buildNPEmbed() {
 		const song = this.songs[0]
 		if (song) {
-			return new Discord.MessageEmbed()
-				.setDescription(`Now playing: **${Discord.Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}`)
-				.setColor(0x36393f)
+			const embed = new Discord.MessageEmbed()
+			const lang = this.langCache || Lang.en_us
+			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `**${Discord.Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}` }))
+			embed.setColor(0x36393f)
+			return embed
 		} else return null
 	}
 	/**
@@ -503,7 +512,8 @@ class Queue {
 	 * @param {Discord.VoiceState} oldState
 	 * @param {Discord.VoiceState} newState
 	 */
-	voiceStateUpdate(oldState, newState) {
+	async voiceStateUpdate(oldState, newState) {
+		const lang = await this.getLang()
 		// Update own channel
 		if (newState.member.id == client.user.id && newState.channelID != oldState.channelID && newState.channel) this.voiceChannel = newState.channel
 		// Detect number of users left in channel
@@ -511,7 +521,7 @@ class Queue {
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
-				this.voiceLeaveWarningMessagePromise = this.textChannel.send(`No users left in my voice channel. I will stop playing in ${this.voiceLeaveTimeout.delay / 1000} seconds if nobody rejoins.`)
+				this.voiceLeaveWarningMessagePromise = this.textChannel.send(utils.replace(lang.audio.music.prompts.noUsersLeft, { "time": this.voiceLeaveTimeout.delay / 1000 }))
 			}
 		} else {
 			this.voiceLeaveTimeout.clear()
@@ -537,14 +547,20 @@ class QueueWrapper {
 	toggleAuto(context) {
 		this.queue.toggleAuto()
 		const auto = this.queue.auto
-		if (context instanceof Discord.Message) context.channel.send(`Auto mode is now turned ${auto ? "on" : "off"}`)
-		else if (context === "web") return true
+		if (context instanceof Discord.Message) {
+			this.queue.getLang().then(lang => {
+				context.channel.send(auto ? lang.audio.music.prompts.autoOn : lang.audio.music.prompts.autoOff)
+			})
+		} else if (context === "web") return true
 	}
 	toggleLoop(context) {
 		this.queue.toggleLoop()
 		const loop = this.queue.loop
-		if (context instanceof Discord.Message) context.channel.send(`Loop mode is now turned ${loop ? "on" : "off"}`)
-		else if (context === "web") return true
+		if (context instanceof Discord.Message) {
+			this.queue.getLang().then(lang => {
+				context.channel.send(loop ? lang.audio.music.prompts.loopOn : lang.audio.music.prompts.loopOff)
+			})
+		} else if (context === "web") return true
 	}
 	togglePlaying(context) {
 		if (this.queue.isPaused) return this.resume(context)
@@ -560,7 +576,13 @@ class QueueWrapper {
 	}
 	resume(context) {
 		const result = this.queue.resume()
-		if (result == 1) if (context instanceof Discord.Message) context.channel.send("Music is playing. If you want to pause, use `&music pause`.")
+		if (result == 1) {
+			if (context instanceof Discord.Message) {
+				this.queue.getLang().then(lang => {
+					context.channel.send(lang.audio.music.prompts.musicPlaying)
+				})
+			}
+		}
 		if (context === "web") return !result
 	}
 	skip(amount) {
@@ -586,25 +608,30 @@ class QueueWrapper {
 	 * @param {any} [context]
 	 */
 	removeSong(index, context) {
-		if (!index || isNaN(index)) {
-			if (context instanceof Discord.Message) {
-				context.channel.send(
-					"You need to tell me which song to remove. `&music queue remove <number>`"
-					+ "\nTo clear the entire queue, use `&music queue clear` or `&music queue remove all`."
-				)
-			} else if (context === "web") return false
-		} else {
-			const result = this.queue.removeSong(index - 1, true)
-			if (context instanceof Discord.Message) {
-				if (result == 1) {
-					if (index == 1) {
-						context.channel.send(
-							"Item 1 is the currently playing song. Use `&music skip` to skip it, "
-							+ "or `&music queue remove 2` if you wanted to remove the song that's up next."
-						)
-					} else context.channel.send(`There are ${this.queue.songs.length} items in the queue. You can only remove items 2-${this.queue.songs.length}.`)
-				} else context.react("✅")
-			} else if (context === "web") return result !== 1
+		if (context instanceof Discord.Message) {
+			this.queue.getLang().then(lang => {
+				if (!index) {
+					context.channel.send(lang.audio.music.prompts.songRemoveRequired)
+				} else {
+					const result = this.queue.removeSong(index - 1, true)
+					if (result === 1) {
+						if (index === 1) {
+							context.channel.send(lang.audio.music.prompts.songRemove1)
+						} else {
+							context.channel.send(utils.replace(lang.audio.music.prompts.queueSongTotal, { "number1": this.queue.songs.length, "number2": this.queue.songs.length }))
+						}
+					} else {
+						context.react("✅")
+					}
+				}
+			})
+		} else if (context === "web") {
+			if (!index) {
+				return false
+			} else {
+				const result = this.queue.removeSong(index - 1, true)
+				return result !== 1
+			}
 		}
 	}
 	/**
@@ -637,11 +664,12 @@ class QueueWrapper {
 	 * @param {any} [context]
 	 */
 	async playRelated(index, insert, context) {
+		const lang = await this.queue.getLang()
 		index--
 		const result = await this.queue.playRelated(index, insert)
 		if (context instanceof Discord.Message) {
 			if (result == 0) context.react("✅")
-			else if (result == 1) context.channel.send("The number you typed isn't an item in the related list. Try `&music related`.")
+			else if (result == 1) context.channel.send(lang.audio.music.prompts.numberNotInRelated)
 		}
 	}
 

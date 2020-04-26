@@ -147,7 +147,7 @@ commands.assign([
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
-		async process(msg, suffix) {
+		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(0x36393f)
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
 			const leadingSpace = `${emojis.bl}\n​`
@@ -160,14 +160,14 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ Songs Played Today:**\n${songsPlayed} songs\n` +
-								`**❯ Songs Queued:**\n${[...queues.cache.values()].reduce((acc, cur) => acc + cur.songs.length, 0)} songs`,
+							value: `${utils.replace(lang.meta.statistics.returns.songsToday, { "number": songsPlayed })}\n` +
+								`${utils.replace(lang.meta.statistics.returns.songsQueued, { "number": [...queues.cache.values()].reduce((acc, cur) => acc + cur.songs.length, 0) })}`,
 							inline: true
 						},
 						{
 							name: leadingSpace,
-							value: `**❯ Voice Connections:**\n${client.lavalink.players.size} connections\n` +
-								`**❯ Users Listening:**\n${[...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)} users`,
+							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": client.lavalink.players.size })}\n` +
+								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": [...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0) })}`,
 							inline: true
 						}
 					])
@@ -177,13 +177,13 @@ commands.assign([
 				embed.addFields([
 					{
 						name: leadingIdentity,
-						value: `**❯ Games Played Today:**\n${gamesPlayed} games\n` +
-							`**❯ Games In Progress:**\n${games.cache.size} games`,
+						value: `${utils.replace(lang.meta.statistics.returns.gamesToday, { "number": gamesPlayed })}\n` +
+							`${utils.replace(lang.meta.statistics.returns.gamesInProgress, { "number": games.cache.size })}`,
 						inline: true
 					},
 					{
 						name: leadingSpace,
-						value: `**❯ Users Playing:**\n${games.cache.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)} users`,
+						value: `${utils.replace(lang.meta.statistics.returns.usersPlaying, { "number": games.cache.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0) })}`,
 						inline: true
 					}
 				])
@@ -201,23 +201,23 @@ commands.assign([
 			} else {
 				const stats = utils.getStats()
 				const allStats = await ipc.replier.requestGetAllStats()
-				const nmsg = await msg.channel.send("Ugh. I hate it when I'm slow, too")
+				const nmsg = await msg.channel.send(lang.meta.statistics.prompts.slow)
 				embed
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ Heartbeat:**\n${stats.ping.toFixed(0)}ms\n`
-							+ `**❯ Latency:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
-							+ `**❯ Uptime:**\n${utils.shortTime(stats.uptime, "sec")}\n`
-							+ `**❯ RAM Usage:**\n${bToMB(stats.ram)}`,
+							value: `**❯ ${lang.meta.statistics.returns.heartbeat}:**\n${stats.ping.toFixed(0)}ms\n`
+							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
+							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
 							inline: true
 						},
 						{
 							name: leadingSpace,
-							value: `**❯ User Count:**\n${bothStats(stats, allStats, "users")}\n`
-							+ `**❯ Guild Count:**\n${bothStats(stats, allStats, "guilds")}\n`
-							+ `**❯ Channel Count:**\n${bothStats(stats, allStats, "channels")}\n`
-							+ `**❯ Voice Connections:**\n${bothStats(stats, allStats, "connections")}`,
+							value: `${utils.replace(lang.meta.statistics.returns.userCount, { "number": bothStats(stats, allStats, "users") })}\n`
+							+ `${utils.replace(lang.meta.statistics.returns.guildCount, { "number": bothStats(stats, allStats, "guilds") })}\n`
+							+ `${utils.replace(lang.meta.statistics.returns.channelCount, { "number": bothStats(stats, allStats, "channels") })}\n`
+							+ `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": bothStats(stats, allStats, "connections") })}`,
 							inline: true
 						}
 					])
@@ -239,7 +239,7 @@ commands.assign([
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor("Pong!").addFields([{ name: "❯ Heartbeat:", value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: "❯ Latency:", value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: `❯ ${lang.meta.statistics.returns.latency}`, value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -277,7 +277,7 @@ commands.assign([
 		process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
-				.setDescription(`${lang.meta.invite.returns.notice}\nInvite link: ${constants.add}`)
+				.setDescription(`${lang.meta.invite.returns.notice}\n${utils.replace(lang.meta.invite.returns.link, { "link": constants.add })}`)
 				.setColor(0x36393f)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}

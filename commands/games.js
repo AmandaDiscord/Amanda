@@ -95,7 +95,7 @@ class TriviaGame extends Game {
 			.setDescription(`​\n${entities.decodeHTML(this.data.question)}`) // SC: zero-width space
 			.setColor(this.color)
 		answerFields.forEach(f => embed.addFields({ name: "​", value: f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", inline: true }))
-		embed.setFooter("To answer, type a letter in chat. You have 20 seconds.")
+		embed.setFooter(this.lang.games.trivia.prompts.provideAnswer)
 		this.channel.send(utils.contentify(this.channel, embed))
 		// Setup timer
 		this.timer = setTimeout(() => this.end(), 20000)
@@ -158,10 +158,10 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addFields({ name: "Winners", value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n") })
-		else embed.addFields({ name: "Winners", value: "No winners." })
-		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter("Click the reaction for another round.")
-		else embed.addFields({ name: "Next round", value: `${this.lang.games.trivia.prompts.permissionDenied}\n\nYou can type \`&trivia\` or \`&t\` for another round.` })
+		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n") })
+		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
+		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
+		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
 			utils.reactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
@@ -209,12 +209,12 @@ async function startGame(channel, options) {
 		if (options.suffix.includes("categor")) {
 			options.msg.author.send(
 				new Discord.MessageEmbed()
-					.setTitle("Categories")
+					.setTitle(options.lang.games.trivia.prompts.categories)
 					.setDescription(`${data.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
 			).then(() => {
 				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, { "username": options.msg.author.username }))
 			}).catch(() => {
-				channel.send("DM Error")
+				channel.send(options.lang.games.trivia.prompts.dmError)
 			})
 			return
 		} else {
