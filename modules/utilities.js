@@ -1109,6 +1109,45 @@ const utils = {
 	},
 
 	/**
+	 * @param {Discord.Message} msg
+	 */
+	resolveWebhookMessageAuthor: async function(msg) {
+		const row = await utils.sql.get(
+			"SELECT userID, user_username, user_discriminator FROM WebhookAliases"
+				+ " WHERE webhookID = ? AND webhook_username = ?",
+			[msg.webhookID, msg.author.username]
+		)
+		if (!row) return null
+		/** @type {Discord.User} */
+		let newAuthor
+		let newUserData
+		if (client.users.cache.has(row.userID)) {
+			newAuthor = client.users.cache.get(row.userID)
+		} else {
+			await client.users.fetch(row.userID).then(m => {
+				newAuthor = m
+			}).catch(() => {
+				newUserData = {
+					id: row.userID,
+					bot: false,
+					username: row.user_username,
+					discriminator: row.user_discriminator,
+					avatar: null
+				}
+				newAuthor = new Discord.User(client, newUserData)
+			})
+		}
+		msg.author = newAuthor
+		/** @type {Discord.GuildMember} */
+		if (!msg.guild.members.cache.has(row.userID)) {
+			await msg.guild.members.fetch(row.userID).catch(() => {
+				msg.guild.members.add(newUserData)
+			})
+		}
+		return msg
+	},
+
+	/**
 	 * @param {string} region
 	 */
 	getLavalinkNodeByRegion: function(region) {

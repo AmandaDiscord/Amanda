@@ -99,6 +99,7 @@ const db = mysql.createPool({
 		"./commands/meta.js",
 		"./commands/todo.js",
 		"./commands/traa.js",
+		"./commands/webhookalias.js",
 		"./modules/events.js",
 		"./modules/stdin.js"
 	])
