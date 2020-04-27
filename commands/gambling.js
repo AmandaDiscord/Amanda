@@ -39,6 +39,7 @@ commands.assign([
 		description: "Runs a random slot machine for a chance at Discoins",
 		aliases: ["slot", "slots"],
 		category: "gambling",
+		example: "&slot 1000",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
 			let permissions
@@ -128,6 +129,7 @@ commands.assign([
 		description: "Flips a coin",
 		aliases: ["flip"],
 		category: "gambling",
+		example: "&flip",
 		process(msg, suffix, lang) {
 			const flip = utils.arrayRandom(["heads <:coinH:402219464348925954>", "tails <:coinT:402219471693021196>"])
 			return msg.channel.send(utils.replace(lang.gambling.flip.returns.flip, { "flip": flip }))
@@ -138,6 +140,7 @@ commands.assign([
 		description: "Place a bet on a random flip for a chance of Discoins",
 		aliases: ["betflip", "bf"],
 		category: "gambling",
+		example: "&bf 1000 h",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
@@ -205,6 +208,7 @@ commands.assign([
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
+		example: "&coins PapiOphidian",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			const member = await msg.guild.findMember(msg, suffix, true)
@@ -222,6 +226,7 @@ commands.assign([
 		description: "A daily command that gives a random amount of Discoins",
 		aliases: ["daily"],
 		category: "gambling",
+		example: "&daily",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
 			const [row, donor] = await Promise.all([
@@ -249,6 +254,7 @@ commands.assign([
 		description: "Gets the leaderboard for people with the most coins",
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
+		example: "&lb 2",
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
@@ -331,6 +337,7 @@ commands.assign([
 		description: "Gives discoins to a user from your account",
 		aliases: ["give"],
 		category: "gambling",
+		example: "&give half PapiOphidian",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
@@ -379,6 +386,7 @@ commands.assign([
 		description: "A Wheel of Fortune for a chance at making more Discoins",
 		aliases: ["wheel", "wof"],
 		category: "gambling",
+		example: "&wheel 1000",
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
 			const permissions = msg.channel.permissionsFor(client.user)

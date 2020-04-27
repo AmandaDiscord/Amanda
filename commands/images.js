@@ -44,6 +44,7 @@ commands.assign([
 		description: "Returns an image of a cute cat",
 		aliases: ["cat"],
 		category: "images",
+		example: "&cat",
 		process(msg) {
 			return sendImage("chewey", "cat", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
@@ -53,6 +54,7 @@ commands.assign([
 		description: "Returns an image of a cute doggo",
 		aliases: ["dog", "doggo"],
 		category: "images",
+		example: "&dog",
 		process(msg) {
 			return sendImage("chewey", "dog", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
@@ -62,6 +64,7 @@ commands.assign([
 		description: "Returns an image of space",
 		aliases: ["space"],
 		category: "images",
+		example: "&space",
 		process(msg) {
 			return sendImage("chewey", "space", msg, "<a:SpaceLoading:429061691633041419>", poweredbychewey)
 		}
@@ -71,6 +74,7 @@ commands.assign([
 		description: "Returns an image of a snek",
 		aliases: ["snek", "snake"],
 		category: "images",
+		example: "&snek",
 		process(msg) {
 			return sendImage("chewey", "snake", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
@@ -80,6 +84,7 @@ commands.assign([
 		description: "Returns an image of a birb",
 		aliases: ["birb", "bird"],
 		category: "images",
+		example: "&birb",
 		process(msg) {
 			return sendImage("chewey", "birb", msg, "<a:CatLoading:426263491385622539>", poweredbychewey)
 		}
@@ -89,6 +94,7 @@ commands.assign([
 		description: "Returns an image of a catgirl (ฅ’ω’ฅ)",
 		aliases: ["catgirl", "neko"],
 		category: "images",
+		example: "&neko",
 		process(msg, suffix, lang) {
 			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life").catch(() => {
 				const embed = new Discord.MessageEmbed()

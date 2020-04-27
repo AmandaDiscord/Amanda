@@ -14,6 +14,7 @@ commands.assign([
 		description: "See Amanda's to-do list",
 		aliases: ["todo", "trello", "tasks"],
 		category: "meta",
+		example: "&todo",
 		process(msg, suffix) {
 			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}
