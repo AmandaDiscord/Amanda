@@ -303,7 +303,7 @@ commands.assign([
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Leaderboard" : "Leaderboard"
-			const footerHelp = lang.gambling.leaderboard.help.usage
+			const footerHelp = `&leaderboard ${lang.gambling.leaderboard.help.usage}`
 
 			if (rows.length) {
 				// Load usernames
@@ -323,13 +323,7 @@ commands.assign([
 					.setFooter(utils.replace(lang.gambling.leaderboard.prompts.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
-			} else {
-				const embed = new Discord.MessageEmbed()
-					.setAuthor(title)
-					.setDescription(utils.replace(lang.gambling.leaderboard.returns.emptyPage, { "lastPage": lastAvailablePage }))
-					.setColor(constants.money_embed_color)
-				return msg.channel.send(utils.contentify(msg.channel, embed))
-			}
+			} else return msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
 		}
 	},
 	{

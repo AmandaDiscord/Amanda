@@ -251,7 +251,7 @@ const cmds = [
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Waifu Leaderboard" : "Waifu Leaderboard"
-			const footerHelp = lang.interaction.waifuleaderboard.help.usage
+			const footerHelp = `&waifuleaderboard ${lang.interaction.waifuleaderboard.help.usage}`
 
 			if (rows.length) {
 				const usersToResolve = new Set()
@@ -273,17 +273,10 @@ const cmds = [
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)
 					.setDescription(displayRows.join("\n"))
-					.setFooter(`Page ${pageNumber} of ${lastAvailablePage} | ${footerHelp}`) // SC: U+2002 EN SPACE
+					.setFooter(utils.replace(lang.interaction.waifuleaderboard.returns.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
 				return msg.channel.send(utils.contentify(msg.channel, embed))
-			} else {
-				const embed = new Discord.MessageEmbed()
-					.setAuthor(title)
-					.setDescription(utils.replace(lang.interaction.waifuleaderboard.returns.emptyPage, { "lastPage": lastAvailablePage }))
-					.setFooter(footerHelp)
-					.setColor(constants.money_embed_color)
-				return msg.channel.send(utils.contentify(msg.channel, embed))
-			}
+			} else msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
 		}
 	},
 	{

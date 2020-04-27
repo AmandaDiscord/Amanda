@@ -239,7 +239,7 @@ commands.assign([
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: `❯ ${lang.meta.statistics.returns.latency}`, value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: `❯ ${lang.meta.ping.returns.latency}`, value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
