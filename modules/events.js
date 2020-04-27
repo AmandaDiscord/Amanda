@@ -75,7 +75,16 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
  * @param {Discord.Message} msg
  */
 async function manageMessage(msg) {
-	if (msg.author.bot) return
+	if (msg.author.bot) {
+		if (!msg.webhookID) {
+			return
+		} else {
+			const result = await utils.resolveWebhookMessageAuthor(msg)
+			if (!result) {
+				return
+			}
+		}
+	}
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`)
 	const prefix = prefixes.find(p => msg.content.startsWith(p))
 	if (!prefix) return
