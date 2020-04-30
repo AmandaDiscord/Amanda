@@ -9,12 +9,12 @@ const passthrough = require("../../passthrough")
 const { config, client, reloader, ipc } = passthrough
 
 const utils = require("../utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const Replier = require("./ipcreplier")
 utils.addTemporaryListener(reloader.reloadEvent, "ipcreplier.js", path.basename(__filename), () => {
 	setImmediate(() => { // event is emitted synchronously before decache, so wait for next event loop
-		reloader.forceResync("./modules/ipc/ipcbotreplier.js")
+		reloader.resync("./modules/ipc/ipcbotreplier.js")
 	})
 }, "once")
 

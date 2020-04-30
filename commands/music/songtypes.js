@@ -9,10 +9,10 @@ const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
 
 const utils = require("../../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./common.js")
-reloader.useSync("./commands/music/common.js", common)
+reloader.sync("./commands/music/common.js", common)
 
 const stationData = new Map([
 	["original", {

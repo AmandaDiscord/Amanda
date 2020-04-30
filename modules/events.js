@@ -18,7 +18,7 @@ let starting = true
 if (client.readyAt != null) starting = false
 
 const utils = require("./utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()

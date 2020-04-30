@@ -18,7 +18,7 @@ const passthrough = require("../passthrough")
 const { client, constants, config, commands, reloadEvent, reloader, games, queues, periodicHistory, ipc } = passthrough
 
 const utils = require("../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000 * 60 * 60 - (Date.now() % (1000 * 60 * 60)))
 console.log("added timeout sendStatsTimeout")
@@ -209,7 +209,7 @@ commands.assign([
 							name: leadingIdentity,
 							value: `**❯ ${lang.meta.statistics.returns.heartbeat}:**\n${stats.ping.toFixed(0)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
-							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
 							inline: true
 						},

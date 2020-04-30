@@ -7,10 +7,10 @@ const passthrough = require("../../passthrough")
 const { client, reloader, ipc } = passthrough
 
 const QueueFile = require("../../commands/music/queue")
-reloader.useSync("./commands/music/queue.js", QueueFile)
+reloader.sync("./commands/music/queue.js", QueueFile)
 
 const utils = require("../utilities")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 class QueueManager {
 	constructor() {

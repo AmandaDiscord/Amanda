@@ -12,7 +12,7 @@ const utils = require("../modules/utilities")
 const Replier = require("../../modules/ipc/ipcreplier")
 utils.addTemporaryListener(reloader.reloadEvent, "ipcreplier.js", path.basename(__filename), () => {
 	setImmediate(() => { // event is emitted synchronously before decache, so wait for next event loop
-		reloader.forceResync("./website/modules/ipcserverreplier.js")
+		reloader.resync("./website/modules/ipcserverreplier.js")
 	})
 }, "once")
 

@@ -27,7 +27,7 @@ const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":sev
 undefined
 
 const utils = require("../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 class Game {
 	/**

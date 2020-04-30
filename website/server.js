@@ -7,7 +7,8 @@ const Snow = require("snowtransfer")
 const mysql = require("mysql2/promise")
 const config = require("../config")
 const dba = require("discord-bot-analytics")
-const Reloader = require("../modules/hotreload")
+const Reloader = require("@amanda/reloader")
+const path = require("path")
 require("dnscache")({ enable: true })
 
 // Passthrough
@@ -17,7 +18,7 @@ passthrough.config = config
 
 // Reloader
 
-const reloader = new Reloader()
+const reloader = new Reloader(true, path.join(__dirname, "../"))
 passthrough.reloader = reloader
 
 // Snow
@@ -38,14 +39,14 @@ passthrough.db = db
 
 // Utils
 
-reloader.setupWatch(["./website/modules/utilities.js"])
+reloader.watch(["./website/modules/utilities.js"])
 
 // IPC (which requires utils)
 
 const IPC = require("./modules/ipcserver.js")
 const ipc = new IPC("website", config.website_ipc_bind, 6544)
 passthrough.ipc = ipc
-reloader.setupWatch(["./modules/ipc/ipcreplier.js"])
+reloader.watch(["./modules/ipc/ipcreplier.js"])
 reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
 
 const analytics = new dba(config.chewey_api_key, null)

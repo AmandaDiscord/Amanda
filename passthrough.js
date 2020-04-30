@@ -10,9 +10,9 @@ process._ptcreated = true
  * @property {import("./modules/structures/Discord/Amanda")} client
  * @property {import("./config")} config
  * @property {import("./constants")} constants
- * @property {import("./modules/managers/CommandManager")} commands
+ * @property {import("@amanda/commandmanager")<[import("@amanda/lang").Lang]>} commands
  * @property {import("mysql2/promise").Pool} db
- * @property {import("./modules/hotreload")} reloader
+ * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./modules/managers/GameManager")} games
  * @property {Map<string, import("./modules/structures/Discord/ReactionMenu")>} reactionMenus

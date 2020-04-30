@@ -9,10 +9,10 @@ const passthrough = require("../passthrough")
 const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, reactionMenus, frisky, weeb } = passthrough
 
 const utils = require("../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./music/common.js")
-reloader.useSync("./commands/music/common.js", common)
+reloader.sync("./commands/music/common.js", common)
 
 commands.assign([
 	{

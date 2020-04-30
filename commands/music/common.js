@@ -10,7 +10,7 @@ const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
 
 const utils = require("../../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 class VoiceStateCallback {
 	/**

@@ -7,13 +7,13 @@ const passthrough = require("../../passthrough")
 const { client, config, reloader, commands } = passthrough
 
 const utils = require("../../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./common.js")
-reloader.useSync("./commands/music/common.js", common)
+reloader.sync("./commands/music/common.js", common)
 
 const songTypes = require("./songtypes.js")
-reloader.useSync("./commands/music/songtypes.js", songTypes)
+reloader.sync("./commands/music/songtypes.js", songTypes)
 
 const YouTube = require("simple-youtube-api")
 const youtube = passthrough.youtube

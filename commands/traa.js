@@ -13,7 +13,7 @@ const bots = [
 const { client, reloader, commands } = passthrough
 
 const utils = require("../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const cadence = new utils.DMUser("176580265294954507")
 const prompts = []

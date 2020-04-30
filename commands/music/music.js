@@ -9,16 +9,16 @@ const passthrough = require("../../passthrough")
 const { config, client, reloader, commands, queues, frisky } = passthrough
 
 const utils = require("../../modules/utilities.js")
-reloader.useSync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities.js", utils)
 
 const songTypes = require("./songtypes.js")
-reloader.useSync("./commands/music/songtypes.js", songTypes)
+reloader.sync("./commands/music/songtypes.js", songTypes)
 
 const queueFile = require("./queue.js")
-reloader.useSync("./commands/music/queue.js", queueFile)
+reloader.sync("./commands/music/queue.js", queueFile)
 
 const common = require("./common.js")
-reloader.useSync("./commands/music/common.js", common)
+reloader.sync("./commands/music/common.js", common)
 
 utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
 	// Pass on to queue for leave timeouts

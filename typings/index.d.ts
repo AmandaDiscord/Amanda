@@ -82,3 +82,12 @@ export interface InvidiousPlaylist {
 	isListed: boolean,
 	videos: InvidiousPlaylistVideo[]
 }
+
+interface Command<T extends Array<any>> {
+	usage: string;
+	description: string;
+	aliases: Array<string>;
+	category: string;
+	example?: string;
+	process(message: Discord.Message, args?: string, ...extras: T): any;
+}

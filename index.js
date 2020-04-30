@@ -6,18 +6,19 @@ const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
 const Discord = require("discord.js")
 const WeebSH = require("taihou")
+const CommandManager = require("@amanda/commandmanager")
+const Reloader = require("@amanda/reloader")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
-const Reloader = require("./modules/hotreload")
 
 // @ts-ignore
 const intents = new Discord.Intents((config.additional_intents || []).concat(["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]))
 const client = new Amanda({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents: intents } })
 const youtube = new YouTube(config.yt_api_key)
-const reloader = new Reloader()
+const reloader = new Reloader(true, __dirname)
 // @ts-ignore
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
 
@@ -39,7 +40,7 @@ const db = mysql.createPool({
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky(), weeb })
 
-	reloader.setupWatch([
+	reloader.watch([
 		"./modules/utilities.js"
 	])
 
@@ -52,13 +53,13 @@ const db = mysql.createPool({
 	reloader.watchAndLoad([
 		"./modules/ipc/ipcbotreplier.js"
 	])
-	reloader.setupWatch([
+	reloader.watch([
 		"./modules/ipc/ipcreplier.js"
 	])
 
 	// Music parts
 
-	reloader.setupWatch([
+	reloader.watch([
 		"./commands/music/common.js",
 		"./commands/music/playlistcommand.js",
 		"./commands/music/queue.js",
@@ -67,7 +68,6 @@ const db = mysql.createPool({
 
 	// Passthrough managers
 
-	const CommandManager = require("./modules/managers/CommandManager")
 	const GameManager = require("./modules/managers/GameManager")
 	const QueueManager = require("./modules/managers/QueueManager")
 	const PeriodicHistory = require("./modules/structures/PeriodicHistory")
