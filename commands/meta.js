@@ -706,7 +706,7 @@ commands.assign([
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo", "es", "nl", "pl"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "usagename": msg.author.username, "codes": "\nen-us, en-owo, es, and nl" }))
+				if (!["en-us", "en-owo", "es", "nl", "pl"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": "\nen-us, en-owo, es, and nl" }))
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}

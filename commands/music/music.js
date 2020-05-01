@@ -276,7 +276,7 @@ commands.assign([
 		usage: "[new|delete]",
 		description: "Obtain a web dashboard login token",
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
-		category: "meta",
+		category: "audio",
 		example: "&token new",
 		async process(msg, suffix, lang) {
 			if (suffix == "delete") {
