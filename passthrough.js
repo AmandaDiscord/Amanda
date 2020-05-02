@@ -15,7 +15,6 @@ process._ptcreated = true
  * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./modules/managers/GameManager")} games
- * @property {Map<string, import("./modules/structures/Discord/ReactionMenu")>} reactionMenus
  * @property {import("./modules/managers/QueueManager")} queues
  * @property {import("./modules/structures/PeriodicHistory")} periodicHistory
  * @property {import("simple-youtube-api")} youtube

@@ -6,6 +6,7 @@ const { PlayerManager } = require("discord.js-lavalink")
 /** @type {import("node-fetch").default} */
 // @ts-ignore
 const fetch = require("node-fetch")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
 const { client, config, constants, commands, reloader, reloadEvent } = passthrough
@@ -23,7 +24,7 @@ reloader.sync("./modules/utilities.js", utils)
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
-utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), reactionEvent)
+utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), (data, channel, user) => ReactionMenu.handler(data, channel, user, client))
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
 	if (data && data.id && data.channel_id && data.content && data.author) {
 		const channel = client.channels.cache.get(data.channel_id)
@@ -212,80 +213,5 @@ function manageReady() {
 		})
 
 		passthrough.ipc.connect()
-	}
-}
-
-/**
- * @param {object} data
- * @property {string} data.user_id
- * @param {Discord.Channel} channel
- * @param {Discord.User} user
- */
-function reactionEvent(data, channel, user) {
-	/*
-	data
-		user_id: snowflake
-		channel_id: snowflake
-		message_id: snowflake
-		emoji
-			id: snowflake?
-			name: string
-	*/
-	// Set up vars
-	const emoji = data.emoji
-	const menu = passthrough.reactionMenus.get(data.message_id)
-	// Quick conditions
-	if (user.id == client.user.id) return
-	if (!menu) return
-	// We now have a menu
-	const msg = menu.message
-	const action = menu.actions.find(a => utils.fixEmoji(a.emoji) == utils.fixEmoji(emoji))
-	// Make sure the emoji is actually an action
-	if (!action) return
-	// Make sure the user is allowed
-	if ((action.allowedUsers && !action.allowedUsers.includes(user.id)) || (action.deniedUsers && action.deniedUsers.includes(user.id))) {
-		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji, user.id)
-		return
-	}
-	// Actually do stuff
-	switch (action.actionType) {
-	case "reply":
-		msg.channel.send(user.toString() + " " + action.actionData)
-		break
-	case "edit":
-		msg.edit(action.actionData)
-		break
-	case "js":
-		action.actionData(msg, emoji, user)
-		break
-	}
-	switch (action.ignore) {
-	case "that":
-		menu.actions.find(a => a.emoji == emoji).actionType = "none"
-		break
-	case "thatTotal":
-		menu.actions = menu.actions.filter(a => a.emoji != emoji)
-		break
-	case "all":
-		menu.actions.forEach(a => a.actionType = "none")
-		break
-	case "total":
-		menu.destroy(true)
-		break
-	}
-	switch (action.remove) {
-	case "user":
-		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji, user.id)
-		break
-	case "bot":
-		utils.removeUncachedReaction(channel.id, data.message_id, data.emoji)
-		break
-	case "all":
-		msg.reactions.removeAll()
-		break
-	case "message":
-		menu.destroy(true)
-		msg.delete()
-		break
 	}
 }

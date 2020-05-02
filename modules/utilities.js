@@ -7,7 +7,7 @@ const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
 const Lang = require("@amanda/lang")
 
-const ReactionMenu = require("./structures/Discord/ReactionMenu")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
 const { config, constants, client, db, reloadEvent } = passthrough
@@ -279,7 +279,7 @@ const utils = {
 		 * @param {string} userID
 		 * @returns {Promise<number>}
 		 */
-		"get": async function(userID) {
+		get: async function(userID) {
 			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
 			if (row) return row.coins
 			else {
@@ -291,7 +291,7 @@ const utils = {
 		 * @param {string} userID
 		 * @param {number} value
 		 */
-		"set": async function(userID, value) {
+		set: async function(userID, value) {
 			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
 			if (row) void utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [value, userID])
 			else void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, value])
@@ -300,7 +300,7 @@ const utils = {
 		 * @param {string} userID
 		 * @param {number} value
 		 */
-		"award": async function(userID, value) {
+		award: async function(userID, value) {
 			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
 			if (row) void await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID])
 			else void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value])
@@ -377,7 +377,7 @@ const utils = {
 	/**
 	 * @param {string} userID
 	 * @param {string} command
-	 * @param {{max: number, min: number, step: number, regen: {time: number, amount: number}}} info
+	 * @param {{ max: number, min: number, step: number, regen: { time: number, amount: number }}} info
 	 */
 	cooldownManager: async function(userID, command, info) {
 		let winChance = info.max
@@ -798,8 +798,7 @@ const utils = {
 	},
 
 	/**
-	 * @param {Discord.Message} message
-	 * @param {import("./structures/Discord/ReactionMenu").ReactionMenuAction[]} actions
+	 * @type {import("../typings").reactionMenu1 & (import("../typings").reactionMenu2) & (import("../typings").reactionMenu3) & (import("../typings").reactionMenu4)}
 	 */
 	reactionMenu: function(message, actions) {
 		return new ReactionMenu(message, actions)

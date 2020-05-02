@@ -71,9 +71,7 @@ const db = mysql.createPool({
 	const GameManager = require("./modules/managers/GameManager")
 	const QueueManager = require("./modules/managers/QueueManager")
 	const PeriodicHistory = require("./modules/structures/PeriodicHistory")
-	const reactionMenus = require("./modules/structures/Discord/reactionmenus")
 
-	passthrough.reactionMenus = reactionMenus
 	passthrough.commands = new CommandManager()
 	passthrough.games = new GameManager()
 	passthrough.queues = new QueueManager()

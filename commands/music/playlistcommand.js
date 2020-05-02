@@ -304,6 +304,7 @@ commands.assign([
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
 				utils.reactionMenu(message, [
+					// @ts-ignore
 					{ emoji: client.emojis.cache.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),

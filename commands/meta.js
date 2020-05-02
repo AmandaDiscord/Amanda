@@ -945,7 +945,6 @@ commands.assign([
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
 								.setColor("36393E")
-							// @ts-ignore
 							const menu = utils.reactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						}
