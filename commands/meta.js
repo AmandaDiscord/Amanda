@@ -729,6 +729,28 @@ commands.assign([
 	},
 
 	{
+		usage: "<code>",
+		description: "Set the language for Amanda to talk to you",
+		aliases: ["language", "lang"],
+		category: "configuration",
+		example: "&language es",
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, "self language " + suffix, lang)
+		}
+	},
+
+	{
+		usage: "<code>",
+		description: "Set the language for Amanda to use in your server",
+		aliases: ["serverlanguage", "serverlang"],
+		category: "configuration",
+		example: "&serverlanguage es",
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, "server language " + suffix, lang)
+		}
+	},
+
+	{
 		usage: "<url>",
 		description: "Set the background displayed on &profile",
 		aliases: ["background", "profilebackground"],
