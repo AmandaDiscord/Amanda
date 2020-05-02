@@ -3,14 +3,16 @@
 const Discord = require("discord.js")
 const events = require("events")
 const util = require("util")
+const path = require("path")
 const Jimp = require("jimp")
 const mysql = require("mysql2/promise")
-const Lang = require("@amanda/lang")
 
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
 const { config, constants, client, db, reloadEvent } = passthrough
+
+let Lang = require("@amanda/lang")
 
 const startingCoins = 5000
 
@@ -1009,14 +1011,19 @@ const utils = {
 	 * @returns {Promise<Lang.Lang>}
 	 */
 	getLang: async function(id, type) {
-		let langcode, lang, value
-		if (type == "self") lang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [id, "language"])
-		else if (type == "guild") lang = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [id, "language"])
-		if (lang) langcode = lang.value
-		else langcode = "en-us"
+		let code, row
+		if (type === "self") {
+			row = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID = ? AND setting = ?", [id, "language"])
+		} else if (type === "guild") {
+			row = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID = ? AND setting = ?", [id, "language"])
+		}
+		if (row) {
+			code = row.value
+		} else {
+			code = "en-us"
+		}
 
-		if (Lang[langcode.replace("-", "_")]) value = Lang[langcode.replace("-", "_")]
-		else value = Lang.en_us
+		const value = Lang[code.replace("-", "_")] || Lang.en_us
 		return value
 	},
 	findChannel:
@@ -1221,5 +1228,9 @@ const utils = {
 		return max
 	}
 }
+
+utils.addTemporaryListener(reloadEvent, "@amanda/lang", path.basename(__filename), () => {
+	Lang = require("@amanda/lang")
+})
 
 module.exports = utils

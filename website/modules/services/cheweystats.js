@@ -18,7 +18,9 @@ async function report() {
 
 async function reportAndSetTimeout() {
 	if (cancelled) return
-	await report()
+	await report().catch(() => {
+		console.log("chewey your api sucks but we're continuing anyway")
+	})
 	setTimeout(reportAndSetTimeout, 10*60*1000)
 }
 

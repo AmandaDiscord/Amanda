@@ -83,6 +83,12 @@ const db = mysql.createPool({
 		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
 	}
 
+	// Can't be part of reloader, and depends on IPC, so it's down here.
+
+	reloader.watchAndLoad([
+		"./modules/reloadapi.js"
+	])
+
 	// Commands
 
 	reloader.watchAndLoad([

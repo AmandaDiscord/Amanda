@@ -706,7 +706,8 @@ commands.assign([
 			}
 
 			if (settingName == "language") {
-				if (!["en-us", "en-owo", "es", "nl", "pl"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": "\nen-us, en-owo, es, and nl" }))
+				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
+				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": "\n" + codes.map(c => "`" + c + "`").join(", ") }))
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
@@ -725,6 +726,28 @@ commands.assign([
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)
+		}
+	},
+
+	{
+		usage: "<code>",
+		description: "Set the language that Amanda will use to talk to you",
+		aliases: ["language", "lang"],
+		category: "configuration",
+		example: "&language es",
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, "self language " + suffix, lang)
+		}
+	},
+
+	{
+		usage: "<code>",
+		description: "Set the language that Amanda will use in your server",
+		aliases: ["serverlanguage", "serverlang"],
+		category: "configuration",
+		example: "&serverlanguage es",
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, "server language " + suffix, lang)
 		}
 	},
 
