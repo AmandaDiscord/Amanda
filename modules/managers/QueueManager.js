@@ -12,12 +12,18 @@ reloader.sync("./commands/music/queue.js", QueueFile)
 const utils = require("../utilities")
 reloader.sync("./modules/utilities.js", utils)
 
+const auditDestroyTimeout = 1000 * 60 * 60 * 5
+
 class QueueManager {
 	constructor() {
 		/** @type {Discord.Collection<string, QueueFile.Queue>} */
 		this.cache = new Discord.Collection()
 		this.songsPlayed = 0
 		this.events = new EventEmitter()
+		/** @type {Map<string, Array<{ action: string, platform: string, user: string }>>} */
+		this.audits = new Map()
+		/** @type {Map<string, NodeJS.Timeout>} */
+		this.enqueuedAuditDestructions = new Map()
 	}
 	toObject() {
 		return {
@@ -42,6 +48,12 @@ class QueueManager {
 	 */
 	create(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
+		if (this.audits.get(guildID)) {
+			if (this.enqueuedAuditDestructions.get(guildID)) {
+				clearTimeout(this.enqueuedAuditDestructions.get(guildID))
+				this.enqueuedAuditDestructions.delete(guildID)
+			}
+		} else this.audits.set(guildID, [])
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, host)
 		this.cache.set(guildID, instance)
 		ipc.replier.sendNewQueue(instance)
@@ -54,6 +66,8 @@ class QueueManager {
 	 */
 	delete(guildID) {
 		this.cache.delete(guildID)
+		const timeout = setTimeout(() => this.audits.delete(guildID), auditDestroyTimeout)
+		this.enqueuedAuditDestructions.set(guildID, timeout)
 		ipc.replier.sendDeleteQueue(guildID)
 		this.events.emit("delete", guildID)
 	}

@@ -832,6 +832,10 @@ commands.assign([
 								value: "Empty the queue and leave the voice channel.\n`&music stop`"
 							},
 							{
+								name: "audit",
+								value: "Show an audit log of important actions done to a server's queue"
+							},
+							{
 								name: "playlist",
 								value: "Manage playlists. Try `&help playlist` for more info."
 							}

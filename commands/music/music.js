@@ -150,6 +150,7 @@ const subcommandsMap = new Map([
 		voiceChannel: "required",
 		queue: "required",
 		code: (msg, args, { queue }) => {
+			queue.audit.push({ action: "Queue Stop", user: msg.author.tag, platform: "Discord" })
 			queue.wrapper.stop()
 		}
 	}],
@@ -157,6 +158,7 @@ const subcommandsMap = new Map([
 		queue: "required",
 		code: (msg, args, { queue, lang }) => {
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
+				queue.audit.push({ action: "Queue Clear", user: msg.author.tag, platform: "Discord" })
 				queue.wrapper.removeAllSongs({ msg, lang })
 			} else if (args[1] == "r" || args[1] == "remove") {
 				const index = +args[2]
@@ -186,6 +188,7 @@ const subcommandsMap = new Map([
 				if (queue.songs.length < amount) return msg.channel.send(lang.audio.music.prompts.tooManySkips)
 				if (queue.songs.length == amount) return queue.wrapper.stop()
 			}
+			queue.audit.push({ action: `Queue skip ${amount}`, platform: "Discord", user: msg.author.tag })
 			queue.wrapper.skip(amount)
 		}
 	}],
@@ -252,6 +255,19 @@ const subcommandsMap = new Map([
 				return command.process(msg, suffix, lang)
 			} else throw new Error("Playlist command not loaded")
 		}
+	}],
+	["audit", {
+		code: (msg, args, { lang, queue }) => {
+			const audit = queues.audits.get(msg.guild.id)
+			if (!audit || (audit && audit.length == 0)) return msg.channel.send(`${msg.author.username}, there is no audit data to fetch`)
+			let entries
+			if (audit.length > 15) entries = audit.reverse().slice(0, 15)
+			else entries = audit.reverse()
+			const embed = new Discord.MessageEmbed().setColor("36393E")
+				.setAuthor(`Audit for ${msg.guild.name}`)
+				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
+			return msg.channel.send(embed)
+		}
 	}]
 ])
 
@@ -267,7 +283,8 @@ const subcommandAliasMap = new Map([
 	["pl", "playlist"],
 	["playlists", "playlist"],
 	["repeat", "loop"],
-	["l", "loop"]
+	["l", "loop"],
+	["a", "audit"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
