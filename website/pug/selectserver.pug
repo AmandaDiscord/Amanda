@@ -36,9 +36,11 @@ html
 					+guild-selection(guild, false)
 
 			div.message.missing-servers-message
-				div Missing servers? Join a voice channel in a server we share to make it appear here.
+				div.
+					Missing servers?
+					Join a voice channel to make its server appear here.
 
-			if displayNoSharedServers
+			//- if displayNoSharedServers
 				div.message.missing-servers-message
 					div
 						div We don't share any servers? Wha-!

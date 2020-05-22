@@ -51,7 +51,7 @@ class Queue {
 
 		this.voiceLeaveWarningMessagePromise = null
 		if (!host) {
-			const node = utils.getLavalinkNodeByRegion(this.voiceChannel.guild.region)
+			const node = common.nodes.getByRegion(this.voiceChannel.guild.region)
 			host = node.host
 		}
 		this.player = client.lavalink.join({

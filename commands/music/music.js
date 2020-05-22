@@ -47,7 +47,7 @@ const subcommandsMap = new Map([
 				// Get the track
 				if (config.use_invidious) { // Resolve tracks with Invidious
 					const queue = queues.cache.get(msg.guild.id)
-					const node = (queue && queue.getUsedLavalinkNode()) || utils.getLavalinkNodeByRegion(msg.guild.region)
+					const node = (queue && queue.getUsedLavalinkNode()) || common.nodes.getByRegion(msg.guild.region)
 					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
@@ -334,7 +334,7 @@ commands.assign([
 			const perms = channel.type == "text" ? types.text : types.voice
 			const permissions = channel.permissionsFor(client.user)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
-			const node = utils.getLavalinkNodeByRegion(msg.guild.region)
+			const node = common.nodes.getByRegion(msg.guild.region)
 			let extraNodeInfo = ""
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()

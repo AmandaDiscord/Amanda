@@ -132,6 +132,9 @@ a.no-underline
 
 .about
 	@include fatbox
+	max-width: 800px
+	margin-left: auto
+	margin-right: auto
 	font-size: 24px
 
 	*:first-child
@@ -141,6 +144,8 @@ a.no-underline
 .config-overview
 	@include fatbox
 	font-size: 18px
+	max-width: 800px
+	margin: 0 auto
 
 	.config-table
 		border-collapse: collapse
@@ -189,6 +194,8 @@ a.no-underline
 .missing-servers-message
 	margin-top: 40px
 	margin-bottom: 40px
+	text-align: center
+	white-space: pre-line
 
 .alert
 	color: #680505
@@ -196,6 +203,33 @@ a.no-underline
 	border: 1px solid #222
 	border-left: 3px solid
 	padding: 8px
+
+@mixin flat-input
+	padding: 4px
+	line-height: 1
+	font-size: 18px
+	border: 2px solid #de56a9
+	background-color: white
+	color: black
+	outline: none
+
+	&:disabled
+		border-color: #777
+		color: #555
+
+@mixin flat-button
+	@include flat-input
+	font-size: 16px
+	padding: 4px 8px
+	transition: 0.2s ease-out
+	transition-property: color, background-color
+
+	&:not(:disabled)
+		cursor: pointer
+
+		&:hover
+			background-color: #de56a9
+			color: white
 
 .login-container
 	display: grid
@@ -211,30 +245,10 @@ a.no-underline
 	margin: 0 auto
 
 	input
-		padding: 4px
-		line-height: 1
-		font-size: 18px
-		border: 2px solid #de56a9
-		background-color: white
-		color: black
-		outline: none
-
-		&:disabled
-			border-color: #777
-			color: #555
+		@include flat-input
 
 	input[type="submit"], input[type="button"]
-		font-size: 16px
-		padding: 4px 8px
-		transition: 0.2s ease-out
-		transition-property: color, background-color
-
-		&:not(:disabled)
-			cursor: pointer
-
-			&:hover
-				background-color: #de56a9
-				color: white
+		@include flat-button
 
 #get-token
 	margin-top: 20px
@@ -509,3 +523,8 @@ a.no-underline
 		margin: 0px
 		padding: 4px
 		font-size: inherit
+
+.apply-config
+	@include flat-button
+	margin-top: 20px
+	padding: 10px

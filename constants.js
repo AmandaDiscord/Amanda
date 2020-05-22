@@ -22,7 +22,8 @@ module.exports = {
 			port: 10402,
 			password: config.lavalink_password,
 			invidious_origin: "http://cadence.moe:3000",
-			regions: ["brazil", "us-central", "us-south", "us-east", "us-west", "eu-central", "europe", "eu-west", "sydney", "southafrica"]
+			regions: ["brazil", "us-central", "us-south", "us-east", "us-west", "eu-central", "europe", "eu-west", "sydney", "southafrica"],
+			enabled: true
 		},
 		{
 			name: "Crayon",
@@ -30,7 +31,8 @@ module.exports = {
 			port: 10402,
 			password: config.lavalink_password,
 			invidious_origin: "http://139.99.90.94:3000",
-			regions: ["hongkong", "japan", "singapore", "india", "russia", "south-korea"]
+			regions: ["hongkong", "japan", "singapore", "india", "russia", "south-korea"],
+			enabled: true
 		}
 	]
 }

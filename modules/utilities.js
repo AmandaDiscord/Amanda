@@ -1153,18 +1153,6 @@ const utils = {
 		return msg
 	},
 
-	/**
-	 * @param {string} region
-	 */
-	getLavalinkNodeByRegion: function(region) {
-		if (region) {
-			for (const node of constants.lavalinkNodes) {
-				if (node.regions.includes(region)) return node
-			}
-		}
-		return constants.lavalinkNodes[0]
-	},
-
 	editLavalinkNodes: {
 		/**
 		 * @returns {[number, number]} removedCount, addedCount
@@ -1201,6 +1189,40 @@ const utils = {
 		add: function(data) {
 			constants.lavalinkNodes.push(data)
 			return utils.editLavalinkNodes.applyChanges()
+		},
+
+		/**
+		 * Add enabled and disconnected nodes to the client node list and connect to them.
+		 * Clean unused and disabled client nodes and close their websockets
+		 * so that the lavalink process can be ended safely.
+		 *
+		 * @returns {[number, number]} cleaned nodes, added nodes
+		 */
+		syncConnections: function() {
+			const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
+
+			let cleanedCount = 0
+			let addedCount = 0
+
+			for (const node of constants.lavalinkNodes) { // loop through all known nodes
+				const clientNode = client.lavalink.nodes.find(n => n.host === node.host) // get the matching client node
+				if (node.enabled) { // try connecting to nodes
+					if (clientNode) continue // only consider situations where the client node is unknown
+					// connect to the node
+					client.lavalink.createNode(node)
+					addedCount++
+				} else { // try disconnecting from nodes
+					if (!clientNode) continue // only consider situations where the client node is known
+					// if no queues are using the node, disconnect it.
+					if (!queues.cache.some(q => q.player.node === clientNode)) {
+						client.lavalink.removeNode(clientNode.host)
+						clientNode.destroy()
+						cleanedCount++
+					}
+				}
+			}
+
+			return [cleanedCount, addedCount]
 		}
 	},
 

@@ -4,9 +4,10 @@ const types = require("../../typings")
 
 const path = require("path")
 const Discord = require("discord.js")
+const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, ipc } = passthrough
+const { config, constants, client, reloader, ipc } = passthrough
 
 const utils = require("../utilities.js")
 reloader.sync("./modules/utilities.js", utils)
@@ -195,11 +196,15 @@ class ClientReplier extends Replier {
 	}
 
 	/**
-	 * @param {any} data data to apply over config
+	 * @param {{config: any, lavalinkNodes: boolean[]}} data data to apply over config
 	 */
-	REPLY_UPDATE_CONFIG(data) {
-		Object.assign(config, data)
-		return config
+	REPLY_UPDATE_CONFIG(data = undefined) {
+		if (data && data.config) mixinDeep(config, data.config)
+		if (data && data.lavalinkNodes) {
+			constants.lavalinkNodes.forEach((n, i) => mixinDeep(n, data.lavalinkNodes[i]))
+			utils.editLavalinkNodes.syncConnections()
+		}
+		return {config, lavalinkNodes: constants.lavalinkNodes}
 	}
 
 	async requestPing() {

@@ -86,8 +86,8 @@ module.exports = [
 			}
 
 			if (allowed) {
-				const configs = await ipc.replier.requestUpdateConfig({})
-				return render(200, "pug/config.pug", { configs })
+				const shardData = await ipc.replier.requestUpdateConfig()
+				return render(200, "pug/config.pug", { shardData })
 			} else {
 				const csrfToken = utils.generateCSRF()
 				return render(401, "pug/login.pug", { message: "You must log in.", csrfToken })
@@ -112,12 +112,19 @@ module.exports = [
 				.then(async state => {
 					/** @type {URLSearchParams} */
 					const params = state.params
-					const newConfig = {
+					const config = {
 						use_invidious: params.has("use-invidious"),
-						invidious_origin: params.get("invidious-origin")
 					}
+					const lavalinkNodes =
+						Array(+params.get("number-of-nodes"))
+							.fill(undefined)
+							.map((_, i) => ({
+								enabled: params.has("enable-node-"+i)
+							}))
 
-					await ipc.replier.requestUpdateConfig(newConfig)
+					console.log({config, lavalinkNodes})
+
+					await ipc.replier.requestUpdateConfig({config, lavalinkNodes})
 
 					return {
 						statusCode: 303,

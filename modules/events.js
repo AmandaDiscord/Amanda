@@ -178,6 +178,8 @@ function manageReady() {
 		statusPrefix = result.find(r => r.status).prefix
 		passthrough.statusPrefix = statusPrefix
 		console.log("Loaded " + prefixes.length + " prefixes: " + prefixes.join(" "))
+		// we should probably use a different event or a callback instead.
+		// @ts-ignore
 		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
 	})
 	if (firstStart) {
@@ -185,7 +187,7 @@ function manageReady() {
 		process.title = client.user.username
 		console.log(client.user.id + "/" + utils.getShardsArray())
 		constants.lavalinkNodes.forEach(node => node.resumeKey = client.user.id + "/" + utils.getShardsArray())
-		client.lavalink = new PlayerManager(this, constants.lavalinkNodes, {
+		client.lavalink = new PlayerManager(this, constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
 			shards: client.options.shardCount
 		})

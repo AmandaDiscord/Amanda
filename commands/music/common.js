@@ -139,7 +139,7 @@ const common = {
 	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
 	 */
 	getTracks: function(input, region = "") {
-		const node = utils.getLavalinkNodeByRegion(region)
+		const node = common.nodes.getByRegion(region)
 
 		const params = new URLSearchParams()
 		params.append("identifier", input)
@@ -162,6 +162,20 @@ const common = {
 		})
 	},
 
+	nodes: {
+		first() {
+			return constants.lavalinkNodes.find(n => n.enabled)
+		},
+
+		getByHost(host) {
+			return constants.lavalinkNodes.find(n => n.enabled && n.host === host) || common.nodes.first()
+		},
+
+		getByRegion(region) {
+			return constants.lavalinkNodes.find(n => n.enabled && n.regions.includes(region)) || common.nodes.first()
+		}
+	},
+
 	invidious: {
 		/**
 		 * Get the Invidious origin that should be used with a specific Lavalink node.
@@ -169,7 +183,7 @@ const common = {
 		 * @returns {string}
 		 */
 		getOrigin: function(host) {
-			const node = constants.lavalinkNodes.find(n => n.host === host) || constants.lavalinkNodes[0]
+			const node = common.nodes.getByHost(host)
 			return node.invidious_origin
 		},
 
