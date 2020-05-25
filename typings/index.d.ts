@@ -98,3 +98,14 @@ export declare function reactionMenu1(message: Discord.Message, actions: Array<i
 export declare function reactionMenu2(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionEdit>): ReactionMenu;
 export declare function reactionMenu3(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionReply>): ReactionMenu;
 export declare function reactionMenu4(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionJS>): ReactionMenu;
+
+export interface LavalinkInfo {
+	identifier: string;
+	isSeekable: boolean;
+	author: string;
+	length: number;
+	isStream: boolean;
+	position: number;
+	title: string;
+	uri: string;
+}

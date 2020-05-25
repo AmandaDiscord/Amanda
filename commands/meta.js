@@ -783,7 +783,7 @@ commands.assign([
 						.addFields([
 							{
 								name: "play",
-								value: "Play a song or add it to the end of the queue. Use any YouTube video or playlist url or video name as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs` or\n`&music play despacito`"
+								value: "Play a song or add it to the end of the queue. Use any YouTube video or playlist URL or video name as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs` or\n`&music play https://soundcloud.com/luisfonsiofficial/despacito` or\n`&music play despacito`"
 							},
 							{
 								name: "insert",
@@ -938,7 +938,19 @@ commands.assign([
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Command Category: ${suffix}`)
 							.setDescription(
-								cat.map(c => {
+								cat.sort((a, b) => {
+									const cmda = commands.cache.get(a)
+									const cmdb = commands.cache.get(b)
+									if (cmda.order !== undefined && cmdb.order !== undefined) { // both are numbers, sort based on that, lowest first
+										return cmda.order - cmdb.order
+									} else if (cmda.order !== undefined) { // a is defined, sort a first
+										return -1
+									} else if (cmdb.order !== undefined) { // b is defined, sort b first
+										return 1
+									} else { // we don't care
+										return 0
+									}
+								}).map(c => {
 									const cmd = commands.cache.get(c)
 									let desc
 									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
@@ -946,7 +958,7 @@ commands.assign([
 									return `\`${cmd.aliases[0]}${" ​".repeat(maxLength - cmd.aliases[0].length)}\` ${desc}`
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
-							.setColor("36393E")
+							.setColor(0x36393f)
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
 						try {
 							msg.author.send(embed).then(mobile).then(() => reply(msg))

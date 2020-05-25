@@ -48,13 +48,14 @@ const stationData = new Map([
 class Song {
 	constructor() {
 		this.title = ""
-		this.queueLine = ""
 		this.track = ""
 		this.lengthSeconds = -1
+		this.queueLine = ""
 		this.npUpdateFrequency = 0
 		this.noPauseReason = ""
 		this.error = ""
 		this.typeWhileGetRelated = true
+		/** only used for error logs at the moment (???) */
 		this.id = ""
 		this.live = null
 		this.thumbnail = {
@@ -127,7 +128,7 @@ class Song {
 		["id", "track", "title", "queueLine", "npUpdateFrequency"].forEach(key => {
 			if (!this[key]) this.validationError(`unset ${key}`)
 		})
-		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject", "destroy"].forEach(key => {
+		;["getProgress", "getRelated", "showRelated", "showInfo", "toObject"].forEach(key => {
 			if (this[key] === Song.prototype[key]) this.validationError(`unset ${key}`)
 		})
 		if (typeof (this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
@@ -463,6 +464,68 @@ class FriskySong extends Song {
 	}
 }
 
+class SoundCloudSong extends Song {
+	/**
+	 * @param {import("../../typings").LavalinkInfo} data
+	 * @param {string} track
+	 */
+	constructor(data, track) {
+		super()
+		this.title = data.title
+		this.track = track
+		this.lengthSeconds = Math.floor(data.length / 1000)
+		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		this.npUpdateFrequency = 5000
+		this.error = ""
+		this.typeWhileGetRelated = true
+		this.id = "sc/" + data.identifier.match(/soundcloud:tracks:(\d+)/)[1]
+		this.live = data.isStream || false
+		this.thumbnail = {
+			src: "https://a-v2.sndcdn.com/assets/images/meta/soundcloud-unfurl-square.png",
+			width: 1200,
+			height: 1200
+		}
+		this.uri = data.uri
+
+		this.validate()
+	}
+
+	/**
+	 * @param {number} time milliseconds
+	 * @param {boolean} paused
+	 */
+	getProgress(time, paused) {
+		const max = this.lengthSeconds
+		const rightTime = common.prettySeconds(max)
+		if (time > max) time = max
+		const leftTime = common.prettySeconds(time)
+		const bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
+		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+	}
+
+	getRelated() {
+		return Promise.resolve([])
+	}
+
+	showRelated() {
+		return Promise.resolve("Try finding related songs on SoundCloud.")
+	}
+
+	showInfo() {
+		return Promise.resolve(this.uri)
+	}
+
+	toObject() {
+		return {
+			class: "SoundCloudSong",
+			id: this.id,
+			title: this.title,
+			lengthSeconds: this.lengthSeconds,
+			track: this.track
+		}
+	}
+}
+
 function makeYouTubeSongFromData(data) {
 	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000))
 	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
@@ -472,3 +535,4 @@ module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
 module.exports.FriskySong = FriskySong
+module.exports.SoundCloudSong = SoundCloudSong

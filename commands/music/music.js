@@ -4,9 +4,12 @@
 const crypto = require("crypto")
 const Discord = require("discord.js")
 const path = require("path")
+/** @type {import("node-fetch").default} */
+// @ts-ignore
+const fetch = require("node-fetch")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, commands, queues, frisky } = passthrough
+const { config, constants, client, reloader, commands, queues, frisky } = passthrough
 
 const utils = require("../../modules/utilities.js")
 reloader.sync("./modules/utilities.js", utils)
@@ -143,7 +146,12 @@ const subcommandsMap = new Map([
 						return Object.assign({ emoji }, action)
 					}))
 				}
-			} else common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang) // User input wasn't a playlist and wasn't a video. Start a search.
+			} else if (match.type === "soundcloud") {
+				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
+			} else {
+				// User input wasn't a playlist and wasn't a video. Start a search.
+				common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
+			}
 		}
 	}],
 	["stop", {
@@ -363,6 +371,7 @@ commands.assign([
 		aliases: ["frisky"],
 		category: "audio",
 		example: "&frisky chill",
+		order: 3,
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
@@ -480,6 +489,7 @@ commands.assign([
 		description: "Play music from YouTube",
 		aliases: ["music", "m"],
 		category: "audio",
+		order: 1,
 		async process(msg, suffix, lang) {
 			// No DMs
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
@@ -516,6 +526,26 @@ commands.assign([
 			}
 			// Hand over execution to the subcommand
 			subcommandObject.code(msg, args, subcommmandData)
+		}
+	},
+	{
+		usage: "<search terms>",
+		description: "Play music from SoundCloud",
+		aliases: ["soundcloud", "sc"],
+		category: "audio",
+		example: "&sc Kanshou No Matenrou",
+		order: 2,
+		async process(msg, suffix, lang) {
+			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			const voiceChannel = await common.detectVoiceChannel(msg, false, lang)
+			if (!voiceChannel) return
+
+			if (suffix.match(/https:\/\/(?:www.)?soundcloud.com\//)) {
+				suffix = suffix.replace(/(<|>)/g, "")
+				return common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, false, suffix, lang)
+			} else {
+				return common.inserters.fromSoundCloudSearch(msg.channel, voiceChannel, msg.author, false, suffix, lang)
+			}
 		}
 	}
 ])

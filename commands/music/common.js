@@ -88,7 +88,7 @@ const common = {
 	inputToID:
 	/**
 	 * @param {string} input
-	 * @returns {({type: string, id?: string, list?: string})|null}
+	 * @returns {({type: string, id?: string, list?: string, link?: string})|null}
 	 */
 	function(input) {
 		input = input.replace(/(<|>)/g, "")
@@ -98,8 +98,11 @@ const common = {
 			const url = new URL(inputAsURL)
 			// It's a URL.
 			if (url.hostname.startsWith("www.")) url.hostname = url.hostname.slice(4)
-			// Is it CloudTube?
-			if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") {
+			// Is it SoundCloud?
+			if (url.hostname === "soundcloud.com") {
+				// Bam, done.
+				return { type: "soundcloud", link: url.toString() }
+			} else if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") { // Is it CloudTube?
 				try {
 					const id = url.pathname.match(/video\/([\w-]{11})$/)[1]
 					// Got an ID!
@@ -136,7 +139,7 @@ const common = {
 	 * Throws exception.message.
 	 * @param {string} input
 	 * @param {string} [region]
-	 * @returns {Promise<{track: string, info: {identifier: string, isSeekable: boolean, author: string, length: number, isStream: boolean, position: number, title: string, uri: string}}[]>}
+	 * @returns {Promise<{track: string, info: import("../../typings").LavalinkInfo}[]>}
 	 */
 	getTracks: function(input, region = "") {
 		const node = common.nodes.getByRegion(region)
@@ -309,7 +312,6 @@ const common = {
 			common.inserters.handleSong(song, textChannel, voiceChannel, insert, context)
 		},
 
-
 		fromDataArray:
 		/**
 		 * @param {Discord.TextChannel} textChannel
@@ -367,6 +369,48 @@ const common = {
 					common.inserters.fromData(textChannel, voiceChannel, track, insert)
 				}
 			})
+		},
+
+		fromSoundCloudSearch:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.User} author
+		 * @param {boolean} insert
+		 * @param {string} search
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, author, insert, search, lang) {
+			let tracks = await common.getTracks(`scsearch:${search}`, textChannel.guild.region)
+			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
+			tracks = tracks.slice(0, 10)
+			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
+			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
+				if (typeof index != "number") return
+				const track = tracks[index]
+				const song = new (require("./songtypes").SoundCloudSong)(track.info, track.track)
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert)
+			})
+		},
+
+		fromSoundCloudLink:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const tracks = await common.getTracks(link, textChannel.guild.region)
+			const track = tracks[0]
+			if (track) {
+				const song = new (require("./songtypes").SoundCloudSong)(track.info, track.track)
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
+			} else {
+				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
 		}
 	},
 
