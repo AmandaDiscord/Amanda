@@ -146,7 +146,7 @@ const subcommandsMap = new Map([
 						return Object.assign({ emoji }, action)
 					}))
 				}
-			} else if (match.type === "soundcloud") {
+			} else if (match && match.type === "soundcloud") {
 				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else {
 				// User input wasn't a playlist and wasn't a video. Start a search.
