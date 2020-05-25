@@ -90,6 +90,10 @@ class Queue {
 				// This should therefore clean up the queueStore and the website correctly.
 				return this.stop()
 			}
+			if (details.op === "event" && [1000, 1006].includes(details.code) && details.type === "WebSocketClosedEvent") {
+				// This doesn't seem to be harmful. Songs keep playing and the queue isn't damaged.
+				return
+			}
 			console.error("Lavalink error event at", new Date().toUTCString(), details)
 			if (this.songs[0]) {
 				this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
