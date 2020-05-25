@@ -344,7 +344,7 @@ commands.assign([
 			msg.channel.sendTyping()
 			const limit = 5
 			const authorNameMap = {
-				"Cadence Fish": "Cadence",
+				"Cadence Ember": "Cadence",
 				"Papi": "PapiOphidian"
 			}
 			const res = await new Promise((r) => {
