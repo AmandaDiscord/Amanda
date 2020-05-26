@@ -1,9 +1,3 @@
-var ex = ex || []
-ex.push({
-	name: "utilities",
-	dependencies: []
-})
-
 const q = s => document.querySelector(s)
 
 const opcodes = {
@@ -54,4 +48,11 @@ function prettySeconds(seconds) {
 	}
 	output.push(seconds.toString().padStart(2, "0"));
 	return output.join(":");
+}
+
+export {
+	q,
+	opcodes,
+	generateNonce,
+	prettySeconds
 }

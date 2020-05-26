@@ -1,10 +1,12 @@
 // @ts-check
 
-var ex = ex || []
-ex.push({
-	name: "classes",
-	dependencies: ["imagestore"]
-})
+import {imageStore} from "./imagestore.js"
+import {q, prettySeconds, opcodes} from "./utilities.js"
+import {SoundCloudWrapper} from "./wrappers/SoundCloudWrapper.js"
+
+// From HTML
+// @ts-ignore
+let serverTimeDiff = _serverTimeDiff
 
 class ElemJS {
 	constructor(type) {
@@ -61,6 +63,14 @@ class ElemJS {
 	clearChildren() {
 		this.children.length = 0;
 		while (this.element.lastChild) this.element.removeChild(this.element.lastChild);
+	}
+}
+
+class AnonImage extends ElemJS {
+	constructor(url) {
+		super("img")
+		this.direct("crossOrigin", "anonymous")
+		this.direct("src", url)
 	}
 }
 
@@ -152,7 +162,7 @@ class QueueItem extends ElemJS {
 			controls: ejs`div.song-management`
 		}
 		;["play", "remove"].forEach(icon => {
-			let child = new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => this[icon]())
+			let child = new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this[icon]())
 			this.parts.controls.child(child)
 		})
 
@@ -332,7 +342,7 @@ class Player extends ElemJS {
 			time: new PlayerTime()
 		}
 		;["playpause", "skip", "stop"].forEach(icon => {
-			this.parts.controls.child(new ElemJS("img").direct("src", `/images/${icon}.svg`).direct("onclick", () => this.session[icon]()))
+			this.parts.controls.child(new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this.session[icon]()))
 		})
 		this.parts.controls.child(this.parts.loopButton = new AttributeButton(this, "loop"))
 		this.parts.controls.child(this.parts.autoButton = new AttributeButton(this, "auto"))
@@ -394,7 +404,7 @@ class PlayerTime extends ElemJS {
 		this.class("progress")
 		this.animation = null
 		this.interval = null
-		this.state = {playing: false, songStartTime: 0, maxTime: 0, live: false}
+		this.state = {playing: false, songStartTime: 0, pausedAt: 0, maxTime: 0, live: false}
 		this.child(new ElemJS("div").class("progressbar"))
 		this.child(new ElemJS("div"))
 		this.child(new ElemJS("div"))
@@ -404,9 +414,15 @@ class PlayerTime extends ElemJS {
 		Object.assign(this.state, data)
 		this.render()
 	}
+	/**
+	 * Get the current play time in ms.
+	 */
 	getTime() {
-		// @ts-ignore This exists, I promise.
-		return Date.now() - this.state.songStartTime + serverTimeDiff
+		if (!this.state.playing && this.state.pausedAt) {
+			return this.state.pausedAt - this.state.songStartTime
+		} else {
+			return Date.now() - this.state.songStartTime + serverTimeDiff
+		}
 	}
 	getMSRemaining() {
 		return Math.max(0, this.state.maxTime*1000 - this.getTime())
@@ -509,9 +525,6 @@ class ClearQueueControl extends SideControl {
 	onClick() {
 		this.sideControls.session.send({
 			op: opcodes.CLEAR_QUEUE,
-			// vvv do these comments mean anything? I think not vvv
-			// +1 because backend queue starts with currently playing
-			// and +1 because this gets sent to QueueWrapper, which is 1-indexed
 			d: null
 		})
 	}
@@ -522,13 +535,38 @@ class ClearQueueControl extends SideControl {
 	}
 }
 
+class ListenInBrowserControl extends SideControl {
+	constructor(sideControls) {
+		super(sideControls, "Listen in browser", "headphones-shaped")
+		this.element.addEventListener("click", event => this.onClick())
+		this.disabled = true
+		this.started = false
+	}
+
+	onClick() {
+		const song = this.sideControls.session.state.songs[0]
+		this.sideControls.session.listenManager.boot(song, () => this.sideControls.session.player.parts.time.getTime())
+		this.started = true
+		this.render()
+	}
+
+	render() {
+		this.disabled = !this.sideControls.session.state || this.started
+		super.render()
+	}
+}
+
 class SideControls extends ElemJS {
+	/**
+	 * @param {import("./player").Session} session
+	 */
 	constructor(container, session) {
 		super(container)
 		this.session = session
 		this.mainLoaded = false
 		/** @type {{[x: string]: SideControl}} */
 		this.parts = {}
+		this.child(this.parts.listen = new ListenInBrowserControl(this))
 		this.child(this.parts.add = new AddSongControl(this))
 		this.child(this.parts.info = new SongInfoControl(this))
 		this.child(this.parts.clear = new ClearQueueControl(this))
@@ -667,7 +705,7 @@ class VoiceMember extends ElemJS {
 		))
 	}
 	getAvatar() {
-		return new ElemJS("img").class("avatar").direct("src", this.props.avatar).direct("width", this.avatarSize).direct("height", this.avatarSize)
+		return new AnonImage(this.props.avatar).class("avatar").direct("width", this.avatarSize).direct("height", this.avatarSize)
 	}
 	getName() {
 		let name = new ElemJS("div").class("name")
@@ -675,4 +713,14 @@ class VoiceMember extends ElemJS {
 		name.child(new ElemJS("span").text(this.props.name))
 		return name
 	}
+}
+
+export {
+	Player,
+	PlayerTime,
+	Queue,
+	QueueItem,
+	VoiceInfo,
+	VoiceMember,
+	SideControls
 }

@@ -3,7 +3,7 @@ doctype html
 mixin guild-selection(guild, active)
 	a(href="/server/"+guild.id)
 		if guild.icon
-			img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
+			img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128` crossorigin="anonymous")
 		else
 			div.letter-icon= guild.nameAcronym
 		div.name= guild.name

@@ -3,13 +3,10 @@ html
 	include includes/head.pug
 		title= guild.name+" | Amanda"
 		script.
-			const guildID = "#{guild.id}"
-			let serverTimeDiff = Date.now()-#{timestamp}
-		script(defer src="/exports.js")
-		script(defer src="/player.js" data-ex="player")
-		script(defer src="/classes.js" data-ex="classes")
-		script(defer src="/utilities.js" data-ex="utilities")
-		script(defer src="/imagestore.js" data-ex="imagestore")
+			var _guildID = "#{guild.id}"
+			var _serverTimeDiff = Date.now()-#{timestamp}
+		script(defer src="/external/soundcloud.js")
+		script(type="module" src="/player.js")
 
 	body
 		include includes/nav.pug
@@ -22,7 +19,7 @@ html
 				div.guild-info
 					div.guild-icon
 						if guild.icon
-							img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`)
+							img(src=`https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128` crossorigin="anonymous" referrerpolicy="no-referrer")
 						else
 							div.letter-icon= guild.nameAcronym
 					div.guild-words
@@ -32,3 +29,6 @@ html
 				div.right-panels
 					div.side-controls#side-controls
 					div.voice-info#voice-info
+		div.frames
+			//- TODO set sandbox to allow-scripts
+			iframe#f-soundcloud

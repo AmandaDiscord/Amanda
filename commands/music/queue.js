@@ -698,6 +698,7 @@ class QueueWrapper {
 			guildID: this.queue.guildID,
 			playing: !this.queue.isPaused,
 			songStartTime: this.queue.songStartTime,
+			pausedAt: this.queue.pausedAt,
 			songs: this.queue.songs.map(s => s.getState()),
 			members: this.getMembers(),
 			voiceChannel: {

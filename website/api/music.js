@@ -127,13 +127,14 @@ addProcessors([
 	},
 	{
 		op: "TIME_UPDATE",
-		updateCallback: (cache, { songStartTime, playing }) => {
+		updateCallback: (cache, { songStartTime, pausedAt, playing }) => {
 			cache.songStartTime = songStartTime
+			cache.pausedAt = pausedAt
 			cache.playing = playing
 			return cache
 		},
-		sessionCallback: (session, cache, { songStartTime, playing }) => {
-			session.timeUpdate({ songStartTime, playing })
+		sessionCallback: (session, cache, { songStartTime, pausedAt, playing }) => {
+			session.timeUpdate({ songStartTime, pausedAt, playing })
 		}
 	},
 	{

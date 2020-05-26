@@ -537,7 +537,7 @@ commands.assign([
 		order: 2,
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
-			const voiceChannel = await common.detectVoiceChannel(msg, false, lang)
+			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return
 
 			if (suffix.match(/https:\/\/(?:www.)?soundcloud.com\//)) {

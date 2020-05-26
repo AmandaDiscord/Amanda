@@ -12,6 +12,7 @@ module.exports = {
 	invite_link_for_help: "https://discord.gg/X5naRFu",
 	stats: `${baseURL}/to/stats`,
 	frisky_placeholder: `${baseURL}/images/frisky-small.png`,
+	soundcloud_placeholder: `${baseURL}/images/soundcloud-logo-rectangle.jpg`,
 	avatar: `${baseURL}/images/amanda.png`,
 	chewey_api: "https://api.chewey-bot.top",
 	money_embed_color: 0xf8e71c,

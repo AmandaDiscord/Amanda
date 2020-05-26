@@ -83,11 +83,14 @@ class Song {
 		}
 	}
 	getState() {
+		const object = this.toObject()
 		return {
 			title: this.title,
 			length: this.lengthSeconds,
 			thumbnail: this.thumbnail,
-			live: this.live
+			live: this.live,
+			class: object.class,
+			id: object.id
 		}
 	}
 	/**
@@ -300,7 +303,7 @@ class FriskySong extends Song {
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 		this.stationData = stationData.get(this.station)
 
-		this.id = this.station // designed for error reporting
+		this.id = "frisky/" + this.station // designed for error reporting
 		this.thumbnail = {
 			src: constants.frisky_placeholder,
 			width: 320,
@@ -477,13 +480,14 @@ class SoundCloudSong extends Song {
 		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
 		this.error = ""
-		this.typeWhileGetRelated = true
-		this.id = "sc/" + data.identifier.match(/soundcloud:tracks:(\d+)/)[1]
+		this.typeWhileGetRelated = false
+		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)[1]
+		this.id = "sc/" + this.trackNumber
 		this.live = data.isStream || false
 		this.thumbnail = {
-			src: "https://a-v2.sndcdn.com/assets/images/meta/soundcloud-unfurl-square.png",
-			width: 1200,
-			height: 1200
+			src: constants.soundcloud_placeholder,
+			width: 616,
+			height: 440
 		}
 		this.uri = data.uri
 
@@ -519,10 +523,17 @@ class SoundCloudSong extends Song {
 		return {
 			class: "SoundCloudSong",
 			id: this.id,
+			trackNumber: this.trackNumber,
 			title: this.title,
 			lengthSeconds: this.lengthSeconds,
-			track: this.track
+			track: this.track,
+			uri: this.uri,
+			live: this.live
 		}
+	}
+
+	getState() {
+		return Object.assign(super.getState(), {trackNumber: this.trackNumber})
 	}
 }
 
@@ -531,8 +542,20 @@ function makeYouTubeSongFromData(data) {
 	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
 }
 
+function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track) {
+	// @ts-ignore this is a hack
+	return new SoundCloudSong({
+		identifier: "soundcloud:tracks:" + trackNumber,
+		title: title,
+		length: lengthSeconds * 1000,
+		isStream: live,
+		uri: uri
+	}, track)
+}
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
 module.exports.FriskySong = FriskySong
 module.exports.SoundCloudSong = SoundCloudSong
+module.exports.makeSoundCloudSong = makeSoundCloudSong

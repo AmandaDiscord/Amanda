@@ -256,7 +256,7 @@ class ClientReplier extends Replier {
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendTimeUpdate(queue) {
-		this.ipc.send({ op: "TIME_UPDATE", data: { guildID: queue.guildID, songStartTime: queue.songStartTime, playing: !queue.isPaused } })
+		this.ipc.send({ op: "TIME_UPDATE", data: { guildID: queue.guildID, songStartTime: queue.songStartTime, pausedAt: queue.pausedAt, playing: !queue.isPaused } })
 	}
 
 	/**

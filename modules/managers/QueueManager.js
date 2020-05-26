@@ -84,6 +84,10 @@ class QueueManager {
 						const song = new songTypes.FriskySong(s.station, { track: s.track })
 						queue.songs.push(song)
 						console.log("Added FriskySong " + song.station)
+					} else if (s.class === "SoundCloudSong") {
+						const song = songTypes.makeSoundCloudSong(s.trackNumber, s.title, s.lengthSeconds, s.live, s.uri, s.track)
+						queue.songs.push(song)
+						console.log("Added SoundCloudSong " + song.title)
 					}
 				})
 				if (queue.songs[0]) {

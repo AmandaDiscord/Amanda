@@ -1,15 +1,10 @@
-var ex = ex || []
-ex.push({
-	name: "imagestore",
-	dependencies: []
-})
-
 class ImageStore {
 	constructor() {
 		this.store = new Map()
 	}
 	_create(url) {
 		let e = document.createElement("img")
+		e.crossOrigin = "anonymous"
 		e.src = url
 		return e
 	}
@@ -34,3 +29,7 @@ class ImageStore {
 }
 
 const imageStore = new ImageStore()
+
+export {
+	imageStore
+}

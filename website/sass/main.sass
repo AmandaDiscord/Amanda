@@ -451,6 +451,9 @@ a.no-underline
 		display: flex
 		flex-direction: column
 
+		button[disabled]
+			color: #767676
+
 	.side-controls
 		@include player-box
 		margin-bottom: $gap
@@ -528,3 +531,6 @@ a.no-underline
 	@include flat-button
 	margin-top: 20px
 	padding: 10px
+
+.frames
+	display: none
