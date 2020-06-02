@@ -90,7 +90,7 @@ class Queue {
 				// This should therefore clean up the queueStore and the website correctly.
 				return this.stop()
 			}
-			if (details.op === "event" && [1000, 1006].includes(details.code) && details.type === "WebSocketClosedEvent") {
+			if (details.op === "event" && [1000, 1001, 1006].includes(details.code) && details.type === "WebSocketClosedEvent") {
 				// This doesn't seem to be harmful. Songs keep playing and the queue isn't damaged.
 				return
 			}
