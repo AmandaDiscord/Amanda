@@ -12,7 +12,7 @@ reloader.sync("./commands/music/queue.js", QueueFile)
 const utils = require("../utilities")
 reloader.sync("./modules/utilities.js", utils)
 
-const auditDestroyTimeout = 1000 * 60 * 60 * 5
+const auditDestroyTimeout = 1000 * 60 * 5
 
 class QueueManager {
 	constructor() {
