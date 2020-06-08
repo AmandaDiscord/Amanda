@@ -1,10 +1,14 @@
 // @ts-check
 
 const Discord = require("discord.js")
+const path = require("path")
 const Lang = require("@amanda/lang")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, queues, ipc } = passthrough
+const { config, constants, client, reloader, ipc } = passthrough
+
+/** @type {import("../../modules/managers/QueueManager")} */
+let queues = passthrough.queues ? passthrough.queues : undefined
 
 const voiceEmptyDuration = 20000
 
@@ -16,6 +20,14 @@ reloader.sync("./commands/music/songtypes.js", songTypes)
 
 const common = require("./common.js")
 reloader.sync("./commands/music/common.js", common)
+
+// This is a very gross hack but I could not think of another way to do this because of looping between this file and the QueueManager.
+// This file depends on QueueManager to be fully instanciated and QueueManager requires this file to be watched and it loads it.
+// Please fix this
+utils.addTemporaryListener(client, "QueueManager", path.basename(__filename), (mngr) => {
+	queues = mngr
+	passthrough.queues = mngr
+}, "once")
 
 class Queue {
 	/**
@@ -41,10 +53,12 @@ class Queue {
 		this.shouldDisplayErrors = true
 		/** @type {import("@amanda/lang").Lang} */
 		this.langCache = undefined
+		this.audit = queues.audits.get(this.guildID)
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
 				this.getLang().then(lang => this.textChannel.send(lang.audio.music.prompts.everyoneLeft))
+				this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 				this.stop()
 			})
 			.setDelay(voiceEmptyDuration)
@@ -88,6 +102,7 @@ class Queue {
 				// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 				// Simply respond by stopping the queue, since that was the intention.
 				// This should therefore clean up the queueStore and the website correctly.
+				this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
 				return this.stop()
 			}
 			if (details.op === "event" && [1000, 1001, 1006].includes(details.code) && details.type === "WebSocketClosedEvent") {
@@ -273,10 +288,12 @@ class Queue {
 				} else { // No related songs. Dissolve.
 					this.textChannel.send(lang.audio.music.prompts.autoRanOut)
 					this.auto = false
+					this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 					this._clearSongs()
 					this._dissolve()
 				}
 			} else { // Auto mode is off. Dissolve.
+				this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 				this._clearSongs()
 				this._dissolve()
 			}
@@ -500,14 +517,17 @@ class Queue {
 		this.npMenu = utils.reactionMenu(this.np, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
+				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 				this.wrapper.togglePlaying("reaction")
 			} },
 			{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
+				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
 			{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
+				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()
 			} }
 		])
@@ -555,7 +575,11 @@ class QueueWrapper {
 			this.queue.getLang().then(lang => {
 				context.channel.send(auto ? lang.audio.music.prompts.autoOn : lang.audio.music.prompts.autoOff)
 			})
-		} else if (context === "web") return true
+			this.queue.audit.push({ action: "Queue Auto Toggle", platform: "Discord", user: context.author.tag })
+		} else if (context === "web") {
+			this.queue.audit.push({ action: "Queue Auto Toggle", platform: "Web", user: "Unkown" })
+			return true
+		}
 	}
 	toggleLoop(context) {
 		this.queue.toggleLoop()
@@ -564,7 +588,11 @@ class QueueWrapper {
 			this.queue.getLang().then(lang => {
 				context.channel.send(loop ? lang.audio.music.prompts.loopOn : lang.audio.music.prompts.loopOff)
 			})
-		} else if (context === "web") return true
+			this.queue.audit.push({ action: "Queue Loop Toggle", platform: "Discord", user: context.author.tag })
+		} else if (context === "web") {
+			this.queue.audit.push({ action: "Queue Loop Toggle", platform: "Web", user: "Unkown" })
+			return true
+		}
 	}
 	togglePlaying(context) {
 		if (this.queue.isPaused) return this.resume(context)
@@ -572,7 +600,11 @@ class QueueWrapper {
 	}
 	pause(context) {
 		const result = this.queue.pause()
-		if (context === "web") return !result
+		if (context === "web") {
+			if (!result) this.queue.audit.push({ action: "Queue Pause", platform: "Web", user: "Unkown" })
+			return !result
+		}
+		if (context instanceof Discord.Message && !result) this.queue.audit.push({ action: "Queue Pause", platform: "Discord", user: context.author.tag })
 		if (result) {
 			if (context instanceof Discord.Message) context.channel.send(result)
 			else if (context === "reaction") this.queue.textChannel.send(result)
@@ -580,6 +612,7 @@ class QueueWrapper {
 	}
 	resume(context) {
 		const result = this.queue.resume()
+		if (context instanceof Discord.Message && result == 0) this.queue.audit.push({ action: "Queue Resume", platform: "Discord", user: context.author.tag })
 		if (result == 1) {
 			if (context instanceof Discord.Message) {
 				this.queue.getLang().then(lang => {
@@ -587,7 +620,10 @@ class QueueWrapper {
 				})
 			}
 		}
-		if (context === "web") return !result
+		if (context === "web") {
+			if (result == 0) this.queue.audit.push({ action: "Queue Resume", platform: "Web", user: "Unkown" })
+			return !result
+		}
 	}
 	skip(amount) {
 		this.queue.skip(amount)
@@ -625,6 +661,7 @@ class QueueWrapper {
 							context.channel.send(utils.replace(lang.audio.music.prompts.queueSongTotal, { "number1": this.queue.songs.length, "number2": this.queue.songs.length }))
 						}
 					} else {
+						this.queue.audit.push({ action: "Queue Song Remove", platform: "Discord", user: context.author.tag })
 						context.react("✅")
 					}
 				}
@@ -634,6 +671,7 @@ class QueueWrapper {
 				return false
 			} else {
 				const result = this.queue.removeSong(index - 1, true)
+				if (result == 0) this.queue.audit.push({ action: "Queue Song Remove", platform: "Web", user: "Unknown" })
 				return result !== 1
 			}
 		}
