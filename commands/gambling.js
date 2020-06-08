@@ -210,12 +210,15 @@ commands.assign([
 		category: "gambling",
 		example: "&coins PapiOphidian",
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
-			const member = await msg.guild.findMember(msg, suffix, true)
-			if (!member) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
-			const money = await utils.coinsManager.get(member.id)
+			let user, member
+			if (msg.channel.type == "text") {
+				member = await msg.guild.findMember(msg, suffix, true)
+				if (member) user = member.user
+			} else user = await utils.findUser(msg, suffix, true)
+			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
+			const money = await utils.coinsManager.get(user.id)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member.displayTag }))
+				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? member.displayTag : user.tag }))
 				.setDescription(`${money} ${emojis.discoin}`)
 				.setColor(constants.money_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))

@@ -560,8 +560,8 @@ commands.assign([
 					canvas = images.get("canvas").clone()
 				}
 			} else canvas = images.get("canvas").clone()
-			canvas.composite(avatar, 32, 85)
 			canvas.composite(images.get("profile"), 0, 0)
+			canvas.composite(avatar, 32, 85)
 			if (badgeImage) canvas.composite(badgeImage, 166, 113)
 			if (boosting) {
 				if (!badge) canvas.composite(images.get("badge-booster"), 166, 115)
