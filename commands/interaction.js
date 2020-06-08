@@ -82,12 +82,15 @@ const cmds = [
 		category: "interaction",
 		example: "&user PapiOphidian",
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
-			const member = await msg.guild.findMember(msg, suffix, true)
-			if (!member) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
-			const info = await utils.waifu.get(member.id)
+			let user, member
+			if (msg.channel.type == "text") {
+				member = await msg.guild.findMember(msg, suffix, true)
+				if (member) user = member.user
+			} else user = await utils.findUser(msg, suffix, true)
+			if (!user) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
+			const info = await utils.waifu.get(user.id)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(member.displayTag, member.user.displayAvatarURL({ format: "png", size: 32 }))
+				.setAuthor(member ? member.displayTag : user.tag, user.displayAvatarURL({ format: "png", size: 32 }))
 				.addFields([
 					{ name: lang.interaction.waifu.returns.price, value: info.price },
 					{ name: lang.interaction.waifu.returns.claimedBy, value: info.claimer ? info.claimer.tag : lang.interaction.waifu.returns.nobody },
@@ -183,7 +186,6 @@ const cmds = [
 		category: "interaction",
 		example: "&gift 1000",
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.gift.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const waifu = await utils.waifu.get(msg.author.id, { basic: true })
 			const money = await utils.coinsManager.get(msg.author.id)
@@ -205,7 +207,7 @@ const cmds = [
 			}
 			await utils.waifu.transact(msg.author.id, gift)
 			await utils.coinsManager.award(msg.author.id, -gift)
-			const user = await client.users.fetch(waifu.waifuID)
+			const user = await client.users.fetch(waifu.waifuID, true)
 			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": gift, "tag2": user.tag }))
 		}
 	},
