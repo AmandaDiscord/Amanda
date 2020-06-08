@@ -304,8 +304,8 @@ commands.assign([
 				.addFields([
 					{
 						name: lang.meta.info.returns.creators,
-						value: `${c1.tag} <:bravery:479939311593324557> <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406>\n` +
-							`${c2.tag} <:EarlySupporterBadge:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`
+						value: `${c1.tag} ${utils.userFlagEmojis(c1).join(" ")} <:NitroBadge:421774688507920406>\n` +
+							`${c2.tag} ${utils.userFlagEmojis(c2).join(" ")} <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`
 					},
 					{
 						name: "Code",
@@ -425,10 +425,13 @@ commands.assign([
 				if (user.presence.activity.state && user.presence.activity.name == "Spotify") activity += `\nby ${user.presence.activity.state}`
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
 			}*/
-			if (user.bot) status = "<:bot:412413027565174787>"
+			if (user.bot) {
+				if (user.flags && user.flags.has("VERIFIED_BOT")) status = "<:VerifiedBot:719645152003489912>"
+				else status = "<:bot:412413027565174787>"
+			}
 			embed.setThumbnail(!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL())
 			embed.addFields({ name: "Avatar URL:", value: `[Click Here](${!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL()})` })
-			embed.setTitle(`${user.tag} ${status}`)
+			embed.setTitle(`${user.tag} ${status}\n${utils.userFlagEmojis(user).join(" ")}`)
 			// if (activity) embed.setDescription(activity)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}

@@ -1248,6 +1248,27 @@ const utils = {
 			if (total > max) max = total
 		}
 		return max
+	},
+
+	/**
+	 * @param {Discord.User} user
+	 * @returns {Array<string>}
+	 */
+	userFlagEmojis(user) {
+		const flags = user.flags // All of these emojis are from Papi's Dev House.
+		const arr = [] // The emojis are pushed to the array in order of which they'd appear in Discord.
+		if (!flags) return arr
+		if (flags.has("DISCORD_EMPLOYEE")) arr.push("<:staff:433155028895793172>")
+		if (flags.has("DISCORD_PARTNER")) arr.push("<:partner:421802275326001152>")
+		if (flags.has("HYPESQUAD_EVENTS")) arr.push("<:HypesquadEvents:719628242449072260>")
+		if (flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>")
+		if (flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>")
+		if (flags.has("HOUSE_BRILLIANCE")) arr.push("<:brilliance:479939329104412672>")
+		if (flags.has("VERIFIED_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>")
+		if (flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcherlvl2:678721839488434203>")
+		if (flags.has("BUGHUNTER_LEVEL_1") && !flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcher:434087337488678921>")
+		if (flags.has("EARLY_SUPPORTER")) arr.push("<:EarlySupporter:585638218255564800>")
+		return arr
 	}
 }
 
