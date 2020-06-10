@@ -305,16 +305,14 @@ commands.assign([
 				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
 				utils.reactionMenu(message, [
 					// @ts-ignore
-					{ emoji: client.emojis.cache.get("331164186790854656"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
+					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 						])
 						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed))
-					} },
-					// @ts-ignore: actionData is normally a function, but actionType here is "edit".
-					{ emoji: client.emojis.get("327986149203116032"), allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "edit", actionData: utils.contentify(msg.channel, new Discord.MessageEmbed().setColor("36393e").setDescription(lang.audio.playlist.returns.playlistDeleteCancelled)) }
+					} }
 				])
 			} else {
 				const author = []

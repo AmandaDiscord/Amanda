@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#353c135cecaa612ad9ac88620e902084fa9ad87d",
-    "@amanda/lang": "github:AmandaDiscord/Lang#28ebd410012bbc03371f30e7561a8c96d8a00837",
+    "@amanda/lang": "github:AmandaDiscord/Lang#4c149fcf16e21818e48c042ae96543ec14fb5e0d",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#735ae949430c9c33260ceca894023551afbda483",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "buffer-signature": "^1.1.0",
