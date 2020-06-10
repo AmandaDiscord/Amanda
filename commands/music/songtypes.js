@@ -533,7 +533,7 @@ class SoundCloudSong extends Song {
 	}
 
 	getState() {
-		return Object.assign(super.getState(), {trackNumber: this.trackNumber})
+		return Object.assign(super.getState(), { trackNumber: this.trackNumber })
 	}
 }
 

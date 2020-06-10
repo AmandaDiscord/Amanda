@@ -6,7 +6,8 @@
   "author": "PapiOphidian",
   "scripts": {
     "start": "node --expose-gc --optimize_for_size index.js",
-    "website": "cd website && node server.js"
+    "website": "cd website && node server.js",
+    "test": "tap"
   },
   "license": "UNLICENSED",
   "engines": {
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^13.9.2",
-    "eslint": "^6.8.0"
+    "eslint": "^6.8.0",
+    "tap": "^14.10.7"
   }
 }

@@ -54,5 +54,13 @@
 		"space-unary-ops": "error",
 		"spaced-comment": "error",
 		"yoda": "error"
-	}
+	},
+	"overrides": [
+		{
+			"files": ["*.test.js"],
+			"rules": {
+				"require-await": "off"
+			}
+		}
+	]
 }

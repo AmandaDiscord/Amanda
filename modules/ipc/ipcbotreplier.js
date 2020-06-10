@@ -204,7 +204,7 @@ class ClientReplier extends Replier {
 			constants.lavalinkNodes.forEach((n, i) => mixinDeep(n, data.lavalinkNodes[i]))
 			utils.editLavalinkNodes.syncConnections()
 		}
-		return {config, lavalinkNodes: constants.lavalinkNodes}
+		return { config, lavalinkNodes: constants.lavalinkNodes }
 	}
 
 	async requestPing() {

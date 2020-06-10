@@ -10,3 +10,5 @@ dblimg.png
 /images/backgrounds/cache
 /saves
 \#*#
+/.nyc_output
+/coverage
