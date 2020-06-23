@@ -432,8 +432,8 @@ commands.assign([
 				if (user.flags && user.flags.has("VERIFIED_BOT")) status = "<:VerifiedBot:719645152003489912>"
 				else status = "<:bot:412413027565174787>"
 			}
-			embed.setThumbnail(!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL())
-			embed.addFields({ name: "Avatar URL:", value: `[Click Here](${!user.displayAvatarURL().endsWith("gif") ? user.displayAvatarURL({ format: "png" }) : user.displayAvatarURL()})` })
+			embed.setThumbnail(user.displayAvatarURL({ format: "png", size: 256, dynamic: true }))
+			embed.addFields({ name: "Avatar URL:", value: `[Click Here](${user.displayAvatarURL({ format: "png", size: 2048, dynamic: true })})` })
 			embed.setTitle(`${user.tag} ${status}\n${utils.userFlagEmojis(user).join(" ")}`)
 			// if (activity) embed.setDescription(activity)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
