@@ -544,10 +544,13 @@ commands.assign([
 			let mem
 			const memberFetchTimeout = 5000
 			try {
-				mem = await ipc.replier.requestGetGuildMember("475599038536744960", user.id) // this can apparently hang causing user profiles to not work
-				setTimeout(() => {
-					if (!mem || mem && !mem.roles) throw new Error("IPC fetch timeout")
-				}, memberFetchTimeout)
+				/** @type {Promise<import("snowtransfer/src/methods/Guilds").GuildMember>} */
+				const TProm = new Promise((_, reject) => {
+					setTimeout(() => {
+						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
+					}, memberFetchTimeout)
+				})
+				mem = await Promise.race([ipc.replier.requestGetGuildMember("475599038536744960", user.id), TProm])
 			} catch(e) {
 				// @ts-ignore
 				mem = { roles: [] }
