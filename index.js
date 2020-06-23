@@ -82,6 +82,7 @@ const db = mysql.createPool({
 	passthrough.nedb = {
 		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
 	}
+	// @ts-ignore
 	client.emit("QueueManager", passthrough.queues)
 
 	// Can't be part of reloader, and depends on IPC, so it's down here.

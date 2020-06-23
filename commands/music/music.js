@@ -196,7 +196,7 @@ const subcommandsMap = new Map([
 				if (queue.songs.length < amount) return msg.channel.send(lang.audio.music.prompts.tooManySkips)
 				if (queue.songs.length == amount) return queue.wrapper.stop()
 			}
-			queue.audit.push({ action: `Queue skip ${amount}`, platform: "Discord", user: msg.author.tag })
+			queue.audit.push({ action: `Queue Skip ${amount ? amount : ""}`, platform: "Discord", user: msg.author.tag })
 			queue.wrapper.skip(amount)
 		}
 	}],

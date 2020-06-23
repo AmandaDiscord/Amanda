@@ -110,6 +110,7 @@ const profileStorage = new utils.JIMPStorage()
 const fontStorage = new utils.JIMPStorage()
 profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
 profileStorage.save("profile", "file", "./images/profile.png")
+profileStorage.save("profile-light", "file", "./images/profile_light.png")
 profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
 profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
@@ -120,6 +121,8 @@ profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png"
 profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
 fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
+fontStorage.save("font-black", "font", ".fonts/Whitney-25-black.fnt")
+fontStorage.save("font2-black", "font", ".fonts/profile/Whitney-20-aaa-black.fnt")
 
 /**
  * @param {Discord.User} user
@@ -500,7 +503,7 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[user]",
+		usage: "[user] [--light]",
 		description: "Get profile information about someone",
 		aliases: ["profile"],
 		category: "meta",
@@ -509,6 +512,8 @@ commands.assign([
 			let user, member, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
+			const themeoverlay = suffix.indexOf("--light") != -1 ? "profile-light" : "profile"
+			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
 				if (member) user = member.user
@@ -522,8 +527,8 @@ commands.assign([
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "profile", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"]),
-				fontStorage.getAll(["font", "font2"])
+				profileStorage.getAll(["canvas", themeoverlay, "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"]),
+				fontStorage.getAll(["font", "font2", "font-black", "font2-black"])
 			])
 
 			avatar.resize(111, 111)
@@ -537,8 +542,12 @@ commands.assign([
 			else if (isPremium) badge = "badge-donator"
 			/** @type {import("snowtransfer/src/methods/Guilds").GuildMember} */
 			let mem
+			const memberFetchTimeout = 5000
 			try {
-				mem = await ipc.replier.requestGetGuildMember("475599038536744960", user.id)
+				mem = await ipc.replier.requestGetGuildMember("475599038536744960", user.id) // this can apparently hang causing user profiles to not work
+				setTimeout(() => {
+					if (!mem || mem && !mem.roles) throw new Error("IPC fetch timeout")
+				}, memberFetchTimeout)
 			} catch(e) {
 				// @ts-ignore
 				mem = { roles: [] }
@@ -560,7 +569,7 @@ commands.assign([
 					canvas = images.get("canvas").clone()
 				}
 			} else canvas = images.get("canvas").clone()
-			canvas.composite(images.get("profile"), 0, 0)
+			canvas.composite(images.get(themeoverlay), 0, 0)
 			canvas.composite(avatar, 32, 85)
 			if (badgeImage) canvas.composite(badgeImage, 166, 113)
 			if (boosting) {
@@ -568,16 +577,15 @@ commands.assign([
 				else canvas.composite(images.get("badge-booster"), 216, 115)
 			}
 
-			const font = fonts.get("font")
-			const font2 = fonts.get("font2")
-			canvas.print(font, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
-			canvas.print(font2, 508, 104, `#${user.discriminator}`)
-			canvas.print(font2, 550, 163, money)
+			const [font, font2, font_black, font2_black] = [fonts.get("font"), fonts.get("font2"), fonts.get("font-black"), fonts.get("font2-black")]
+			canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
+			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
+			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money)
 			canvas.composite(heart, 508, 207)
-			canvas.print(font2, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
+			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
 			if (hunter) {
 				canvas.composite(images.get("badge-hunter"), 508, 250)
-				canvas.print(font2, 550, 260, "Amanda Bug Catcher")
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
 			}
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
