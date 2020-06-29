@@ -11,9 +11,11 @@ const Lang = require("@amanda/lang")
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, commands, reloader, games } = passthrough
+const { client, commands, reloader, games, streaks } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
+const streakStep = 10
+const maxStreak = 10
 
 /**
  * @typedef TriviaResponse
@@ -73,6 +75,7 @@ class TriviaGame extends Game {
 	start() {
 		const correctAnswer = this.data.correct_answer.trim()
 		const wrongAnswers = this.data.incorrect_answers.map(a => a.trim())
+		/** @type {Array<{ correct: boolean, answer: string }>} */
 		this.answers = wrongAnswers
 			.map(answer => ({ correct: false, answer }))
 			.concat([{ correct: true, answer: correctAnswer }])
@@ -144,21 +147,26 @@ class TriviaGame extends Game {
 			}
 		}
 		const winners = [...this.receivedAnswers.entries()].filter(r => this.answers[r[1]].correct)
+		const losers = [...this.receivedAnswers.entries()].filter(r => !this.answers[r[1]].correct)
 		const results = await Promise.all(winners.map(async w => {
 			const result = {}
 			result.userID = w[0]
 			const cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
+			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID }, true)
 			result.winnings = Math.floor(coins * 0.8 ** (10 - cooldownValue))
 			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
-			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings)
+			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings + streakGains)
 			return result
 		}))
+		for (const loser of losers) {
+			streaks.delete(loser[0], "trivia")
+		}
 		// Send message
 		const embed = new Discord.MessageEmbed()
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin})`).join("\n") })
+		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID })} ${emojis.discoin})` : ""}`).join("\n") })
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })

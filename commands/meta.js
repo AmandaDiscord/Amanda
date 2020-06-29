@@ -109,16 +109,20 @@ const profileStorage = new utils.JIMPStorage()
 /** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
 const fontStorage = new utils.JIMPStorage()
 profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
-profileStorage.save("profile", "file", "./images/profile.png")
-profileStorage.save("profile-light", "file", "./images/profile_light.png")
+profileStorage.save("canvas-vicinity", "file", "./images/backgrounds/vicinity.png")
+profileStorage.save("profile", "file", "./images/overlays/profile.png")
+profileStorage.save("profile-light", "file", "./images/overlays/profile_light.png")
+profileStorage.save("old-profile", "file", "./images/overlays/profile_old.png")
+profileStorage.save("old-profile-light", "file", "./images/overlays/profile_old_light.png")
 profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
 profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
 profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-profileStorage.save("circle-mask", "file", "./images/circle_mask.png")
+profileStorage.save("circle-mask", "file", "./images/masks/circle_mask.png")
 profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
 profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
 profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
+profileStorage.save("discoin", "file", "./images/emojis/discoin.png")
 fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
 fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
 fontStorage.save("font-black", "font", ".fonts/Whitney-25-black.fnt")
@@ -503,7 +507,7 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[user] [--light]",
+		usage: "[user]",
 		description: "Get profile information about someone",
 		aliases: ["profile"],
 		category: "meta",
@@ -512,7 +516,6 @@ commands.assign([
 			let user, member, permissions
 			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
-			const themeoverlay = suffix.indexOf("--light") != -1 ? "profile-light" : "profile"
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
 				member = await msg.guild.findMember(msg, suffix, true)
@@ -521,30 +524,33 @@ commands.assign([
 			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))
 			msg.channel.sendTyping()
 
+			let themeoverlay = "profile"
+			const themedata = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "profiletheme"])
+			if (themedata && themedata.value && themedata.value == "light") themeoverlay = "profile-light"
+
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
 				utils.hasPermission(user, "owner"),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 				utils.coinsManager.get(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", themeoverlay, "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster"]),
+				profileStorage.getAll(["canvas", "canvas-vicinity", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "discoin"]),
 				fontStorage.getAll(["font", "font2", "font-black", "font2-black"])
 			])
 
 			avatar.resize(111, 111)
-			avatar.mask(images.get("circle-mask"), 0, 0)
 
 			const heartType = getHeartType(user, info)
 			const heart = images.get(`heart-${heartType}`)
 
+			/** @type {string} */
 			let badge
 			if (isOwner) badge = "badge-developer"
 			else if (isPremium) badge = "badge-donator"
 			/** @type {import("snowtransfer/src/methods/Guilds").GuildMember} */
 			let mem
-			const memberFetchTimeout = 5000
+			const memberFetchTimeout = 2000
 			try {
-				/** @type {Promise<import("snowtransfer/src/methods/Guilds").GuildMember>} */
 				const TProm = new Promise((_, reject) => {
 					setTimeout(() => {
 						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
@@ -560,8 +566,24 @@ commands.assign([
 				boosting = mem.roles.includes("613685290938138625")
 				hunter = mem.roles.includes("497586624390234112")
 			}
+			/** @type {import("jimp")} */
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
+
+			async function getDefaultBG() {
+				const attempt = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "defaultprofilebackground"])
+				if (attempt && attempt.value && attempt.value != "default") return images.get(`canvas-${attempt.value}`).clone()
+				else return images.get("canvas").clone()
+			}
+
+			async function getOverlay() {
+				const attempt = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "profilestyle"])
+				if (attempt && attempt.value && attempt.value != "new") return { style: "old", image: images.get(`old-${themeoverlay}`).clone() }
+				else return { style: "new", image: images.get(themeoverlay).clone() }
+			}
+
+			const job = await getOverlay()
+
 			/** @type {import("jimp")} */
 			let canvas
 
@@ -569,27 +591,57 @@ commands.assign([
 				try {
 					canvas = await Jimp.read(`./images/backgrounds/cache/${user.id}.png`)
 				} catch (e) {
-					canvas = images.get("canvas").clone()
+					canvas = await getDefaultBG()
 				}
-			} else canvas = images.get("canvas").clone()
-			canvas.composite(images.get(themeoverlay), 0, 0)
-			canvas.composite(avatar, 32, 85)
-			if (badgeImage) canvas.composite(badgeImage, 166, 113)
-			if (boosting) {
-				if (!badge) canvas.composite(images.get("badge-booster"), 166, 115)
-				else canvas.composite(images.get("badge-booster"), 216, 115)
-			}
+			} else canvas = await getDefaultBG()
 
 			const [font, font2, font_black, font2_black] = [fonts.get("font"), fonts.get("font2"), fonts.get("font-black"), fonts.get("font2-black")]
-			canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
-			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
-			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money)
-			canvas.composite(heart, 508, 207)
-			canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
-			if (hunter) {
-				canvas.composite(images.get("badge-hunter"), 508, 250)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
+
+			function buildOldProfile() {
+				canvas.composite(job.image, 0, 0)
+				canvas.composite(avatar, 65, 61)
+				if (badgeImage) canvas.composite(badgeImage, 219, 120)
+				if (boosting) {
+					if (!badge) canvas.composite(images.get("badge-booster"), 219, 120)
+					else canvas.composite(images.get("badge-booster"), 279, 120)
+				}
+
+				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 219, 90, `#${user.discriminator}`)
+				canvas.composite(images.get("discoin"), 62, 215)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, money)
+				canvas.composite(heart, 62, 259)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 42 ? `${info.waifu.tag.slice(0, 40)}...` : info.waifu.tag : "Nobody, yet")
+				let huntercoords = [219, 125]
+				if (badge && boosting) huntercoords = [339, 125]
+				else if (badge || boosting) huntercoords = [279, 125]
+				if (hunter) canvas.composite(images.get("badge-hunter"), huntercoords[0], huntercoords[1])
 			}
+
+			function buildNewProfile() {
+				canvas.composite(job.image, 0, 0)
+				avatar.mask(images.get("circle-mask"), 0, 0)
+				canvas.composite(avatar, 32, 85)
+				if (badgeImage) canvas.composite(badgeImage, 166, 113)
+				if (boosting) {
+					if (!badge) canvas.composite(images.get("badge-booster"), 166, 115)
+					else canvas.composite(images.get("badge-booster"), 216, 115)
+				}
+
+				canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
+				canvas.composite(images.get("discoin"), 508, 156)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money)
+				canvas.composite(heart, 508, 207)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
+				if (hunter) {
+					canvas.composite(images.get("badge-hunter"), 508, 250)
+					canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
+				}
+			}
+
+			if (job.style == "old") buildOldProfile()
+			else buildNewProfile()
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "profile.png")
@@ -620,6 +672,16 @@ commands.assign([
 				"profilebackground": {
 					type: "string",
 					default: `[unset] (${lang.configuration.settings.prompts.backgroundRecommended})`,
+					scope: "self"
+				},
+				"profiletheme": {
+					type: "string",
+					default: "dark",
+					scope: "self"
+				},
+				"profilestyle": {
+					type: "string",
+					default: "new",
 					scope: "self"
 				},
 				"language": {
@@ -681,7 +743,8 @@ commands.assign([
 			if (value === "null") {
 				if (settingName == "profilebackground") {
 					try {
-						await fs.promises.unlink(`./images/backgrounds/${msg.author.id}.png`)
+						await fs.promises.unlink(`./images/backgrounds/cache/${msg.author.id}.png`)
+						ipc.replier.sendBackgroundUpdateRequired()
 					} catch (e) {
 						return msg.channel.send(lang.configuration.settings.prompts.noBackground)
 					}
@@ -699,7 +762,14 @@ commands.assign([
 				let allowed = false
 				if (isEval) allowed = true
 				if (isPremium) allowed = true
-				if (!allowed) return msg.channel.send(lang.configuration.settings.prompts.donorRequired)
+				const link = value.startsWith("http")
+				if (!allowed && link) return msg.channel.send(lang.configuration.settings.prompts.donorRequired)
+				if (!link) {
+					const choices = ["default", "vicinity"]
+					if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a background of ${choices.join(" or ")}`)
+					await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "defaultprofilebackground", value])
+					return msg.channel.send(lang.configuration.settings.returns.updated)
+				}
 				let data
 				try {
 					data = await fetch(value).then(d => d.buffer())
@@ -716,6 +786,20 @@ commands.assign([
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES (?, ?, ?)", [config.machine_id, keyID, value])
 				ipc.replier.sendBackgroundUpdateRequired()
+				return msg.channel.send(lang.configuration.settings.returns.updated)
+			}
+
+			if (settingName == "profiletheme") {
+				const choices = ["dark", "light"]
+				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a theme of ${choices.join(" or ")}`)
+				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "profiletheme", value])
+				return msg.channel.send(lang.configuration.settings.returns.updated)
+			}
+
+			if (settingName == "profilestyle") {
+				const choices = ["new", "old"]
+				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a style of ${choices.join(" or ")}`)
+				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "profilestyle", value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 

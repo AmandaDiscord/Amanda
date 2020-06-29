@@ -20,14 +20,14 @@ const JIMPStorage = utils.JIMPStorage
 const imageStorage = new utils.JIMPStorage()
 /** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
 const fontStorage = new utils.JIMPStorage()
-imageStorage.save("slot-canvas", "file", "./images/slot.png")
+imageStorage.save("slot-canvas", "file", "./images/backgrounds/commands/slot.png")
 imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png")
 imageStorage.save("emoji-cherries", "file", "./images/emojis/cherries.png")
 imageStorage.save("emoji-heart", "file", "./images/emojis/heart.png")
 imageStorage.save("emoji-pear", "file", "./images/emojis/pear.png")
 imageStorage.save("emoji-strawberry", "file", "./images/emojis/strawberry.png")
 imageStorage.save("emoji-watermelon", "file", "./images/emojis/watermelon.png")
-imageStorage.save("wheel-canvas", "file", "./images/wheel.png")
+imageStorage.save("wheel-canvas", "file", "./images/backgrounds/commands/wheel.png")
 imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png");
 ["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach(i => imageStorage.get(`emoji-${i}`).then(image => image.resize(85, 85)))
 imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))

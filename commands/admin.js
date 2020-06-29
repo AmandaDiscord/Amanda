@@ -6,7 +6,7 @@ const util = require("util")
 const path = require("path")
 
 const passthrough = require("../passthrough")
-const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, frisky, weeb } = passthrough
+const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, streaks, frisky, weeb } = passthrough
 
 const utils = require("../modules/utilities.js")
 reloader.sync("./modules/utilities.js", utils)

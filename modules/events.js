@@ -47,7 +47,9 @@ async function autoPayTimeoutFunction() {
 	for (const ID of donors) {
 		await utils.coinsManager.award(ID, 10000)
 	}
-	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+	const time = getTimeoutDuration()
+	console.log(`Donor payments completed. Set a timeout for ${utils.shortTime(time, "ms")}`)
+	autoPayTimeout = setTimeout(autoPayTimeoutFunction, time)
 }
 
 reloadEvent.once(path.basename(__filename), () => {

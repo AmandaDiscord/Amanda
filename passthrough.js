@@ -16,6 +16,7 @@ process._ptcreated = true
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./modules/managers/GameManager")} games
  * @property {import("./modules/managers/QueueManager")} queues
+ * @property {import("./modules/managers/StreakManager")} streaks
  * @property {import("./modules/structures/PeriodicHistory")} periodicHistory
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss

@@ -70,11 +70,13 @@ const db = mysql.createPool({
 
 	const GameManager = require("./modules/managers/GameManager")
 	const QueueManager = require("./modules/managers/QueueManager")
+	const StreakManager = require("./modules/managers/StreakManager")
 	const PeriodicHistory = require("./modules/structures/PeriodicHistory")
 
 	passthrough.commands = new CommandManager()
 	passthrough.games = new GameManager()
 	passthrough.queues = new QueueManager()
+	passthrough.streaks = new StreakManager()
 	passthrough.periodicHistory = new PeriodicHistory([
 		{ field: "song_start", ttl: 86400e3 },
 		{ field: "game_start", ttl: 86400e3 }
