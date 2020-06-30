@@ -16,6 +16,11 @@ const { client, commands, reloader, games, streaks } = passthrough
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 const streakStep = 10
 const maxStreak = 10
+const maxMultiplier = 10
+const multiplierStep = 10
+const absoluteMax = 1000
+
+streaks.setDestroyDuration("trivia", 1000 * 60 * 15)
 
 /**
  * @typedef TriviaResponse
@@ -152,7 +157,7 @@ class TriviaGame extends Game {
 			const result = {}
 			result.userID = w[0]
 			const cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
-			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID }, true)
+			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax }, true)
 			result.winnings = Math.floor(coins * 0.8 ** (10 - cooldownValue))
 			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
 			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings + streakGains)
@@ -166,7 +171,7 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID })} ${emojis.discoin})` : ""}`).join("\n") })
+		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax })} ${emojis.discoin})` : ""}`).join("\n") })
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
@@ -234,7 +239,7 @@ async function startGame(channel, options) {
 		}
 	}
 	// Check games in progress
-	if (games.cache.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(options.lang.games.trivia.prompts.gameInProgress)
+	if (games.cache.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(utils.replace(options.lang.games.trivia.prompts.gameInProgress, { "username": options.msg ? options.msg.author.username : "" }))
 	// Send typing
 	channel.sendTyping()
 	// Get new game data

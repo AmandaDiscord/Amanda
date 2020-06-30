@@ -39,8 +39,12 @@ function getTimeoutDuration() {
 		return remainingToday
 	}
 }
-let autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
-console.log("added timeout autoPayTimeout")
+
+let autoPayTimeout
+if (utils.isFirstShardOnMachine()) {
+	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+	console.log("added timeout autoPayTimeout")
+}
 async function autoPayTimeoutFunction() {
 	/** @type {Array<string>} */
 	const donors = await utils.sql.all("SELECT * FROM Premium").then(rows => rows.map(r => r.userID))
@@ -53,8 +57,10 @@ async function autoPayTimeoutFunction() {
 }
 
 reloadEvent.once(path.basename(__filename), () => {
-	clearTimeout(autoPayTimeout)
-	console.log("removed timeout autoPayTimeout")
+	if (utils.isFirstShardOnMachine()) {
+		clearTimeout(autoPayTimeout)
+		console.log("removed timeout autoPayTimeout")
+	}
 })
 
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
