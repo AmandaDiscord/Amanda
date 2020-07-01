@@ -19,6 +19,12 @@ const startingCoins = 5000
 const uncachedChannelSendBlacklist = new Set()
 
 /**
+ * @type {Map<string, NodeJS.Timeout>}
+ */
+const givingRelations = new Map() // move this to SQL eventually
+const givingRelationDeleteTimeout = 1000 * 60 * 30
+
+/**
  * @namespace
  */
 const utils = {
@@ -284,9 +290,19 @@ const utils = {
 		get: async function(userID) {
 			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
 			if (row) return row.coins
+			else return utils.coinsManager.create(userID)
+		},
+		/**
+		 * @param {string} userID
+		 * @param {string} [fields="*"]
+		 */
+		getRow: async function(userID, fields = "*") {
+			const statement = `SELECT ${fields} FROM money WHERE userID =?`
+			const row = await utils.sql.get(statement, userID)
+			if (row) return row
 			else {
-				await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins])
-				return startingCoins
+				await utils.coinsManager.create(userID)
+				return utils.sql.get(statement, userID)
 			}
 		},
 		/**
@@ -304,8 +320,41 @@ const utils = {
 		 */
 		award: async function(userID, value) {
 			const row = await utils.sql.get("SELECT * FROM money WHERE userID = ?", userID)
-			if (row) void await utils.sql.all("UPDATE money SET coins = ? WHERE userID = ?", [row.coins + value, userID])
-			else void await utils.sql.all("INSERT INTO money (userID, coins) VALUES (?, ?)", [userID, startingCoins + value])
+			if (row) {
+				const earned = value > 0
+				const coinfield = earned ? "woncoins" : "lostcoins"
+				void await utils.sql.all(`UPDATE money SET coins = ?, ${coinfield} = ${coinfield} + ? WHERE userID = ?`, [row.coins + value, earned ? value : (value * -1), userID])
+			} else void await utils.coinsManager.create(userID, value)
+		},
+		/**
+		 * @param {string} user1
+		 * @param {string} user2
+		 * @param {number} amount
+		 */
+		transact: async function(user1, user2, amount) {
+			const u1row = await utils.coinsManager.getRow(user1)
+			const u2coins = await utils.coinsManager.get(user2)
+
+			const strings = [user1, user2].sort((a, b) => Number(a) - Number(b)).join("-")
+
+			let given = amount
+			if (givingRelations.get(strings)) {
+				given = 0
+				clearTimeout(givingRelations.get(strings))
+				givingRelations.set(strings, setTimeout(() => givingRelations.delete(strings), givingRelationDeleteTimeout))
+			}
+
+			void await Promise.all([
+				utils.sql.all("UPDATE money SET coins =? WHERE userID =?", [u2coins + amount, user2]),
+				utils.sql.all("UPDATE money SET coins =?, givencoins =? WHERE userID =?", [u1row.coins - amount, u1row.givencoins + given, user1])
+			])
+		},
+		/**
+		 * @param {string} userID
+		 * @param {number} [extra=0]
+		 */
+		create: function(userID, extra = 0) {
+			return utils.sql.all("INSERT INTO money(userID, coins) VALUES (?, ?)", [userID, startingCoins + extra]).then(() => startingCoins + extra)
 		}
 	},
 	waifuGifts: {

@@ -110,23 +110,32 @@ const profileStorage = new utils.JIMPStorage()
 const fontStorage = new utils.JIMPStorage()
 profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
 profileStorage.save("canvas-vicinity", "file", "./images/backgrounds/vicinity.png")
+profileStorage.save("canvas-sakura", "file", "./images/backgrounds/sakura.png")
 profileStorage.save("profile", "file", "./images/overlays/profile.png")
 profileStorage.save("profile-light", "file", "./images/overlays/profile_light.png")
 profileStorage.save("old-profile", "file", "./images/overlays/profile_old.png")
 profileStorage.save("old-profile-light", "file", "./images/overlays/profile_old_light.png")
+
 profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
 profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
+profileStorage.save("discoin", "file", "./images/emojis/discoin.png")
+
 profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
 profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-profileStorage.save("circle-mask", "file", "./images/masks/circle_mask.png")
 profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
 profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
-profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
-profileStorage.save("discoin", "file", "./images/emojis/discoin.png")
+profileStorage.save("badge-giver1", "file", "./images/badges/GivingHand_50x50.png")
+profileStorage.save("badge-giver2", "file", "./images/badges/GivingHandTier2_50x50.png")
+profileStorage.save("badge-giver3", "file", "./images/badges/GivingHandTier3_50x50.png")
+
+profileStorage.save("circle-mask", "file", "./images/masks/circle_mask.png")
+
 fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
 fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
 fontStorage.save("font-black", "font", ".fonts/Whitney-25-black.fnt")
 fontStorage.save("font2-black", "font", ".fonts/profile/Whitney-20-aaa-black.fnt")
+
+profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 /**
  * @param {Discord.User} user
@@ -147,6 +156,10 @@ function getHeartType(user, info) {
 	// So the user must be loved by someone else.
 	return "broken"
 }
+
+const giverTier1 = 100000
+const giverTier2 = 1000000
+const giverTier3 = 10000000
 
 commands.assign([
 	{
@@ -531,10 +544,10 @@ commands.assign([
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
 				utils.hasPermission(user, "owner"),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
-				utils.coinsManager.get(user.id),
+				utils.coinsManager.getRow(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "canvas-vicinity", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "discoin"]),
+				profileStorage.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
 				fontStorage.getAll(["font", "font2", "font-black", "font2-black"])
 			])
 
@@ -569,6 +582,11 @@ commands.assign([
 			/** @type {import("jimp")} */
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
+			let giverImage
+			if (money.givencoins >= giverTier3) giverImage = images.get("badge-giver3").clone()
+			else if (money.givencoins >= giverTier2) giverImage = images.get("badge-giver2").clone()
+			else if (money.givencoins >= giverTier1) giverImage = images.get("badge-giver1").clone()
+
 
 			async function getDefaultBG() {
 				const attempt = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "defaultprofilebackground"])
@@ -598,23 +616,29 @@ commands.assign([
 			const [font, font2, font_black, font2_black] = [fonts.get("font"), fonts.get("font2"), fonts.get("font-black"), fonts.get("font2-black")]
 
 			function buildOldProfile() {
+				// badge coords [219, 289, 359, 419, 489] (increments of 70)
 				canvas.composite(job.image, 0, 0)
 				canvas.composite(avatar, 65, 61)
 				if (badgeImage) canvas.composite(badgeImage, 219, 120)
+				if (!badgeImage && giverImage) canvas.composite(giverImage, 219, 120)
+				else if (badgeImage && giverImage) canvas.composite(giverImage, 289, 120)
 				if (boosting) {
-					if (!badge) canvas.composite(images.get("badge-booster"), 219, 120)
-					else canvas.composite(images.get("badge-booster"), 279, 120)
+					if (!badge && !giverImage) canvas.composite(images.get("badge-booster"), 219, 120)
+					else if (!badge || !giverImage) canvas.composite(images.get("badge-booster"), 289, 120)
+					else canvas.composite(images.get("badge-booster"), 349, 120)
 				}
 
 				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 219, 90, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 62, 215)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, money)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, money.coins)
 				canvas.composite(heart, 62, 259)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 42 ? `${info.waifu.tag.slice(0, 40)}...` : info.waifu.tag : "Nobody, yet")
+
 				let huntercoords = [219, 125]
-				if (badge && boosting) huntercoords = [339, 125]
-				else if (badge || boosting) huntercoords = [279, 125]
+				if (badge && boosting && giverImage) huntercoords = [419, 125]
+				else if (badge && (boosting || giverImage)) huntercoords = [359, 125]
+				else if (badge || boosting || giverImage) huntercoords = [289, 125]
 				if (hunter) canvas.composite(images.get("badge-hunter"), huntercoords[0], huntercoords[1])
 			}
 
@@ -631,13 +655,14 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 508, 156)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money.coins)
 				canvas.composite(heart, 508, 207)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
 				if (hunter) {
 					canvas.composite(images.get("badge-hunter"), 508, 250)
 					canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
 				}
+				if (giverImage) canvas.composite(giverImage, 595, 370)
 			}
 
 			if (job.style == "old") buildOldProfile()
@@ -765,7 +790,7 @@ commands.assign([
 				const link = value.startsWith("http")
 				if (!allowed && link) return msg.channel.send(lang.configuration.settings.prompts.donorRequired)
 				if (!link) {
-					const choices = ["default", "vicinity"]
+					const choices = ["default", "vicinity", "sakura"]
 					if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a background of ${choices.join(" or ")}`)
 					await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "defaultprofilebackground", value])
 					return msg.channel.send(lang.configuration.settings.returns.updated)

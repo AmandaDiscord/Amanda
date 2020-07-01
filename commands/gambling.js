@@ -20,23 +20,30 @@ const JIMPStorage = utils.JIMPStorage
 const imageStorage = new utils.JIMPStorage()
 /** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
 const fontStorage = new utils.JIMPStorage()
-imageStorage.save("slot-canvas", "file", "./images/backgrounds/commands/slot.png")
+imageStorage.save("slot-background", "file", "./images/backgrounds/commands/slot.png")
+imageStorage.save("slot-amanda", "file", "./images/overlays/slot-amanda-carsaleswoman.png")
+imageStorage.save("slot-machine", "file", "./images/overlays/slot-machine.png")
+imageStorage.save("slot-top", "file", "./images/overlays/slot-top-layer.png")
+
 imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png")
 imageStorage.save("emoji-cherries", "file", "./images/emojis/cherries.png")
 imageStorage.save("emoji-heart", "file", "./images/emojis/heart.png")
 imageStorage.save("emoji-pear", "file", "./images/emojis/pear.png")
 imageStorage.save("emoji-strawberry", "file", "./images/emojis/strawberry.png")
 imageStorage.save("emoji-watermelon", "file", "./images/emojis/watermelon.png")
-imageStorage.save("wheel-canvas", "file", "./images/backgrounds/commands/wheel.png")
-imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png");
+imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png")
+
+imageStorage.save("wheel-canvas", "file", "./images/backgrounds/commands/wheel.png");
+
 ["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach(i => imageStorage.get(`emoji-${i}`).then(image => image.resize(85, 85)))
 imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))
+
 fontStorage.save("font", "font", ".fonts/Whitney-20.fnt")
 
 commands.assign([
 	{
 		usage: "[amount: number|all|half]",
-		description: "Runs a random slot machine for a chance at Discoins",
+		description: "*slaps top of slot machine.* This baby can make you loose all your amandollars",
 		aliases: ["slot", "slots"],
 		category: "gambling",
 		example: "&slot 1000",
@@ -57,11 +64,10 @@ commands.assign([
 					time: 3 * 60 * 1000
 				}
 			}
-			const [money, winChance, images, font] = await Promise.all([
+			const [money, winChance, images] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.cooldownManager(msg.author.id, "slot", cooldownInfo),
-				imageStorage.getAll(["slot-canvas", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"]),
-				fontStorage.get("font")
+				imageStorage.getAll(["slot-background", "slot-amanda", "slot-machine", "slot-top", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"])
 			])
 			const slots = []
 			for (let i = 0; i < 3; i++) {
@@ -69,18 +75,20 @@ commands.assign([
 				else slots[i] = utils.arrayRandom(array)
 			}
 
-			const canvas = images.get("slot-canvas").clone()
+			const canvas = images.get("slot-background").clone()
+			canvas.composite(images.get("slot-amanda").clone(), 0, 0)
+			canvas.composite(images.get("slot-machine").clone(), 0, 0)
 			const pieces = []
 			slots.forEach(i => pieces.push(images.get(`emoji-${i}`)))
 
-			canvas.composite(pieces[0], 120, 360)
-			canvas.composite(pieces[1], 258, 360)
-			canvas.composite(pieces[2], 392, 360)
+			canvas.composite(pieces[0], 100, 560)
+			canvas.composite(pieces[1], 258, 560)
+			canvas.composite(pieces[2], 412, 560)
+
+			canvas.composite(images.get("slot-top").clone(), 0, 0)
 
 			let buffer, image
 			if (!args[0]) {
-				canvas.print(font, 130, 523, "Nothing")
-				canvas.print(font, 405, 523, "Nothing")
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 				image = new Discord.MessageAttachment(buffer, "slot.png")
 				return msg.channel.send({ files: [image] })
@@ -117,8 +125,6 @@ commands.assign([
 				result = utils.replace(lang.gambling.slot.returns.lost, { "number": bet })
 			}
 			utils.coinsManager.award(msg.author.id, winning - bet)
-			canvas.print(font, 115, 523, winning)
-			canvas.print(font, 390, 523, bet)
 			buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			image = new Discord.MessageAttachment(buffer, "slot.png")
 			return msg.channel.send(result, { files: [image] })
@@ -369,8 +375,7 @@ commands.assign([
 				if (gift < 1) return msg.channel.send(utils.replace(lang.gambling.give.prompts.giftSmall, { "username": msg.author.username }))
 				if (gift > authorCoins) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
 			}
-			utils.coinsManager.award(msg.author.id, -gift)
-			utils.coinsManager.award(member.id, gift)
+			utils.coinsManager.transact(msg.author.id, member.id, gift)
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": gift, "mention2": String(member) }))
