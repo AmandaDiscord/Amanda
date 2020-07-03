@@ -625,6 +625,7 @@ const utils = {
 			else mode = "username"
 
 			if (mode == "id") {
+				if (guild.members.cache.get(search)) return guild.members.cache.get(search)
 				let d
 				try {
 					d = await guild.members.fetch(search)
@@ -1307,8 +1308,10 @@ const utils = {
 				if (list.length == 0) {
 					const fetched = await utils.cacheManager.get(string, message.guild)
 					if (!fetched) return resolve(null)
-					if (Array.isArray(fetched)) list = fetched
-					else return resolve(fetched)
+					if (Array.isArray(fetched)) {
+						if (fetched.length == 0) return resolve(null)
+						else list = fetched
+					} else return resolve(fetched)
 				}
 				const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
 				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed))
