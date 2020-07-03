@@ -218,7 +218,7 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
-				member = await msg.guild.findMember(msg, suffix, true)
+				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
@@ -353,7 +353,7 @@ commands.assign([
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidAmountandUser, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
 			if (!usertxt) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidUser, { "username": msg.author.username }))
-			const member = await msg.guild.findMember(msg, usertxt)
+			const member = await utils.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidUser, { "username": msg.author.username }))
 			if (member.id == msg.author.id) return msg.channel.send(lang.gambling.give.prompts.cannotGiveSelf)
 			const [authorCoins, memsettings, guildsettings] = await Promise.all([

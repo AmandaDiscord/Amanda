@@ -33,11 +33,15 @@ const cmds = [
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
-			if (args.length != 2) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
-			const [mem1, mem2] = await Promise.all([
-				msg.guild.findMember(msg, args[0]),
-				msg.guild.findMember(msg, args[1])
-			])
+			if (!(args.length >= 1)) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
+			let mem1, mem2
+			if (args.length == 1) {
+				mem1 = msg.member
+				mem2 = await utils.findMember(msg, args[0])
+			} else {
+				mem1 = await utils.findMember(msg, args[0])
+				mem2 = await utils.findMember(msg, args[1])
+			}
 			if (mem1 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser1, { "username": msg.author.username }))
 			if (mem2 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser2, { "username": msg.author.username }))
 			if (mem1.id == mem2.id) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.selfShip, { "username": msg.author.username }))
@@ -84,7 +88,7 @@ const cmds = [
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
-				member = await msg.guild.findMember(msg, suffix, true)
+				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
@@ -113,7 +117,7 @@ const cmds = [
 			const usertxt = args.slice(1).join(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
 			if (!usertxt) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))
-			const member = await msg.guild.findMember(msg, usertxt)
+			const member = await utils.findMember(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.invalidUser, { "username": msg.author.username }))
 			if (member.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.selfClaim, { "username": msg.author.username }))
 			const [memberInfo, money, memsettings, guildsettings] = await Promise.all([
@@ -296,7 +300,7 @@ const cmds = [
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
 			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
-			const member = await msg.guild.findMember(msg, suffix, true)
+			const member = await utils.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
 			if (member.id == client.user.id) return msg.channel.send("No u")
 			if (member.id == msg.author.id) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.selfBean, { "username": msg.author.username }))
@@ -394,7 +398,7 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.dm, { "action": source.name }))
 	if (!suffix) return msg.channel.send(utils.replace(lang.interaction[source.name].prompts.noUser, { "action": source.name }))
 	/** @type {Discord.GuildMember | string} */
-	let member = await msg.guild.findMember(msg, suffix)
+	let member = await utils.findMember(msg, suffix)
 	if (!member) member = suffix
 	let fetched
 	if (typeof member != "string") {

@@ -94,11 +94,6 @@ export interface Command<T extends Array<any>> {
 	process(message: Discord.Message, args?: string, ...extras: T): any;
 }
 
-export declare function reactionMenu1(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuAction>): ReactionMenu;
-export declare function reactionMenu2(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionEdit>): ReactionMenu;
-export declare function reactionMenu3(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionReply>): ReactionMenu;
-export declare function reactionMenu4(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionJS>): ReactionMenu;
-
 export interface LavalinkInfo {
 	identifier: string;
 	isSeekable: boolean;
@@ -109,3 +104,10 @@ export interface LavalinkInfo {
 	title: string;
 	uri: string;
 }
+
+// Overloaded functions
+
+export declare function reactionMenu1(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuAction>): ReactionMenu;
+export declare function reactionMenu2(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionEdit>): ReactionMenu;
+export declare function reactionMenu3(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionReply>): ReactionMenu;
+export declare function reactionMenu4(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionJS>): ReactionMenu;

@@ -422,7 +422,7 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
-				member = await msg.guild.findMember(msg, suffix, true)
+				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
@@ -468,7 +468,7 @@ commands.assign([
 			/** @type {Discord.User} */
 			let user = null
 			if (msg.channel.type == "text") {
-				const member = await msg.guild.findMember(msg, suffix, true)
+				const member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.avatar.prompts.invalidUser, { "username": msg.author.username }))
@@ -531,7 +531,7 @@ commands.assign([
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
-				member = await msg.guild.findMember(msg, suffix, true)
+				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))

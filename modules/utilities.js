@@ -19,15 +19,17 @@ const startingCoins = 5000
 const uncachedChannelSendBlacklist = new Set()
 
 /**
- * @type {Map<string, NodeJS.Timeout>}
- */
-const givingRelations = new Map() // move this to SQL eventually
-const givingRelationDeleteTimeout = 1000 * 60 * 30
-
-/**
- * @namespace
+ * @namespace AmandaUtils
  */
 const utils = {
+	/**
+	 * ========
+	 * Classes
+	 * ========
+	 */
+
+
+	/***/
 	DMUser: class DMUser {
 		/**
 		 * @param {string} userID
@@ -168,6 +170,82 @@ const utils = {
 			return result
 		}
 	},
+	AsyncValueCache:
+	/** @template T */
+	class AsyncValueCache {
+		/**
+		 * @param {() => Promise<T>} getter
+		 * @param {number} lifetime
+		 */
+		constructor(getter, lifetime = undefined) {
+			this.getter = getter
+			this.lifetime = lifetime
+			this.lifetimeTimeout = null
+			/** @type {Promise<T>} */
+			this.promise = null
+			/** @type {T} */
+			this.cache = null
+		}
+		clear() {
+			clearTimeout(this.lifetimeTimeout)
+			this.cache = null
+		}
+		get() {
+			if (this.cache) return Promise.resolve(this.cache)
+			if (this.promise) return this.promise
+			return this._getNew()
+		}
+		_getNew() {
+			this.promise = this.getter()
+			return this.promise.then(result => {
+				this.cache = result
+				this.promise = null
+				clearTimeout(this.lifetimeTimeout)
+				if (this.lifetime) this.lifetimeTimeout = setTimeout(() => this.clear(), this.lifetime)
+				return result
+			})
+		}
+	},
+	FrequencyUpdater: class FrequencyUpdater {
+		/**
+		 * @param {() => any} callback
+		 */
+		constructor(callback) {
+			this.callback = callback
+			this.timeout = null
+			this.interval = null
+		}
+		/**
+		 * @param {number} frequency Number of milliseconds between calls of the callback
+		 * @param {boolean} trigger Whether to call the callback straight away
+		 * @param {number} delay Defaults to frequency. Delay to be used for the the first delay only.
+		 */
+		start(frequency, trigger, delay = frequency) {
+			this.stop(false)
+			if (trigger) this.callback()
+			this.timeout = setTimeout(() => {
+				this.callback()
+				this.interval = setInterval(() => {
+					this.callback()
+				}, frequency)
+			}, delay)
+		}
+		stop(trigger = false) {
+			clearTimeout(this.timeout)
+			clearInterval(this.interval)
+			if (trigger) this.callback()
+		}
+	},
+
+
+	/**
+	 * =========
+	 * Managers
+	 * =========
+	 */
+
+
+	/***/
 	sql: {
 		/**
 		 * @param {string} string
@@ -203,9 +281,6 @@ const utils = {
 		"get": async function(string, prepared = undefined, connection = undefined) {
 			return (await utils.sql.all(string, prepared, connection))[0]
 		}
-	},
-	getConnection: function() {
-		return db.getConnection()
 	},
 	waifu: {
 		/**
@@ -295,13 +370,16 @@ const utils = {
 		/**
 		 * @param {string} userID
 		 * @param {string} [fields="*"]
+		 * @returns {Promise<{ userID: string, coins: number, woncoins: number, lostcoins: number, givencoins: number }>}
 		 */
 		getRow: async function(userID, fields = "*") {
 			const statement = `SELECT ${fields} FROM money WHERE userID =?`
 			const row = await utils.sql.get(statement, userID)
+			// @ts-ignore
 			if (row) return row
 			else {
 				await utils.coinsManager.create(userID)
+				// @ts-ignore
 				return utils.sql.get(statement, userID)
 			}
 		},
@@ -335,18 +413,9 @@ const utils = {
 			const u1row = await utils.coinsManager.getRow(user1)
 			const u2coins = await utils.coinsManager.get(user2)
 
-			const strings = [user1, user2].sort((a, b) => Number(a) - Number(b)).join("-")
-
-			let given = amount
-			if (givingRelations.get(strings)) {
-				given = 0
-				clearTimeout(givingRelations.get(strings))
-				givingRelations.set(strings, setTimeout(() => givingRelations.delete(strings), givingRelationDeleteTimeout))
-			}
-
 			void await Promise.all([
 				utils.sql.all("UPDATE money SET coins =? WHERE userID =?", [u2coins + amount, user2]),
-				utils.sql.all("UPDATE money SET coins =?, givencoins =? WHERE userID =?", [u1row.coins - amount, u1row.givencoins + given, user1])
+				utils.sql.all("UPDATE money SET coins =?, givencoins =? WHERE userID =?", [u1row.coins - amount, u1row.givencoins + amount, user1])
 			])
 		},
 		/**
@@ -354,7 +423,7 @@ const utils = {
 		 * @param {number} [extra=0]
 		 */
 		create: function(userID, extra = 0) {
-			return utils.sql.all("INSERT INTO money(userID, coins) VALUES (?, ?)", [userID, startingCoins + extra]).then(() => startingCoins + extra)
+			return utils.sql.all("REPLACE INTO money(userID, coins) VALUES (?, ?)", [userID, startingCoins + extra]).then(() => startingCoins + extra)
 		}
 	},
 	waifuGifts: {
@@ -401,65 +470,203 @@ const utils = {
 			description: "A moment to never forget."
 		}
 	},
-	/**
-	 * @param {events.EventEmitter} target
-	 * @param {string} name
-	 * @param {string} filename
-	 * @param {(...args: Array<any>) => any} code
-	 */
-	addTemporaryListener: function(target, name, filename, code, targetListenMethod = "on") {
-		console.log(`added event ${name}`)
-		target[targetListenMethod](name, code)
-		reloadEvent.once(filename, () => {
-			target.removeListener(name, code)
-			console.log(`removed event ${name}`)
-		})
+	compactRows: {
+		/**
+		 * @param {Array<string>} rows
+		 * @param {number} [maxLength=2000]
+		 * @param {number} [joinLength=1]
+		 * @param {string} [endString="…"]
+		 */
+		removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
+			let currentLength = 0
+			const maxItems = 20
+			for (let i = 0; i < rows.length; i++) {
+				const row = rows[i]
+				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
+					return rows.slice(0, i).concat([endString])
+				}
+				currentLength += row.length + joinLength
+			}
+			return rows
+		},
+		/**
+		 * @param {Array<string>} rows
+		 * @param {number} [maxLength=2000]
+		 * @param {number} [joinLength=1]
+		 * @param {string} [middleString="…"]
+		 */
+		removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
+			let currentLength = 0
+			let currentItems = 0
+			const maxItems = 20
+			/**
+			 * Holds items for the left and right sides.
+			 * Items should flow into the left faster than the right.
+			 * At the end, the sides will be combined into the final list.
+			 */
+			const reconstruction = new Map([
+				["left", []],
+				["right", []]
+			])
+			let leftOffset = 0
+			let rightOffset = 0
+			function getNextDirection() {
+				return rightOffset * 3 > leftOffset ? "left" : "right"
+			}
+			while (currentItems < rows.length) {
+				const direction = getNextDirection()
+				let row
+				if (direction == "left") row = rows[leftOffset++]
+				else row = rows[rows.length - 1 - rightOffset++]
+				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
+					return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
+				}
+				reconstruction.get(direction).push(row)
+				currentLength += row.length + joinLength
+				currentItems++
+			}
+			return reconstruction.get("left").concat(reconstruction.get("right").reverse())
+		}
 	},
-	/**
-	 * @param {Discord.User} user
-	 * @param {"eval"|"owner"} permission
-	 * @returns {Promise<boolean>}
-	 */
-	hasPermission: async function(user, permission) {
-		let result = await utils.sql.get(`SELECT ${permission} FROM UserPermissions WHERE userID = ?`, user.id)
-		if (result) result = Object.values(result)[0]
-		return !!result
+	editLavalinkNodes: {
+		/**
+		 * @returns {[number, number]} removedCount, addedCount
+		 */
+		applyChanges: function() {
+			let removedCount = 0
+			let addedCount = 0
+			for (const node of client.lavalink.nodes.values()) {
+				if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
+					removedCount++
+					const nodeInstance = client.lavalink.nodes.get(node.host)
+					client.lavalink.removeNode(node.host)
+					nodeInstance.destroy()
+				}
+			}
+
+			for (const node of constants.lavalinkNodes) {
+				if (!client.lavalink.nodes.has(node.host)) {
+					addedCount++
+					client.lavalink.createNode(node)
+				}
+			}
+			return [removedCount, addedCount]
+		},
+		/**
+		 * @param {string} name
+		 */
+		removeByName: function(name) {
+			constants.lavalinkNodes = constants.lavalinkNodes.filter(node => node.name !== name)
+			return utils.editLavalinkNodes.applyChanges()
+		},
+		add: function(data) {
+			constants.lavalinkNodes.push(data)
+			return utils.editLavalinkNodes.applyChanges()
+		},
+		/**
+		 * Add enabled and disconnected nodes to the client node list and connect to them.
+		 * Clean unused and disabled client nodes and close their websockets
+		 * so that the lavalink process can be ended safely.
+		 *
+		 * @returns {[number, number]} cleaned nodes, added nodes
+		 */
+		syncConnections: function() {
+			const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
+
+			let cleanedCount = 0
+			let addedCount = 0
+
+			for (const node of constants.lavalinkNodes) { // loop through all known nodes
+				const clientNode = client.lavalink.nodes.find(n => n.host === node.host) // get the matching client node
+				if (node.enabled) { // try connecting to nodes
+					if (clientNode) continue // only consider situations where the client node is unknown
+					// connect to the node
+					client.lavalink.createNode(node)
+					addedCount++
+				} else { // try disconnecting from nodes
+					if (!clientNode) continue // only consider situations where the client node is known
+					// if no queues are using the node, disconnect it.
+					if (!queues.cache.some(q => q.player.node === clientNode)) {
+						client.lavalink.removeNode(clientNode.host)
+						clientNode.destroy()
+						cleanedCount++
+					}
+				}
+			}
+
+			return [cleanedCount, addedCount]
+		}
 	},
-	/**
-	 * @param {string} userID
-	 * @param {string} command
-	 * @param {{ max: number, min: number, step: number, regen: { time: number, amount: number }}} info
-	 */
-	cooldownManager: async function(userID, command, info) {
-		let winChance = info.max
-		const cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command])
-		if (cooldown) {
-			winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now() - cooldown.date) / info.regen.time) * info.regen.amount))
-			const newValue = winChance - info.step
-			utils.sql.all("UPDATE MoneyCooldown SET date = ?, value = ? WHERE userID = ? AND command = ?", [Date.now(), newValue, userID, command])
-		} else utils.sql.all("INSERT INTO MoneyCooldown VALUES (NULL, ?, ?, ?, ?)", [userID, command, Date.now(), info.max - info.step])
-		return winChance
-	},
-	/**
-	 * @param {number} length
-	 * @param {number} value
-	 * @param {number} max
-	 * @param {string} [text=""]
-	 */
-	progressBar: function(length, value, max, text) {
-		if (!text) text = ""
-		const textPosition = Math.floor(length / 2) - Math.ceil(text.length / 2) + 1
-		let result = ""
-		for (let i = 1; i <= length; i++) {
-			if (i >= textPosition && i < textPosition + text.length) {
-				result += text[i - textPosition]
+	cacheManager: {
+		/**
+		 * Validates if a string is *possibly* a valid Snowflake
+		 * @param {string} id
+		 */
+		validate: function(id) {
+			if (!(/^\d+$/.test(id))) return false
+
+			const deconstructed = Discord.SnowflakeUtil.deconstruct(id)
+			if (!deconstructed || !deconstructed.date) return false
+			if (deconstructed.date.getTime() > Date.now()) return false
+			return true
+		},
+		/**
+		 * Returns a user if possible or an Array of Members from a guild
+		 * @param {string} search
+		 * @param {Discord.Guild} guild
+		 * @param {number} [limit=10]
+		 */
+		get: async function(search, guild, limit = 10) {
+			/** @type {"id" | "username" | "tag"} */
+			let mode
+			const discrimregex = /#\d{4}$/
+			if (search.match(discrimregex)) mode = "tag"
+			else if (utils.cacheManager.validate(search)) mode = "id"
+			else mode = "username"
+
+			if (mode == "id") {
+				let d
+				try {
+					d = await guild.members.fetch(search)
+				} catch (e) {
+					return null
+				}
+				return d
 			} else {
-				// eslint-disable-next-line no-lonely-if
-				if (value / max * length >= i) result += "="
-				else result += " ​" // space + zwsp to prevent shrinking
+				let payload, discrim
+				if (mode == "tag") {
+					payload = search.replace(discrimregex, "")
+					discrim = /#(\d{4})$/.exec(search)[1]
+				} else payload = search
+				let data
+				try {
+					data = await guild.members.fetch({ query: payload, limit: limit, withPresences: false })
+				} catch (e) {
+					return null
+				}
+				if (!data) return null
+				const matchdiscrim = mode == "tag" ? data.find(m => m.user.discriminator == discrim) : undefined
+				if (matchdiscrim) return matchdiscrim
+				else if (mode == "tag" && !matchdiscrim) return null
+				else {
+					if (data.size == 1) return data.first()
+					else return data.array()
+				}
 			}
 		}
-		return "​" + result // zwsp + result
+	},
+
+
+	/**
+	 * ===============
+	 * Core functions
+	 * ===============
+	 */
+
+
+	/***/
+	getConnection: function() {
+		return db.getConnection()
 	},
 	/**
 	 * @param {any} data
@@ -489,17 +696,310 @@ const utils = {
 		}
 		return result
 	},
-
 	/**
-	 * @param {Date|string} when
-	 * @param {string} seperator
+	 * @param {events.EventEmitter} target
+	 * @param {string} name
+	 * @param {string} filename
+	 * @param {(...args: Array<any>) => any} code
 	 */
-	getSixTime: function(when, seperator) {
-		const d = new Date(when || Date.now())
-		if (!seperator) seperator = ""
-		return d.getHours().toString().padStart(2, "0") + seperator + d.getMinutes().toString().padStart(2, "0") + seperator + d.getSeconds().toString().padStart(2, "0")
+	addTemporaryListener: function(target, name, filename, code, targetListenMethod = "on") {
+		console.log(`added event ${name}`)
+		target[targetListenMethod](name, code)
+		reloadEvent.once(filename, () => {
+			target.removeListener(name, code)
+			console.log(`removed event ${name}`)
+		})
+	},
+	/**
+	 * @param {Discord.User} user
+	 * @param {"eval"|"owner"} permission
+	 * @returns {Promise<boolean>}
+	 */
+	hasPermission: async function(user, permission) {
+		let result = await utils.sql.get(`SELECT ${permission} FROM UserPermissions WHERE userID = ?`, user.id)
+		if (result) result = Object.values(result)[0]
+		return !!result
+	},
+	/**
+	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {string|Discord.MessageEmbed} content
+	 */
+	contentify: function(channel, content) {
+		if (channel.type != "text") return content
+		let value = ""
+		let permissions
+		if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user)
+		if (content instanceof Discord.MessageEmbed) {
+			if (permissions && !permissions.has("EMBED_LINKS")) {
+				value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? content.fields.map(f => `${f.name}\n${f.value}`).join("\n") + "\n" : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
+				if (value.length > 2000) value = `${value.slice(0, 1960)}…`
+				value += "\nPlease allow me to embed content"
+			} else return content
+		} else if (typeof (content) == "string") {
+			value = content
+			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
+		}
+		return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
+	},
+	/**
+	 * @type {import("../typings").reactionMenu1 & (import("../typings").reactionMenu2) & (import("../typings").reactionMenu3) & (import("../typings").reactionMenu4)}
+	 */
+	reactionMenu: function(message, actions) {
+		return new ReactionMenu(message, actions)
+	},
+	/**
+	 * Get a random element from an array.
+	 * @param {Array<T>} array
+	 * @return {T}
+	 * @template T
+	 */
+	arrayRandom: function(array) {
+		const index = Math.floor(Math.random() * array.length)
+		return array[index]
+	},
+	/**
+	 * Shuffle an array in place.
+	 * @param {Array<T>} array
+	 * @return {Array<T>}
+	 * @template T
+	 */
+	// thanks stackoverflow https://stackoverflow.com/a/12646864
+	arrayShuffle: function(array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1));
+			[array[i], array[j]] = [array[j], array[i]]
+		}
+		return array
+	},
+	/**
+	 * Do not ask me in what way this "fixes" an emoji.
+	 * Please know what you are doing before touching this.
+	 * This should probably only be used in the reaction event.
+	 */
+	fixEmoji: function(emoji) {
+		if (emoji && emoji.name) {
+			if (emoji.id != null) return `${emoji.name}:${emoji.id}`
+			else return emoji.name
+		}
+		return emoji
+	},
+	/**
+	 * @param {string} channelID
+	 * @param {string} messageID
+	 * @param {emoji} any
+	 * @param {string} [userID]
+	 */
+	removeUncachedReaction: function(channelID, messageID, emoji, userID) {
+		if (!userID) userID = "@me"
+		let reaction
+		if (emoji.id) {
+			// Custom emoji, has name and ID
+			reaction = `${emoji.name}:${emoji.id}`
+		} else {
+			// Default emoji, has name only
+			reaction = encodeURIComponent(emoji.name)
+		}
+		// @ts-ignore: client.api is not documented
+		const promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
+		promise.catch(() => console.error)
+		return promise
+	},
+	/**
+	 * A function to replace wildcard (%string) strings with information from lang
+	 * @param {string} string The string from lang
+	 * @param {Object.<string, any>} properties example: `{ "username": "PapiOphidian" }`
+	 * @returns {string}
+	 */
+	replace: function(string, properties = {}) {
+		let value = string.slice(0, string.length)
+		Object.keys(properties).forEach(item => {
+			let index
+			while ((index = value.indexOf(`%${item}`)) !== -1) {
+				value = value.slice(0, index) + properties[item] + value.slice(index + item.length + 1)
+			}
+		})
+		return value
+	},
+	getStats: function() {
+		const ram = process.memoryUsage()
+		return {
+			ping: client.ws.ping,
+			uptime: process.uptime(),
+			ram: ram.rss - (ram.heapTotal - ram.heapUsed),
+			users: client.users.cache.size,
+			guilds: client.guilds.cache.size,
+			channels: client.channels.cache.size,
+			connections: client.lavalink.players.size
+		}
+	},
+	/**
+	 * @param {string} id
+	 * @param {"self"|"guild"} type
+	 * @returns {Promise<Lang.Lang>}
+	 */
+	getLang: async function(id, type) {
+		let code, row
+		if (type === "self") {
+			row = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID = ? AND setting = ?", [id, "language"])
+		} else if (type === "guild") {
+			row = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID = ? AND setting = ?", [id, "language"])
+		}
+		if (row) {
+			code = row.value
+		} else {
+			code = "en-us"
+		}
+
+		const value = Lang[code.replace("-", "_")] || Lang.en_us
+		return value
+	},
+	/**
+	 * discord.js is hilarious(ly awful)
+	 * @param {string} channelID
+	 * @param {boolean} useBlacklist refuse to send more messages to channels with missing access
+	 * @param {Discord.MessageOptions|Discord.MessageAdditions} content
+	 */
+	sendToUncachedChannel: function(channelID, useBlacklist, content) {
+		if (useBlacklist) {
+			if (uncachedChannelSendBlacklist.has(channelID)) return Promise.reject(new Error("Channel is blacklisted because you did not have permission last time."))
+		} else {
+			uncachedChannelSendBlacklist.delete(channelID)
+		}
+		// @ts-ignore holy shit, remove this and see what happens. it's so so cursed
+		return client.api.channels[channelID].messages.post(
+			Discord.APIMessage.create(
+				// @ts-ignore xd
+				{ id: channelID, client: client },
+				content
+			).resolveData()
+		).catch(error => {
+			if (error && error.name === "DiscordAPIError" && error.code === 50001) { // missing access
+				uncachedChannelSendBlacklist.add(channelID)
+			}
+			throw error
+		})
+	},
+	/**
+	 * @param {Discord.Message} msg
+	 */
+	resolveWebhookMessageAuthor: async function(msg) {
+		const row = await utils.sql.get(
+			"SELECT userID, user_username, user_discriminator FROM WebhookAliases"
+				+ " WHERE webhookID = ? AND webhook_username = ?",
+			[msg.webhookID, msg.author.username]
+		)
+		if (!row) return null
+		/** @type {Discord.User} */
+		let newAuthor
+		let newUserData
+		if (client.users.cache.has(row.userID)) {
+			newAuthor = client.users.cache.get(row.userID)
+		} else {
+			await client.users.fetch(row.userID).then(m => {
+				newAuthor = m
+			}).catch(() => {
+				newUserData = {
+					id: row.userID,
+					bot: false,
+					username: row.user_username,
+					discriminator: row.user_discriminator,
+					avatar: null
+				}
+				newAuthor = new Discord.User(client, newUserData)
+			})
+		}
+		msg.author = newAuthor
+		/** @type {Discord.GuildMember} */
+		if (!msg.guild.members.cache.has(row.userID)) {
+			await msg.guild.members.fetch(row.userID).catch(() => {
+				msg.guild.members.add(newUserData)
+			})
+		}
+		return msg
+	},
+	/**
+	 * @param {Discord.User} user
+	 * @returns {Array<string>}
+	 */
+	userFlagEmojis(user) {
+		const flags = user.flags // All of these emojis are from Papi's Dev House.
+		const arr = [] // The emojis are pushed to the array in order of which they'd appear in Discord.
+		if (!flags) return arr
+		if (flags.has("DISCORD_EMPLOYEE")) arr.push("<:staff:433155028895793172>")
+		if (flags.has("DISCORD_PARTNER")) arr.push("<:partner:421802275326001152>")
+		if (flags.has("HYPESQUAD_EVENTS")) arr.push("<:HypesquadEvents:719628242449072260>")
+		if (flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>")
+		if (flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>")
+		if (flags.has("HOUSE_BRILLIANCE")) arr.push("<:brilliance:479939329104412672>")
+		if (flags.has("VERIFIED_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>")
+		if (flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcherlvl2:678721839488434203>")
+		if (flags.has("BUGHUNTER_LEVEL_1") && !flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcher:434087337488678921>")
+		if (flags.has("EARLY_SUPPORTER")) arr.push("<:EarlySupporter:585638218255564800>")
+		return arr
+	},
+	emojiURL:
+	/**
+	 * @param {string} id
+	 * @param {boolean} [animated]
+	 */
+	function(id, animated = false) {
+		const ext = animated ? "gif" : "png"
+		return `https://cdn.discordapp.com/emojis/${id}.${ext}`
 	},
 
+
+	/**
+	 * =================
+	 * Casino functions
+	 * =================
+	 */
+
+
+	/**
+	 * @param {string} userID
+	 * @param {string} command
+	 * @param {{ max: number, min: number, step: number, regen: { time: number, amount: number }}} info
+	 */
+	cooldownManager: async function(userID, command, info) {
+		let winChance = info.max
+		const cooldown = await utils.sql.get("SELECT * FROM MoneyCooldown WHERE userID = ? AND command = ?", [userID, command])
+		if (cooldown) {
+			winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now() - cooldown.date) / info.regen.time) * info.regen.amount))
+			const newValue = winChance - info.step
+			utils.sql.all("UPDATE MoneyCooldown SET date = ?, value = ? WHERE userID = ? AND command = ?", [Date.now(), newValue, userID, command])
+		} else utils.sql.all("INSERT INTO MoneyCooldown VALUES (NULL, ?, ?, ?, ?)", [userID, command, Date.now(), info.max - info.step])
+		return winChance
+	},
+
+
+	/**
+	 * ================
+	 * Music functions
+	 * ================
+	 */
+
+
+	/**
+	 * @param {number} length
+	 * @param {number} value
+	 * @param {number} max
+	 * @param {string} [text=""]
+	 */
+	progressBar: function(length, value, max, text) {
+		if (!text) text = ""
+		const textPosition = Math.floor(length / 2) - Math.ceil(text.length / 2) + 1
+		let result = ""
+		for (let i = 1; i <= length; i++) {
+			if (i >= textPosition && i < textPosition + text.length) {
+				result += text[i - textPosition]
+			} else {
+				// eslint-disable-next-line no-lonely-if
+				if (value / max * length >= i) result += "="
+				else result += " ​" // space + zwsp to prevent shrinking
+			}
+		}
+		return "​" + result // zwsp + result
+	},
 	/**
 	 * @param {T[]} items
 	 * @param {string} startString One-based index
@@ -520,7 +1020,6 @@ const utils = {
 		if (!startString && !shuffle) items = items.slice() // make copy of array for consistent behaviour
 		return items
 	},
-
 	/**
 	 * @param {Discord.TextChannel} channel
 	 * @param {string} authorID
@@ -564,6 +1063,14 @@ const utils = {
 		})
 	},
 
+
+	/**
+	 * ===============
+	 * Time functions
+	 * ===============
+	 */
+
+
 	/** @param {Date} date */
 	upcomingDate: function(date) {
 		const currentHours = date.getUTCHours()
@@ -572,66 +1079,71 @@ const utils = {
 		else textHours = `${currentHours - 12} PM`
 		return `${date.toUTCString().split(" ").slice(0, 4).join(" ")} at ${textHours} UTC`
 	},
-
-	compactRows: {
-		/**
-		 * @param {Array<string>} rows
-		 * @param {number} [maxLength=2000]
-		 * @param {number} [joinLength=1]
-		 * @param {string} [endString="…"]
-		 */
-		removeEnd: function(rows, maxLength = 2000, joinLength = 1, endString = "…") {
-			let currentLength = 0
-			const maxItems = 20
-			for (let i = 0; i < rows.length; i++) {
-				const row = rows[i]
-				if (i >= maxItems || currentLength + row.length + joinLength + endString.length > maxLength) {
-					return rows.slice(0, i).concat([endString])
-				}
-				currentLength += row.length + joinLength
-			}
-			return rows
-		},
-
-		/**
-		 * @param {Array<string>} rows
-		 * @param {number} [maxLength=2000]
-		 * @param {number} [joinLength=1]
-		 * @param {string} [middleString="…"]
-		 */
-		removeMiddle: function(rows, maxLength = 2000, joinLength = 1, middleString = "…") {
-			let currentLength = 0
-			let currentItems = 0
-			const maxItems = 20
-			/**
-			 * Holds items for the left and right sides.
-			 * Items should flow into the left faster than the right.
-			 * At the end, the sides will be combined into the final list.
-			 */
-			const reconstruction = new Map([
-				["left", []],
-				["right", []]
-			])
-			let leftOffset = 0
-			let rightOffset = 0
-			function getNextDirection() {
-				return rightOffset * 3 > leftOffset ? "left" : "right"
-			}
-			while (currentItems < rows.length) {
-				const direction = getNextDirection()
-				let row
-				if (direction == "left") row = rows[leftOffset++]
-				else row = rows[rows.length - 1 - rightOffset++]
-				if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
-					return reconstruction.get("left").concat([middleString], reconstruction.get("right").reverse())
-				}
-				reconstruction.get(direction).push(row)
-				currentLength += row.length + joinLength
-				currentItems++
-			}
-			return reconstruction.get("left").concat(reconstruction.get("right").reverse())
-		}
+	/**
+	 * @param {Date|string} when
+	 * @param {string} seperator
+	 */
+	getSixTime: function(when, seperator) {
+		const d = new Date(when || Date.now())
+		if (!seperator) seperator = ""
+		return d.getHours().toString().padStart(2, "0") + seperator + d.getMinutes().toString().padStart(2, "0") + seperator + d.getSeconds().toString().padStart(2, "0")
 	},
+	shortTime:
+	/**
+	 * @param {number} number
+	 * @param {"ms" | "sec"} scale
+	 */
+	function(number, scale, precision = ["d", "h", "m", "s"]) {
+		if (isNaN(number)) throw new TypeError("Input provided is NaN")
+		if (!scale) throw new RangeError("Missing scale")
+		if (scale.toLowerCase() == "ms") number = Math.floor(number)
+		else if (scale.toLowerCase() == "sec") number = Math.floor(number * 1000)
+		else throw new TypeError("Invalid scale provided")
+		const days = Math.floor(number / 1000 / 60 / 60 / 24)
+		number -= days * 1000 * 60 * 60 * 24
+		const hours = Math.floor(number / 1000 / 60 / 60)
+		number -= hours * 1000 * 60 * 60
+		const mins = Math.floor(number / 1000 / 60)
+		number -= mins * 1000 * 60
+		const secs = Math.floor(number / 1000)
+		let timestr = ""
+		if (days > 0 && precision.includes("d")) timestr += `${days}d `
+		if (hours > 0 && precision.includes("h")) timestr += `${hours}h `
+		if (mins > 0 && precision.includes("m")) timestr += `${mins}m `
+		if (secs > 0 && precision.includes("s")) timestr += `${secs}s`
+		if (!timestr) timestr = "0" + precision.slice(-1)[0]
+		return timestr
+	},
+	timeUntilSongsEnd: function() {
+		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
+		let max = 0
+		for (const queue of queueStore.cache.values()) {
+			if (queue.songs[0] && queue.songs[0].lengthSeconds >= 0) {
+				if (queue.songs[0].lengthSeconds > max) max = queue.songs[0].lengthSeconds
+			}
+		}
+		return max
+	},
+	timeUntilQueuesEnd: function() {
+		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
+		let max = 0
+		for (const queue of queueStore.cache.values()) {
+			let total = 0
+			for (const song of queue.songs) {
+				if (song.lengthSeconds >= 0) total += song.lengthSeconds
+			}
+			if (total > max) max = total
+		}
+		return max
+	},
+
+
+	/**
+	 * =====================
+	 * Pagination functions
+	 * =====================
+	 */
+
 
 	/**
 	 * @param {string[]} rows
@@ -657,7 +1169,6 @@ const utils = {
 		pages.push(currentPage)
 		return pages
 	},
-
 	/**
 	 * @param {string[][]} rows
 	 * @param {any[]} align
@@ -700,7 +1211,6 @@ const utils = {
 		}
 		return output
 	},
-
 	/**
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {string[]} title
@@ -721,7 +1231,6 @@ const utils = {
 			)
 		})
 	},
-
 	/**
 	 * @param {Discord.TextChannel|Discord.DMChannel} channel
 	 * @param {number} pageCount
@@ -757,167 +1266,68 @@ const utils = {
 		}
 	},
 
-	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
-	 * @param {string|Discord.MessageEmbed} content
-	 */
-	contentify: function(channel, content) {
-		if (channel.type != "text") return content
-		let value = ""
-		let permissions
-		if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user)
-		if (content instanceof Discord.MessageEmbed) {
-			if (permissions && !permissions.has("EMBED_LINKS")) {
-				value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? content.fields.map(f => `${f.name}\n${f.value}`).join("\n") + "\n" : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
-				if (value.length > 2000) value = `${value.slice(0, 1960)}…`
-				value += "\nPlease allow me to embed content"
-			} else return content
-		} else if (typeof (content) == "string") {
-			value = content
-			if (value.length > 2000) value = `${value.slice(0, 1998)}…`
-		}
-		return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
-	},
-
-	AsyncValueCache:
-	/** @template T */
-	class AsyncValueCache {
-		/**
-		 * @param {() => Promise<T>} getter
-		 * @param {number} lifetime
-		 */
-		constructor(getter, lifetime = undefined) {
-			this.getter = getter
-			this.lifetime = lifetime
-			this.lifetimeTimeout = null
-			/** @type {Promise<T>} */
-			this.promise = null
-			/** @type {T} */
-			this.cache = null
-		}
-		clear() {
-			clearTimeout(this.lifetimeTimeout)
-			this.cache = null
-		}
-		get() {
-			if (this.cache) return Promise.resolve(this.cache)
-			if (this.promise) return this.promise
-			return this._getNew()
-		}
-		_getNew() {
-			this.promise = this.getter()
-			return this.promise.then(result => {
-				this.cache = result
-				this.promise = null
-				clearTimeout(this.lifetimeTimeout)
-				if (this.lifetime) this.lifetimeTimeout = setTimeout(() => this.clear(), this.lifetime)
-				return result
-			})
-		}
-	},
-
-	FrequencyUpdater:
-	class FrequencyUpdater {
-		/**
-		 * @param {() => any} callback
-		 */
-		constructor(callback) {
-			this.callback = callback
-			this.timeout = null
-			this.interval = null
-		}
-		/**
-		 * @param {number} frequency Number of milliseconds between calls of the callback
-		 * @param {boolean} trigger Whether to call the callback straight away
-		 * @param {number} delay Defaults to frequency. Delay to be used for the the first delay only.
-		 */
-		start(frequency, trigger, delay = frequency) {
-			this.stop(false)
-			if (trigger) this.callback()
-			this.timeout = setTimeout(() => {
-				this.callback()
-				this.interval = setInterval(() => {
-					this.callback()
-				}, frequency)
-			}, delay)
-		}
-		stop(trigger = false) {
-			clearTimeout(this.timeout)
-			clearInterval(this.interval)
-			if (trigger) this.callback()
-		}
-	},
 
 	/**
-	 * @type {import("../typings").reactionMenu1 & (import("../typings").reactionMenu2) & (import("../typings").reactionMenu3) & (import("../typings").reactionMenu4)}
+	 * ==========================
+	 * Cache searching functions
+	 * ==========================
 	 */
-	reactionMenu: function(message, actions) {
-		return new ReactionMenu(message, actions)
-	},
+
 
 	/**
-	 * Get a random element from an array.
-	 * @param {Array<T>} array
-	 * @return {T}
-	 * @template T
+	 * @param {Discord.Message} message Message Object
+	 * @param {string} string String to search members by
+	 * @param {boolean} [self=false] If the function should return the `message` author's member Object
+	 * @returns {Promise<Discord.GuildMember>}
 	 */
-	arrayRandom: function(array) {
-		const index = Math.floor(Math.random() * array.length)
-		return array[index]
+	findMember(message, string, self = false) {
+		// eslint-disable-next-line no-async-promise-executor
+		return new Promise(async resolve => {
+			string = string.toLowerCase()
+			if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
+			/** @type {Array<(member: Discord.GuildMember) => Boolean>} */
+			let matchFunctions = []
+			matchFunctions = matchFunctions.concat([
+				member => member.id.includes(string),
+				member => member.user.tag.toLowerCase() == string,
+				member => member.user.username.toLowerCase() == string,
+				member => member.displayName.toLowerCase() == string,
+				member => member.user.username.toLowerCase().includes(string),
+				member => member.displayName.toLowerCase().includes(string)
+			])
+			if (!string) {
+				if (self) return resolve(message.member)
+				else return resolve(null)
+			} else {
+				if (message.guild.members.cache.get(string)) return resolve(message.guild.members.cache.get(string))
+				/** @type {Array<Discord.GuildMember>} */
+				let list = []
+				matchFunctions.forEach(i => message.guild.members.cache.filter(m => i(m)).forEach(mem => { if (!list.includes(mem) && list.length < 10) list.push(mem) }))
+				if (list.length == 1) return resolve(list[0])
+				if (list.length == 0) {
+					const fetched = await utils.cacheManager.get(string, message.guild)
+					if (!fetched) return resolve(null)
+					if (Array.isArray(fetched)) list = fetched
+					else return resolve(fetched)
+				}
+				const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed))
+				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
+				return collector.next.then(newmessage => {
+					const index = parseInt(newmessage.content)
+					if (!index || !list[index - 1]) return resolve(null)
+					selectmessage.delete()
+					// eslint-disable-next-line no-empty-function
+					newmessage.delete().catch(() => {})
+					return resolve(list[index - 1])
+				}).catch(() => {
+					embed.setTitle("Member selection cancelled").setDescription("").setFooter("")
+					selectmessage.edit(utils.contentify(message.channel, embed))
+					resolve(null)
+				})
+			}
+		})
 	},
-
-	/**
-	 * Shuffle an array in place.
-	 * @param {Array<T>} array
-	 * @return {Array<T>}
-	 * @template T
-	 */
-	// thanks stackoverflow https://stackoverflow.com/a/12646864
-	arrayShuffle: function(array) {
-		for (let i = array.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[array[i], array[j]] = [array[j], array[i]]
-		}
-		return array
-	},
-
-	shortTime:
-	/**
-	 * @param {number} number
-	 * @param {"ms" | "sec"} scale
-	 */
-	function(number, scale, precision = ["d", "h", "m", "s"]) {
-		if (isNaN(number)) throw new TypeError("Input provided is NaN")
-		if (!scale) throw new RangeError("Missing scale")
-		if (scale.toLowerCase() == "ms") number = Math.floor(number)
-		else if (scale.toLowerCase() == "sec") number = Math.floor(number * 1000)
-		else throw new TypeError("Invalid scale provided")
-		const days = Math.floor(number / 1000 / 60 / 60 / 24)
-		number -= days * 1000 * 60 * 60 * 24
-		const hours = Math.floor(number / 1000 / 60 / 60)
-		number -= hours * 1000 * 60 * 60
-		const mins = Math.floor(number / 1000 / 60)
-		number -= mins * 1000 * 60
-		const secs = Math.floor(number / 1000)
-		let timestr = ""
-		if (days > 0 && precision.includes("d")) timestr += `${days}d `
-		if (hours > 0 && precision.includes("h")) timestr += `${hours}h `
-		if (mins > 0 && precision.includes("m")) timestr += `${mins}m `
-		if (secs > 0 && precision.includes("s")) timestr += `${secs}s`
-		if (!timestr) timestr = "0" + precision.slice(-1)[0]
-		return timestr
-	},
-
-	emojiURL:
-	/**
-	 * @param {string} id
-	 * @param {boolean} [animated]
-	 */
-	function(id, animated = false) {
-		const ext = animated ? "gif" : "png"
-		return `https://cdn.discordapp.com/emojis/${id}.${ext}`
-	},
-
 	findUser:
 	/**
 	 * @param {Discord.Message} message Message Object
@@ -951,7 +1361,17 @@ const utils = {
 						if (!list.includes(us) && list.length < 10) list.push(us)
 					}))
 				if (list.length == 1) return resolve(list[0])
-				if (list.length == 0) return resolve(null)
+				if (list.length == 0) {
+					if (utils.cacheManager.validate(string)) {
+						let d
+						try {
+							d = await client.users.fetch(string, true)
+						} catch (e) {
+							return resolve(null)
+						}
+						return resolve(d)
+					} else return resolve(null)
+				}
 				const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
 				const selectmessage = await message.channel.send(utils.contentify(message.channel, embed))
 				const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
@@ -970,112 +1390,6 @@ const utils = {
 				})
 			}
 		})
-	},
-
-	/**
-	 * Do not ask me in what way this "fixes" an emoji.
-	 * Please know what you are doing before touching this.
-	 * This should probably only be used in the reaction event.
-	 */
-	fixEmoji: function(emoji) {
-		if (emoji && emoji.name) {
-			if (emoji.id != null) return `${emoji.name}:${emoji.id}`
-			else return emoji.name
-		}
-		return emoji
-	},
-
-	/**
-	 * @param {string} channelID
-	 * @param {string} messageID
-	 * @param {emoji} any
-	 * @param {string} [userID]
-	 */
-	removeUncachedReaction: function(channelID, messageID, emoji, userID) {
-		if (!userID) userID = "@me"
-		let reaction
-		if (emoji.id) {
-			// Custom emoji, has name and ID
-			reaction = `${emoji.name}:${emoji.id}`
-		} else {
-			// Default emoji, has name only
-			reaction = encodeURIComponent(emoji.name)
-		}
-		// @ts-ignore: client.api is not documented
-		const promise = client.api.channels(channelID).messages(messageID).reactions(reaction, userID).delete()
-		promise.catch(() => console.error)
-		return promise
-	},
-
-	getFirstShard: function() {
-		if (client.shard) return client.shard.ids[0]
-		else return 0
-	},
-
-	getShardsArray: function() {
-		if (client.shard) return client.shard.ids
-		else return [0]
-	},
-
-	getFirstShardForMachine: function() {
-		if (config.shard_list) return config.shard_list[0]
-		else return 0
-	},
-
-	isFirstShardOnMachine: function() {
-		return utils.getFirstShard() === utils.getFirstShardForMachine()
-	},
-
-	/**
-	 * A function to replace wildcard (%string) strings with information from lang
-	 * @param {string} string The string from lang
-	 * @param {Object.<string, any>} properties example: `{ "username": "PapiOphidian" }`
-	 * @returns {string}
-	 */
-	replace: function(string, properties = {}) {
-		let value = string.slice(0, string.length)
-		Object.keys(properties).forEach(item => {
-			let index
-			while ((index = value.indexOf(`%${item}`)) !== -1) {
-				value = value.slice(0, index) + properties[item] + value.slice(index + item.length + 1)
-			}
-		})
-		return value
-	},
-
-	getStats: function() {
-		const ram = process.memoryUsage()
-		return {
-			ping: client.ws.ping,
-			uptime: process.uptime(),
-			ram: ram.rss - (ram.heapTotal - ram.heapUsed),
-			users: client.users.cache.size,
-			guilds: client.guilds.cache.size,
-			channels: client.channels.cache.size,
-			connections: client.lavalink.players.size
-		}
-	},
-
-	/**
-	 * @param {string} id
-	 * @param {"self"|"guild"} type
-	 * @returns {Promise<Lang.Lang>}
-	 */
-	getLang: async function(id, type) {
-		let code, row
-		if (type === "self") {
-			row = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID = ? AND setting = ?", [id, "language"])
-		} else if (type === "guild") {
-			row = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID = ? AND setting = ?", [id, "language"])
-		}
-		if (row) {
-			code = row.value
-		} else {
-			code = "en-us"
-		}
-
-		const value = Lang[code.replace("-", "_")] || Lang.en_us
-		return value
 	},
 	findChannel:
 	/**
@@ -1138,190 +1452,31 @@ const utils = {
 		})
 	},
 
-	/**
-	 * discord.js is hilarious(ly awful)
-	 * @param {string} channelID
-	 * @param {boolean} useBlacklist refuse to send more messages to channels with missing access
-	 * @param {Discord.MessageOptions|Discord.MessageAdditions} content
-	 */
-	sendToUncachedChannel: function(channelID, useBlacklist, content) {
-		if (useBlacklist) {
-			if (uncachedChannelSendBlacklist.has(channelID)) return Promise.reject(new Error("Channel is blacklisted because you did not have permission last time."))
-		} else {
-			uncachedChannelSendBlacklist.delete(channelID)
-		}
-		// @ts-ignore holy shit, remove this and see what happens. it's so so cursed
-		return client.api.channels[channelID].messages.post(
-			Discord.APIMessage.create(
-				// @ts-ignore xd
-				{ id: channelID, client: client },
-				content
-			).resolveData()
-		).catch(error => {
-			if (error && error.name === "DiscordAPIError" && error.code === 50001) { // missing access
-				uncachedChannelSendBlacklist.add(channelID)
-			}
-			throw error
-		})
-	},
 
 	/**
-	 * @param {Discord.Message} msg
+	 * =========
+	 * Sharding
+	 * =========
 	 */
-	resolveWebhookMessageAuthor: async function(msg) {
-		const row = await utils.sql.get(
-			"SELECT userID, user_username, user_discriminator FROM WebhookAliases"
-				+ " WHERE webhookID = ? AND webhook_username = ?",
-			[msg.webhookID, msg.author.username]
-		)
-		if (!row) return null
-		/** @type {Discord.User} */
-		let newAuthor
-		let newUserData
-		if (client.users.cache.has(row.userID)) {
-			newAuthor = client.users.cache.get(row.userID)
-		} else {
-			await client.users.fetch(row.userID).then(m => {
-				newAuthor = m
-			}).catch(() => {
-				newUserData = {
-					id: row.userID,
-					bot: false,
-					username: row.user_username,
-					discriminator: row.user_discriminator,
-					avatar: null
-				}
-				newAuthor = new Discord.User(client, newUserData)
-			})
-		}
-		msg.author = newAuthor
-		/** @type {Discord.GuildMember} */
-		if (!msg.guild.members.cache.has(row.userID)) {
-			await msg.guild.members.fetch(row.userID).catch(() => {
-				msg.guild.members.add(newUserData)
-			})
-		}
-		return msg
+
+
+	getFirstShard: function() {
+		if (client.shard) return client.shard.ids[0]
+		else return 0
 	},
-
-	editLavalinkNodes: {
-		/**
-		 * @returns {[number, number]} removedCount, addedCount
-		 */
-		applyChanges: function() {
-			let removedCount = 0
-			let addedCount = 0
-			for (const node of client.lavalink.nodes.values()) {
-				if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
-					removedCount++
-					const nodeInstance = client.lavalink.nodes.get(node.host)
-					client.lavalink.removeNode(node.host)
-					nodeInstance.destroy()
-				}
-			}
-
-			for (const node of constants.lavalinkNodes) {
-				if (!client.lavalink.nodes.has(node.host)) {
-					addedCount++
-					client.lavalink.createNode(node)
-				}
-			}
-			return [removedCount, addedCount]
-		},
-
-		/**
-		 * @param {string} name
-		 */
-		removeByName: function(name) {
-			constants.lavalinkNodes = constants.lavalinkNodes.filter(node => node.name !== name)
-			return utils.editLavalinkNodes.applyChanges()
-		},
-
-		add: function(data) {
-			constants.lavalinkNodes.push(data)
-			return utils.editLavalinkNodes.applyChanges()
-		},
-
-		/**
-		 * Add enabled and disconnected nodes to the client node list and connect to them.
-		 * Clean unused and disabled client nodes and close their websockets
-		 * so that the lavalink process can be ended safely.
-		 *
-		 * @returns {[number, number]} cleaned nodes, added nodes
-		 */
-		syncConnections: function() {
-			const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
-
-			let cleanedCount = 0
-			let addedCount = 0
-
-			for (const node of constants.lavalinkNodes) { // loop through all known nodes
-				const clientNode = client.lavalink.nodes.find(n => n.host === node.host) // get the matching client node
-				if (node.enabled) { // try connecting to nodes
-					if (clientNode) continue // only consider situations where the client node is unknown
-					// connect to the node
-					client.lavalink.createNode(node)
-					addedCount++
-				} else { // try disconnecting from nodes
-					if (!clientNode) continue // only consider situations where the client node is known
-					// if no queues are using the node, disconnect it.
-					if (!queues.cache.some(q => q.player.node === clientNode)) {
-						client.lavalink.removeNode(clientNode.host)
-						clientNode.destroy()
-						cleanedCount++
-					}
-				}
-			}
-
-			return [cleanedCount, addedCount]
-		}
+	getShardsArray: function() {
+		if (client.shard) return client.shard.ids
+		else return [0]
 	},
-
-	timeUntilSongsEnd: function() {
-		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
-		let max = 0
-		for (const queue of queueStore.cache.values()) {
-			if (queue.songs[0] && queue.songs[0].lengthSeconds >= 0) {
-				if (queue.songs[0].lengthSeconds > max) max = queue.songs[0].lengthSeconds
-			}
-		}
-		return max
+	getFirstShardForMachine: function() {
+		if (config.shard_list) return config.shard_list[0]
+		else return 0
 	},
-
-	timeUntilQueuesEnd: function() {
-		const queueStore = passthrough.queues // file load order means queueStore cannot be extracted at top of file
-		let max = 0
-		for (const queue of queueStore.cache.values()) {
-			let total = 0
-			for (const song of queue.songs) {
-				if (song.lengthSeconds >= 0) total += song.lengthSeconds
-			}
-			if (total > max) max = total
-		}
-		return max
-	},
-
-	/**
-	 * @param {Discord.User} user
-	 * @returns {Array<string>}
-	 */
-	userFlagEmojis(user) {
-		const flags = user.flags // All of these emojis are from Papi's Dev House.
-		const arr = [] // The emojis are pushed to the array in order of which they'd appear in Discord.
-		if (!flags) return arr
-		if (flags.has("DISCORD_EMPLOYEE")) arr.push("<:staff:433155028895793172>")
-		if (flags.has("DISCORD_PARTNER")) arr.push("<:partner:421802275326001152>")
-		if (flags.has("HYPESQUAD_EVENTS")) arr.push("<:HypesquadEvents:719628242449072260>")
-		if (flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>")
-		if (flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>")
-		if (flags.has("HOUSE_BRILLIANCE")) arr.push("<:brilliance:479939329104412672>")
-		if (flags.has("VERIFIED_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>")
-		if (flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcherlvl2:678721839488434203>")
-		if (flags.has("BUGHUNTER_LEVEL_1") && !flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcher:434087337488678921>")
-		if (flags.has("EARLY_SUPPORTER")) arr.push("<:EarlySupporter:585638218255564800>")
-		return arr
+	isFirstShardOnMachine: function() {
+		return utils.getFirstShard() === utils.getFirstShardForMachine()
 	}
 }
+
 
 utils.addTemporaryListener(reloadEvent, "@amanda/lang", path.basename(__filename), () => {
 	Lang = require("@amanda/lang")

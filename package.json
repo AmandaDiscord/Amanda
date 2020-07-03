@@ -21,7 +21,7 @@
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
-    "discord.js": "github:AmandaDiscord/discord.js#d9146745bf9d6ae376379a2f81811aaf9fe93248",
+    "discord.js": "github:AmandaDiscord/discord.js#737b00128b846bbe000f2a69e010f2cc5be94db7",
     "discord.js-lavalink": "github:AmandaDiscord/discord.js-lavalink#faa5481f1c2b763ce8db107b42e24a8fdc8fd7d5",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.0.0",
