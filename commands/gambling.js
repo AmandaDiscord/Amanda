@@ -55,15 +55,30 @@ commands.assign([
 			msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const array = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
-			const cooldownInfo = {
-				max: 23,
-				min: 10,
-				step: 1,
-				regen: {
-					amount: 1,
-					time: 3 * 60 * 1000
+			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+			let cooldownInfo
+			if (isPremium) {
+				cooldownInfo = {
+					max: 25,
+					min: 12,
+					step: 1,
+					regen: {
+						amount: 1,
+						time: 3 * 60 * 1000
+					}
+				}
+			} else {
+				cooldownInfo = {
+					max: 23,
+					min: 10,
+					step: 1,
+					regen: {
+						amount: 1,
+						time: 3 * 60 * 1000
+					}
 				}
 			}
+
 			const [money, winChance, images] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.cooldownManager(msg.author.id, "slot", cooldownInfo),
@@ -177,15 +192,30 @@ commands.assign([
 				selfChosenSide = true
 			}
 			if (args[1] != "h" && args[1] != "t") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidSide, { "username": msg.author.username }))
-			const cooldownInfo = {
-				max: 60,
-				min: 36,
-				step: 3,
-				regen: {
-					amount: 1,
-					time: 60 * 1000
+			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+			let cooldownInfo
+			if (isPremium) {
+				cooldownInfo = {
+					max: 64,
+					min: 40,
+					step: 3,
+					regen: {
+						amount: 1,
+						time: 60 * 1000
+					}
+				}
+			} else {
+				cooldownInfo = {
+					max: 60,
+					min: 36,
+					step: 3,
+					regen: {
+						amount: 1,
+						time: 60 * 1000
+					}
 				}
 			}
+
 			const winChance = await utils.cooldownManager(msg.author.id, "bf", cooldownInfo)
 			const strings = {
 				h: ["heads", "<:coinH:402219464348925954>"],
