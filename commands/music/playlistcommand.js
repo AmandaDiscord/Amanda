@@ -2,11 +2,12 @@
 
 const Discord = require("discord.js")
 const path = require("path")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
 const { client, config, reloader, commands } = passthrough
 
-const utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./common.js")
@@ -303,7 +304,7 @@ commands.assign([
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
-				utils.reactionMenu(message, [
+				new ReactionMenu(message, [
 					// @ts-ignore
 					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([

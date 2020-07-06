@@ -8,7 +8,7 @@ const fetch = require("node-fetch")
 const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
 
-const utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./common.js")

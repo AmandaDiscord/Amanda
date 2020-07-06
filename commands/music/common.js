@@ -9,7 +9,7 @@ const path = require("path")
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
 
-const utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 class VoiceStateCallback {

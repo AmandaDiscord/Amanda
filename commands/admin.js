@@ -4,11 +4,12 @@ const Discord = require("discord.js")
 const fetch = require("node-fetch")
 const util = require("util")
 const path = require("path")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
 const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, streaks, frisky, weeb } = passthrough
 
-const utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const common = require("./music/common.js")
@@ -22,7 +23,7 @@ commands.assign([
 		category: "admin",
 		example: "&eval client.token",
 		async process(msg, suffix, lang) {
-			const allowed = await utils.hasPermission(msg.author, "eval")
+			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (allowed) {
 				if (!suffix) return msg.channel.send(lang.admin.evaluate.prompts.noInput)
 				let result, depth
@@ -41,7 +42,7 @@ commands.assign([
 				}
 				const output = await utils.stringify(result, depth)
 				const nmsg = await msg.channel.send(output.replace(new RegExp(client.token, "g"), config.fake_token))
-				const menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			} else return
 		}
@@ -53,7 +54,7 @@ commands.assign([
 		category: "admin",
 		example: "&exec rm -rf /",
 		async process(msg, suffix, lang) {
-			const allowed = await utils.hasPermission(msg.author, "eval")
+			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (!suffix) return msg.channel.send(lang.admin.execute.prompts.noInput)
 			await msg.channel.sendTyping()
@@ -76,7 +77,7 @@ commands.assign([
 				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
 				const nmsg = await msg.channel.send(utils.contentify(msg.channel, result))
-				const menu = utils.reactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			})
 			return
@@ -89,7 +90,7 @@ commands.assign([
 		category: "admin",
 		example: "&award 10000 PapiOphidian",
 		async process(msg, suffix, lang) {
-			const allowed = await utils.hasPermission(msg.author, "eval")
+			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.admin.award.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")

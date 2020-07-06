@@ -1,6 +1,6 @@
 // @ts-check
 
-const utils = require("../utilities.js")
+const utils = require("../utilities")
 
 class Queue {
 	/**

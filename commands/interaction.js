@@ -14,7 +14,7 @@ const { constants, client, commands, reloader, weeb } = passthrough
 
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
-const utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 /**
@@ -101,7 +101,7 @@ const cmds = [
 					{ name: lang.interaction.waifu.returns.waifu, value: info.waifu ? info.waifu.tag : lang.interaction.waifu.returns.nobody },
 					{ name: lang.interaction.waifu.returns.gifts, value: info.gifts.received.emojis || lang.interaction.waifu.returns.none }
 				])
-				.setColor("36393E")
+				.setColor(constants.standard_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -148,7 +148,7 @@ const cmds = [
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, { "mention1": String(msg.author), "mention2": String(member), "number": claim }))
-				.setColor("36393E")
+				.setColor(constants.standard_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
@@ -446,7 +446,7 @@ async function doInteraction(msg, suffix, source, lang) {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": typeof member == "string" ? member : `<@${member.id}>` }))
 			.setImage(url)
-			.setColor("36393E")
+			.setColor(constants.standard_embed_color)
 		if (source.footer) embed.setFooter(source.footer)
 		return msg.channel.send(utils.contentify(msg.channel, embed))
 	}).catch(error => { return msg.channel.send(`There was an error: \`\`\`\n${error}\`\`\``) })

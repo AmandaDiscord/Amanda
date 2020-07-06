@@ -33,7 +33,7 @@ async function sendImage(host, path, msg, emoji, footer) {
 	else if (host == "nekos") img = data.url
 	const embed = new Discord.MessageEmbed()
 		.setImage(img)
-		.setColor("36393E")
+		.setColor(constants.standard_embed_color)
 		.setFooter(footer)
 	return msg.channel.send(utils.contentify(msg.channel, embed))
 }
@@ -101,7 +101,7 @@ commands.assign([
 					.setTitle(lang.images.catgirl.returns.error)
 					.setDescription(lang.images.catgirl.returns.offline)
 					.setImage("https://cdn.discordapp.com/attachments/413088092556361728/632513720593022997/6439473d9cea838eae9161dad09927ae.png")
-					.setColor(0x36393f)
+					.setColor(constants.standard_embed_color)
 				msg.channel.send(embed)
 			})
 		}

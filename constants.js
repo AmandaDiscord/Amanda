@@ -16,6 +16,7 @@ module.exports = {
 	avatar: `${baseURL}/images/amanda.png`,
 	chewey_api: "https://api.chewey-bot.top",
 	money_embed_color: 0xf8e71c,
+	standard_embed_color: 0x36393f,
 	lavalinkNodes: [
 		{
 			name: "Pencil",

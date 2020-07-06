@@ -9,7 +9,7 @@ const mixinDeep = require("mixin-deep")
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc } = passthrough
 
-const utils = require("../utilities.js")
+const utils = require("../utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const Replier = require("./ipcreplier")
@@ -188,7 +188,7 @@ class ClientReplier extends Replier {
 	}
 
 	REPLY_GET_STATS() {
-		return utils.getStats()
+		return utils.getOwnStats()
 	}
 
 	REPLY_PING() {

@@ -12,7 +12,7 @@ const { constants, client, commands, reloader } = passthrough
 const dailyCooldownHours = 20
 const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
 
-const utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 const JIMPStorage = utils.JIMPStorage
 
@@ -81,7 +81,7 @@ commands.assign([
 
 			const [money, winChance, images] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
-				utils.cooldownManager(msg.author.id, "slot", cooldownInfo),
+				utils.coinsManager.updateCooldown(msg.author.id, "slot", cooldownInfo),
 				imageStorage.getAll(["slot-background", "slot-amanda", "slot-machine", "slot-top", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"])
 			])
 			const slots = []
@@ -216,7 +216,7 @@ commands.assign([
 				}
 			}
 
-			const winChance = await utils.cooldownManager(msg.author.id, "bf", cooldownInfo)
+			const winChance = await utils.coinsManager.updateCooldown(msg.author.id, "bf", cooldownInfo)
 			const strings = {
 				h: ["heads", "<:coinH:402219464348925954>"],
 				t: ["tails", "<:coinT:402219471693021196>"]

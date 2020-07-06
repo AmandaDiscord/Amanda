@@ -40,10 +40,6 @@ const db = mysql.createPool({
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky(), weeb })
 
-	reloader.watch([
-		"./modules/utilities.js"
-	])
-
 	// IPC
 
 	const IPC = require("./modules/ipc/ipcbot.js")
@@ -105,7 +101,6 @@ const db = mysql.createPool({
 		"./commands/interaction.js",
 		"./commands/meta.js",
 		"./commands/todo.js",
-		"./commands/traa.js",
 		"./commands/webhookalias.js",
 		"./modules/events.js",
 		"./modules/stdin.js"

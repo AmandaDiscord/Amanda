@@ -7,11 +7,12 @@ const entities = require("entities")
 const Discord = require("discord.js")
 const path = require("path")
 const Lang = require("@amanda/lang")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
-const { client, commands, reloader, games, streaks } = passthrough
+const { constants, client, commands, reloader, games, streaks } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 const streakStep = 10
@@ -33,7 +34,7 @@ streaks.setDestroyDuration("trivia", 1000 * 60 * 15)
  */
 undefined
 
-const utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 class Game {
@@ -156,7 +157,7 @@ class TriviaGame extends Game {
 		const results = await Promise.all(winners.map(async w => {
 			const result = {}
 			result.userID = w[0]
-			const cooldownValue = await utils.cooldownManager(w[0], "trivia", cooldownInfo)
+			const cooldownValue = await utils.coinsManager.updateCooldown(w[0], "trivia", cooldownInfo)
 			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax }, true)
 			result.winnings = Math.floor(coins * 0.8 ** (10 - cooldownValue))
 			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
@@ -176,7 +177,7 @@ class TriviaGame extends Game {
 		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
 		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
-			utils.reactionMenu(msg, [
+			new ReactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
 					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
 					else startGame(this.channel, { category: this.category, lang: this.lang })
@@ -283,7 +284,6 @@ function sweeper(difficulty, size) {
 
 	if (size) {
 		let num
-		// eslint-disable-next-line no-sequences
 		if (size < 4) {
 			num = 8
 			error = true
@@ -428,7 +428,7 @@ commands.assign([
 
 			title = utils.replace(lang.games.minesweeper.returns.info, { "difficulty": difficulty, "number1": string.bombs, "number2": string.size, "number3": string.size })
 			if (string.error) title += `\n${lang.games.minesweeper.returns.error}`
-			const embed = new Discord.MessageEmbed().setColor("36393E").setTitle(title).setDescription(string.text)
+			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color).setTitle(title).setDescription(string.text)
 			if (sfx.includes("-r") || sfx.includes("--raw")) {
 				const rawcontent = `${title}\n${string.text}`.replace(/\|/g, "\\|")
 				if (rawcontent.length > 1999) return msg.channel.send(lang.games.minesweeper.returns.rawTooLarge)

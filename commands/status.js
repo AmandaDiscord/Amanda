@@ -3,7 +3,7 @@
 const passthrough = require("../passthrough")
 const { client, constants, reloader, ipc, commands } = passthrough
 
-const utils = require("../modules/utilities.js")
+const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const refreshTime = 15 * 60 * 1000
@@ -42,7 +42,7 @@ commands.assign([
 		aliases: ["announce"],
 		example: "&announce 60000 sub to papiophidian on twitch | &help",
 		async process(msg, suffix) {
-			const allowed = await utils.hasPermission(msg.author, "eval")
+			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
 			if (enqueued) {
 				clearTimeout(enqueued)
@@ -73,6 +73,7 @@ function refresh() {
 	})
 }
 
+// @ts-ignore
 client.once("prefixes", async (prefixes, statusPrefix) => {
 	await refresh()
 
@@ -82,12 +83,6 @@ client.once("prefixes", async (prefixes, statusPrefix) => {
 
 	updateInterval = setInterval(() => update(), updateTime)
 	setInterval(() => refresh(), refreshTime)
-
-	// gross hack
-	utils.updateStatus = async function() {
-		await refresh()
-		update()
-	}
 })
 
 /** @return {Array<string>} */

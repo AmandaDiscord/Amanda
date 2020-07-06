@@ -7,11 +7,12 @@ const path = require("path")
 /** @type {import("node-fetch").default} */
 // @ts-ignore
 const fetch = require("node-fetch")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, commands, queues, frisky } = passthrough
 
-const utils = require("../../modules/utilities.js")
+const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities.js", utils)
 
 const songTypes = require("./songtypes.js")
@@ -141,7 +142,7 @@ const subcommandsMap = new Map([
 						}
 					} }
 					// Create the reaction menu
-					utils.reactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
+					new ReactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
 						const emoji = buttons[i].slice(2, -1)
 						return Object.assign({ emoji }, action)
 					}))
