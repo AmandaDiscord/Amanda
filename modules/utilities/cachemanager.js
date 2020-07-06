@@ -144,7 +144,7 @@ async function findChannel(message, string, self) {
 		else return null
 	} else {
 		// @ts-ignore
-		if (message.guild.channels.get(string)) return message.guild.channels.get(string)
+		if (message.guild.channels.cache.get(string)) return message.guild.channels.cache.get(string)
 		/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
 		const list = []
 		const channels = message.guild.channels.cache.filter(c => c.type == "text" || c.type == "voice")
