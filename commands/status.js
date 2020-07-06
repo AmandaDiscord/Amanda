@@ -57,6 +57,7 @@ commands.assign([
 			const message = suffix.substring(args[0].length + 1)
 			// The announcement gets beamed to all shards including us, so don't trigger a change here since it'll come in anyway.
 			ipc.replier.sendPresenceAnnouncement(duration, message)
+			msg.channel.send(`New presence set for ${utils.shortTime(duration, "ms").trim()}: \`${message}\``)
 		}
 	}
 ])
