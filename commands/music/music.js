@@ -41,6 +41,9 @@ const subcommandsMap = new Map([
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const insert = args[0][0] == "i"
 			const search = args.slice(1).join(" ")
+			if (search.trim().length === 0) {
+				return msg.channel.send(lang.audio.music.prompts.playNoArguments)
+			}
 			const match = common.inputToID(search)
 
 			const channel = msg.channel // ts is ACTUALLY stupid.
