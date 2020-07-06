@@ -7,8 +7,10 @@ const { reloader } = passthrough
 
 const { addTemporaryListener } = require("./eventutils")
 
+const loadBlacklist = [".test.js", "index.js"]
+
 const fs = require("fs")
-for (const file of [...fs.readdirSync(__dirname), ...fs.readdirSync(`${__dirname}/classes`)].filter(f => f.endsWith(".js") && !f.endsWith(".test.js") && f !== "index.js")) {
+for (const file of [...fs.readdirSync(__dirname), ...fs.readdirSync(`${__dirname}/classes`)].filter(f => f.endsWith(".js") && !loadBlacklist.find(entry => f.endsWith(entry)))) {
 	addTemporaryListener(reloader.reloadEvent, file, path.basename(__filename), () => {
 		setImmediate(() => { // event is emitted synchronously before decache, so wait for next event loop
 			reloader.resync("./modules/utilities/index.js")
