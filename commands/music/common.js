@@ -5,6 +5,7 @@
 const fetch = require("node-fetch")
 const Discord = require("discord.js")
 const path = require("path")
+const { encode } = require("@lavalink/encoding")
 
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
@@ -165,6 +166,15 @@ const common = {
 		})
 	},
 
+	searchYouTube: function(input, region = "") {
+		const node = common.nodes.getByRegion(region)
+		if (node.search_with_invidious) {
+			return common.invidious.search(input, node.host).then(common.invidious.searchResultsToTracks)
+		} else {
+			return common.getTracks(`ytsearch:${input}`, region)
+		}
+	},
+
 	nodes: {
 		first() {
 			return constants.lavalinkNodes.find(n => n.enabled)
@@ -201,6 +211,50 @@ const common = {
 				if (json.error) throw new Error(json.error)
 				else return json
 			})
+		},
+
+		/**
+		 * @returns {Promise<{type: string, title: string, videoId: string, author: string, lengthSeconds: number, liveNow: boolean}[]>}
+		 */
+		search: function(input, host = null) {
+			const url = new URL(`${common.invidious.getOrigin(host)}/api/v1/search`)
+			url.searchParams.append("q", input)
+			url.searchParams.append("type", input)
+			return fetch(url.toString()).then(async data => {
+				const json = await data.json()
+				if (json.error) throw new Error(json.error)
+				else return json
+			})
+		},
+
+		/**
+		 * @param {{type: string, title: string, videoId: string, author: string, lengthSeconds: number, liveNow: boolean}[]} results
+		 */
+		searchResultsToTracks: function(results) {
+			return results.filter(result => result.type === "video").map(result => ({
+				track: encode({
+					flags: 1,
+					version: 2,
+					title: result.title,
+					author: result.author,
+					length: BigInt(result.lengthSeconds) * 1000n,
+					identifier: result.videoId,
+					isStream: result.liveNow, // this is a guess
+					uri: `https://www.youtube.com/watch?v=${result.videoId}`,
+					source: "youtube",
+					position: 0n
+				}),
+				info: {
+					identifier: result.videoId,
+					isSeekable: true,
+					author: result.author,
+					length: result.lengthSeconds * 1000,
+					isStream: result.liveNow,
+					position: 0,
+					title: result.title,
+					uri: `https://www.youtube.com/watch?v=${result.videoId}`
+				}
+			}))
 		},
 
 		/**
@@ -355,7 +409,7 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
-			let tracks = await common.getTracks(`ytsearch:${search}`, textChannel.guild.region)
+			let tracks = await common.searchYouTube(search, textChannel.guild.region)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)

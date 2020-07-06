@@ -19,6 +19,7 @@
     "@amanda/lang": "github:AmandaDiscord/Lang#4c149fcf16e21818e48c042ae96543ec14fb5e0d",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#735ae949430c9c33260ceca894023551afbda483",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
+    "@lavalink/encoding": "^0.1.1",
     "buffer-signature": "^1.1.0",
     "discord-bot-analytics": "^1.0.13",
     "discord.js": "github:AmandaDiscord/discord.js#737b00128b846bbe000f2a69e010f2cc5be94db7",
