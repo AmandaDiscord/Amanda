@@ -8,6 +8,7 @@ const Discord = require("discord.js")
 const WeebSH = require("taihou")
 const CommandManager = require("@amanda/commandmanager")
 const Reloader = require("@amanda/reloader")
+const fs = require("fs")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
@@ -19,6 +20,7 @@ const intents = new Discord.Intents((config.additional_intents || []).concat(["D
 const client = new Amanda({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents: intents } })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)
+reloader.reloadEvent.setMaxListeners(20)
 // @ts-ignore
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
 
@@ -39,6 +41,13 @@ const db = mysql.createPool({
 	])
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky(), weeb })
+
+	// Utility files
+
+	reloader.watch([
+		...fs.readdirSync("./modules/utilities").filter(f => f.endsWith(".js")).map(f => `./modules/utilities/${f}`),
+		...fs.readdirSync("./modules/utilities/classes").filter(f => f.endsWith(".js")).map(f => `./modules/utilities/classes/${f}`)
+	])
 
 	// IPC
 

@@ -15,7 +15,7 @@ const { constants, client, commands, reloader, weeb } = passthrough
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 /**
  * @type {Array<import("../typings").Command<[import("@amanda/lang").Lang]>>}

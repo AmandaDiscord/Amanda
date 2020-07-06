@@ -10,7 +10,7 @@ const passthrough = require("../passthrough")
 const { config, client, commands, db, reloader, reloadEvent, games, queues, frisky, nedb, periodicHistory } = passthrough
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 /**
  * @param {string} input

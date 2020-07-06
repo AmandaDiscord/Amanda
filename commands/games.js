@@ -35,7 +35,7 @@ streaks.setDestroyDuration("trivia", 1000 * 60 * 15)
 undefined
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 class Game {
 	/**

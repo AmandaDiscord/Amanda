@@ -1,5 +1,21 @@
 // @ts-check
 
+const path = require("path")
+
+const passthrough = require("../../passthrough")
+const { reloader } = passthrough
+
+const { addTemporaryListener } = require("./eventutils")
+
+const fs = require("fs")
+for (const file of [...fs.readdirSync(__dirname), ...fs.readdirSync(`${__dirname}/classes`)].filter(f => f.endsWith(".js") && !f.endsWith(".test.js") && f !== "index.js")) {
+	addTemporaryListener(reloader.reloadEvent, file, path.basename(__filename), () => {
+		setImmediate(() => { // event is emitted synchronously before decache, so wait for next event loop
+			reloader.resync("./modules/utilities/index.js")
+		})
+	}, "once")
+}
+
 const { random: arrayRandom, shuffle: arrayShuffle } = require("./arrayutils")
 
 const utils = {

@@ -13,7 +13,7 @@ const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, commands, queues, frisky } = passthrough
 
 const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const songTypes = require("./songtypes.js")
 reloader.sync("./commands/music/songtypes.js", songTypes)

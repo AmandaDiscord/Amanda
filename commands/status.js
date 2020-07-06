@@ -4,7 +4,7 @@ const passthrough = require("../passthrough")
 const { client, constants, reloader, ipc, commands } = passthrough
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const refreshTime = 15 * 60 * 1000
 const updateTime = 5 * 60 * 1000

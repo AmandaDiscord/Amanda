@@ -14,7 +14,7 @@ let queues = passthrough.queues ? passthrough.queues : undefined
 const voiceEmptyDuration = 20000
 
 const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const songTypes = require("./songtypes.js")
 reloader.sync("./commands/music/songtypes.js", songTypes)

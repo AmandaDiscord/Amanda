@@ -19,7 +19,7 @@ let starting = true
 if (client.readyAt != null) starting = false
 
 const utils = require("./utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 // Auto donor payment
 function getTimeoutDuration() {

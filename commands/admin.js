@@ -10,7 +10,7 @@ const passthrough = require("../passthrough")
 const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, streaks, frisky, weeb } = passthrough
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const common = require("./music/common.js")
 reloader.sync("./commands/music/common.js", common)

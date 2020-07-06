@@ -12,7 +12,7 @@ const key = config.chewey_api_key
 const poweredbychewey = `Powered by ${constants.chewey_api}`.replace("https://", "")
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 /**
  * @param {string} host

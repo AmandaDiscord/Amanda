@@ -13,7 +13,7 @@ const dailyCooldownHours = 20
 const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
 
 const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 const JIMPStorage = utils.JIMPStorage
 
 /** @type {JIMPStorage<typeof JimpProto>} */

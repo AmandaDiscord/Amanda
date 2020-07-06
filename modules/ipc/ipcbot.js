@@ -6,7 +6,7 @@ const passthrough = require("../../passthrough")
 const { client, config, reloader } = passthrough
 
 const utils = require("../utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 class IPC {
 	constructor() {

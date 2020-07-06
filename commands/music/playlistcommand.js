@@ -8,7 +8,7 @@ const passthrough = require("../../passthrough")
 const { client, config, reloader, commands } = passthrough
 
 const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const common = require("./common.js")
 reloader.sync("./commands/music/common.js", common)
