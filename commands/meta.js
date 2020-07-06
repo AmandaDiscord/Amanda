@@ -103,40 +103,6 @@ reloadEvent.once(path.basename(__filename), () => {
 	console.log("removed timeout sendStatsTimeout")
 	console.log("removed timeout cacheUpdateTimeout")
 })
-const JIMPStorage = utils.JIMPStorage
-
-/** @type {JIMPStorage<typeof JimpProto>} */
-const profileStorage = new utils.JIMPStorage()
-/** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
-const fontStorage = new utils.JIMPStorage()
-profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
-profileStorage.save("canvas-vicinity", "file", "./images/backgrounds/vicinity.png")
-profileStorage.save("canvas-sakura", "file", "./images/backgrounds/sakura.png")
-profileStorage.save("profile", "file", "./images/overlays/profile.png")
-profileStorage.save("profile-light", "file", "./images/overlays/profile_light.png")
-profileStorage.save("old-profile", "file", "./images/overlays/profile_old.png")
-profileStorage.save("old-profile-light", "file", "./images/overlays/profile_old_light.png")
-
-profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
-profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
-profileStorage.save("discoin", "file", "./images/emojis/discoin.png")
-
-profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
-profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
-profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
-profileStorage.save("badge-giver1", "file", "./images/badges/GivingHand_50x50.png")
-profileStorage.save("badge-giver2", "file", "./images/badges/GivingHandTier2_50x50.png")
-profileStorage.save("badge-giver3", "file", "./images/badges/GivingHandTier3_50x50.png")
-
-profileStorage.save("circle-mask", "file", "./images/masks/circle_mask.png")
-
-fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
-fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
-fontStorage.save("font-black", "font", ".fonts/Whitney-25-black.fnt")
-fontStorage.save("font2-black", "font", ".fonts/profile/Whitney-20-aaa-black.fnt")
-
-profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 /**
  * @param {Discord.User} user
@@ -548,8 +514,8 @@ commands.assign([
 				utils.coinsManager.getRow(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
-				fontStorage.getAll(["font", "font2", "font-black", "font2-black"])
+				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
+				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
 			])
 
 			avatar.resize(111, 111)
@@ -614,7 +580,7 @@ commands.assign([
 				}
 			} else canvas = await getDefaultBG()
 
-			const [font, font2, font_black, font2_black] = [fonts.get("font"), fonts.get("font2"), fonts.get("font-black"), fonts.get("font2-black")]
+			const [font, font2, font_black, font2_black] = [fonts.get("whitney-25"), fonts.get("whitney-20-2"), fonts.get("whitney-25-black"), fonts.get("whitney-20-2-black")]
 
 			function buildOldProfile() {
 				// badge coords [219, 289, 359, 419, 489] (increments of 70)

@@ -1,7 +1,6 @@
 // @ts-check
 
 const Jimp = require("jimp")
-const JimpProto = Jimp.prototype
 const Discord = require("discord.js")
 
 const emojis = require("../modules/emojis")
@@ -14,31 +13,6 @@ const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
 
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
-const JIMPStorage = utils.JIMPStorage
-
-/** @type {JIMPStorage<typeof JimpProto>} */
-const imageStorage = new utils.JIMPStorage()
-/** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
-const fontStorage = new utils.JIMPStorage()
-imageStorage.save("slot-background", "file", "./images/backgrounds/commands/slot.png")
-imageStorage.save("slot-amanda", "file", "./images/overlays/slot-amanda-carsaleswoman.png")
-imageStorage.save("slot-machine", "file", "./images/overlays/slot-machine.png")
-imageStorage.save("slot-top", "file", "./images/overlays/slot-top-layer.png")
-
-imageStorage.save("emoji-apple", "file", "./images/emojis/apple.png")
-imageStorage.save("emoji-cherries", "file", "./images/emojis/cherries.png")
-imageStorage.save("emoji-heart", "file", "./images/emojis/heart.png")
-imageStorage.save("emoji-pear", "file", "./images/emojis/pear.png")
-imageStorage.save("emoji-strawberry", "file", "./images/emojis/strawberry.png")
-imageStorage.save("emoji-watermelon", "file", "./images/emojis/watermelon.png")
-imageStorage.save("emoji-triangle", "file", "./images/emojis/triangle.png")
-
-imageStorage.save("wheel-canvas", "file", "./images/backgrounds/commands/wheel.png");
-
-["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach(i => imageStorage.get(`emoji-${i}`).then(image => image.resize(85, 85)))
-imageStorage.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))
-
-fontStorage.save("font", "font", ".fonts/Whitney-20.fnt")
 
 commands.assign([
 	{
@@ -82,7 +56,7 @@ commands.assign([
 			const [money, winChance, images] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.coinsManager.updateCooldown(msg.author.id, "slot", cooldownInfo),
-				imageStorage.getAll(["slot-background", "slot-amanda", "slot-machine", "slot-top", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon", "font"])
+				utils.jimpStores.images.getAll(["slot-background", "slot-amanda", "slot-machine", "slot-top", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon"])
 			])
 			const slots = []
 			for (let i = 0; i < 3; i++) {
@@ -432,8 +406,8 @@ commands.assign([
 			msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
-				imageStorage.get("wheel-canvas"),
-				imageStorage.get("emoji-triangle")
+				utils.jimpStores.images.get("wheel-canvas"),
+				utils.jimpStores.images.get("emoji-triangle")
 			])
 
 			if (!suffix) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmountWheel, { "username": msg.author.username }))

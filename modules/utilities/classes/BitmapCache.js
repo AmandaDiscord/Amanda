@@ -1,32 +1,14 @@
 // @ts-check
 
-const Jimp = require("jimp")
-
 /**
  * @template T
  */
-class JIMPStorage {
+class BitmapCache {
 	constructor() {
 		/**
-		 * @type {Map<string, T>}
+		 * @type {Map<string, T | Promise<T>>}
 		 */
 		this.store = new Map()
-	}
-	/**
-	 * @param {string} name
-	 * @param {"file"|"font"} type
-	 * @param {string} value
-	 */
-	save(name, type, value) {
-		if (type == "file") {
-			const promise = Jimp.read(value)
-			// @ts-ignore
-			this.savePromise(name, promise)
-		} else if (type == "font") {
-			const promise = Jimp.loadFont(value)
-			// @ts-ignore
-			this.savePromise(name, promise)
-		}
 	}
 
 	/**
@@ -34,7 +16,6 @@ class JIMPStorage {
 	 * @param {Promise<T>} promise
 	 */
 	savePromise(name, promise) {
-		// @ts-ignore
 		this.store.set(name, promise)
 		promise.then(result => {
 			this.store.set(name, result)
@@ -62,4 +43,4 @@ class JIMPStorage {
 	}
 }
 
-module.exports = JIMPStorage
+module.exports = BitmapCache
