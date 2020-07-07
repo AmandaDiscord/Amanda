@@ -28,27 +28,28 @@ commands.assign([
 			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			const args = suffix.split(" ")
-			const array = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
-			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
+			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID = ?", msg.author.id)
 			let cooldownInfo
+			// avg % assumes 5 fruits + heart, heart payouts [0, 1.25, 4, 20], triple fruit payout 5
 			if (isPremium) {
 				cooldownInfo = {
-					max: 25,
-					min: 12,
-					step: 1,
+					max: 190, // avg +6.2% per roll
+					min: 172, // avg -4.8% per roll
+					step: 6, // 4 rolls to hit the bottom
 					regen: {
 						amount: 1,
-						time: 3 * 60 * 1000
+						time: 20 * 1000 // 2 minutes to recover by 1 roll
 					}
 				}
 			} else {
 				cooldownInfo = {
-					max: 23,
-					min: 10,
-					step: 1,
+					max: 186, // avg +3.6% per roll
+					min: 164, // avg -9.4% per roll
+					step: 7, // 4.6 rolls to hit the bottom
 					regen: {
 						amount: 1,
-						time: 3 * 60 * 1000
+						time: 30 * 1000 // 3.5 minutes to recover by 1 roll
 					}
 				}
 			}
@@ -58,10 +59,11 @@ commands.assign([
 				utils.coinsManager.updateCooldown(msg.author.id, "slot", cooldownInfo),
 				utils.jimpStores.images.getAll(["slot-background", "slot-amanda", "slot-machine", "slot-top", "emoji-apple", "emoji-cherries", "emoji-heart", "emoji-pear", "emoji-strawberry", "emoji-watermelon"])
 			])
+			// console.log(money, winChance)
 			const slots = []
 			for (let i = 0; i < 3; i++) {
-				if (Math.random() < winChance / 100) slots[i] = "heart"
-				else slots[i] = utils.arrayRandom(array)
+				if (Math.random() < winChance / 1000) slots[i] = "heart"
+				else slots[i] = utils.arrayRandom(fruits)
 			}
 
 			const canvas = images.get("slot-background").clone()
@@ -98,17 +100,17 @@ commands.assign([
 			}
 			let result, winning
 			if (slots.every(s => s == "heart")) {
-				winning = bet * 30
-				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": bet * 30 })
+				winning = bet * 20
+				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": winning })
 			} else if (slots.filter(s => s == "heart").length == 2) {
 				winning = bet * 4
-				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": bet * 4 })
+				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": winning })
 			} else if (slots.filter(s => s == "heart").length == 1) {
 				winning = Math.floor(bet * 1.25)
-				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": Math.floor(bet * 1.25) })
+				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": winning })
 			} else if (slots.slice(1).every(s => s == slots[0])) {
-				winning = bet * 10
-				result = utils.replace(lang.gambling.slot.returns.triple, { "number": bet * 10 })
+				winning = bet * 5
+				result = utils.replace(lang.gambling.slot.returns.triple, { "number": winning })
 			} else {
 				winning = 0
 				result = utils.replace(lang.gambling.slot.returns.lost, { "number": bet })
@@ -170,22 +172,22 @@ commands.assign([
 			let cooldownInfo
 			if (isPremium) {
 				cooldownInfo = {
-					max: 64,
+					max: 48,
 					min: 40,
-					step: 3,
+					step: 2,
 					regen: {
 						amount: 1,
-						time: 60 * 1000
+						time: 1.5 * 60 * 1000
 					}
 				}
 			} else {
 				cooldownInfo = {
-					max: 60,
-					min: 36,
-					step: 3,
+					max: 48,
+					min: 40,
+					step: 2,
 					regen: {
 						amount: 1,
-						time: 60 * 1000
+						time: 2 * 60 * 1000
 					}
 				}
 			}
@@ -196,18 +198,20 @@ commands.assign([
 				t: ["tails", "<:coinT:402219471693021196>"]
 			}
 			if (Math.random() < winChance / 100) {
+				const winnings = Math.floor(bet * 1.25)
+				const explanation = "(+25%)"
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` }) +
-					`.\n${utils.replace(lang.gambling.betflip.returns.win, { "number": bet * 2 })}`
+					`.\n${utils.replace(lang.gambling.betflip.returns.win, { "number": winnings, "explanation": explanation })}`
 				)
-				utils.coinsManager.award(msg.author.id, bet)
+				utils.coinsManager.award(msg.author.id, winnings)
 			} else {
 				const pick = args[1] == "h" ? "t" : "h"
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[pick][1]}`, "string2": `${strings[pick][0]}` }) +
-					`.\n${lang.gambling.betflip.returns.lost}`
+					`.\n${utils.replace(lang.gambling.betflip.returns.lost, { "number": bet })}`
 				)
 				return utils.coinsManager.award(msg.author.id, -bet)
 			}
