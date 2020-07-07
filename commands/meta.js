@@ -11,14 +11,15 @@ const JimpProto = Jimp.prototype
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
 const { client, constants, config, commands, reloadEvent, reloader, games, queues, periodicHistory, ipc } = passthrough
 
-const utils = require("../modules/utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../modules/utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000 * 60 * 60 - (Date.now() % (1000 * 60 * 60)))
 console.log("added timeout sendStatsTimeout")
@@ -31,7 +32,7 @@ function sendStatsTimeoutFunction() {
  */
 async function sendStats(msg) {
 	console.log("Sending stats...")
-	const stats = utils.getStats()
+	const stats = utils.getOwnStats()
 	const now = Date.now()
 	const myid = client.user.id
 	const ramUsageKB = Math.floor(stats.ram / 1024)
@@ -102,40 +103,6 @@ reloadEvent.once(path.basename(__filename), () => {
 	console.log("removed timeout sendStatsTimeout")
 	console.log("removed timeout cacheUpdateTimeout")
 })
-const JIMPStorage = utils.JIMPStorage
-
-/** @type {JIMPStorage<typeof JimpProto>} */
-const profileStorage = new utils.JIMPStorage()
-/** @type {JIMPStorage<import("@jimp/plugin-print").Font>} */
-const fontStorage = new utils.JIMPStorage()
-profileStorage.save("canvas", "file", "./images/backgrounds/defaultbg.png")
-profileStorage.save("canvas-vicinity", "file", "./images/backgrounds/vicinity.png")
-profileStorage.save("canvas-sakura", "file", "./images/backgrounds/sakura.png")
-profileStorage.save("profile", "file", "./images/overlays/profile.png")
-profileStorage.save("profile-light", "file", "./images/overlays/profile_light.png")
-profileStorage.save("old-profile", "file", "./images/overlays/profile_old.png")
-profileStorage.save("old-profile-light", "file", "./images/overlays/profile_old_light.png")
-
-profileStorage.save("heart-full", "file", "./images/emojis/pixel-heart.png")
-profileStorage.save("heart-broken", "file", "./images/emojis/pixel-heart-broken.png")
-profileStorage.save("discoin", "file", "./images/emojis/discoin.png")
-
-profileStorage.save("badge-developer", "file", "./images/badges/Developer_50x50.png")
-profileStorage.save("badge-donator", "file", "./images/badges/Donator_50x50.png")
-profileStorage.save("badge-hunter", "file", "./images/badges/Hunter_50x50.png")
-profileStorage.save("badge-booster", "file", "./images/badges/Booster_50x50.png")
-profileStorage.save("badge-giver1", "file", "./images/badges/GivingHand_50x50.png")
-profileStorage.save("badge-giver2", "file", "./images/badges/GivingHandTier2_50x50.png")
-profileStorage.save("badge-giver3", "file", "./images/badges/GivingHandTier3_50x50.png")
-
-profileStorage.save("circle-mask", "file", "./images/masks/circle_mask.png")
-
-fontStorage.save("font", "font", ".fonts/Whitney-25.fnt")
-fontStorage.save("font2", "font", ".fonts/profile/Whitney-20-aaa.fnt")
-fontStorage.save("font-black", "font", ".fonts/Whitney-25-black.fnt")
-fontStorage.save("font2-black", "font", ".fonts/profile/Whitney-20-aaa-black.fnt")
-
-profileStorage.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 /**
  * @param {Discord.User} user
@@ -210,7 +177,7 @@ commands.assign([
 				])
 				return msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
-				const allowed = await utils.hasPermission(msg.author, "eval")
+				const allowed = await utils.sql.hasPermission(msg.author, "eval")
 				if (!allowed) return
 				const ram = process.memoryUsage()
 				profiler.once("gc", info => {
@@ -220,7 +187,7 @@ commands.assign([
 				if (global.gc) global.gc()
 				else return msg.channel.send("The global Garbage Collector variable is not exposed")
 			} else {
-				const stats = utils.getStats()
+				const stats = utils.getOwnStats()
 				const allStats = await ipc.replier.requestGetAllStats()
 				const nmsg = await msg.channel.send(lang.meta.statistics.prompts.slow)
 				embed
@@ -274,7 +241,7 @@ commands.assign([
 		category: "admin",
 		example: "&forcestatupdate",
 		async process(msg) {
-			const permissions = await utils.hasPermission(msg.author, "eval")
+			const permissions = await utils.sql.hasPermission(msg.author, "eval")
 			if (!permissions) return
 			sendStats(msg)
 		}
@@ -542,13 +509,13 @@ commands.assign([
 			if (themedata && themedata.value && themedata.value == "light") themeoverlay = "profile-light"
 
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
-				utils.hasPermission(user, "owner"),
+				utils.sql.hasPermission(user, "owner"),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 				utils.coinsManager.getRow(user.id),
 				utils.waifu.get(user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				profileStorage.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
-				fontStorage.getAll(["font", "font2", "font-black", "font2-black"])
+				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
+				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
 			])
 
 			avatar.resize(111, 111)
@@ -613,7 +580,7 @@ commands.assign([
 				}
 			} else canvas = await getDefaultBG()
 
-			const [font, font2, font_black, font2_black] = [fonts.get("font"), fonts.get("font2"), fonts.get("font-black"), fonts.get("font2-black")]
+			const [font, font2, font_black, font2_black] = [fonts.get("whitney-25"), fonts.get("whitney-20-2"), fonts.get("whitney-25-black"), fonts.get("whitney-20-2-black")]
 
 			function buildOldProfile() {
 				// badge coords [219, 289, 359, 419, 489] (increments of 70)
@@ -781,7 +748,7 @@ commands.assign([
 			if (settingName == "profilebackground") {
 				await msg.channel.sendTyping()
 				const [isEval, isPremium] = await Promise.all([
-					utils.hasPermission(msg.author, "owner"),
+					utils.sql.hasPermission(msg.author, "owner"),
 					utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
 				])
 				let allowed = false
@@ -1057,7 +1024,7 @@ commands.assign([
 							.setAuthor(`Help for ${command.aliases[0]}`)
 							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExample: ${command.example || "N.A."}`)
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
-							.setColor("36393E")
+							.setColor(constants.standard_embed_color)
 						msg.channel.send(utils.contentify(msg.channel, embed))
 					} else if (commands.categories.get(suffix)) {
 						const cat = commands.categories.get(suffix)
@@ -1087,16 +1054,11 @@ commands.assign([
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(0x36393f)
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
-						try {
-							msg.author.send(embed).then(mobile).then(() => reply(msg))
-						} catch (e) {
-							msg.channel.send(utils.contentify(msg.channel, embed)).then(mobile)
-						}
-						/**
-						 * @param {Discord.Message} message
-						 */
-						// eslint-disable-next-line no-inner-declarations
-						function mobile(message) {
+						new Promise(resolve => {
+							msg.author.send(embed).then(resolve).catch(() => {
+								msg.channel.send(utils.contentify(msg.channel, embed)).then(resolve)
+							})
+						}).then(message => {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => {
@@ -1106,10 +1068,10 @@ commands.assign([
 									else desc = cmd.description
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
-								.setColor("36393E")
-							const menu = utils.reactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
+								.setColor(constants.standard_embed_color)
+							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
-						}
+						})
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor("B60000")
 						msg.channel.send(utils.contentify(msg.channel, embed))
@@ -1120,7 +1082,7 @@ commands.assign([
 					.setAuthor("Command Categories")
 					.setDescription(
 						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${lang.meta.help.returns.main}\n\n${utils.replace(lang.meta.help.returns.info, { "link": constants.invite_link_for_help })}`)
-					.setColor("36393E")
+					.setColor(constants.standard_embed_color)
 				try {
 					msg.author.send(embed).then(m => reply(msg))
 				} catch (e) {

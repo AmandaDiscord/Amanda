@@ -10,7 +10,7 @@ const QueueFile = require("../../commands/music/queue")
 reloader.sync("./commands/music/queue.js", QueueFile)
 
 const utils = require("../utilities")
-reloader.sync("./modules/utilities.js", utils)
+reloader.sync("./modules/utilities/index.js", utils)
 
 const auditDestroyTimeout = 1000 * 60 * 5
 

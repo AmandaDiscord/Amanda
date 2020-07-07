@@ -18,8 +18,8 @@ let statusPrefix = "&"
 let starting = true
 if (client.readyAt != null) starting = false
 
-const utils = require("./utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("./utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 // Auto donor payment
 function getTimeoutDuration() {
@@ -154,7 +154,7 @@ async function manageMessage(msg) {
 			const embed = new Discord.MessageEmbed()
 				.setDescription(msgTxt)
 				.setColor(0xdd2d2d)
-			if (await utils.hasPermission(msg.author, "eval")) msg.channel.send(embed)
+			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
 			const reportChannel = client.channels.cache.get("512869106089852949")

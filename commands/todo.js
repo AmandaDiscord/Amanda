@@ -5,8 +5,8 @@ const passthrough = require("../passthrough")
 
 const { config, reloader, commands } = passthrough
 
-const utils = require("../modules/utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../modules/utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 commands.assign([
 	{
@@ -108,7 +108,7 @@ function paginateResults(channel, itemStrings) {
  * @returns {Promise<boolean>}
  /
 async function checkAdmin(msg) {
-	const result = await utils.hasPermission(msg.author, "eval")
+	const result = await utils.sql.hasPermission(msg.author, "eval")
 	if (result) return true
 	msg.channel.send("The todo list is only for tracking Amanda. Sorry, only Amanda's owners can edit it.")
 	return false

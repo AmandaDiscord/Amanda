@@ -10,8 +10,8 @@ const { encode } = require("@lavalink/encoding")
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
 
-const utils = require("../../modules/utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../../modules/utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 class VoiceStateCallback {
 	/**

@@ -3,6 +3,7 @@
 const Discord = require("discord.js")
 const path = require("path")
 const Lang = require("@amanda/lang")
+const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc } = passthrough
@@ -12,8 +13,8 @@ let queues = passthrough.queues ? passthrough.queues : undefined
 
 const voiceEmptyDuration = 20000
 
-const utils = require("../../modules/utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../../modules/utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 const songTypes = require("./songtypes.js")
 reloader.sync("./commands/music/songtypes.js", songTypes)
@@ -28,6 +29,37 @@ utils.addTemporaryListener(client, "QueueManager", path.basename(__filename), (m
 	queues = mngr
 	passthrough.queues = mngr
 }, "once")
+
+class FrequencyUpdater {
+	/**
+	 * @param {() => any} callback
+	 */
+	constructor(callback) {
+		this.callback = callback
+		this.timeout = null
+		this.interval = null
+	}
+	/**
+	 * @param {number} frequency Number of milliseconds between calls of the callback
+	 * @param {boolean} trigger Whether to call the callback straight away
+	 * @param {number} delay Defaults to frequency. Delay to be used for the the first delay only.
+	 */
+	start(frequency, trigger, delay = frequency) {
+		this.stop(false)
+		if (trigger) this.callback()
+		this.timeout = setTimeout(() => {
+			this.callback()
+			this.interval = setInterval(() => {
+				this.callback()
+			}, frequency)
+		}, delay)
+	}
+	stop(trigger = false) {
+		clearTimeout(this.timeout)
+		clearInterval(this.interval)
+		if (trigger) this.callback()
+	}
+}
 
 class Queue {
 	/**
@@ -121,7 +153,7 @@ class Queue {
 		this.np = null
 		/** @type {import("@amanda/reactionmenu")} */
 		this.npMenu = null
-		this.npUpdater = new utils.FrequencyUpdater(() => {
+		this.npUpdater = new FrequencyUpdater(() => {
 			if (this.np) {
 				const embed = this._buildNPEmbed()
 				if (embed) this.np.edit(embed)
@@ -514,7 +546,7 @@ class Queue {
 	}
 	_makeReactionMenu() {
 		if (this.npMenu) this.npMenu.destroy(true)
-		this.npMenu = utils.reactionMenu(this.np, [
+		this.npMenu = new ReactionMenu(this.np, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.voiceChannel.members.has(user.id)) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })

@@ -6,8 +6,8 @@ const passthrough = require("../passthrough")
 
 const { commands, reloader } = passthrough
 
-const utils = require("../modules/utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../modules/utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 commands.assign([
 	{

@@ -9,8 +9,8 @@ const mixinDeep = require("mixin-deep")
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc } = passthrough
 
-const utils = require("../utilities.js")
-reloader.sync("./modules/utilities.js", utils)
+const utils = require("../utilities")
+reloader.sync("./modules/utilities/index.js", utils)
 
 const Replier = require("./ipcreplier")
 utils.addTemporaryListener(reloader.reloadEvent, "ipcreplier.js", path.basename(__filename), () => {
@@ -188,7 +188,7 @@ class ClientReplier extends Replier {
 	}
 
 	REPLY_GET_STATS() {
-		return utils.getStats()
+		return utils.getOwnStats()
 	}
 
 	REPLY_PING() {
