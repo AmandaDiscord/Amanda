@@ -280,6 +280,7 @@ class Queue {
 	 * Start updating the now playing message.
 	 */
 	_startNPUpdates() {
+		if (!this.songs[0]) return console.log("Tried to call Queue._startNPUpdates but no songs")
 		const frequency = this.songs[0].npUpdateFrequency
 		const timeUntilNext5 = frequency - ((Date.now() - this.songStartTime) % frequency)
 		const triggerNow = timeUntilNext5 > 1500

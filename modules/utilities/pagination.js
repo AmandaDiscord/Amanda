@@ -3,6 +3,7 @@
 const Discord = require("discord.js")
 const ReactionMenu = require("@amanda/reactionmenu")
 const { contentify } = require("./discordutils")
+const { shuffle: arrayShuffle } = require("./arrayutils")
 
 /**
  * @param {string[]} rows
@@ -201,7 +202,7 @@ function playlistSection(items, startString, endString, shuffle) {
 	to = Math.min(items.length, to)
 	if (startString) items = items.slice(from - 1, to)
 	if (shuffle) {
-		utils.arrayShuffle(items)
+		arrayShuffle(items)
 	}
 	if (!startString && !shuffle) items = items.slice() // make copy of array for consistent behaviour
 	return items
