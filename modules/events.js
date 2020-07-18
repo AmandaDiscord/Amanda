@@ -204,7 +204,8 @@ async function manageMessage(msg) {
 					if (text.length >= 2000) text = text.slice(0, 1999) + "…"
 					if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no")
 					if (text == "IE=edge,chrome=1 (Answers.com)" && data.output[0].actions.source && data.output[0].actions.source.url) text = "I believe you can find the answer here: " + data.output[0].actions.source.url
-					if (["sex", "fuck", "cock"].find(word => text.toLowerCase().includes(word))) return msg.channel.send("I think I misunderstood what you said. My response was a bit unprofessional. Let's talk about something else")
+					// It's really sad that I have to include these words into this blacklist but people will be people. Thanks.
+					if (["sex", "fuck", "cock", "nigga", "nigger"].find(word => text.toLowerCase().includes(word))) return msg.channel.send("I think I misunderstood what you said. My response was a bit unprofessional. Let's talk about something else")
 					msg.channel.send(text)
 				})
 			} catch (error) { msg.channel.send(error) }
