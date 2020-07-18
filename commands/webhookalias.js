@@ -37,8 +37,8 @@ commands.assign([
 								msg.channel.send("That's not the right confirmation code.")
 							} else {
 								utils.sql.all(
-									"INSERT INTO WebhookAliases (webhookID, webhook_username, userID, user_username, user_discriminator)"
-									+ " VALUES (?, ?, ?, ?, ?)",
+									"INSERT INTO WebhookAliases (webhookID, webhook_username, userID, user_username, user_discriminator) \
+									VALUES (?, ?, ?, ?, ?)",
 									[link.webhookID, link.author.username, msg.author.id, msg.author.username, msg.author.discriminator]
 								)
 								msg.channel.send("Alias created. The webhook can now act as you.")

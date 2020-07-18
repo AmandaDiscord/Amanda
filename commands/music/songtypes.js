@@ -266,11 +266,10 @@ class YouTubeSong extends Song {
 			}
 		}).catch(() => {
 			this.typeWhileGetRelated = false
-			return ""
-				+ "Invidious didn't return valid data."
-				+ `\n<${this.getInvidiousOrigin()}/api/v1/videos/${this.id}>`
-				+ `\n<${this.getInvidiousOrigin()}/v/${this.id}>`
-				+ `\n<https://youtu.be/${this.id}>`
+			return `Invidious didn't return valid data.\
+				\n<${this.getInvidiousOrigin()}/api/v1/videos/${this.id}>\
+				\n<${this.getInvidiousOrigin()}/v/${this.id}>\
+				\n<https://youtu.be/${this.id}>`
 		})
 	}
 	getInvidiousOrigin() {

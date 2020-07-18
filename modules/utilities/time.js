@@ -41,7 +41,7 @@ function shortTime(number, scale, precision = ["d", "h", "m", "s"]) {
 	if (hours > 0 && precision.includes("h")) timestr += `${hours}h `
 	if (mins > 0 && precision.includes("m")) timestr += `${mins}m `
 	if (secs > 0 && precision.includes("s")) timestr += `${secs}s`
-	if (!timestr) timestr = "0" + precision.slice(-1)[0]
+	if (!timestr) timestr = `0${precision.slice(-1)[0]}`
 	return timestr
 }
 

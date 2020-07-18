@@ -169,7 +169,7 @@ async function manageMessage(msg) {
 					details = details.concat([
 						["Guild", msg.guild.name],
 						["Guild ID", msg.guild.id],
-						["Channel", "#" + msg.channel.name],
+						["Channel", `#${msg.channel.name}`],
 						["Channel ID", msg.channel.id]
 					])
 				} else {
@@ -179,11 +179,11 @@ async function manageMessage(msg) {
 				}
 				const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 				const detailsString = details.map(row =>
-					"`" + row[0] + " ​".repeat(maxLength - row[0].length) + "` " + row[1] // SC: space + zwsp, wide space
+					`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 				).join("\n")
 				embed.addFields([
 					{ name: "Details", value: detailsString },
-					{ name: "Message content", value: "```\n" + msg.content.replace(/`/g, "ˋ") + "```" }
+					{ name: "Message content", value: `\`\`\`\n${msg.content.replace(/`/g, "ˋ")}\`\`\`` }
 				])
 				reportChannel.send(embed)
 			}
@@ -196,14 +196,15 @@ async function manageMessage(msg) {
 			if (!chat) return
 			msg.channel.sendTyping()
 			if (chat.toLowerCase().startsWith("say")) return
+			console.log(chat)
 			try {
 				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 					const data = await res.json()
 					if (!data.output || !data.output[0] || !data.output[0].actions) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?")
 					let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, "PapiOphidian")
-					if (text.length >= 2000) text = text.slice(0, 1999) + "…"
+					if (text.length >= 2000) text = `${text.slice(0, 1999)}…`
 					if (chat.toLowerCase().includes("ip") && text.match(/(\d{1,3}\.){3}\d{1,3}/)) return msg.channel.send("no")
-					if (text == "IE=edge,chrome=1 (Answers.com)" && data.output[0].actions.source && data.output[0].actions.source.url) text = "I believe you can find the answer here: " + data.output[0].actions.source.url
+					if (text == "IE=edge,chrome=1 (Answers.com)" && data.output[0].actions.source && data.output[0].actions.source.url) text = `I believe you can find the answer here: ${data.output[0].actions.source.url}`
 					// It's really sad that I have to include these words into this blacklist but people will be people. Thanks.
 					if (["sex", "fuck", "cock", "nigga", "nigger"].find(word => text.toLowerCase().includes(word))) return msg.channel.send("I think I misunderstood what you said. My response was a bit unprofessional. Let's talk about something else")
 					msg.channel.send(text)
@@ -220,7 +221,7 @@ function manageReady() {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
 		passthrough.statusPrefix = statusPrefix
-		console.log("Loaded " + prefixes.length + " prefixes: " + prefixes.join(" "))
+		console.log(`Loaded ${prefixes.length} prefixes: ${prefixes.join(" ")}`)
 		// we should probably use a different event or a callback instead.
 		// @ts-ignore
 		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
@@ -228,8 +229,8 @@ function manageReady() {
 	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
-		console.log(client.user.id + "/" + utils.getShardsArray())
-		constants.lavalinkNodes.forEach(node => node.resumeKey = client.user.id + "/" + utils.getShardsArray())
+		console.log(`${client.user.id}/${utils.getShardsArray()}`)
+		constants.lavalinkNodes.forEach(node => node.resumeKey = `${client.user.id}/${utils.getShardsArray()}`)
 		client.lavalink = new PlayerManager(this, constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
 			shards: client.options.shardCount
@@ -237,21 +238,21 @@ function manageReady() {
 		client.lavalink.once("ready", async () => {
 			console.log("Lavalink ready")
 			/** @type {{ queues: Array<any> }} */
-			const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
+			const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${utils.getFirstShard()}` })
 			if (!data) return
 			if (data.queues.length > 0) passthrough.queues.restore()
 		})
 		client.lavalink.on("error", (self, error) => {
-			console.error("Failed to initialise Lavalink: " + error.message)
+			console.error(`Failed to initialise Lavalink: ${error.message}`)
 		})
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(row => {
 				const channel = client.channels.cache.get(row.channelID)
-				if (channel instanceof Discord.TextChannel) channel.send("<@" + row.mentionID + "> Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
+				if (channel instanceof Discord.TextChannel) channel.send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {
 					const user = client.users.cache.get(row.mentionID)
 					if (!user) console.log(`Could not notify ${row.mentionID}`)
-					else user.send("Restarted! Uptime: " + utils.shortTime(process.uptime(), "sec"))
+					else user.send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				}
 			})
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])

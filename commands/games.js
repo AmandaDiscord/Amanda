@@ -103,7 +103,7 @@ class TriviaGame extends Game {
 			.setTitle(`${entities.decodeHTML(this.data.category)} (${this.data.difficulty})`)
 			.setDescription(`​\n${entities.decodeHTML(this.data.question)}`) // SC: zero-width space
 			.setColor(this.color)
-		answerFields.forEach(f => embed.addFields({ name: "​", value: f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("") + "​", inline: true }))
+		answerFields.forEach(f => embed.addFields({ name: "​", value: `${f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("")}​`, inline: true }))
 		embed.setFooter(this.lang.games.trivia.prompts.provideAnswer)
 		this.channel.send(utils.contentify(this.channel, embed))
 		// Setup timer

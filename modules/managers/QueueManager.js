@@ -84,7 +84,7 @@ class QueueManager {
 			const textChannel = client.channels.cache.get(q.textChannelID)
 			const host = q.host
 			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
-			console.log("Making queue for voice channel " + voiceChannel.name)
+			console.log(`Making queue for voice channel ${voiceChannel.name}`)
 			const exists = this.cache.has(guildID)
 			if (exists) console.log("Queue already in store! Skipping.")
 			else {

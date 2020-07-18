@@ -44,8 +44,8 @@ function emojiURL(id, animated = false) {
  */
 async function resolveWebhookMessageAuthor(msg) {
 	const row = await sql.get(
-		"SELECT userID, user_username, user_discriminator FROM WebhookAliases"
-			+ " WHERE webhookID = ? AND webhook_username = ?",
+		"SELECT userID, user_username, user_discriminator FROM WebhookAliases \
+		WHERE webhookID = ? AND webhook_username = ?",
 		[msg.webhookID, msg.author.username]
 	)
 	if (!row) return null
@@ -116,7 +116,7 @@ function contentify(channel, content) {
 	if (channel instanceof Discord.TextChannel) permissions = channel.permissionsFor(client.user)
 	if (content instanceof Discord.MessageEmbed) {
 		if (permissions && !permissions.has("EMBED_LINKS")) {
-			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? content.fields.map(f => `${f.name}\n${f.value}`).join("\n") + "\n" : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
+			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? `${content.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
 			if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 			value += "\nPlease allow me to embed content"
 		} else return content

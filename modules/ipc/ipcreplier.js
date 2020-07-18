@@ -33,7 +33,7 @@ class Replier {
 	}
 
 	nextThreadID() {
-		return process.pid + "_" + (++this.lastThreadID)
+		return `${process.pid}_${(++this.lastThreadID)}`
 	}
 
 	async baseOnMessage(raw, replyFn) {
@@ -45,8 +45,8 @@ class Replier {
 				// this is for us to act on and respond to because it has an op and a thread
 				// 6. get reply data
 				let replyData
-				if (this["REPLY_" + op]) {
-					replyData = await this["REPLY_" + op](data)
+				if (this[`REPLY_${op}`]) {
+					replyData = await this[`REPLY_${op}`](data)
 				} else { // we can only have one thing replying.
 					for (const receiver of this.receivers.values()) {
 						if (receiver.op === op) {
@@ -55,14 +55,14 @@ class Replier {
 						}
 					} // \- to here
 				}
-				if (replyData === undefined) throw new Error("Nothing replied to op " + op)
+				if (replyData === undefined) throw new Error(`Nothing replied to op ${op}`)
 				// sends something like {threadID: 1, data: {guilds: []}}
 				// 7. send reply
 				replyFn({ threadID: threadID, data: replyData })
 			} else {
 				// receives something like {op: "ADD_QUEUE", data: {...}}
 				// this is for us to act on but not respond to because it has an op but no thread
-				if (this["RECEIVE_" + op]) this["RECEIVE_" + op](data)
+				if (this[`RECEIVE_${op}`]) this[`RECEIVE_${op}`](data)
 				for (const receiver of this.receivers.values()) {
 					if (receiver.op === op) receiver.fn(data)
 				}

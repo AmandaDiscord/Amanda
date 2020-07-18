@@ -7,7 +7,6 @@ const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("discord.js")
 const Jimp = require("jimp")
-const JimpProto = Jimp.prototype
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
@@ -38,8 +37,8 @@ async function sendStats(msg) {
 	const ramUsageKB = Math.floor(stats.ram / 1024)
 	const shard = utils.getFirstShard()
 	await utils.sql.all(
-		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard)"
-		+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard) \
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 		, [now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
 	)
 	if (msg) msg.react("👌")
@@ -72,8 +71,7 @@ async function updateCache() {
 		}
 	}))
 	if (updatedPrepared.length) {
-		// Not gonna touch this but string concatenation vexes me
-		await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES " + updatedQuery, updatedPrepared)
+		await utils.sql.all(`REPLACE INTO BackgroundSync (machineID, userID, url) VALUES ${updatedQuery}`, updatedPrepared)
 		console.log("Background cache update complete")
 	} else {
 		console.log("No changes to backgrounds since last call")
@@ -696,7 +694,7 @@ commands.assign([
 			let settingName = args[1] ? args[1].toLowerCase() : ""
 			settingName = Discord.Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
-				const all = await utils.sql.all("SELECT * FROM " + tableName + " WHERE keyID =?", keyID)
+				const all = await utils.sql.all(`SELECT * FROM ${tableName} WHERE keyID =?`, keyID)
 				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
@@ -709,10 +707,10 @@ commands.assign([
 
 			let value = args[2]
 			if (!value) {
-				const row = await utils.sql.get("SELECT value FROM " + tableName + " WHERE keyID = ? AND setting = ?", [keyID, settingName])
+				const row = await utils.sql.get(`SELECT value FROM ${tableName} WHERE keyID = ? AND setting = ?`, [keyID, settingName])
 				if (scope == "server") {
 					value = row ? row.value : setting.default
-					if (setting.type == "boolean") value = (!!+value) + ""
+					if (setting.type == "boolean") value = `${(!!+value)}`
 					if (row) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueServer, { "setting": settingName, "value": value }))
 					else return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueInherited, { "setting": settingName, "value": value }))
 				} else if (scope == "self") {
@@ -743,7 +741,7 @@ commands.assign([
 						return msg.channel.send(lang.configuration.settings.prompts.noBackground)
 					}
 				}
-				await utils.sql.all("DELETE FROM " + tableName + " WHERE keyID = ? AND setting = ?", [keyID, settingName])
+				await utils.sql.all(`DELETE FROM ${tableName} WHERE keyID = ? AND setting = ?`, [keyID, settingName])
 				return msg.channel.send(lang.configuration.settings.returns.deleted)
 			}
 
@@ -761,7 +759,7 @@ commands.assign([
 				if (!link) {
 					const choices = ["default", "vicinity", "sakura"]
 					if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a background of ${choices.join(" or ")}`)
-					await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "defaultprofilebackground", value])
+					await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "defaultprofilebackground", value])
 					return msg.channel.send(lang.configuration.settings.returns.updated)
 				}
 				let data
@@ -777,7 +775,7 @@ commands.assign([
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
 				await fs.promises.writeFile(`./images/backgrounds/cache/${msg.author.id}.png`, buffer)
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
 				await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES (?, ?, ?)", [config.machine_id, keyID, value])
 				ipc.replier.sendBackgroundUpdateRequired()
 				return msg.channel.send(lang.configuration.settings.returns.updated)
@@ -786,21 +784,21 @@ commands.assign([
 			if (settingName == "profiletheme") {
 				const choices = ["dark", "light"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a theme of ${choices.join(" or ")}`)
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "profiletheme", value])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "profiletheme", value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (settingName == "profilestyle") {
 				const choices = ["new", "old"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a style of ${choices.join(" or ")}`)
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, "profilestyle", value])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "profilestyle", value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (settingName == "language") {
 				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
 				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": `\n${codes.map(c => `\`${c}\``).join(", ")}` }))
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
@@ -808,13 +806,13 @@ commands.assign([
 				value = args[2].toLowerCase()
 				if (!["true", "false"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxBoolean, { "setting": settingName, "value": value }))
 				const value_result = args[2] == "true" ? "1" : "0"
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value_result])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value_result])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else if (setting.type == "string") {
 				value = args[2].toLowerCase()
 				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
-				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
+				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)
@@ -899,21 +897,21 @@ commands.assign([
 							},
 							{
 								name: "related [play|insert] [index]",
-								value: "Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\n" +
-									"`&music related` (shows related songs)\n" +
-									"`&music rel play 8` (adds related song #8 to the end of the queue)"
+								value: "Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\
+												`\n&music related` (shows related songs)\
+												`\n&music rel play 8` (adds related song #8 to the end of the queue)"
 							},
 							{
 								name: "auto",
-								value: "Enable or disable auto mode.\n" +
-									"When auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\n" +
-									"`&music auto`"
+								value: "Enable or disable auto mode.\
+												\nWhen auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\
+												\n`&music auto`"
 							},
 							{
 								name: "queue [remove|clear] [index]",
-								value: "Display or edit the current queue.\n" +
-									"`&music queue`\n" +
-									"`&music queue remove 2`"
+								value: "Display or edit the current queue.\
+												\n`&music queue`\
+												\n`&music queue remove 2`"
 							},
 							{
 								name: "skip",
@@ -942,9 +940,9 @@ commands.assign([
 				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
-						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. " +
-						"If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\n" +
-						"Note that using `add`, `remove`, `move`, `import` and `delete` require you to be the owner (creator) of a playlist.")
+						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. \
+														If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\
+														\nNote that using `add`, `remove`, `move`, `import` and `delete` require you to be the owner (creator) of a playlist.")
 						.addFields([
 							{
 								name: "show",
@@ -956,13 +954,13 @@ commands.assign([
 							},
 							{
 								name: "play [start] [end]",
-								value: "Play a playlist.\n" +
-									"Optionally, specify values for start and end to play specific songs from a playlist. " +
-									"Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\n" +
-									"`&music playlist xi play` (plays the entire playlist named `xi`)\n" +
-									"`&music playlist xi play 32` (plays item #32 from the playlist)\n" +
-									"`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\n" +
-									"`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)"
+								value: "Play a playlist.\n\
+												Optionally, specify values for start and end to play specific songs from a playlist. \
+												Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\
+												\n`&music playlist xi play` (plays the entire playlist named `xi`)\
+												\n`&music playlist xi play 32` (plays item #32 from the playlist)\
+												\n`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\
+												\n`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)"
 							},
 							{
 								name: "shuffle [start] [end]",
@@ -970,33 +968,32 @@ commands.assign([
 							},
 							{
 								name: "add <url>",
-								value: "Add a song to a playlist. Specify a URL the same as `&music play`.\n" +
-									"`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`"
+								value: "Add a song to a playlist. Specify a URL the same as `&music play`.\
+												\n`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`"
 							},
 							{
 								name: "remove <index>",
-								value: "Remove a song from a playlist.\n" +
-									"`index` is the index of the item to be removed.\n" +
-									"`&music playlist xi remove 12`"
+								value: "Remove a song from a playlist.\
+												\n`index` is the index of the item to be removed.\
+												\n`&music playlist xi remove 12`"
 							},
 							{
 								name: "move <index1> <index2>",
-								value: "Move items around within a playlist. " +
-									"`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\n" +
-									"The indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. " +
-									"If you don't understand what this means, try it out yourself.\n" +
-									"`&music playlist xi move 12 13`"
+								value: "Move items around within a playlist. \
+												`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\
+												\nThe indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. \
+												`&music playlist xi move 12 13`"
 							},
 							{
 								name: "find",
-								value: "Find specific items in a playlist.\n" +
-									"Provide some text to search for, and matching songs will be shown.\n" +
-									"`&music playlist undertale find hopes and dreams`"
+								value: "Find specific items in a playlist.\
+												\nProvide some text to search for, and matching songs will be shown.\
+												\n`&music playlist undertale find hopes and dreams`"
 							},
 							{
 								name: "import <url>",
-								value: "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\n" +
-									"`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`"
+								value: "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\
+												\n`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`"
 							},
 							{
 								name: "bulk",

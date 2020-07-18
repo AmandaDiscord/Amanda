@@ -59,7 +59,7 @@ class Validator {
 
 		const processError = () => {
 			if (input.errorValue !== undefined) reject(input.errorValue)
-			else reject("Unlabelled error in validator stage " + this.stage)
+			else reject(`Unlabelled error in validator stage ${this.stage}`)
 		}
 
 		try {
@@ -93,7 +93,7 @@ class FormValidator extends Validator {
 			() => req.headers["origin"] || req.headers["referer"] || ""
 			, v => {
 				if (v.startsWith(`${config.website_protocol}://${config.website_domain}`)) return true
-				if (config.website_domain.startsWith("localhost") && req.headers.host && v.startsWith("http://" + req.headers.host)) return true
+				if (config.website_domain.startsWith("localhost") && req.headers.host && v.startsWith(`http://${req.headers.host}`)) return true
 				return false
 			}
 			, [400, "Origin or referer must start with the current domain"]
@@ -118,7 +118,7 @@ class FormValidator extends Validator {
 			this.do(
 				(_) => _.params[matchMode](item)
 				, v => v
-				, [400, "Missing " + item]
+				, [400, `Missing ${item}`]
 			)
 		})
 		return this

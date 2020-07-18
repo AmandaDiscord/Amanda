@@ -25,7 +25,7 @@ async function stringify(data, depth = 0) {
 	} else result = `\`\`\`js\n${util.inspect(data, { depth: depth })}\`\`\``
 
 	if (result.length >= 2000) {
-		if (result.startsWith("```")) result = result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "") + "…```"
+		if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
 		else result = `${result.slice(0, 1998)}…`
 	}
 	return result
@@ -50,7 +50,7 @@ function progressBar(length, value, max, text) {
 			else result += " ​" // space + zwsp to prevent shrinking
 		}
 	}
-	return "​" + result // zwsp + result
+	return `​${result}` // zwsp + result
 }
 
 module.exports.progressBar = progressBar

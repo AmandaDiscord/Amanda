@@ -32,15 +32,15 @@ commands.assign([
 			const playlistName = args[0]
 			if (playlistName == "show") {
 				let playlists = await utils.sql.all(
-					"SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, count(*) as count, sum(Songs.length) as length"
-					+ " FROM PlaylistSongs"
-					+ " INNER JOIN Songs USING (videoID) INNER JOIN Playlists USING (playlistID)"
-					+ " GROUP BY playlistID"
-					+ " UNION"
-					+ " SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, 0, 0"
-					+ " FROM Playlists"
-					+ " LEFT JOIN PlaylistSongs USING (playlistID)"
-					+ " WHERE videoID IS NULL"
+					"SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, count(*) as count, sum(Songs.length) as length \
+					FROM PlaylistSongs \
+					INNER JOIN Songs USING (videoID) INNER JOIN Playlists USING (playlistID) \
+					GROUP BY playlistID \
+					UNION \
+					SELECT Playlists.playlistID, Playlists.name, Playlists.author, Playlists.playCount, 0, 0 \
+					FROM Playlists \
+					LEFT JOIN PlaylistSongs USING (playlistID) \
+					WHERE videoID IS NULL"
 				)
 				utils.arrayShuffle(playlists)
 				playlists = playlists.map(p => {

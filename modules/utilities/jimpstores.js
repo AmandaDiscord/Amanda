@@ -1,3 +1,5 @@
+// @ts-check
+
 const Jimp = require("jimp")
 
 const [ImageCache, FontCache] = [require("./classes/ImageCache"), require("./classes/FontCache")]
@@ -46,6 +48,7 @@ imageStore.save("badge-giver3", "./images/badges/GivingHandTier3_50x50.png")
 imageStore.save("circle-mask", "./images/masks/circle_mask.png")
 
 
+// Fonts
 fontStore.save("whitney-20", ".fonts/Whitney-20.fnt")
 fontStore.save("whitney-20-2", ".fonts/profile/Whitney-20-aaa.fnt")
 fontStore.save("whitne-20-2-black", ".fonts/profile/Whitney-20-aaa-black.fnt")

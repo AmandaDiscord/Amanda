@@ -7,8 +7,6 @@ const crypto = require("crypto")
 const fetch = require("node-fetch")
 const Discord = require("discord.js")
 
-const emojis = require("../modules/emojis")
-
 const passthrough = require("../passthrough")
 const { constants, client, commands, reloader, weeb } = passthrough
 
@@ -62,7 +60,7 @@ const cmds = [
 			canvas.composite(pfp2, 200, 0)
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
-			const image = new Discord.MessageAttachment(buffer, `ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g, "") + ".png")
+			const image = new Discord.MessageAttachment(buffer, `${`ship_${mem1.user.username}_${mem2.user.username}`.replace(/[^a-zA-Z0-9_-]+/g, "")}.png`)
 			const strings = [mem1.id, mem2.id].sort((a, b) => Number(a) - Number(b)).join(" ")
 			let percentage = undefined
 

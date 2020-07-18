@@ -26,7 +26,7 @@ class IPC {
 	}
 
 	connect() {
-		const shard = "shard-" + utils.getShardsArray().join("_")
+		const shard = `shard-${utils.getShardsArray().join("_")}`
 		ipc.config.id = shard
 		let shouldBeConnected = true // for ensuring that only one disconnect warning is sent
 		ipc.connectToNet("website", () => {

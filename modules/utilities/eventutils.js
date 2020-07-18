@@ -1,3 +1,7 @@
+// @ts-check
+
+const events = require("events")
+
 const passthrough = require("../../passthrough")
 
 /**

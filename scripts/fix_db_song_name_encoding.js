@@ -23,10 +23,10 @@ const youtube = new YouTube(config.yt_api_key)
 	}
 
 	let rows = await sql_all("select * from Songs where name like ?", ["%?%"])
-	
+
 	for (let row of rows) {
 		let video = await youtube.getVideoByID(row.videoID)
-		console.log(row.name + " → " + video.title)
+		console.log(`${row.name} → ${video.title}`)
 		await sql_all("update Songs set name = ? where videoID = ?", [video.title, row.videoID])
 	}
 })()

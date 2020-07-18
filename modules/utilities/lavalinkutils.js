@@ -3,10 +3,10 @@
 const constants = require("../../constants")
 
 const passthrough = require("../../passthrough")
-const { client, config } = passthrough
+const { client } = passthrough
 
 /**
- * @returns {[number, number]} removedCount, addedCount
+ * @returns {[number, number]} [removedCount, addedCount]
  */
 function applyChanges() {
 	let removedCount = 0

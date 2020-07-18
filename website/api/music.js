@@ -81,11 +81,11 @@ function addProcessors(processors) {
 				state.update(cache => {
 					if (cache == null) {
 						console.error(
-							"====="
-							+ "\nUh oh! How did we get here?"
-							+ `\nop: ${processor.op}`
-							+ "\ndata", clientData
-							, "\nQueue cache:", cache
+							`=====\
+							\nUh oh! How did we get here?\
+							\nop: ${processor.op}\
+							\ndata, ${clientData}\
+							\nQueue cache: ${cache}`
 						)
 					} else {
 						cache = processor.updateCallback(cache, clientData)
@@ -227,7 +227,7 @@ class Session {
 	}
 
 	onClose() {
-		if (this.user) console.log("WebSocket disconnected: " + this.user.username)
+		if (this.user) console.log(`WebSocket disconnected: ${this.user.username}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
 		console.log(`${sessions.length} sessions in memory`)
@@ -249,7 +249,7 @@ class Session {
 			this.loggedin = true
 			this.guild = guild
 			this.user = user
-			console.log("WebSocket identified: " + this.user.username)
+			console.log(`WebSocket identified: ${this.user.username}`)
 			console.log(`${sessions.length} sessions in memory`)
 			this.send({
 				op: opcodes.ACKNOWLEDGE,
