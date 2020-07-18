@@ -650,6 +650,7 @@ commands.assign([
 			const args = suffix.split(" ")
 			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
+			/** @type {Object.<string, { type: string, default: string, scope: Array<string> | string }>} */
 			const settings = {
 				"waifualert": {
 					type: "boolean",

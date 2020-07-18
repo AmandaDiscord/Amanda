@@ -435,7 +435,12 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
-			let tracks = await common.getTracks(`scsearch:${search}`, textChannel.guild.region)
+			let tracks
+			try {
+				tracks = await common.getTracks(`scsearch:${search}`, textChannel.guild.region)
+			} catch {
+				return textChannel.send(lang.audio.music.prompts.noResults)
+			}
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
@@ -457,7 +462,12 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, msg, insert, link, lang) {
-			const tracks = await common.getTracks(link, textChannel.guild.region)
+			let tracks
+			try {
+				tracks = await common.getTracks(link, textChannel.guild.region)
+			} catch {
+				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
 			const track = tracks[0]
 			if (track) {
 				const song = new (require("./songtypes").SoundCloudSong)(track.info, track.track)
