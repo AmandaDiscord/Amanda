@@ -466,10 +466,10 @@ const common = {
 			try {
 				tracks = await common.getTracks(link, textChannel.guild.region)
 			} catch {
-				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
-			const track = tracks[0]
-			if (track) {
+			if (tracks && tracks[0]) {
+				const track = tracks[0]
 				const song = new (require("./songtypes").SoundCloudSong)(track.info, track.track)
 				common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
 			} else {
