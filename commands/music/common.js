@@ -214,6 +214,8 @@ const common = {
 		},
 
 		/**
+		 * @param {string} input
+		 * @param {string} [host=null]
 		 * @returns {Promise<{type: string, title: string, videoId: string, author: string, lengthSeconds: number, liveNow: boolean}[]>}
 		 */
 		search: function(input, host = null) {
@@ -267,6 +269,9 @@ const common = {
 			return fetch(`${common.invidious.getOrigin(host)}/api/v1/playlists/${id}?page=${pageNumber}`).then(res => res.json())
 		},
 
+		/**
+		 * @param {string} id
+		 */
 		getPlaylist: function(id) {
 			const pageSize = 100 // max number of videos returned in a page, magic number
 			/** @type {import("../../typings").InvidiousPlaylistVideo[]} */
@@ -290,6 +295,7 @@ const common = {
 
 		/**
 		 * Find the best audio stream URL in a data object. Throw if the data is bad.
+		 * @param {{ adaptiveFormats: Array<{ type: string, bitrate: number, url: string }> }} data
 		 */
 		dataToURL: function(data) {
 			let formats = data && data.adaptiveFormats
@@ -307,6 +313,7 @@ const common = {
 
 		/**
 		 * Promise to get the track. Errors are rejected.
+		 * @param {string} url
 		 */
 		urlToTrack: function(url, region = "") {
 			if (!url) throw new Error("url parameter in urlToTrack is falsy")

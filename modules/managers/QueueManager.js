@@ -27,7 +27,7 @@ class QueueManager {
 	}
 	toObject() {
 		return {
-			_id: "QueueStore_" + utils.getFirstShard(),
+			_id: `QueueStore_${utils.getFirstShard()}`,
 			queues: [...this.cache.values()].map(q => q.toObject())
 		}
 	}
@@ -72,11 +72,11 @@ class QueueManager {
 		this.events.emit("delete", guildID)
 	}
 	save() {
-		return passthrough.nedb.queue.update({ _id: "QueueStore_" + utils.getFirstShard() }, this.toObject(), { upsert: true })
+		return passthrough.nedb.queue.update({ _id: `QueueStore_${utils.getFirstShard()}` }, this.toObject(), { upsert: true })
 	}
 	async restore() {
 		const songTypes = require("../../commands/music/songtypes")
-		const data = await passthrough.nedb.queue.findOne({ _id: "QueueStore_" + utils.getFirstShard() })
+		const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${utils.getFirstShard()}` })
 		data.queues.forEach(async q => {
 			// console.log(q)
 			const guildID = q.guildID
@@ -93,15 +93,15 @@ class QueueManager {
 					if (s.class == "YouTubeSong") {
 						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
 						queue.songs.push(song)
-						console.log("Added YouTubeSong " + song.title)
+						console.log(`Added YouTubeSong ${song.title}`)
 					} else if (s.class == "FriskySong") {
 						const song = new songTypes.FriskySong(s.station, { track: s.track })
 						queue.songs.push(song)
-						console.log("Added FriskySong " + song.station)
+						console.log(`Added FriskySong ${song.station}`)
 					} else if (s.class === "SoundCloudSong") {
 						const song = songTypes.makeSoundCloudSong(s.trackNumber, s.title, s.lengthSeconds, s.live, s.uri, s.track)
 						queue.songs.push(song)
-						console.log("Added SoundCloudSong " + song.title)
+						console.log(`Added SoundCloudSong ${song.title}`)
 					}
 				})
 				if (queue.songs[0]) {
@@ -117,7 +117,7 @@ class QueueManager {
 				ipc.replier.sendNewQueue(queue)
 			}
 		})
-		setTimeout(() => passthrough.nedb.queue.update({ _id: "QueueStore_" + utils.getFirstShard() }, { _id: "QueueStore_" + utils.getFirstShard(), queues: [] }, { upsert: true }), 1000 * 60 * 2)
+		setTimeout(() => passthrough.nedb.queue.update({ _id: `QueueStore_${utils.getFirstShard()}` }, { _id: `QueueStore_${utils.getFirstShard()}`, queues: [] }, { upsert: true }), 1000 * 60 * 2)
 	}
 }
 

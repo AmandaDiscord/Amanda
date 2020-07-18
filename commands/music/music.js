@@ -4,13 +4,10 @@
 const crypto = require("crypto")
 const Discord = require("discord.js")
 const path = require("path")
-/** @type {import("node-fetch").default} */
-// @ts-ignore
-const fetch = require("node-fetch")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, commands, queues, frisky } = passthrough
+const { config, client, reloader, commands, queues, frisky } = passthrough
 
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -466,7 +463,7 @@ commands.assign([
 							const date = new Date(`${dateString} UTC`)
 							let displayDate = date.toUTCString().split(" ")[2] // extract month
 							if (date.getUTCFullYear() !== new Date().getUTCFullYear()) { // different year, so should also display year
-								displayDate += " " + date.getUTCFullYear()
+								displayDate += ` ${date.getUTCFullYear()}`
 							}
 							item += `[${name}](https://beta.frisky.fm/mix/${stream.mix.data.id}) (${displayDate})`
 

@@ -17,7 +17,6 @@ const songTypes = require("./songtypes.js")
 reloader.sync("./commands/music/songtypes.js", songTypes)
 
 const YouTube = require("simple-youtube-api")
-const youtube = passthrough.youtube
 
 const bulkAddCollectionChannels = new Set()
 
@@ -46,6 +45,9 @@ commands.assign([
 				utils.arrayShuffle(playlists)
 				playlists = playlists.map(p => {
 					p.ranking = "" // higher ascii value is better
+					/**
+					 * @param {number} r
+					 */
 					function addRanking(r) {
 						p.ranking += `${r}.`
 					}
@@ -60,6 +62,9 @@ commands.assign([
 					else if (b.ranking < a.ranking) return -1
 					else return 0
 				})
+				/**
+				 * @param {string} author
+				 */
 				// eslint-disable-next-line no-inner-declarations
 				function getAuthor(author) {
 					const user = client.users.cache.get(author)

@@ -27,7 +27,7 @@ commands.assign([
 						msg.channel.send("That message wasn't sent by a webhook.")
 					} else {
 						const checkString = crypto.randomBytes(12).toString("hex")
-						const checkMessage = await msg.channel.send("To confirm, the webhook must now send this message: `" + checkString + "`")
+						const checkMessage = await msg.channel.send(`To confirm, the webhook must now send this message: \`${checkString}\``)
 						const collector = msg.channel.createMessageCollector(
 							m => m.webhookID === link.webhookID && m.author.username === link.author.username,
 							{ max: 1, time: 30000 }

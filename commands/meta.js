@@ -68,10 +68,11 @@ async function updateCache() {
 			updatedPrepared.push(config.machine_id, row.keyID, row.value)
 			if (updatedQuery) updatedQuery += ", "
 			updatedQuery += "(?, ?, ?)"
-			console.log("Saved background for " + row.keyID)
+			console.log(`Saved background for ${row.keyID}`)
 		}
 	}))
 	if (updatedPrepared.length) {
+		// Not gonna touch this but string concatenation vexes me
 		await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES " + updatedQuery, updatedPrepared)
 		console.log("Background cache update complete")
 	} else {
@@ -767,7 +768,7 @@ commands.assign([
 				try {
 					data = await fetch(value).then(d => d.buffer())
 				} catch (e) {
-					console.log("Failed to fetch new background URL in settings command: " + value)
+					console.log(`Failed to fetch new background URL in settings command: ${value}`)
 					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)
 				}
 				const type = bs.identify(data)
@@ -798,7 +799,7 @@ commands.assign([
 
 			if (settingName == "language") {
 				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
-				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": "\n" + codes.map(c => "`" + c + "`").join(", ") }))
+				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": `\n${codes.map(c => `\`${c}\``).join(", ")}` }))
 				await utils.sql.all("REPLACE INTO " + tableName + " (keyID, setting, value) VALUES (?, ?, ?)", [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
@@ -827,7 +828,7 @@ commands.assign([
 		category: "configuration",
 		example: "&language es",
 		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, "self language " + suffix, lang)
+			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang)
 		}
 	},
 
@@ -838,7 +839,7 @@ commands.assign([
 		category: "configuration",
 		example: "&serverlanguage es",
 		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, "server language " + suffix, lang)
+			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang)
 		}
 	},
 
@@ -849,7 +850,7 @@ commands.assign([
 		category: "configuration",
 		example: "&background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg",
 		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, "self profilebackground " + suffix, lang)
+			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
 		}
 	},
 

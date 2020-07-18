@@ -303,7 +303,7 @@ class FriskySong extends Song {
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 		this.stationData = stationData.get(this.station)
 
-		this.id = "frisky/" + this.station // designed for error reporting
+		this.id = `frisky/${this.station}` // designed for error reporting
 		this.thumbnail = {
 			src: constants.frisky_placeholder,
 			width: 320,
@@ -414,15 +414,17 @@ class FriskySong extends Song {
 			return "Unfortunately, we failed to retrieve information about the current song."
 		})
 	}
-	getProgress(time, paused) {
+	/**
+	 * @param {number} time
+	 */
+	getProgress(time) {
 		const part = "= ⋄ ==== ⋄ ==="
 		const fragment = part.substr(7 - this._filledBarOffset, 7)
 		const bar = `${fragment.repeat(5)}` // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		time = common.prettySeconds(time)
 		// eslint-disable-next-line no-irregular-whitespace
-		return `\`[ ${time} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+		return `\`[ ${common.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
 	}
 	async prepare() {
 		if (!this.bound) {
@@ -482,7 +484,7 @@ class SoundCloudSong extends Song {
 		this.error = ""
 		this.typeWhileGetRelated = false
 		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)[1]
-		this.id = "sc/" + this.trackNumber
+		this.id = `sc/${this.trackNumber}`
 		this.live = data.isStream || false
 		this.thumbnail = {
 			src: constants.soundcloud_placeholder,
@@ -537,15 +539,26 @@ class SoundCloudSong extends Song {
 	}
 }
 
+/**
+ * @param {{ track: string, info: { identifier: string, title: string, length: number } }} data
+ */
 function makeYouTubeSongFromData(data) {
 	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000))
 	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
 }
 
+/**
+ * @param {string} trackNumber
+ * @param {string} title
+ * @param {number} lengthSeconds
+ * @param {boolean} live
+ * @param {string} uri
+ * @param {string} track
+ */
 function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track) {
 	// @ts-ignore this is a hack
 	return new SoundCloudSong({
-		identifier: "soundcloud:tracks:" + trackNumber,
+		identifier: `soundcloud:tracks:${trackNumber}`,
 		title: title,
 		length: lengthSeconds * 1000,
 		isStream: live,
