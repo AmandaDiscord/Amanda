@@ -20,7 +20,7 @@ for (const file of [...fs.readdirSync(__dirname), ...fs.readdirSync(`${__dirname
 
 const { random: arrayRandom, shuffle: arrayShuffle } = require("./arrayutils")
 
-const utils = {
+const utils = { // I really hate that we have to nest an import then destructure it to get typings. So much.
 	arrayRandom,
 	arrayShuffle,
 	AsyncValueCache: require("./classes/AsyncValueCache"),
@@ -28,19 +28,29 @@ const utils = {
 	BitmapCache: require("./classes/BitmapCache"),
 	ImageCache: require("./classes/ImageCache"),
 	FontCache: require("./classes/FontCache"),
-	jimpStores: require("./jimpstores"),
+	jimpStores: {
+		...require("./jimpstores")
+	},
 	...require("./cachemanager"),
-	coinsManager: require("./coinsmanager"),
+	coinsManager: {
+		...require("./coinsmanager")
+	},
 	...require("./discordutils"),
 	...require("./eventutils"),
 	...require("./langutils"),
 	...require("./pagination"),
 	...require("./shardinfo"),
-	editLavalinkNodes: require("./lavalinkutils"),
-	sql: require("./sql"),
+	editLavalinkNodes: {
+		...require("./lavalinkutils")
+	},
+	sql: {
+		...require("./sql")
+	},
 	...require("./text"),
 	...require("./time"),
-	waifu: require("./waifu")
+	waifu: {
+		...require("./waifu")
+	}
 }
 
 module.exports = utils
