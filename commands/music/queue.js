@@ -195,8 +195,8 @@ class Queue {
 		}
 		if (song.error) {
 			console.error("Song error call C:")
-			console.error("id:", song.id, "/ error:", song.error)
-			this._reportError()
+			console.error("shard:", utils.getFirstShard(), "/ id:", song.id, "/ error:", song.error)
+			await this._reportError()
 			this._nextSong()
 		} else {
 			passthrough.periodicHistory.add("song_start")
@@ -210,10 +210,11 @@ class Queue {
 	}
 	async _reportError() {
 		const lang = await this.getLang()
-		const sendReport = (contents) => {
+		const sendReport = (contents, toLogs) => {
 			// Report to original channel
 			this.textChannel.send(contents)
 			// Report to #amanda-error-log
+			if (!toLogs) return
 			const reportTarget = "512869106089852949"
 			const embed = new Discord.MessageEmbed()
 			embed.setTitle("Music error occurred.")
@@ -254,13 +255,14 @@ class Queue {
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
-				sendReport(embed)
+				const toLogs = song.error.includes("YouTube said:") || song.error === "Unable to extract video data. This video was probably removed."
+				sendReport(embed, toLogs)
 			} else {
 				const embed = new Discord.MessageEmbed()
 					.setTitle(lang.audio.music.prompts.errorOccured)
 					.setDescription(utils.replace(lang.audio.music.prompts.songErrorNotObject, { "song": song }))
 					.setColor(0xdd2d2d)
-				sendReport(embed)
+				sendReport(embed, true)
 			}
 			if (this.errorChain >= 3) {
 				this.shouldDisplayErrors = false
