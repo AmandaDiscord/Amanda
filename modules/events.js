@@ -191,12 +191,11 @@ async function manageMessage(msg) {
 	} else {
 		if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
 			if (!config.allow_ai) return
-			const username = msg.guild ? msg.guild.me.displayName : client.user.username
-			const chat = msg.cleanContent.replace(new RegExp(`@${username},?`), "").trim()
+			const mention = msg.content.startsWith(`<@${client.user.id}>`) ? `<@${client.user.id}>` : `<@!${client.user.id}>`
+			const chat = Discord.Util.cleanContent(msg.content.substring(mention.length).trim(), msg)
 			if (!chat) return
 			msg.channel.sendTyping()
-			if (chat.toLowerCase().startsWith("say")) return
-			console.log(chat)
+			if (chat.toLowerCase().startsWith("say")) return msg.channel.send("No thanks")
 			try {
 				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 					const data = await res.json()
