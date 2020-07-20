@@ -77,6 +77,8 @@ class TriviaGame extends Game {
 		this.category = category
 		this.earningsDisabled = false
 		this.lang = lang
+		/** @type {"trivia"} */
+		this.type
 	}
 	start() {
 		const correctAnswer = this.data.correct_answer.trim()
@@ -255,8 +257,10 @@ async function startGame(channel, options) {
 }
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 function answerDetector(msg) {
-	const game = games.cache.find(g => g.id == msg.channel.id)
-	if (game instanceof TriviaGame) if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
+	/** @type {TriviaGame} */
+	// @ts-ignore
+	const game = games.cache.find(g => g.id == msg.channel.id && g.type == "trivia")
+	if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
 }
 
 
