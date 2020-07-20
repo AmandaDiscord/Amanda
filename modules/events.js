@@ -195,7 +195,7 @@ async function manageMessage(msg) {
 			const chat = Discord.Util.cleanContent(msg.content.substring(mention.length).trim(), msg)
 			if (!chat) return
 			msg.channel.sendTyping()
-			if (chat.toLowerCase().startsWith("say")) return msg.channel.send("No thanks")
+			if (chat.toLowerCase().startsWith("say") || chat.toLowerCase().startsWith("repeat")) return msg.channel.send("No thanks")
 			try {
 				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
 					const data = await res.json()
