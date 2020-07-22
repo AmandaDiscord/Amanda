@@ -270,8 +270,8 @@ const subcommandsMap = new Map([
 			const audit = queues.audits.get(msg.guild.id)
 			if (!audit || (audit && audit.length == 0)) return msg.channel.send(`${msg.author.username}, there is no audit data to fetch`)
 			let entries
-			if (audit.length > 15) entries = audit.reverse().slice(0, 15)
-			else entries = audit.reverse()
+			if (audit.length > 15) entries = audit.slice().reverse().slice(0, 15) // Array.reverse mutates Arrays, apparently.
+			else entries = audit.slice().reverse()
 			const embed = new Discord.MessageEmbed().setColor("36393E")
 				.setAuthor(`Audit for ${msg.guild.name}`)
 				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
