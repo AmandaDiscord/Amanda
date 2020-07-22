@@ -82,7 +82,7 @@ const cmds = [
 		description: "Gets the waifu information about yourself or a user",
 		aliases: ["waifu"],
 		category: "interaction",
-		example: "&user PapiOphidian",
+		example: "&waifu PapiOphidian",
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
