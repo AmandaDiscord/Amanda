@@ -8,7 +8,8 @@ const fs = require("fs")
 const Discord = require("discord.js")
 const Jimp = require("jimp")
 const path = require("path")
-const simpleGit = require("simple-git")(__dirname)
+// @ts-ignore
+const simpleGit = require("simple-git")(__dirname) // simple-git 2.0.0 breaks typings I guess
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
