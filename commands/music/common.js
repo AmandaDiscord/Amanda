@@ -495,6 +495,7 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const songtypes = require("./songtypes")
 			let data
 			try {
 				data = await common.spotify.search(link)
@@ -503,11 +504,8 @@ const common = {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
 			const tracks = common.spotify.getTrackInfo(data)
-			const ytdata = await Promise.all(tracks.map(track => common.searchYouTube(track.name, textChannel.guild.region)))
-			const yttracks = ytdata.map(item => {
-				if (item[0]) return item[0]
-			})
-			return common.inserters.fromDataArray(textChannel, voiceChannel, yttracks, insert, msg)
+			const songs = tracks.map(track => songtypes.makeSpotifySong(track))
+			return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
 		}
 	},
 

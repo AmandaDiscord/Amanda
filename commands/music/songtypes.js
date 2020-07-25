@@ -538,6 +538,51 @@ class SoundCloudSong extends Song {
 	}
 }
 
+// @ts-ignore
+class SpotifySong extends YouTubeSong {
+	/**
+	 * @param {import("../../typings").SpotifyTrack & { track?: string, youtubeID?: string }} data
+	 */
+	constructor(data) {
+		super(data.youtubeID || "!", data.name, Math.floor(data.duration_ms / 1000))
+		this.trackNumber = data.track_number
+		this.live = false
+		this.thumbnail = data.album.images[0] ? { src: data.album.images[0].url, width: data.album.images[0].width, height: data.album.images[0].height } : { src: constants.soundcloud_placeholder, width: 616, height: 440 }
+		this.uri = data.uri
+		this.typeWhileGetRelated = false
+		this.related = []
+		this.prepareCache = new utils.AsyncValueCache(() => {
+			if (this.id == "!" || this.track == "!") {
+				return common.searchYouTube(this.title, this.queue.textChannel.guild.region).then(tracks => {
+					if (!tracks[0]) this.error = `No results for ${this.title}`
+					else if (!tracks[0].track) this.error = `Missing track for ${this.title}`
+					else {
+						this.track = tracks[0].track
+						this.id = tracks[0].info.identifier
+					}
+				}).catch(message => {
+					this.error = message
+				})
+			}
+		})
+
+		this.validate()
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try finding related songs on Spotify.")
+	}
+	showInfo() {
+		const ID = this.uri.match(/spotify:track:([\d\w]+)/)[1]
+		return Promise.resolve(`https://open.spotify.com/track/${ID}`)
+	}
+	prepare() {
+		return this.prepareCache.get()
+	}
+}
+
 /**
  * @param {{ track: string, info: { identifier: string, title: string, length: number } }} data
  */
@@ -565,9 +610,22 @@ function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track)
 	}, track)
 }
 
+/**
+ * @param {import("../../typings").SpotifyTrack} data
+ * @param {string} [id]
+ * @param {string} [track]
+ */
+function makeSpotifySong(data, id, track) {
+	if (id) Object.assign(data, { youtubeID: id })
+	if (track) Object.assign(data, { track: track })
+	return new SpotifySong(data)
+}
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
 module.exports.FriskySong = FriskySong
 module.exports.SoundCloudSong = SoundCloudSong
 module.exports.makeSoundCloudSong = makeSoundCloudSong
+module.exports.SpotifySong = SpotifySong
+module.exports.makeSpotifySong = makeSpotifySong
