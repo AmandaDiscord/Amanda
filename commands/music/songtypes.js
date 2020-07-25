@@ -560,6 +560,8 @@ class SpotifySong extends YouTubeSong {
 					else {
 						this.track = tracks[0].track
 						this.id = tracks[0].info.identifier
+						this.lengthSeconds = Math.ceil(tracks[0].info.length / 1000)
+						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 					}
 				}).catch(message => {
 					this.error = message
@@ -575,9 +577,10 @@ class SpotifySong extends YouTubeSong {
 	showRelated() {
 		return Promise.resolve("Try finding related songs on Spotify.")
 	}
-	showInfo() {
+	async showInfo() {
 		const ID = this.uri.match(/spotify:track:([\d\w]+)/)[1]
-		return Promise.resolve(`https://open.spotify.com/track/${ID}`)
+		const YT = await super.showInfo()
+		return Promise.resolve(`https://open.spotify.com/track/${ID}\n${YT}`)
 	}
 	prepare() {
 		return this.prepareCache.get()
