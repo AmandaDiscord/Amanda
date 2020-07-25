@@ -551,7 +551,8 @@ class SpotifySong extends YouTubeSong {
 		this.uri = data.uri
 		this.typeWhileGetRelated = false
 		this.related = []
-		this.prepareCache = new utils.AsyncValueCache(() => {
+		// eslint-disable-next-line require-await
+		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
 				return common.searchYouTube(this.title, this.queue.textChannel.guild.region).then(tracks => {
 					if (!tracks[0]) this.error = `No results for ${this.title}`
