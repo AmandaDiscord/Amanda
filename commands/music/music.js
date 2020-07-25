@@ -565,5 +565,116 @@ commands.assign([
 				return common.inserters.fromSoundCloudSearch(msg.channel, voiceChannel, msg.author, false, suffix, lang)
 			}
 		}
+	},
+
+	{
+		usage: "<search terms>",
+		description: "Play music",
+		aliases: ["play", "p"],
+		category: "audio",
+		example: "&play despacito",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `play ${suffix}`, lang)
+		}
+	},
+	{
+		usage: "<search terms>",
+		description: "Play music and put it next in the queue",
+		aliases: ["insert", "i"],
+		category: "audio",
+		example: "&insert despacito",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `insert ${suffix}`, lang)
+		}
+	},
+	{
+		usage: "[remove] [number]",
+		description: "Show the server's current queue",
+		aliases: ["queue", "q"],
+		category: "audio",
+		example: "&queue",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `queue${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "[amount]",
+		description: "Skips the songs in the queue",
+		aliases: ["skip", "s"],
+		category: "audio",
+		example: "&skip 3",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `skip${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Stops all currently playing music",
+		aliases: ["stop"],
+		category: "audio",
+		example: "&stop",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "stop", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Pauses current playback",
+		aliases: ["pause"],
+		category: "audio",
+		example: "&pause",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "pause", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Resumes current playback",
+		aliases: ["resume"],
+		category: "audio",
+		example: "&resume",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "resume", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Shows what's currently playing",
+		aliases: ["now", "n"],
+		category: "audio",
+		example: "&now",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "now", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Shows related songs to what's currently playing",
+		aliases: ["related", "rel"],
+		category: "audio",
+		example: "&related",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "related", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Toggles repeat mode for the queue",
+		aliases: ["repeat", "loop"],
+		category: "audio",
+		example: "&repeat",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "repeat", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Toggles auto play for first related song",
+		aliases: ["auto"],
+		category: "audio",
+		example: "&auto",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "auto", lang)
+		}
 	}
 ])
