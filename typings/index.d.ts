@@ -105,6 +105,113 @@ export interface LavalinkInfo {
 	uri: string;
 }
 
+export interface SpotifyTrack {
+	album: SpotifyAlbum;
+	artists: Array<SpotifyArtist>;
+	disc_number: number;
+	duration_ms: number;
+	explicit: boolean;
+	external_ids: {};
+	href: string;
+	id: string;
+	is_local: boolean;
+	is_playable: boolean;
+	name: string;
+	popularity: number;
+	preview_url: string;
+	track_number: number;
+	type: "track";
+	uri: string;
+}
+
+export interface SpotifyPlaylist {
+	collaborative: boolean;
+	description: string;
+	external_urls?: {
+		spotify?: string;
+	};
+	followers: {
+		href?: string;
+		total: number;
+	};
+	href: string;
+	id: string;
+	images: Array<SpotifyImage>;
+	name: string;
+	owner: SpotifyUser;
+	primary_color: null;
+	public: boolean;
+	snapshot_id: string;
+	tracks: {
+		href: string;
+		items: Array<SpotifyPlaylistItem>;
+		limit: number;
+		next: null;
+		offset: number;
+		previous: null;
+		total: number;
+	};
+	type: "playlist";
+	uri: string;
+	etag: string;
+}
+
+export interface SpotifyPlaylistItem {
+	added_at: string;
+	added_by: SpotifyUser;
+	is_local: boolean;
+	primary_color: null;
+	track: SpotifyTrack;
+	video_thumbnail: {
+		url: null;
+	};
+}
+
+export interface SpotifyAlbum {
+	album_type: string;
+	artists: Array<SpotifyArtist>;
+	external_urls?: {
+		spotify?: string;
+	};
+	href: string;
+	id: string;
+	images: Array<SpotifyImage>;
+	name: string;
+	release_data: string;
+	release_date_precision: string;
+	total_tracks: number;
+	type: "album";
+	uri: string;
+}
+
+export interface SpotifyArtist {
+	external_urls?: {
+		spotify?: string;
+	};
+	href: string;
+	id: string;
+	name: string;
+	type: "artist";
+	uri: string;
+}
+
+export interface SpotifyUser {
+	display_name?: string;
+	external_urls?: {
+		spotify?: string;
+	};
+	href: string;
+	id: string;
+	type: "user";
+	uri: string;
+}
+
+export interface SpotifyImage {
+	height: number;
+	url: string;
+	width: number;
+}
+
 // Overloaded functions
 
 export declare function reactionMenu1(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuAction>): ReactionMenu;

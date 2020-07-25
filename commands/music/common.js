@@ -103,6 +103,8 @@ const common = {
 			if (url.hostname === "soundcloud.com") {
 				// Bam, done.
 				return { type: "soundcloud", link: url.toString() }
+			} else if (url.hostname == "open.spotify.com" && (url.pathname.startsWith("/playlist") || url.pathname.startsWith("/track"))) {
+				return { type: "spotify", link: url.toString() }
 			} else if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") { // Is it CloudTube?
 				try {
 					const id = url.pathname.match(/video\/([\w-]{11})$/)[1]
@@ -239,12 +241,12 @@ const common = {
 					version: 2,
 					title: result.title,
 					author: result.author,
-					length: BigInt(result.lengthSeconds) * 1000n,
+					length: BigInt(result.lengthSeconds) * BigInt(1000),
 					identifier: result.videoId,
 					isStream: result.liveNow, // this is a guess
 					uri: `https://www.youtube.com/watch?v=${result.videoId}`,
 					source: "youtube",
-					position: 0n
+					position: BigInt(0)
 				}),
 				info: {
 					identifier: result.videoId,
@@ -482,6 +484,30 @@ const common = {
 			} else {
 				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
+		},
+		fromSpotifyLink:
+		/**
+		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			let data
+			try {
+				data = await common.spotify.search(link)
+			} catch (e) {
+				console.error(e)
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
+			const tracks = common.spotify.getTrackInfo(data)
+			const ytdata = await Promise.all(tracks.map(track => common.searchYouTube(track.name, textChannel.guild.region)))
+			const yttracks = ytdata.map(item => {
+				if (item[0]) return item[0]
+			})
+			return common.inserters.fromDataArray(textChannel, voiceChannel, yttracks, insert, msg)
 		}
 	},
 
@@ -497,6 +523,46 @@ const common = {
 		 */
 		getAll: function(userID, guild) {
 			return this.callbacks.filter(o => o.msg.author.id == userID && o.msg.guild == guild)
+		}
+	},
+
+	spotify: {
+		/**
+		 * @param {string} url
+		 * @returns {Promise<import("../../typings").SpotifyTrack | import("../../typings").SpotifyPlaylist>}
+		 */
+		search: async function(url) {
+			let text
+			// eslint-disable-next-line no-useless-catch
+			try {
+				text = await fetch(url).then(res => res.text())
+			} catch (e) {
+				throw e
+			}
+			const ss = "Spotify.Entity"
+			const start = text.indexOf(ss)
+			const afterStart = text.substring(start)
+			const end = afterStart.indexOf(";")
+			const body = text.slice(start + ss.length + 3, start + end)
+			if (!body) throw new Error("Cannot extract Spotify track info")
+			let parsed
+			// eslint-disable-next-line no-useless-catch
+			try {
+				parsed = JSON.parse(body)
+			} catch {
+				throw new Error("Cannot extract Spotify track info")
+			}
+			return parsed
+		},
+		/**
+		 * @param {import("../../typings").SpotifyTrack | import("../../typings").SpotifyPlaylist} data
+		 */
+		getTrackInfo(data) {
+			if (data.type == "track") {
+				return [data]
+			} else if (data.type == "playlist") {
+				return data.tracks.items.map(d => d.track)
+			}
 		}
 	},
 

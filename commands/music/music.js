@@ -149,6 +149,8 @@ const subcommandsMap = new Map([
 				}
 			} else if (match && match.type === "soundcloud") {
 				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
+			} else if (match && match.type === "spotify") {
+				common.inserters.fromSpotifyLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else {
 				// User input wasn't a playlist and wasn't a video. Start a search.
 				common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
@@ -640,7 +642,7 @@ commands.assign([
 	{
 		usage: "None",
 		description: "Shows what's currently playing",
-		aliases: ["now", "n"],
+		aliases: ["now", "np", "n"],
 		category: "audio",
 		example: "&now",
 		process(msg, suffix, lang) {
