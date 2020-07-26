@@ -8,19 +8,19 @@ module.exports = {
 	weeb_api_key: "weeb.sh api key here",
 
 	// Environment
-	mysql_domain: "amanda.discord-bots.ga",
+	machine_id: "lmao_dev_compname",
+	mysql_domain: "example.com",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	website_ipc_bind: "localhost",
 	invidious_origin: "https://invidio.us",
-	machine_id: "lmao_dev_compname",
-	weeb_identifier: "Amanda/1.0.0/prod",
+	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",
 	additional_intents: [],
+	shard_list: [0],
 
 	// Settings
+	allow_ai: false,
 	music_dash_enabled: true,
 	use_invidious: false,
-	fake_token: "write something here to be displayed when the token is evaled",
-	shards_list: [0, 1],
-	allow_ai: false
+	fake_token: "(token)"
 }
