@@ -619,7 +619,7 @@ function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track)
  * @param {string} [id]
  * @param {string} [track]
  */
-function makeSpotifySong(data, id, track) {
+function makeSpotifySong(data, id = undefined, track = undefined) {
 	if (id) Object.assign(data, { youtubeID: id })
 	if (track) Object.assign(data, { track: track })
 	return new SpotifySong(data)
