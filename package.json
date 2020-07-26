@@ -6,6 +6,7 @@
   "author": "PapiOphidian",
   "scripts": {
     "start": "node --expose-gc --optimize_for_size index.js",
+    "shards": "node --expose-gc --optimize_for_size shards.js",
     "website": "cd website && node server.js",
     "test": "tap"
   },
