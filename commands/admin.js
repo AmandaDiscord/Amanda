@@ -15,6 +15,15 @@ reloader.sync("./modules/utilities/index.js", utils)
 const common = require("./music/common.js")
 reloader.sync("./commands/music/common.js", common)
 
+const replaceBlackList = [
+	client.token,
+	config.mysql_password,
+	config.yt_api_key,
+	config.chewey_api_key,
+	config.lavalink_password,
+	config.weeb_api_key
+]
+
 commands.assign([
 	{
 		usage: "<code>",
@@ -36,12 +45,17 @@ commands.assign([
 					suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring(0).split(" ")[0]}`, "")
 				}
 				try {
-					result = eval(suffix.replace(/client.token/g, `"${config.fake_token}"`))
+					result = eval(suffix.replace(/client.token/g, `"${constants.fake_token}"`))
 				} catch (e) {
 					result = e
 				}
-				const output = await utils.stringify(result, depth)
-				const nmsg = await msg.channel.send(output.replace(new RegExp(client.token, "g"), config.fake_token))
+
+				let output = await utils.stringify(result, depth)
+				for (const item of replaceBlackList) {
+					output = output.replace(new RegExp(item, "g"), constants.fake_token)
+				}
+
+				const nmsg = await msg.channel.send(output)
 				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			} else return
