@@ -3,6 +3,11 @@
     "short_name": "",
     "icons": [
         {
+            "src": "/images/android-chrome-96x96.png?v=lk9Bb25nwO",
+            "sizes": "96x96",
+            "type": "image/png"
+        },
+        {
             "src": "/images/android-chrome-192x192.png?v=lk9Bb25nwO",
             "sizes": "192x192",
             "type": "image/png"
@@ -10,6 +15,11 @@
         {
             "src": "/images/android-chrome-384x384.png?v=lk9Bb25nwO",
             "sizes": "384x384",
+            "type": "image/png"
+        },
+        {
+            "src": "/images/android-chrome-512x512.png?v=lk9Bb25nwO",
+            "sizes": "512x512",
             "type": "image/png"
         }
     ],

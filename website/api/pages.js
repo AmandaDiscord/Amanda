@@ -23,6 +23,11 @@ module.exports = [
 		}
 	},
 	{
+		route: "/donate", methods: ["GET"], code: async () => {
+			return render(200, "pug/donate.pug")
+		}
+	},
+	{
 		route: "/dash", methods: ["GET"], code: async ({ req }) => {
 			const cookies = utils.getCookies(req)
 			const session = await utils.getSession(cookies)

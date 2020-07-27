@@ -547,7 +547,7 @@ class SpotifySong extends YouTubeSong {
 		super(data.youtubeID || "!", data.name, Math.floor(data.duration_ms / 1000))
 		this.trackNumber = data.track_number
 		this.live = false
-		this.thumbnail = data.album && data.album.images[0] ? { src: data.album.images[0].url, width: data.album.images[0].width, height: data.album.images[0].height } : { src: constants.soundcloud_placeholder, width: 616, height: 440 }
+		this.thumbnail = data.album && data.album.images[0] ? { src: data.album.images[0].url, width: data.album.images[0].width, height: data.album.images[0].height } : { src: constants.spotify_placeholder, width: 386, height: 386 }
 		this.uri = data.uri
 		this.typeWhileGetRelated = false
 		this.related = []
