@@ -102,6 +102,11 @@ class QueueManager {
 						const song = songTypes.makeSoundCloudSong(s.trackNumber, s.title, s.lengthSeconds, s.live, s.uri, s.track)
 						queue.songs.push(song)
 						console.log(`Added SoundCloudSong ${song.title}`)
+					} else if (s.class === "SpotifySong") {
+						// @ts-ignore
+						const song = songTypes.makeSpotifySong({ track_number: s.trackNumber, duration_ms: s.durationMS, name: s.title, uri: s.uri, artists: [{ name: s.artist }] }, s.id, s.track)
+						queue.songs.push(song)
+						console.log(`Added SpotifySong ${song.title}`)
 					}
 				})
 				if (queue.songs[0]) {

@@ -547,14 +547,15 @@ class SpotifySong extends YouTubeSong {
 		super(data.youtubeID || "!", data.name, Math.floor(data.duration_ms / 1000))
 		this.trackNumber = data.track_number
 		this.live = false
-		this.thumbnail = data.album.images[0] ? { src: data.album.images[0].url, width: data.album.images[0].width, height: data.album.images[0].height } : { src: constants.soundcloud_placeholder, width: 616, height: 440 }
+		this.thumbnail = data.album && data.album.images[0] ? { src: data.album.images[0].url, width: data.album.images[0].width, height: data.album.images[0].height } : { src: constants.soundcloud_placeholder, width: 616, height: 440 }
 		this.uri = data.uri
 		this.typeWhileGetRelated = false
 		this.related = []
+		this.artist = data.artists[0].name
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
-				return common.searchYouTube(`${data.artists[0].name} - ${this.title}`, this.queue.textChannel.guild.region).then(tracks => {
+				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.textChannel.guild.region).then(tracks => {
 					if (!tracks[0]) this.error = `No results for ${this.title}`
 					else if (!tracks[0].track) this.error = `Missing track for ${this.title}`
 					else {
@@ -570,6 +571,19 @@ class SpotifySong extends YouTubeSong {
 		})
 
 		this.validate()
+	}
+	// @ts-ignore
+	toObject() {
+		return {
+			class: "SpotifySong",
+			trackNumber: this.trackNumber,
+			durationMS: this.lengthSeconds * 1000,
+			title: this.title,
+			uri: this.uri,
+			artist: this.artist,
+			id: this.id,
+			track: this.track
+		}
 	}
 	getRelated() {
 		return Promise.resolve([])
