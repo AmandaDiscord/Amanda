@@ -552,6 +552,7 @@ class SpotifySong extends YouTubeSong {
 		this.typeWhileGetRelated = false
 		this.related = []
 		this.artist = data.artists[0].name
+		const youtubePrepareCache = this.prepareCache
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
@@ -559,10 +560,10 @@ class SpotifySong extends YouTubeSong {
 					if (!tracks[0]) this.error = `No results for ${this.title}`
 					else if (!tracks[0].track) this.error = `Missing track for ${this.title}`
 					else {
-						this.track = tracks[0].track
 						this.id = tracks[0].info.identifier
 						this.lengthSeconds = Math.ceil(tracks[0].info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+						return youtubePrepareCache.get()
 					}
 				}).catch(message => {
 					this.error = message
