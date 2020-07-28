@@ -41,13 +41,13 @@
     "simple-git": "^2.15.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#b43a90158d9f6dfe07a7b079a5e595a35cd86398",
-    "taihou": "^2.0.3",
-    "typescript": "~3.6.4"
+    "taihou": "^2.0.3"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^13.9.2",
     "eslint": "^7.5.0",
-    "tap": "^14.10.8"
+    "tap": "^14.10.8",
+    "typescript": "~3.9.7"
   }
 }

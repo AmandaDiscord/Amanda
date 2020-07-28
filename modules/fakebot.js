@@ -7,10 +7,11 @@ const { EventEmitter } = require("events")
 const passthrough = require("../passthrough")
 
 const config = require("../config")
+const constants = require("../constants")
 
-passthrough.client = new Amanda()
-passthrough.constants = require("../constants")
-passthrough.config = config
-passthrough.reloadEvent = new EventEmitter()
+const client = new Amanda()
+const reloadEvent = new EventEmitter()
+
+Object.assign(passthrough, { config, constants, client, reloadEvent })
 
 module.exports = passthrough

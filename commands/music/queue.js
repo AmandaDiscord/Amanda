@@ -16,9 +16,6 @@ const voiceEmptyDuration = 20000
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
-const songTypes = require("./songtypes.js")
-reloader.sync("./commands/music/songtypes.js", songTypes)
-
 const common = require("./common.js")
 reloader.sync("./commands/music/common.js", common)
 
@@ -76,7 +73,7 @@ class Queue {
 		this.wrapper = new QueueWrapper(this)
 		this.songStartTime = 0
 		this.pausedAt = null
-		/** @type {songTypes.Song[]} */
+		/** @type {import("./songtypes").Song[]} */
 		this.songs = []
 		/** @type {boolean} */
 		this.auto = false
@@ -432,7 +429,7 @@ class Queue {
 	 * Add a song to the end of the queue.
 	 * Returns 0 on ordinary success.
 	 * Returns 1 if this made the queue non-empty and started playback.
-	 * @param {songTypes.Song} song
+	 * @param {import("./songtypes").Song} song
 	 * @param {number|boolean} [insert]
 	 * @returns {0|1}
 	 */
@@ -658,6 +655,9 @@ class QueueWrapper {
 			return !result
 		}
 	}
+	/**
+	 * @param {number} [amount]
+	 */
 	skip(amount) {
 		this.queue.skip(amount)
 	}

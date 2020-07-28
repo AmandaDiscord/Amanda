@@ -16,7 +16,7 @@ const auditDestroyTimeout = 1000 * 60 * 5
 
 class QueueManager {
 	constructor() {
-		/** @type {Discord.Collection<string, QueueFile.Queue>} */
+		/** @type {Discord.Collection<string, import("../../commands/music/queue").Queue>} */
 		this.cache = new Discord.Collection()
 		this.songsPlayed = 0
 		this.events = new EventEmitter()
