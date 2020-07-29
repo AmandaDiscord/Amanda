@@ -30,7 +30,7 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 })
 
 /**
- * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: queueFile.Queue, lang: import("@amanda/lang").Lang})) => any}>}
+ * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: import("./queue").Queue, lang: import("@amanda/lang").Lang})) => any}>}
  */
 const subcommandsMap = new Map([
 	["play", {
@@ -142,6 +142,7 @@ const subcommandsMap = new Map([
 						}
 					} }
 					// Create the reaction menu
+					// @ts-ignore
 					new ReactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
 						const emoji = buttons[i].slice(2, -1)
 						return Object.assign({ emoji }, action)
@@ -415,8 +416,6 @@ commands.assign([
 					return Array(length).fill(" ").join("​") // SC: U+200B zero-width space
 				}
 
-				/** @type {import("frisky-client/lib/StreamManager")} */ // type detection PLEASE
-				frisky.managers.stream
 				const stations = frisky.managers.stream.stations
 				// first column
 				const stationNameLength = 9

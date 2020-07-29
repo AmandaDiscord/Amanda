@@ -6,7 +6,7 @@ const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, ipc } = passthrough
+const { config, constants, client, reloader, ipc, internalEvents } = passthrough
 
 /** @type {import("../../modules/managers/QueueManager")} */
 let queues = passthrough.queues ? passthrough.queues : undefined
@@ -19,10 +19,7 @@ reloader.sync("./modules/utilities/index.js", utils)
 const common = require("./common.js")
 reloader.sync("./commands/music/common.js", common)
 
-// This is a very gross hack but I could not think of another way to do this because of looping between this file and the QueueManager.
-// This file depends on QueueManager to be fully instanciated and QueueManager requires this file to be watched and it loads it.
-// Please fix this
-utils.addTemporaryListener(client, "QueueManager", path.basename(__filename), (mngr) => {
+utils.addTemporaryListener(internalEvents, "QueueManager", path.basename(__filename), (mngr) => {
 	queues = mngr
 	passthrough.queues = mngr
 }, "once")

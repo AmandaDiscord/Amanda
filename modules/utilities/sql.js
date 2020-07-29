@@ -13,7 +13,6 @@ const { db } = passthrough
  * @returns {Promise<Array<import("mysql2/promise").RowDataPacket>>}
  */
 function all(string, prepared = undefined, connection = undefined, attempts = 2) {
-	// @ts-ignore
 	if (!connection) connection = db
 	if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
 	return new Promise((resolve, reject) => {

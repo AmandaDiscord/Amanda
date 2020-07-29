@@ -448,8 +448,12 @@ commands.assign([
 			const [rotation, x, y] = coords
 
 			arrow.rotate(rotation)
-			// @ts-ignore
-			canvas.composite(arrow, x, y, Jimp.BLEND_MULTIPLY)
+			/**
+			 * we previously passed a blend mode as a string but it only accepts an object
+			 * of type { mode: string, opacitySource: number, opacityDest: number } so it did not actually blend
+			 * with the passed mode previously. It'd be best to just not specify a mode unless you know what you're doing.
+			 */
+			canvas.composite(arrow, x, y)
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")

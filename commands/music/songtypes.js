@@ -2,7 +2,6 @@
 
 const Discord = require("discord.js")
 /** @type {import("node-fetch").default} */
-// @ts-ignore
 const fetch = require("node-fetch")
 
 const passthrough = require("../../passthrough")
@@ -538,7 +537,6 @@ class SoundCloudSong extends Song {
 	}
 }
 
-// @ts-ignore
 class SpotifySong extends YouTubeSong {
 	/**
 	 * @param {import("../../typings").SpotifyTrack & { track?: string, youtubeID?: string }} data
@@ -573,7 +571,6 @@ class SpotifySong extends YouTubeSong {
 
 		this.validate()
 	}
-	// @ts-ignore
 	toObject() {
 		return {
 			class: "SpotifySong",
@@ -619,7 +616,6 @@ function makeYouTubeSongFromData(data) {
  * @param {string} track
  */
 function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track) {
-	// @ts-ignore this is a hack
 	return new SoundCloudSong({
 		identifier: `soundcloud:tracks:${trackNumber}`,
 		title: title,

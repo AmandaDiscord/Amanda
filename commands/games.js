@@ -1,7 +1,6 @@
 // @ts-check
 
 /** @type {import("node-fetch").default} */
-// @ts-ignore
 const fetch = require("node-fetch")
 const entities = require("entities")
 const Discord = require("discord.js")
@@ -258,7 +257,6 @@ async function startGame(channel, options) {
 utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
 function answerDetector(msg) {
 	/** @type {TriviaGame} */
-	// @ts-ignore
 	const game = games.cache.find(g => g.id == msg.channel.id && g.type == "trivia")
 	if (game) game.addAnswer(msg) // all error checking to be done inside addAnswer
 }

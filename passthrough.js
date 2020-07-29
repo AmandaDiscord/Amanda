@@ -14,6 +14,7 @@ process._ptcreated = true
  * @property {import("mysql2/promise").Pool} db
  * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent
+ * @property {import("./typings").internalEvents} internalEvents
  * @property {import("./modules/managers/GameManager")} games
  * @property {import("./modules/managers/QueueManager")} queues
  * @property {import("./modules/managers/StreakManager")} streaks
@@ -21,7 +22,7 @@ process._ptcreated = true
  * @property {import("simple-youtube-api")} youtube
  * @property {import("ws").Server} wss
  * @property {Object<string, import("nedb-promises")>} nedb
- * @property {import("frisky-client")} frisky
+ * @property {import("frisky-client/lib/Frisky")} frisky
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix

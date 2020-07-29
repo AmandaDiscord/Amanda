@@ -1,7 +1,7 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
-const { client, constants, reloader, ipc, commands } = passthrough
+const { client, constants, reloader, ipc, commands, internalEvents } = passthrough
 
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -74,8 +74,7 @@ function refresh() {
 	})
 }
 
-// @ts-ignore
-client.once("prefixes", async (prefixes, statusPrefix) => {
+internalEvents.once("prefixes", async (prefixes, statusPrefix) => {
 	await refresh()
 
 	prefix = statusPrefix

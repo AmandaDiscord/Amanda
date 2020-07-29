@@ -4,12 +4,11 @@ const Discord = require("discord.js")
 const path = require("path")
 const { PlayerManager } = require("discord.js-lavalink")
 /** @type {import("node-fetch").default} */
-// @ts-ignore
 const fetch = require("node-fetch")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
-const { client, config, constants, commands, reloader, reloadEvent } = passthrough
+const { client, config, constants, commands, reloader, reloadEvent, internalEvents } = passthrough
 
 const lastAttemptedLogins = []
 
@@ -221,9 +220,7 @@ function manageReady() {
 		statusPrefix = result.find(r => r.status).prefix
 		passthrough.statusPrefix = statusPrefix
 		console.log(`Loaded ${prefixes.length} prefixes: ${prefixes.join(" ")}`)
-		// we should probably use a different event or a callback instead.
-		// @ts-ignore
-		if (firstStart) client.emit("prefixes", prefixes, statusPrefix)
+		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
 	})
 	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)

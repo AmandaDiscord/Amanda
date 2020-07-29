@@ -3,7 +3,6 @@
 const Jimp = require("jimp")
 const crypto = require("crypto")
 /** @type {import("node-fetch").default} */
-// @ts-ignore
 const fetch = require("node-fetch")
 const Discord = require("discord.js")
 

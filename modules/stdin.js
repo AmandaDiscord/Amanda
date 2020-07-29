@@ -7,7 +7,7 @@ const util = require("util")
 const vm = require("vm")
 
 const passthrough = require("../passthrough")
-const { config, client, commands, db, reloader, reloadEvent, games, queues, frisky, nedb, periodicHistory } = passthrough
+const { config, client, commands, db, reloader, reloadEvent, internalEvents, games, queues, frisky, nedb, periodicHistory } = passthrough
 
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -35,8 +35,7 @@ reloadEvent.once(path.basename(__filename), () => {
 	console.log("stdin.js does not auto-reload.")
 })
 
-// @ts-ignore
-client.once("prefixes", () => {
+internalEvents.once("prefixes", () => {
 	if (utils.isFirstShardOnMachine()) {
 		const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 

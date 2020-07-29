@@ -5,24 +5,27 @@ const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
 const Discord = require("discord.js")
+/** @type {typeof import("./typings/Taihou")} */
 const WeebSH = require("taihou")
 const CommandManager = require("@amanda/commandmanager")
 const Reloader = require("@amanda/reloader")
 const fs = require("fs")
+const events = require("events")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
 
-// @ts-ignore
 const intents = new Discord.Intents((config.additional_intents || []).concat(["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]))
 const client = new Amanda({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents: intents } })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)
-reloader.reloadEvent.setMaxListeners(20)
-// @ts-ignore
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
+/** @type {import("./typings").internalEvents} */
+const internalEvents = new events.EventEmitter()
+
+reloader.reloadEvent.setMaxListeners(20)
 
 const db = mysql.createPool({
 	host: config.mysql_domain,
@@ -40,7 +43,7 @@ const db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, frisky: new Frisky(), weeb })
+	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
 
 	// Utility files
 
@@ -89,8 +92,7 @@ const db = mysql.createPool({
 	passthrough.nedb = {
 		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
 	}
-	// @ts-ignore
-	client.emit("QueueManager", passthrough.queues)
+	internalEvents.emit("QueueManager", passthrough.queues)
 
 	// Can't be part of reloader, and depends on IPC, so it's down here.
 

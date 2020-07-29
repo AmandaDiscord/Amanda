@@ -131,7 +131,7 @@ async function findChannel(message, string, self) {
 	const permissions = message.channel.permissionsFor(client.user)
 	string = string.toLowerCase()
 	if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
-	/** @type {Array<(channel: Discord.TextChannel | Discord.VoiceChannel) => boolean>} */
+	/** @type {Array<(channel: Discord.GuildChannel) => boolean>} */
 	let matchFunctions = []
 	matchFunctions = matchFunctions.concat([
 		channel => channel.id == string,
@@ -139,22 +139,20 @@ async function findChannel(message, string, self) {
 		channel => channel.name.toLowerCase().includes(string)
 	])
 	if (!string) {
-		// @ts-ignore
 		if (self) return message.channel
 		else return null
 	} else {
 		// @ts-ignore
 		if (message.guild.channels.cache.get(string)) return message.guild.channels.cache.get(string)
-		/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
+		/** @type {Array<Discord.GuildChannel>} */
 		const list = []
 		const channels = message.guild.channels.cache.filter(c => c.type == "text" || c.type == "voice")
 		matchFunctions.forEach(i => channels
-			// @ts-ignore
 			.filter(c => i(c))
 			.forEach(ch => {
-				// @ts-ignore
 				if (!list.includes(ch) && list.length < 10) list.push(ch)
 			}))
+		// @ts-ignore
 		if (list.length == 1) return list[0]
 		if (list.length == 0) return null
 		const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")

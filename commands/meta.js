@@ -1,15 +1,13 @@
 // @ts-check
 
 /** @type {import("node-fetch").default} */
-// @ts-ignore
 const fetch = require("node-fetch")
 const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("discord.js")
 const Jimp = require("jimp")
 const path = require("path")
-// @ts-ignore
-const simpleGit = require("simple-git")(__dirname) // simple-git 2.0.0 breaks typings I guess
+const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
@@ -538,7 +536,6 @@ commands.assign([
 				})
 				mem = await Promise.race([ipc.replier.requestGetGuildMember("475599038536744960", user.id), TProm])
 			} catch(e) {
-				// @ts-ignore
 				mem = { roles: [] }
 			}
 			let boosting, hunter

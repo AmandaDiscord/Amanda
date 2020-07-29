@@ -1,12 +1,27 @@
 import MySQL = require("MySQL2/promise");
 import Discord = require("discord.js");
 import ReactionMenu = require("@amanda/reactionmenu");
+import events = require("events");
 
 export interface FilteredGuild {
 	id: string;
 	name: string;
 	icon: string;
 	nameAcronym: string;
+}
+
+export interface InternalEvents {
+	prefixes: [Array<string>, string];
+	QueueManager: [import("../modules/managers/QueueManager")]
+}
+
+
+export class internalEvents extends events.EventEmitter {
+	constructor();
+
+	public on<K extends keyof InternalEvents>(event: K, listener: (...args: InternalEvents[K]) => void): this;
+	public once<K extends keyof InternalEvents>(event: K, listener: (...args: InternalEvents[K]) => void): this;
+	public emit<K extends keyof InternalEvents>(event: K, ...args: InternalEvents[K]): boolean;
 }
 
 export interface SQLWrapper {
