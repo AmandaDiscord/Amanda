@@ -101,19 +101,19 @@ commands.assign([
 			let result, winning
 			if (slots.every(s => s == "heart")) {
 				winning = bet * 20
-				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": winning })
+				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 2) {
 				winning = bet * 4
-				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": winning })
+				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 1) {
 				winning = Math.floor(bet * 1.25)
-				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": winning })
+				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": utils.numberComma(winning) })
 			} else if (slots.slice(1).every(s => s == slots[0])) {
 				winning = bet * 5
-				result = utils.replace(lang.gambling.slot.returns.triple, { "number": winning })
+				result = utils.replace(lang.gambling.slot.returns.triple, { "number": utils.numberComma(winning) })
 			} else {
 				winning = 0
-				result = utils.replace(lang.gambling.slot.returns.lost, { "number": bet })
+				result = utils.replace(lang.gambling.slot.returns.lost, { "number": utils.numberComma(bet) })
 			}
 			utils.coinsManager.award(msg.author.id, winning - bet)
 			buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
@@ -203,7 +203,7 @@ commands.assign([
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` }) +
-					`.\n${utils.replace(lang.gambling.betflip.returns.win, { "number": winnings, "explanation": explanation })}`
+					`.\n${utils.replace(lang.gambling.betflip.returns.win, { "number": utils.numberComma(winnings), "explanation": explanation })}`
 				)
 				utils.coinsManager.award(msg.author.id, winnings)
 			} else {
@@ -211,7 +211,7 @@ commands.assign([
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[pick][1]}`, "string2": `${strings[pick][0]}` }) +
-					`.\n${utils.replace(lang.gambling.betflip.returns.lost, { "number": bet })}`
+					`.\n${utils.replace(lang.gambling.betflip.returns.lost, { "number": utils.numberComma(bet) })}`
 				)
 				return utils.coinsManager.award(msg.author.id, -bet)
 			}
@@ -233,7 +233,7 @@ commands.assign([
 			const money = await utils.coinsManager.get(user.id)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? member.displayTag : user.tag }))
-				.setDescription(`${money} ${emojis.discoin}`)
+				.setDescription(`${utils.numberComma(money)} ${emojis.discoin}`)
 				.setColor(constants.money_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -336,7 +336,7 @@ commands.assign([
 						.catch(() => [userID, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${tag} ${botTag} :: ${coins} ${emojis.discoin}`
+					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(coins)} ${emojis.discoin}`
 				}))
 
 				// Display results
@@ -386,15 +386,15 @@ commands.assign([
 			utils.coinsManager.transact(msg.author.id, member.id, gift)
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
-				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": gift, "mention2": String(member) }))
+				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": utils.numberComma(gift), "mention2": String(member) }))
 				.setColor(constants.money_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(gift) })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 				else return
 			}
-			return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": gift })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
+			return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(gift) })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
 		}
 	},
 	{
@@ -458,8 +458,7 @@ commands.assign([
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
 			await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount))
-			utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": amount, "number2": Math.round(amount * Number(choice)) })
-			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": amount, "number2": Math.round(amount * Number(choice)) }), { files: [image] })
+			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), { files: [image] })
 		}
 	}
 ])

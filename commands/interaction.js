@@ -93,7 +93,7 @@ const cmds = [
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(member ? member.displayTag : user.tag, user.displayAvatarURL({ format: "png", size: 32 }))
 				.addFields([
-					{ name: lang.interaction.waifu.returns.price, value: info.price },
+					{ name: lang.interaction.waifu.returns.price, value: utils.numberComma(info.price) },
 					{ name: lang.interaction.waifu.returns.claimedBy, value: info.claimer ? info.claimer.tag : lang.interaction.waifu.returns.nobody },
 					{ name: lang.interaction.waifu.returns.waifu, value: info.waifu ? info.waifu.tag : lang.interaction.waifu.returns.nobody },
 					{ name: lang.interaction.waifu.returns.gifts, value: info.gifts.received.emojis || lang.interaction.waifu.returns.none }
@@ -144,15 +144,15 @@ const cmds = [
 			const face = utils.arrayRandom(faces)
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
-				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, { "mention1": String(msg.author), "mention2": String(member), "number": claim }))
+				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, { "mention1": String(msg.author), "mention2": String(member), "number": utils.numberComma(claim) }))
 				.setColor(constants.standard_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(claim) })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 				else return
 			}
-			return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": claim })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
+			return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(claim) })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
 		}
 	},
 	{
@@ -209,7 +209,7 @@ const cmds = [
 			await utils.waifu.transact(msg.author.id, gift)
 			await utils.coinsManager.award(msg.author.id, -gift)
 			const user = await client.users.fetch(waifu.waifuID, true)
-			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": gift, "tag2": user.tag }))
+			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": utils.numberComma(gift), "tag2": user.tag }))
 		}
 	},
 	{
@@ -277,7 +277,7 @@ const cmds = [
 				))
 				const displayRows = rows.map((row, index) => {
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${utils.replace(lang.interaction.waifuleaderboard.returns.claimEntry, { "user1": userTagMap.get(row.userID), "user2": userTagMap.get(row.waifuID), "price": row.price })}`
+					return `${ranking}. ${utils.replace(lang.interaction.waifuleaderboard.returns.claimEntry, { "user1": userTagMap.get(row.userID), "user2": userTagMap.get(row.waifuID), "price": utils.numberComma(row.price) })}`
 				})
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)

@@ -138,7 +138,7 @@ commands.assign([
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
-				return `${allStats[key]} total, _${stats[key]} shard_` // SC: U+2004 THREE-PER-EM SPACE
+				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} shard_` // SC: U+2004 THREE-PER-EM SPACE
 			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
@@ -146,14 +146,14 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `${utils.replace(lang.meta.statistics.returns.songsToday, { "number": songsPlayed })}\n` +
-								`${utils.replace(lang.meta.statistics.returns.songsQueued, { "number": [...queues.cache.values()].reduce((acc, cur) => acc + cur.songs.length, 0) })}`,
+							value: `${utils.replace(lang.meta.statistics.returns.songsToday, { "number": utils.numberComma(songsPlayed) })}\n` +
+								`${utils.replace(lang.meta.statistics.returns.songsQueued, { "number": utils.numberComma([...queues.cache.values()].reduce((acc, cur) => acc + cur.songs.length, 0)) })}`,
 							inline: true
 						},
 						{
 							name: leadingSpace,
-							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": client.lavalink.players.size })}\n` +
-								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": [...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0) })}`,
+							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": utils.numberComma(client.lavalink.players.size) })}\n` +
+								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma([...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)) })}`,
 							inline: true
 						}
 					])
@@ -163,13 +163,13 @@ commands.assign([
 				embed.addFields([
 					{
 						name: leadingIdentity,
-						value: `${utils.replace(lang.meta.statistics.returns.gamesToday, { "number": gamesPlayed })}\n` +
-							`${utils.replace(lang.meta.statistics.returns.gamesInProgress, { "number": games.cache.size })}`,
+						value: `${utils.replace(lang.meta.statistics.returns.gamesToday, { "number": utils.numberComma(gamesPlayed) })}\n` +
+							`${utils.replace(lang.meta.statistics.returns.gamesInProgress, { "number": utils.numberComma(games.cache.size) })}`,
 						inline: true
 					},
 					{
 						name: leadingSpace,
-						value: `${utils.replace(lang.meta.statistics.returns.usersPlaying, { "number": games.cache.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0) })}`,
+						value: `${utils.replace(lang.meta.statistics.returns.usersPlaying, { "number": utils.numberComma(games.cache.reduce((acc, cur) => acc + cur.receivedAnswers ? cur.receivedAnswers.size : 0, 0)) })}`,
 						inline: true
 					}
 				])
@@ -180,7 +180,7 @@ commands.assign([
 				const ram = process.memoryUsage()
 				profiler.once("gc", info => {
 					const now = process.memoryUsage()
-					return msg.channel.send(`Garbage Collection completed in ${info.duration}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
+					return msg.channel.send(`Garbage Collection completed in ${utils.numberComma(info.duration)}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
 				})
 				if (global.gc) global.gc()
 				else return msg.channel.send("The global Garbage Collector variable is not exposed")
@@ -192,8 +192,8 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ ${lang.meta.statistics.returns.heartbeat}:**\n${stats.ping.toFixed(0)}ms\n`
-							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${nmsg.createdTimestamp - msg.createdTimestamp}ms\n`
+							value: `**❯ ${lang.meta.statistics.returns.heartbeat}:**\n${utils.numberComma(stats.ping.toFixed(0))}ms\n`
+							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
 							inline: true
@@ -226,7 +226,7 @@ commands.assign([
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${client.ws.ping.toFixed(0)}ms`, inline: true }, { name: lang.meta.ping.returns.latency, value: `${nmsg.createdTimestamp - msg.createdTimestamp}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${utils.numberComma(client.ws.ping.toFixed(0))}ms`, inline: true }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -595,7 +595,7 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 219, 90, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 62, 215)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, money.coins)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, utils.numberComma(money.coins))
 				canvas.composite(heart, 62, 259)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 42 ? `${info.waifu.tag.slice(0, 40)}...` : info.waifu.tag : "Nobody, yet")
 
@@ -619,7 +619,7 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 508, 156)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, money.coins)
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, utils.numberComma(money.coins))
 				canvas.composite(heart, 508, 207)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
 				if (hunter) {

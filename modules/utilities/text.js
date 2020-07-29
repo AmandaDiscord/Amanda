@@ -53,5 +53,14 @@ function progressBar(length, value, max, text) {
 	return `​${result}` // zwsp + result
 }
 
+/**
+ * Converts a number to a string then adds commas where they should go. https://stackoverflow.com/a/2901298
+ * @param {number} number
+ */
+function numberComma(number) {
+	return String(number).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+}
+
 module.exports.progressBar = progressBar
 module.exports.stringify = stringify
+module.exports.numberComma = numberComma
