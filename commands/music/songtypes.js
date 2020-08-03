@@ -279,7 +279,7 @@ class YouTubeSong extends Song {
 						)
 					)
 					.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
-					.setColor(0x36393f)
+					.setColor(constants.standard_embed_color)
 			} else {
 				return "No related content available for the current song."
 			}
@@ -397,7 +397,7 @@ class FriskySong extends Song {
 			if (percentPassed < 0) percentPassed = 0
 			if (percentPassed > 100) percentPassed = 100
 			const embed = new Discord.MessageEmbed()
-				.setColor(0x36393f)
+				.setColor(constants.standard_embed_color)
 				.setTitle(`FRISKY: ${mix.data.title}`)
 				.setURL(`https://beta.frisky.fm/mix/${mix.id}`)
 				.addFields({

@@ -4,6 +4,7 @@ const Discord = require("discord.js")
 const ReactionMenu = require("@amanda/reactionmenu")
 const { contentify } = require("./discordutils")
 const { shuffle: arrayShuffle } = require("./arrayutils")
+const { constants } = require("../../passthrough")
 
 /**
  * @param {string[]} rows
@@ -87,7 +88,7 @@ function createPagination(channel, title, rows, align, maxLength) {
 		return contentify(channel,
 			new Discord.MessageEmbed()
 				.setTitle("Viewing all playlists")
-				.setColor(0x36393f)
+				.setColor(constants.standard_embed_color)
 				.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
 				.setFooter(`Page ${page + 1} of ${pages.length}`)
 		)
@@ -222,7 +223,7 @@ async function makeSelection(channel, authorID, title, failedTitle, items, embed
 	if (!embed) embed = new Discord.MessageEmbed()
 	embed.setTitle(title)
 	embed.setDescription(items.join("\n"))
-	embed.setColor(0x36393f)
+	embed.setColor(constants.standard_embed_color)
 	embed.setFooter(`Type a number from 1-${items.length} to select that item`)
 	// Send embed
 	const selectmessage = await channel.send(contentify(channel, embed))

@@ -134,7 +134,7 @@ commands.assign([
 		category: "meta",
 		example: "&stats",
 		async process(msg, suffix, lang) {
-			const embed = new Discord.MessageEmbed().setColor(0x36393f)
+			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
@@ -226,7 +226,7 @@ commands.assign([
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${utils.numberComma(client.ws.ping.toFixed(0))}ms`, inline: true }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${utils.numberComma(client.ws.ping.toFixed(0))}ms`, inline: true }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = utils.contentify(msg.channel, embed)
 			if (typeof content == "string") nmsg.edit(content)
 			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
@@ -268,7 +268,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
 				.setDescription(`${lang.meta.invite.returns.notice}\n${utils.replace(lang.meta.invite.returns.link, { "link": constants.add })}`)
-				.setColor(0x36393f)
+				.setColor(constants.standard_embed_color)
 			msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -301,7 +301,7 @@ commands.assign([
 						value: utils.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal })
 					}
 				])
-				.setColor("36393E")
+				.setColor(constants.standard_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -313,7 +313,7 @@ commands.assign([
 		example: "&donate",
 		process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
-				.setColor(0x36393f)
+				.setColor(constants.standard_embed_color)
 				.setTitle(lang.meta.donate.returns.intro)
 				.setDescription(utils.replace(lang.meta.donate.returns.description, { "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }))
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -359,7 +359,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setTitle("Git info")
 				.addFields([{ name: "Status", value:`On branch ${res.branch}, latest commit ${res.latestCommitHash}` }, { name: `Commits (latest ${limit} entries)`, value: res.logString }])
-				.setColor("36393E")
+				.setColor(constants.standard_embed_color)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	},
@@ -370,7 +370,7 @@ commands.assign([
 		category: "meta",
 		example: "&privacy",
 		async process(msg, suffix, lang) {
-			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor("36393E")
+			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor(constants.standard_embed_color)
 			try {
 				await msg.author.send(embed)
 				if (msg.channel.type != "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
@@ -391,7 +391,7 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
-			const embed = new Discord.MessageEmbed().setColor("36393E")
+			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
 			if (member) {
 				const guildJoinedTime = member.joinedAt.toUTCString()
@@ -441,7 +441,7 @@ commands.assign([
 			if (canEmbedLinks) {
 				const embed = new Discord.MessageEmbed()
 					.setImage(url)
-					.setColor(0x36393f)
+					.setColor(constants.standard_embed_color)
 				msg.channel.send(embed)
 			} else msg.channel.send(url)
 		}
@@ -459,7 +459,7 @@ commands.assign([
 			if (canEmbedLinks) {
 				const embed = new Discord.MessageEmbed()
 					.setImage(url)
-					.setColor(0x36393f)
+					.setColor(constants.standard_embed_color)
 				msg.channel.send(embed)
 			} else msg.channel.send(url)
 		}
@@ -479,7 +479,7 @@ commands.assign([
 			const url = utils.emojiURL(emoji.id, emoji.animated)
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
-				.setColor("36393E")
+				.setColor(constants.standard_embed_color)
 			if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(url)
 			return msg.channel.send(embed)
 		}
@@ -929,7 +929,7 @@ commands.assign([
 							}
 						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
-						.setColor("36393E")
+						.setColor(constants.standard_embed_color)
 					try {
 						msg.author.send(embed).then(m => reply(msg))
 					} catch (e) {
@@ -1003,7 +1003,7 @@ commands.assign([
 							}
 						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
-						.setColor("36393E")
+						.setColor(constants.standard_embed_color)
 					try {
 						msg.author.send(embed).then(m => reply(msg))
 					} catch (e) {
@@ -1049,7 +1049,7 @@ commands.assign([
 									return `\`${cmd.aliases[0]}${" ​".repeat(maxLength - cmd.aliases[0].length)}\` ${desc}`
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
-							.setColor(0x36393f)
+							.setColor(constants.standard_embed_color)
 						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
 						new Promise(resolve => {
 							msg.author.send(embed).then(resolve).catch(() => {

@@ -3,7 +3,7 @@
 const Discord = require("discord.js")
 
 const passthrough = require("../../passthrough")
-const { client } = passthrough
+const { client, constants } = passthrough
 
 const { contentify } = require("./discordutils")
 
@@ -43,7 +43,7 @@ async function findMember(message, string, self = false) {
 				else list = fetched
 			} else return fetched
 		}
-		const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+		const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
 		const selectmessage = await message.channel.send(contentify(message.channel, embed))
 		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
 		return collector.next.then(newmessage => {
@@ -100,7 +100,7 @@ async function findUser(message, string, self = false) {
 				return d
 			} else return null
 		}
-		const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+		const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
 		const selectmessage = await message.channel.send(contentify(message.channel, embed))
 		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
 		return collector.next.then(newmessage => {
@@ -155,7 +155,7 @@ async function findChannel(message, string, self) {
 		// @ts-ignore
 		if (list.length == 1) return list[0]
 		if (list.length == 0) return null
-		const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor("36393E")
+		const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
 		const selectmessage = await message.channel.send(contentify(message.channel, embed))
 		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
 		return collector.next.then(newmessage => {

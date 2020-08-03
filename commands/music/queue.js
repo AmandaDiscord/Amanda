@@ -520,7 +520,7 @@ class Queue {
 			const embed = new Discord.MessageEmbed()
 			const lang = this.langCache || Lang.en_us
 			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `**${Discord.Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}` }))
-			embed.setColor(0x36393f)
+			embed.setColor(constants.standard_embed_color)
 			return embed
 		} else return null
 	}

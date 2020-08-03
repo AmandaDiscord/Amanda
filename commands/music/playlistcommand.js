@@ -5,7 +5,7 @@ const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { client, config, reloader, commands } = passthrough
+const { client, config, reloader, commands, constants } = passthrough
 
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -253,7 +253,7 @@ commands.assign([
 				if (body.length > 2000) body = `${body.slice(0, 1998).split("\n").slice(0, -1).join("\n")}\n…`
 				const embed = new Discord.MessageEmbed()
 					.setDescription(body)
-					.setColor(0x36393f)
+					.setColor(constants.standard_embed_color)
 				msg.channel.send(utils.contentify(msg.channel, embed))
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
@@ -327,7 +327,7 @@ commands.assign([
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])
-					.setColor("36393E")
+					.setColor(constants.standard_embed_color)
 				if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 					embed.setDescription(rows.join("\n") + totalLength)
 					msg.channel.send(utils.contentify(msg.channel, embed))

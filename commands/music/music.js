@@ -7,7 +7,7 @@ const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, commands, queues, frisky } = passthrough
+const { config, client, reloader, commands, queues, frisky, constants } = passthrough
 
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -111,7 +111,7 @@ const subcommandsMap = new Map([
 					// Make an embed
 					const embed = new Discord.MessageEmbed()
 						.setTitle(lang.audio.playlist.prompts.playlistSection)
-						.setColor(0x36393f)
+						.setColor(constants.standard_embed_color)
 						.setDescription(
 							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
 						+ `\n${lang.audio.playlist.prompts.query}`
@@ -183,7 +183,7 @@ const subcommandsMap = new Map([
 					new Discord.MessageEmbed()
 						.setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(msg.guild.name) }))
 						.setDescription(body)
-						.setColor(0x36393f)
+						.setColor(constants.standard_embed_color)
 				)
 			}
 		}
@@ -275,7 +275,7 @@ const subcommandsMap = new Map([
 			let entries
 			if (audit.length > 15) entries = audit.slice().reverse().slice(0, 15) // Array.reverse mutates Arrays, apparently.
 			else entries = audit.slice().reverse()
-			const embed = new Discord.MessageEmbed().setColor("36393E")
+			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 				.setAuthor(`Audit for ${msg.guild.name}`)
 				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -290,7 +290,7 @@ const subcommandsMap = new Map([
 			if (lyrics.length >= 2000) {
 				lyrics = `${lyrics.slice(0, 1998)}…`
 			}
-			const embed = new Discord.MessageEmbed().setColor("36393E")
+			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 				.setAuthor(`Lyrics for ${song.title}`)
 				.setDescription(lyrics)
 			return msg.channel.send(utils.contentify(msg.channel, embed))
@@ -388,7 +388,7 @@ commands.assign([
 			}
 			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node).host)).hostname
 			const details = new Discord.MessageEmbed()
-				.setColor(0x36393f)
+				.setColor(constants.standard_embed_color)
 				.setAuthor(utils.replace(lang.audio.debug.returns.infoFor, { "channel": channel.name }), utils.emojiURL(emoji))
 				.addField(lang.audio.debug.returns.permissions, perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
 				.addField("Player:",
@@ -510,7 +510,7 @@ commands.assign([
 
 				msg.channel.send(
 					new Discord.MessageEmbed()
-						.setColor(0x36393f)
+						.setColor(constants.standard_embed_color)
 						.setTitle(lang.audio.frisky.returns.schedule)
 						.setDescription(description)
 						.setFooter(lang.audio.frisky.returns.footer)
