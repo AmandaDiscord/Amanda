@@ -121,6 +121,20 @@ class Song {
 		return Promise.resolve("This isn't a real song.")
 	}
 	/**
+	 * @returns {Promise<string>}
+	 */
+	async getLyrics() {
+		const picked = common.genius.pickApart(this)
+		if (!picked.artist || !picked.title) return null
+		let lyrics
+		try {
+			lyrics = await common.genius.getLyrics(picked.title, picked.artist)
+		} catch {
+			lyrics = null
+		}
+		return lyrics
+	}
+	/**
 	 * @param {string} message
 	 */
 	validationError(message) {
@@ -163,9 +177,10 @@ class YouTubeSong extends Song {
 	 * @param {string} id
 	 * @param {string} title
 	 * @param {number} lengthSeconds
-	 * @param {string} track
+	 * @param {string} [track]
+	 * @param {string} [uploader]
 	 */
-	constructor(id, title, lengthSeconds, track = null) {
+	constructor(id, title, lengthSeconds, track = null, uploader = undefined) {
 		super()
 		this.id = id
 		this.thumbnail = {
@@ -174,6 +189,7 @@ class YouTubeSong extends Song {
 			height: 180
 		}
 		this.title = title
+		this.uploader = uploader
 		this.lengthSeconds = lengthSeconds
 		/** @type {string} */ // the vscode type checker is dumb, it would seem
 		this.track = track || "!"
@@ -212,7 +228,10 @@ class YouTubeSong extends Song {
 					return common.getTracks(this.id, this.queue.textChannel.guild.region).then(tracks => {
 						if (!tracks[0]) this.error = `No results for ID ${this.id}`
 						else if (!tracks[0].track) this.error = `Missing track for ID ${this.id}`
-						else this.track = tracks[0].track
+						else {
+							this.track = tracks[0].track
+							if (tracks[0].info) this.uploader = tracks[0].info.author
+						}
 					}).catch(message => {
 						this.error = message
 					})
@@ -228,7 +247,8 @@ class YouTubeSong extends Song {
 			id: this.id,
 			title: this.title,
 			lengthSeconds: this.lengthSeconds,
-			track: this.track
+			track: this.track,
+			uploader: this.uploader
 		}
 	}
 	/**
@@ -476,6 +496,7 @@ class SoundCloudSong extends Song {
 		super()
 		this.title = data.title
 		this.track = track
+		this.artist = data.author
 		this.lengthSeconds = Math.floor(data.length / 1000)
 		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
@@ -600,11 +621,11 @@ class SpotifySong extends YouTubeSong {
 }
 
 /**
- * @param {{ track: string, info: { identifier: string, title: string, length: number } }} data
+ * @param {{ track: string, info: { identifier: string, title: string, length: number, author: string } }} data
  */
 function makeYouTubeSongFromData(data) {
-	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000))
-	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track)
+	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
+	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
 }
 
 /**

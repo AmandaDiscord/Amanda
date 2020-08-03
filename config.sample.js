@@ -6,6 +6,7 @@ module.exports = {
 	chewey_api_key: "chewey bot api key here",
 	lavalink_password: "lavalink password here",
 	weeb_api_key: "weeb.sh api key here",
+	genius_access_token: "genius api key here",
 
 	// Environment
 	machine_id: "lmao_dev_compname",

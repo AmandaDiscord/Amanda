@@ -29,6 +29,7 @@
     "entities": "^2.0.3",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "gc-profiler": "^1.4.1",
+    "genius-lyrics-api": "^3.0.2",
     "heapdump": "^0.3.15",
     "jimp": "^0.x",
     "mime": "^2.4.6",

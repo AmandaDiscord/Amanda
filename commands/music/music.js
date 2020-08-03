@@ -30,7 +30,7 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 })
 
 /**
- * @type {Map<string, {voiceChannel?: string, queue?: string, code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: import("./queue").Queue, lang: import("@amanda/lang").Lang})) => any}>}
+ * @type {Map<string, {voiceChannel?: "ask" | "required" | "provide", queue?: "required", code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: import("./queue").Queue, lang: import("@amanda/lang").Lang})) => any}>}
  */
 const subcommandsMap = new Map([
 	["play", {
@@ -60,7 +60,7 @@ const subcommandsMap = new Map([
 						// The ID worked. Add the song
 						const track = await common.invidious.urlToTrack(url, voiceChannel.guild.region)
 						if (track) {
-							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track)
+							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
 							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
 							return
 						}
@@ -278,7 +278,22 @@ const subcommandsMap = new Map([
 			const embed = new Discord.MessageEmbed().setColor("36393E")
 				.setAuthor(`Audit for ${msg.guild.name}`)
 				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
-			return msg.channel.send(embed)
+			return msg.channel.send(utils.contentify(msg.channel, embed))
+		}
+	}],
+	["lyrics", {
+		queue: "required",
+		code: async (msg, args, { lang, queue }) => {
+			const song = queue.songs[0]
+			let lyrics = await song.getLyrics()
+			if (!lyrics) return msg.channel.send(`${msg.author.username}, no lyrics were found for the current song`)
+			if (lyrics.length >= 2000) {
+				lyrics = `${lyrics.slice(0, 1998)}…`
+			}
+			const embed = new Discord.MessageEmbed().setColor("36393E")
+				.setAuthor(`Lyrics for ${song.title}`)
+				.setDescription(lyrics)
+			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	}]
 ])
@@ -676,6 +691,16 @@ commands.assign([
 		example: "&auto",
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "auto", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Gets song lyrics from Genius",
+		aliases: ["lyrics"],
+		category: "audio",
+		example: "&lyrics",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "lyrics", lang)
 		}
 	}
 ])

@@ -91,7 +91,7 @@ class QueueManager {
 				const queue = this.getOrCreate(voiceChannel, textChannel, host)
 				q.songs.forEach(s => {
 					if (s.class == "YouTubeSong") {
-						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track)
+						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track, s.uploader)
 						queue.songs.push(song)
 						console.log(`Added YouTubeSong ${song.title}`)
 					} else if (s.class == "FriskySong") {

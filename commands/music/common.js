@@ -5,6 +5,7 @@ const fetch = require("node-fetch")
 const Discord = require("discord.js")
 const path = require("path")
 const { encode } = require("@lavalink/encoding")
+const genius = require("genius-lyrics-api")
 
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
@@ -176,6 +177,65 @@ const common = {
 		}
 	},
 
+	genius: {
+		/**
+		 * @param {string} title
+		 * @param {string} artist
+		 * @returns {Promise<?string>}
+		 */
+		getLyrics: function(title, artist = undefined) {
+			const options = {
+				apiKey: config.genius_access_token,
+				title: title,
+				artist: artist,
+				optimizeQuery: true
+			}
+			return genius.getLyrics(options)
+		},
+		/**
+		 * @param {import("./songtypes").Song} song
+		 */
+		pickApart(song) {
+			const songTypes = require("./songtypes")
+
+			const expressions = [
+				/([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/, // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+				/([^-]+) - Topic/ // If the artist is officially uploaded by YouTube. Sucks to suck if they have a - in their name
+			]
+
+			let title, artist
+
+			const standard = () => {
+				const match = song.title.match(expressions[0])
+				if (match) {
+					title = match[2]
+					artist = match[1]
+				}
+				if (!title || !artist) {
+					if (song instanceof songTypes.YouTubeSong) {
+						title = song.title
+						artist = song.uploader
+					}
+				}
+			}
+
+			if (song instanceof songTypes.SpotifySong || song instanceof songTypes.SoundCloudSong) {
+				title = song.title
+				artist = song.artist
+			} else if (song instanceof songTypes.YouTubeSong) {
+				if (song.uploader) {
+					const topic = song.uploader.match(expressions[1])
+					if (topic) {
+						title = song.title
+						artist = topic[1]
+					} else standard()
+				} else standard()
+			}
+
+			return { title, artist }
+		}
+	},
+
 	nodes: {
 		first() {
 			return constants.lavalinkNodes.find(n => n.enabled)
@@ -216,10 +276,10 @@ const common = {
 
 		/**
 		 * @param {string} input
-		 * @param {string} [host=null]
+		 * @param {string} host
 		 * @returns {Promise<{type: string, title: string, videoId: string, author: string, lengthSeconds: number, liveNow: boolean}[]>}
 		 */
-		search: function(input, host = null) {
+		search: function(input, host) {
 			const url = new URL(`${common.invidious.getOrigin(host)}/api/v1/search`)
 			url.searchParams.append("q", input)
 			url.searchParams.append("type", input)
@@ -425,7 +485,7 @@ const common = {
 				if (typeof index != "number") return
 				const track = tracks[index]
 				if (config.use_invidious) {
-					const song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length / 1000))
+					const song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length / 1000), track.track || null, track.info.author)
 					common.inserters.handleSong(song, textChannel, voiceChannel, insert)
 				} else {
 					common.inserters.fromData(textChannel, voiceChannel, track, insert)
