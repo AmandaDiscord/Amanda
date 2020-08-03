@@ -21,7 +21,8 @@ const replaceBlackList = [
 	config.yt_api_key,
 	config.chewey_api_key,
 	config.lavalink_password,
-	config.weeb_api_key
+	config.weeb_api_key,
+	config.genius_access_token
 ]
 
 commands.assign([
