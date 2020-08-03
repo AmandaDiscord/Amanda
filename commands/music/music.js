@@ -287,12 +287,13 @@ const subcommandsMap = new Map([
 			const song = queue.songs[0]
 			let lyrics = await song.getLyrics()
 			if (!lyrics) return msg.channel.send(`${msg.author.username}, no lyrics were found for the current song`)
-			if (lyrics.length >= 2000) {
-				lyrics = `${lyrics.slice(0, 1998)}…`
+			if (lyrics.length >= 1960) {
+				lyrics = `${lyrics.slice(0, 1959)}…`
 			}
 			const embed = new Discord.MessageEmbed().setColor("36393E")
 				.setAuthor(`Lyrics for ${song.title}`)
 				.setDescription(lyrics)
+				.setFooter("Lyrics via Genius")
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
 	}]
