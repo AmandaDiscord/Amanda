@@ -1,35 +1,45 @@
 // @ts-check
 
+const Jimp = require("jimp")
+const JimpProto = Jimp.prototype
+
 /**
  * @template T
  */
 class BitmapCache {
-	constructor() {
+	/**
+	 * @param {"image" | "font"} type
+	 */
+	constructor(type) {
+		this.type = type
 		/**
-		 * @type {Map<string, T | Promise<T>>}
+		 * @type {Map<string, string>}
 		 */
 		this.store = new Map()
 	}
 
 	/**
 	 * @param {string} name
-	 * @param {Promise<T>} promise
+	 * @param {string} dir
 	 */
-	savePromise(name, promise) {
-		this.store.set(name, promise)
-		promise.then(result => {
-			this.store.set(name, result)
-		})
+	save(name, dir) {
+		this.store.set(name, dir)
 	}
 
 	/**
 	 * @param {string} name
 	 * @returns {Promise<T>}
 	 */
-	get(name) {
-		const value = this.store.get(name)
-		if (value instanceof Promise) return value
-		else return Promise.resolve(value)
+	async get(name) {
+		const dir = this.store.get(name)
+		let value
+		if (this.type == "image") {
+			value = await Jimp.read(dir)
+		} else if (this.type == "font") {
+			value = await Jimp.loadFont(dir)
+		}
+		// @ts-ignore
+		return value
 	}
 
 	/**
