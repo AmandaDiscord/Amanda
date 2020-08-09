@@ -485,7 +485,7 @@ const common = {
 				if (typeof index != "number") return
 				const track = tracks[index]
 				if (config.use_invidious) {
-					const song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length / 1000), track.track || null, track.info.author)
+					const song = new (require("./songtypes").YouTubeSong)(track.info.identifier, track.info.title, Math.floor(track.info.length / 1000), null, track.info.author)
 					common.inserters.handleSong(song, textChannel, voiceChannel, insert)
 				} else {
 					common.inserters.fromData(textChannel, voiceChannel, track, insert)
