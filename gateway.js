@@ -11,6 +11,9 @@ const Gateway = new CloudStorm.Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]
 })
 
+/**
+ * @type {import("@amanda/discordtypings").ReadyData}
+ */
 let readyPayload = {}
 
 const connection = new AmpqpConnector({
@@ -77,12 +80,66 @@ async function handleCache(event) {
 	if (event.t === "GUILD_CREATE") {
 		/** @type {import("@amanda/discordtypings").GuildData} */
 		const typed = event.d
-		if (typed.channels) await Promise.all(typed.channels.map(channel => rain.cache.channel.update(channel.id, { id: channel.id, name: channel.name, permission_overwrites: channel.permission_overwrites, type: channel.type })))
+		const promises = []
+		if (typed.channels) {
+			for (const channel of typed.channels) {
+				promises.push(rain.cache.channel.update(channel.id, channel))
+			}
+		}
+		if (typed.roles) {
+			for (const role of typed.roles) {
+				promises.push(rain.cache.role.update(role.id, typed.id, role))
+			}
+		}
+		if (typed.members) {
+			for (const member of typed.members) {
+				promises.push(rain.cache.member.update(member.user.id, typed.id, typed))
+			}
+		}
+		await Promise.all(promises)
 		await rain.cache.guild.update(typed.id, typed)
+	} else if (event.t === "GUILD_DELETE") {
+		if (!event.d.unavailable) { // There is probably a better way to do all of this but for now, IDK. I'm very new to Redis
+			await rain.cache.guild.remove(event.d.id)
+
+			const channelsToDelete = await rain.cache.channel.filter(chan => {
+				chan.guild_id && chan.guild_id === event.d.id
+			})
+			if (channelsToDelete && channelsToDelete.length) {
+				const chanpromises = channelsToDelete.map(item => rain.cache.channel.remove(item.boundObject.id))
+				Promise.all(chanpromises)
+			}
+
+			const membersToDelete = await rain.cache.member.filter(mem => {
+				mem.guild_id && mem.guild_id === event.d.id
+			})
+			if (membersToDelete && membersToDelete.length) {
+				const mempromises = membersToDelete.map(item => rain.cache.member.remove(item.boundObject.id, event.d.id))
+				Promise.all(mempromises)
+			}
+
+			const rolesToDelete = await rain.cache.role.filter(role => {
+				role.guild_id && role.guild_id === event.d.id
+			})
+			if (rolesToDelete && rolesToDelete.length) {
+				const rolepromises = rolesToDelete.map(item => rain.cache.role.remove(item.boundObject.id, event.d.id))
+				Promise.all(rolepromises)
+			}
+		}
 	} else if (event.t === "CHANNEL_CREATE") {
 		/** @type {import("@amanda/discordtypings").ChannelData} */
 		const typed = event.d
-		await rain.cache.channel.update(typed.id, { id: typed.id, name: typed.name, type: typed.type })
+		await rain.cache.channel.update(typed.id, { ...typed })
+		if (typed.permission_overwrites && Array.isArray(typed.permission_overwrites)) {
+			const promises = []
+			for (const overwrite of typed.permission_overwrites) {
+				promises.push(rain.cache.permOverwrite.update(overwrite.id, typed.id, overwrite))
+			}
+			await Promise.all(promises)
+		}
+	} else if (event.t === "CHANNEL_DELETE") {
+		if (!event.d.guild_id) return
+		await rain.cache.channel.remove(event.d.channel_id)
 	} else if (event.t === "MESSAGE_CREATE") {
 		/** @type {import("@amanda/discordtypings").MessageData} */
 		const typed = event.d
@@ -101,5 +158,9 @@ async function handleCache(event) {
 		/** @type {import("@amanda/discordtypings").VoiceStateData} */
 		const typed = event.d
 		if (typed.member && typed.user_id && typed.guild_id) await rain.cache.member.update(typed.user_id, typed.guild_id, { guild_id: typed.guild_id, ...typed.member })
+	} else if (event.t === "GUILD_MEMBER_UPDATE") {
+		/** @type {import("@amanda/discordtypings").MemberData & { user: import("@amanda/discordtypings").UserData } & { guild_id: string }} */
+		const typed = event.d
+		await rain.cache.member.update(typed.user.id, typed.guild_id, typed) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
 	} else return false
 }

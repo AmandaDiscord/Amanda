@@ -115,10 +115,6 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
  * @param {Discord.Message} msg
  */
 async function manageMessage(msg, isEdit = false) {
-	if (!isEdit) {
-		messagesReceived.set(msg.id, msg)
-		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
-	}
 	if (msg.author.bot) {
 		if (!msg.webhookID) {
 			return
@@ -128,6 +124,10 @@ async function manageMessage(msg, isEdit = false) {
 				return
 			}
 		}
+	}
+	if (!isEdit) {
+		messagesReceived.set(msg.id, msg)
+		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
 	}
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`)
 	const prefix = prefixes.find(p => msg.content.startsWith(p))
@@ -156,35 +156,33 @@ async function manageMessage(msg, isEdit = false) {
 				.setColor(0xdd2d2d)
 			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
+
 			// Report to #amanda-error-log
-			const reportChannel = await client.rain.cache.channel.get("512869106089852949")
-			if (reportChannel) {
-				embed.setTitle("Command error occurred.")
-				let details = [
-					["User", msg.author.tag],
-					["User ID", msg.author.id],
-					["Bot", msg.author.bot ? "Yes" : "No"]
-				]
-				if (msg.guild) {
-					details = details.concat([
-						["Guild ID", msg.guild.id],
-						["Channel ID", msg.channel.id]
-					])
-				} else {
-					details = details.concat([
-						["DM", "Yes"]
-					])
-				}
-				const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
-				const detailsString = details.map(row =>
-					`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
-				).join("\n")
-				embed.addFields([
-					{ name: "Details", value: detailsString },
-					{ name: "Message content", value: `\`\`\`\n${msg.content.replace(/`/g, "ˋ")}\`\`\`` }
+			embed.setTitle("Command error occurred.")
+			let details = [
+				["User", msg.author.tag],
+				["User ID", msg.author.id],
+				["Bot", msg.author.bot ? "Yes" : "No"]
+			]
+			if (msg.guild) {
+				details = details.concat([
+					["Guild ID", msg.guild.id],
+					["Channel ID", msg.channel.id]
 				])
-				new Discord.PartialChannel({ id: "512869106089852949" }, client).send(embed)
+			} else {
+				details = details.concat([
+					["DM", "Yes"]
+				])
 			}
+			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
+			const detailsString = details.map(row =>
+				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+			).join("\n")
+			embed.addFields([
+				{ name: "Details", value: detailsString },
+				{ name: "Message content", value: `\`\`\`\n${msg.content.replace(/`/g, "ˋ")}\`\`\`` }
+			])
+			if (!config.is_dev_env) new Discord.PartialChannel({ id: "512869106089852949" }, client).send(embed)
 		}
 	} else {
 		if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {

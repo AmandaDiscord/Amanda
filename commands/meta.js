@@ -266,9 +266,8 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			const permissions = await utils.getChannelPermissions(msg.channel)
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
-			if (permissions && !((this.permissions & 0x00000040) == 0x00000040)) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
 	},
@@ -410,7 +409,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor(constants.standard_embed_color)
 			try {
 				await msg.author.send(embed)
-				if (await utils.getChannelType() === "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
+				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
 				return
 			} catch (reason) { return msg.channel.send(await utils.contentify(msg.channel, embed)) }
 		}
@@ -428,10 +427,10 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let user, member
-			if (await utils.getChannelType(msg.channel) === "text") {
-				member = await utils.findMember(msg, suffix, true)
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+				member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
-			} else user = await utils.findUser(msg, suffix, true)
+			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 			const createdAt = SnowflakeUtil.deconstruct(user.id).date
@@ -477,14 +476,13 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
-			const permissions = await utils.getChannelPermissions(msg.channel)
-			if (permissions && !((permissions & 0x00004000) == 0x00004000)) canEmbedLinks = false
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00004000))) canEmbedLinks = false
 			/** @type {Discord.User} */
 			let user = null
 			if (msg.channel.type == "text") {
-				const member = await utils.findMember(msg, suffix, true)
+				const member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
-			} else user = await utils.findUser(msg, suffix, true)
+			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.avatar.prompts.invalidUser, { "username": msg.author.username }))
 			const url = user.displayAvatarURL({ format: "png", size: 2048, dynamic: true })
 			if (canEmbedLinks) {
@@ -502,9 +500,9 @@ commands.assign([
 		category: "meta",
 		example: "&icon",
 		async process(msg, suffix, lang) {
-			if (await utils.getChannelType() === "dm") return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.cacheManager.channels.typeOf() === "dm") return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
 			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
-			const canEmbedLinks = msg.channel.permissionsFor(client.user).has("EMBED_LINKS")
+			const canEmbedLinks = msg.channel.utils.cacheManager.users.find(client.user).has("EMBED_LINKS")
 			if (canEmbedLinks) {
 				const embed = new Discord.MessageEmbed()
 					.setImage(url)
@@ -525,7 +523,6 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			const permissions = await utils.getChannelPermissions(msg.channel)
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const emoji = Util.parseEmoji(suffix)
 			if (emoji == null) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
@@ -533,7 +530,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
 				.setColor(constants.standard_embed_color)
-			if (permissions && !((permissions & 0x00004000) == 0x00004000)) return msg.channel.send(url)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00004000))) return msg.channel.send(url)
 			return msg.channel.send(embed)
 		}
 	},
@@ -550,13 +547,12 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let user, member
-			const permissions = await utils.getChannelPermissions(msg.channel)
-			if (permissions && !((permissions & 0x00008000) == 0x00008000)) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
-				member = await utils.findMember(msg, suffix, true)
+				member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
-			} else user = await utils.findUser(msg, suffix, true)
+			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))
 			msg.channel.sendTyping()
 
@@ -941,11 +937,10 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let embed
-			const permissions = await utils.getChannelPermissions(msg.channel)
 			/**
 			 * @param {Discord.Message} mesg
 			 */
-			const reply = async (mesg) => { if (await utils.getChannelType(msg.channel) != "dm") return mesg.channel.send("I sent you a DM") }
+			const reply = async (mesg) => { if (await utils.cacheManager.channels.typeOf(msg.channel) != "dm") return mesg.channel.send("I sent you a DM") }
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
@@ -1133,7 +1128,7 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if (permissions && (permissions & 0x00000040) == 0x00000040) embed.setFooter(lang.meta.help.returns.mobile)
+						if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00000040))) embed.setFooter(lang.meta.help.returns.mobile)
 						new Promise(resolve => {
 							msg.author.send(embed).then(resolve).catch(async () => {
 								msg.channel.send(await utils.contentify(msg.channel, embed)).then(resolve)

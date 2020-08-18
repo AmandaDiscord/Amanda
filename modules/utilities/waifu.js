@@ -5,7 +5,7 @@ const { client } = passthrough
 
 const sql = require("./sql")
 const coinsManager = require("./coinsmanager")
-const { getUser } = require("./discordutils")
+const { cacheManager } = require("./cachemanager")
 
 const waifuGifts = {
 	"Flowers": {
@@ -83,9 +83,9 @@ async function get(userID, options) {
 		sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
 		sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
 	])
-	const claimer = claimerRow ? await getUser(claimerRow.userID) : undefined
+	const claimer = claimerRow ? await cacheManager.users.get(claimerRow.userID, true) : undefined
 	const price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0
-	const waifu = meRow ? await getUser(meRow.waifuID) : undefined
+	const waifu = meRow ? await cacheManager.users.get(meRow.waifuID, true) : undefined
 	const waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0
 	const gifts = {
 		received: {
@@ -97,6 +97,7 @@ async function get(userID, options) {
 			emojis: sentGifts.map(g => waifuGifts[g.type].emoji).join("").replace(/(.{10})/g, "$1\n").trim()
 		}
 	}
+	// @ts-ignore
 	return { claimer, price, waifu, waifuPrice, gifts }
 }
 

@@ -130,7 +130,7 @@ commands.assign([
 			if (isNaN(award)) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
 			if (!usertxt) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
-			const member = await utils.findMember(msg, usertxt)
+			const member = await utils.cacheManager.members.find(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
 			utils.coinsManager.award(member.id, award)
 			const memlang = await utils.getLang(member.id, "self")
