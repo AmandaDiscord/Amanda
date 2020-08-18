@@ -15,6 +15,10 @@ commands.assign([
 		aliases: ["todo", "trello", "tasks"],
 		category: "meta",
 		example: "&todo",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 */
 		process(msg, suffix) {
 			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}

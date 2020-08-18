@@ -2,7 +2,7 @@
 
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
 const { constants, config, commands, reloader } = passthrough
@@ -34,7 +34,7 @@ async function sendImage(host, path, msg, emoji, footer) {
 		.setImage(img)
 		.setColor(constants.standard_embed_color)
 		.setFooter(footer)
-	return msg.channel.send(utils.contentify(msg.channel, embed))
+	return msg.channel.send(await utils.contentify(msg.channel, embed))
 }
 
 commands.assign([
@@ -94,14 +94,19 @@ commands.assign([
 		aliases: ["catgirl", "neko"],
 		category: "images",
 		example: "&neko",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
-			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life").catch(() => {
+			return sendImage("nekos", "neko", msg, "<a:NekoSway:461420549990776832>", "Powered by nekos.life").catch(async () => {
 				const embed = new Discord.MessageEmbed()
 					.setTitle(lang.images.catgirl.returns.error)
 					.setDescription(lang.images.catgirl.returns.offline)
 					.setImage("https://cdn.discordapp.com/attachments/413088092556361728/632513720593022997/6439473d9cea838eae9161dad09927ae.png")
 					.setColor(constants.standard_embed_color)
-				msg.channel.send(embed)
+				msg.channel.send(await utils.contentify(msg.channel, embed))
 			})
 		}
 	}

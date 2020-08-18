@@ -3,7 +3,7 @@
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
 const entities = require("entities")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
@@ -38,7 +38,7 @@ reloader.sync("./modules/utilities/index.js", utils)
 
 class Game {
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {Discord.Message["channel"]} channel
 	 * @param {string} type
 	 */
 	constructor(channel, type) {
@@ -47,8 +47,8 @@ class Game {
 		this.manager = games
 		this.id = channel.id
 		this.receivedAnswers = undefined
-		if (channel instanceof Discord.TextChannel) this.permissions = channel.permissionsFor(client.user)
-		else this.permissions = undefined
+		this.permissions = 0
+		utils.getChannelPermissions(channel).then(perms => this.permissions = perms)
 	}
 	init() {
 		this.manager.add(this)
@@ -65,7 +65,7 @@ module.exports.Game = Game
 
 class TriviaGame extends Game {
 	/**
-	 * @param {Discord.TextChannel|Discord.DMChannel} channel
+	 * @param {Discord.Message["channel"]} channel
 	 * @param {{response_code: number, results: Array<TriviaResponse>}} data
 	 * @param {number} category
 	 * @param {Lang.Lang} lang
@@ -79,7 +79,7 @@ class TriviaGame extends Game {
 		/** @type {"trivia"} */
 		this.type
 	}
-	start() {
+	async start() {
 		const correctAnswer = this.data.correct_answer.trim()
 		const wrongAnswers = this.data.incorrect_answers.map(a => a.trim())
 		/** @type {Array<{ correct: boolean, answer: string }>} */
@@ -106,7 +106,7 @@ class TriviaGame extends Game {
 			.setColor(this.color)
 		answerFields.forEach(f => embed.addFields({ name: "​", value: `${f.map(a => `${a.letter} ${entities.decodeHTML(a.answer)}\n`).join("")}​`, inline: true }))
 		embed.setFooter(this.lang.games.trivia.prompts.provideAnswer)
-		this.channel.send(utils.contentify(this.channel, embed))
+		this.channel.send(await utils.contentify(this.channel, embed))
 		// Setup timer
 		this.timer = setTimeout(() => this.end(), 20000)
 		// Prepare to receive answers
@@ -173,17 +173,17 @@ class TriviaGame extends Game {
 			.setTitle("Correct answer:")
 			.setDescription(this.correctAnswer)
 			.setColor(this.color)
-		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `${String(client.users.cache.get(r.userID))} (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax })} ${emojis.discoin})` : ""}`).join("\n") })
+		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `<@${r.userID}> (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax })} ${emojis.discoin})` : ""}`).join("\n") })
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
-		if (this.channel.type == "dm" || this.permissions && this.permissions.has("ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
+		if (this.channel.type == "dm" || this.permissions && ((this.permissions & 0x00000040) == 0x00000040)) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
-		return this.channel.send(utils.contentify(this.channel, embed)).then(msg => {
-			new ReactionMenu(msg, [
+		return this.channel.send(await utils.contentify(this.channel, embed)).then(msg => {
+			/* new ReactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
 					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
 					else startGame(this.channel, { category: this.category, lang: this.lang })
 				} }
-			])
+			])*/
 		})
 	}
 }
@@ -191,7 +191,7 @@ module.exports.TriviaGame = TriviaGame
 
 /**
  * @param {string} body
- * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @param {Discord.Message["channel"]} channel
  * @param {Lang.Lang} lang
  * @returns {Promise<[boolean, any]>}
  */
@@ -203,11 +203,11 @@ async function JSONHelper(body, channel, lang) {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(lang.games.trivia.prompts.parsingError)
 			.setColor(0xdd1d1d)
-		return [false, channel.send(utils.contentify(channel, embed))]
+		return [false, channel.send(await utils.contentify(channel, embed))]
 	}
 }
 /**
- * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @param {Discord.Message["channel"]} channel
  * @param {{ suffix?: string, msg?: Discord.Message, category?: number, lang: Lang.Lang }} options
  */
 async function startGame(channel, options) {
@@ -402,6 +402,11 @@ commands.assign([
 		aliases: ["trivia", "t"],
 		category: "games",
 		example: "&t Science: Computers",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
 			startGame(msg.channel, { suffix, msg, lang })
 		}
@@ -412,7 +417,12 @@ commands.assign([
 		aliases: ["minesweeper", "ms"],
 		category: "games",
 		example: "&ms hard --raw --size:10",
-		process(msg, suffix, lang) {
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async process(msg, suffix, lang) {
 			let size = 8, difficulty = "easy"
 			let title
 			const sfx = suffix.toLowerCase()
@@ -436,7 +446,7 @@ commands.assign([
 				if (rawcontent.length > 1999) return msg.channel.send(lang.games.minesweeper.returns.rawTooLarge)
 				return msg.channel.send(rawcontent)
 			}
-			msg.channel.send(utils.contentify(msg.channel, embed))
+			msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	}
 ])

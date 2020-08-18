@@ -5,6 +5,7 @@ const { client } = passthrough
 
 const sql = require("./sql")
 const coinsManager = require("./coinsmanager")
+const { getUser } = require("./discordutils")
 
 const waifuGifts = {
 	"Flowers": {
@@ -54,7 +55,7 @@ const waifuGifts = {
 /**
  * @param {string} userID
  * @param {{basic: boolean}} [options]
- * @returns {Promise<{claimer: import("discord.js").User, price: number, waifu: import("discord.js").User, waifuID?: string, userID?: string, waifuPrice: number, gifts: {received: {list: Array<any>, emojis: string}, sent: {list: Array<any>, emojis: string}}}>}
+ * @returns {Promise<{claimer: import("thunderstorm").User, price: number, waifu: import("thunderstorm").User, waifuID?: string, userID?: string, waifuPrice: number, gifts: {received: {list: Array<any>, emojis: string}, sent: {list: Array<any>, emojis: string}}}>}
  */
 async function get(userID, options) {
 	/* const emojiMap = {
@@ -82,9 +83,9 @@ async function get(userID, options) {
 		sql.all("SELECT senderID, type FROM WaifuGifts WHERE receiverID = ?", userID),
 		sql.all("SELECT receiverID, type FROM WaifuGifts WHERE senderID = ?", userID)
 	])
-	const claimer = claimerRow ? await client.users.fetch(claimerRow.userID) : undefined
+	const claimer = claimerRow ? await getUser(claimerRow.userID) : undefined
 	const price = claimerRow ? Math.floor(claimerRow.price * 1.25) : 0
-	const waifu = meRow ? await client.users.fetch(meRow.waifuID) : undefined
+	const waifu = meRow ? await getUser(meRow.waifuID) : undefined
 	const waifuPrice = meRow ? Math.floor(meRow.price * 1.25) : 0
 	const gifts = {
 		received: {

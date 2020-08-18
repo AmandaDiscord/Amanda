@@ -1,121 +1,126 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
 const { client, constants } = passthrough
 
-const { contentify } = require("./discordutils")
+const { contentify, createMessageCollector, getUser, getChannelType } = require("./discordutils")
+
+const SnowflakeUtil = require("discord.js/src/util/Snowflake")
 
 /**
  * @param {Discord.Message} message Message Object
  * @param {string} string String to search members by
  * @param {boolean} [self=false] If the function should return the `message` author's member Object
- * @returns {Promise<Discord.GuildMember>}
+ * @returns {?Promise<?Discord.GuildMember>}
  */
-async function findMember(message, string, self = false) {
-	string = string.toLowerCase()
-	if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
-	/** @type {Array<(member: Discord.GuildMember) => Boolean>} */
-	let matchFunctions = []
-	matchFunctions = matchFunctions.concat([
-		member => member.id.includes(string),
-		member => member.user.tag.toLowerCase() == string,
-		member => member.user.username.toLowerCase() == string,
-		member => member.displayName.toLowerCase() == string,
-		member => member.user.username.toLowerCase().includes(string),
-		member => member.displayName.toLowerCase().includes(string)
-	])
-	if (!string) {
-		if (self) return message.member
-		else return null
-	} else {
-		if (message.guild.members.cache.get(string)) return message.guild.members.cache.get(string)
-		/** @type {Array<Discord.GuildMember>} */
-		let list = []
-		matchFunctions.forEach(i => message.guild.members.cache.filter(m => i(m)).forEach(mem => { if (!list.includes(mem) && list.length < 10) list.push(mem) }))
-		if (list.length == 1) return list[0]
-		if (list.length == 0) {
-			const fetched = await fetch(string, message.guild)
-			if (!fetched) return null
-			if (Array.isArray(fetched)) {
-				if (fetched.length == 0) return null
-				else list = fetched
-			} else return fetched
+function findMember(message, string, self = false) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (res) => {
+		string = string.toLowerCase()
+		if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
+
+		if (!string) {
+			if (self) return res(message.member)
+			else return res(null)
+		} else {
+			const guildMemData = await client.rain.cache.member.filter(() => true, message.guild.id)
+			const nicktest = guildMemData.find(mem => mem.boundObject.nick && mem.boundObject.nick.toLowerCase().includes(string))
+			const userdata = await client.rain.cache.user.filter((user) => {
+				const bO = !!(nicktest && nicktest.boundObject)
+				const safeBo = bO ? nicktest.boundObject : { id: "" }
+				return user.id.includes(string) || `${user.username}#${user.discriminator}`.toLowerCase() === string || user.username.toLowerCase() === string || user.username.toLowerCase().includes(string) || bO ? user.id === safeBo.id : false
+			}, guildMemData.map(item => item.boundObject.id))
+
+			/** @type {Array<Discord.GuildMember>} */
+			let list = []
+			for (const user of userdata) {
+				console.log(user.boundObject)
+				if (list.find(item => item.id === user.id) || list.length === 10) continue
+				const memdata = await client.rain.cache.member.get(user.id, message.guild.id)
+				console.log(memdata.boundObject)
+				list.push(new Discord.GuildMember({ user: user.boundObject, ...memdata.boundObject }, client))
+			}
+			if (list.length == 1) return res(list[0])
+			if (list.length == 0) {
+				const fetched = await fetch(string, message.guild)
+				if (!fetched) return res(null)
+				if (Array.isArray(fetched)) {
+					if (fetched.length == 0) return res(null)
+					else list = fetched
+				} else return res(fetched)
+			}
+			const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
+			const selectmessage = await message.channel.send(await contentify(message.channel, embed))
+			createMessageCollector({ channelID: message.channel.id, userIDs: [message.author.id] }, (newmessage) => {
+				const index = parseInt(newmessage.content)
+				if (!index || !list[index - 1]) return null
+				selectmessage.delete()
+				// eslint-disable-next-line no-empty-function
+				newmessage.delete().catch(() => {})
+				return res(list[index - 1])
+			}, async () => {
+				embed.setTitle("Member selection cancelled").setDescription("").setFooter("")
+				selectmessage.edit(await contentify(message.channel, embed))
+				return res(null)
+			})
 		}
-		const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
-		const selectmessage = await message.channel.send(contentify(message.channel, embed))
-		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
-		return collector.next.then(newmessage => {
-			const index = parseInt(newmessage.content)
-			if (!index || !list[index - 1]) return null
-			selectmessage.delete()
-			// eslint-disable-next-line no-empty-function
-			newmessage.delete().catch(() => {})
-			return list[index - 1]
-		}).catch(() => {
-			embed.setTitle("Member selection cancelled").setDescription("").setFooter("")
-			selectmessage.edit(contentify(message.channel, embed))
-			return null
-		})
-	}
+	})
 }
 
 /**
  * @param {Discord.Message} message Message Object
  * @param {string} string String to search users by
  * @param {boolean} [self=false] If the function should return the `message` author's user Object
- * @returns {Promise<Discord.User>}
+ * @returns {Promise<?Discord.User>}
  */
-async function findUser(message, string, self = false) {
-	string = string.toLowerCase()
-	if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
-	/** @type {Array<(user: Discord.User) => boolean>} */
-	let matchFunctions = []
-	matchFunctions = matchFunctions.concat([
-		user => user.id == string,
-		user => user.tag.toLowerCase() == string,
-		user => user.username.toLowerCase() == string,
-		user => user.username.toLowerCase().includes(string)
-	])
-	if (!string) {
-		if (self) return message.author
-		else return null
-	} else {
-		if (client.users.cache.get(string)) return client.users.cache.get(string)
-		const list = []
-		matchFunctions.forEach(i => client.users.cache.filter(u => i(u))
-			.forEach(us => {
-				if (!list.includes(us) && list.length < 10) list.push(us)
-			}))
-		if (list.length == 1) return list[0]
-		if (list.length == 0) {
-			if (validate(string)) {
-				let d
-				try {
-					d = await client.users.fetch(string, true)
-				} catch (e) {
-					return null
-				}
-				return d
-			} else return null
+function findUser(message, string, self = false) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (res) => {
+		string = string.toLowerCase()
+		if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
+		if (!string) {
+			if (self) return res(message.author)
+			else return res(null)
+		} else {
+			const userdata = await client.rain.cache.user.filter((user) => {
+				return user.id.includes(string) || `${user.username}#${user.discriminator}`.toLowerCase() === string || user.username.toLowerCase() === string || user.username.toLowerCase().includes(string)
+			})
+			const list = []
+			for (const user of userdata) {
+				if (list.find(item => item.id === user.id) || list.length === 10) continue
+				list.push(new Discord.User(user.boundObject, client))
+			}
+			if (list.length == 1) return res(list[0])
+			if (list.length == 0) {
+				if (validate(string)) {
+					let d
+					try {
+						d = await getUser(string)
+					} catch (e) {
+						return res(null)
+					}
+					// @ts-ignore
+					return res(d)
+				} else return res(null)
+			}
+			const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
+			const selectmessage = await message.channel.send(await contentify(message.channel, embed))
+			createMessageCollector({ channelID: message.channel.id, userIDs: [message.author.id] }, (newmessage) => {
+				const index = Number(newmessage.content)
+				if (!index || !list[index - 1]) return res(null)
+				selectmessage.delete()
+				// eslint-disable-next-line no-empty-function
+				if (message.channel.type != "dm") newmessage.delete().catch(() => {})
+				return res(list[index - 1])
+			}, async () => {
+				embed.setTitle("User selection cancelled").setDescription("").setFooter("")
+				selectmessage.edit(await contentify(selectmessage.channel, embed))
+				return res(null)
+			})
 		}
-		const embed = new Discord.MessageEmbed().setTitle("User selection").setDescription(list.map((item, i) => `${i + 1}. ${item.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
-		const selectmessage = await message.channel.send(contentify(message.channel, embed))
-		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
-		return collector.next.then(newmessage => {
-			const index = Number(newmessage.content)
-			if (!index || !list[index - 1]) return null
-			selectmessage.delete()
-			// eslint-disable-next-line no-empty-function
-			if (message.channel.type != "dm") newmessage.delete().catch(() => {})
-			return list[index - 1]
-		}).catch(() => {
-			embed.setTitle("User selection cancelled").setDescription("").setFooter("")
-			selectmessage.edit(contentify(selectmessage.channel, embed))
-			return null
-		})
-	}
+	})
 }
 
 /**
@@ -123,54 +128,47 @@ async function findUser(message, string, self = false) {
  * @param {Discord.Message} message Message Object
  * @param {string} string String to search channels by
  * @param {boolean} [self=false] If the function should return `message`.channel
- * @returns {Promise<Discord.TextChannel | Discord.VoiceChannel>}
+ * @returns {Promise<?Discord.TextChannel | Discord.VoiceChannel>}
  */
-async function findChannel(message, string, self) {
+function findChannel(message, string, self) {
 	// eslint-disable-next-line no-async-promise-executor
-	if (message.channel instanceof Discord.DMChannel) return null
-	const permissions = message.channel.permissionsFor(client.user)
-	string = string.toLowerCase()
-	if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
-	/** @type {Array<(channel: Discord.GuildChannel) => boolean>} */
-	let matchFunctions = []
-	matchFunctions = matchFunctions.concat([
-		channel => channel.id == string,
-		channel => channel.name.toLowerCase() == string,
-		channel => channel.name.toLowerCase().includes(string)
-	])
-	if (!string) {
-		if (self) return message.channel
-		else return null
-	} else {
-		// @ts-ignore
-		if (message.guild.channels.cache.get(string)) return message.guild.channels.cache.get(string)
-		/** @type {Array<Discord.GuildChannel>} */
-		const list = []
-		const channels = message.guild.channels.cache.filter(c => c.type == "text" || c.type == "voice")
-		matchFunctions.forEach(i => channels
-			.filter(c => i(c))
-			.forEach(ch => {
-				if (!list.includes(ch) && list.length < 10) list.push(ch)
-			}))
-		// @ts-ignore
-		if (list.length == 1) return list[0]
-		if (list.length == 0) return null
-		const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
-		const selectmessage = await message.channel.send(contentify(message.channel, embed))
-		const collector = message.channel.createMessageCollector((m => m.author.id == message.author.id), { max: 1, time: 60000 })
-		return collector.next.then(newmessage => {
-			const index = Number(newmessage.content)
-			if (!index || !list[index - 1]) return null
-			selectmessage.delete()
-			// eslint-disable-next-line no-empty-function
-			newmessage.delete().catch(() => {})
-			return list[index - 1]
-		}).catch(() => {
-			embed.setTitle("Channel selection cancelled").setDescription("").setFooter("")
-			selectmessage.edit(contentify(selectmessage.channel, embed))
-			return null
-		})
-	}
+	return new Promise(async (res) => {
+		if (await getChannelType(message.channel) === "dm") return null
+		string = string.toLowerCase()
+		if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
+		if (!string) {
+			if (self) return client.rain.cache.channel.get(message.channel.id).then(d => d && d.boundObject.type === 0 ? new Discord.TextChannel(d.boundObject, client) : d ? new Discord.VoiceChannel(d.boundObject, client) : null).then(res)
+			else return res(null)
+		} else {
+			const channeldata = await client.rain.cache.channel.filter((channel) => {
+				// @ts-ignore
+				if (!channel.guild_id || (channel.guild_id && channel.guild_id === message.guild.id)) return false
+				else return channel.id === string || channel.name.toLowerCase() === string || channel.name.toLowerCase().includes(string)
+			})
+			const list = []
+			const channels = channeldata.filter(chan => chan.boundObject.type === 0 || chan.boundObject.type === 2)
+			for (const chan of channels) {
+				if (list.find(item => item.id === chan.boundObject.id) || list.length === 10) continue
+				list.push(chan.boundObject.type === 0 ? new Discord.TextChannel(chan.boundObject, client) : new Discord.VoiceChannel(chan.boundObject, client))
+			}
+			if (list.length == 1) return res(list[0])
+			if (list.length == 0) return res(null)
+			const embed = new Discord.MessageEmbed().setTitle("Channel selection").setDescription(list.map((item, i) => `${item.type == "voice" ? "<:voice:674569797278760961>" : "<:text:674569797278892032>"} ${i + 1}. ${item.name}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
+			const selectmessage = await message.channel.send(await contentify(message.channel, embed))
+			createMessageCollector({ channelID: message.channel.id, userIDs: [message.author.id] }, (newmessage) => {
+				const index = Number(newmessage.content)
+				if (!index || !list[index - 1]) return res(null)
+				selectmessage.delete()
+				// eslint-disable-next-line no-empty-function
+				newmessage.delete().catch(() => {})
+				return res(list[index - 1])
+			}, async () => {
+				embed.setTitle("Channel selection cancelled").setDescription("").setFooter("")
+				selectmessage.edit(await contentify(selectmessage.channel, embed))
+				return res(null)
+			})
+		}
+	})
 }
 
 /**
@@ -180,15 +178,16 @@ async function findChannel(message, string, self) {
 function validate(id) {
 	if (!(/^\d+$/.test(id))) return false
 
-	const deconstructed = Discord.SnowflakeUtil.deconstruct(id)
+	const deconstructed = SnowflakeUtil.deconstruct(id)
 	if (!deconstructed || !deconstructed.date) return false
 	if (deconstructed.date.getTime() > Date.now()) return false
 	return true
 }
+
 /**
  * Returns a user if possible or an Array of Members from a guild
  * @param {string} search
- * @param {Discord.Guild} guild
+ * @param {Discord.Message["guild"]} guild
  * @param {number} [limit=10]
  */
 async function fetch(search, guild, limit = 10) {
@@ -200,13 +199,16 @@ async function fetch(search, guild, limit = 10) {
 	else mode = "username"
 
 	if (mode == "id") {
-		if (guild.members.cache.get(search)) return guild.members.cache.get(search)
+		/** @type {Discord.GuildMember} */
 		let d
 		try {
-			d = await guild.members.fetch(search)
+			// @ts-ignore
+			d = await guild.fetchMembers(search)
 		} catch (e) {
 			return null
 		}
+		// @ts-ignore
+		if (d) await client.rain.cache.member.update(search, guild.id, d.toJSON())
 		return d
 	} else {
 		let payload, discrim
@@ -214,19 +216,27 @@ async function fetch(search, guild, limit = 10) {
 			payload = search.replace(discrimregex, "")
 			discrim = /#(\d{4})$/.exec(search)[1]
 		} else payload = search
+		/** @type {Array<Discord.GuildMember>} */
 		let data
 		try {
-			data = await guild.members.fetch({ query: payload, limit: limit, withPresences: false })
+			// @ts-ignore
+			data = await guild.fetchMembers({ query: payload, limit: limit })
 		} catch (e) {
 			return null
 		}
 		if (!data) return null
-		const matchdiscrim = mode == "tag" ? data.find(m => m.user.discriminator == discrim) : undefined
+		for (const entry of data) {
+			// @ts-ignore
+			await client.rain.cache.member.update(entry.id, guild.id, entry.toJSON())
+		}
+		const matchdiscrim = mode == "tag" ?
+			Array.isArray(data) ? data.find(m => m.user.discriminator == discrim) : undefined :
+			undefined
 		if (matchdiscrim) return matchdiscrim
 		else if (mode == "tag" && !matchdiscrim) return null
 		else {
-			if (data.size == 1) return data.first()
-			else return data.array()
+			if (Array.isArray(data) && data.length == 1) return data[0]
+			else return data
 		}
 	}
 }

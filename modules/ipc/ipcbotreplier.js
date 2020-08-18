@@ -3,7 +3,7 @@
 const types = require("../../typings")
 
 const path = require("path")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
@@ -28,7 +28,7 @@ function filterGuild(guild) {
 		id: guild.id,
 		name: guild.name,
 		icon: guild.icon,
-		nameAcronym: guild.nameAcronym
+		nameAcronym: guild.name.split(" ").map(it => it[0].toUpperCase()).join("")
 	}
 }
 
@@ -66,7 +66,7 @@ class ClientReplier extends Replier {
 	 * @param {string} guildID
 	 */
 	REPLY_GET_GUILD(guildID) {
-		const guild = client.guilds.cache.get(guildID)
+		const guild = undefined
 		if (guild) return filterGuild(guild)
 		else return null
 	}
@@ -80,7 +80,7 @@ class ClientReplier extends Replier {
 		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
-		for (const guild of client.guilds.cache.values()) {
+		for (const guild of []) {
 			if (guild.members.cache.has(userID)) {
 				let isNowPlaying = false
 				if (np) {
@@ -100,7 +100,7 @@ class ClientReplier extends Replier {
 	 * @param {string} input.guildID
 	 */
 	REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
-		const guild = client.guilds.cache.get(guildID)
+		const guild = undefined
 		if (!guild) return null
 		if (!guild.members.cache.has(userID)) return null
 		return filterGuild(guild)

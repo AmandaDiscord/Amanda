@@ -47,7 +47,7 @@ function getConnection() {
 }
 
 /**
- * @param {import("discord.js").User} user
+ * @param {import("thunderstorm").User} user
  * @param {"eval"|"owner"} permission
  * @returns {Promise<boolean>}
  */

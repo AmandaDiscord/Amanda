@@ -4,7 +4,7 @@ const Jimp = require("jimp")
 const crypto = require("crypto")
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
 const { constants, client, commands, reloader, weeb } = passthrough
@@ -24,10 +24,15 @@ const cmds = [
 		aliases: ["ship"],
 		category: "interaction",
 		example: "&ship PapiOphidian Cadence",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
-			const permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
+			if (await utils.getChannelType() === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
+			const permissions = await utils.getChannelPermissions(msg.channel)
+			if (permissions && !((permissions & 0x00008000) == 0x00008000)) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
 			if (!(args.length >= 1)) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
@@ -73,7 +78,7 @@ const cmds = [
 				const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 				percentage = Number(`0x${hash}`) % 101
 			}
-			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { files: [image] })
+			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { file: image })
 		}
 	},
 	{
@@ -82,16 +87,21 @@ const cmds = [
 		aliases: ["waifu"],
 		category: "interaction",
 		example: "&waifu PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			let user, member
-			if (msg.channel.type == "text") {
+			if (await utils.getChannelType(msg.channel) === "text") {
 				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.invalidUser, { "username": msg.author.username }))
 			const info = await utils.waifu.get(user.id)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(member ? member.displayTag : user.tag, user.displayAvatarURL({ format: "png", size: 32 }))
+				.setAuthor(member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag, user.displayAvatarURL({ format: "png", size: 32 }))
 				.addFields([
 					{ name: lang.interaction.waifu.returns.price, value: utils.numberComma(info.price) },
 					{ name: lang.interaction.waifu.returns.claimedBy, value: info.claimer ? info.claimer.tag : lang.interaction.waifu.returns.nobody },
@@ -99,7 +109,7 @@ const cmds = [
 					{ name: lang.interaction.waifu.returns.gifts, value: info.gifts.received.emojis || lang.interaction.waifu.returns.none }
 				])
 				.setColor(constants.standard_embed_color)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -108,8 +118,13 @@ const cmds = [
 		aliases: ["claim"],
 		category: "interaction",
 		example: "&claim 1000 Cadence",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.claim.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const usertxt = args.slice(1).join(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.interaction.claim.prompts.badFormat, { "username": msg.author.username }))
@@ -146,7 +161,7 @@ const cmds = [
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.interaction.claim.returns.claimed, { "mention1": String(msg.author), "mention2": String(member), "number": utils.numberComma(claim) }))
 				.setColor(constants.standard_embed_color)
-			msg.channel.send(utils.contentify(msg.channel, embed))
+			msg.channel.send(await utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
 				if (memsettings && memsettings.value == 1) return member.send(`${utils.replace(memlang.interaction.claim.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(claim) })} ${face}`).catch(() => msg.channel.send(lang.interaction.claim.prompts.dmFailed))
@@ -161,6 +176,11 @@ const cmds = [
 		aliases: ["divorce"],
 		category: "interaction",
 		example: "&divorce I'm sorry",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const info = await utils.waifu.get(msg.author.id)
 			if (!info.waifu) return msg.channel.send(utils.replace(lang.interaction.divorce.prompts.noWaifu, { "username": msg.author.username }))
@@ -186,6 +206,11 @@ const cmds = [
 		aliases: ["gift"],
 		category: "interaction",
 		example: "&gift 1000",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
 			const waifu = await utils.waifu.get(msg.author.id, { basic: true })
@@ -218,6 +243,11 @@ const cmds = [
 		aliases: ["waifuleaderboard", "waifulb"],
 		category: "interaction",
 		example: "&waifulb 2",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
@@ -229,7 +259,7 @@ const cmds = [
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 			if (isLocal) {
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (await utils.getChannelType() === "text") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			}
 
 			// Set up page number
@@ -248,9 +278,10 @@ const cmds = [
 			let rows = null
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
+			const members = await client.rain.cache.member.filter(() => true, msg.guild.id)
 			if (isLocal) {
-				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
-				const memberIDs = [...msg.guild.members.cache.keys()]
+				if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
+				const memberIDs = members.map(mem => mem.id)
 				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else {
@@ -284,7 +315,7 @@ const cmds = [
 					.setDescription(displayRows.join("\n"))
 					.setFooter(utils.replace(lang.interaction.waifuleaderboard.returns.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
-				return msg.channel.send(utils.contentify(msg.channel, embed))
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
 		}
 	},
@@ -294,8 +325,13 @@ const cmds = [
 		aliases: ["bean"],
 		category: "interaction",
 		example: "&bean PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
 			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await utils.findMember(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
@@ -362,7 +398,7 @@ for (const source of interactionSources) {
 		category: "interaction",
 		example: `&${source.name} Amanda`,
 		/**
-		 * @param {Discord.Message} msg
+		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
@@ -439,13 +475,13 @@ async function doInteraction(msg, suffix, source, lang) {
 		} else if (source.shortcut == "durl") fetched = source.url()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
-	fetched.then(url => {
+	fetched.then(async url => {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(utils.replace(lang.interaction[source.name].returns.action, { "username": msg.author.username, "action": source.name, "mention": typeof member == "string" ? member : `<@${member.id}>` }))
 			.setImage(url)
 			.setColor(constants.standard_embed_color)
 		if (source.footer) embed.setFooter(source.footer)
-		return msg.channel.send(utils.contentify(msg.channel, embed))
+		return msg.channel.send(await utils.contentify(msg.channel, embed))
 	}).catch(error => { return msg.channel.send(`There was an error: \`\`\`\n${error}\`\`\``) })
 }
 

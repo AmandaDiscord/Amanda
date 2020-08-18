@@ -1,7 +1,7 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
-const { client, constants, reloader, ipc, commands, internalEvents } = passthrough
+const { client, config, constants, reloader, ipc, commands, internalEvents } = passthrough
 
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
@@ -12,13 +12,20 @@ const updateTime = 5 * 60 * 1000
 let messages, ranges, users, prefix, updateInterval
 let enqueued
 
+const activities = {
+	"PLAYING": 0,
+	"STREAMING": 1,
+	"LISTENING": 2,
+	"WATCHING": 3
+}
+
 /**
  * @param {number} duration
  * @param {string} message
  */
 function startAnnouncement(duration, message) {
 	clearInterval(updateInterval)
-	client.user.setActivity(message, { type: "PLAYING" })
+	client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ name: message, type: 0, event: "STATUS_UPDATE" })))
 	enqueued = setTimeout(() => {
 		update()
 		updateInterval = setInterval(() => update(), updateTime)
@@ -41,6 +48,10 @@ commands.assign([
 		category: "admin",
 		aliases: ["announce"],
 		example: "&announce 60000 sub to papiophidian on twitch | &help",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 */
 		async process(msg, suffix) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
@@ -146,10 +157,7 @@ function update() {
 	// console.log(JSON.stringify(choices, null, 4))
 	const choice = utils.arrayRandom(choices)
 	if (choice) {
-		if (client.options.shardCount === 1) client.user.setActivity(`${choice.message} | ${prefix}help`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
-		else client.user.setActivity(`${choice.message} | ${prefix}help | shard ${utils.getFirstShard()}`, { type: choice.type, url: "https://www.twitch.tv/papiophidian/" })
-
-		// console.log(`Set status: "${choice.message}" (${choice.type})`)
+		client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ name: `${choice.message} | ${prefix}help | ${config.cluster_id}`, type: activities[choice.type] || choice.type, url: "https://www.twitch.tv/papiophidian/", event: "STATUS_UPDATE" })))
 	} else {
 		console.error("Warning: no status messages available!")
 	}

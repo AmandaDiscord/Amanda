@@ -4,21 +4,22 @@ const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
-const Discord = require("discord.js")
 /** @type {typeof import("./typings/Taihou")} */
 const WeebSH = require("taihou")
 const CommandManager = require("@amanda/commandmanager")
 const Reloader = require("@amanda/reloader")
 const fs = require("fs")
 const events = require("events")
+const SnowTransfer = require("snowtransfer")
+const ThunderStorm = require("thunderstorm")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
 
-const intents = new Discord.Intents((config.additional_intents || []).concat(["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_EMOJIS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"]))
-const client = new Amanda({ disableMentions: "everyone", messageCacheMaxSize: 0, ws: { intents: intents } })
+const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
+const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
@@ -37,6 +38,17 @@ const db = mysql.createPool({
 
 (async () => {
 	// DB
+
+	await client.connector.initialize()
+	await client.rain.initialize()
+	console.log("Client connected to data stream")
+	client.connector.channel.assertQueue(config.amqp_events_queue, { durable: false, autoDelete: true })
+	client.connector.channel.assertQueue(config.amqp_client_send_queue, { durable: false, autoDelete: true })
+	client.connector.channel.consume(config.amqp_events_queue, async (data) => {
+		await client.connector.channel.ack(data)
+
+		ThunderStorm.handle(JSON.parse(data.content.toString()), client)
+	})
 
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
@@ -90,7 +102,7 @@ const db = mysql.createPool({
 		{ field: "game_start", ttl: 86400e3 }
 	])
 	passthrough.nedb = {
-		queue: nedb.create({ filename: `saves/queue-${client.options.shards}.db`, autoload: true })
+		queue: nedb.create({ filename: `saves/queue-${config.cluster_id}.db`, autoload: true })
 	}
 	internalEvents.emit("QueueManager", passthrough.queues)
 
@@ -120,6 +132,5 @@ const db = mysql.createPool({
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
 	require("./commands/status.js")
 
-	client.login(config.bot_token)
-
+	client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ event: "LOGIN", time: new Date().getTime() })))
 })()

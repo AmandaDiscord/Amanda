@@ -36,14 +36,11 @@ reloadEvent.once(path.basename(__filename), () => {
 })
 
 internalEvents.once("prefixes", () => {
-	if (utils.isFirstShardOnMachine()) {
-		const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
+	const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 
-		Object.assign(cli.context, passthrough, { Discord })
+	Object.assign(cli.context, passthrough, { Discord })
 
-		cli.once("exit", () => {
-			if (client.shard) client.shard.killAll()
-			else process.exit()
-		})
-	} else console.log(`This is shard ${utils.getShardsArray()}, which is not the first shard on this machine. No REPL.`)
+	cli.once("exit", () => {
+		process.exit()
+	})
 })

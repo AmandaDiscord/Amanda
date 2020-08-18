@@ -1,7 +1,7 @@
 // @ts-check
 
 const Jimp = require("jimp")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 const emojis = require("../modules/emojis")
 
@@ -21,11 +21,15 @@ commands.assign([
 		aliases: ["slot", "slots"],
 		category: "gambling",
 		example: "&slot 1000",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
-			let permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
+			const permissions = await utils.getChannelPermissions(msg.channel)
+			if (permissions && !((permissions & 0x00008000) == 0x00008000)) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
@@ -70,7 +74,7 @@ commands.assign([
 			canvas.composite(images.get("slot-amanda").clone(), 0, 0)
 			canvas.composite(images.get("slot-machine").clone(), 0, 0)
 			const pieces = []
-			slots.forEach(i => pieces.push(images.get(`emoji-${i}`)))
+			slots.forEach(i => pieces.push(images.get(`emoji-${i}`).resize(85, 85)))
 
 			canvas.composite(pieces[0], 100, 560)
 			canvas.composite(pieces[1], 258, 560)
@@ -82,7 +86,7 @@ commands.assign([
 			if (!args[0]) {
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 				image = new Discord.MessageAttachment(buffer, "slot.png")
-				return msg.channel.send({ files: [image] })
+				return msg.channel.send({ file: image })
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
@@ -118,7 +122,7 @@ commands.assign([
 			utils.coinsManager.award(msg.author.id, winning - bet)
 			buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			image = new Discord.MessageAttachment(buffer, "slot.png")
-			return msg.channel.send(result, { files: [image] })
+			return msg.channel.send(result, { file: image })
 		}
 	},
 	{
@@ -127,6 +131,11 @@ commands.assign([
 		aliases: ["flip"],
 		category: "gambling",
 		example: "&flip",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
 			const flip = utils.arrayRandom(["heads <:coinH:402219464348925954>", "tails <:coinT:402219471693021196>"])
 			return msg.channel.send(utils.replace(lang.gambling.flip.returns.flip, { "flip": flip }))
@@ -138,8 +147,13 @@ commands.assign([
 		aliases: ["betflip", "bf"],
 		category: "gambling",
 		example: "&bf 1000 h",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const money = await utils.coinsManager.get(msg.author.id)
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBetandSide, { "username": msg.author.username }))
@@ -223,6 +237,11 @@ commands.assign([
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
 		example: "&coins PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
@@ -232,10 +251,10 @@ commands.assign([
 			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
 			const money = await utils.coinsManager.get(user.id)
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? member.displayTag : user.tag }))
+				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag }))
 				.setDescription(`${utils.numberComma(money)} ${emojis.discoin}`)
 				.setColor(constants.money_embed_color)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -244,8 +263,13 @@ commands.assign([
 		aliases: ["daily"],
 		category: "gambling",
 		example: "&daily",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
 			const [row, donor] = await Promise.all([
 				utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
@@ -257,7 +281,7 @@ commands.assign([
 				const embed = new Discord.MessageEmbed()
 					.setDescription(utils.replace(lang.gambling.daily.returns.claimed, { "username": msg.author.username, "number": amount }))
 					.setColor(constants.money_embed_color)
-				msg.channel.send(utils.contentify(msg.channel, embed))
+				msg.channel.send(await utils.contentify(msg.channel, embed))
 				utils.coinsManager.award(msg.author.id, amount)
 				utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()])
 			} else {
@@ -272,6 +296,11 @@ commands.assign([
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
 		example: "&lb 2",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
@@ -282,10 +311,11 @@ commands.assign([
 			// Set up local
 			const inputLocalArg = args[0]
 			const isLocal = ["local", "guild", "server"].includes(args[0])
+			const members = await client.rain.cache.member.filter(() => true, msg.guild.id)
 			if (isLocal) {
-				if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				isLargeGuild = msg.guild.members.cache.size >= 1000 // members for a "large guild". read further down
+				isLargeGuild = members.length >= 1000 // members for a "large guild". read further down
 			}
 
 			// Set up page number
@@ -307,14 +337,16 @@ commands.assign([
 			if (isLocal && !isLargeGuild) {
 				// using small guild method:
 				// request rows for everyone in the guild
-				const memberIDs = [...msg.guild.members.cache.keys()] // cache so it doesn't change during sql execution
+				// @ts-ignore
+				const memberIDs = members.map(mem => mem.id) // cache so it doesn't change during sql execution
 				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else if (isLocal) {
 				// using large guild method:
 				// request top pages from database then filter to guild members then slice to page
 				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ?", [maxPages * itemsPerPage])
-				rows = rows.filter(row => msg.guild.members.cache.has(row.userID))
+				// @ts-ignore
+				rows = rows.filter(row => members.find(m => m.id === row.userID))
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {
@@ -331,7 +363,7 @@ commands.assign([
 			if (rows.length) {
 				// Load usernames
 				const displayRows = await Promise.all(rows.map(async ({ userID, coins }, index) => {
-					const [tag, isBot] = await client.users.fetch(userID, false) // don't cache. let's not waste memory on something we probably won't need again.
+					const [tag, isBot] = await client.fetchUser(userID) // don't cache. let's not waste memory on something we probably won't need again.
 						.then(user => [user.tag, user.bot])
 						.catch(() => [userID, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""
@@ -345,7 +377,7 @@ commands.assign([
 					.setDescription(displayRows.join("\n"))
 					.setFooter(utils.replace(lang.gambling.leaderboard.prompts.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
-				return msg.channel.send(utils.contentify(msg.channel, embed))
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else return msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
 		}
 	},
@@ -355,8 +387,13 @@ commands.assign([
 		aliases: ["give"],
 		category: "gambling",
 		example: "&give half PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidAmountandUser, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
@@ -388,7 +425,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.gambling.give.returns.channel, { "mention1": String(msg.author), "number": utils.numberComma(gift), "mention2": String(member) }))
 				.setColor(constants.money_embed_color)
-			msg.channel.send(utils.contentify(msg.channel, embed))
+			msg.channel.send(await utils.contentify(msg.channel, embed))
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
 				if (memsettings && memsettings.value == 1) return member.send(utils.replace(memlang.gambling.give.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(gift) })).catch(() => msg.channel.send(lang.gambling.give.prompts.dmFailed))
@@ -403,10 +440,15 @@ commands.assign([
 		aliases: ["wheel", "wof"],
 		category: "gambling",
 		example: "&wheel 1000",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
-			const permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
+			const permissions = await utils.getChannelPermissions(msg.channel)
+			if (permissions && !((permissions & 0x00008000) == 0x00008000)) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
@@ -443,7 +485,7 @@ commands.assign([
 			else if (choice == "2.4") coords = [50, 245, 200]
 
 			const canvas = canv.clone()
-			const arrow = triangle.clone()
+			const arrow = triangle.clone().resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR)
 
 			const [rotation, x, y] = coords
 
@@ -458,7 +500,7 @@ commands.assign([
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
 			await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount))
-			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), { files: [image] })
+			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), { file: image })
 		}
 	}
 ])

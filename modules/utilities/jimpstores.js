@@ -51,14 +51,10 @@ imageStore.save("circle-mask", "./images/masks/circle_mask.png")
 // Fonts
 fontStore.save("whitney-20", ".fonts/Whitney-20.fnt")
 fontStore.save("whitney-20-2", ".fonts/profile/Whitney-20-aaa.fnt")
-fontStore.save("whitne-20-2-black", ".fonts/profile/Whitney-20-aaa-black.fnt")
+fontStore.save("whitney-20-2-black", ".fonts/profile/Whitney-20-aaa-black.fnt")
 fontStore.save("whitney-25", ".fonts/Whitney-25.fnt")
 fontStore.save("whitney-25-black", ".fonts/Whitney-25-black.fnt")
 
-
-;["apple", "cherries", "heart", "pear", "strawberry", "watermelon"].forEach(i => imageStore.get(`emoji-${i}`).then(image => image.resize(85, 85)))
-imageStore.get("emoji-triangle").then(image => image.resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR))
-imageStore.get("badge-hunter").then(badge => badge.resize(34, 34))
 
 module.exports.images = imageStore
 module.exports.fonts = fontStore

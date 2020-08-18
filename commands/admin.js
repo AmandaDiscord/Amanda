@@ -1,6 +1,6 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const fetch = require("node-fetch")
 const util = require("util")
 const path = require("path")
@@ -22,7 +22,8 @@ const replaceBlackList = [
 	config.chewey_api_key,
 	config.lavalink_password,
 	config.weeb_api_key,
-	config.genius_access_token
+	config.genius_access_token,
+	config.redis_password
 ]
 
 commands.assign([
@@ -32,6 +33,11 @@ commands.assign([
 		aliases: ["evaluate", "eval"],
 		category: "admin",
 		example: "&eval client.token",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (allowed) {
@@ -56,9 +62,9 @@ commands.assign([
 					output = output.replace(new RegExp(item, "g"), constants.fake_token)
 				}
 
-				const nmsg = await msg.channel.send(output)
-				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				msg.channel.send(output)
+				// const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				// return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			} else return
 		}
 	},
@@ -68,6 +74,11 @@ commands.assign([
 		aliases: ["execute", "exec"],
 		category: "admin",
 		example: "&exec rm -rf /",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
@@ -91,9 +102,9 @@ commands.assign([
 				if (stdout) result.addFields({ name: "stdout:", value: formatOutput(stdout) })
 				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
-				const nmsg = await msg.channel.send(utils.contentify(msg.channel, result))
-				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				msg.channel.send(await utils.contentify(msg.channel, result))
+				// const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				// return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			})
 			return
 		}
@@ -104,6 +115,11 @@ commands.assign([
 		aliases: ["award"],
 		category: "admin",
 		example: "&award 10000 PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
@@ -121,7 +137,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": award, "mention2": String(member) }))
 				.setColor(constants.money_embed_color)
-			msg.channel.send(utils.contentify(msg.channel, embed))
+			msg.channel.send(await utils.contentify(msg.channel, embed))
 			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}
 	}

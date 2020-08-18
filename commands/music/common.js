@@ -2,7 +2,7 @@
 
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const { encode } = require("@lavalink/encoding")
 const genius = require("genius-lyrics-api")
@@ -13,6 +13,11 @@ const { client, reloader, config, constants } = passthrough
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
+/**
+ * @type {Array<{ guildID: string, channelID: string, userID: string, bot: boolean }>}
+ */
+const states = []
+
 class VoiceStateCallback {
 	/**
 	 * @param {Discord.Message} msg
@@ -22,6 +27,7 @@ class VoiceStateCallback {
 	 */
 	constructor(msg, timeoutMs, callback) {
 		this.msg = msg
+		this.guildID = msg.guild.id
 		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
 		this.callback = callback
 		this.active = true
@@ -67,6 +73,7 @@ class VoiceStateCallback {
 }
 
 const common = {
+	states: states,
 	/**
 	 * @param {number} seconds
 	 */
@@ -407,7 +414,7 @@ const common = {
 		handleSong:
 		/**
 		 * @param {import("./songtypes").Song} song
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
@@ -422,7 +429,7 @@ const common = {
 
 		fromData:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any} data
 		 * @param {boolean} insert
@@ -436,7 +443,7 @@ const common = {
 
 		fromDataArray:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} data
 		 * @param {boolean} insert
@@ -450,7 +457,7 @@ const common = {
 
 		fromSongArray:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} songs
 		 * @param {boolean} insert
@@ -469,7 +476,7 @@ const common = {
 
 		fromSearch:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -495,7 +502,7 @@ const common = {
 
 		fromSoundCloudSearch:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -522,7 +529,7 @@ const common = {
 
 		fromSoundCloudLink:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -546,7 +553,7 @@ const common = {
 		},
 		fromSpotifyLink:
 		/**
-		 * @param {Discord.TextChannel} textChannel
+		 * @param {Discord.Message["channel"]} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -575,11 +582,11 @@ const common = {
 		callbacks: [],
 		/**
 		 * @param {string} userID
-		 * @param {Discord.Guild} guild
+		 * @param {string} guildID
 		 * @returns {VoiceStateCallback[]}
 		 */
-		getAll: function(userID, guild) {
-			return this.callbacks.filter(o => o.msg.author.id == userID && o.msg.guild == guild)
+		getAll: function(userID, guildID) {
+			return this.callbacks.filter(o => o.msg.author.id == userID && o.guildID === guildID)
 		}
 	},
 
@@ -691,12 +698,17 @@ const common = {
 	}
 }
 
-utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (oldState, newState) => {
+utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (newState) => {
+	/**
+	 * @type {Discord.VoiceState}
+	 */
+	const typed = newState // ts is actually stupid
+
 	// Process waiting to join
 	// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
-	if (newState.id != client.user.id && newState.channel) {
+	if (typed.id != client.user.id && typed.channelID && typed.guildID) {
 		// Trigger all callbacks for that user in that guild
-		common.voiceStateCallbackManager.getAll(newState.id, newState.guild).forEach(state => state.trigger(newState.channel))
+		common.voiceStateCallbackManager.getAll(typed.id, newState.guild).forEach(state => state.trigger(newState.channel))
 	}
 })
 

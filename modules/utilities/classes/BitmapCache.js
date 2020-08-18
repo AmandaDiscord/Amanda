@@ -1,8 +1,6 @@
 // @ts-check
 
 const Jimp = require("jimp")
-const JimpProto = Jimp.prototype
-
 /**
  * @template T
  */

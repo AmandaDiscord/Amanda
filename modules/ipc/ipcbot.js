@@ -26,8 +26,8 @@ class IPC {
 	}
 
 	connect() {
-		const shard = `shard-${utils.getShardsArray().join("_")}`
-		ipc.config.id = shard
+		const cluster = `cluster-${config.cluster_id}`
+		ipc.config.id = cluster
 		let shouldBeConnected = true // for ensuring that only one disconnect warning is sent
 		ipc.connectToNet("website", () => {
 			this.socket = ipc.of.website
@@ -37,7 +37,7 @@ class IPC {
 			})
 			this.socket.on("connect", () => {
 				shouldBeConnected = true
-				this.socket.emit("shard", { clientID: client.user.id, total: client.options.shardCount, me: utils.getShardsArray() })
+				this.socket.emit("cluster", { clientID: client.user.id, first: config.shard_list[0], clusterID: config.cluster_id })
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {

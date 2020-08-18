@@ -1,6 +1,6 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const { PlayerManager } = require("discord.js-lavalink")
 /** @type {import("node-fetch").default} */
@@ -15,6 +15,7 @@ const lastAttemptedLogins = []
 let prefixes = []
 let statusPrefix = "&"
 let starting = true
+const messagesReceived = new Map()
 if (client.readyAt != null) starting = false
 
 const utils = require("./utilities")
@@ -40,7 +41,7 @@ function getTimeoutDuration() {
 }
 
 let autoPayTimeout
-if (utils.isFirstShardOnMachine()) {
+if (config.cluster_id === "prod-0") {
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 	console.log("added timeout autoPayTimeout")
 }
@@ -56,7 +57,7 @@ async function autoPayTimeoutFunction() {
 }
 
 reloadEvent.once(path.basename(__filename), () => {
-	if (utils.isFirstShardOnMachine()) {
+	if (config.cluster_id === "prod-0") {
 		clearTimeout(autoPayTimeout)
 		console.log("removed timeout autoPayTimeout")
 	}
@@ -65,18 +66,15 @@ reloadEvent.once(path.basename(__filename), () => {
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
-utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), (data, channel, user) => ReactionMenu.handler(data, channel, user, client))
-utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), data => {
-	if (data && data.id && data.channel_id && data.content && data.author) {
-		const channel = client.channels.cache.get(data.channel_id)
-		// ensure channel is a message channel, and ensure member exists if is a guild channel
-		if (channel instanceof Discord.DMChannel || (channel instanceof Discord.TextChannel && data.member)) {
-			const message = new Discord.Message(client, data, channel)
-			manageMessage(message)
-		}
+// utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), (data, channel, user) => ReactionMenu.handler(data, channel, user, client))
+utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (message) => {
+	const m = messagesReceived.get(message.id)
+	if (m) {
+		m.content = message.content || ""
+		manageMessage(m, true)
 	}
 })
-utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (reason) => {
+/* utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (num, reason, ) => {
 	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`)
 	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now() - lastAttemptedLogins.slice(-1)[0] / 1000)} seconds ago.`)
 	lastAttemptedLogins.push(Date.now())
@@ -91,7 +89,7 @@ utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename
 	}).then(() => {
 		client.login(config.bot_token)
 	})
-})
+})*/
 utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 	if (reason) console.error(reason)
 })
@@ -116,7 +114,11 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
 /**
  * @param {Discord.Message} msg
  */
-async function manageMessage(msg) {
+async function manageMessage(msg, isEdit = false) {
+	if (!isEdit) {
+		messagesReceived.set(msg.id, msg)
+		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
+	}
 	if (msg.author.bot) {
 		if (!msg.webhookID) {
 			return
@@ -130,14 +132,13 @@ async function manageMessage(msg) {
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`)
 	const prefix = prefixes.find(p => msg.content.startsWith(p))
 	if (!prefix) return
-	if (msg.guild) await msg.guild.members.fetch(client.user)
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	const cmd = commands.cache.find(c => c.aliases.includes(cmdTxt))
 	let lang
 	const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
 	if (selflang) lang = await utils.getLang(msg.author.id, "self")
-	else if (msg.guild) lang = await utils.getLang(msg.guild.id, "guild")
+	else if (msg.guild && msg.guild.id) lang = await utils.getLang(msg.guild.id, "guild")
 	else lang = await utils.getLang(msg.author.id, "self")
 
 	if (cmd) {
@@ -156,19 +157,17 @@ async function manageMessage(msg) {
 			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send(embed)
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 			// Report to #amanda-error-log
-			const reportChannel = client.channels.cache.get("512869106089852949")
-			if (reportChannel instanceof Discord.TextChannel && reportChannel.permissionsFor(client.user).has("VIEW_CHANNEL")) {
+			const reportChannel = await client.rain.cache.channel.get("512869106089852949")
+			if (reportChannel) {
 				embed.setTitle("Command error occurred.")
 				let details = [
 					["User", msg.author.tag],
 					["User ID", msg.author.id],
 					["Bot", msg.author.bot ? "Yes" : "No"]
 				]
-				if (msg.channel instanceof Discord.TextChannel) {
+				if (msg.guild) {
 					details = details.concat([
-						["Guild", msg.guild.name],
 						["Guild ID", msg.guild.id],
-						["Channel", `#${msg.channel.name}`],
 						["Channel ID", msg.channel.id]
 					])
 				} else {
@@ -184,16 +183,15 @@ async function manageMessage(msg) {
 					{ name: "Details", value: detailsString },
 					{ name: "Message content", value: `\`\`\`\n${msg.content.replace(/`/g, "ˋ")}\`\`\`` }
 				])
-				reportChannel.send(embed)
+				new Discord.PartialChannel({ id: "512869106089852949" }, client).send(embed)
 			}
 		}
 	} else {
 		if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
 			if (!config.allow_ai) return
 			const mention = msg.content.startsWith(`<@${client.user.id}>`) ? `<@${client.user.id}>` : `<@!${client.user.id}>`
-			const chat = Discord.Util.cleanContent(msg.content.substring(mention.length).trim(), msg)
+			const chat = msg.content.substring(mention.length + 1)
 			if (!chat) return
-			msg.channel.sendTyping()
 			if (chat.toLowerCase().startsWith("say") || chat.toLowerCase().startsWith("repeat")) return msg.channel.send("No thanks")
 			try {
 				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
@@ -223,18 +221,18 @@ function manageReady() {
 		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
 	})
 	if (firstStart) {
+		client.readyAt = new Date()
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
-		console.log(`${client.user.id}/${utils.getShardsArray()}`)
-		constants.lavalinkNodes.forEach(node => node.resumeKey = `${client.user.id}/${utils.getShardsArray()}`)
+		constants.lavalinkNodes.forEach(node => node.resumeKey = `${client.user.id}/${config.cluster_id}`)
 		client.lavalink = new PlayerManager(this, constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
-			shards: client.options.shardCount
+			shards: config.shard_list.length
 		})
 		client.lavalink.once("ready", async () => {
 			console.log("Lavalink ready")
 			/** @type {{ queues: Array<any> }} */
-			const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${utils.getFirstShard()}` })
+			const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${config.cluster_id}` })
 			if (!data) return
 			if (data.queues.length > 0) passthrough.queues.restore()
 		})
@@ -242,13 +240,13 @@ function manageReady() {
 			console.error(`Failed to initialise Lavalink: ${error.message}`)
 		})
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
-			result.forEach(row => {
-				const channel = client.channels.cache.get(row.channelID)
-				if (channel instanceof Discord.TextChannel) channel.send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
+			result.forEach(async row => {
+				const channel = client.rain.cache.channel.get(row.channelID)
+				if (channel) new Discord.PartialChannel({ id: row.channelID }, client).send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {
-					const user = client.users.cache.get(row.mentionID)
+					const user = await client.rain.cache.users.get(row.mentionID)
 					if (!user) console.log(`Could not notify ${row.mentionID}`)
-					else user.send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
+					else new Discord.PartialUser({ id: row.mentionID }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				}
 			})
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])

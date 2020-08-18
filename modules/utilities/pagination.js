@@ -1,8 +1,8 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const ReactionMenu = require("@amanda/reactionmenu")
-const { contentify } = require("./discordutils")
+const { contentify, createMessageCollector } = require("./discordutils")
 const { shuffle: arrayShuffle } = require("./arrayutils")
 const { constants } = require("../../passthrough")
 
@@ -75,7 +75,7 @@ function tableifyRows(rows, align, surround = () => "", spacer = " ") { // SC:
 }
 
 /**
- * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @param {Discord.Message["channel"]} channel
  * @param {string[]} title
  * @param {string[][]} rows
  */
@@ -85,6 +85,7 @@ function createPagination(channel, title, rows, align, maxLength) {
 	alignedRows = alignedRows.slice(1)
 	const pages = createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 	paginate(channel, pages.length, page => {
+		// @ts-ignore
 		return contentify(channel,
 			new Discord.MessageEmbed()
 				.setTitle("Viewing all playlists")
@@ -96,7 +97,7 @@ function createPagination(channel, title, rows, align, maxLength) {
 }
 
 /**
- * @param {Discord.TextChannel|Discord.DMChannel} channel
+ * @param {Discord.Message["channel"]} channel
  * @param {number} pageCount
  * @param {(page: number) => any} callback
  */
@@ -210,7 +211,7 @@ function playlistSection(items, startString, endString, shuffle) {
 }
 
 /**
- * @param {Discord.TextChannel} channel
+ * @param {Discord.Message["channel"]} channel
  * @param {string} authorID
  * @param {string} title
  * @param {string} failedTitle
@@ -218,37 +219,39 @@ function playlistSection(items, startString, endString, shuffle) {
  * @param {Discord.MessageEmbed} [embed=undefined]
  * @returns {Promise<number|null>} The zero-based index that was selected, or null if invalid response.
  */
-async function makeSelection(channel, authorID, title, failedTitle, items, embed = undefined) {
-	// Set up embed
-	if (!embed) embed = new Discord.MessageEmbed()
-	embed.setTitle(title)
-	embed.setDescription(items.join("\n"))
-	embed.setColor(constants.standard_embed_color)
-	embed.setFooter(`Type a number from 1-${items.length} to select that item`)
-	// Send embed
-	const selectmessage = await channel.send(contentify(channel, embed))
-	// Make collector
-	const collector = channel.createMessageCollector((m => m.author.id == authorID), { max: 1, time: 60000 })
-	return collector.next.then(newmessage => {
-		// Collector got a message
-		let index = Number(newmessage.content)
-		// Is index a number?
-		if (isNaN(index)) throw new Error()
-		index--
-		// Is index in bounds?
-		if (index < 0 || index >= items.length) throw new Error() // just head off to the catch
-		// Edit to success
-		embed.setDescription(`» ${items[index]}`)
-		embed.setFooter("")
-		selectmessage.edit(contentify(selectmessage.channel, embed))
-		return index
-	}).catch(() => {
-		// Collector failed, show the failure message and return null
-		embed.setTitle(failedTitle)
-		embed.setDescription("")
-		embed.setFooter("")
-		selectmessage.edit(contentify(selectmessage.channel, embed))
-		return null
+function makeSelection(channel, authorID, title, failedTitle, items, embed = undefined) {
+	// eslint-disable-next-line no-async-promise-executor
+	return new Promise(async (res) => {
+		// Set up embed
+		if (!embed) embed = new Discord.MessageEmbed()
+		embed.setTitle(title)
+		embed.setDescription(items.join("\n"))
+		embed.setColor(constants.standard_embed_color)
+		embed.setFooter(`Type a number from 1-${items.length} to select that item`)
+		// Send embed
+		const selectmessage = await channel.send(await contentify(channel, embed))
+		// Make collector
+		createMessageCollector({ channelID: channel.id, userIDs: [authorID] }, (newmessage) => {
+			// Collector got a message
+			let index = Number(newmessage.content)
+			// Is index a number?
+			if (isNaN(index)) throw new Error()
+			index--
+			// Is index in bounds?
+			if (index < 0 || index >= items.length) throw new Error() // just head off to the catch
+			// Edit to success
+			embed.setDescription(`» ${items[index]}`)
+			embed.setFooter("")
+			selectmessage.edit(contentify(selectmessage.channel, embed))
+			return res(index)
+		}, async () => {
+			// Collector failed, show the failure message and return null
+			embed.setTitle(failedTitle)
+			embed.setDescription("")
+			embed.setFooter("")
+			selectmessage.edit(await contentify(selectmessage.channel, embed))
+			return null
+		})
 	})
 }
 

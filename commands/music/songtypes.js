@@ -1,8 +1,9 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
+const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
@@ -216,7 +217,7 @@ class YouTubeSong extends Song {
 					let region = null
 					if (this.queue) {
 						host = this.queue.player.node.host
-						region = this.queue.voiceChannel.guild.region
+						region = this.queue.guild.region
 					}
 					return common.invidious.getTrack(this.id, host, region).then(t => {
 						this.track = t
@@ -225,7 +226,7 @@ class YouTubeSong extends Song {
 						else this.error = `${error.name} - ${error.message}`
 					})
 				} else { // Resolve track with Lavalink
-					return common.getTracks(this.id, this.queue.textChannel.guild.region).then(tracks => {
+					return common.getTracks(this.id, this.queue.guild.region).then(tracks => {
 						if (!tracks[0]) this.error = `No results for ID ${this.id}`
 						else if (!tracks[0].track) this.error = `Missing track for ID ${this.id}`
 						else {
@@ -274,7 +275,7 @@ class YouTubeSong extends Song {
 					.setTitle("Related content from YouTube")
 					.setDescription(
 						related.map((v, i) =>
-							`${i + 1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+							`${i + 1}. **${Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
 						+ `\n — ${v.author}`
 						)
 					)
@@ -451,7 +452,7 @@ class FriskySong extends Song {
 			await this.stationUpdate()
 		}
 		if (this.track == "!") {
-			return common.getTracks(this.stationData.beta_url, this.queue.textChannel.guild.region).then(tracks => {
+			return common.getTracks(this.stationData.beta_url, this.queue.guild.region).then(tracks => {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)
@@ -575,7 +576,7 @@ class SpotifySong extends YouTubeSong {
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
-				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.textChannel.guild.region).then(tracks => {
+				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.guild.region).then(tracks => {
 					if (!tracks[0]) this.error = `No results for ${this.title}`
 					else if (!tracks[0].track) this.error = `Missing track for ${this.title}`
 					else {

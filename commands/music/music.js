@@ -2,9 +2,10 @@
 // @ts-check
 
 const crypto = require("crypto")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
+const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { config, client, reloader, commands, queues, frisky, constants } = passthrough
@@ -36,7 +37,7 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, { voiceChannel, lang }) => {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const insert = args[0][0] == "i"
 			const search = args.slice(1).join(" ")
 			if (search.trim().length === 0) {
@@ -44,44 +45,45 @@ const subcommandsMap = new Map([
 			}
 			const match = common.inputToID(search)
 
-			const channel = msg.channel // ts is ACTUALLY stupid.
+			const guilddata = await utils.getGuild(msg.guild)
+			const guild = new Discord.Guild(guilddata.boundObject, client)
 
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
 				if (config.use_invidious) { // Resolve tracks with Invidious
 					const queue = queues.cache.get(msg.guild.id)
-					const node = (queue && queue.getUsedLavalinkNode()) || common.nodes.getByRegion(msg.guild.region)
+					const node = (queue && queue.getUsedLavalinkNode()) || common.nodes.getByRegion(guild.region)
 					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
 						const url = common.invidious.dataToURL(data)
 						// The ID worked. Add the song
-						const track = await common.invidious.urlToTrack(url, voiceChannel.guild.region)
+						const track = await common.invidious.urlToTrack(url, guild.region)
 						if (track) {
 							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
-							common.inserters.handleSong(song, channel, voiceChannel, insert, msg)
+							common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
 							return
 						}
 					}).catch(() => {
 						// Otherwise, start a search
-						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search, lang)
+						common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
 					})
 				} else { // Resolve tracks with Lavalink
-					common.getTracks(match.id, voiceChannel.guild.region).then(tracks => {
+					common.getTracks(match.id, guild.region).then(tracks => {
 						if (tracks[0]) {
 							// If the ID worked, add the song
-							common.inserters.fromData(channel, voiceChannel, tracks[0], insert, msg)
+							common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
 						} else throw new Error("No tracks available")
 					}).catch(() => {
 						// Otherwise, start a search
-						common.inserters.fromSearch(channel, voiceChannel, msg.author, insert, search, lang)
+						common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
 					})
 				}
 			} else if (match && match.type == "playlist" && match.list) { // Linked to a playlist. `list` is set, `id` may or may not be.
 				// Get the tracks
-				let tracks = await common.getTracks(match.list, voiceChannel.guild.region)
+				let tracks = await common.getTracks(match.list, guild.region)
 				// Figure out what index was linked to, if any
 				/** @type {number} */
 				let linkedIndex = null
@@ -113,7 +115,7 @@ const subcommandsMap = new Map([
 						.setTitle(lang.audio.playlist.prompts.playlistSection)
 						.setColor(constants.standard_embed_color)
 						.setDescription(
-							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
+							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
 						+ `\n${lang.audio.playlist.prompts.query}`
 						+ options.map((o, i) => `\n${buttons[i]} ${o}`).join("")
 						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
@@ -168,7 +170,9 @@ const subcommandsMap = new Map([
 	}],
 	["queue", {
 		queue: "required",
-		code: (msg, args, { queue, lang }) => {
+		code: async (msg, args, { queue, lang }) => {
+			const guilddata = await utils.getGuild(msg.guild)
+			const guild = new Discord.Guild(guilddata.boundObject, client)
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
 				queue.audit.push({ action: "Queue Clear", user: msg.author.tag, platform: "Discord" })
 				queue.wrapper.removeAllSongs({ msg, lang })
@@ -181,7 +185,7 @@ const subcommandsMap = new Map([
 				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
 				msg.channel.send(
 					new Discord.MessageEmbed()
-						.setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(msg.guild.name) }))
+						.setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Util.escapeMarkdown(guild.name) }))
 						.setDescription(body)
 						.setColor(constants.standard_embed_color)
 				)
@@ -269,14 +273,16 @@ const subcommandsMap = new Map([
 		}
 	}],
 	["audit", {
-		code: (msg, args, { lang, queue }) => {
+		code: async (msg, args, { lang, queue }) => {
+			const guilddata = await utils.getGuild(msg.guild)
+			const guild = new Discord.Guild(guilddata.boundObject, client)
 			const audit = queues.audits.get(msg.guild.id)
 			if (!audit || (audit && audit.length == 0)) return msg.channel.send(`${msg.author.username}, there is no audit data to fetch`)
 			let entries
 			if (audit.length > 15) entries = audit.slice().reverse().slice(0, 15) // Array.reverse mutates Arrays, apparently.
 			else entries = audit.slice().reverse()
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-				.setAuthor(`Audit for ${msg.guild.name}`)
+				.setAuthor(`Audit for ${guild.name}`)
 				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
 			return msg.channel.send(utils.contentify(msg.channel, embed))
 		}
@@ -322,6 +328,11 @@ commands.assign([
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
 		category: "audio",
 		example: "&token new",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			if (suffix == "delete") {
 				await deleteAll()
@@ -365,20 +376,28 @@ commands.assign([
 		aliases: ["debug"],
 		category: "audio",
 		example: "&debug general",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.findChannel(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
+			/** @type {Object.<string, Array<[string, number]>>} */
 			const types = {
-				text: [["Read Messages", "VIEW_CHANNEL"], ["Read Message History", "READ_MESSAGE_HISTORY"], ["Send Messages", "SEND_MESSAGES"], ["Embed Content", "EMBED_LINKS"], ["Add Reactions", "ADD_REACTIONS"]],
-				voice: [["View Channel", "VIEW_CHANNEL"], ["Join", "CONNECT"], ["Speak", "SPEAK"]]
+				text: [["Read Messages", 0x00000400], ["Read Message History", 0x00010000], ["Send Messages", 0x00000800], ["Embed Content", 0x00004000], ["Add Reactions", 0x00000040]],
+				voice: [["View Channel", 0x00000400], ["Join", 0x00100000], ["Speak", 0x00200000]]
 			}
-			/** @type {Array<[string, Discord.BitFieldResolvable<Discord.PermissionString>]>} */
-			// @ts-ignore
+
+			const guilddata = await utils.getGuild(msg.guild)
+			const guild = new Discord.Guild(guilddata.boundObject, client)
+
 			const perms = channel.type == "text" ? types.text : types.voice
-			const permissions = channel.permissionsFor(client.user)
+			const permissions = await utils.getChannelPermissions(channel)
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
-			const node = common.nodes.getByRegion(msg.guild.region)
+			const node = common.nodes.getByRegion(guild.region)
 			let extraNodeInfo = ""
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
@@ -387,10 +406,11 @@ commands.assign([
 				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
 			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node).host)).hostname
+			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.channelHasPermissions(channel, item[1], permissions)}`))
 			const details = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
 				.setAuthor(utils.replace(lang.audio.debug.returns.infoFor, { "channel": channel.name }), utils.emojiURL(emoji))
-				.addField(lang.audio.debug.returns.permissions, perms.map(item => `${item[0]}: ${permissions.has(item[1])}`).join("\n"))
+				.addField(lang.audio.debug.returns.permissions, permss.join("\n"))
 				.addField("Player:",
 					`${lang.audio.debug.returns.method} ${config.use_invidious ? "Invidious" : "LavaLink"}`
 					+ `\nLavaLink Node: ${node.name}`
@@ -398,7 +418,7 @@ commands.assign([
 					+ `\nInvidious Domain: ${invidiousHostname}`
 				)
 			if (channel.type === "text") details.addFields({ name: lang.audio.debug.returns.tip, value: lang.audio.debug.returns.tipValue })
-			return msg.channel.send(utils.contentify(msg.channel, details))
+			return msg.channel.send(await utils.contentify(msg.channel, details))
 		}
 	},
 	{
@@ -408,8 +428,13 @@ commands.assign([
 		category: "audio",
 		example: "&frisky chill",
 		order: 3,
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
 			if (["original", "deep", "chill", "classics"].includes(suffix)) { // valid station?
@@ -508,13 +533,7 @@ commands.assign([
 				}
 				description = description.slice(0, -1) // cut off final newline
 
-				msg.channel.send(
-					new Discord.MessageEmbed()
-						.setColor(constants.standard_embed_color)
-						.setTitle(lang.audio.frisky.returns.schedule)
-						.setDescription(description)
-						.setFooter(lang.audio.frisky.returns.footer)
-				)
+				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setColor(constants.standard_embed_color).setTitle(lang.audio.frisky.returns.schedule).setDescription(description).setFooter(lang.audio.frisky.returns.footer)))
 			}
 		}
 	},
@@ -524,9 +543,14 @@ commands.assign([
 		aliases: ["music", "m"],
 		category: "audio",
 		order: 1,
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			// No DMs
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args
 			const args = suffix.split(" ")
 			// Find subcommand
@@ -554,7 +578,8 @@ commands.assign([
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = msg.member.voice.channel
+					const voiceChannel = common.states.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
+
 					subcommmandData.voiceChannel = voiceChannel
 				}
 			}
@@ -569,8 +594,13 @@ commands.assign([
 		category: "audio",
 		example: "&sc Kanshou No Matenrou",
 		order: 2,
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (await utils.getChannelType(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return
 

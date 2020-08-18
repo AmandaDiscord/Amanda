@@ -1,8 +1,9 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
+const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { client, config, reloader, commands, constants } = passthrough
@@ -26,6 +27,11 @@ commands.assign([
 		category: "audio",
 		description: "Create, play, and edit playlists.",
 		usage: "",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
@@ -66,12 +72,12 @@ commands.assign([
 				 * @param {string} author
 				 */
 				// eslint-disable-next-line no-inner-declarations
-				function getAuthor(author) {
-					const user = client.users.cache.get(author)
+				async function getAuthor(author) {
+					const user = await utils.getUser(author)
 					if (user) {
 						let username = user.username
 						if (username.length > 14) username = `${username.slice(0, 13)}…`
-						return `\`${Discord.Util.escapeMarkdown(username)}\``
+						return `\`${Util.escapeMarkdown(username)}\``
 					} else return "(?)"
 				}
 				return utils.createPagination(
@@ -137,26 +143,14 @@ commands.assign([
 						)
 						.setColor(0x22dddd)
 				)
-				const collector = msg.channel.createMessageCollector(m => m.author.id === msg.author.id, { dispose: true, idle: 120e3 })
-				/** @param {Discord.Message} msgg */
-				const callback = msgg => {
-					collector.handleDispose(msgg) // don't cache the message inside the collector
+				utils.createMessageCollector({ channelID: msg.channel.id, userIDs: [msg.author.id] }, (msgg) => {
 					if (msgg.content.startsWith(passthrough.statusPrefix)) {
 						return // ignore commands
-					} else if ([".", "stop", "end", "cancel", "done"].includes(msgg.content)) {
-						collector.stop()
 					} else if (msgg.content === "undo") {
 						commands.cache.get("playlist").process(msgg, `${playlistName} remove last`, lang)
 					} else {
 						commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang)
 					}
-				}
-				collector.on("collect", callback)
-				const fileSaveCallback = () => collector.stop()
-				reloader.reloadEvent.once(path.basename(__filename), fileSaveCallback)
-				collector.once("end", () => {
-					collector.removeListener("collect", callback)
-					reloader.reloadEvent.removeListener(path.basename(__filename), fileSaveCallback)
 					msg.channel.send(lang.audio.playlist.returns.bulkDone)
 					confirmation.edit(lang.audio.playlist.returns.bulkMenuGone, { embed: null })
 					bulkAddCollectionChannels.delete(msg.channel.id)
@@ -254,7 +248,7 @@ commands.assign([
 				const embed = new Discord.MessageEmbed()
 					.setDescription(body)
 					.setColor(constants.standard_embed_color)
-				msg.channel.send(utils.contentify(msg.channel, embed))
+				msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else if (action.toLowerCase() == "play" || action.toLowerCase() == "p" || action.toLowerCase() == "shuffle") {
 				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 				if (!voiceChannel) return
@@ -308,8 +302,8 @@ commands.assign([
 			} else if (action.toLowerCase() == "delete") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
-				const message = await msg.channel.send(utils.contentify(msg.channel, deletePromptEmbed))
-				new ReactionMenu(message, [
+				const message = await msg.channel.send(await utils.contentify(msg.channel, deletePromptEmbed))
+				/* new ReactionMenu(message, [
 					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
@@ -318,19 +312,21 @@ commands.assign([
 						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
 						message.edit(utils.contentify(msg.channel, deletePromptEmbed))
 					} }
-				])
+				])*/
 			} else {
 				const author = []
-				if (client.users.cache.get(playlistRow.author)) author.push(`${client.users.cache.get(playlistRow.author).tag} — ${playlistName}`, client.users.cache.get(playlistRow.author).displayAvatarURL({ format: "png", size: 32 }))
+				/** @type {Discord.User} */
+				const user = await utils.getUser(playlistRow.author)
+				if (user) author.push(`${user.tag} — ${playlistName}`, user.displayAvatarURL({ format: "png", size: 32 }))
 				else author.push(playlistName)
-				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
+				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])
 					.setColor(constants.standard_embed_color)
 				if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 					embed.setDescription(rows.join("\n") + totalLength)
-					msg.channel.send(utils.contentify(msg.channel, embed))
+					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else {
 					const pages = []
 					let currentPage = []

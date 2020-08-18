@@ -4,12 +4,15 @@
 const fetch = require("node-fetch")
 const bs = require("buffer-signature")
 const fs = require("fs")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const Jimp = require("jimp")
 const path = require("path")
 const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
+
+const SnowflakeUtil = require("discord.js/src/util/Snowflake")
+const Util = require("discord.js/src/util/Util")
 
 const emojis = require("../modules/emojis")
 
@@ -30,11 +33,11 @@ function sendStatsTimeoutFunction() {
  */
 async function sendStats(msg) {
 	console.log("Sending stats...")
-	const stats = utils.getOwnStats()
+	const stats = await utils.getOwnStats()
 	const now = Date.now()
 	const myid = client.user.id
 	const ramUsageKB = Math.floor(stats.ram / 1024)
-	const shard = utils.getFirstShard()
+	const shard = 0
 	await utils.sql.all(
 		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard) \
 		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
@@ -77,19 +80,17 @@ async function updateCache() {
 	}
 }
 let cacheUpdateTimeout
-if (utils.isFirstShardOnMachine()) {
-	updateCache()
-	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
-	console.log("added timeout cacheUpdateTimeout")
-	ipc.replier.addReceivers([
-		["update_background_cache_BACKGROUND_UPDATE_REQUIRED", {
-			op: "BACKGROUND_UPDATE_REQUIRED",
-			fn: () => {
-				updateCache()
-			}
-		}]
-	])
-}
+updateCache()
+cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+console.log("added timeout cacheUpdateTimeout")
+ipc.replier.addReceivers([
+	["update_background_cache_BACKGROUND_UPDATE_REQUIRED", {
+		op: "BACKGROUND_UPDATE_REQUIRED",
+		fn: () => {
+			updateCache()
+		}
+	}]
+])
 function cacheUpdateTimeoutFunction() {
 	updateCache()
 	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
@@ -133,12 +134,17 @@ commands.assign([
 		aliases: ["statistics", "stats"],
 		category: "meta",
 		example: "&stats",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\nShard ${utils.getFirstShard() + 1} of ${client.options.shardCount}`
+			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} Cluster`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
-				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} shard_` // SC: U+2004 THREE-PER-EM SPACE
+				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} cluster_` // SC: U+2004 THREE-PER-EM SPACE
 			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
@@ -157,7 +163,7 @@ commands.assign([
 							inline: true
 						}
 					])
-				return msg.channel.send(utils.contentify(msg.channel, embed))
+				return msg.channel.send(embed)
 			} else if (suffix.toLowerCase() == "games") {
 				const gamesPlayed = periodicHistory.getSize("game_start")
 				embed.addFields([
@@ -173,7 +179,7 @@ commands.assign([
 						inline: true
 					}
 				])
-				return msg.channel.send(utils.contentify(msg.channel, embed))
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "gc") {
 				const allowed = await utils.sql.hasPermission(msg.author, "eval")
 				if (!allowed) return
@@ -185,15 +191,14 @@ commands.assign([
 				if (global.gc) global.gc()
 				else return msg.channel.send("The global Garbage Collector variable is not exposed")
 			} else {
-				const stats = utils.getOwnStats()
-				const allStats = await ipc.replier.requestGetAllStats()
+				const stats = await utils.getOwnStats()
+				const allStats = stats
 				const nmsg = await msg.channel.send(lang.meta.statistics.prompts.slow)
 				embed
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ ${lang.meta.statistics.returns.heartbeat}:**\n${utils.numberComma(stats.ping.toFixed(0))}ms\n`
-							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
+							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
 							inline: true
@@ -207,9 +212,7 @@ commands.assign([
 							inline: true
 						}
 					])
-				const content = utils.contentify(msg.channel, embed)
-				if (typeof content === "string") nmsg.edit(content)
-				else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
+				nmsg.edit(await utils.contentify(msg.channel, embed))
 			}
 			function bToMB(number) {
 				return `${((number / 1024) / 1024).toFixed(2)}MB`
@@ -222,14 +225,18 @@ commands.assign([
 		aliases: ["ping", "pong"],
 		category: "meta",
 		example: "&ping",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: `${lang.meta.ping.returns.heartbeat}:`, value: `${utils.numberComma(client.ws.ping.toFixed(0))}ms`, inline: true }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
-			const content = utils.contentify(msg.channel, embed)
-			if (typeof content == "string") nmsg.edit(content)
-			else if (content instanceof Discord.MessageEmbed) nmsg.edit("", content)
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
+			const content = await utils.contentify(msg.channel, embed)
+			nmsg.edit(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -238,6 +245,9 @@ commands.assign([
 		aliases: ["forcestatupdate"],
 		category: "admin",
 		example: "&forcestatupdate",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 */
 		async process(msg) {
 			const permissions = await utils.sql.hasPermission(msg.author, "eval")
 			if (!permissions) return
@@ -250,11 +260,15 @@ commands.assign([
 		aliases: ["restartnotify"],
 		category: "admin",
 		example: "&restartnotify",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			let permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+			const permissions = await utils.getChannelPermissions(msg.channel)
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
-			if (permissions && !permissions.has("ADD_REACTIONS")) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
+			if (permissions && !((this.permissions & 0x00000040) == 0x00000040)) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
 	},
@@ -264,12 +278,17 @@ commands.assign([
 		aliases: ["invite", "inv"],
 		category: "meta",
 		example: "&invite",
-		process(msg, suffix, lang) {
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
 				.setDescription(`${lang.meta.invite.returns.notice}\n${utils.replace(lang.meta.invite.returns.link, { "link": constants.add })}`)
 				.setColor(constants.standard_embed_color)
-			msg.channel.send(utils.contentify(msg.channel, embed))
+			msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -278,10 +297,15 @@ commands.assign([
 		aliases: ["info", "inf"],
 		category: "meta",
 		example: "&info",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const [c1, c2] = await Promise.all([
-				client.users.fetch("320067006521147393", true),
-				client.users.fetch("176580265294954507", true)
+				client.rain.cache.user.get("320067006521147393").then(d => new Discord.User(d, client)),
+				client.rain.cache.user.get("176580265294954507").then(d => new Discord.User(d, client))
 			])
 			const embed = new Discord.MessageEmbed()
 				.setAuthor("Amanda", client.user.displayAvatarURL({ format: "png", size: 32 }))
@@ -294,7 +318,7 @@ commands.assign([
 					},
 					{
 						name: "Code",
-						value: `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`
+						value: `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) 11.6.4 (ThunderStorm)`
 					},
 					{
 						name: "Links",
@@ -302,7 +326,7 @@ commands.assign([
 					}
 				])
 				.setColor(constants.standard_embed_color)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -311,12 +335,17 @@ commands.assign([
 		aliases: ["donate", "patreon"],
 		category: "meta",
 		example: "&donate",
-		process(msg, suffix, lang) {
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
 				.setTitle(lang.meta.donate.returns.intro)
 				.setDescription(utils.replace(lang.meta.donate.returns.description, { "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }))
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -325,6 +354,9 @@ commands.assign([
 		aliases: ["commits", "commit", "git", "changes", "changelog"],
 		category: "meta",
 		example: "&git",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 */
 		async process(msg) {
 			msg.channel.sendTyping()
 			const limit = 5
@@ -360,7 +392,7 @@ commands.assign([
 				.setTitle("Git info")
 				.addFields([{ name: "Status", value:`On branch ${res.branch}, latest commit ${res.latestCommitHash}` }, { name: `Commits (latest ${limit} entries)`, value: res.logString }])
 				.setColor(constants.standard_embed_color)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -369,13 +401,18 @@ commands.assign([
 		aliases: ["privacy"],
 		category: "meta",
 		example: "&privacy",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor(constants.standard_embed_color)
 			try {
 				await msg.author.send(embed)
-				if (msg.channel.type != "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
+				if (await utils.getChannelType() === "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
 				return
-			} catch (reason) { return msg.channel.send(utils.contentify(msg.channel, embed)) }
+			} catch (reason) { return msg.channel.send(await utils.contentify(msg.channel, embed)) }
 		}
 	},
 	{
@@ -384,18 +421,24 @@ commands.assign([
 		aliases: ["user"],
 		category: "meta",
 		example: "&user PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			let user, member
-			if (msg.channel.type == "text") {
+			if (await utils.getChannelType(msg.channel) === "text") {
 				member = await utils.findMember(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.findUser(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
+			const createdAt = SnowflakeUtil.deconstruct(user.id).date
+			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: createdAt.toUTCString() }])
 			if (member) {
 				const guildJoinedTime = member.joinedAt.toUTCString()
-				embed.addFields({ name: `Joined ${msg.guild.name} at:`, value: guildJoinedTime })
+				embed.addFields({ name: "Joined at:", value: guildJoinedTime })
 			}
 			let status = ""
 			/* const activity = `*${user.activeOn}*\n`
@@ -411,14 +454,14 @@ commands.assign([
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
 			}*/
 			if (user.bot) {
-				if (user.flags && user.flags.has("VERIFIED_BOT")) status = "<:VerifiedBot:719645152003489912>"
+				if (user.flags && (user.flags & 1 << 16) == 1 << 16) status = "<:VerifiedBot:719645152003489912>"
 				else status = "<:bot:412413027565174787>"
 			}
 			embed.setThumbnail(user.displayAvatarURL({ format: "png", size: 256, dynamic: true }))
 			embed.addFields({ name: "Avatar URL:", value: `[Click Here](${user.displayAvatarURL({ format: "png", size: 2048, dynamic: true })})` })
 			embed.setTitle(`${user.tag} ${status}\n${utils.userFlagEmojis(user).join(" ")}`)
 			// if (activity) embed.setDescription(activity)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	},
 	{
@@ -427,9 +470,15 @@ commands.assign([
 		aliases: ["avatar", "pfp"],
 		category: "meta",
 		example: "&avatar PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
-			if (msg.channel instanceof Discord.TextChannel) if (!msg.channel.permissionsFor(client.user).has("EMBED_LINKS")) canEmbedLinks = false
+			const permissions = await utils.getChannelPermissions(msg.channel)
+			if (permissions && !((permissions & 0x00004000) == 0x00004000)) canEmbedLinks = false
 			/** @type {Discord.User} */
 			let user = null
 			if (msg.channel.type == "text") {
@@ -446,14 +495,14 @@ commands.assign([
 			} else msg.channel.send(url)
 		}
 	},
-	{
+	/* {
 		usage: "None",
 		description: "Gets a server's icon",
 		aliases: ["icon"],
 		category: "meta",
 		example: "&icon",
-		process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
+		async process(msg, suffix, lang) {
+			if (await utils.getChannelType() === "dm") return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
 			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
 			const canEmbedLinks = msg.channel.permissionsFor(client.user).has("EMBED_LINKS")
 			if (canEmbedLinks) {
@@ -463,24 +512,28 @@ commands.assign([
 				msg.channel.send(embed)
 			} else msg.channel.send(url)
 		}
-	},
+	},*/
 	{
 		usage: "<emoji>",
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
 		category: "meta",
 		example: "&wumbo :amandathink:",
-		process(msg, suffix, lang) {
-			let permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async process(msg, suffix, lang) {
+			const permissions = await utils.getChannelPermissions(msg.channel)
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
-			const emoji = Discord.Util.parseEmoji(suffix)
+			const emoji = Util.parseEmoji(suffix)
 			if (emoji == null) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const url = utils.emojiURL(emoji.id, emoji.animated)
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
 				.setColor(constants.standard_embed_color)
-			if (permissions && !permissions.has("EMBED_LINKS")) return msg.channel.send(url)
+			if (permissions && !((permissions & 0x00004000) == 0x00004000)) return msg.channel.send(url)
 			return msg.channel.send(embed)
 		}
 	},
@@ -490,10 +543,15 @@ commands.assign([
 		aliases: ["profile"],
 		category: "meta",
 		example: "&profile PapiOphidian",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
-			let user, member, permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
-			if (permissions && !permissions.has("ATTACH_FILES")) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
+			let user, member
+			const permissions = await utils.getChannelPermissions(msg.channel)
+			if (permissions && !((permissions & 0x00008000) == 0x00008000)) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
 				member = await utils.findMember(msg, suffix, true)
@@ -534,7 +592,7 @@ commands.assign([
 						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
 					}, memberFetchTimeout)
 				})
-				mem = await Promise.race([ipc.replier.requestGetGuildMember("475599038536744960", user.id), TProm])
+				mem = await Promise.race([client._snow.guild.getGuildMember("475599038536744960", user.id), TProm])
 			} catch(e) {
 				mem = { roles: [] }
 			}
@@ -587,9 +645,9 @@ commands.assign([
 				if (!badgeImage && giverImage) canvas.composite(giverImage, 219, 120)
 				else if (badgeImage && giverImage) canvas.composite(giverImage, 289, 120)
 				if (boosting) {
-					if (!badge && !giverImage) canvas.composite(images.get("badge-booster"), 219, 120)
-					else if (!badge || !giverImage) canvas.composite(images.get("badge-booster"), 289, 120)
-					else canvas.composite(images.get("badge-booster"), 349, 120)
+					if (!badge && !giverImage) canvas.composite(images.get("badge-booster").resize(34, 34), 219, 120)
+					else if (!badge || !giverImage) canvas.composite(images.get("badge-booster").resize(34, 34), 289, 120)
+					else canvas.composite(images.get("badge-booster").resize(34, 34), 349, 120)
 				}
 
 				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
@@ -612,8 +670,8 @@ commands.assign([
 				canvas.composite(avatar, 32, 85)
 				if (badgeImage) canvas.composite(badgeImage, 166, 113)
 				if (boosting) {
-					if (!badge) canvas.composite(images.get("badge-booster"), 166, 115)
-					else canvas.composite(images.get("badge-booster"), 216, 115)
+					if (!badge) canvas.composite(images.get("badge-booster").resize(34, 34), 166, 115)
+					else canvas.composite(images.get("badge-booster").resize(34, 34), 216, 115)
 				}
 
 				canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
@@ -634,7 +692,7 @@ commands.assign([
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "profile.png")
-			return msg.channel.send({ files: [image] })
+			return msg.channel.send({ file: image })
 		}
 	},
 	{
@@ -643,6 +701,11 @@ commands.assign([
 		aliases: ["settings", "setting"],
 		category: "configuration",
 		example: "&settings self lang es",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
 			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
@@ -684,13 +747,13 @@ commands.assign([
 			const tableNames = { self: "SettingsSelf", server: "SettingsGuild" }
 
 			let scope = args[0].toLowerCase()
-			scope = Discord.Util.escapeMarkdown(scope)
+			scope = Util.escapeMarkdown(scope)
 			if (!["self", "server"].includes(scope)) return msg.channel.send(lang.configuration.settings.prompts.invalidSyntaxScope)
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
 			let settingName = args[1] ? args[1].toLowerCase() : ""
-			settingName = Discord.Util.escapeMarkdown(settingName)
+			settingName = Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
 				const all = await utils.sql.all(`SELECT * FROM ${tableName} WHERE keyID =?`, keyID)
 				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))
@@ -823,6 +886,11 @@ commands.assign([
 		aliases: ["language", "lang"],
 		category: "configuration",
 		example: "&language es",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang)
 		}
@@ -834,6 +902,11 @@ commands.assign([
 		aliases: ["serverlanguage", "serverlang"],
 		category: "configuration",
 		example: "&serverlanguage es",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang)
 		}
@@ -845,6 +918,11 @@ commands.assign([
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
 		example: "&background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg",
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
 		}
@@ -856,13 +934,18 @@ commands.assign([
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
 		example: "&help audio",
-		process(msg, suffix, lang) {
-			let embed, permissions
-			if (msg.channel instanceof Discord.TextChannel) permissions = msg.channel.permissionsFor(client.user)
+		/**
+		 * @param {import("thunderstorm").Message} msg
+		 * @param {string} suffix
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async process(msg, suffix, lang) {
+			let embed
+			const permissions = await utils.getChannelPermissions(msg.channel)
 			/**
 			 * @param {Discord.Message} mesg
 			 */
-			const reply = (mesg) => { if (mesg.channel.type != "dm") return mesg.channel.send("I sent you a DM") }
+			const reply = async (mesg) => { if (await utils.getChannelType(msg.channel) != "dm") return mesg.channel.send("I sent you a DM") }
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
@@ -933,7 +1016,7 @@ commands.assign([
 					try {
 						msg.author.send(embed).then(m => reply(msg))
 					} catch (e) {
-						msg.channel.send(utils.contentify(msg.channel, embed))
+						msg.channel.send(await utils.contentify(msg.channel, embed))
 					}
 				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
@@ -1007,7 +1090,7 @@ commands.assign([
 					try {
 						msg.author.send(embed).then(m => reply(msg))
 					} catch (e) {
-						msg.channel.send(utils.contentify(msg.channel, embed))
+						msg.channel.send(await utils.contentify(msg.channel, embed))
 					}
 				} else {
 					const command = commands.cache.find(c => c.aliases.includes(suffix))
@@ -1022,7 +1105,7 @@ commands.assign([
 							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExample: ${command.example || "N.A."}`)
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor(constants.standard_embed_color)
-						msg.channel.send(utils.contentify(msg.channel, embed))
+						msg.channel.send(await utils.contentify(msg.channel, embed))
 					} else if (commands.categories.get(suffix)) {
 						const cat = commands.categories.get(suffix)
 						const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
@@ -1050,12 +1133,12 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if (permissions && permissions.has("ADD_REACTIONS")) embed.setFooter(lang.meta.help.returns.mobile)
+						if (permissions && (permissions & 0x00000040) == 0x00000040) embed.setFooter(lang.meta.help.returns.mobile)
 						new Promise(resolve => {
-							msg.author.send(embed).then(resolve).catch(() => {
-								msg.channel.send(utils.contentify(msg.channel, embed)).then(resolve)
+							msg.author.send(embed).then(resolve).catch(async () => {
+								msg.channel.send(await utils.contentify(msg.channel, embed)).then(resolve)
 							})
-						}).then(message => {
+						}).then(async message => {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => {
@@ -1066,12 +1149,12 @@ commands.assign([
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
 								.setColor(constants.standard_embed_color)
-							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: utils.contentify(message.channel, mobileEmbed) }])
+							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: await utils.contentify(message.channel, mobileEmbed) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						})
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor("B60000")
-						msg.channel.send(utils.contentify(msg.channel, embed))
+						msg.channel.send(await utils.contentify(msg.channel, embed))
 					}
 				}
 			} else {
@@ -1083,7 +1166,7 @@ commands.assign([
 				try {
 					msg.author.send(embed).then(m => reply(msg))
 				} catch (e) {
-					msg.channel.send(utils.contentify(msg.channel, embed)).catch(console.error)
+					msg.channel.send(await utils.contentify(msg.channel, embed)).catch(console.error)
 				}
 			}
 		}

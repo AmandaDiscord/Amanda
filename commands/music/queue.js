@@ -1,9 +1,10 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
+const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc, internalEvents } = passthrough
@@ -59,15 +60,18 @@ class Queue {
 	/**
 	 * @param {queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.TextChannel} textChannel
+	 * @param {Discord.Message["channel"]} textChannel
+	 * @param {Discord.Guild} guild
 	 * @param {string} [host]
 	 */
-	constructor(manager, voiceChannel, textChannel, host = null) {
+	constructor(manager, voiceChannel, textChannel, guild, host = null) {
 		this.manager = manager
-		this.guildID = voiceChannel.guild.id
+		this.guild = guild
 		this.voiceChannel = voiceChannel
 		this.textChannel = textChannel
 		this.wrapper = new QueueWrapper(this)
+		/** @type {Map<string, Discord.GuildMember>} */
+		this.listeners = new Map()
 		this.songStartTime = 0
 		this.pausedAt = null
 		/** @type {import("./songtypes").Song[]} */
@@ -79,7 +83,7 @@ class Queue {
 		this.shouldDisplayErrors = true
 		/** @type {import("@amanda/lang").Lang} */
 		this.langCache = undefined
-		this.audit = queues.audits.get(this.guildID)
+		this.audit = queues.audits.get(this.guild.id)
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
@@ -91,11 +95,11 @@ class Queue {
 
 		this.voiceLeaveWarningMessagePromise = null
 		if (!host) {
-			const node = common.nodes.getByRegion(this.voiceChannel.guild.region)
+			const node = common.nodes.getByRegion(this.guild.region)
 			host = node.host
 		}
 		this.player = client.lavalink.join({
-			guild: this.guildID,
+			guild: this.guild.id,
 			channel: this.voiceChannel.id,
 			host
 		})
@@ -113,8 +117,8 @@ class Queue {
 					if (!this.songs[0].error) {
 						console.log(
 							"Song didn't start."
-							+ ` Region: ${client.guilds.cache.get(this.guildID) ? client.guilds.cache.get(this.guildID).region : "unknown"}`
-							+ `, guildID: ${this.guildID}`
+							+ ` Region: ${guild.region}`
+							+ `, guildID: ${this.guild.id}`
 						)
 						this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
 					}
@@ -157,7 +161,7 @@ class Queue {
 	}
 	getLang() {
 		if (this.langCache) return Promise.resolve(this.langCache)
-		return utils.getLang(this.guildID, "guild")
+		return utils.getLang(this.guild.id, "guild")
 	}
 	getUsedLavalinkNode() {
 		// Find the node in constants rather than using the node from the player because constants has the friendly name
@@ -165,7 +169,7 @@ class Queue {
 	}
 	toObject() {
 		return {
-			guildID: this.guildID,
+			guild: this.guild.toJSON(),
 			voiceChannelID: this.voiceChannel.id,
 			textChannelID: this.textChannel.id,
 			songStartTime: this.songStartTime,
@@ -214,9 +218,9 @@ class Queue {
 			embed.setDescription("The next message is the message that was sent to the user.")
 			const usedNode = this.getUsedLavalinkNode()
 			const details = [
-				["Shard", String(utils.getFirstShard())],
-				["Guild", client.guilds.cache.get(this.guildID).name],
-				["Guild ID", this.guildID],
+				["Cluster", config.cluster_id],
+				["Guild", this.guild.name],
+				["Guild ID", this.guild.id],
 				["Text channel", this.textChannel.id],
 				["Voice channel", this.voiceChannel.id],
 				["Using Invidious", String(config.use_invidious)],
@@ -244,7 +248,7 @@ class Queue {
 				const embed = new Discord.MessageEmbed()
 					.setTitle(lang.audio.music.prompts.songNotPlayable)
 					.setDescription(
-						`**${Discord.Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
+						`**${Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
@@ -353,8 +357,8 @@ class Queue {
 		this.dissolved = true
 		this.npUpdater.stop(false)
 		if (this.npMenu) this.npMenu.destroy(true)
-		client.lavalink.leave(this.guildID)
-		this.manager.delete(this.guildID)
+		client.lavalink.leave(this.guild.id)
+		this.manager.delete(this.guild.id)
 	}
 	/**
 	 * Pause playback.
@@ -519,7 +523,7 @@ class Queue {
 		if (song) {
 			const embed = new Discord.MessageEmbed()
 			const lang = this.langCache || Lang.en_us
-			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `**${Discord.Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}` }))
+			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `**${Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}` }))
 			embed.setColor(constants.standard_embed_color)
 			return embed
 		} else return null
@@ -540,6 +544,9 @@ class Queue {
 		}
 	}
 	_makeReactionMenu() {
+		return
+		// @ts-ignore
+		// eslint-disable-next-line no-unreachable
 		if (this.npMenu) this.npMenu.destroy(true)
 		this.npMenu = new ReactionMenu(this.np, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
@@ -560,15 +567,14 @@ class Queue {
 		])
 	}
 	/**
-	 * @param {Discord.VoiceState} oldState
 	 * @param {Discord.VoiceState} newState
 	 */
-	async voiceStateUpdate(oldState, newState) {
+	async voiceStateUpdate(newState) {
 		const lang = await this.getLang()
 		// Update own channel
-		if (newState.member.id == client.user.id && newState.channelID != oldState.channelID && newState.channel) this.voiceChannel = newState.channel
+		if (newState.member.id == client.user.id && newState.channelID) this.voiceChannel = await utils.getChannel(newState.channelID)
 		// Detect number of users left in channel
-		const count = this.voiceChannel.members.filter(m => !m.user.bot).size
+		const count = common.states.filter(item => item.bot).length
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
@@ -662,7 +668,7 @@ class QueueWrapper {
 		this.queue.stop()
 	}
 	/**
-	 * @param {Discord.TextChannel} channel
+	 * @param {Discord.Message["channel"]} channel
 	 */
 	async showRelated(channel) {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
@@ -722,7 +728,7 @@ class QueueWrapper {
 		}
 	}
 	/**
-	 * @param {Discord.TextChannel} channel
+	 * @param {Discord.Message["channel"]} channel
 	 */
 	async showInfo(channel) {
 		const content = await this.queue.songs[0].showInfo()
@@ -746,10 +752,10 @@ class QueueWrapper {
 	}
 
 	getMembers() {
-		return this.queue.voiceChannel.members.map(m => ({
+		return [...this.queue.listeners.values()].map(m => ({
 			id: m.id,
 			name: m.displayName,
-			avatar: m.user.displayAvatarURL({ format: "png", size: 64 }),
+			avatar: m.user.displayAvatarURL({ format: "png", size: 64, dynamic: false }),
 			isAmanda: m.id == client.user.id
 		}))
 	}
@@ -763,7 +769,7 @@ class QueueWrapper {
 
 	getState() {
 		return {
-			guildID: this.queue.guildID,
+			guildID: this.queue.guild.id,
 			playing: !this.queue.isPaused,
 			songStartTime: this.queue.songStartTime,
 			pausedAt: this.queue.pausedAt,
