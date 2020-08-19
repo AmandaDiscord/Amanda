@@ -77,28 +77,9 @@ const rain = new RainCache({
  * just waited for cache ops to finish actually caching things for the worker to be able to access.
  */
 async function handleCache(event) {
-	if (event.t === "GUILD_CREATE") {
-		/** @type {import("@amanda/discordtypings").GuildData} */
-		const typed = event.d
-		const promises = []
-		if (typed.channels) {
-			for (const channel of typed.channels) {
-				promises.push(rain.cache.channel.update(channel.id, channel))
-			}
-		}
-		if (typed.roles) {
-			for (const role of typed.roles) {
-				promises.push(rain.cache.role.update(role.id, typed.id, role))
-			}
-		}
-		if (typed.members) {
-			for (const member of typed.members) {
-				promises.push(rain.cache.member.update(member.user.id, typed.id, typed))
-			}
-		}
-		await Promise.all(promises)
-		await rain.cache.guild.update(typed.id, typed)
-	} else if (event.t === "GUILD_DELETE") {
+	if (event.t === "GUILD_CREATE") await updateGuild(event.d)
+	else if (event.t === "GUILD_UPDATE") await updateGuild(event.d)
+	else if (event.t === "GUILD_DELETE") {
 		if (!event.d.unavailable) { // There is probably a better way to do all of this but for now, IDK. I'm very new to Redis
 			await rain.cache.guild.remove(event.d.id)
 
@@ -163,4 +144,28 @@ async function handleCache(event) {
 		const typed = event.d
 		await rain.cache.member.update(typed.user.id, typed.guild_id, typed) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
 	} else return false
+}
+
+/**
+ * @param {import("@amanda/discordtypings").GuildData} guild
+ */
+async function updateGuild(guild) {
+	const promises = []
+	if (guild.channels) {
+		for (const channel of guild.channels) {
+			promises.push(rain.cache.channel.update(channel.id, channel))
+		}
+	}
+	if (guild.roles) {
+		for (const role of guild.roles) {
+			promises.push(rain.cache.role.update(role.id, guild.id, role))
+		}
+	}
+	if (guild.members) {
+		for (const member of guild.members) {
+			promises.push(rain.cache.member.update(member.user.id, guild.id, member))
+		}
+	}
+	await Promise.all(promises)
+	await rain.cache.guild.update(guild.id, guild)
 }

@@ -33,7 +33,8 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			// @ts-ignore
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]
 			if (playlistName == "show") {
@@ -82,15 +83,16 @@ commands.assign([
 						return `\`${Util.escapeMarkdown(username)}\``
 					} else return "(?)"
 				}
+				const users = await Promise.all(playlists.map(p => getAuthor(p.author)))
 				return utils.createPagination(
 					msg.channel
 					, ["Playlist", "Songs", "Length", "Plays", "`Author`"]
-					, playlists.map(p => [
+					, playlists.map((p, index) => [
 						p.name
 						, p.count.toString()
 						, common.prettySeconds(p.length)
 						, p.playCount.toString()
-						, getAuthor(p.author)
+						, users[index]
 					])
 					, ["left", "right", "right", "right", ""]
 					, 2000
