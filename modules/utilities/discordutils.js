@@ -41,19 +41,29 @@ function testFlag(flags, flag) {
  * @param {(message?: Discord.Message) => any} callback
  * @param {() => any} [onFail]
  */
-function createMessageCollector(filter = { timeout: 1000 * 60, matches: 1 }, callback, onFail) {
-	const timeout = setTimeout(clear, filter.timeout)
+function createMessageCollector(filter = {}, callback, onFail) {
+	let timerdur = (1000 * 60), maxMatches = 1
+	if (filter.timeout) timerdur = filter.timeout
+	if (filter.matches) maxMatches = filter.matches
+	const timet = setTimeout(() => {
+		clear()
+		if (onFail) onFail()
+	}, timerdur)
+
 	let matches = 0
 	function clear() {
 		client.removeListener("message", listener)
-		clearTimeout(timeout)
+		clearTimeout(timet)
 	}
+	client.on("message", listener)
+
 	/**
 	 * @param {Discord.Message} message
 	 */
 	function listener(message) {
+		if (message.author.bot) return
 		if (filter.channelID && message.channel.id !== filter.channelID) return
-		let test = false
+		let test
 
 		if (filter.userIDs && (filter.userIDs.includes(message.author.id) || filter.userIDs.includes(message.webhookID))) test = true
 		else if (!filter.userIDs) test = true
@@ -62,20 +72,19 @@ function createMessageCollector(filter = { timeout: 1000 * 60, matches: 1 }, cal
 			if (filter.test(message)) {
 				callback(message)
 				matches++
-				if (matches === filter.matches) clear()
+				if (matches === maxMatches) return clear()
 			}
 		} else if (test) {
 			callback(message)
 			matches++
-			if (matches === filter.matches) clear()
-		}
-
-		if (filter.matches === 1 && !test && onFail) {
-			onFail()
-			clear()
+			if (matches === maxMatches) return clear()
+		} else {
+			if (maxMatches === 1 && !test && onFail) {
+				onFail()
+				return clear()
+			}
 		}
 	}
-	client.on("message", listener)
 }
 
 /**
