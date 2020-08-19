@@ -1,6 +1,5 @@
 const CloudStorm = require("cloudstorm")
 const RainCache = require("raincache")
-const { Constants } = require("thunderstorm")
 
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
 const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
@@ -50,6 +49,7 @@ const rain = new RainCache({
 		connection.channel.sendToQueue(config.amqp_events_queue, Buffer.from(JSON.stringify(data)))
 	})
 	connection.channel.consume(config.amqp_client_send_queue, (message) => {
+		connection.channel.ack(message)
 		const data = JSON.parse(message.content.toString())
 
 		if (data.event === "LOGIN") {

@@ -50,18 +50,14 @@ const channelManager = {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
 			// @ts-ignore
-			if (await channelManager.typeOf(message.channel) === "dm") return null
+			if (await channelManager.typeOf(message.channel) === "dm") return res(null)
 			string = string.toLowerCase()
 			if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
 			if (!string) {
 				if (self) return client.rain.cache.channel.get(message.channel.id).then(d => d && d.boundObject.type === 0 ? new Discord.TextChannel(d.boundObject, client) : d ? new Discord.VoiceChannel(d.boundObject, client) : null).then(res)
 				else return res(null)
 			} else {
-				const channeldata = await client.rain.cache.channel.filter((channel) => {
-					// @ts-ignore
-					if (!channel.guild_id || (channel.guild_id && channel.guild_id === message.guild.id)) return false
-					else return channel.id === string || channel.name.toLowerCase() === string || channel.name.toLowerCase().includes(string)
-				})
+				const channeldata = await channelManager.filter(string)
 				const list = []
 				const channels = channeldata.filter(chan => chan.boundObject.type === 0 || chan.boundObject.type === 2)
 				for (const chan of channels) {
@@ -88,11 +84,32 @@ const channelManager = {
 		})
 	},
 	/**
+	 * @param {((channel: import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData) => boolean) | string} [fn]
+	 * @param {Array<string>} [inList] Filter within a specific list of IDs only
+	 */
+	filter: async function(fn, inList = undefined) {
+		/**
+		 * @param {import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData} channel
+		 * @returns {boolean}
+		 */
+		const defa = (channel) => {
+			// @ts-ignore
+			const bO = channel.boundObject ? channel.boundObject : channel
+			return bO.id.includes(fn) || bO.name ? bO.name.toLowerCase() === fn : false || bO.name ? bO.name.toLowerCase().includes(fn) : false
+		}
+		let data
+		if (typeof fn === "string") data = await client.rain.cache.channel.filter(defa, inList)
+		else data = await client.rain.cache.channel.filter(fn, inList)
+
+		if (data && data.length > 0) return data
+		else return null
+	},
+	/**
 	 * @param {import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData} channel
 	 */
 	parse: function(channel) {
 		// @ts-ignore
-		const d = channel.boundObject ? channel.boundObject.type : channel.type
+		const d = channel.boundObject ? channel.boundObject : channel
 		const type = d.type
 		if (type === 0) return new Discord.TextChannel(d, client)
 		else if (type === 1) return new Discord.DMChannel(d, client)
@@ -131,6 +148,7 @@ const channelManager = {
 	 * @param {{ allow: number, deny: number }} [permissions]
 	 */
 	hasPermissions: async function(channel, permission, permissions) {
+		if (!channel.guild_id) return true
 		if (!permissions) permissions = await channelManager.permissionsFor(channel)
 		if ((permissions.allow & permission) == permission) return true
 		if ((permissions.deny & permission) == permission) return false
@@ -253,7 +271,8 @@ const memberManager = {
 	/**
 	 * @param {string} id
 	 * @param {string} guildID
-	 * @param {boolean} [raw]
+	 * @param {boolean} [fetch]
+	 * @param {boolean} [convert]
 	 */
 	get: async function(id, guildID, fetch = false, convert = true) {
 		const [md, ud] = await Promise.all([
@@ -289,7 +308,7 @@ const memberManager = {
 	/**
 	 * Returns a user if possible or an Array of Members from a guild
 	 * @param {string} search
-	 * @param {{ id: string }} guild
+	 * @param {Discord.Message["guild"]} guild
 	 * @param {number} [limit=10]
 	 */
 	fetchMembers: async function(search, guild, limit = 10) {
@@ -401,6 +420,28 @@ const memberManager = {
 		})
 	},
 	/**
+	 * @param {((member: import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData) => boolean) | string} [fn]
+	 * @param {string} [guild_id]
+	 * @param {Array<string>} [inList] Filter within a specific list of IDs only
+	 */
+	filter: async function(fn, guild_id, inList = undefined) {
+		/**
+		 * @param {import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData} member
+		 * @returns {boolean}
+		 */
+		const defa = (member) => {
+			// @ts-ignore
+			const bO = member.boundObject ? member.boundObject : member
+			return bO.id.includes(fn) || bO.nick ? bO.nick.toLowerCase() === fn : false || bO.nick ? bO.nick.toLowerCase().includes(fn) : false
+		}
+		let data
+		if (typeof fn === "string") data = await client.rain.cache.member.filter(defa, guild_id, inList)
+		else data = await client.rain.cache.member.filter(fn, guild_id, inList)
+
+		if (data && data.length > 0) return data
+		else return null
+	},
+	/**
 	 * @param {import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData} member
 	 * @param {import("raincache/src/cache/UserCache") | import("@amanda/discordtypings").UserData} user
 	 */
@@ -410,6 +451,48 @@ const memberManager = {
 		// @ts-ignore
 		const ud = user.boundObject ? user.boundObject : user
 		return new Discord.GuildMember({ user: ud, ...md }, client)
+	}
+}
+
+const guildManager = {
+	/**
+	 * @param {string} id
+	 * @param {boolean} [fetch]
+	 * @param {boolean} [convert]
+	 */
+	get: async function(id, fetch = false, convert = true) {
+		const d = await client.rain.cache.guild.get(id)
+		if (d) {
+			if (convert) return guildManager.parse(d) // fetching all members, channels and userdata took too long so the Guild#channels and Guild#members Maps will be empty
+			else return d
+		} else {
+			if (fetch) {
+				const fetched = await guildManager.fetch(id)
+				if (fetched) {
+					// @ts-ignore
+					if (convert) return guildManager.parse(fetched)
+					else return fetched
+				} else return null
+			} else return null
+		}
+	},
+	/**
+	 * @param {string} id
+	 */
+	fetch: async function(id) {
+		const d = await client._snow.guild.getGuild(id)
+		// @ts-ignore
+		if (d) await client.rain.cache.guild.update(id, d)
+		return d || null
+	},
+	/**
+	 * @param {import("raincache/src/cache/GuildCache") | import("@amanda/discordtypings").GuildData} guild
+	 */
+	parse: function(guild) {
+		// @ts-ignore
+		const d = guild.boundObject ? guild.boundObject : guild
+		// @ts-ignore
+		return new Discord.Guild(d, client)
 	}
 }
 
@@ -426,4 +509,4 @@ function validate(id) {
 	return true
 }
 
-module.exports.cacheManager = { validate, users: userManager, channels: channelManager, members: memberManager }
+module.exports.cacheManager = { validate, users: userManager, channels: channelManager, members: memberManager, guilds: guildManager }

@@ -73,7 +73,9 @@ commands.assign([
 				 */
 				// eslint-disable-next-line no-inner-declarations
 				async function getAuthor(author) {
-					const user = await utils.getUser(author)
+					/** @type {Discord.User} */
+					// @ts-ignore
+					const user = await utils.cacheManager.users.get(author, true, true)
 					if (user) {
 						let username = user.username
 						if (username.length > 14) username = `${username.slice(0, 13)}…`
@@ -136,13 +138,13 @@ commands.assign([
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (bulkAddCollectionChannels.has(msg.channel.id)) return msg.channel.send(lang.audio.playlist.prompts.bulkMenuOpen)
 				bulkAddCollectionChannels.add(msg.channel.id)
-				const confirmation = await msg.channel.send(
+				const confirmation = await msg.channel.send(await utils.contentify(msg.channel,
 					new Discord.MessageEmbed()
 						.setTitle(lang.audio.playlist.prompts.bulkListening)
 						.setDescription(utils.replace(lang.audio.playlist.prompts.bulkDescription, { "prefix": passthrough.statusPrefix })
 						)
 						.setColor(0x22dddd)
-				)
+				))
 				utils.createMessageCollector({ channelID: msg.channel.id, userIDs: [msg.author.id] }, (msgg) => {
 					if (msgg.content.startsWith(passthrough.statusPrefix)) {
 						return // ignore commands
@@ -316,8 +318,9 @@ commands.assign([
 			} else {
 				const author = []
 				/** @type {Discord.User} */
-				const user = await utils.getUser(playlistRow.author)
-				if (user) author.push(`${user.tag} — ${playlistName}`, user.displayAvatarURL({ format: "png", size: 32 }))
+				// @ts-ignore
+				const user = await utils.cacheManager.users.get(playlistRow.author, true, true)
+				if (user) author.push(`${user.tag} — ${playlistName}`, user.displayAvatarURL({ format: "png", size: 32, dynamic: false }))
 				else author.push(playlistName)
 				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`

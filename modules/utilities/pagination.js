@@ -103,10 +103,10 @@ function createPagination(channel, title, rows, align, maxLength) {
  */
 async function paginate(channel, pageCount, callback) {
 	let page = 0
-	const msg = await channel.send(callback(page))
+	const msg = await channel.send(await callback(page))
 	if (pageCount > 1) {
 		let reactionMenuExpires
-		const reactionMenu = new ReactionMenu(msg, [
+		/* const reactionMenu = new ReactionMenu(msg, [
 			{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
 				page--
 				if (page < 0) page = pageCount - 1
@@ -119,12 +119,12 @@ async function paginate(channel, pageCount, callback) {
 				msg.edit(callback(page))
 				makeTimeout()
 			} }
-		])
+		])*/
 		// eslint-disable-next-line no-inner-declarations
 		function makeTimeout() {
 			clearTimeout(reactionMenuExpires)
 			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true)
+				// reactionMenu.destroy(true)
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()

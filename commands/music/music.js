@@ -36,6 +36,7 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, { voiceChannel, lang }) => {
+			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const insert = args[0][0] == "i"
 			const search = args.slice(1).join(" ")
@@ -44,8 +45,9 @@ const subcommandsMap = new Map([
 			}
 			const match = common.inputToID(search)
 
-			const guilddata = await utils.getGuild(msg.guild)
-			const guild = new Discord.Guild(guilddata.boundObject, client)
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
@@ -170,8 +172,9 @@ const subcommandsMap = new Map([
 	["queue", {
 		queue: "required",
 		code: async (msg, args, { queue, lang }) => {
-			const guilddata = await utils.getGuild(msg.guild)
-			const guild = new Discord.Guild(guilddata.boundObject, client)
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 			if (args[1] == "empty" || args[1] == "clear" || (args[1] == "remove" && args[2] == "all")) {
 				queue.audit.push({ action: "Queue Clear", user: msg.author.tag, platform: "Discord" })
 				queue.wrapper.removeAllSongs({ msg, lang })
@@ -182,12 +185,8 @@ const subcommandsMap = new Map([
 				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(queue.getTotalLength()) })}`
 				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
-				msg.channel.send(
-					new Discord.MessageEmbed()
-						.setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Util.escapeMarkdown(guild.name) }))
-						.setDescription(body)
-						.setColor(constants.standard_embed_color)
-				)
+				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Util.escapeMarkdown(guild.name) })).setDescription(body).setColor(constants.standard_embed_color)
+				))
 			}
 		}
 	}],
@@ -273,8 +272,9 @@ const subcommandsMap = new Map([
 	}],
 	["audit", {
 		code: async (msg, args, { lang, queue }) => {
-			const guilddata = await utils.getGuild(msg.guild)
-			const guild = new Discord.Guild(guilddata.boundObject, client)
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 			const audit = queues.audits.get(msg.guild.id)
 			if (!audit || (audit && audit.length == 0)) return msg.channel.send(`${msg.author.username}, there is no audit data to fetch`)
 			let entries
@@ -381,7 +381,8 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			if (msg.channel instanceof Discord.DMChannel) return msg.channel.send(lang.audio.debug.prompts.guildOnly)
+			// @ts-ignore
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.cacheManager.channels.find(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
 			/** @type {Object.<string, Array<[string, number]>>} */
@@ -390,8 +391,9 @@ commands.assign([
 				voice: [["View Channel", 0x00000400], ["Join", 0x00100000], ["Speak", 0x00200000]]
 			}
 
-			const guilddata = await utils.getGuild(msg.guild)
-			const guild = new Discord.Guild(guilddata.boundObject, client)
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 
 			const perms = channel.type == "text" ? types.text : types.voice
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
@@ -432,6 +434,7 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
+			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
@@ -548,6 +551,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			// No DMs
+			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args
 			const args = suffix.split(" ")
@@ -577,8 +581,12 @@ commands.assign([
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
 					const voiceChannel = common.states.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
+					let vcdata
+					// @ts-ignore
+					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.id)
 
-					subcommmandData.voiceChannel = voiceChannel
+					// @ts-ignore
+					subcommmandData.voiceChannel = vcdata.boundObject ? vcdata.boundObject : vcdata
 				}
 			}
 			// Hand over execution to the subcommand
@@ -598,6 +606,7 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
+			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return

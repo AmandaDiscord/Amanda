@@ -128,7 +128,7 @@ async function contentify(channel, content) {
 	/** @type {number} */
 	// @ts-ignore
 	if (content instanceof Discord.MessageEmbed) {
-		if (!(await cacheManager.channels.hasPermissions({ id: channel.id, guild_id: channel.guild.id }, 0x00004000))) { // EMBED_LINKS (https://discord.com/developers/docs/topics/permissions#permissions)
+		if (!(await cacheManager.channels.hasPermissions({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, 0x00004000))) { // EMBED_LINKS (https://discord.com/developers/docs/topics/permissions#permissions)
 			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? `${content.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
 			if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 			value += "\nPlease allow me to embed content"
@@ -140,16 +140,8 @@ async function contentify(channel, content) {
 	return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
 }
 
-/**
- * @param {Discord.Message["guild"]} guild
- */
-function getGuild(guild) {
-	return client.rain.cache.guild.get(guild.id)
-}
-
 module.exports.userFlagEmojis = userFlagEmojis
 module.exports.emojiURL = emojiURL
 module.exports.resolveWebhookMessageAuthor = resolveWebhookMessageAuthor
 module.exports.contentify = contentify
 module.exports.createMessageCollector = createMessageCollector
-module.exports.getGuild = getGuild

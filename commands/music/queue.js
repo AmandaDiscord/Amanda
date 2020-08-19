@@ -236,8 +236,9 @@ class Queue {
 				detailsString
 			)
 			embed.setColor(0xff2ee7)
-			utils.sendToUncachedChannel(reportTarget, true, embed).then(() => {
-				return utils.sendToUncachedChannel(reportTarget, true, contents)
+			const rchan = new Discord.PartialChannel({ id: reportTarget })
+			rchan.send(embed).then(() => {
+				return rchan.send(contents)
 			// eslint-disable-next-line no-empty-function
 			}).catch(() => {}) // probably missing access error
 		}
@@ -572,7 +573,8 @@ class Queue {
 	async voiceStateUpdate(newState) {
 		const lang = await this.getLang()
 		// Update own channel
-		if (newState.member.id == client.user.id && newState.channelID) this.voiceChannel = await utils.getChannel(newState.channelID)
+		// @ts-ignore
+		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
 		const count = common.states.filter(item => item.bot).length
 		if (count == 0) {

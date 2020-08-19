@@ -267,7 +267,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
 	},
@@ -476,7 +476,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00004000))) canEmbedLinks = false
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00004000))) canEmbedLinks = false
 			/** @type {Discord.User} */
 			let user = null
 			if (msg.channel.type == "text") {
@@ -530,7 +530,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
 				.setColor(constants.standard_embed_color)
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00004000))) return msg.channel.send(url)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00004000))) return msg.channel.send(url)
 			return msg.channel.send(embed)
 		}
 	},
@@ -547,7 +547,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let user, member
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00008000))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
@@ -588,7 +588,7 @@ commands.assign([
 						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
 					}, memberFetchTimeout)
 				})
-				mem = await Promise.race([client._snow.guild.getGuildMember("475599038536744960", user.id), TProm])
+				mem = await Promise.race([utils.cacheManager.members.get(user.id, "475599038536744960", true, false), TProm])
 			} catch(e) {
 				mem = { roles: [] }
 			}
@@ -1128,7 +1128,7 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00000040))) embed.setFooter(lang.meta.help.returns.mobile)
+						if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) embed.setFooter(lang.meta.help.returns.mobile)
 						new Promise(resolve => {
 							msg.author.send(embed).then(resolve).catch(async () => {
 								msg.channel.send(await utils.contentify(msg.channel, embed)).then(resolve)

@@ -51,7 +51,7 @@ class VoiceStateCallback {
 		else if (this.msg.guild) lang = await utils.getLang(this.msg.guild.id, "guild")
 		else lang = await utils.getLang(this.msg.author.id, "self")
 		if (this.active) {
-			const checkedVoiceChannel = common.verifyVoiceChannel(voiceChannel, this.msg, lang)
+			const checkedVoiceChannel = await common.verifyVoiceChannel(voiceChannel, this.msg, lang)
 			if (checkedVoiceChannel) {
 				// All good!
 				this.active = false
@@ -655,7 +655,11 @@ const common = {
 	 */
 	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		if (msg.member.voice.channel) return common.verifyVoiceChannel(msg.member.voice.channel, msg, lang)
+		const state = states.find(st => st.guildID === msg.guild.id && st.userID === msg.author.id)
+		if (state) {
+			const cdata = await utils.cacheManager.channels.get(state.channelID, true, true)
+			return common.verifyVoiceChannel(cdata, msg, lang)
+		}
 		// Not in a voice channel, and not waiting? Quit.
 		if (!wait) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceChannelRequired, { "username": msg.author.username }))
@@ -684,12 +688,16 @@ const common = {
 	 * @param {import("@amanda/lang").Lang} lang
 	 * @return {(Discord.VoiceChannel|null)}
 	 */
-	verifyVoiceChannel: function(voiceChannel, msg, lang) {
-		if (!voiceChannel.joinable && !voiceChannel.members.get(client.user.id)) {
+	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
+		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id })
+		const viewable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00000400, perms)
+		const joinable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00100000, perms)
+		const speakable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00200000, perms)
+		if (!(viewable && !joinable)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))
 			return null
 		}
-		if (!voiceChannel.speakable) {
+		if (!speakable) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantSpeak, { "username": msg.author.username }))
 			return null
 		}
@@ -698,17 +706,30 @@ const common = {
 	}
 }
 
-utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (newState) => {
+utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), async (newState) => {
 	/**
 	 * @type {Discord.VoiceState}
 	 */
 	const typed = newState // ts is actually stupid
 
+	if (!typed.guildID) return // we should only process voice state updates that are in guilds
+
+	if (!typed.channelID) { // if there is no channel in the user's state update
+		const inCache = states.find(state => state.channelID === typed.channelID && state.guildID === typed.guildID && state.userID === typed.id)
+		if (inCache) states.splice(states.indexOf(inCache), 1)
+	}
+
+	const previously = states.find(state => state.guildID === typed.guildID && state.userID === typed.id) // if the user just moved to a new voice channel
+	if (previously) states.splice(states.indexOf(previously), 1)
+
 	// Process waiting to join
 	// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 	if (typed.id != client.user.id && typed.channelID && typed.guildID) {
+		const udata = await utils.cacheManager.users.get(typed.id, true)
+		states.push({ userID: typed.id, guildID: typed.guildID, channelID: typed.channelID, bot: udata.bot })
+		const vc = await utils.cacheManager.channels.get(typed.channelID, true, true)
 		// Trigger all callbacks for that user in that guild
-		common.voiceStateCallbackManager.getAll(typed.id, newState.guild).forEach(state => state.trigger(newState.channel))
+		common.voiceStateCallbackManager.getAll(typed.id, newState.guild).forEach(state => state.trigger(vc))
 	}
 })
 
