@@ -382,19 +382,27 @@ const memberManager = {
 				else return res(null)
 			} else {
 				const guildMemData = await client.rain.cache.member.filter(() => true, message.guild.id)
-				const nicktest = guildMemData.find(mem => mem.boundObject.nick && mem.boundObject.nick.toLowerCase().includes(string))
+				const nicktest = guildMemData.filter(mem => mem.boundObject.nick && mem.boundObject.nick.toLowerCase().includes(string))
 				const userdata = await client.rain.cache.user.filter((user) => {
-					const bO = !!(nicktest && nicktest.boundObject)
-					const safeBo = bO ? nicktest.boundObject : { id: "" }
-					return user.id.includes(string) || `${user.username}#${user.discriminator}`.toLowerCase() === string || user.username.toLowerCase() === string || user.username.toLowerCase().includes(string) || bO ? user.id === safeBo.id : false
+					// @ts-ignore
+					const userb = user.boundObject ? user.boundObject : user
+					// @ts-ignore
+					const nickb = nicktest.find(m => (m.boundObject ? m.boundObject.id : m.id) === userb.id)
+					if (nickb) return true
+					else if (userb.id.includes(string)) return true
+					else if (`${userb.username}#${userb.discriminator}`.toLowerCase() === string) return true
+					else if (userb.username.toLowerCase() === string) return true
+					else if (userb.username.toLowerCase().includes(string)) return true
+					else return false
 				}, guildMemData.map(item => item.boundObject.id))
 
 				/** @type {Array<Discord.GuildMember>} */
 				let list = []
 				for (const user of userdata) {
 					if (list.find(item => item.id === user.id) || list.length === 10) continue
-					const memdata = await client.rain.cache.member.get(user.id, message.guild.id)
-					list.push(new Discord.GuildMember({ user: user.boundObject, ...memdata.boundObject }, client))
+					// @ts-ignore
+					const memdata = guildMemData.find(m => (m.boundObject ? m.boundObject.id : m.id) === user.id)
+					list.push(new Discord.GuildMember({ user: user.boundObject ? user.boundObject : user, ...(memdata.boundObject ? memdata.boundObject : memdata) }, client))
 				}
 				if (list.length == 1) return res(list[0])
 				if (list.length == 0) {
