@@ -9,6 +9,46 @@ const { contentify, createMessageCollector } = require("./discordutils")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
 
+const permissionstable = {
+	CREATE_INSTANT_INVITE: 0x00000001,
+	KICK_MEMBERS: 0x00000002,
+	BAN_MEMBERS: 0x00000004,
+	ADMINISTRATOR: 0x00000008,
+	MANAGE_CHANNELS: 0x00000010,
+	MANAGE_GUILD: 0x00000020,
+	ADD_REACTIONS: 0x00000040,
+	VIEW_AUDIT_LOG: 0x00000080,
+	PRIORITY_SPEAKER: 0x00000100,
+	STREAM: 0x00000200,
+	VIEW_CHANNEL: 0x00000400,
+	SEND_MESSAGES: 0x00000800,
+	SEND_TTS_MESSAGES: 0x00001000,
+	MANAGE_MESSAGES: 0x00002000,
+	EMBED_LINKS: 0x00004000,
+	ATTACH_FILES: 0x00008000,
+	READ_MESSAGE_HISTORY: 0x00010000,
+	MENTION_EVERYONE: 0x00020000,
+	USE_EXTERNAL_EMOJIS: 0x00040000,
+	VIEW_GUILD_INSIGHTS: 0x00080000,
+	CONNECT: 0x00100000,
+	SPEAK: 0x00200000,
+	MUTE_MEMBERS: 0x00400000,
+	DEAFEN_MEMBERS: 0x00800000,
+	MOVE_MEMBERS: 0x01000000,
+	USE_VAD: 0x02000000,
+	CHANGE_NICKNAME: 0x04000000,
+	MANAGE_NICKNAMES: 0x08000000,
+	MANAGE_ROLES: 0x10000000,
+	MANAGE_WEBHOOKS: 0x20000000,
+	MANAGE_EMOJIS: 0x40000000,
+	ALL: 0x00000000
+}
+
+for (const key of Object.keys(permissionstable)) {
+	if (key === "ALL") continue
+	permissionstable["ALL"] = permissionstable["ALL"] | permissionstable[key]
+}
+
 const channelManager = {
 	/**
 	 * @param {string} id
@@ -54,10 +94,12 @@ const channelManager = {
 			string = string.toLowerCase()
 			if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
 			if (!string) {
-				if (self) return client.rain.cache.channel.get(message.channel.id).then(d => d && d.boundObject.type === 0 ? new Discord.TextChannel(d.boundObject, client) : d ? new Discord.VoiceChannel(d.boundObject, client) : null).then(res)
+				// @ts-ignore
+				if (self) return channelManager.get(message.channel.id, true, true).then(data => res(data))
 				else return res(null)
 			} else {
 				const channeldata = await channelManager.filter(string)
+				if (!channeldata) return res(null)
 				const list = []
 				const channels = channeldata.filter(chan => chan.boundObject.type === 0 || chan.boundObject.type === 2)
 				for (const chan of channels) {
@@ -97,7 +139,9 @@ const channelManager = {
 		const defa = (channel) => {
 			// @ts-ignore
 			const bO = channel.boundObject ? channel.boundObject : channel
-			return bO.id.includes(fn) || bO.name ? bO.name.toLowerCase() === fn : false || bO.name ? bO.name.toLowerCase().includes(fn) : false
+			if (bO.id.includes(fn)) return true
+			else if (bO.name && bO.name.toLowerCase().includes(fn)) return true
+			else return false
 		}
 		let data
 		if (typeof fn === "string") data = await client.rain.cache.channel.filter(defa, inList)
@@ -136,24 +180,69 @@ const channelManager = {
 	},
 	/**
 	 * @param {{ id: string }} channel
-	 * @returns {Promise<{ allow: number, deny: number }>}
 	 */
-	permissionsFor: async function(channel) {
-		// @ts-ignore
-		const perms = await client.rain.cache.permOverwrite.get(client.user.id, channel.id)
-		if (!perms) return { allow: 0, deny: 0 }
-		return { allow: perms.boundObject.allow, deny: perms.boundObject.deny }
+	getOverridesFor: async function(channel) {
+		const value = { allow: 0x00000000, deny: 0x00000000 }
+		const perms = await client.rain.cache.permOverwrite.get(client.user.id, channel.id) // get permission overwrite data from cache
+		if (perms) {
+			const permbO = perms.boundObject ? perms.boundObject : perms // isolate overwrite object
+			value.allow |= (permbO.allow || 0)
+			value.deny |= (permbO.deny || 0)
+		}
+		return value
 	},
 	/**
 	 * @param {{ id: string, guild_id: string }} channel
-	 * @param {number} permission
+	 * @returns {Promise<{ allow: number, deny: number }>}
+	 */
+	permissionsFor: async function(channel) {
+		const value = { allow: 0x00000000, deny: 0x00000000 }
+		if (!channel.guild_id) return { allow: permissionstable["ALL"], deny: 0x00000000 }
+
+		const chanperms = await channelManager.getOverridesFor(channel)
+		const guildperms = await guildManager.getOverridesFor(channel.guild_id)
+
+		value.allow |= chanperms.allow
+		value.deny |= chanperms.deny
+
+		value.allow |= guildperms.allow
+		value.deny |= guildperms.deny
+
+
+		const clientmemdata = await memberManager.get(client.user.id, channel.guild_id, false, false) // get ClientUser member data in guild to get roles array
+		if (!clientmemdata) return value
+
+		/** @type {Array<string>} */
+		// @ts-ignore
+		const roles = (clientmemdata.boundObject ? clientmemdata.boundObject.roles : clientmemdata.roles) // isolate ClientUser roles array
+		const roledata = await Promise.all(roles.map(role => client.rain.cache.role.get(role, channel.guild_id))) // get all role data from cache
+		for (const role of roledata) {
+			const rbO = role.boundObject ? role.boundObject : role // isolate role object
+			if (rbO.permissions) {
+				value.allow |= rbO.permissions // OR together the permissions of each role
+			}
+		}
+
+		return value
+	},
+	/**
+	 * @param {{ id: string, guild_id: string }} channel
+	 * @param {number | keyof permissionstable} permission
 	 * @param {{ allow: number, deny: number }} [permissions]
 	 */
 	hasPermissions: async function(channel, permission, permissions) {
 		if (!channel.guild_id) return true
 		if (!permissions) permissions = await channelManager.permissionsFor(channel)
-		if ((permissions.allow & permission) == permission) return true
-		if ((permissions.deny & permission) == permission) return false
+
+		/** @type {number} */
+		let toCheck
+		if (permissionstable[permission]) toCheck = permissionstable[permission]
+		else if (typeof permission === "number") toCheck = permission
+		// @ts-ignore
+		else toCheck = permission
+
+		if ((permissions.allow & toCheck) == toCheck) return true
+		if ((permissions.deny & toCheck) == toCheck) return false
 		else return true
 	}
 }
@@ -507,6 +596,19 @@ const guildManager = {
 		const d = guild.boundObject ? guild.boundObject : guild
 		// @ts-ignore
 		return new Discord.Guild(d, client)
+	},
+	/**
+	 * @param {string} id
+	 */
+	async getOverridesFor(id) {
+		const value = { allow: 0x00000000, deny: 0x00000000 }
+		const guild = await guildManager.get(id, true, false)
+		if (guild) {
+			// @ts-ignore
+			const gbO = guild.boundObject ? guild.boundObject : guild
+			value.allow |= (gbO.permissions || 0)
+		}
+		return value
 	}
 }
 

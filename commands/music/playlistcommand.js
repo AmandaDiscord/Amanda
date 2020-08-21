@@ -172,6 +172,8 @@ commands.assign([
 				const NOT_AN_ID = Symbol("NOT_AN_ID")
 				const NO_TRACKS = Symbol("NO_TRACKS")
 
+				const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
+
 				// Resolve the content
 				/** @type {{id: string, title: string, lengthSeconds: number}|null} */
 				// Just trust me on this eslint control:
@@ -183,7 +185,7 @@ commands.assign([
 							return { id: data.videoId, title: data.title, lengthSeconds: data.lengthSeconds }
 						})
 					} else { // Resolve tracks with Lavalink
-						return common.getTracks(match.id, msg.guild.region).then(tracks => {
+						return common.getTracks(match.id, guild.region).then(tracks => {
 							if (tracks && tracks[0]) {
 								// If the ID worked, add the song
 								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
@@ -192,7 +194,7 @@ commands.assign([
 					}
 				})().catch(error => {
 					// Treating as ID failed, so start a search
-					return common.getTracks(`ytsearch:${search}`, msg.guild.region).then(tracks => {
+					return common.getTracks(`ytsearch:${search}`, guild.region).then(tracks => {
 						if (tracks && tracks[0]) {
 							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
 						} else return null // no results

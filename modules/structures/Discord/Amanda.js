@@ -1,7 +1,7 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const Lavalink = require("discord.js-lavalink")
+const Lavalink = require("lavacord")
 const RainCache = require("raincache")
 
 const passthrough = require("../../../passthrough")
@@ -33,7 +33,7 @@ class Amanda extends Discord.Client {
 	constructor(options) {
 		super(options)
 
-		/** @type {Lavalink.PlayerManager} */
+		/** @type {Lavalink.Manager} */
 		this.lavalink
 
 		/**

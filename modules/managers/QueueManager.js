@@ -1,10 +1,11 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const { EventEmitter } = require("events")
+const Collection = require("discord.js").Collection
 
 const passthrough = require("../../passthrough")
-const { client, reloader, ipc } = passthrough
+const { client, reloader, ipc, config } = passthrough
 
 const QueueFile = require("../../commands/music/queue")
 reloader.sync("./commands/music/queue.js", QueueFile)
@@ -16,8 +17,8 @@ const auditDestroyTimeout = 1000 * 60 * 5
 
 class QueueManager {
 	constructor() {
-		/** @type {Discord.Collection<string, import("../../commands/music/queue").Queue>} */
-		this.cache = new Discord.Collection()
+		/** @type {Collection<string, import("../../commands/music/queue").Queue>} */
+		this.cache = new Collection()
 		this.songsPlayed = 0
 		this.events = new EventEmitter()
 		/** @type {Map<string, Array<{ action: string, platform: string, user: string }>>} */
@@ -27,13 +28,13 @@ class QueueManager {
 	}
 	toObject() {
 		return {
-			_id: `QueueStore_${utils.getFirstShard()}`,
+			_id: `QueueStore_${config.cluster_id}`,
 			queues: [...this.cache.values()].map(q => q.toObject())
 		}
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.TextChannel} textChannel
+	 * @param {Discord.PartialChannel} textChannel
 	 * @param {string} [host]
 	 */
 	getOrCreate(voiceChannel, textChannel, host = null) {
@@ -43,18 +44,21 @@ class QueueManager {
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.TextChannel} textChannel
+	 * @param {Discord.PartialChannel} textChannel
 	 * @param {string} [host]
 	 */
-	create(voiceChannel, textChannel, host = null) {
+	async create(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
+		/** @type {Discord.Guild} */
+		// @ts-ignore
+		const guild = await utils.cacheManager.guilds.get(guildID)
 		if (this.audits.get(guildID)) {
 			if (this.enqueuedAuditDestructions.get(guildID)) {
 				clearTimeout(this.enqueuedAuditDestructions.get(guildID))
 				this.enqueuedAuditDestructions.delete(guildID)
 			}
 		} else this.audits.set(guildID, [])
-		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, host)
+		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, guild, host)
 		this.cache.set(guildID, instance)
 		ipc.replier.sendNewQueue(instance)
 		this.events.emit("create", instance)
@@ -72,23 +76,24 @@ class QueueManager {
 		this.events.emit("delete", guildID)
 	}
 	save() {
-		return passthrough.nedb.queue.update({ _id: `QueueStore_${utils.getFirstShard()}` }, this.toObject(), { upsert: true })
+		return passthrough.nedb.queue.update({ _id: `QueueStore_${config.cluster_id}` }, this.toObject(), { upsert: true })
 	}
 	async restore() {
 		const songTypes = require("../../commands/music/songtypes")
-		const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${utils.getFirstShard()}` })
+		const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${config.cluster_id}` })
 		data.queues.forEach(async q => {
 			// console.log(q)
 			const guildID = q.guildID
-			const voiceChannel = client.channels.cache.get(q.voiceChannelID)
-			const textChannel = client.channels.cache.get(q.textChannelID)
+			const voiceChannel = await utils.cacheManager.channels.get(q.voiceChannelID)
+			const textChannel = await utils.cacheManager.channels.get(q.textChannelID)
 			const host = q.host
 			if (!(voiceChannel instanceof Discord.VoiceChannel) || !(textChannel instanceof Discord.TextChannel)) throw new Error("The IDs you saved don't match to channels, dummy")
 			console.log(`Making queue for voice channel ${voiceChannel.name}`)
 			const exists = this.cache.has(guildID)
 			if (exists) console.log("Queue already in store! Skipping.")
 			else {
-				const queue = this.getOrCreate(voiceChannel, textChannel, host)
+				// @ts-ignore
+				const queue = await this.getOrCreate(voiceChannel, textChannel, host)
 				q.songs.forEach(s => {
 					if (s.class == "YouTubeSong") {
 						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track, s.uploader)
@@ -114,7 +119,7 @@ class QueueManager {
 				}
 				queue.songStartTime = q.songStartTime
 				queue.pausedAt = q.pausedAt
-				const message = await textChannel.messages.fetch(q.npID, false)
+				const message = await client._snow.channel.getChannelMessage(q.textChannelID, q.npID).then(m => new Discord.Message(m, client))
 				// eslint-disable-next-line require-atomic-updates
 				queue.np = message
 				queue._startNPUpdates()
@@ -122,7 +127,7 @@ class QueueManager {
 				ipc.replier.sendNewQueue(queue)
 			}
 		})
-		setTimeout(() => passthrough.nedb.queue.update({ _id: `QueueStore_${utils.getFirstShard()}` }, { _id: `QueueStore_${utils.getFirstShard()}`, queues: [] }, { upsert: true }), 1000 * 60 * 2)
+		setTimeout(() => passthrough.nedb.queue.update({ _id: `QueueStore_${config.cluster_id}` }, { _id: `QueueStore_${config.cluster_id}`, queues: [] }, { upsert: true }), 1000 * 60 * 2)
 	}
 }
 

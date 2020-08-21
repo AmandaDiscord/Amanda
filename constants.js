@@ -22,6 +22,7 @@ module.exports = {
 	fake_token: "(token)",
 	lavalinkNodes: [
 		{
+			id: "pencil",
 			name: "Pencil",
 			host: "amanda.moe",
 			port: 10402,
@@ -32,6 +33,7 @@ module.exports = {
 			search_with_invidious: true
 		},
 		{
+			id: "crayon",
 			name: "Crayon",
 			host: "139.99.90.94",
 			port: 10402,

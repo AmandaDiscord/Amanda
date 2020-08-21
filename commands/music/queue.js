@@ -96,56 +96,55 @@ class Queue {
 		this.voiceLeaveWarningMessagePromise = null
 		if (!host) {
 			const node = common.nodes.getByRegion(this.guild.region)
-			host = node.host
+			host = node.id
 		}
+		this.nodeID = host
 		this.player = client.lavalink.join({
 			guild: this.guild.id,
 			channel: this.voiceChannel.id,
-			host
+			node: host
 		})
-		this.player.on("end", event => this._onEnd(event))
-		this.player.on("playerUpdate", async data => {
-			const lang = await this.getLang()
-			if (!this.isPaused) {
-				const newSongStartTime = data.state.time - data.state.position
-				// commenting this out: it may break the error check, but it will improve the web time
-				// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
-				this.songStartTime = newSongStartTime
-				ipc.replier.sendTimeUpdate(this)
-				// }
-				if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
-					if (!this.songs[0].error) {
-						console.log(
-							"Song didn't start."
-							+ ` Region: ${guild.region}`
-							+ `, guildID: ${this.guild.id}`
-						)
-						this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
+		this.player.then(player => {
+			player.on("end", event => this._onEnd(event))
+			player.on("playerUpdate", async data => {
+				const lang = await this.getLang()
+				if (!this.isPaused) {
+					const newSongStartTime = data.state.time - data.state.position
+					// commenting this out: it may break the error check, but it will improve the web time
+					// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
+					this.songStartTime = newSongStartTime
+					ipc.replier.sendTimeUpdate(this)
+					// }
+					if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
+						if (!this.songs[0].error) {
+							console.log(
+								"Song didn't start."
+								+ ` Region: ${guild.region}`
+								+ `, guildID: ${this.guild.id}`
+							)
+							this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
+						}
+						console.log("Song error call A")
+						this._reportError()
 					}
-					console.log("Song error call A")
-					this._reportError()
 				}
-			}
-		})
-		this.player.on("error", details => {
-			if (details.op === "event" && details.code === 4014 && details.byRemote === true && details.type === "WebSocketClosedEvent") {
-				// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
-				// Simply respond by stopping the queue, since that was the intention.
-				// This should therefore clean up the queueStore and the website correctly.
-				this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
-				return this.stop()
-			}
-			if (details.op === "event" && [1000, 1001, 1006].includes(details.code) && details.type === "WebSocketClosedEvent") {
-				// This doesn't seem to be harmful. Songs keep playing and the queue isn't damaged.
-				return
-			}
-			console.error("Lavalink error event at", new Date().toUTCString(), details)
-			if (this.songs[0]) {
-				this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
-				console.log("Song error call B")
-				this._reportError()
-				// This may automatically continue to the next song, presumably because the end event may also be fired.
-			}
+			})
+			player.on("error", details => {
+				if (details.type === "WebSocketClosedEvent") {
+					// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
+					// Simply respond by stopping the queue, since that was the intention.
+					// This should therefore clean up the queueStore and the website correctly.
+					this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
+					return this.stop()
+				}
+				console.error("Lavalink error event at", new Date().toUTCString(), details)
+				if (this.songs[0]) {
+					this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
+					console.log("Song error call B")
+					this._reportError()
+					// This may automatically continue to the next song, presumably because the end event may also be fired.
+				}
+			})
 		})
 		/** @type {Discord.Message} */
 		this.np = null
@@ -164,8 +163,7 @@ class Queue {
 		return utils.getLang(this.guild.id, "guild")
 	}
 	getUsedLavalinkNode() {
-		// Find the node in constants rather than using the node from the player because constants has the friendly name
-		return constants.lavalinkNodes.find(n => n.host === this.player.node.host) || null
+		return this.nodeID || null
 	}
 	toObject() {
 		return {
@@ -176,7 +174,7 @@ class Queue {
 			pausedAt: this.pausedAt,
 			npID: this.np ? this.np.id : null,
 			songs: this.songs.map(s => s.toObject()),
-			host: this.player.node.host
+			host: this.nodeID
 		}
 	}
 	/**
@@ -198,7 +196,8 @@ class Queue {
 			this._nextSong()
 		} else {
 			passthrough.periodicHistory.add("song_start")
-			this.player.play(song.track).then(() => {
+			const player = await this.player
+			player.play(song.track).then(() => {
 				this.songStartTime = Date.now()
 				this.pausedAt = null
 				this._startNPUpdates()
@@ -224,8 +223,8 @@ class Queue {
 				["Text channel", this.textChannel.id],
 				["Voice channel", this.voiceChannel.id],
 				["Using Invidious", String(config.use_invidious)],
-				["Invidious origin", `\`${common.invidious.getOrigin(this.player.node.host)}\``],
-				["Queue node", usedNode ? usedNode.name : "Unnamed"]
+				["Invidious origin", `\`${common.invidious.getOrigin(this.nodeID)}\``],
+				["Queue node", usedNode ? usedNode : "Unnamed"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>
@@ -236,7 +235,7 @@ class Queue {
 				detailsString
 			)
 			embed.setColor(0xff2ee7)
-			const rchan = new Discord.PartialChannel({ id: reportTarget })
+			const rchan = new Discord.PartialChannel({ id: reportTarget }, client)
 			rchan.send(embed).then(() => {
 				return rchan.send(contents)
 			// eslint-disable-next-line no-empty-function
@@ -288,7 +287,7 @@ class Queue {
 	}
 	/**
 	 * Called when the player emits the "end" event.
-	 * @param {LLEndEvent} event
+	 * @param {import("lavacord").LavalinkEvent} event
 	 */
 	_onEnd(event) {
 		if (event.reason == "REPLACED") return
@@ -363,16 +362,17 @@ class Queue {
 	}
 	/**
 	 * Pause playback.
-	 * @returns {?string} null on success, string reason on failure
+	 * @returns {Promise<?string>} null on success, string reason on failure
 	 */
-	pause() {
+	async pause() {
 		if (this.songs[0].noPauseReason) return this.songs[0].noPauseReason
 		else if (this.isPaused) {
 			if (this.langCache) return this.langCache.audio.music.prompts.queueAlreadyPaused
 			else return "Music is already paused. Use `&music resume` to resume."
 		} else {
+			const player = await this.player
 			this.pausedAt = Date.now()
-			this.player.pause(true)
+			player.pause(true)
 			this.npUpdater.stop(true)
 			ipc.replier.sendTimeUpdate(this)
 			return null
@@ -382,15 +382,16 @@ class Queue {
 	 * Resume playback.
 	 * Returns 0 on success.
 	 * Returns 1 if the queue wasn't paused.
-	 * @returns {0|1}
+	 * @returns {Promise<0|1>}
 	 */
-	resume() {
+	async resume() {
 		if (!this.isPaused) return 1
 		else {
+			const player = await this.player
 			const pausedTime = Date.now() - this.pausedAt
 			this.songStartTime += pausedTime
 			this.pausedAt = null
-			this.player.resume().then(() => {
+			player.resume().then(() => {
 				this._startNPUpdates()
 			})
 			ipc.replier.sendTimeUpdate(this)
@@ -401,22 +402,24 @@ class Queue {
 	 * Skip the current song by asking the player to stop.
 	 * @param {number} [amount]
 	 */
-	skip(amount) {
+	async skip(amount) {
 		if (amount) {
 			for (let i = 1; i <= amount - 1; i++) { // count from 1 to amount-1, inclusive
 				this.removeSong(1, true)
 			}
 		}
-		this.player.stop()
+		const player = await this.player
+		player.stop()
 	}
 	/**
 	 * End playback by clearing the queue, then asking the player to stop.
 	 */
-	stop() {
+	async stop() {
+		const player = await this.player
 		this._clearSongs()
 		this.loop = false
 		this.auto = false
-		this.player.stop()
+		player.stop()
 		this._dissolve()
 	}
 	toggleAuto() {
@@ -576,7 +579,7 @@ class Queue {
 		// @ts-ignore
 		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
-		const count = common.states.filter(item => item.bot).length
+		const count = common.states.filter(item => !item.bot).length
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
@@ -645,8 +648,8 @@ class QueueWrapper {
 			else if (context === "reaction") this.queue.textChannel.send(result)
 		}
 	}
-	resume(context) {
-		const result = this.queue.resume()
+	async resume(context) {
+		const result = await this.queue.resume()
 		if (context instanceof Discord.Message && result == 0) this.queue.audit.push({ action: "Queue Resume", platform: "Discord", user: context.author.tag })
 		if (result == 1) {
 			if (context instanceof Discord.Message) {

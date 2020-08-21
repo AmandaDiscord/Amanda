@@ -2,7 +2,7 @@
 
 const Discord = require("thunderstorm")
 const path = require("path")
-const { PlayerManager } = require("discord.js-lavalink")
+const { Manager } = require("lavacord")
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
 const ReactionMenu = require("@amanda/reactionmenu")
@@ -74,32 +74,8 @@ utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (
 		manageMessage(m, true)
 	}
 })
-/* utils.addTemporaryListener(client, "shardDisconnected", path.basename(__filename), (num, reason, ) => {
-	if (reason) console.log(`Disconnected with ${reason.code} at ${reason.path}.`)
-	if (lastAttemptedLogins.length) console.log(`Previous disconnection was ${Math.floor(Date.now() - lastAttemptedLogins.slice(-1)[0] / 1000)} seconds ago.`)
-	lastAttemptedLogins.push(Date.now())
-	new Promise(resolve => {
-		if (lastAttemptedLogins.length >= 3) {
-			const oldest = lastAttemptedLogins.shift()
-			const timePassed = Date.now() - oldest
-			const timeout = 30000
-			if (timePassed < timeout) return setTimeout(() => resolve(), timeout - timePassed)
-		}
-		return resolve()
-	}).then(() => {
-		client.login(config.bot_token)
-	})
-})*/
 utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 	if (reason) console.error(reason)
-})
-utils.addTemporaryListener(client, "guildMemberUpdate", path.basename(__filename), async (oldMember, newMember) => {
-	if (newMember.guild.id != "475599038536744960") return
-	if (!oldMember.roles.cache.get("475599593879371796") && newMember.roles.cache.get("475599593879371796")) {
-		const row = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", newMember.id)
-		if (!row) await utils.sql.all("INSERT INTO Premium (userID, state) VALUES (?, ?)", [newMember.id, 1])
-		else return
-	} else return
 })
 utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
 	let shouldIgnore = false
@@ -208,7 +184,7 @@ async function manageMessage(msg, isEdit = false) {
 	}
 }
 
-function manageReady() {
+async function manageReady() {
 	const firstStart = starting
 	starting = false
 	utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
@@ -223,9 +199,12 @@ function manageReady() {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
 		constants.lavalinkNodes.forEach(node => node.resumeKey = `${client.user.id}/${config.cluster_id}`)
-		client.lavalink = new PlayerManager(this, constants.lavalinkNodes.filter(n => n.enabled), {
+		client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
-			shards: config.shard_list.length
+			shards: config.shard_list.length,
+			send: (packet) => {
+				client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ event: "SEND_MESSAGE", data: packet, time: new Date().getTime() })))
+			}
 		})
 		client.lavalink.once("ready", async () => {
 			console.log("Lavalink ready")
@@ -234,9 +213,10 @@ function manageReady() {
 			if (!data) return
 			if (data.queues.length > 0) passthrough.queues.restore()
 		})
-		client.lavalink.on("error", (self, error) => {
+		client.lavalink.on("error", (error, node) => {
 			console.error(`Failed to initialise Lavalink: ${error.message}`)
 		})
+		await client.lavalink.connect()
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(async row => {
 				const channel = client.rain.cache.channel.get(row.channelID)

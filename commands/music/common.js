@@ -13,6 +13,8 @@ const { client, reloader, config, constants } = passthrough
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
+const Util = require("discord.js/src/util/Util")
+
 /**
  * @type {Array<{ guildID: string, channelID: string, userID: string, bot: boolean }>}
  */
@@ -419,8 +421,8 @@ const common = {
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
 		 */
-		function(song, textChannel, voiceChannel, insert, context) {
-			const queue = passthrough.queues.getOrCreate(voiceChannel, textChannel)
+		async function(song, textChannel, voiceChannel, insert, context) {
+			const queue = await passthrough.queues.getOrCreate(voiceChannel, textChannel)
 			const result = queue.addSong(song, insert)
 			if (context instanceof Discord.Message && result == 0) {
 				context.react("✅")
@@ -463,9 +465,9 @@ const common = {
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
 		 */
-		function(textChannel, voiceChannel, songs, insert, context) {
+		async function(textChannel, voiceChannel, songs, insert, context) {
 			if (insert) songs.reverse()
-			const queue = passthrough.queues.getOrCreate(voiceChannel, textChannel)
+			const queue = await passthrough.queues.getOrCreate(voiceChannel, textChannel)
 			const results = songs.map(song => {
 				return queue.addSong(song, insert)
 			})
@@ -487,7 +489,7 @@ const common = {
 			let tracks = await common.searchYouTube(search, textChannel.guild.region)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
-			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
+			const results = tracks.map((track, index) => `${index + 1}. **${Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
 			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
 				if (typeof index != "number") return
 				const track = tracks[index]
@@ -518,7 +520,7 @@ const common = {
 			}
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
-			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
+			const results = tracks.map((track, index) => `${index + 1}. **${Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
 			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
 				if (typeof index != "number") return
 				const track = tracks[index]
@@ -690,10 +692,10 @@ const common = {
 	 */
 	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
 		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id })
-		const viewable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00000400, perms)
-		const joinable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00100000, perms)
-		const speakable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, 0x00200000, perms)
-		if (!(viewable && !joinable)) {
+		const viewable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms)
+		const joinable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms)
+		const speakable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
+		if ((!viewable && !joinable)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))
 			return null
 		}
@@ -710,7 +712,9 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 	/**
 	 * @type {Discord.VoiceState}
 	 */
-	const typed = newState // ts is actually stupid
+	const typed = newState
+
+	if (typed.id === client.user.id) return
 
 	if (!typed.guildID) return // we should only process voice state updates that are in guilds
 
@@ -724,7 +728,7 @@ utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename)
 
 	// Process waiting to join
 	// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
-	if (typed.id != client.user.id && typed.channelID && typed.guildID) {
+	if (typed.channelID && typed.guildID) {
 		const udata = await utils.cacheManager.users.get(typed.id, true)
 		states.push({ userID: typed.id, guildID: typed.guildID, channelID: typed.channelID, bot: udata.bot })
 		const vc = await utils.cacheManager.channels.get(typed.channelID, true, true)

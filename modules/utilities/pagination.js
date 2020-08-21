@@ -231,7 +231,7 @@ function makeSelection(channel, authorID, title, failedTitle, items, embed = und
 		// Send embed
 		const selectmessage = await channel.send(await contentify(channel, embed))
 		// Make collector
-		createMessageCollector({ channelID: channel.id, userIDs: [authorID] }, (newmessage) => {
+		createMessageCollector({ channelID: channel.id, userIDs: [authorID] }, async (newmessage) => {
 			// Collector got a message
 			let index = Number(newmessage.content)
 			// Is index a number?
@@ -242,7 +242,7 @@ function makeSelection(channel, authorID, title, failedTitle, items, embed = und
 			// Edit to success
 			embed.setDescription(`» ${items[index]}`)
 			embed.setFooter("")
-			selectmessage.edit(contentify(selectmessage.channel, embed))
+			selectmessage.edit(await contentify(selectmessage.channel, embed))
 			return res(index)
 		}, async () => {
 			// Collector failed, show the failure message and return null

@@ -25,6 +25,7 @@ reloader.sync("./commands/music/common.js", common)
 utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (newState) => {
 	// Pass on to queue for leave timeouts
 	if (!newState.guildID) return
+	if (newState.id === client.user.id) return
 	const queue = queues.cache.get(newState.guildID)
 	if (queue) queue.voiceStateUpdate(newState)
 })
@@ -55,7 +56,7 @@ const subcommandsMap = new Map([
 				if (config.use_invidious) { // Resolve tracks with Invidious
 					const queue = queues.cache.get(msg.guild.id)
 					const node = (queue && queue.getUsedLavalinkNode()) || common.nodes.getByRegion(guild.region)
-					common.invidious.getData(match.id, node.host).then(async data => {
+					common.invidious.getData(match.id, typeof node === "string" ? `${node[0].toUpperCase()}${node.slice(1, node.length)}` : node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
@@ -401,11 +402,11 @@ commands.assign([
 			let extraNodeInfo = ""
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
-			if (currentQueueNode && currentQueueNode !== node) {
-				const name = currentQueueNode ? currentQueueNode.name : lang.audio.debug.returns.unnamedNode
+			if (currentQueueNode && currentQueueNode !== node.id) {
+				const name = currentQueueNode ? `${currentQueue[0].toUpperCase()}${currentQueueNode.slice(1, currentQueueNode.length)}` : lang.audio.debug.returns.unnamedNode
 				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
-			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node).host)).hostname
+			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node.id))).hostname
 			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.cacheManager.channels.hasPermissions({ id: channel.id, guild_id: msg.guild.id }, item[1])}`))
 			const details = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
