@@ -79,6 +79,7 @@ const rain = new RainCache({
 			})
 			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
 			if (shard) shard.connector.betterWs.sendMessage(data.data)
+			else console.log(`No shard found to send WS Message:\n${require("util").inspect(data.data, true, 2, true)}`)
 		}
 	})
 })().catch(console.error)
