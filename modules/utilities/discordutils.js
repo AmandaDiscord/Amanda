@@ -70,14 +70,22 @@ function createMessageCollector(filter = {}, callback, onFail) {
 
 		if (filter.test && test) {
 			if (filter.test(message)) {
+				try {
+					callback(message)
+					matches++
+					if (matches === maxMatches) return clear()
+				} catch (e) {
+					if (onFail) return onFail()
+				}
+			}
+		} else if (test) {
+			try {
 				callback(message)
 				matches++
 				if (matches === maxMatches) return clear()
+			} catch (e) {
+				if (onFail) return onFail()
 			}
-		} else if (test) {
-			callback(message)
-			matches++
-			if (matches === maxMatches) return clear()
 		} else {
 			if (maxMatches === 1 && !test && onFail) {
 				onFail()
