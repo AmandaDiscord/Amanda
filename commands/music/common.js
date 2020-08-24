@@ -15,11 +15,6 @@ reloader.sync("./modules/utilities/index.js", utils)
 
 const Util = require("discord.js/src/util/Util")
 
-/**
- * @type {Array<{ guildID: string, channelID: string, userID: string, bot: boolean }>}
- */
-const states = []
-
 class VoiceStateCallback {
 	/**
 	 * @param {Discord.Message} msg
@@ -75,7 +70,6 @@ class VoiceStateCallback {
 }
 
 const common = {
-	states: states,
 	/**
 	 * @param {number} seconds
 	 */
@@ -657,7 +651,7 @@ const common = {
 	 */
 	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		const state = states.find(st => st.guildID === msg.guild.id && st.userID === msg.author.id)
+		const state = passthrough.voiceStates.find(st => st.guildID === msg.guild.id && st.userID === msg.author.id)
 		if (state) {
 			const cdata = await utils.cacheManager.channels.get(state.channelID, true, true)
 			return common.verifyVoiceChannel(cdata, msg, lang)
@@ -705,36 +699,35 @@ const common = {
 		}
 		// All good!
 		return voiceChannel
+	},
+	/**
+	 * @param {Discord.VoiceState} state
+	 */
+	voiceStateUpdate: async function(state) {
+		if (state.id === client.user.id) return
+
+		if (!state.guildID) return // we should only process voice state updates that are in guilds
+
+		if (!state.channelID) { // if there is no channel in the user's state update
+			const inCache = passthrough.voiceStates.find(s => s.channelID === state.channelID && s.guildID === state.guildID && s.userID === state.id)
+			if (inCache) passthrough.voiceStates.splice(passthrough.voiceStates.indexOf(inCache), 1)
+		}
+
+		const previously = passthrough.voiceStates.find(s => s.guildID === state.guildID && s.userID === state.id) // if the user just moved to a new voice channel
+		if (previously) passthrough.voiceStates.splice(passthrough.voiceStates.indexOf(previously), 1)
+
+		// Process waiting to join
+		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
+		if (state.channelID && state.guildID) {
+			const udata = await utils.cacheManager.users.get(state.id, true)
+			passthrough.voiceStates.push({ userID: state.id, guildID: state.guildID, channelID: state.channelID, bot: udata.bot })
+			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
+			// Trigger all callbacks for that user in that guild
+			common.voiceStateCallbackManager.getAll(state.id, state.guild).forEach(s => s.trigger(vc))
+		}
 	}
 }
 
-utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), async (newState) => {
-	/**
-	 * @type {Discord.VoiceState}
-	 */
-	const typed = newState
-
-	if (typed.id === client.user.id) return
-
-	if (!typed.guildID) return // we should only process voice state updates that are in guilds
-
-	if (!typed.channelID) { // if there is no channel in the user's state update
-		const inCache = states.find(state => state.channelID === typed.channelID && state.guildID === typed.guildID && state.userID === typed.id)
-		if (inCache) states.splice(states.indexOf(inCache), 1)
-	}
-
-	const previously = states.find(state => state.guildID === typed.guildID && state.userID === typed.id) // if the user just moved to a new voice channel
-	if (previously) states.splice(states.indexOf(previously), 1)
-
-	// Process waiting to join
-	// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
-	if (typed.channelID && typed.guildID) {
-		const udata = await utils.cacheManager.users.get(typed.id, true)
-		states.push({ userID: typed.id, guildID: typed.guildID, channelID: typed.channelID, bot: udata.bot })
-		const vc = await utils.cacheManager.channels.get(typed.channelID, true, true)
-		// Trigger all callbacks for that user in that guild
-		common.voiceStateCallbackManager.getAll(typed.id, newState.guild).forEach(state => state.trigger(vc))
-	}
-})
+utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), common.voiceStateUpdate)
 
 module.exports = common

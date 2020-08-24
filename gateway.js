@@ -22,7 +22,7 @@ const shardGuildMap = new Map()
 let readyPayload = {}
 
 const connection = new AmpqpConnector({
-	amqpUrl: config.ampq_is_local ? "amqp://localhost" : `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`,
+	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`,
 	amqpQueue: config.amqp_cache_queue,
 	sendQueue: config.amqp_events_queue
 })

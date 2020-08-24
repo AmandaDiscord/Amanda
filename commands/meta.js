@@ -141,7 +141,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} Cluster`
+			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
 				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} cluster_` // SC: U+2004 THREE-PER-EM SPACE
@@ -159,7 +159,7 @@ commands.assign([
 						{
 							name: leadingSpace,
 							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": utils.numberComma(client.lavalink.players.size) })}\n` +
-								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma([...queues.cache.values()].reduce((acc, cur) => acc + cur.voiceChannel.members.filter(m => m.user && !m.user.bot).size, 0)) })}`,
+								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma([...queues.cache.values()].reduce((acc, cur) => acc + passthrough.voiceStates.filter(m => !m.bot).length, 0)) })}`,
 							inline: true
 						}
 					])

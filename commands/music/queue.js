@@ -636,8 +636,8 @@ class QueueWrapper {
 		if (this.queue.isPaused) return this.resume(context)
 		else return this.pause(context)
 	}
-	pause(context) {
-		const result = this.queue.pause()
+	async pause(context) {
+		const result = await this.queue.pause()
 		if (context === "web") {
 			if (!result) this.queue.audit.push({ action: "Queue Pause", platform: "Web", user: "Unkown" })
 			return !result

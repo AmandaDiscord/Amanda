@@ -11,7 +11,7 @@ async function getOwnStats() {
 		users: await client.rain.cache.user.getIndexCount(),
 		guilds: await client.rain.cache.guild.getIndexCount(),
 		channels: await client.rain.cache.channel.getIndexCount(),
-		connections: 0
+		connections: client.lavalink.players.size
 	}
 }
 

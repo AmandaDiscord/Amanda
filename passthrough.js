@@ -26,6 +26,7 @@ process._ptcreated = true
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix
+ * @property {Array<{ guildID: string, channelID: string, userID: string, bot: boolean }>} voiceStates
  */
 
 /**

@@ -1,3 +1,5 @@
+const cluster_id = "cluster"
+
 module.exports = {
 	// Keys
 	bot_token: "discord bot token here",
@@ -7,6 +9,9 @@ module.exports = {
 	lavalink_password: "lavalink password here",
 	weeb_api_key: "weeb.sh api key here",
 	genius_access_token: "genius api key here",
+	redis_password: "redis password here",
+	amqp_events_queue: `amqp-events-${cluster_id}`,
+	amqp_client_send_queue: `amqp-client-${cluster_id}`,
 
 	// Environment
 	machine_id: "lmao_dev_compname",
@@ -18,10 +23,15 @@ module.exports = {
 	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",
 	additional_intents: [],
 	shard_list: [0],
+	amqp_username: "user",
+	amqp_port: 5672,
+	amqp_origin: "example.com",
+	cluster_id: cluster_id,
 
 	// Settings
 	allow_ai: false,
 	music_dash_enabled: true,
 	use_invidious: false,
-	fake_token: "(token)"
+	fake_token: "(token)",
+	is_dev_env: true
 }

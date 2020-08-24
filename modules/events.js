@@ -10,6 +10,9 @@ const ReactionMenu = require("@amanda/reactionmenu")
 const passthrough = require("../passthrough")
 const { client, config, constants, commands, reloader, reloadEvent, internalEvents } = passthrough
 
+const common = require("../commands/music/common")
+reloader.sync("./commands/music/common.js", common)
+
 const lastAttemptedLogins = []
 
 let prefixes = []
@@ -41,7 +44,7 @@ function getTimeoutDuration() {
 }
 
 let autoPayTimeout
-if (config.cluster_id === "prod-0") {
+if (config.cluster_id === "pencil") {
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 	console.log("added timeout autoPayTimeout")
 }
@@ -57,7 +60,7 @@ async function autoPayTimeoutFunction() {
 }
 
 reloadEvent.once(path.basename(__filename), () => {
-	if (config.cluster_id === "prod-0") {
+	if (config.cluster_id === "pencil") {
 		clearTimeout(autoPayTimeout)
 		console.log("removed timeout autoPayTimeout")
 	}
@@ -87,6 +90,25 @@ utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filena
 	if (reason) console.error(reason)
 	else console.log("There was an error but no reason")
 })
+utils.addTemporaryListener(client, "raw", path.basename(__filename), event => {
+	if (event.t === "VOICE_STATE_UPDATE") {
+		if (!client.lavalink) return
+		client.lavalink.voiceStateUpdate(event.d)
+	} else if (event.t === "VOICE_SERVER_UPDATE") {
+		if (!client.lavalink) return
+		client.lavalink.voiceServerUpdate(event.d)
+	} else if (event.t === "GUILD_CREATE") {
+		if (!client.lavalink) return
+		if (!event.d.voice_states) return
+		for (const state of event.d.voice_states) {
+			client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
+			const ns = new Discord.VoiceState(state, client)
+			common.voiceStateUpdate(ns)
+		}
+	}
+})
+
+
 /**
  * @param {Discord.Message} msg
  */

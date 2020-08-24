@@ -284,7 +284,7 @@ const subcommandsMap = new Map([
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 				.setAuthor(`Audit for ${guild.name}`)
 				.setDescription(entries.map((entry, index) => `${index + 1}. ${entry.action} by ${entry.user} on ${entry.platform}`).join("\n"))
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	}],
 	["lyrics", {
@@ -299,7 +299,7 @@ const subcommandsMap = new Map([
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 				.setAuthor(`Lyrics for ${song.title}`)
 				.setDescription(lyrics)
-			return msg.channel.send(utils.contentify(msg.channel, embed))
+			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
 	}]
 ])
