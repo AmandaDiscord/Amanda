@@ -26,7 +26,7 @@ class IPC {
 	}
 
 	connect() {
-		const cluster = `cluster-${config.cluster_id}`;
+		const cluster = `cluster-${config.cluster_id}`
 		ipc.config.id = cluster
 		let shouldBeConnected = true // for ensuring that only one disconnect warning is sent
 		ipc.connectToNet("website", () => {
@@ -60,6 +60,7 @@ class IPC {
 	 * Send raw data to the server.
 	 */
 	send(raw) {
+		if (!this.socket) return
 		this.socket.emit("message", raw)
 	}
 }
