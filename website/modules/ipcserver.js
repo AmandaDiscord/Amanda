@@ -32,21 +32,22 @@ class IPC {
 		this.clientID = null
 
 		ipc.serveNet(() => {
+			// @ts-ignore
 			this.server.on("message", this.receive.bind(this))
-			this.server.on("shard", (data, socket) => {
-				const {clientID, total, me} = data
-				console.log(`Socket identified as ${me.join(" ")}, total ${total} (${clientID})`)
+			// @ts-ignore
+			this.server.on("cluster", (data, socket) => {
+				const {clientID, total, clusterID} = data
+				console.log(`Socket identified as ${clusterID}, total of ${total} shards (${clientID})`)
 				this.clientID = clientID
 				this.totalShards = total
-				me.forEach(id => {
-					this.shards.set(id, socket)
-				})
+				this.clusters.set(clusterID, socket)
 			})
+			// @ts-ignore
 			this.server.on("socket.disconnected", dsocket => {
 				let disconnected = []
-				this.shards.forEach((socket, id) => {
+				this.clusters.forEach((socket, id) => {
 					if (socket == dsocket) {
-						this.shards.delete(id)
+						this.clusters.delete(id)
 						disconnected.push(id)
 					}
 				})
@@ -62,7 +63,7 @@ class IPC {
 		 * Map shard IDs to their IPC sockets.
 		 * @type {Map<number, any>}
 		 */
-		this.shards = new Map()
+		this.clusters = new Map()
 		this.totalShards = 1
 
 		this.replier = null
@@ -77,13 +78,13 @@ class IPC {
 	}
 
 	/**
-	 * Get the socket that corresponds to a shard ID.
+	 * Get the socket that corresponds to a cluster ID.
 	 */
-	getShard(id) {
-		if (ipc.of["shard-x"]) {
-			return ipc.of["shard-x"] || null
+	getCluster(id) {
+		if (ipc.of["cluster-x"]) {
+			return ipc.of["cluster-x"] || null
 		} else {
-			return this.shards.get(id) || null
+			return this.clusters.get(id) || null
 		}
 	}
 

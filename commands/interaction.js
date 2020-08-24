@@ -30,7 +30,7 @@ const cmds = [
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf() === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
@@ -300,7 +300,7 @@ const cmds = [
 					usersToResolve.add(row.waifuID)
 				}
 				await Promise.all([...usersToResolve].map(userID =>
-					client.users.fetch(userID, false)
+					utils.cacheManager.users.get(userID, true, true)
 						.then(user => user.tag)
 						.catch(() => userID) // fall back to userID if user no longer exists
 						.then(display => userTagMap.set(userID, display))
@@ -436,7 +436,7 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (typeof member != "string") {
 		if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 		if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
-		if (source.traaOverride) {
+		/* if (source.traaOverride) {
 			const g1 = msg.member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
 			const g2 = member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
 			// console.log(msg.member.user.username, g1, member.user.username, g2)
@@ -452,7 +452,7 @@ async function doInteraction(msg, suffix, source, lang) {
 					i++
 				}
 			}
-		}
+		}*/
 	}
 	if (!fetched) {
 		if (source.fetch) fetched = source.fetch()

@@ -1,7 +1,7 @@
 {
   "name": "amanda",
   "version": "1.0.0",
-  "description": "A cutie-pie social bot to bring your members closer",
+  "description": "A cutie-pie music bot",
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
@@ -10,20 +10,20 @@
     "website": "cd website && node server.js",
     "test": "tap"
   },
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": "12.0.0",
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager",
-    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#c4532138417583475714ff357c03bbc93e207b8e",
+    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
     "@amanda/lang": "github:AmandaDiscord/Lang#3b0b66fc0bfb4dcd6ee70f5df98cc92342f2bbe9",
-    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#735ae949430c9c33260ceca894023551afbda483",
+    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#005080b5104d5afb24d9fb6d9ae874f9de673bac",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
     "buffer-signature": "^1.1.0",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#882b8e9b2ff5698947548870864f773fc32788eb",
     "discord-bot-analytics": "^1.0.14",
     "discord.js": "github:AmandaDiscord/discord.js#737b00128b846bbe000f2a69e010f2cc5be94db7",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
@@ -33,7 +33,7 @@
     "genius-lyrics-api": "^3.0.2",
     "heapdump": "^0.3.15",
     "jimp": "^0.x",
-    "lavacord": "^1.1.9",
+    "lavacord": "github:AmandaDiscord/Lavacord#3c70e3179b98fd49e25816366e378fb22659eaae",
     "mime": "^2.4.6",
     "mixin-deep": "^2.0.1",
     "mysql2": "^2.1.0",
@@ -41,12 +41,12 @@
     "node-fetch": "^2.6.0",
     "node-ipc": "^9.1.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "raincache": "github:AmandaDiscord/RainCache",
+    "raincache": "github:AmandaDiscord/RainCache#f621adefb95017389562dab4f20788ca87ddc915",
     "simple-git": "^2.15.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#c153a2eaac55c06f86ae8dd6d71c7bff78b36b7d",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#a47fea57ede54c1fbcf60ede47c266db67f05aa3"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",

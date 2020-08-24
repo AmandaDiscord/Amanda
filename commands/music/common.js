@@ -240,6 +240,10 @@ const common = {
 	},
 
 	nodes: {
+		lowUsage() {
+			return client.lavalink.idealNodes.map(node => constants.lavalinkNodes.find(n => n.host === node.host)).filter(node => node.enabled)
+		},
+
 		first() {
 			return constants.lavalinkNodes.find(n => n.enabled)
 		},
@@ -250,6 +254,9 @@ const common = {
 
 		getByRegion(region) {
 			return constants.lavalinkNodes.find(n => n.enabled && n.regions.includes(region)) || common.nodes.first()
+			// eslint-disable-next-line no-unreachable
+			const lowUsage = common.nodes.lowUsage()
+			return lowUsage.find(node => node.regions.includes(region)) || lowUsage[0]
 		}
 	},
 
@@ -359,7 +366,7 @@ const common = {
 
 		/**
 		 * Find the best audio stream URL in a data object. Throw if the data is bad.
-		 * @param {{ adaptiveFormats: Array<{ type: string, bitrate: number, url: string }> }} data
+		 * @param {{ adaptiveFormats: Array<{ type: string, bitrate: string, url: string }> }} data
 		 */
 		dataToURL: function(data) {
 			let formats = data && data.adaptiveFormats
@@ -367,8 +374,8 @@ const common = {
 			formats = formats
 				.filter(f => f.type.includes("audio"))
 				.sort((a, b) => {
-					const abitrate = a.bitrate + (a.type.includes("audio/webm") ? 1e6 : 0)
-					const bbitrate = b.bitrate + (b.type.includes("audio/webm") ? 1e6 : 0)
+					const abitrate = Number(a.bitrate) + (a.type.includes("audio/webm") ? 20000 : 0)
+					const bbitrate = Number(b.bitrate) + (b.type.includes("audio/webm") ? 20000 : 0)
 					return bbitrate - abitrate
 				})
 			if (formats[0]) return formats[0].url

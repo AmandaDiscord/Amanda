@@ -98,7 +98,10 @@ const channelManager = {
 				if (self) return channelManager.get(message.channel.id, true, true).then(data => res(data))
 				else return res(null)
 			} else {
-				const channeldata = await channelManager.filter(string)
+				// @ts-ignore
+				const inGuild = await channelManager.filter(chan => chan.guild_id && chan.guild_id === message.guild.id)
+				// @ts-ignore
+				const channeldata = await channelManager.filter(string, inGuild.map(c => c.boundObject ? c.boundObject.id : c.id))
 				if (!channeldata) return res(null)
 				const list = []
 				const channels = channeldata.filter(chan => chan.boundObject.type === 0 || chan.boundObject.type === 2)

@@ -172,6 +172,10 @@ commands.assign([
 				const NOT_AN_ID = Symbol("NOT_AN_ID")
 				const NO_TRACKS = Symbol("NO_TRACKS")
 
+				/**
+				 * @type {Discord.Guild}
+				 */
+				// @ts-ignore
 				const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 
 				// Resolve the content
@@ -309,16 +313,16 @@ commands.assign([
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor("dd1d1d").setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(await utils.contentify(msg.channel, deletePromptEmbed))
-				/* new ReactionMenu(message, [
+				new ReactionMenu(message, client, [
 					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.sql.all("DELETE FROM Playlists WHERE playlistID = ?", playlistRow.playlistID),
 							utils.sql.all("DELETE FROM PlaylistSongs WHERE playlistID = ?", playlistRow.playlistID)
 						])
 						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
-						message.edit(utils.contentify(msg.channel, deletePromptEmbed))
+						message.edit(await utils.contentify(msg.channel, deletePromptEmbed))
 					} }
-				])*/
+				])
 			} else {
 				const author = []
 				/** @type {Discord.User} */

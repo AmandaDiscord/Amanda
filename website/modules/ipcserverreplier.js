@@ -29,10 +29,10 @@ class ServerReplier extends Replier {
 		this.baseOnMessage(raw, reply => this.ipc.send(socket, reply))
 	}
 
-	requestFromShard(shardID, op, data) {
+	requestFromCluster(clusterID, op, data) {
 		// 3. request to a client
 		return this.baseRequest(op, data, raw => {
-			const socket = this.ipc.getShard(shardID)
+			const socket = this.ipc.getCluster(clusterID)
 			this.ipc.send(socket, raw)
 		})
 	}
@@ -45,7 +45,7 @@ class ServerReplier extends Replier {
 	}
 
 	requestFromGuild(guildID, op, data) {
-		return this.requestFromShard(this.getShardIDForGuild(guildID), op, data)
+		return this.requestFromCluster("pencil", op, data)
 	}
 
 	broadcast(op, data) {

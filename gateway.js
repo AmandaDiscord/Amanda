@@ -9,12 +9,9 @@ const config = require("./config")
 const Gateway = new CloudStorm.Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
 	firstShardId: config.shard_list[0],
-	shardAmount: config.shard_list.length,
+	shardAmount: config.total_shards,
 	lastShardId: config.shard_list[config.shard_list.length - 1]
 })
-
-/** @type {Map<number, Array<string>>} */
-const shardGuildMap = new Map()
 
 /**
  * @type {import("@amanda/discordtypings").ReadyData}
@@ -73,10 +70,7 @@ const rain = new RainCache({
 
 			Gateway.statusUpdate(payload)
 		} else if (data.event === "SEND_MESSAGE") {
-			let sid
-			shardGuildMap.forEach((arr, key) => {
-				if (arr.includes(data.data.d.guild_id)) sid = key
-			})
+			const sid = Number((BigInt(data.data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
 			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
 			if (shard) shard.connector.betterWs.sendMessage(data.data)
 			else console.log(`No shard found to send WS Message:\n${require("util").inspect(data.data, true, 2, true)}`)
@@ -92,19 +86,9 @@ const rain = new RainCache({
 async function handleCache(event) {
 	if (event.t === "GUILD_CREATE") {
 		await rain.cache.guild.update(event.d.id, event.d) // Rain apparently handles members and such
-		if (shardGuildMap.get(event.shard_id)) {
-			if (!shardGuildMap.get(event.shard_id).includes(event.d.id)) {
-				shardGuildMap.get(event.shard_id).push(event.d.id)
-			}
-		} else shardGuildMap.set(event.shard_id, [event.d.id])
 	} else if (event.t === "GUILD_UPDATE") await rain.cache.guild.update(event.d.id, event.d)
 	else if (event.t === "GUILD_DELETE") {
 		if (!event.d.unavailable) await rain.cache.guild.remove(event.d.id) // Rain apparently also handles deletion of everything in a guild
-		else {
-			if (shardGuildMap.get(event.shard_id) && shardGuildMap.get(event.shard_id).includes(event.d.id)) {
-				shardGuildMap.get(event.shard_id).splice(shardGuildMap.get(event.shard_id).indexOf(event.d.id), 1)
-			}
-		}
 	} else if (event.t === "CHANNEL_CREATE") await rain.cache.channel.update(event.d.id, event.d) // Rain handles permission_overwrites
 	else if (event.t === "CHANNEL_DELETE") {
 		if (!event.d.guild_id) return

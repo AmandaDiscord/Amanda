@@ -20,28 +20,6 @@ module.exports = {
 	standard_embed_color: 0x2f3136,
 	discord_background_color: 0x36393f,
 	fake_token: "(token)",
-	lavalinkNodes: [
-		{
-			id: "pencil",
-			name: "Pencil",
-			host: "amanda.moe",
-			port: 10402,
-			password: config.lavalink_password,
-			invidious_origin: "http://amanda.moe:3000",
-			regions: ["brazil", "us-central", "us-south", "us-east", "us-west", "eu-central", "europe", "eu-west", "sydney", "southafrica"],
-			enabled: true,
-			search_with_invidious: true
-		},
-		{
-			id: "crayon",
-			name: "Crayon",
-			host: "139.99.90.94",
-			port: 10402,
-			password: config.lavalink_password,
-			invidious_origin: "http://139.99.90.94:3000",
-			regions: ["hongkong", "japan", "singapore", "india", "russia", "south-korea"],
-			enabled: true,
-			search_with_invidious: true
-		}
-	]
+	/** @type {{ id: string, name: string, host: string, port: number, password: string, invidious_origin: string, regions: string[], enabled: boolean, search_with_invidious: boolean}[]} */
+	lavalinkNodes: []
 }

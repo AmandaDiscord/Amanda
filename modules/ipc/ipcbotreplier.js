@@ -237,7 +237,7 @@ class ClientReplier extends Replier {
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendNewQueue(queue) {
-		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guildID, state: queue.wrapper.getState() } })
+		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state: queue.wrapper.getState() } })
 	}
 
 	sendDeleteQueue(guildID) {
@@ -249,21 +249,21 @@ class ClientReplier extends Replier {
 	 * @param {import("../../commands/music/songtypes").Song} song
 	 */
 	sendAddSong(queue, song, position) {
-		this.ipc.send({ op: "ADD_SONG", data: { guildID: queue.guildID, position, song: song.getState() } })
+		this.ipc.send({ op: "ADD_SONG", data: { guildID: queue.guild.id, position, song: song.getState() } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendTimeUpdate(queue) {
-		this.ipc.send({ op: "TIME_UPDATE", data: { guildID: queue.guildID, songStartTime: queue.songStartTime, pausedAt: queue.pausedAt, playing: !queue.isPaused } })
+		this.ipc.send({ op: "TIME_UPDATE", data: { guildID: queue.guild.id, songStartTime: queue.songStartTime, pausedAt: queue.pausedAt, playing: !queue.isPaused } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendNextSong(queue) {
-		this.ipc.send({ op: "NEXT_SONG", data: { guildID: queue.guildID } })
+		this.ipc.send({ op: "NEXT_SONG", data: { guildID: queue.guild.id } })
 	}
 
 	/**
@@ -272,7 +272,7 @@ class ClientReplier extends Replier {
 	 * @param {number} index
 	 */
 	sendSongUpdate(queue, song, index) {
-		this.ipc.send({ op: "SONG_UPDATE", data: { guildID: queue.guildID, song: song.getState(), index: index } })
+		this.ipc.send({ op: "SONG_UPDATE", data: { guildID: queue.guild.id, song: song.getState(), index: index } })
 	}
 
 	/**
@@ -280,28 +280,28 @@ class ClientReplier extends Replier {
 	 * @param {number} index
 	 */
 	sendRemoveSong(queue, index) {
-		this.ipc.send({ op: "REMOVE_SONG", data: { guildID: queue.guildID, index: index } })
+		this.ipc.send({ op: "REMOVE_SONG", data: { guildID: queue.guild.id, index: index } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendRemoveAllSongs(queue) {
-		this.ipc.send({ op: "REMOVE_ALL_SONGS", data: { guildID: queue.guildID } })
+		this.ipc.send({ op: "REMOVE_ALL_SONGS", data: { guildID: queue.guild.id } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendMembersUpdate(queue) { // TODO: this is jank
-		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guildID, members: queue.wrapper.getMembers() } })
+		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guild.id, members: queue.wrapper.getMembers() } })
 	}
 
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	sendAttributesChange(queue) {
-		this.ipc.send({ op: "ATTRIBUTES_CHANGE", data: { guildID: queue.guildID, attributes: queue.wrapper.getAttributes() } })
+		this.ipc.send({ op: "ATTRIBUTES_CHANGE", data: { guildID: queue.guild.id, attributes: queue.wrapper.getAttributes() } })
 	}
 
 	sendBackgroundUpdateRequired() {

@@ -62,9 +62,9 @@ commands.assign([
 					output = output.replace(new RegExp(item, "g"), constants.fake_token)
 				}
 
-				msg.channel.send(output)
-				// const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				// return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				const nmsg = await msg.channel.send(output)
+				const menu = new ReactionMenu(nmsg, client, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			} else return
 		}
 	},
@@ -102,9 +102,9 @@ commands.assign([
 				if (stdout) result.addFields({ name: "stdout:", value: formatOutput(stdout) })
 				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
-				msg.channel.send(await utils.contentify(msg.channel, result))
-				// const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				// return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				const nmsg = await msg.channel.send(await utils.contentify(msg.channel, result))
+				const menu = new ReactionMenu(nmsg, client, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			})
 			return
 		}

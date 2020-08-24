@@ -69,7 +69,11 @@ reloadEvent.once(path.basename(__filename), () => {
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
-// utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), (data, channel, user) => ReactionMenu.handler(data, channel, user, client))
+utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), async (data) => {
+	const channel = new Discord.PartialChannel({ id: data.channel_id })
+	const user = await utils.cacheManager.users.get(data.user_id, true, true)
+	ReactionMenu.handler(data, channel, user, client)
+})
 utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (message) => {
 	const m = messagesReceived.get(message.id)
 	if (m) {
@@ -216,11 +220,30 @@ async function manageReady() {
 		console.log(`Loaded ${prefixes.length} prefixes: ${prefixes.join(" ")}`)
 		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
 	})
+
 	if (firstStart) {
 		client.readyAt = new Date()
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
-		constants.lavalinkNodes.forEach(node => node.resumeKey = `${client.user.id}/${config.cluster_id}`)
+
+		/** @type {[any, any]} */
+		// eslint-disable-next-line prefer-const
+		let [lavalinkNodes, lavalinkNodeRegions] = await Promise.all([
+			utils.sql.all("SELECT * FROM LavalinkNodes"),
+			utils.sql.all("SELECT * FROM LavalinkNodeRegions")
+		])
+		lavalinkNodes = lavalinkNodes.map(node => {
+			node = { ...node }
+			node.regions = lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region)
+			node.password = config.lavalink_password
+			node.enabled = !!node.enabled
+			node.id = node.name.toLowerCase()
+			node.search_with_invidious = !!node.search_with_invidious
+			node.resumeKey = `${client.user.id}/${config.cluster_id}`
+			return node
+		})
+
+		constants.lavalinkNodes = lavalinkNodes
 		client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
 			shards: config.shard_list.length,
@@ -228,6 +251,7 @@ async function manageReady() {
 				client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ event: "SEND_MESSAGE", data: packet, time: new Date().getTime() })))
 			}
 		})
+
 		client.lavalink.once("ready", async () => {
 			console.log("Lavalink ready")
 			/** @type {{ queues: Array<any> }} */
@@ -235,10 +259,13 @@ async function manageReady() {
 			if (!data) return
 			if (data.queues.length > 0) passthrough.queues.restore()
 		})
+
 		client.lavalink.on("error", (error, node) => {
 			console.error(`Failed to initialise Lavalink: ${error.message}`)
 		})
+
 		await client.lavalink.connect()
+
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(async row => {
 				const channel = client.rain.cache.channel.get(row.channelID)

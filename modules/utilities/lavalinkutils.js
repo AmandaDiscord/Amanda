@@ -47,16 +47,16 @@ function add(data) {
  * Clean unused and disabled client nodes and close their websockets
  * so that the lavalink process can be ended safely.
  *
- * @returns {[number, number]} cleaned nodes, added nodes
+ * @returns {Promise<[number, number]>} cleaned nodes, added nodes
  */
-function syncConnections() {
+async function syncConnections() {
 	const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
 
 	let cleanedCount = 0
 	let addedCount = 0
 
 	for (const node of constants.lavalinkNodes) { // loop through all known nodes
-		const clientNode = client.lavalink.nodes.find(n => n.host === node.host) // get the matching client node
+		const clientNode = [...client.lavalink.nodes.values()].find(n => n.host === node.host) // get the matching client node
 		if (node.enabled) { // try connecting to nodes
 			if (clientNode) continue // only consider situations where the client node is unknown
 			// connect to the node
@@ -65,7 +65,13 @@ function syncConnections() {
 		} else { // try disconnecting from nodes
 			if (!clientNode) continue // only consider situations where the client node is known
 			// if no queues are using the node, disconnect it.
-			if (!queues.cache.some(q => q.player.node === clientNode)) {
+			let fq
+			for (const q of queues.cache.values()) {
+				const p = await q.player
+				const found = p.node === clientNode
+				if (found) fq = q
+			}
+			if (!fq) {
 				client.lavalink.removeNode(clientNode.host)
 				clientNode.destroy()
 				cleanedCount++

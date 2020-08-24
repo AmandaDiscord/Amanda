@@ -103,9 +103,9 @@ const subcommandsMap = new Map([
 					// linkedIndex is definitely specified here.
 					// Define options
 					const buttons = [
-						"<:bn_1:327896448232325130>",
-						"<:bn_2:327896448505217037>",
-						"<:bn_3:327896452363976704>"
+						"bn_1:327896448232325130",
+						"bn_2:327896448505217037",
+						"bn_3:327896452363976704"
 					]
 					const options = [
 						lang.audio.playlist.prompts.playFromStart,
@@ -147,8 +147,8 @@ const subcommandsMap = new Map([
 					} }
 					// Create the reaction menu
 					// @ts-ignore
-					new ReactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
-						const emoji = buttons[i].slice(2, -1)
+					new ReactionMenu(nmsg, client, Array(3).fill(undefined).map((_, i) => {
+						const emoji = buttons[i]
 						return Object.assign({ emoji }, action)
 					}))
 				}
@@ -581,10 +581,10 @@ commands.assign([
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = common.states.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
+					const voiceChannel = passthrough.voiceStates.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
 					let vcdata
 					// @ts-ignore
-					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.id)
+					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channelID)
 
 					// @ts-ignore
 					subcommmandData.voiceChannel = vcdata.boundObject ? vcdata.boundObject : vcdata

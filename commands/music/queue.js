@@ -356,7 +356,7 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npMenu) this.npMenu.destroy(true)
+		if (this.npMenu) this.npMenu.destroy(true, "text")
 		client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)
 	}
@@ -548,23 +548,20 @@ class Queue {
 		}
 	}
 	_makeReactionMenu() {
-		return
-		// @ts-ignore
-		// eslint-disable-next-line no-unreachable
-		if (this.npMenu) this.npMenu.destroy(true)
-		this.npMenu = new ReactionMenu(this.np, [
+		if (this.npMenu) this.npMenu.destroy(true, "text")
+		this.npMenu = new ReactionMenu(this.np, client, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return
+				if (!passthrough.voiceStates.find(s => s.channelID === this.voiceChannel.id && s.userID === user.id)) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 				this.wrapper.togglePlaying("reaction")
 			} },
 			{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return
+				if (!passthrough.voiceStates.find(s => s.channelID === this.voiceChannel.id && s.userID === user.id)) return
 				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
 			{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.voiceChannel.members.has(user.id)) return
+				if (!passthrough.voiceStates.find(s => s.channelID === this.voiceChannel.id && s.userID === user.id)) return
 				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()
 			} }

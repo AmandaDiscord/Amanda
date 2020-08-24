@@ -1,6 +1,5 @@
 import MySQL = require("MySQL2/promise");
 import Discord = require("discord.js");
-import ReactionMenu = require("@amanda/reactionmenu");
 import events = require("events");
 
 export interface FilteredGuild {
@@ -226,10 +225,3 @@ export interface SpotifyImage {
 	url: string;
 	width: number;
 }
-
-// Overloaded functions
-
-export declare function reactionMenu1(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuAction>): ReactionMenu;
-export declare function reactionMenu2(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionEdit>): ReactionMenu;
-export declare function reactionMenu3(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionReply>): ReactionMenu;
-export declare function reactionMenu4(message: Discord.Message, actions: Array<import("@amanda/reactionmenu").ReactionMenuActionJS>): ReactionMenu;

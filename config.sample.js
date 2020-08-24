@@ -32,6 +32,7 @@ module.exports = {
 	allow_ai: false,
 	music_dash_enabled: true,
 	use_invidious: false,
+	total_shards: 1,
 	fake_token: "(token)",
 	is_dev_env: true
 }

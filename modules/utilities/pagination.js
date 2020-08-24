@@ -4,7 +4,8 @@ const Discord = require("thunderstorm")
 const ReactionMenu = require("@amanda/reactionmenu")
 const { contentify, createMessageCollector } = require("./discordutils")
 const { shuffle: arrayShuffle } = require("./arrayutils")
-const { constants } = require("../../passthrough")
+const { constants, client } = require("../../passthrough")
+const { cacheManager } = require("./cachemanager")
 
 /**
  * @param {string[]} rows
@@ -97,7 +98,7 @@ function createPagination(channel, title, rows, align, maxLength) {
 }
 
 /**
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {number} pageCount
  * @param {(page: number) => any} callback
  */
@@ -106,25 +107,26 @@ async function paginate(channel, pageCount, callback) {
 	const msg = await channel.send(await callback(page))
 	if (pageCount > 1) {
 		let reactionMenuExpires
-		/* const reactionMenu = new ReactionMenu(msg, [
-			{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: () => {
+		const reactionMenu = new ReactionMenu(msg, client, [
+			{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: async () => {
 				page--
 				if (page < 0) page = pageCount - 1
-				msg.edit(callback(page))
+				msg.edit(await callback(page))
 				makeTimeout()
 			} },
-			{ emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: () => {
+			{ emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: async () => {
 				page++
 				if (page >= pageCount) page = 0
-				msg.edit(callback(page))
+				msg.edit(await callback(page))
 				makeTimeout()
 			} }
-		])*/
+		])
+		const channelType = await cacheManager.channels.typeOf(channel)
 		// eslint-disable-next-line no-inner-declarations
 		function makeTimeout() {
 			clearTimeout(reactionMenuExpires)
 			reactionMenuExpires = setTimeout(() => {
-				// reactionMenu.destroy(true)
+				reactionMenu.destroy(true, channelType === "dm" ? "dm" : "text")
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()

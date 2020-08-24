@@ -1133,7 +1133,7 @@ commands.assign([
 							msg.author.send(embed).then(resolve).catch(async () => {
 								msg.channel.send(await utils.contentify(msg.channel, embed)).then(resolve)
 							})
-						}).then(async message => {
+						}).then(message => {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => {
@@ -1144,7 +1144,7 @@ commands.assign([
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
 								.setColor(constants.standard_embed_color)
-							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "edit", actionData: await utils.contentify(message.channel, mobileEmbed) }])
+							const menu = new ReactionMenu(message, client, [{ emoji: "📱", ignore: "total", actionType: "js", actionData: async () => message.edit(await utils.contentify(message.channel, mobileEmbed)) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						})
 					} else {
