@@ -296,9 +296,11 @@ const userManager = {
 			} else {
 				const userdata = await userManager.filter(string)
 				const list = []
-				for (const user of userdata) {
-					if (list.find(item => item.id === user.id) || list.length === 10) continue
-					list.push(new Discord.User(user.boundObject, client))
+				if (userdata) {
+					for (const user of userdata) {
+						if (list.find(item => item.id === user.id) || list.length === 10) continue
+						list.push(new Discord.User(user.boundObject, client))
+					}
 				}
 				if (list.length == 1) return res(list[0])
 				if (list.length == 0) {
