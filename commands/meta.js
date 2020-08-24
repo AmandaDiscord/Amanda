@@ -657,7 +657,7 @@ commands.assign([
 				if (badge && boosting && giverImage) huntercoords = [419, 125]
 				else if (badge && (boosting || giverImage)) huntercoords = [359, 125]
 				else if (badge || boosting || giverImage) huntercoords = [289, 125]
-				if (hunter) canvas.composite(images.get("badge-hunter"), huntercoords[0], huntercoords[1])
+				if (hunter) canvas.composite(images.get("badge-hunter").resize(34, 34), huntercoords[0], huntercoords[1])
 			}
 
 			function buildNewProfile() {
@@ -677,7 +677,7 @@ commands.assign([
 				canvas.composite(heart, 508, 207)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
 				if (hunter) {
-					canvas.composite(images.get("badge-hunter"), 508, 250)
+					canvas.composite(images.get("badge-hunter").resize(34, 34), 508, 250)
 					canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
 				}
 				if (giverImage) canvas.composite(giverImage, 595, 370)
