@@ -263,7 +263,7 @@ class Queue {
 			if (this.errorChain >= 3) {
 				this.shouldDisplayErrors = false
 				this.textChannel.send(
-					utils.contentify(
+					await utils.contentify(
 						this.textChannel,
 						new Discord.MessageEmbed()
 							.setTitle(lang.audio.music.prompts.tooManyErrors)
