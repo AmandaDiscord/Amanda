@@ -576,7 +576,7 @@ class Queue {
 		// @ts-ignore
 		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
-		const count = common.states.filter(item => !item.bot).length
+		const count = passthrough.voiceStates.filter(item => !item.bot).length
 		if (count == 0) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()

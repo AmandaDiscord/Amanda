@@ -476,6 +476,7 @@ const memberManager = {
 				const guildMemData = await client.rain.cache.member.filter(() => true, message.guild.id)
 				const nicktest = guildMemData.filter(mem => mem.boundObject.nick && mem.boundObject.nick.toLowerCase().includes(string))
 				const userdata = await client.rain.cache.user.filter((user) => {
+					if (!user) return false
 					// @ts-ignore
 					const userb = user.boundObject ? user.boundObject : user
 					// @ts-ignore
