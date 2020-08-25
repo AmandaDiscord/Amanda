@@ -11,7 +11,6 @@ const sql = require("./sql")
 const cacheInserthandler = require("../../cacheHandler")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
-const utils = require(".")
 
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
@@ -46,15 +45,6 @@ const permissionstable = {
 	MANAGE_WEBHOOKS: 0x20000000,
 	MANAGE_EMOJIS: 0x40000000,
 	ALL: 0x00000000
-}
-
-const cachehandlersql = {
-	all(string, prepared, connection, attempts) {
-		return sql.all(string, prepared, cache, attempts)
-	},
-	get(string, prepared, connection) {
-		return sql.get(string, prepared, cache)
-	}
 }
 
 for (const key of Object.keys(permissionstable)) {
@@ -95,7 +85,7 @@ const channelManager = {
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
 		// @ts-ignore
-		if (d) await cacheInserthandler.handleChannel(d, d.guild_id, cachehandlersql)
+		if (d) await cacheInserthandler.handleChannel(d, d.guild_id)
 		return d || null
 	},
 	/**
@@ -290,7 +280,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		if (d) await cacheInserthandler.handleUser(d, cachehandlersql)
+		if (d) await cacheInserthandler.handleUser(d)
 		return d || null
 	},
 	/**
@@ -414,7 +404,7 @@ const memberManager = {
 		const md = await client._snow.guild.getGuildMember(guildID, id)
 		const ud = await userManager.get(id, true, false)
 		// @ts-ignore
-		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID, cachehandlersql)
+		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID)
 		return (md && ud) ? { id: ud.id, guild_id: guildID, user: ud, ...md } : null
 	},
 	/**
@@ -528,7 +518,7 @@ const guildManager = {
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
 		// @ts-ignore
-		if (d) await cacheInserthandler.handleGuild(d, cachehandlersql)
+		if (d) await cacheInserthandler.handleGuild(d)
 		return d || null
 	},
 	parse: function(guild) {
