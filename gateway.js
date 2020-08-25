@@ -143,3 +143,5 @@ async function handleCache(event) {
 		await sql.all("DELETE FROM Roles WHERE id =?", event.d.role_id)
 	}
 }
+
+process.on("unhandledRejection", console.error)
