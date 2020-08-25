@@ -350,13 +350,15 @@ const userManager = {
 
 		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
 
-		const d = await sql.all(`SELECT * FROM Users WHERE (id LIKE ? OR username LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
-		if (d) {
-			for (const k of Object.keys(d)) {
-				d[k] = decodeURIComponent(d[k])
+		const ds = await sql.all(`SELECT * FROM Users WHERE (id LIKE ? OR username LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
+		if (ds) {
+			for (const d of ds) {
+				for (const k of Object.keys(d)) {
+					d[k] = decodeURIComponent(d[k])
+				}
 			}
 		}
-		return d
+		return ds
 	},
 	parse: function(user) {
 		return new Discord.User(user, client)
@@ -476,11 +478,15 @@ const memberManager = {
 		let s = ""
 		if (search) s = `(id LIKE ? OR nick LIKE ?) ${where ? `AND ${wherestatement} ` : ""} `
 
-		const d = await sql.all(`SELECT * FROM Members WHERE ${s}${wherestatement} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
-		for (const k of Object.keys(d)) {
-			d[k] = decodeURIComponent(d[k])
+		const ds = await sql.all(`SELECT * FROM Members WHERE ${s}${wherestatement} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
+		if (ds) {
+			for (const d of ds) {
+				for (const k of Object.keys(d)) {
+					d[k] = decodeURIComponent(d[k])
+				}
+			}
 		}
-		return d
+		return ds
 	},
 	parse: function(member, user) {
 		return new Discord.GuildMember({ user: user, ...member }, client)
