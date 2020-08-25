@@ -1,7 +1,7 @@
 const CloudStorm = require("cloudstorm")
 const RainCache = require("raincache")
 const mysql = require("mysql2/promise")
-const handle = require("./cacheHandler")
+const passthrough = require("./passthrough")
 
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
 
@@ -22,41 +22,9 @@ const cache = mysql.createPool({
 	connectionLimit: 5
 })
 
-const sql = {
-	/**
-	 * @param {string} string
-	 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-	 * @param {mysql.Pool|mysql.PoolConnection} [connection]
-	 * @param {number} [attempts=2]
-	 * @returns {Promise<Array<any>>}
-	 */
-	all(string, prepared = undefined, connection = undefined, attempts = 2) {
-		if (!connection) connection = cache
-		if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
-		return new Promise((resolve, reject) => {
-			if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${require("util").inspect(prepared)}`))
-			connection.execute(string, prepared).then(result => {
-				const rows = result[0]
-				// @ts-ignore
-				resolve(rows)
-			}).catch(err => {
-				console.error(err)
-				attempts--
-				console.log(string, prepared)
-				if (attempts) sql.all(string, prepared, connection, attempts).then(resolve).catch(reject)
-				else reject(err)
-			})
-		})
-	},
-	/**
-	 * @param {string} string
-	 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-	 * @param {mysql.Pool|mysql.PoolConnection} [connection]
-	 */
-	"get": async function(string, prepared = undefined, connection = undefined) {
-		return (await sql.all(string, prepared, connection))[0]
-	}
-}
+Object.assign(passthrough, { db: cache })
+
+const sql = require("./modules/utilities/sql")
 
 /**
  * @type {import("@amanda/discordtypings").ReadyData}
@@ -123,8 +91,8 @@ const connection = new AmpqpConnector({
  * just waited for cache ops to finish actually caching things for the worker to be able to access.
  */
 async function handleCache(event) {
-	if (event.t === "GUILD_CREATE") await handle.handleGuild(event.d, sql)
-	else if (event.t === "GUILD_UPDATE") await handle.handleGuild(event.d, sql)
+	if (event.t === "GUILD_CREATE") await require("./cacheHandler").handleGuild(event.d, sql)
+	else if (event.t === "GUILD_UPDATE") await require("./cacheHandler").handleGuild(event.d, sql)
 	else if (event.t === "GUILD_DELETE") {
 		if (!event.d.unavailable) {
 			await sql.all("DELETE FROM Guilds WHERE id =?", event.d.id)
@@ -135,7 +103,7 @@ async function handleCache(event) {
 		}
 	} else if (event.t === "CHANNEL_CREATE") {
 		if (!event.d.guild_id) return
-		await handle.handleChannel(event.d, event.d.guild_id, sql)
+		await require("./cacheHandler").handleChannel(event.d, event.d.guild_id, sql)
 	} else if (event.t === "CHANNEL_DELETE") {
 		if (!event.d.guild_id) return
 		await sql.all("DELETE FROM Channels WHERE id =?", event.d.id)
@@ -146,12 +114,12 @@ async function handleCache(event) {
 
 		if (typed.member) {
 			if (!typed.author) return
-			handle.handleMember(typed.member, typed.author, typed.guild_id, sql)
+			require("./cacheHandler").handleMember(typed.member, typed.author, typed.guild_id, sql)
 		}
 
 		if (typed.mentions && typed.mentions.length > 0 && typed.guild_id) {
 			await Promise.all(typed.mentions.map(async user => {
-				if (user.member) await handle.handleMember(user.member, user, typed.guild_id, sql)
+				if (user.member) await require("./cacheHandler").handleMember(user.member, user, typed.guild_id, sql)
 			}))
 		}
 	} else if (event.t === "VOICE_STATE_UPDATE") {
@@ -161,7 +129,7 @@ async function handleCache(event) {
 	} else if (event.t === "GUILD_MEMBER_UPDATE") {
 		/** @type {import("@amanda/discordtypings").MemberData & { user: import("@amanda/discordtypings").UserData } & { guild_id: string }} */
 		const typed = event.d
-		await handle.handleMember(typed, typed.user, typed.guild_id, sql) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
+		await require("./cacheHandler").handleMember(typed, typed.user, typed.guild_id, sql) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
 	} else if (event.t === "GUILD_ROLE_CREATE") {
 		/** @type {{ guild_id: string, role: import("@amanda/discordtypings").RoleData }} */
 		const typed = event.d

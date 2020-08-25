@@ -1,4 +1,6 @@
-async function handleGuild(guild, sql) {
+const sql = require("./modules/utilities/sql")
+
+async function handleGuild(guild) {
 
 	await sql.all("REPLACE INTO Guilds (id, name, icon, owner_id, permissions, region, member_count) VALUES (?, ?, ?, ?, ?, ?, ?)", [guild.id, encodeURIComponent(guild.name), guild.icon, guild.owner_id, guild.permissions || 0, guild.region, guild.member_count])
 
@@ -38,7 +40,7 @@ async function handleGuild(guild, sql) {
  * @param {import("@amanda/discordtypings").ChannelData} channel
  * @param {string} guildID
  */
-async function handleChannel(channel, guildID, sql) {
+async function handleChannel(channel, guildID) {
 	sql.all("REPLACE INTO Channels (id, name, type, guild_id) VALUES (?, ?, ?, ?)", [channel.id, encodeURIComponent(channel.name), channel.type, guildID])
 
 	if (channel.permission_overwrites) {
@@ -58,7 +60,7 @@ async function handleChannel(channel, guildID, sql) {
  * @param {import("@amanda/discordtypings").UserData} user
  * @param {string} guildID
  */
-async function handleMember(member, user, guildID, sql) {
+async function handleMember(member, user, guildID) {
 	await sql.all("REPLACE INTO Members (id, nick, guild_id, joined_at) VALUES (?, ?, ?, ?)", [user.id, encodeURIComponent(member.nick || null), guildID, member.joined_at ? new Date(member.joined_at).getTime() : 0])
 	if (member.roles) {
 		for (const role of member.roles) {
@@ -68,7 +70,7 @@ async function handleMember(member, user, guildID, sql) {
 	await handleUser(user)
 }
 
-async function handleUser(user, sql) {
+async function handleUser(user) {
 	if (!user) return
 	await sql.all("REPLACE INTO Users (id, username, discriminator, bot, public_flags, avatar) VALUES (?, ?, ?, ?, ?, ?)", [user.id, encodeURIComponent(user.username), user.discriminator, user.bot ? 1 : 0, user.public_flags || 0, user.avatar || null])
 }
