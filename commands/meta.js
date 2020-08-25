@@ -148,7 +148,8 @@ commands.assign([
 			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
-				const listeningcount = await utils.sql.get("SELECT COUNT(*) AS count FROM VoiceStates WHERE bot = 0", undefined, passthrough.cache).then(d => d.count)
+				const qs = passthrough.queues.cache
+				const listeningcount = await utils.sql.get(`SELECT COUNT(*) AS count FROM VoiceStates WHERE bot = 0 AND guild_id IN ${Array(qs.size).fill("?").join(", ")}`, qs.map(q => q.guild.id), passthrough.cache).then(d => d.count)
 				embed
 					.addFields([
 						{
