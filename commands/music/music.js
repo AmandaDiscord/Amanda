@@ -22,14 +22,6 @@ reloader.sync("./commands/music/queue.js", queueFile)
 const common = require("./common.js")
 reloader.sync("./commands/music/common.js", common)
 
-utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), (newState) => {
-	// Pass on to queue for leave timeouts
-	if (!newState.guildID) return
-	if (newState.id === client.user.id) return
-	const queue = queues.cache.get(newState.guildID)
-	if (queue) queue.voiceStateUpdate(newState)
-})
-
 /**
  * @type {Map<string, {voiceChannel?: "ask" | "required" | "provide", queue?: "required", code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: import("./queue").Queue, lang: import("@amanda/lang").Lang})) => any}>}
  */
@@ -581,13 +573,13 @@ commands.assign([
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = passthrough.voiceStates.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
+					const voiceChannel = await utils.sql.get("SELECT channel_id FROM VoiceStates WHERE user_id =? AND guild_id =?", [msg.author.id, msg.guild.id], passthrough.cache)
 					let vcdata
 					// @ts-ignore
-					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channelID, true, true)
+					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)
 
 					// @ts-ignore
-					subcommmandData.voiceChannel = (vcdata && vcdata.boundObject) ? vcdata.boundObject : (vcdata ? vcdata : undefined)
+					subcommmandData.voiceChannel = vcdata ? vcdata : undefined
 				}
 			}
 			// Hand over execution to the subcommand

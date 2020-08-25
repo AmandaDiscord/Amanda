@@ -12,6 +12,7 @@ process._ptcreated = true
  * @property {import("./constants")} constants
  * @property {import("@amanda/commandmanager")} commands
  * @property {import("mysql2/promise").Pool} db
+ * @property {import("mysql2/promise").Pool} cache
  * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./typings").internalEvents} internalEvents
@@ -26,7 +27,6 @@ process._ptcreated = true
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix
- * @property {Array<{ guildID: string, channelID: string, userID: string, bot: boolean }>} voiceStates
  */
 
 /**

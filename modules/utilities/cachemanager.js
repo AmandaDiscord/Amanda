@@ -3,11 +3,15 @@
 const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
-const { client, constants } = passthrough
+const { client, constants, cache } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
+const sql = require("./sql")
+
+const cacheInserthandler = require("../../cacheHandler")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
+const utils = require(".")
 
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
@@ -44,6 +48,15 @@ const permissionstable = {
 	ALL: 0x00000000
 }
 
+const cachehandlersql = {
+	all(string, prepared, connection, attempts) {
+		return sql.all(string, prepared, cache, attempts)
+	},
+	get(string, prepared, connection) {
+		return sql.get(string, prepared, cache)
+	}
+}
+
 for (const key of Object.keys(permissionstable)) {
 	if (key === "ALL") continue
 	permissionstable["ALL"] = permissionstable["ALL"] | permissionstable[key]
@@ -56,8 +69,13 @@ const channelManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await client.rain.cache.channel.get(id)
+		/** @type {import("@amanda/discordtypings").ChannelData} */
+		// @ts-ignore
+		const d = await sql.get("SELECT * FROM Channels WHERE id =?", id, cache)
 		if (d) {
+			for (const k of Object.keys(d)) {
+				d[k] = decodeURIComponent(d[k])
+			}
 			if (convert) return channelManager.parse(d)
 			else return d
 		} else {
@@ -76,7 +94,8 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
-		if (d) await client.rain.cache.channel.update(id, d)
+		// @ts-ignore
+		if (d) await cacheInserthandler.handleChannel(d, d.guild_id, cachehandlersql)
 		return d || null
 	},
 	/**
@@ -98,16 +117,15 @@ const channelManager = {
 				if (self) return channelManager.get(message.channel.id, true, true).then(data => res(data))
 				else return res(null)
 			} else {
-				// @ts-ignore
-				const inGuild = await channelManager.filter(chan => chan.guild_id && chan.guild_id === message.guild.id)
-				// @ts-ignore
-				const channeldata = await channelManager.filter(string, inGuild.map(c => c.boundObject ? c.boundObject.id : c.id))
+				const channeldata = await channelManager.filter(string, { guild_id: message.guild.id })
 				if (!channeldata) return res(null)
+				/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
 				const list = []
-				const channels = channeldata.filter(chan => chan.boundObject.type === 0 || chan.boundObject.type === 2)
+				const channels = channeldata.filter(chan => chan.type == 0 || chan.type == 2)
 				for (const chan of channels) {
-					if (list.find(item => item.id === chan.boundObject.id) || list.length === 10) continue
-					list.push(chan.boundObject.type === 0 ? new Discord.TextChannel(chan.boundObject, client) : new Discord.VoiceChannel(chan.boundObject, client))
+					if (list.find(item => item.id === chan.id) || list.length === 10) continue
+					// @ts-ignore
+					list.push(channelManager.parse(chan))
 				}
 				if (list.length == 1) return res(list[0])
 				if (list.length == 0) return res(null)
@@ -115,13 +133,14 @@ const channelManager = {
 				const selectmessage = await message.channel.send(await contentify(message.channel, embed))
 				const cb = (newmessage) => {
 					const index = Number(newmessage.content)
-					if (!index || !list[index - 1]) return res(null)
+					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
 					newmessage.delete().catch(() => {})
 					return res(list[index - 1])
 				}
-				const onFail = async () => {
+				// eslint-disable-next-line no-inner-declarations
+				async function onFail() {
 					embed.setTitle("Channel selection cancelled").setDescription("").setFooter("")
 					selectmessage.edit(await contentify(selectmessage.channel, embed))
 					return res(null)
@@ -131,54 +150,48 @@ const channelManager = {
 		})
 	},
 	/**
-	 * @param {((channel: import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData) => boolean) | string} [fn]
-	 * @param {Array<string>} [inList] Filter within a specific list of IDs only
+	 * @param {string} [search]
+	 * @param {Object.<string, any>} [where]
+	 * @param {number} [limit]
 	 */
-	filter: async function(fn, inList = undefined) {
-		/**
-		 * @param {import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData} channel
-		 * @returns {boolean}
-		 */
-		const defa = (channel) => {
-			// @ts-ignore
-			const bO = channel.boundObject ? channel.boundObject : channel
-			if (bO.id.includes(fn)) return true
-			else if (bO.name && bO.name.toLowerCase().includes(fn)) return true
-			else return false
-		}
-		let data
-		if (typeof fn === "string") data = await client.rain.cache.channel.filter(defa, inList)
-		else data = await client.rain.cache.channel.filter(fn, inList)
+	filter: async function(search, where = undefined, limit = 10) {
+		const wherekeys = (Object.keys(where || {}) || [])
+		const wherevalues = (Object.values(where || {}) || [])
 
-		if (data && data.length > 0) return data
-		else return null
+		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
+
+		const ds = await sql.all(`SELECT * FROM Channels WHERE (id LIKE ? OR name LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
+		if (ds) {
+			for (const d of ds) {
+				for (const k of Object.keys(d)) {
+					d[k] = decodeURIComponent(d[k])
+				}
+			}
+		}
+		return ds
 	},
-	/**
-	 * @param {import("raincache/src/cache/ChannelCache") | import("@amanda/discordtypings").ChannelData} channel
-	 */
 	parse: function(channel) {
-		// @ts-ignore
-		const d = channel.boundObject ? channel.boundObject : channel
-		const type = d.type
-		if (type === 0) return new Discord.TextChannel(d, client)
-		else if (type === 1) return new Discord.DMChannel(d, client)
-		else if (type === 2) return new Discord.VoiceChannel(d, client)
-		else if (type === 4) return new Discord.CategoryChannel(d, client)
-		else if (type === 5) return new Discord.NewsChannel(d, client)
-		else return new Discord.Channel(d, client)
+		const type = channel.type
+		if (type == 0) return new Discord.TextChannel(channel, client)
+		else if (type == 1) return new Discord.DMChannel(channel, client)
+		else if (type == 2) return new Discord.VoiceChannel(channel, client)
+		else if (type == 4) return new Discord.CategoryChannel(channel, client)
+		else if (type == 5) return new Discord.NewsChannel(channel, client)
+		else return new Discord.Channel(channel, client)
 	},
 	/**
 	 * @param {{ id: string }} channel
 	 */
 	typeOf: async function(channel) {
-		const chan = await client.rain.cache.channel.get(channel.id)
-		if (chan && chan.boundObject) {
-			if (chan.boundObject.type === 0) return "text"
-			else if (chan.boundObject.type === 1) return "dm"
-			else if (chan.boundObject.type === 2) return "voice"
-			else if (chan.boundObject.type === 4) return "category"
-			else if (chan.boundObject.type === 5) return "news"
-			else if (chan.boundObject.type === 6) return "store"
+		const chan = await channelManager.get(channel.id, true, false)
+		if (chan) {
+			if (chan.type == 0) return "text"
+			else if (chan.type == 1) return "dm"
+			else if (chan.type == 2) return "voice"
+			else if (chan.type == 4) return "category"
+			else if (chan.type == 5) return "news"
+			else if (chan.type == 6) return "store"
+			else return "text"
 		} else return "text"
 	},
 	/**
@@ -186,11 +199,10 @@ const channelManager = {
 	 */
 	getOverridesFor: async function(channel) {
 		const value = { allow: 0x00000000, deny: 0x00000000 }
-		const perms = await client.rain.cache.permOverwrite.get(client.user.id, channel.id) // get permission overwrite data from cache
+		const perms = await sql.get("SELECT * FROM PermissionOverwrites WHERE channel_id = ? AND id =?", [channel.id, client.user.id], cache) // get permission overwrite data from cache
 		if (perms) {
-			const permbO = perms.boundObject ? perms.boundObject : perms // isolate overwrite object
-			value.allow |= (permbO.allow || 0)
-			value.deny |= (permbO.deny || 0)
+			value.allow |= (perms.allow || 0)
+			value.deny |= (perms.deny || 0)
 		}
 		return value
 	},
@@ -217,12 +229,11 @@ const channelManager = {
 
 		/** @type {Array<string>} */
 		// @ts-ignore
-		const roles = (clientmemdata.boundObject ? clientmemdata.boundObject.roles : clientmemdata.roles) // isolate ClientUser roles array
-		const roledata = await Promise.all(roles.map(role => client.rain.cache.role.get(role, channel.guild_id))) // get all role data from cache
+		const roles = clientmemdata.roles || []
+		const roledata = await Promise.all(roles.map(role => sql.get("SELECT * FROM Roles WHERE id =? AND guild_id =?", [role, channel.guild_id], cache))) // get all role data from cache
 		for (const role of roledata) {
-			const rbO = role.boundObject ? role.boundObject : role // isolate role object
-			if (rbO.permissions) {
-				value.allow |= rbO.permissions // OR together the permissions of each role
+			if (role.permissions) {
+				value.allow |= role.permissions // OR together the permissions of each role
 			}
 		}
 
@@ -257,8 +268,11 @@ const userManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await client.rain.cache.user.get(id)
+		const d = await sql.get("SELECT * FROM Users WHERE id =?", id, cache)
 		if (d) {
+			for (const k of Object.keys(d)) {
+				d[k] = decodeURIComponent(d[k])
+			}
 			if (convert) return userManager.parse(d)
 			else return d
 		} else {
@@ -276,7 +290,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		if (d) await client.rain.cache.user.update(id, d)
+		if (d) await cacheInserthandler.handleUser(d, cachehandlersql)
 		return d || null
 	},
 	/**
@@ -299,7 +313,8 @@ const userManager = {
 				if (userdata) {
 					for (const user of userdata) {
 						if (list.find(item => item.id === user.id) || list.length === 10) continue
-						list.push(new Discord.User(user.boundObject, client))
+						// @ts-ignore
+						list.push(new Discord.User(user, client))
 					}
 				}
 				if (list.length == 1) return res(list[0])
@@ -335,33 +350,26 @@ const userManager = {
 		})
 	},
 	/**
-	 * @param {((user: import("raincache/src/cache/UserCache") | import("@amanda/discordtypings").UserData) => boolean) | string} [fn]
-	 * @param {Array<string>} [inList] Filter within a specific list of IDs only
+	 * @param {string} search
+	 * @param {Object.<string, any>} [where]
+	 * @param {number} [limit]
 	 */
-	filter: async function(fn, inList = undefined) {
-		/**
-		 * @param {import("raincache/src/cache/UserCache") | import("@amanda/discordtypings").UserData} user
-		 * @returns {boolean}
-		 */
-		const defa = (user) => {
-			// @ts-ignore
-			const bO = user.boundObject ? user.boundObject : user
-			return bO.id.includes(fn) || `${bO.username}#${bO.discriminator}`.toLowerCase() === fn || bO.username.toLowerCase() === fn || bO.username.toLowerCase().includes(fn)
-		}
-		let data
-		if (typeof fn === "string") data = await client.rain.cache.user.filter(defa, inList)
-		else data = await client.rain.cache.user.filter(fn, inList)
+	filter: async function(search, where = undefined, limit = 10) {
+		const wherekeys = (Object.keys(where || {}) || [])
+		const wherevalues = (Object.values(where || {}) || [])
 
-		if (data && data.length > 0) return data
-		else return null
+		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
+
+		const d = await sql.all(`SELECT * FROM Users WHERE (id LIKE ? OR username LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
+		if (d) {
+			for (const k of Object.keys(d)) {
+				d[k] = decodeURIComponent(d[k])
+			}
+		}
+		return d
 	},
-	/**
-	 * @param {import("raincache/src/cache/UserCache") | import("@amanda/discordtypings").UserData} user
-	 */
 	parse: function(user) {
-		// @ts-ignore
-		const d = user.boundObject ? user.boundObject : user
-		return new Discord.User(d, client)
+		return new Discord.User(user, client)
 	}
 }
 
@@ -374,14 +382,19 @@ const memberManager = {
 	 */
 	get: async function(id, guildID, fetch = false, convert = true) {
 		const [md, ud] = await Promise.all([
-			client.rain.cache.member.get(id, guildID),
+			sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [id, guildID], cache),
 			userManager.get(id, true, false)
 		])
+		const roles = await sql.all("SELECT * FROM RoleRelations WHERE user_id =? AND guild_id =?", [id, guildID], cache).then(d => d.map(i => i.id))
 		if (md && ud) {
-			// @ts-ignore
-			const sud = ud.boundObject ? ud.boundObject : ud
-			if (convert) return memberManager.parse(md, sud)
-			else return { user: sud, ...md }
+			for (const k of Object.keys(md)) {
+				md[k] = decodeURIComponent(md[k])
+			}
+			for (const k of Object.keys(ud)) {
+				ud[k] = decodeURIComponent(ud[k])
+			}
+			if (convert) return memberManager.parse({ roles, ...md }, ud)
+			else return { user: ud, roles, ...md }
 		} else {
 			if (fetch) {
 				const fetched = await memberManager.fetch(id, guildID)
@@ -400,64 +413,9 @@ const memberManager = {
 	fetch: async function(id, guildID) {
 		const md = await client._snow.guild.getGuildMember(guildID, id)
 		const ud = await userManager.get(id, true, false)
-		if (md && ud) await client.rain.cache.member.update(id, guildID, { id: ud.id, guild_id: guildID, user: ud, ...md })
+		// @ts-ignore
+		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID, cachehandlersql)
 		return (md && ud) ? { id: ud.id, guild_id: guildID, user: ud, ...md } : null
-	},
-	/**
-	 * Returns a user if possible or an Array of Members from a guild
-	 * @param {string} search
-	 * @param {Discord.Message["guild"]} guild
-	 * @param {number} [limit=10]
-	 */
-	fetchMembers: async function(search, guild, limit = 10) {
-		/** @type {"id" | "username" | "tag"} */
-		let mode
-		const discrimregex = /#\d{4}$/
-		if (search.match(discrimregex)) mode = "tag"
-		else if (validate(search)) mode = "id"
-		else mode = "username"
-
-		if (mode == "id") {
-			/** @type {Discord.GuildMember} */
-			let d
-			try {
-				// @ts-ignore
-				d = await guild.fetchMembers(search)
-			} catch (e) {
-				return null
-			}
-			// @ts-ignore
-			if (d) await client.rain.cache.member.update(search, guild.id, d.toJSON())
-			return d
-		} else {
-			let payload, discrim
-			if (mode == "tag") {
-				payload = search.replace(discrimregex, "")
-				discrim = /#(\d{4})$/.exec(search)[1]
-			} else payload = search
-			/** @type {Array<Discord.GuildMember>} */
-			let data
-			try {
-				// @ts-ignore
-				data = await guild.fetchMembers({ query: payload, limit: limit })
-			} catch (e) {
-				return null
-			}
-			if (!data) return null
-			for (const entry of data) {
-				// @ts-ignore
-				await client.rain.cache.member.update(entry.id, guild.id, entry.toJSON())
-			}
-			const matchdiscrim = mode == "tag" ?
-				Array.isArray(data) ? data.find(m => m.user.discriminator == discrim) : undefined :
-				undefined
-			if (matchdiscrim) return matchdiscrim
-			else if (mode == "tag" && !matchdiscrim) return null
-			else {
-				if (Array.isArray(data) && data.length == 1) return data[0]
-				else return data
-			}
-		}
 	},
 	/**
 	 * @param {Discord.Message} message Message Object
@@ -475,40 +433,26 @@ const memberManager = {
 				if (self) return res(message.member)
 				else return res(null)
 			} else {
-				const guildMemData = await client.rain.cache.member.filter(() => true, message.guild.id)
-				const nicktest = guildMemData.filter(mem => mem.boundObject.nick && mem.boundObject.nick.toLowerCase().includes(string))
-				const userdata = await client.rain.cache.user.filter((user) => {
-					if (!user) return false
-					// @ts-ignore
-					const userb = user.boundObject ? user.boundObject : user
-					// @ts-ignore
-					const nickb = nicktest.find(m => (m.boundObject ? m.boundObject.id : m.id) === userb.id)
-					if (nickb) return true
-					else if (userb.id.includes(string)) return true
-					else if (`${userb.username}#${userb.discriminator}`.toLowerCase() === string) return true
-					else if (userb.username.toLowerCase() === string) return true
-					else if (userb.username.toLowerCase().includes(string)) return true
-					else return false
-				}, guildMemData.map(item => item.boundObject.id))
+				const userdata = await userManager.filter(string)
 
 				/** @type {Array<Discord.GuildMember>} */
-				let list = []
+				const list = []
 				for (const user of userdata) {
 					if (list.find(item => item.id === user.id) || list.length === 10) continue
 					// @ts-ignore
-					const memdata = guildMemData.find(m => (m.boundObject ? m.boundObject.id : m.id) === user.id)
-					list.push(new Discord.GuildMember({ user: user.boundObject ? user.boundObject : user, ...(memdata.boundObject ? memdata.boundObject : memdata) }, client))
+					let memdata
+					const d = await sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [user.id, message.guild.id], cache)
+					if (d) {
+						for (const k of Object.keys(d)) {
+							d[k] = decodeURIComponent(d[k])
+						}
+						memdata = d
+					} else memdata = { nick: null, joined_at: Date.now() }
+					// @ts-ignore
+					list.push(new Discord.GuildMember({ user: user, ...memdata }, client))
 				}
 				if (list.length == 1) return res(list[0])
-				if (list.length == 0) {
-					// @ts-ignore
-					const fetched = await memberManager.fetchMembers(string, message.guild)
-					if (!fetched) return res(null)
-					if (Array.isArray(fetched)) {
-						if (fetched.length == 0) return res(null)
-						else list = fetched
-					} else return res(fetched)
-				}
+				if (list.length == 0) return res(null)
 				const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
 				const selectmessage = await message.channel.send(await contentify(message.channel, embed))
 				const cb = (newmessage) => {
@@ -529,37 +473,27 @@ const memberManager = {
 		})
 	},
 	/**
-	 * @param {((member: import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData) => boolean) | string} [fn]
-	 * @param {string} [guild_id]
-	 * @param {Array<string>} [inList] Filter within a specific list of IDs only
+	 * @param {string} search
+	 * @param {Object.<string, any>} [where]
+	 * @param {number} [limit]
 	 */
-	filter: async function(fn, guild_id, inList = undefined) {
-		/**
-		 * @param {import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData} member
-		 * @returns {boolean}
-		 */
-		const defa = (member) => {
-			// @ts-ignore
-			const bO = member.boundObject ? member.boundObject : member
-			return bO.id.includes(fn) || bO.nick ? bO.nick.toLowerCase() === fn : false || bO.nick ? bO.nick.toLowerCase().includes(fn) : false
-		}
-		let data
-		if (typeof fn === "string") data = await client.rain.cache.member.filter(defa, guild_id, inList)
-		else data = await client.rain.cache.member.filter(fn, guild_id, inList)
+	filter: async function(search, where, limit = 10) {
+		const wherekeys = (Object.keys(where || {}) || [])
+		const wherevalues = (Object.values(where || {}) || [])
 
-		if (data && data.length > 0) return data
-		else return null
+		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
+
+		let s = ""
+		if (search) s = `(id LIKE ? OR nick LIKE ?) ${where ? `AND ${wherestatement} ` : ""} `
+
+		const d = await sql.all(`SELECT * FROM Members WHERE ${s}${wherestatement} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
+		for (const k of Object.keys(d)) {
+			d[k] = decodeURIComponent(d[k])
+		}
+		return d
 	},
-	/**
-	 * @param {import("raincache/src/cache/MemberCache") | import("@amanda/discordtypings").MemberData} member
-	 * @param {import("raincache/src/cache/UserCache") | import("@amanda/discordtypings").UserData} user
-	 */
 	parse: function(member, user) {
-		// @ts-ignore
-		const md = member.boundObject ? member.boundObject : member
-		// @ts-ignore
-		const ud = user.boundObject ? user.boundObject : user
-		return new Discord.GuildMember({ user: ud, ...md }, client)
+		return new Discord.GuildMember({ user: user, ...member }, client)
 	}
 }
 
@@ -570,8 +504,11 @@ const guildManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await client.rain.cache.guild.get(id)
+		const d = await sql.get("SELECT * FROM Guilds WHERE id =?", id, cache)
 		if (d) {
+			for (const k of Object.keys(d)) {
+				d[k] = decodeURIComponent(d[k])
+			}
 			if (convert) return guildManager.parse(d) // fetching all members, channels and userdata took too long so the Guild#channels and Guild#members Maps will be empty
 			else return d
 		} else {
@@ -591,17 +528,11 @@ const guildManager = {
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
 		// @ts-ignore
-		if (d) await client.rain.cache.guild.update(id, d)
+		if (d) await cacheInserthandler.handleGuild(d, cachehandlersql)
 		return d || null
 	},
-	/**
-	 * @param {import("raincache/src/cache/GuildCache") | import("@amanda/discordtypings").GuildData} guild
-	 */
 	parse: function(guild) {
-		// @ts-ignore
-		const d = guild.boundObject ? guild.boundObject : guild
-		// @ts-ignore
-		return new Discord.Guild(d, client)
+		return new Discord.Guild(guild, client)
 	},
 	/**
 	 * @param {string} id
@@ -611,8 +542,7 @@ const guildManager = {
 		const guild = await guildManager.get(id, true, false)
 		if (guild) {
 			// @ts-ignore
-			const gbO = guild.boundObject ? guild.boundObject : guild
-			value.allow |= (gbO.permissions || 0)
+			value.allow |= (guild.permissions || 0)
 		}
 		return value
 	}

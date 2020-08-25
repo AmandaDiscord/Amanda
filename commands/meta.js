@@ -148,6 +148,7 @@ commands.assign([
 			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
+				const listeningcount = await utils.sql.get("SELECT COUNT(*) AS count FROM VoiceStates WHERE bot = 0", undefined, passthrough.cache).then(d => d.count)
 				embed
 					.addFields([
 						{
@@ -159,7 +160,7 @@ commands.assign([
 						{
 							name: leadingSpace,
 							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": utils.numberComma(client.lavalink.players.size) })}\n` +
-								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma([...queues.cache.values()].reduce((acc, cur) => acc + passthrough.voiceStates.filter(m => !m.bot).length, 0)) })}`,
+								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma(listeningcount) })}`,
 							inline: true
 						}
 					])
@@ -303,8 +304,8 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			const [c1, c2] = await Promise.all([
-				client.rain.cache.user.get("320067006521147393").then(d => new Discord.User(d, client)),
-				client.rain.cache.user.get("176580265294954507").then(d => new Discord.User(d, client))
+				utils.cacheManager.users.get("320067006521147393", true, true),
+				utils.cacheManager.users.get("176580265294954507", true, true)
 			])
 			const embed = new Discord.MessageEmbed()
 				.setAuthor("Amanda", client.user.displayAvatarURL({ format: "png", size: 32 }))

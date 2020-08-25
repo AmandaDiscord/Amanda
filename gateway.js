@@ -1,8 +1,9 @@
 const CloudStorm = require("cloudstorm")
 const RainCache = require("raincache")
+const mysql = require("mysql2/promise")
+const handle = require("./cacheHandler")
 
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
-const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
 
 const config = require("./config")
 
@@ -13,6 +14,50 @@ const Gateway = new CloudStorm.Client(config.bot_token, {
 	lastShardId: config.shard_list[config.shard_list.length - 1]
 })
 
+const cache = mysql.createPool({
+	host: config.amqp_origin,
+	user: "amanda",
+	password: config.mysql_password,
+	database: "cache",
+	connectionLimit: 5
+})
+
+const sql = {
+	/**
+	 * @param {string} string
+	 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
+	 * @param {mysql.Pool|mysql.PoolConnection} [connection]
+	 * @param {number} [attempts=2]
+	 * @returns {Promise<Array<any>>}
+	 */
+	all(string, prepared = undefined, connection = undefined, attempts = 2) {
+		if (!connection) connection = cache
+		if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
+		return new Promise((resolve, reject) => {
+			if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${require("util").inspect(prepared)}`))
+			connection.execute(string, prepared).then(result => {
+				const rows = result[0]
+				// @ts-ignore
+				resolve(rows)
+			}).catch(err => {
+				console.error(err)
+				attempts--
+				console.log(string, prepared)
+				if (attempts) sql.all(string, prepared, connection, attempts).then(resolve).catch(reject)
+				else reject(err)
+			})
+		})
+	},
+	/**
+	 * @param {string} string
+	 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
+	 * @param {mysql.Pool|mysql.PoolConnection} [connection]
+	 */
+	"get": async function(string, prepared = undefined, connection = undefined) {
+		return (await sql.all(string, prepared, connection))[0]
+	}
+}
+
 /**
  * @type {import("@amanda/discordtypings").ReadyData}
  */
@@ -22,21 +67,15 @@ const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`,
 	amqpQueue: config.amqp_cache_queue,
 	sendQueue: config.amqp_events_queue
-})
-const rain = new RainCache({
-	storage: {
-		default: new RedisStorageEngine({
-			redisOptions: {
-				host: config.amqp_origin,
-				password: config.redis_password
-			}
-		})
-	},
-	debug: false
-}, connection, connection);
+});
 
 (async () => {
-	await rain.initialize()
+	await Promise.all([
+		cache.query("SET NAMES 'utf8mb4'"),
+		cache.query("SET CHARACTER SET utf8mb4")
+	])
+
+	await connection.initialize()
 	await Gateway.connect()
 	console.log("Cache and Gateway initialized")
 
@@ -84,45 +123,54 @@ const rain = new RainCache({
  * just waited for cache ops to finish actually caching things for the worker to be able to access.
  */
 async function handleCache(event) {
-	if (event.t === "GUILD_CREATE") {
-		await rain.cache.guild.update(event.d.id, event.d) // Rain apparently handles members and such
-	} else if (event.t === "GUILD_UPDATE") await rain.cache.guild.update(event.d.id, event.d)
+	if (event.t === "GUILD_CREATE") await handle.handleGuild(event.d, sql)
+	else if (event.t === "GUILD_UPDATE") await handle.handleGuild(event.d, sql)
 	else if (event.t === "GUILD_DELETE") {
-		if (!event.d.unavailable) await rain.cache.guild.remove(event.d.id) // Rain apparently also handles deletion of everything in a guild
-	} else if (event.t === "CHANNEL_CREATE") await rain.cache.channel.update(event.d.id, event.d) // Rain handles permission_overwrites
-	else if (event.t === "CHANNEL_DELETE") {
+		if (!event.d.unavailable) {
+			await sql.all("DELETE FROM Guilds WHERE id =?", event.d.id)
+			await sql.all("DELETE FROM Channels WHERE guild_id =?", event.d.id)
+			await sql.all("DELETE FROM Members WHERE guild_id =?", event.d.id)
+			await sql.all("DELETE FROM Roles WHERE guild_id =?", event.d.id)
+			await sql.all("DELETE FROM PermissionOverwrites WHERE guild_id =?", event.d.id)
+		}
+	} else if (event.t === "CHANNEL_CREATE") {
 		if (!event.d.guild_id) return
-		await rain.cache.channel.remove(event.d.channel_id)
+		await handle.handleChannel(event.d, event.d.guild_id, sql)
+	} else if (event.t === "CHANNEL_DELETE") {
+		if (!event.d.guild_id) return
+		await sql.all("DELETE FROM Channels WHERE id =?", event.d.id)
+		await sql.all("DELETE FROM PermissionOverwrites WHERE channel_id =?", event.d.id)
 	} else if (event.t === "MESSAGE_CREATE") {
 		/** @type {import("@amanda/discordtypings").MessageData} */
 		const typed = event.d
 
-		if (typed.member) await rain.cache.member.update(typed.author.id, typed.guild_id, typed.member)
-		else await rain.cache.user.update(typed.author.id, typed.author)
+		if (typed.member) {
+			if (!typed.author) return
+			handle.handleMember(typed.member, typed.author, typed.guild_id, sql)
+		}
 
 		if (typed.mentions && typed.mentions.length > 0 && typed.guild_id) {
 			await Promise.all(typed.mentions.map(async user => {
-				if (user.member) await rain.cache.member.update(user.id, typed.guild_id, user.member)
-				else await rain.cache.user.update(user.id, user)
+				if (user.member) await handle.handleMember(user.member, user, typed.guild_id, sql)
 			}))
 		}
 	} else if (event.t === "VOICE_STATE_UPDATE") {
 		/** @type {import("@amanda/discordtypings").VoiceStateData} */
 		const typed = event.d
-		if (typed.member && typed.user_id && typed.guild_id) await rain.cache.member.update(typed.user_id, typed.guild_id, { guild_id: typed.guild_id, ...typed.member })
+		// if (typed.member && typed.user_id && typed.guild_id) await rain.cache.member.update(typed.user_id, typed.guild_id, { guild_id: typed.guild_id, ...typed.member })
 	} else if (event.t === "GUILD_MEMBER_UPDATE") {
 		/** @type {import("@amanda/discordtypings").MemberData & { user: import("@amanda/discordtypings").UserData } & { guild_id: string }} */
 		const typed = event.d
-		await rain.cache.member.update(typed.user.id, typed.guild_id, typed) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
+		await handle.handleMember(typed, typed.user, typed.guild_id, sql) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
 	} else if (event.t === "GUILD_ROLE_CREATE") {
 		/** @type {{ guild_id: string, role: import("@amanda/discordtypings").RoleData }} */
 		const typed = event.d
-		await rain.cache.role.update(typed.role.id, typed.guild_id, typed.role)
+		await sql.all("REPLACE INTO Roles (id, name, guild_id, permissions) VALUES (?, ?, ?, ?)", [typed.role.id, typed.role.name, typed.guild_id, typed.role.permissions || 0])
 	} else if (event.t === "GUILD_ROLE_UPDATE") {
 		/** @type {{ guild_id: string, role: import("@amanda/discordtypings").RoleData }} */
 		const typed = event.d
-		await rain.cache.role.update(typed.role.id, typed.guild_id, typed.role)
+		await sql.all("REPLACE INTO Roles (id, name, guild_id, permissions) VALUES (?, ?, ?, ?)", [typed.role.id, typed.role.name, typed.guild_id, typed.role.permissions || 0])
 	} else if (event.t === "GUILD_ROLE_DELETE") {
-		await rain.cache.role.remove(event.d.role_id, event.d.guild_id)
+		await sql.all("DELETE FROM Roles WHERE id =?", event.d.role_id)
 	}
 }

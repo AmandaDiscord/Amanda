@@ -268,12 +268,10 @@ async function manageReady() {
 
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(async row => {
-				const channel = client.rain.cache.channel.get(row.channelID)
-				if (channel) new Discord.PartialChannel({ id: row.channelID }, client).send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
+				const channel = await utils.cacheManager.channels.get(row.channelID, true, true)
+				if (channel) channel.send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {
-					const user = await client.rain.cache.users.get(row.mentionID)
-					if (!user) console.log(`Could not notify ${row.mentionID}`)
-					else new Discord.PartialUser({ id: row.mentionID }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
+					new Discord.PartialUser({ id: row.mentionID }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mentionID}`))
 				}
 			})
 			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])

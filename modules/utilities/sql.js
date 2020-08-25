@@ -26,6 +26,7 @@ function all(string, prepared = undefined, connection = undefined, attempts = 2)
 		}).catch(err => {
 			console.error(err)
 			attempts--
+			console.log(string, prepared)
 			if (attempts) all(string, prepared, connection, attempts).then(resolve).catch(reject)
 			else reject(err)
 		})

@@ -311,12 +311,12 @@ commands.assign([
 			const args = suffix.split(" ")
 
 			// Set up local
-			const inputLocalArg = args[0]
 			const isLocal = ["local", "guild", "server"].includes(args[0])
-			const members = await client.rain.cache.member.filter(() => true, msg.guild.id)
+
+			let members = []
 			if (isLocal) {
-				// @ts-ignore
 				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				members = await utils.cacheManager.members.filter(undefined, { guild_id: msg.guild.id })
 				args.shift() // if it exists, page number will now definitely be in args[0]
 				isLargeGuild = members.length >= 1000 // members for a "large guild". read further down
 			}
@@ -366,7 +366,8 @@ commands.assign([
 			if (rows.length) {
 				// Load usernames
 				const displayRows = await Promise.all(rows.map(async ({ userID, coins }, index) => {
-					const [tag, isBot] = await client.fetchUser(userID) // don't cache. let's not waste memory on something we probably won't need again.
+					const [tag, isBot] = await utils.cacheManager.users.get(userID, true, true)
+						// @ts-ignore
 						.then(user => [user.tag, user.bot])
 						.catch(() => [userID, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""

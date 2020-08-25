@@ -34,13 +34,20 @@ const db = mysql.createPool({
 	password: config.mysql_password,
 	database: "money",
 	connectionLimit: 5
+})
+
+const cache = mysql.createPool({
+	host: config.amqp_origin,
+	user: "amanda",
+	password: config.mysql_password,
+	database: "cache",
+	connectionLimit: 5
 });
 
 (async () => {
 	// DB
 
 	await client.connector.initialize()
-	await client.rain.initialize()
 	console.log("Client connected to data stream")
 	client.connector.channel.assertQueue(config.amqp_events_queue, { durable: false, autoDelete: true })
 	client.connector.channel.assertQueue(config.amqp_client_send_queue, { durable: false, autoDelete: true })
@@ -52,10 +59,12 @@ const db = mysql.createPool({
 
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
-		db.query("SET CHARACTER SET utf8mb4")
+		db.query("SET CHARACTER SET utf8mb4"),
+		cache.query("SET NAMES 'utf8mb4'"),
+		cache.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, voiceStates: [] })
+	Object.assign(passthrough, { config, constants, client, db, cache, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
 
 	// Utility files
 

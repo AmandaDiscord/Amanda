@@ -232,7 +232,7 @@ const cmds = [
 			}
 			await utils.waifu.transact(msg.author.id, gift)
 			await utils.coinsManager.award(msg.author.id, -gift)
-			const user = await client.users.fetch(waifu.waifuID, true)
+			const user = await utils.cacheManager.users.get(waifu.waifuID, true, true)
 			return msg.channel.send(utils.replace(lang.interaction.gift.returns.gifted, { "tag1": msg.author.tag, "number": utils.numberComma(gift), "tag2": user.tag }))
 		}
 	},
@@ -277,9 +277,9 @@ const cmds = [
 			let rows = null
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
-			const members = await client.rain.cache.member.filter(() => true, msg.guild.id)
 			if (isLocal) {
 				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
+				const members = await utils.cacheManager.members.filter(undefined, { guild_id: msg.guild.id })
 				const memberIDs = members.map(mem => mem.id)
 				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
