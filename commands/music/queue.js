@@ -551,19 +551,19 @@ class Queue {
 		if (this.npMenu) this.npMenu.destroy(true, "text")
 		this.npMenu = new ReactionMenu(this.np, client, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND userID =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
 				if (!t) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 				this.wrapper.togglePlaying("reaction")
 			} },
 			{ emoji: "⏭", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND userID =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
 				if (!t) return
 				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
 			{ emoji: "⏹", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND userID =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
 				if (!t) return
 				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()
