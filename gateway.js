@@ -22,7 +22,7 @@ const cache = mysql.createPool({
 	connectionLimit: 5
 })
 
-Object.assign(passthrough, { db: cache })
+Object.assign(passthrough, { db: cache, cache })
 
 const sql = require("./modules/utilities/sql")
 
