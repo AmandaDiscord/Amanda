@@ -100,6 +100,7 @@ async function handleCache(event) {
 			await sql.all("DELETE FROM Members WHERE guild_id =?", event.d.id)
 			await sql.all("DELETE FROM Roles WHERE guild_id =?", event.d.id)
 			await sql.all("DELETE FROM PermissionOverwrites WHERE guild_id =?", event.d.id)
+			await sql.all("DELETE FROM VoiceStates WHERE guild_id =?", event.d.id)
 		}
 	} else if (event.t === "CHANNEL_CREATE") {
 		if (!event.d.guild_id) return
