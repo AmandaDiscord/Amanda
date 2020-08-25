@@ -584,13 +584,14 @@ commands.assign([
 					const voiceChannel = passthrough.voiceStates.find(item => item.userID === msg.author.id && item.guildID === msg.guild.id)
 					let vcdata
 					// @ts-ignore
-					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channelID)
+					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channelID, true, true)
 
 					// @ts-ignore
-					subcommmandData.voiceChannel = vcdata.boundObject ? vcdata.boundObject : vcdata
+					subcommmandData.voiceChannel = (vcdata && vcdata.boundObject) ? vcdata.boundObject : (vcdata ? vcdata : undefined)
 				}
 			}
 			// Hand over execution to the subcommand
+			// @ts-ignore
 			subcommandObject.code(msg, args, subcommmandData)
 		}
 	},
