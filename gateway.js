@@ -58,7 +58,7 @@ const connection = new AmpqpConnector({
 		// Send data (Gateway -> Client)
 		connection.channel.sendToQueue(config.amqp_events_queue, Buffer.from(JSON.stringify(data)))
 	})
-	connection.channel.consume(config.amqp_client_send_queue, (message) => {
+	connection.channel.consume(config.amqp_client_send_queue, async (message) => {
 		connection.channel.ack(message)
 		const data = JSON.parse(message.content.toString())
 
@@ -75,7 +75,10 @@ const connection = new AmpqpConnector({
 
 			if (game.name || game.type || game.url) payload["game"] = game
 
-			Gateway.statusUpdate(payload)
+			for (const shard of Object.values(Gateway.shardManager.shards)) {
+				await shard.statusUpdate(payload)
+				await new Promise((res) => setTimeout(() => res(undefined), 5000))
+			}
 		} else if (data.event === "SEND_MESSAGE") {
 			const sid = Number((BigInt(data.data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
 			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
