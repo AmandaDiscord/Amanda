@@ -60,7 +60,8 @@ function createMessageCollector(filter = {}, callback, onFail) {
 	/**
 	 * @param {Discord.Message} message
 	 */
-	function listener(message) {
+	async function listener(message) {
+		await resolveWebhookMessageAuthor(message)
 		if (message.author.bot) return
 		if (filter.channelID && message.channel.id !== filter.channelID) return
 		let test
@@ -71,7 +72,7 @@ function createMessageCollector(filter = {}, callback, onFail) {
 		if (filter.test && test) {
 			if (filter.test(message)) {
 				try {
-					callback(message)
+					await callback(message)
 					matches++
 					if (matches === maxMatches) return clear()
 				} catch (e) {
@@ -80,7 +81,7 @@ function createMessageCollector(filter = {}, callback, onFail) {
 			}
 		} else if (test) {
 			try {
-				callback(message)
+				await callback(message)
 				matches++
 				if (matches === maxMatches) return clear()
 			} catch (e) {
