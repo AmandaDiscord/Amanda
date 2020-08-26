@@ -63,9 +63,6 @@ const channelManager = {
 		// @ts-ignore
 		const d = await sql.get("SELECT * FROM Channels WHERE id =?", id, cache)
 		if (d) {
-			for (const k of Object.keys(d)) {
-				d[k] = decodeURIComponent(d[k])
-			}
 			if (convert) return channelManager.parse(d)
 			else return d
 		} else {
@@ -151,13 +148,6 @@ const channelManager = {
 		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
 
 		const ds = await sql.all(`SELECT * FROM Channels WHERE (id LIKE ? OR name LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
-		if (ds) {
-			for (const d of ds) {
-				for (const k of Object.keys(d)) {
-					d[k] = decodeURIComponent(d[k])
-				}
-			}
-		}
 		return ds
 	},
 	parse: function(channel) {
@@ -260,9 +250,6 @@ const userManager = {
 	get: async function(id, fetch = false, convert = true) {
 		const d = await sql.get("SELECT * FROM Users WHERE id =?", id, cache)
 		if (d) {
-			for (const k of Object.keys(d)) {
-				d[k] = decodeURIComponent(d[k])
-			}
 			if (convert) return userManager.parse(d)
 			else return d
 		} else {
@@ -351,13 +338,6 @@ const userManager = {
 		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
 
 		const ds = await sql.all(`SELECT * FROM Users WHERE (id LIKE ? OR username LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
-		if (ds) {
-			for (const d of ds) {
-				for (const k of Object.keys(d)) {
-					d[k] = decodeURIComponent(d[k])
-				}
-			}
-		}
 		return ds
 	},
 	parse: function(user) {
@@ -379,12 +359,6 @@ const memberManager = {
 		])
 		const roles = await sql.all("SELECT * FROM RoleRelations WHERE user_id =? AND guild_id =?", [id, guildID], cache).then(d => d.map(i => i.id))
 		if (md && ud) {
-			for (const k of Object.keys(md)) {
-				md[k] = decodeURIComponent(md[k])
-			}
-			for (const k of Object.keys(ud)) {
-				ud[k] = decodeURIComponent(ud[k])
-			}
 			if (convert) return memberManager.parse({ roles, ...md }, ud)
 			else return { user: ud, roles, ...md }
 		} else {
@@ -435,9 +409,6 @@ const memberManager = {
 					let memdata
 					const d = await sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [user.id, message.guild.id], cache)
 					if (d) {
-						for (const k of Object.keys(d)) {
-							d[k] = decodeURIComponent(d[k])
-						}
 						memdata = d
 					} else memdata = { nick: null, joined_at: Date.now() }
 					// @ts-ignore
@@ -479,13 +450,6 @@ const memberManager = {
 		if (search) s = `(id LIKE ? OR nick LIKE ?) ${where ? `AND ${wherestatement} ` : ""} `
 
 		const ds = await sql.all(`SELECT * FROM Members WHERE ${s}${wherestatement} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
-		if (ds) {
-			for (const d of ds) {
-				for (const k of Object.keys(d)) {
-					d[k] = decodeURIComponent(d[k])
-				}
-			}
-		}
 		return ds
 	},
 	parse: function(member, user) {
@@ -502,9 +466,6 @@ const guildManager = {
 	get: async function(id, fetch = false, convert = true) {
 		const d = await sql.get("SELECT * FROM Guilds WHERE id =?", id, cache)
 		if (d) {
-			for (const k of Object.keys(d)) {
-				d[k] = decodeURIComponent(d[k])
-			}
 			if (convert) return guildManager.parse(d) // fetching all members, channels and userdata took too long so the Guild#channels and Guild#members Maps will be empty
 			else return d
 		} else {
