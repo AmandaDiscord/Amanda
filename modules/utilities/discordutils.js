@@ -45,7 +45,7 @@ function createMessageCollector(filter = {}, callback, onFail) {
 	let timerdur = (1000 * 60), maxMatches = 1
 	if (filter.timeout) timerdur = filter.timeout
 	if (filter.matches) maxMatches = filter.matches
-	const timet = setTimeout(() => {
+	const timer = setTimeout(() => {
 		clear()
 		if (onFail) onFail()
 	}, timerdur)
@@ -53,7 +53,7 @@ function createMessageCollector(filter = {}, callback, onFail) {
 	let matches = 0
 	function clear() {
 		client.removeListener("message", listener)
-		clearTimeout(timet)
+		clearTimeout(timer)
 	}
 	client.on("message", listener)
 
