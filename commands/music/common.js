@@ -716,9 +716,7 @@ const common = {
 
 		if (!state.guildID) return // we should only process voice state updates that are in guilds
 
-		if (!state.channelID) { // if there is no channel in the user's state update
-			await utils.sql.all("DELETE FROM VoiceStates WHERE guild_id =? AND user_id =?", [state.guildID, state.id], passthrough.cache)
-		}
+		await utils.sql.all("DELETE FROM VoiceStates WHERE guild_id =? AND user_id =?", [state.guildID, state.id], passthrough.cache)
 
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
@@ -726,7 +724,7 @@ const common = {
 			await utils.sql.all("REPLACE INTO VoiceStates (user_id, guild_id, channel_id, bot) VALUES (?, ?, ?, ?)", [state.id, state.guildID, state.channelID, (udata.bot && udata.bot == 1 ? 1 : 0)], passthrough.cache)
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
-			common.voiceStateCallbackManager.getAll(state.id, state.guild).forEach(s => s.trigger(vc))
+			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))
 		}
 
 		const queues = passthrough.queues

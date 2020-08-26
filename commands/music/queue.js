@@ -580,7 +580,7 @@ class Queue {
 		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
 		const count = await utils.sql.get("SELECT COUNT(*) as count FROM VoiceStates WHERE channel_id =? AND bot = 0", this.voiceChannel.id, passthrough.cache).then(d => d["count"])
-		if (count == 0) {
+		if (count == 0 || !count) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
 				this.voiceLeaveWarningMessagePromise = this.textChannel.send(utils.replace(lang.audio.music.prompts.noUsersLeft, { "time": this.voiceLeaveTimeout.delay / 1000 }))
