@@ -211,7 +211,9 @@ const channelManager = {
 		// @ts-ignore
 		const roles = clientmemdata.roles || []
 		const roledata = await Promise.all(roles.map(role => sql.get("SELECT * FROM Roles WHERE id =? AND guild_id =?", [role, channel.guild_id], cache))) // get all role data from cache
+		if (!roledata) return value
 		for (const role of roledata) {
+			if (!role) continue
 			if (role.permissions) {
 				value.allow |= role.permissions // OR together the permissions of each role
 			}
