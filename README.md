@@ -4,6 +4,10 @@
 
 Amanda is a 100% free Discord music bot written in Node.js.
 
+# Legal
+PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amanda/blob/rained-in/LICENSE).
+We will take offenses against this license very seriously.
+
 # Features
 - Play music from YouTube, SoundCloud, Spotify and [Frisky Radio](https://www.friskyradio.com/).
 - Economy.
@@ -28,7 +32,3 @@ The team at AmandaDiscord would like to thank these people in particular:
 - CheweyZ (for his help with hosting in early stages).
 - AmandaDiscord donors (for literally making all of this possible).
 - This cup of coffee (for- wait. That wasn't apart of the script).
-
-# Legal
-PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amanda/blob/rained-in/LICENSE).
-We will take offenses against this license very seriously.
