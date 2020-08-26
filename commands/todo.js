@@ -20,7 +20,7 @@ commands.assign([
 		 * @param {string} suffix
 		 */
 		process(msg, suffix) {
-			msg.channel.send(`Trello board: ${config.website_protocol}://${config.website_domain}/to/todo`)
+			msg.channel.send(`Todo board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}
 	}
 ])

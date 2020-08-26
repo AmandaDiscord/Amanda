@@ -16,7 +16,7 @@ module.exports = [
 	["/to/paypal", "https://paypal.me/papiophidian"],
 	["/to/server", "https://discord.gg/zhthQjH"],
 	["/to/add", "https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot"],
-	["/to/todo", "https://trello.com/b/vFRcbEE4/amanda"],
+	["/to/todo", "https://github.com/AmandaDiscord/Amanda/projects"],
 	["/to/twitter", "https://twitter.com/AmandaDiscord"],
 	["/to/github", "https://github.com/AmandaDiscord"]
 ].map(entry => ({
