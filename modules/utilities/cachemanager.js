@@ -401,7 +401,7 @@ const memberManager = {
 				if (self) return res(message.member)
 				else return res(null)
 			} else {
-				const userdata = await sql.all("SELECT * FROM (Users INNER JOIN Members ON (Users.id LIKE ? OR Users.username LIKE ? OR (Members.nick LIKE ? AND Members.id = Users.id AND Members.guild_id =?)))", [`%${string}%`, `%${string}%`, `%${string}%`, message.guild.id], cache)
+				const userdata = await userManager.filter(string)
 
 				/** @type {Array<Discord.GuildMember>} */
 				const list = []
@@ -409,7 +409,7 @@ const memberManager = {
 					if (list.find(item => item.id === user.id) || list.length === 10) continue
 					// @ts-ignore
 					let memdata
-					const d = memberdata.find(m => m.id === user.id)
+					const d = await sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [user.id, message.guild.id], cache)
 					if (d) {
 						memdata = d
 					} else memdata = { nick: null, joined_at: Date.now() }
