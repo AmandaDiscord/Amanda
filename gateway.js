@@ -27,7 +27,7 @@ Object.assign(passthrough, { db: cache, cache })
 const sql = require("./modules/utilities/sql")
 
 /**
- * @type {import("@amanda/discordtypings").ReadyData}
+ * @type {import("thunderstorm/typings/internal").InboundDataType<"READY">}
  */
 let readyPayload = {}
 
@@ -94,8 +94,8 @@ const connection = new AmpqpConnector({
  * just waited for cache ops to finish actually caching things for the worker to be able to access.
  */
 async function handleCache(event) {
-	if (event.t === "GUILD_CREATE") await require("./cacheHandler").handleGuild(event.d, readyPayload.user.id)
-	else if (event.t === "GUILD_UPDATE") await require("./cacheHandler").handleGuild(event.d, readyPayload.user.id)
+	if (event.t === "GUILD_CREATE") await require("./cacheHandler").handleGuild(event.d, readyPayload.d.user.id)
+	else if (event.t === "GUILD_UPDATE") await require("./cacheHandler").handleGuild(event.d, readyPayload.d.user.id)
 	else if (event.t === "GUILD_DELETE") {
 		if (!event.d.unavailable) {
 			await sql.all("DELETE FROM Guilds WHERE id =?", event.d.id)
@@ -119,12 +119,12 @@ async function handleCache(event) {
 
 		if (typed.member) {
 			if (!typed.author) return
-			require("./cacheHandler").handleMember(typed.member, typed.author, typed.guild_id, readyPayload.user.id)
+			require("./cacheHandler").handleMember(typed.member, typed.author, typed.guild_id, readyPayload.d.user.id)
 		}
 
 		if (typed.mentions && typed.mentions.length > 0 && typed.guild_id) {
 			await Promise.all(typed.mentions.map(async user => {
-				if (user.member) await require("./cacheHandler").handleMember(user.member, user, typed.guild_id, readyPayload.user.id)
+				if (user.member) await require("./cacheHandler").handleMember(user.member, user, typed.guild_id, readyPayload.d.user.id)
 			}))
 		}
 	} else if (event.t === "VOICE_STATE_UPDATE") {
@@ -134,7 +134,7 @@ async function handleCache(event) {
 	} else if (event.t === "GUILD_MEMBER_UPDATE") {
 		/** @type {import("@amanda/discordtypings").MemberData & { user: import("@amanda/discordtypings").UserData } & { guild_id: string }} */
 		const typed = event.d
-		await require("./cacheHandler").handleMember(typed, typed.user, typed.guild_id, readyPayload.user.id) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
+		await require("./cacheHandler").handleMember(typed, typed.user, typed.guild_id, readyPayload.d.user.id) // This should just only be the ClientUser unless the GUILD_MEMBERS intent is passed
 	} else if (event.t === "GUILD_ROLE_CREATE") {
 		/** @type {{ guild_id: string, role: import("@amanda/discordtypings").RoleData }} */
 		const typed = event.d
