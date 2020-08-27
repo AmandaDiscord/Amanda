@@ -279,8 +279,7 @@ const cmds = [
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
 				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
-				const members = await utils.cacheManager.members.filter(undefined, { guild_id: msg.guild.id })
-				const memberIDs = members.map(mem => mem.id)
+				const memberIDs = await utils.sql.all("SELECT id FROM Members WHERE guild_id =?", msg.guild.id, passthrough.cache).then(rs => rs.map(r => r.id))
 				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else {

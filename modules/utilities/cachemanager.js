@@ -382,7 +382,7 @@ const memberManager = {
 		const md = await client._snow.guild.getGuildMember(guildID, id)
 		const ud = await userManager.get(id, true, false)
 		// @ts-ignore
-		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID)
+		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID, client.user.id)
 		return (md && ud) ? { id: ud.id, guild_id: guildID, user: ud, ...md } : null
 	},
 	/**
@@ -401,7 +401,7 @@ const memberManager = {
 				if (self) return res(message.member)
 				else return res(null)
 			} else {
-				const userdata = await userManager.filter(string)
+				const userdata = await sql.all("SELECT * FROM (Users INNER JOIN Members ON (Users.id LIKE ? OR Users.username LIKE ? OR (Members.nick LIKE ? AND Members.id = Users.id AND Members.guild_id =?)))", [`%${string}%`, `%${string}%`, `%${string}%`, message.guild.id], cache)
 
 				/** @type {Array<Discord.GuildMember>} */
 				const list = []
@@ -409,7 +409,7 @@ const memberManager = {
 					if (list.find(item => item.id === user.id) || list.length === 10) continue
 					// @ts-ignore
 					let memdata
-					const d = await sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [user.id, message.guild.id], cache)
+					const d = memberdata.find(m => m.id === user.id)
 					if (d) {
 						memdata = d
 					} else memdata = { nick: null, joined_at: Date.now() }
@@ -451,7 +451,7 @@ const memberManager = {
 		let s = ""
 		if (search) s = `(id LIKE ? OR nick LIKE ?) ${where ? `AND ${wherestatement} ` : ""} `
 
-		const ds = await sql.all(`SELECT * FROM Members WHERE ${s}${wherestatement} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
+		const ds = await sql.all(`SELECT * FROM Members WHERE ${s} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
 		return ds
 	},
 	parse: function(member, user) {

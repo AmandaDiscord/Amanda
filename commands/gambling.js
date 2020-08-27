@@ -306,19 +306,15 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
-			let isLargeGuild = false
 
 			const args = suffix.split(" ")
 
 			// Set up local
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 
-			let members = []
 			if (isLocal) {
 				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
-				members = await utils.cacheManager.members.filter(undefined, { guild_id: msg.guild.id })
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				isLargeGuild = members.length >= 1000 // members for a "large guild". read further down
 			}
 
 			// Set up page number
@@ -337,19 +333,10 @@ commands.assign([
 			let rows = null
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
-			if (isLocal && !isLargeGuild) {
-				// using small guild method:
-				// request rows for everyone in the guild
-				// @ts-ignore
-				const memberIDs = members.map(mem => mem.id) // cache so it doesn't change during sql execution
-				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
-				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM money WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
-			} else if (isLocal) {
-				// using large guild method:
-				// request top pages from database then filter to guild members then slice to page
-				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ?", [maxPages * itemsPerPage])
-				// @ts-ignore
-				rows = rows.filter(row => members.find(m => m.id === row.userID))
+			if (isLocal) {
+				// Unfortunately, I cant INNER JOIN on these statements since they're different dbs
+				const memIDs = await utils.sql.all("SELECT id FROM Members WHERE guild_id =?", msg.guild.id, passthrough.cache).then(rs => rs.map(r => r.id))
+				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ?`, [...memIDs, maxPages * itemsPerPage])
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {

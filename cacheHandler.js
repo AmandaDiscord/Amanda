@@ -4,7 +4,7 @@ const { cache } = passthrough
 
 const sql = require("./modules/utilities/sql")
 
-async function handleGuild(guild) {
+async function handleGuild(guild, clientID) {
 
 	await sql.all("REPLACE INTO Guilds (id, name, icon, owner_id, permissions, region, member_count) VALUES (?, ?, ?, ?, ?, ?, ?)", [guild.id, guild.name, guild.icon, guild.owner_id, guild.permissions || 0, guild.region, guild.member_count], cache)
 
@@ -13,7 +13,7 @@ async function handleGuild(guild) {
 
 		for (const member of guild.members) {
 			if (!member.user) continue
-			batch.push(handleMember(member, member.user, guild.id))
+			batch.push(handleMember(member, member.user, guild.id, clientID))
 		}
 
 		await Promise.all(batch)
@@ -64,9 +64,9 @@ async function handleChannel(channel, guildID) {
  * @param {import("@amanda/discordtypings").UserData} user
  * @param {string} guildID
  */
-async function handleMember(member, user, guildID) {
+async function handleMember(member, user, guildID, clientID) {
 	await sql.all("REPLACE INTO Members (id, nick, guild_id, joined_at) VALUES (?, ?, ?, ?)", [user.id, member.nick || null, guildID, member.joined_at ? new Date(member.joined_at).getTime() : 0], cache)
-	if (member.roles) {
+	if (member.roles && user.id === clientID) {
 		for (const role of member.roles) {
 			await sql.all("REPLACE INTO RoleRelations (id, user_id, guild_id) VALUES (?, ?, ?)", [role, user.id, guildID], cache)
 		}
