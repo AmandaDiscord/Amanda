@@ -53,7 +53,6 @@ const connection = new AmpqpConnector({
 
 	Gateway.on("event", async (data) => {
 		if (data.t === "READY") readyPayload = data
-		if (!readyPayload || !readyPayload.user) return
 		// Send data (Gateway -> Cache)
 		await handleCache(data)
 		// Send data (Gateway -> Client)
