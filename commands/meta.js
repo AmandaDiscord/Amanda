@@ -706,7 +706,7 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
-			if (msg.channel.type == "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
+			if ((await utils.cacheManager.channels.typeOf(msg.channel)) === "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
 			/** @type {Object.<string, { type: string, default: string, scope: Array<string> | string }>} */
 			const settings = {
@@ -758,7 +758,7 @@ commands.assign([
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
 
-			if (scope == "server" && !msg.member.hasPermission("MANAGE_GUILD")) return msg.channel.send(lang.configuration.settings.prompts.manageServer)
+			if (scope == "server") return msg.channel.send("Server settings are currently broken, so they have been temporarily disabled. They will be fixed soon. Sorry for the inconvenience.") // msg.channel.send(lang.configuration.settings.prompts.manageServer)
 
 			const setting = settings[settingName]
 			if (!setting) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxName, { "usage": lang.configuration.settings.help.usage, "settings": Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ") }))
