@@ -395,7 +395,7 @@ commands.assign([
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
 			if (currentQueueNode && currentQueueNode !== node.id) {
-				const name = currentQueueNode ? `${currentQueue[0].toUpperCase()}${currentQueueNode.slice(1, currentQueueNode.length)}` : lang.audio.debug.returns.unnamedNode
+				const name = currentQueueNode ? `${currentQueueNode[0].toUpperCase()}${currentQueueNode.slice(1, currentQueueNode.length)}` : lang.audio.debug.returns.unnamedNode
 				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
 			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node.id))).hostname

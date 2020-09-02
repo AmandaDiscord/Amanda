@@ -66,8 +66,9 @@ function createMessageCollector(filter = {}, callback, onFail) {
 		if (filter.channelID && message.channel.id !== filter.channelID) return
 		let test
 
-		if (filter.userIDs && (filter.userIDs.includes(message.author.id) || filter.userIDs.includes(message.webhookID))) test = true
+		if (filter.userIDs && (filter.userIDs.includes(message.author.id) || !filter.userIDs.includes(message.webhookID))) test = false
 		else if (!filter.userIDs) test = true
+		else test = false
 
 		if (filter.test && test) {
 			if (filter.test(message)) {
@@ -88,7 +89,7 @@ function createMessageCollector(filter = {}, callback, onFail) {
 				if (onFail) return onFail()
 			}
 		} else {
-			if (maxMatches === 1 && !test && onFail) {
+			if (maxMatches === 1 && test && onFail) {
 				onFail()
 				return clear()
 			}
