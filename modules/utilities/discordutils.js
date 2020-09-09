@@ -66,7 +66,8 @@ function createMessageCollector(filter = {}, callback, onFail) {
 		if (filter.channelID && message.channel.id !== filter.channelID) return
 		let test
 
-		if (filter.userIDs && (filter.userIDs.includes(message.author.id) || !filter.userIDs.includes(message.webhookID))) test = false
+		if (filter.userIDs && filter.userIDs.includes(message.author.id)) test = true
+		else if (filter.userIDs && filter.userIDs.includes(message.webhookID)) test = true
 		else if (!filter.userIDs) test = true
 		else test = false
 
