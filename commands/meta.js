@@ -760,7 +760,7 @@ commands.assign([
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
 
-			if (scope == "server") return msg.channel.send("Server settings are currently broken, so they have been temporarily disabled. They will be fixed soon. Sorry for the inconvenience.") // msg.channel.send(lang.configuration.settings.prompts.manageServer)
+			if (scope == "server" && !(await utils.cacheManager.members.hasPermission(msg.author.id, msg.guild.id, "MANAGE_GUILD"))) return msg.channel.send(lang.configuration.settings.prompts.manageServer)
 
 			const setting = settings[settingName]
 			if (!setting) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxName, { "usage": lang.configuration.settings.help.usage, "settings": Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ") }))

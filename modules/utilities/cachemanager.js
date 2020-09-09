@@ -8,6 +8,7 @@ const { client, constants, cacheRequester } = passthrough
 const { contentify, createMessageCollector } = require("./discordutils")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
+const { hasPermission } = require("./sql")
 
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
@@ -202,21 +203,10 @@ const channelManager = {
 		value.deny |= guildperms.deny
 
 
-		const clientmemdata = await memberManager.get(client.user.id, channel.guild_id, false, false) // get ClientUser member data in guild to get roles array
-		if (!clientmemdata) return value
+		const clientperms = await memberManager.permissionsFor(client.user.id, channel.guild_id)
 
-		/** @type {Array<string>} */
-		const roles = clientmemdata.roles || []
-		const roledata = await Promise.all(roles.map(id => client.rain.cache.role.get(id, channel.guild_id)))
-		if (!roledata) return value
-		for (const role of roledata) {
-			if (!role) continue
-			// @ts-ignore
-			if (role.permissions) {
-				// @ts-ignore
-				value.allow |= role.permissions // OR together the permissions of each role
-			}
-		}
+		value.allow |= clientperms.allow
+		value.deny |= clientperms.deny
 
 		return value
 	},
@@ -433,6 +423,52 @@ const memberManager = {
 	},
 	parse: function(member, user) {
 		return new Discord.GuildMember({ user: user, ...member }, client)
+	},
+	/**
+	 * @param {string} userID
+	 * @param {string} guildID
+	 */
+	permissionsFor: async function(userID, guildID) {
+		const value = { allow: 0x00000000, deny: 0x00000000 }
+
+		const clientmemdata = await memberManager.get(userID, guildID, false, false) // get ClientUser member data in guild to get roles array
+		if (!clientmemdata) return value
+
+		/** @type {Array<string>} */
+		const roles = clientmemdata.roles || []
+		const roledata = await Promise.all(roles.map(id => client.rain.cache.role.get(id, guildID)))
+		if (!roledata) return value
+		for (const role of roledata) {
+			if (!role) continue
+			// @ts-ignore
+			if (role.permissions) {
+				// @ts-ignore
+				value.allow |= role.permissions // OR together the permissions of each role
+			}
+		}
+
+		return value
+	},
+	/**
+	 * @param {string} userID
+	 * @param {string} guildID
+	 * @param {number | keyof permissionstable} permission
+	 * @param {{ allow: number, deny: number }} [permissions]
+	 */
+	hasPermission: async function(userID, guildID, permission, permissions) {
+		if (!guildID) return true
+		if (!permissions) permissions = await memberManager.permissionsFor(userID, guildID)
+
+		/** @type {number} */
+		let toCheck
+		if (permissionstable[permission]) toCheck = permissionstable[permission]
+		else if (typeof permission === "number") toCheck = permission
+		// @ts-ignore
+		else toCheck = permission
+
+		if ((permissions.allow & toCheck) == toCheck) return true
+		if ((permissions.deny & toCheck) == toCheck) return false
+		else return true
 	}
 }
 
