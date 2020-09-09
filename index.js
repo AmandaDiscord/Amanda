@@ -6,12 +6,13 @@ const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
 /** @type {typeof import("./typings/Taihou")} */
 const WeebSH = require("taihou")
-const CommandManager = require("@amanda/commandmanager")
 const Reloader = require("@amanda/reloader")
 const fs = require("fs")
 const events = require("events")
 const SnowTransfer = require("snowtransfer")
 const ThunderStorm = require("thunderstorm")
+
+const CommandManager = require("@amanda/commandmanager")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
@@ -34,37 +35,40 @@ const db = mysql.createPool({
 	password: config.mysql_password,
 	database: "money",
 	connectionLimit: 5
-})
-
-const cache = mysql.createPool({
-	host: config.amqp_origin,
-	user: "amanda",
-	password: config.mysql_password,
-	database: "cache",
-	connectionLimit: 5
 });
 
 (async () => {
 	// DB
 
-	await client.connector.initialize()
+	await client.rain.initialize()
 	console.log("Client connected to data stream")
-	client.connector.channel.assertQueue(config.amqp_events_queue, { durable: false, autoDelete: true })
-	client.connector.channel.assertQueue(config.amqp_client_send_queue, { durable: false, autoDelete: true })
-	client.connector.channel.consume(config.amqp_events_queue, async (data) => {
-		await client.connector.channel.ack(data)
-
-		ThunderStorm.handle(JSON.parse(data.content.toString()), client)
-	})
+	client.connector.channel.assertQueue(config.amqp_cache_queue, { durable: false, autoDelete: true })
+	client.connector.channel.assertQueue(config.amqp_client_action_queue, { durable: false, autoDelete: true })
+	client.connector.channel.assertQueue(config.amqp_client_request_queue, { durable: false, autoDelete: true })
 
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
-		db.query("SET CHARACTER SET utf8mb4"),
-		cache.query("SET NAMES 'utf8mb4'"),
-		cache.query("SET CHARACTER SET utf8mb4")
+		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, constants, client, db, cache, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
+	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
+
+	const CacheQueueManager = require("./modules/managers/CacheQueueManager")
+	const cacheRequester = new CacheQueueManager()
+	passthrough.cacheRequester = cacheRequester
+
+	client.connector.channel.consume(config.amqp_cache_queue, data => {
+		client.connector.channel.ack(data)
+
+		/** @type {import("./typings").InboundData} */
+		const d = JSON.parse(data.content.toString())
+
+		if (d.from === "GATEWAY") {
+			ThunderStorm.handle(d.data, client)
+		} else if (d.from === "CACHE") {
+			cacheRequester.onMessage(d)
+		}
+	})
 
 	// Utility files
 
@@ -141,5 +145,12 @@ const cache = mysql.createPool({
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
 	require("./commands/status.js")
 
-	client.connector.channel.sendToQueue(config.amqp_client_send_queue, Buffer.from(JSON.stringify({ event: "LOGIN", time: new Date().getTime() })))
+	/** @type {import("./typings").ActionRequestData<"GATEWAY_LOGIN">} */
+	const payload = {
+		event: "GATEWAY_LOGIN",
+		data: {},
+		time: new Date().toUTCString(),
+		cluster: config.cluster_id
+	}
+	client.connector.channel.sendToQueue(config.amqp_client_action_queue, Buffer.from(JSON.stringify(payload)))
 })()

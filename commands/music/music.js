@@ -573,7 +573,7 @@ commands.assign([
 					if (!voiceChannel) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = await utils.sql.get("SELECT channel_id FROM VoiceStates WHERE user_id =? AND guild_id =?", [msg.author.id, msg.guild.id], passthrough.cache)
+					const voiceChannel = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
 					let vcdata
 					// @ts-ignore
 					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)

@@ -12,7 +12,6 @@ process._ptcreated = true
  * @property {import("./constants")} constants
  * @property {import("@amanda/commandmanager")} commands
  * @property {import("mysql2/promise").Pool} db
- * @property {import("mysql2/promise").Pool} cache
  * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent
  * @property {import("./typings").internalEvents} internalEvents
@@ -27,6 +26,8 @@ process._ptcreated = true
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix
+ * @property {import("raincache")<import("raincache/src/connector/AmqpConnector"), import("raincache/src/connector/AmqpConnector")>} rain
+ * @property {import("./modules/managers/CacheQueueManager")} cacheRequester
  */
 
 /**

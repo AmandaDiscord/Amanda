@@ -551,19 +551,19 @@ class Queue {
 		if (this.npMenu) this.npMenu.destroy(true, "text")
 		this.npMenu = new ReactionMenu(this.np, client, [
 			{ emoji: "⏯", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
 				if (!t) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 				this.wrapper.togglePlaying("reaction")
 			} },
 			{ emoji: "⏭", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
 				if (!t) return
 				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
 			{ emoji: "⏹", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await utils.sql.get("SELECT user_id FROM VoiceStates WHERE channel_id =? AND user_id =?", [this.voiceChannel.id, user.id], passthrough.cache)
+				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
 				if (!t) return
 				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()
@@ -579,7 +579,8 @@ class Queue {
 		// @ts-ignore
 		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
-		const count = await utils.sql.get("SELECT COUNT(*) as count FROM VoiceStates WHERE channel_id =? AND bot = 0", this.voiceChannel.id, passthrough.cache).then(d => d["count"])
+		const inGuild = (await passthrough.cacheRequester.request("FILTER_VOICE_STATES", { guild_id: newState.guildID })) || []
+		const count = inGuild.filter(item => item.channel_id === this.voiceChannel.id && item.user && !item.user.bot)
 		if (count == 0 || !count) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()

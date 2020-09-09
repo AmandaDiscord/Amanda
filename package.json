@@ -29,29 +29,29 @@
     "entities": "^2.0.3",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "gc-profiler": "^1.4.1",
-    "genius-lyrics-api": "^3.0.2",
+    "genius-lyrics-api": "^3.0.3",
     "heapdump": "^0.3.15",
     "jimp": "^0.x",
     "lavacord": "github:AmandaDiscord/Lavacord#3c70e3179b98fd49e25816366e378fb22659eaae",
     "mime": "^2.4.6",
     "mixin-deep": "^2.0.1",
     "mysql2": "^2.1.0",
-    "nedb-promises": "^4.0.3",
-    "node-fetch": "^2.6.0",
+    "nedb-promises": "^4.0.4",
+    "node-fetch": "^2.6.1",
     "node-ipc": "^9.1.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "raincache": "github:AmandaDiscord/RainCache#f621adefb95017389562dab4f20788ca87ddc915",
-    "simple-git": "^2.15.0",
+    "raincache": "github:AmandaDiscord/RainCache#301c2b1662503106ebaad3e0437f6e4e63cf5757",
+    "simple-git": "^2.20.1",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#c153a2eaac55c06f86ae8dd6d71c7bff78b36b7d",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#85aec39a0fa5b8792752181571235785ead9371a"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#90a06a4cbbbbc9e8b4f5a42d0b694d4520082705"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^13.9.2",
-    "eslint": "^7.5.0",
+    "eslint": "^7.8.1",
     "tap": "^14.10.8",
-    "typescript": "~3.9.7"
+    "typescript": "~4.0.2"
   }
 }

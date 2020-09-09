@@ -658,7 +658,7 @@ const common = {
 	 */
 	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		const state = await utils.sql.get("SELECT * FROM VoiceStates WHERE guild_id =? AND user_id =?", [msg.guild.id, msg.author.id], passthrough.cache)
+		const state = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
 		if (state) {
 			const cdata = await utils.cacheManager.channels.get(state.channel_id, true, true)
 			return common.verifyVoiceChannel(cdata, msg, lang)
@@ -712,16 +712,13 @@ const common = {
 	 */
 	voiceStateUpdate: async function(state) {
 		if (state.id === client.user.id) return
-		const udata = await utils.cacheManager.users.get(state.id, true, true)
-
 		if (!state.guildID) return // we should only process voice state updates that are in guilds
 
-		await utils.sql.all("DELETE FROM VoiceStates WHERE guild_id =? AND user_id =?", [state.guildID, state.id], passthrough.cache)
+		const udata = await utils.cacheManager.users.get(state.id, true, true)
 
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
-			await utils.sql.all("REPLACE INTO VoiceStates (user_id, guild_id, channel_id, bot) VALUES (?, ?, ?, ?)", [state.id, state.guildID, state.channelID, (udata.bot && udata.bot == 1 ? 1 : 0)], passthrough.cache)
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))

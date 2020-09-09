@@ -99,15 +99,6 @@ export interface InvidiousPlaylist {
 	videos: InvidiousPlaylistVideo[]
 }
 
-export interface Command<T extends Array<any>> {
-	usage: string;
-	description: string;
-	aliases: Array<string>;
-	category: string;
-	example?: string;
-	process(message: Discord.Message, args?: string, ...extras: T): any;
-}
-
 export interface LavalinkInfo {
 	identifier: string;
 	isSeekable: boolean;
@@ -224,4 +215,67 @@ export interface SpotifyImage {
 	height: number;
 	url: string;
 	width: number;
+}
+
+export interface ActionEvents {
+	GATEWAY_LOGIN: any;
+	GATEWAY_STATUS_UPDATE: GatewayStatusUpdateData;
+	GATEWAY_SEND_MESSAGE: import("lavacord").DiscordPacket;
+	CACHE_REQUEST_DATA: CacheRequestData<keyof CacheOperations>;
+	CACHE_SAVE_DATA: CacheSaveData;
+}
+
+export interface GatewayStatusUpdateData {
+	name: string;
+	type: number;
+	url?: string;
+	status?: number;
+}
+
+interface CacheUserData { username?: string; id?: string; discriminator?: string; tag?: string; };
+interface CacheGuildData { name?: string; id?: string; };
+interface CacheChannelData { name?: string; id?: string; guild_id?: string; };
+interface CacheMemberData { nick?: string; guild_id?: string };
+interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; };
+
+export interface CacheOperations {
+	FIND_GUILD: CacheGuildData;
+	FILTER_GUILDS: CacheGuildData & { limit?: number; };
+
+	FIND_CHANNEL: CacheChannelData;
+	FILTER_CHANNELS: CacheChannelData & { limit?: number; };
+
+	FIND_USER: CacheUserData;
+	FILTER_USERS: CacheUserData & { limit?: number; };
+
+	FIND_MEMBER: CacheMemberData & CacheUserData;
+	FILTER_MEMBERS: CacheMemberData & { limit?: number } & CacheUserData;
+
+	FIND_VOICE_STATE: CacheVoiceStateData
+	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };
+}
+
+export interface ActionRequestData<E extends keyof ActionEvents> {
+	event: E;
+	data: ActionEvents[E];
+	time: string;
+	cluster: string;
+}
+
+export interface CacheRequestData<E extends keyof CacheOperations> {
+	op: E;
+	params: CacheOperations[E];
+	threadID: string;
+}
+
+export interface CacheSaveData {
+	type: "GUILD" | "CHANNEL" | "USER" | "MEMBER" | "PERMISSION_OVERWRITES" | "ROLE";
+	data: any;
+}
+
+export interface InboundData {
+	from: "CACHE" | "GATEWAY";
+	data: any;
+	time: string;
+	threadID: string;
 }

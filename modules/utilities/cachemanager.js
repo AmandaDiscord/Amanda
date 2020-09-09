@@ -3,12 +3,9 @@
 const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
-const { client, constants, cache } = passthrough
+const { client, constants, cacheRequester } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
-const sql = require("./sql")
-
-const cacheInserthandler = require("../../cacheHandler")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
 
@@ -61,7 +58,7 @@ const channelManager = {
 	get: async function(id, fetch = false, convert = true) {
 		/** @type {import("@amanda/discordtypings").ChannelData} */
 		// @ts-ignore
-		const d = await sql.get("SELECT * FROM Channels WHERE id =?", id, cache)
+		const d = await client.rain.cache.channel.get(id)
 		if (d) {
 			if (convert) return channelManager.parse(d)
 			else return d
@@ -81,8 +78,6 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
-		// @ts-ignore
-		if (d) await cacheInserthandler.handleChannel(d, d.guild_id)
 		return d || null
 	},
 	/**
@@ -104,7 +99,7 @@ const channelManager = {
 				if (self) return channelManager.get(message.channel.id, true, true).then(data => res(data))
 				else return res(null)
 			} else {
-				const channeldata = await channelManager.filter(string, { guild_id: message.guild.id })
+				const channeldata = await channelManager.filter(string, message.guild.id)
 				if (!channeldata) return res(null)
 				/** @type {Array<Discord.TextChannel | Discord.VoiceChannel>} */
 				const list = []
@@ -138,16 +133,17 @@ const channelManager = {
 	},
 	/**
 	 * @param {string} [search]
-	 * @param {Object.<string, any>} [where]
+	 * @param {string} [guild_id]
 	 * @param {number} [limit]
 	 */
-	filter: async function(search, where = undefined, limit = 10) {
-		const wherekeys = (Object.keys(where || {}) || [])
-		const wherevalues = (Object.values(where || {}) || [])
-
-		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
-
-		const ds = await sql.all(`SELECT * FROM Channels WHERE (id LIKE ? OR name LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
+	filter: async function(search, guild_id, limit = 10) {
+		const payload = {
+			id: search,
+			name: search,
+			limit
+		}
+		if (guild_id) payload.guild_id = guild_id
+		const ds = await cacheRequester.request("FILTER_CHANNELS", payload)
 		return ds
 	},
 	parse: function(channel) {
@@ -179,9 +175,11 @@ const channelManager = {
 	 */
 	getOverridesFor: async function(channel) {
 		const value = { allow: 0x00000000, deny: 0x00000000 }
-		const perms = await sql.get("SELECT * FROM PermissionOverwrites WHERE channel_id = ? AND id =?", [channel.id, client.user.id], cache) // get permission overwrite data from cache
+		const perms = await client.rain.cache.permOverwrite.get(client.user.id, channel.id)
 		if (perms) {
+			// @ts-ignore
 			value.allow |= (perms.allow || 0)
+			// @ts-ignore
 			value.deny |= (perms.deny || 0)
 		}
 		return value
@@ -208,13 +206,14 @@ const channelManager = {
 		if (!clientmemdata) return value
 
 		/** @type {Array<string>} */
-		// @ts-ignore
 		const roles = clientmemdata.roles || []
-		const roledata = await Promise.all(roles.map(role => sql.get("SELECT * FROM Roles WHERE id =? AND guild_id =?", [role, channel.guild_id], cache))) // get all role data from cache
+		const roledata = await Promise.all(roles.map(id => client.rain.cache.role.get(id, channel.guild_id)))
 		if (!roledata) return value
 		for (const role of roledata) {
 			if (!role) continue
+			// @ts-ignore
 			if (role.permissions) {
+				// @ts-ignore
 				value.allow |= role.permissions // OR together the permissions of each role
 			}
 		}
@@ -250,7 +249,7 @@ const userManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await sql.get("SELECT * FROM Users WHERE id =?", id, cache)
+		const d = await client.rain.cache.user.get(id)
 		if (d) {
 			if (convert) return userManager.parse(d)
 			else return d
@@ -269,7 +268,6 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		if (d) await cacheInserthandler.handleUser(d)
 		return d || null
 	},
 	/**
@@ -330,16 +328,10 @@ const userManager = {
 	},
 	/**
 	 * @param {string} search
-	 * @param {Object.<string, any>} [where]
 	 * @param {number} [limit]
 	 */
-	filter: async function(search, where = undefined, limit = 10) {
-		const wherekeys = (Object.keys(where || {}) || [])
-		const wherevalues = (Object.values(where || {}) || [])
-
-		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
-
-		const ds = await sql.all(`SELECT * FROM Users WHERE (id LIKE ? OR username LIKE ?) ${where ? `AND ${wherestatement} ` : ""}LIMIT ${limit}`, [`%${search}%`, `%${search}%`, ...wherevalues], cache)
+	filter: async function(search, limit = 10) {
+		const ds = await cacheRequester.request("FILTER_USERS", { username: search, id: search, discriminator: search, tag: search, limit })
 		return ds
 	},
 	parse: function(user) {
@@ -356,10 +348,10 @@ const memberManager = {
 	 */
 	get: async function(id, guildID, fetch = false, convert = true) {
 		const [md, ud] = await Promise.all([
-			sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [id, guildID], cache),
+			client.rain.cache.member.get(id, guildID),
 			userManager.get(id, true, false)
 		])
-		const roles = await sql.all("SELECT * FROM RoleRelations WHERE user_id =? AND guild_id =?", [id, guildID], cache).then(d => d.map(i => i.id))
+		const roles = []
 		if (md && ud) {
 			if (convert) return memberManager.parse({ roles, ...md }, ud)
 			else return { user: ud, roles, ...md }
@@ -381,8 +373,6 @@ const memberManager = {
 	fetch: async function(id, guildID) {
 		const md = await client._snow.guild.getGuildMember(guildID, id)
 		const ud = await userManager.get(id, true, false)
-		// @ts-ignore
-		if (md && ud) await cacheInserthandler.handleMember(md, ud, guildID, client.user.id)
 		return (md && ud) ? { id: ud.id, guild_id: guildID, user: ud, ...md } : null
 	},
 	/**
@@ -401,20 +391,13 @@ const memberManager = {
 				if (self) return res(message.member)
 				else return res(null)
 			} else {
-				const userdata = await userManager.filter(string)
+				const memdata = await memberManager.filter(string, message.guild.id)
 
 				/** @type {Array<Discord.GuildMember>} */
 				const list = []
-				for (const user of userdata) {
-					if (list.find(item => item.id === user.id) || list.length === 10) continue
-					// @ts-ignore
-					let memdata
-					const d = await sql.get("SELECT * FROM Members WHERE id =? AND guild_id =?", [user.id, message.guild.id], cache)
-					if (d) {
-						memdata = d
-					} else memdata = { nick: null, joined_at: Date.now() }
-					// @ts-ignore
-					list.push(new Discord.GuildMember({ user: user, ...memdata }, client))
+				for (const member of memdata) {
+					if (list.find(item => item.id === member.id) || list.length === 10) continue
+					list.push(new Discord.GuildMember(member, client))
 				}
 				if (list.length == 1) return res(list[0])
 				if (list.length == 0) return res(null)
@@ -439,19 +422,13 @@ const memberManager = {
 	},
 	/**
 	 * @param {string} search
-	 * @param {Object.<string, any>} [where]
+	 * @param {string} [guild_id]
 	 * @param {number} [limit]
 	 */
-	filter: async function(search, where, limit = 10) {
-		const wherekeys = (Object.keys(where || {}) || [])
-		const wherevalues = (Object.values(where || {}) || [])
-
-		const wherestatement = wherekeys.map(item => `${item} =?`).join(" AND ")
-
-		let s = ""
-		if (search) s = `(id LIKE ? OR nick LIKE ?) ${where ? `AND ${wherestatement} ` : ""} `
-
-		const ds = await sql.all(`SELECT * FROM Members WHERE ${s} LIMIT ${limit}`, [...(search ? [`%${search}%`, `%${search}%`] : []), ...wherevalues], cache)
+	filter: async function(search, guild_id, limit = 10) {
+		const payload = { nick: search, username: search, discriminator: search, id: search, tag: search, limit }
+		if (guild_id) payload.guild_id = guild_id
+		const ds = await cacheRequester.request("FILTER_MEMBERS", payload, 60000)
 		return ds
 	},
 	parse: function(member, user) {
@@ -466,7 +443,7 @@ const guildManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await sql.get("SELECT * FROM Guilds WHERE id =?", id, cache)
+		const d = await client.rain.cache.guild.get(id)
 		if (d) {
 			if (convert) return guildManager.parse(d) // fetching all members, channels and userdata took too long so the Guild#channels and Guild#members Maps will be empty
 			else return d
@@ -486,8 +463,6 @@ const guildManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
-		// @ts-ignore
-		if (d) await cacheInserthandler.handleGuild(d)
 		return d || null
 	},
 	parse: function(guild) {

@@ -334,8 +334,7 @@ commands.assign([
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				// Unfortunately, I cant INNER JOIN on these statements since they're different dbs
-				const memIDs = await utils.sql.all("SELECT id FROM Members WHERE guild_id =?", msg.guild.id, passthrough.cache).then(rs => rs.map(r => r.id))
+				const memIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
 				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ?`, [...memIDs, maxPages * itemsPerPage])
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)

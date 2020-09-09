@@ -10,8 +10,10 @@ module.exports = {
 	weeb_api_key: "weeb.sh api key here",
 	genius_access_token: "genius api key here",
 	redis_password: "redis password here",
-	amqp_events_queue: `amqp-events-${cluster_id}`,
-	amqp_client_send_queue: `amqp-client-${cluster_id}`,
+	amqp_gateway_queue: `amqp-gateway-${cluster_id}`,
+	amqp_client_action_queue: `amqp-client-${cluster_id}`,
+	amqp_client_request_queue: `amqp-request-${cluster_id}`,
+	amqp_cache_queue: `amqp-cache-${cluster_id}`,
 
 	// Environment
 	machine_id: "lmao_dev_compname",

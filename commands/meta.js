@@ -149,7 +149,9 @@ commands.assign([
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
 				const qs = passthrough.queues.cache
-				const listeningcount = await utils.sql.get(`SELECT COUNT(*) AS count FROM VoiceStates WHERE bot = 0 AND guild_id IN (${Array(qs.size).fill("?").join(", ")})`, qs.map(q => q.guild.id), passthrough.cache).then(d => d.count)
+				/** @type {Array<Array<import("@amanda/discordtypings").VoiceStateData & { user: import("@amanda/discordtypings").UserData }>>} */
+				const allStates = await Promise.all(qs.map(q => passthrough.cacheRequester.request("FILTER_VOICE_STATES", { channel_id: q.voiceChannel.id, limit: 30 })))
+				const listeningcount = allStates.filter(channelStates => channelStates.filter(s => !s.user.bot)).length
 				embed
 					.addFields([
 						{

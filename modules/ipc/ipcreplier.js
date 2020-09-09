@@ -1,18 +1,6 @@
 // @ts-check
 
-const types = require("../../typings")
-
-class SingleUseMap extends Map {
-	constructor() {
-		super()
-	}
-
-	use(key) {
-		const value = this.get(key)
-		this.delete(key)
-		return value
-	}
-}
+const BaseReplier = require("../structures/BaseReplier")
 
 /**
  * Keywords:
@@ -21,21 +9,10 @@ class SingleUseMap extends Map {
  * - REQUEST: send a message requesting a reply, wait for the reply, then return or operate on it
  * - SEND: send a message without requesting a reply
  */
-class Replier {
+class Replier extends BaseReplier {
 	constructor() {
-		this.outgoing = new SingleUseMap()
-		this.outgoingPersist = new Set()
-
-		/** @type {Map<string, types.IPCReceiver>} */
-		this.receivers = new Map()
-
-		this.lastThreadID = 0
+		super()
 	}
-
-	nextThreadID() {
-		return `${process.pid}_${(++this.lastThreadID)}`
-	}
-
 	async baseOnMessage(raw, replyFn) {
 		const { op, data, threadID } = raw
 		// 5. receive request for stats
@@ -76,31 +53,6 @@ class Replier {
 				else this.outgoing.use(threadID)(data)
 			} else console.error("threadID has no outgoing! This should not happen. Incoming message:", raw)
 		}
-	}
-
-	buildRequest(op, data) {
-		const threadID = this.nextThreadID()
-		return { threadID, op, data }
-	}
-
-	baseRequest(op, data, sendFn) {
-		// 3. request to a client
-		const raw = this.buildRequest(op, data)
-		// actually send
-		sendFn(raw)
-		return new Promise(resolve => {
-			// 4. create a promise whose resolve will be called later when threadID is checked in onMessage.
-			this.outgoing.set(raw.threadID, resolve)
-		})
-	}
-
-	/**
-	 * @param {[string, types.IPCReceiver][]} receivers
-	 */
-	addReceivers(receivers) {
-		receivers.forEach(entry => {
-			this.receivers.set(entry[0], entry[1])
-		})
 	}
 }
 
