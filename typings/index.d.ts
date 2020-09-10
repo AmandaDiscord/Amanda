@@ -250,6 +250,7 @@ export interface CacheOperations {
 
 	FIND_MEMBER: CacheMemberData & CacheUserData;
 	FILTER_MEMBERS: CacheMemberData & { limit?: number } & CacheUserData;
+	GET_USER_GUILDS: { id: string; };
 
 	FIND_VOICE_STATE: CacheVoiceStateData
 	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };

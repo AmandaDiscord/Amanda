@@ -2,6 +2,7 @@
 
 const ipc = require("node-ipc")
 const Server = require("node-ipc/dao/socketServer")
+const Discord = require("discord.js")
 
 /**
  * original ipc server doesn't have complete typings
@@ -39,7 +40,12 @@ class IPC {
 				const {clientID, total, clusterID} = data
 				console.log(`Socket identified as ${clusterID}, total of ${total} shards (${clientID})`)
 				this.clientID = clientID
-				this.totalShards = total
+				this.totalShards = this.totalShards ? this.totalShards + total : total
+				if (!this.shardsPerCluster) {
+					/** @type {Map<string, number>} */
+					this.shardsPerCluster = new Map()
+				}
+				this.shardsPerCluster.set(clusterID, total)
 				this.clusters.set(clusterID, socket)
 			})
 			// @ts-ignore
@@ -48,6 +54,10 @@ class IPC {
 				this.clusters.forEach((socket, id) => {
 					if (socket == dsocket) {
 						this.clusters.delete(id)
+						if (this.shardsPerCluster.get(id)) {
+							this.totalShards -= this.shardsPerCluster.get(id)
+							this.shardsPerCluster.delete(id)
+						}
 						disconnected.push(id)
 					}
 				})
@@ -60,10 +70,10 @@ class IPC {
 		this.server.start()
 
 		/**
-		 * Map shard IDs to their IPC sockets.
-		 * @type {Map<number, any>}
+		 * Map cluster IDs to their IPC sockets.
+		 * @type {Discord.Collection<string, any>}
 		 */
-		this.clusters = new Map()
+		this.clusters = new Discord.Collection()
 		this.totalShards = 1
 
 		this.replier = null

@@ -431,9 +431,8 @@ const rain = new RainCache({
 				/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string, limit?: number }} */
 				const query = typed.data.params || { limit: 10 }
 				/** @type {Array<string>} */
-				let members
+				let members = []
 				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
-				else members = await rain.cache.member.getIndexMembers()
 				const batchLimit = 50
 				let pass = 1
 				let passing = true
@@ -449,7 +448,7 @@ const rain = new RainCache({
 
 					let mems
 					if (query.guild_id) mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
-					else mems = await Promise.all(batch.map(id => rain.cache.member.get(id)))
+					else mems = []
 
 					for (const member of mems) {
 						if (!passing) continue
@@ -491,6 +490,36 @@ const rain = new RainCache({
 						}
 					}
 					pass++
+				}
+				payload.data = matched
+
+			} else if (typed.data.op === "GET_USER_GUILDS") {
+				/** @type {{ id: string }} */
+				// @ts-ignore
+				const query = typed.data.params || {}
+
+				const guilds = await rain.cache.guild.getIndexMembers()
+				const batchLimit = 100
+				let pass = 1
+				let passing = true
+				const matched = []
+				if (query.id) {
+
+					while (passing) {
+						const starting = (batchLimit * pass) - batchLimit
+						const batch = guilds.slice(starting, starting + batchLimit)
+
+						if (batch.length === 0) {
+							passing = false
+							continue
+						}
+
+						/** @type {Array<[string, boolean]>} */
+						// @ts-ignore
+						const indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
+						indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
+						pass++
+					}
 				}
 				payload.data = matched
 

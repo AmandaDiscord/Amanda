@@ -65,8 +65,9 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {string} guildID
 	 */
-	REPLY_GET_GUILD(guildID) {
-		const guild = undefined
+	async REPLY_GET_GUILD(guildID) {
+		const guild = await utils.cacheManager.guilds.get(guildID, true, false)
+		// @ts-ignore
 		if (guild) return filterGuild(guild)
 		else return null
 	}
@@ -76,20 +77,22 @@ class ClientReplier extends Replier {
 	 * @param {string} input.userID
 	 * @param {boolean} input.np
 	 */
-	REPLY_GET_DASH_GUILDS({ userID, np }) {
+	async REPLY_GET_DASH_GUILDS({ userID, np }) {
 		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
-		for (const guild of []) {
-			if (guild.members.cache.has(userID)) {
-				let isNowPlaying = false
-				if (np) {
-					if (manager && manager.cache.has(guild.id)) isNowPlaying = true
-					if (guild.members.cache.get(userID).voice.channelID) isNowPlaying = true
-				}
-				if (isNowPlaying) npguilds.push(filterGuild(guild))
-				else guilds.push(filterGuild(guild))
+		const gs = await passthrough.cacheRequester.request("GET_USER_GUILDS", { id: userID })
+		for (const guild of gs) {
+			let isNowPlaying = false
+			if (np) {
+				if (manager && manager.cache.has(guild)) isNowPlaying = true
+				if (await client.rain.cache.voiceState.get(userID, guild)) isNowPlaying = true
 			}
+			const g = await utils.cacheManager.guilds.get(guild, true, false)
+			// @ts-ignore
+			if (isNowPlaying) npguilds.push(filterGuild(g))
+			// @ts-ignore
+			else guilds.push(filterGuild(g))
 		}
 		return { guilds, npguilds }
 	}
@@ -99,10 +102,12 @@ class ClientReplier extends Replier {
 	 * @param {string} input.userID
 	 * @param {string} input.guildID
 	 */
-	REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
-		const guild = undefined
+	async REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
+		const guild = await utils.cacheManager.guilds.get(guildID, true, false)
 		if (!guild) return null
-		if (!guild.members.cache.has(userID)) return null
+		const member = await client.rain.cache.member.isIndexed(userID, guildID)
+		if (!member) return null
+		// @ts-ignore
 		return filterGuild(guild)
 	}
 

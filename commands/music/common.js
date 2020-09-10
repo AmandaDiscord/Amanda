@@ -713,20 +713,23 @@ const common = {
 	voiceStateUpdate: async function(state) {
 		if (state.id === client.user.id) return
 		if (!state.guildID) return // we should only process voice state updates that are in guilds
-
-		const udata = await utils.cacheManager.users.get(state.id, true, true)
+		const queues = passthrough.queues
+		const queue = queues.cache.get(state.guildID)
 
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
+			const mdata = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
+			if (mdata) {
+				if (queue) queue.listeners.set(state.id, mdata)
+			}
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))
+		} else {
+			if (queue) queue.listeners.delete(state.id)
 		}
 
-		const queues = passthrough.queues
-
-		const queue = queues.cache.get(state.guildID)
 		if (queue) queue.voiceStateUpdate(state)
 	}
 }
