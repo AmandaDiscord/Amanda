@@ -17,7 +17,7 @@
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#c4532138417583475714ff357c03bbc93e207b8e",
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
-    "@amanda/lang": "github:AmandaDiscord/Lang#3b0b66fc0bfb4dcd6ee70f5df98cc92342f2bbe9",
+    "@amanda/lang": "github:AmandaDiscord/Lang#9565b306594c217f87a42ae9a5dd729428163261",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#73d3d933b74d8cd7bbf5653058458f9c2429812c",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
@@ -45,7 +45,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#c153a2eaac55c06f86ae8dd6d71c7bff78b36b7d",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#90a06a4cbbbbc9e8b4f5a42d0b694d4520082705"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#a22fa66bd8437fc42e38a347f05362f42e4eb234"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",

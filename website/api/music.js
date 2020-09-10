@@ -4,7 +4,7 @@ const passthrough = require("../passthrough")
 
 const utils = require("../modules/utilities")
 /** typescript is stupid */
-const UpdatingValueCache = utils.UpdatingValueCache
+const UVCProto = utils.UpdatingValueCache.prototype
 
 const opcodes = {
 	"IDENTIFY": 1,
@@ -42,7 +42,7 @@ const { ipc, snow } = passthrough
 
 /** @type {Session[]} */
 const sessions = []
-/** @type {Map<string, UpdatingValueCache>} */
+/** @type {Map<string, UVCProto>} */
 const states = new Map()
 
 function getState(guildID) {

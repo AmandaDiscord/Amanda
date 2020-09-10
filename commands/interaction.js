@@ -258,7 +258,7 @@ const cmds = [
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 			if (isLocal) {
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			}
 
 			// Set up page number
@@ -278,7 +278,6 @@ const cmds = [
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.waifu.prompts.guildOnly, { "username": msg.author.username }))
 				const memberIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
 				rows = await utils.sql.all(`SELECT * FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM waifu WHERE userID IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
