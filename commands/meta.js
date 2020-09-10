@@ -942,10 +942,6 @@ commands.assign([
 		 */
 		async process(msg, suffix, lang) {
 			let embed
-			/**
-			 * @param {Discord.Message} mesg
-			 */
-			const reply = async (mesg) => { if (await utils.cacheManager.channels.typeOf(msg.channel) != "dm") return mesg.channel.send("I sent you a DM") }
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
@@ -1013,11 +1009,7 @@ commands.assign([
 						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
-					try {
-						msg.author.send(embed).then(m => reply(msg))
-					} catch (e) {
-						msg.channel.send(await utils.contentify(msg.channel, embed))
-					}
+					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
@@ -1087,11 +1079,7 @@ commands.assign([
 						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
-					try {
-						msg.author.send(embed).then(m => reply(msg))
-					} catch (e) {
-						msg.channel.send(await utils.contentify(msg.channel, embed))
-					}
+					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else {
 					const command = commands.cache.find(c => c.aliases.includes(suffix))
 					if (command) {
@@ -1133,12 +1121,8 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) embed.setFooter(lang.meta.help.returns.mobile)
-						new Promise(resolve => {
-							msg.author.send(embed).then(resolve).catch(async () => {
-								msg.channel.send(await utils.contentify(msg.channel, embed)).then(resolve)
-							})
-						}).then(message => {
+						if ((await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) embed.setFooter(lang.meta.help.returns.mobile)
+						msg.channel.send(await utils.contentify(msg.channel, embed)).then(message => {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)
 								.setDescription(cat.map(c => {
@@ -1163,11 +1147,7 @@ commands.assign([
 					.setDescription(
 						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${lang.meta.help.returns.main}\n\n${utils.replace(lang.meta.help.returns.info, { "link": constants.invite_link_for_help })}`)
 					.setColor(constants.standard_embed_color)
-				try {
-					msg.author.send(embed).then(m => reply(msg))
-				} catch (e) {
-					msg.channel.send(await utils.contentify(msg.channel, embed)).catch(console.error)
-				}
+				msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
 		}
 	}
