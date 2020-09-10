@@ -860,8 +860,9 @@ commands.assign([
 				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
 				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": `\n${codes.map(c => `\`${c}\``).join(", ")}` }))
 				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
-				const newlang = await utils.getLang(keyID, scope == "self" ? "self" : "guild")
-				return msg.channel.send(lang.configuration.settings.returns.updated)
+				const Lang = require("@amanda/lang")
+				const newlang = Lang[value.replace("-", "_")] || Lang.en_us
+				return msg.channel.send(newlang.configuration.settings.returns.updated)
 			}
 
 			if (setting.type == "boolean") {
