@@ -1,8 +1,13 @@
 const CloudStorm = require("cloudstorm")
+const fetchdefault = require("node-fetch").default
+/** @type {fetchdefault} */
+// @ts-ignore
+const fetch = require("node-fetch")
 
 const AmpqpConnector = require("raincache").Connectors.AmqpConnector
 
 const config = require("./config")
+const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
 
 const Gateway = new CloudStorm.Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
@@ -10,6 +15,10 @@ const Gateway = new CloudStorm.Client(config.bot_token, {
 	shardAmount: config.total_shards,
 	lastShardId: config.shard_list[config.shard_list.length - 1]
 })
+
+const worker = new BaseWorkerServer("gateway", config.redis_password)
+
+const presence = {}
 
 /**
  * @type {import("thunderstorm/typings/internal").InboundDataType<"READY">}
@@ -25,48 +34,73 @@ const connection = new AmpqpConnector({
 	await Gateway.connect()
 	console.log("Gateway initialized.")
 
-	connection.channel.assertQueue(config.amqp_gateway_queue, { durable: false, autoDelete: true })
-	connection.channel.assertQueue(config.amqp_client_action_queue, { durable: false, autoDelete: true })
+	connection.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
 
 	Gateway.on("event", data => {
 		if (data.t === "READY") readyPayload = data
 		// Send data (Gateway -> Cache) (Cache sends data to Client worker)
-		connection.channel.sendToQueue(config.amqp_gateway_queue, Buffer.from(JSON.stringify(data)))
+		const timeoutpromise = new Promise((resolve) => setTimeout(() => resolve(undefined), 5000))
+		const d = JSON.stringify(data)
+
+		Promise.race([
+			timeoutpromise,
+			fetch(`${config.cache_server_protocol}://${config.cache_server_domain}/gateway`, { body: d, headers: { authorization: config.redis_password }, method: "POST" })
+		]).then(res => {
+			if (!res) connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(d))
+		}).catch(() => {
+			connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(d))
+		})
 	})
 
-	connection.channel.consume(config.amqp_client_action_queue, async message => {
-		connection.channel.ack(message)
-		/** @type {import("./typings").ActionRequestData<keyof import("./typings").ActionEvents>} */
-		const data = JSON.parse(message.content.toString())
+	worker.get("/stats", (request, response) => {
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), shards: Object.values(Gateway.shardManager.shards).map(s => s.id) })).end()
+	})
 
-		if (data.event === "GATEWAY_LOGIN") {
-			connection.channel.sendToQueue(config.amqp_gateway_queue, Buffer.from(JSON.stringify(readyPayload)))
-			console.log(`Client logged in at ${data.time ? new Date(data.time).toUTCString() : new Date().toUTCString()}`)
+	worker.get("/login", (request, response) => {
+		console.log(`Client logged in at ${new Date().toUTCString()}`)
+		return response.status(200).send(worker.createDataResponse(readyPayload)).end()
+	})
 
-		} else if (data.event === "GATEWAY_STATUS_UPDATE") {
-			/** @type {import("./typings").ActionRequestData<"GATEWAY_STATUS_UPDATE">} */
-			const typed = data
-			const payload = {}
-			const game = {}
-			if (typed.data.name) game["name"] = typed.data.name
-			if (typed.data.type) game["type"] = typed.data.type || 0
-			if (typed.data.url) game["url"] = typed.data.url
-			if (typed.data.status) payload["status"] = typed.data.status
 
-			if (game.name || game.type || game.url) payload["game"] = game
+	worker.patch("/status-update", async (request, response) => {
+		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
+		/** @type {import("./typings").GatewayStatusUpdateData} */
+		const data = request.body
+		if (!data.name && !data.status && !data.type && !data.url) return response.status(406).send(worker.createErrorResponse("Missing all status update fields")).end()
 
-			for (const shard of Object.values(Gateway.shardManager.shards)) {
-				await shard.statusUpdate(payload)
-				await new Promise((res) => setTimeout(() => res(undefined), 5000))
-			}
+		const payload = {}
+		const game = {}
+		if (data.name) game["name"] = data.name
+		if (data.type === 0 || data.type) game["type"] = data.type || 0
+		if (data.url) game["url"] = data.url
+		if (data.status) payload["status"] = data.status
 
-		} else if (data.event === "GATEWAY_SEND_MESSAGE") {
-			/** @type {import("./typings").ActionRequestData<"GATEWAY_SEND_MESSAGE">} */
-			const typed = data
-			const sid = Number((BigInt(typed.data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
-			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
-			if (shard) shard.connector.betterWs.sendMessage(typed.data)
-			else console.log(`No shard found to send WS Message:\n${require("util").inspect(typed.data, true, 2, true)}`)
+		if (game.name || game.type || game.url) payload["game"] = game
+
+		for (const shard of Object.values(Gateway.shardManager.shards)) {
+			await shard.statusUpdate(payload)
+			await new Promise((res) => setTimeout(() => res(undefined), 5000))
+		}
+
+		Object.assign(presence, payload)
+
+		response.status(200).send(worker.createDataResponse(presence)).end()
+	})
+
+
+	worker.post("/send-message", async (request, response) => {
+		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
+		/** @type {import("lavacord").DiscordPacket} */
+		const data = request.body
+
+		const sid = Number((BigInt(data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
+		const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
+		if (shard) {
+			await shard.connector.betterWs.sendMessage(data).catch(() => response.status(500).send(worker.createErrorResponse("Unable to send message")).end())
+			response.status(200).send(worker.createDataResponse("Message sent")).end()
+		} else {
+			console.log(`No shard found to send WS Message:\n${require("util").inspect(data, true, 2, true)}`)
+			response.status(500).send(worker.createErrorResponse("Unable to send message")).end()
 		}
 	})
 })().catch(console.error)

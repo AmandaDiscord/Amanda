@@ -579,7 +579,7 @@ class Queue {
 		// @ts-ignore
 		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		// Detect number of users left in channel
-		const inGuild = (await passthrough.cacheRequester.request("FILTER_VOICE_STATES", { guild_id: newState.guildID })) || []
+		const inGuild = (await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: newState.guildID } })) || []
 		const count = inGuild.filter(item => item.channel_id === this.voiceChannel.id && item.user && !item.user.bot)
 		if (count == 0 || !count) {
 			if (!this.voiceLeaveTimeout.isActive) {

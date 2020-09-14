@@ -6,6 +6,7 @@ const AmpqpConnector = RainCache.Connectors.AmqpConnector
 const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
 
 const config = require("./config")
+const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
 
 const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`
@@ -22,627 +23,723 @@ const rain = new RainCache({
 		})
 	},
 	debug: false
-}, connection, connection);
+}, connection, connection)
+
+const worker = new BaseWorkerServer("cache", config.redis_password);
 
 (async () => {
 	await rain.initialize()
 	console.log("Cache initialized.")
 
-	connection.channel.assertQueue(config.amqp_gateway_queue, { durable: false, autoDelete: true })
-	connection.channel.assertQueue(config.amqp_cache_queue, { durable: false, autoDelete: true })
-	connection.channel.assertQueue(config.amqp_client_request_queue, { durable: false, autoDelete: true })
+	connection.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
 
-	connection.channel.consume(config.amqp_gateway_queue, async message => {
-		connection.channel.ack(message)
-
-		/** @type {import("thunderstorm/typings/internal").InboundDataType<keyof import("thunderstorm/typings/internal").CloudStormEventDataTable>} */
-		const data = JSON.parse(message.content.toString())
-		await handleCache(data)
-		/** @type {import("./typings").InboundData} */
-		// @ts-ignore
-		const payload = {
-			from: "GATEWAY",
-			data: data,
-			time: new Date().toUTCString()
-		}
-		connection.channel.sendToQueue(config.amqp_cache_queue, Buffer.from(JSON.stringify(payload)))
+	worker.get("/stats", (request, response) => {
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime() })).end()
 	})
 
-	connection.channel.consume(config.amqp_client_request_queue, async message => {
-		connection.channel.ack(message)
+	worker.post("/request", async (request, response) => {
+		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
+		/** @type {import("./typings").CacheRequestData<keyof import("./typings").CacheOperations>} */
+		const data = request.body
 
-		/** @type {import("./typings").ActionRequestData<keyof import("./typings").ActionEvents>} */
-		const data = JSON.parse(message.content.toString())
+		if (!data.op) return response.status(400).send(worker.createErrorResponse("No op in payload")).end()
 
+		function sendInternalError(error) {
+			return response.status(500).send(worker.createErrorResponse(error)).end()
+		}
 
-		if (data.event === "CACHE_REQUEST_DATA") {
-			/** @type {import("./typings").ActionRequestData<"CACHE_REQUEST_DATA">} */
+		if (data.op === "FIND_GUILD") {
+			/** @type {{ id?: string, name?: string }} */
 			// @ts-ignore
-			const typed = data
-
-			/** @type {import("./typings").InboundData} */
-			// @ts-ignore
-			const payload = {
-				from: "CACHE"
+			const query = data.params || {}
+			let members
+			try {
+				members = await rain.cache.guild.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
 			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			let match
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
 
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
 
-			if (typed.data.op === "FIND_GUILD") {
-				/** @type {{ id?: string, name?: string }} */
-				// @ts-ignore
-				const query = typed.data.params || {}
-				const members = await rain.cache.guild.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				let match
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+				let guilds
+				try {
+					guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
 
-					if (batch.length === 0) {
-						passing = false
+				for (const guild of guilds) {
+					if (match) continue
+					const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
+
+					if (query.id && obj.id === query.id) {
+						end()
+						continue
+					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					const guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
-
-					for (const guild of guilds) {
-						if (match) continue
-						const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
-
-						if (query.id && obj.id === query.id) {
-							end()
-							continue
-						} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							match = obj
-							passing = false
-						}
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						match = obj
+						passing = false
 					}
-					pass++
 				}
-				payload.data = match || null
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(match)).end()
 
-			} else if (typed.data.op === "FILTER_GUILDS") {
-				/** @type {{ id?: string, name?: string, limit?: number }} */
-				// @ts-ignore
-				const query = typed.data.params || { limit: 10 }
-				const members = await rain.cache.guild.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				const matched = []
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+		} else if (data.op === "FILTER_GUILDS") {
+			/** @type {{ id?: string, name?: string, limit?: number }} */
+			// @ts-ignore
+			const query = data.params || { limit: 10 }
+			let members
+			try {
+				members = await rain.cache.guild.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
 
-					if (batch.length === 0) {
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let guilds
+				try {
+					guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const guild of guilds) {
+					if (!passing) continue
+					if (query.limit && matched.length === query.limit) {
 						passing = false
 						continue
 					}
+					const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
 
-					const guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
-
-					for (const guild of guilds) {
-						if (!passing) continue
-						if (query.limit && matched.length === query.limit) {
-							passing = false
-							continue
-						}
-						const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
-
-						if (!query.id && !query.name) {
-							end()
-							continue
-						} else if (obj.id === query.id) {
-							end()
-							continue
-						} else if (obj.name === (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							matched.push(obj)
-						}
-					}
-					pass++
-				}
-				payload.data = matched
-
-
-			} else if (typed.data.op === "FIND_CHANNEL") {
-				/** @type {{ id?: string, name?: string, guild_id?: string }} */
-				const query = typed.data.params || {}
-				const members = await rain.cache.channel.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				let match
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
-
-					if (batch.length === 0) {
-						passing = false
+					if (!query.id && !query.name) {
+						end()
+						continue
+					} else if (obj.id === query.id) {
+						end()
+						continue
+					} else if (obj.name === (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					const channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
-
-					for (const channel of channels) {
-						if (match) continue
-						const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
-
-						if (query.guild_id && obj.guild_id != query.guild_id) continue
-
-						if (query.id && obj.id === query.id) {
-							end()
-							continue
-						} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							match = obj
-							passing = false
-						}
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push(obj)
 					}
-					pass++
 				}
-				payload.data = match || null
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
 
-			} else if (typed.data.op === "FILTER_CHANNELS") {
-				/** @type {{ id?: string, name?: string, guild_id?: string, limit?: number }} */
-				const query = typed.data.params || { limit: 10 }
-				const members = await rain.cache.channel.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				const matched = []
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
 
-					if (batch.length === 0) {
-						passing = false
+		} else if (data.op === "FIND_CHANNEL") {
+			/** @type {{ id?: string, name?: string, guild_id?: string }} */
+			const query = data.params || {}
+			let members
+			try {
+				members = await rain.cache.channel.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			let match
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let channels
+				try {
+					channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
+				} catch(e) {
+					return sendInternalError(e)
+				}
+
+				for (const channel of channels) {
+					if (match) continue
+					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
+
+					if (query.guild_id && obj.guild_id != query.guild_id) continue
+
+					if (query.id && obj.id === query.id) {
+						end()
+						continue
+					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					const channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
-
-					for (const channel of channels) {
-						if (!passing) continue
-						if (query.limit && matched.length === query.limit) {
-							passing = false
-							continue
-						}
-						const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
-
-						if (query.guild_id && obj.guild_id != query.guild_id) continue
-
-						if (!query.id && !query.name && !query.guild_id) {
-							end()
-							continue
-						} if (query.id && obj.id === query.id) {
-							end()
-							continue
-						} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							matched.push(obj)
-						}
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						match = obj
+						passing = false
 					}
-					pass++
 				}
-				payload.data = matched
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(match)).end()
 
+		} else if (data.op === "FILTER_CHANNELS") {
+			/** @type {{ id?: string, name?: string, guild_id?: string, limit?: number }} */
+			const query = data.params || { limit: 10 }
+			let members
+			try {
+				members = await rain.cache.channel.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
 
-			} else if (typed.data.op === "FIND_USER") {
-				/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string }} */
-				// @ts-ignore
-				const query = typed.data.params || {}
-				const members = await rain.cache.user.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				let match
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
 
-					if (batch.length === 0) {
+				let channels
+				try {
+					channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
+				} catch(e) {
+					return sendInternalError(e)
+				}
+
+				for (const channel of channels) {
+					if (!passing) continue
+					if (query.limit && matched.length === query.limit) {
 						passing = false
 						continue
 					}
+					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
 
-					const users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
+					if (query.guild_id && obj.guild_id != query.guild_id) continue
 
-					for (const user of users) {
-						if (match) continue
-						const obj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (query.id && obj.id === query.id) {
-							end()
-							continue
-						} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-							end()
-							continue
-						} else if (query.discriminator && obj.discriminator === query.discriminator) {
-							end()
-							continue
-						} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							match = obj
-							passing = false
-						}
-					}
-					pass++
-				}
-				payload.data = match || null
-
-			} else if (typed.data.op === "FILTER_USERS") {
-				/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, limit?: number }} */
-				// @ts-ignore
-				const query = typed.data.params || { limit: 10 }
-				const members = await rain.cache.user.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				const matched = []
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
-
-					if (batch.length === 0) {
-						passing = false
+					if (!query.id && !query.name && !query.guild_id) {
+						end()
+						continue
+					} if (query.id && obj.id === query.id) {
+						end()
+						continue
+					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					const users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
-
-					for (const user of users) {
-						if (!passing) continue
-						if (query.limit && matched.length === query.limit) {
-							passing = false
-							continue
-						}
-						const obj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (!query.id && !query.username && !query.discriminator && !query.tag) {
-							end()
-							continue
-						} else if (query.id && obj.id === query.id) {
-							end()
-							continue
-						} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-							end()
-							continue
-						} else if (query.discriminator && obj.discriminator === query.discriminator) {
-							end()
-							continue
-						} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							matched.push(obj)
-						}
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push(obj)
 					}
-					pass++
 				}
-				payload.data = matched
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
 
 
-			} else if (typed.data.op === "FIND_MEMBER") {
-				/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string }} */
-				const query = typed.data.params || {}
-				/** @type {Array<string>} */
-				let members
+		} else if (data.op === "FIND_USER") {
+			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string }} */
+			// @ts-ignore
+			const query = data.params || {}
+			let members
+			try {
+				members = await rain.cache.user.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			let match
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let users
+				try {
+					users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const user of users) {
+					if (match) continue
+					const obj = user && user.boundObject ? user.boundObject : (user || {})
+
+					if (query.id && obj.id === query.id) {
+						end()
+						continue
+					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
+						end()
+						continue
+					} else if (query.discriminator && obj.discriminator === query.discriminator) {
+						end()
+						continue
+					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
+						end()
+						continue
+					} else {
+						continue
+					}
+
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						match = obj
+						passing = false
+					}
+				}
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(match)).end()
+
+		} else if (data.op === "FILTER_USERS") {
+			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, limit?: number }} */
+			// @ts-ignore
+			const query = data.params || { limit: 10 }
+			let members
+			try {
+				members = await rain.cache.user.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let users
+				try {
+					users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const user of users) {
+					if (!passing) continue
+					if (query.limit && matched.length === query.limit) {
+						passing = false
+						continue
+					}
+					const obj = user && user.boundObject ? user.boundObject : (user || {})
+
+					if (!query.id && !query.username && !query.discriminator && !query.tag) {
+						end()
+						continue
+					} else if (query.id && obj.id === query.id) {
+						end()
+						continue
+					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
+						end()
+						continue
+					} else if (query.discriminator && obj.discriminator === query.discriminator) {
+						end()
+						continue
+					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
+						end()
+						continue
+					} else {
+						continue
+					}
+
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push(obj)
+					}
+				}
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
+
+
+		} else if (data.op === "FIND_MEMBER") {
+			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string }} */
+			const query = data.params || {}
+			let members
+			try {
 				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
 				else members = await rain.cache.member.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				let match
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			let match
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
 
-					if (batch.length === 0) {
-						passing = false
-						continue
-					}
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
 
-					let mems
+				let mems
+				try {
 					if (query.guild_id) mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
 					else mems = await Promise.all(batch.map(id => rain.cache.member.get(id)))
-
-					for (const member of mems) {
-						if (match) continue
-						const mobj = member && member.boundObject ? member.boundObject : (member || {})
-						const user = await rain.cache.user.get(mobj.id)
-						const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (query.guild_id && mobj.guild_id != query.guild_id) continue
-
-						if (query.id && mobj.id === query.id) {
-							end()
-							continue
-						} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-							end()
-							continue
-						} else if (query.discriminator && uobj.discriminator === query.discriminator) {
-							end()
-							continue
-						} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-							end()
-							continue
-						} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							match = { user: uobj, ...mobj }
-							passing = false
-						}
-					}
-					pass++
+				} catch (e) {
+					return sendInternalError(e)
 				}
-				payload.data = match || null
 
-			} else if (typed.data.op === "FILTER_MEMBERS") {
-				/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string, limit?: number }} */
-				const query = typed.data.params || { limit: 10 }
-				/** @type {Array<string>} */
-				let members = []
-				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				const matched = []
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+				for (const member of mems) {
+					if (match) continue
+					const mobj = member && member.boundObject ? member.boundObject : (member || {})
+					const user = await rain.cache.user.get(mobj.id)
+					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
-					if (batch.length === 0) {
-						passing = false
+					if (query.guild_id && mobj.guild_id != query.guild_id) continue
+
+					if (query.id && mobj.id === query.id) {
+						end()
+						continue
+					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
+						end()
+						continue
+					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
+						end()
+						continue
+					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
+						end()
+						continue
+					} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					let mems
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						match = { user: uobj, ...mobj }
+						passing = false
+					}
+				}
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(match)).end()
+
+		} else if (data.op === "FILTER_MEMBERS") {
+			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string, limit?: number }} */
+			const query = data.params || { limit: 10 }
+			let members = []
+			try {
+				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let mems
+				try {
 					if (query.guild_id) mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
 					else mems = []
-
-					for (const member of mems) {
-						if (!passing) continue
-						if (query.limit && matched.length === query.limit) {
-							passing = false
-							continue
-						}
-						const mobj = member && member.boundObject ? member.boundObject : (member || {})
-						const user = await rain.cache.user.get(mobj.id)
-						const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (query.guild_id && mobj.guild_id != query.guild_id) continue
-
-						if (!query.id && !query.username && !query.discriminator && !query.tag && !query.guild_id && !query.nick) {
-							end()
-							continue
-						} if (query.id && mobj.id === query.id) {
-							end()
-							continue
-						} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-							end()
-							continue
-						} else if (query.discriminator && uobj.discriminator === query.discriminator) {
-							end()
-							continue
-						} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-							end()
-							continue
-						} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							matched.push({ user: uobj, ...mobj })
-						}
-					}
-					pass++
+				} catch (e) {
+					return sendInternalError(e)
 				}
-				payload.data = matched
 
-			} else if (typed.data.op === "GET_USER_GUILDS") {
-				/** @type {{ id: string }} */
-				// @ts-ignore
-				const query = typed.data.params || {}
-
-				const guilds = await rain.cache.guild.getIndexMembers()
-				const batchLimit = 100
-				let pass = 1
-				let passing = true
-				const matched = []
-				if (query.id) {
-
-					while (passing) {
-						const starting = (batchLimit * pass) - batchLimit
-						const batch = guilds.slice(starting, starting + batchLimit)
-
-						if (batch.length === 0) {
-							passing = false
-							continue
-						}
-
-						/** @type {Array<[string, boolean]>} */
-						// @ts-ignore
-						const indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
-						indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
-						pass++
-					}
-				}
-				payload.data = matched
-
-
-			} else if (typed.data.op === "FIND_VOICE_STATE") {
-				/** @type {{ channel_id?: string, user_id?: string, guild_id?: string }} */
-				// @ts-ignore
-				const query = typed.data.params || {}
-				/** @type {Array<string>} */
-				const members = await rain.cache.voiceState.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				let match
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
-
-					if (batch.length === 0) {
+				for (const member of mems) {
+					if (!passing) continue
+					if (query.limit && matched.length === query.limit) {
 						passing = false
 						continue
 					}
-
-					const states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
-
-					for (const state of states) {
-						if (match) continue
-						const sobj = state && state.boundObject ? state.boundObject : (state || {})
-						const user = await rain.cache.user.get(state.user_id)
-						const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (query.guild_id && sobj.guild_id != query.guild_id) continue
-
-						if (query.channel_id && sobj.channel_id === query.channel_id) {
-							end()
-							continue
-						} else if (query.user_id && sobj.user_id === query.user_id) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							match = { user: uobj, ...sobj }
-							passing = false
-						}
+					const mobj = member && member.boundObject ? member.boundObject : (member || {})
+					let user
+					try {
+						user = await rain.cache.user.get(mobj.id)
+					} catch (e) {
+						return sendInternalError(e)
 					}
-					pass++
-				}
-				payload.data = match || null
+					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
-			} else if (typed.data.op === "FILTER_VOICE_STATES") {
-				/** @type {{ channel_id?: string, user_id?: string, guild_id?: string, limit?: number }} */
-				// @ts-ignore
-				const query = typed.data.params || { limit: 10 }
-				/** @type {Array<string>} */
-				const members = await rain.cache.voiceState.getIndexMembers()
-				const batchLimit = 50
-				let pass = 1
-				let passing = true
-				const matched = []
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = members.slice(starting, starting + batchLimit)
+					if (query.guild_id && mobj.guild_id != query.guild_id) continue
 
-					if (batch.length === 0) {
-						passing = false
+					if (!query.id && !query.username && !query.discriminator && !query.tag && !query.guild_id && !query.nick) {
+						end()
+						continue
+					} if (query.id && mobj.id === query.id) {
+						end()
+						continue
+					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
+						end()
+						continue
+					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
+						end()
+						continue
+					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
+						end()
+						continue
+					} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
+						end()
+						continue
+					} else {
 						continue
 					}
 
-					const states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
-
-					for (const state of states) {
-						if (!passing) continue
-						if (query.limit && matched.length === query.limit) {
-							passing = false
-							continue
-						}
-						if (!state) continue
-						const sobj = state && state.boundObject ? state.boundObject : (state || {})
-						const user = await rain.cache.user.get(sobj.user_id)
-						const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-						if (query.guild_id && sobj.guild_id != query.guild_id) continue
-
-						if (!query.channel_id && !query.user_id) {
-							end()
-							continue
-						} if (query.channel_id && sobj.channel_id === query.channel_id) {
-							end()
-							continue
-						} else if (query.user_id && sobj.user_id === query.user_id) {
-							end()
-							continue
-						} else {
-							continue
-						}
-
-						// eslint-disable-next-line no-inner-declarations
-						function end() {
-							matched.push({ user: uobj, ...sobj })
-						}
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push({ user: uobj, ...mobj })
 					}
-					pass++
 				}
-				payload.data = matched
-
+				pass++
 			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
 
-
-			payload.time = new Date().toUTCString()
-			payload.threadID = typed.data.threadID
-			connection.channel.sendToQueue(config.amqp_cache_queue, Buffer.from(JSON.stringify(payload)))
-
-		} else if (data.event === "CACHE_SAVE_DATA") {
-			/** @type {import("./typings").ActionRequestData<"CACHE_SAVE_DATA">} */
+		} else if (data.op === "GET_USER_GUILDS") {
+			/** @type {{ id: string }} */
 			// @ts-ignore
-			const typed = data.data
+			const query = data.params || {}
+
+			let guilds
+			try {
+				guilds = await rain.cache.guild.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 100
+			let pass = 1
+			let passing = true
+			const matched = []
+			if (query.id) {
+
+				while (passing) {
+					const starting = (batchLimit * pass) - batchLimit
+					const batch = guilds.slice(starting, starting + batchLimit)
+
+					if (batch.length === 0) {
+						passing = false
+						continue
+					}
+
+					/** @type {Array<[string, boolean]>} */
+					let indexed
+					try {
+						// @ts-ignore
+						indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
+					} catch (e) {
+						return sendInternalError(e)
+					}
+					indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
+					pass++
+				}
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
+
+
+		} else if (data.op === "FIND_VOICE_STATE") {
+			/** @type {{ channel_id?: string, user_id?: string, guild_id?: string }} */
+			// @ts-ignore
+			const query = data.params || {}
+			let members
+			try {
+				members = await rain.cache.voiceState.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			let match
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let states
+				try {
+					states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const state of states) {
+					if (match) continue
+					const sobj = state && state.boundObject ? state.boundObject : (state || {})
+					let user
+					try {
+						user = await rain.cache.user.get(state.user_id)
+					} catch (e) {
+						return sendInternalError(e)
+					}
+					const uobj = user && user.boundObject ? user.boundObject : (user || {})
+
+					if (query.guild_id && sobj.guild_id != query.guild_id) continue
+
+					if (query.channel_id && sobj.channel_id === query.channel_id) {
+						end()
+						continue
+					} else if (query.user_id && sobj.user_id === query.user_id) {
+						end()
+						continue
+					} else {
+						continue
+					}
+
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						match = { user: uobj, ...sobj }
+						passing = false
+					}
+				}
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(match)).end()
+
+		} else if (data.op === "FILTER_VOICE_STATES") {
+			/** @type {{ channel_id?: string, user_id?: string, guild_id?: string, limit?: number }} */
+			// @ts-ignore
+			const query = data.params || { limit: 10 }
+			let members
+			try {
+				members = await rain.cache.voiceState.getIndexMembers()
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let states
+				try {
+					states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const state of states) {
+					if (!passing) continue
+					if (query.limit && matched.length === query.limit) {
+						passing = false
+						continue
+					}
+					if (!state) continue
+					const sobj = state && state.boundObject ? state.boundObject : (state || {})
+					let user
+					try {
+						user = await rain.cache.user.get(sobj.user_id)
+					} catch (e) {
+						return sendInternalError(e)
+					}
+					const uobj = user && user.boundObject ? user.boundObject : (user || {})
+
+					if (query.guild_id && sobj.guild_id != query.guild_id) continue
+
+					if (!query.channel_id && !query.user_id) {
+						end()
+						continue
+					} if (query.channel_id && sobj.channel_id === query.channel_id) {
+						end()
+						continue
+					} else if (query.user_id && sobj.user_id === query.user_id) {
+						end()
+						continue
+					} else {
+						continue
+					}
+
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push({ user: uobj, ...sobj })
+					}
+				}
+				pass++
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
+
 		}
 	})
+
+	worker.post("/gateway", async (request, response) => {
+		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
+		/** @type {import("thunderstorm/typings/internal").InboundDataType<keyof import("thunderstorm/typings/internal").CloudStormEventDataTable>} */
+		const data = request.body
+		await handleCache(data)
+		response.status(200).send(worker.createDataResponse("Cached")).end()
+		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(JSON.stringify(request.body)))
+	})
 })()
+
 
 /**
  * We obviously want to wait for the cache ops to complete because most of the code still runs under the assumption

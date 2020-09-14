@@ -3,7 +3,7 @@
 const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
-const { client, constants, cacheRequester } = passthrough
+const { client, constants } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
 
@@ -144,7 +144,7 @@ const channelManager = {
 			limit
 		}
 		if (guild_id) payload.guild_id = guild_id
-		const ds = await cacheRequester.request("FILTER_CHANNELS", payload)
+		const ds = await passthrough.workers.cache.getData({ op: "FILTER_CHANNELS", params: payload })
 		return ds
 	},
 	parse: function(channel) {
@@ -321,7 +321,7 @@ const userManager = {
 	 * @param {number} [limit]
 	 */
 	filter: async function(search, limit = 10) {
-		const ds = await cacheRequester.request("FILTER_USERS", { username: search, id: search, discriminator: search, tag: search, limit })
+		const ds = await passthrough.workers.cache.getData({ op: "FILTER_USERS", params: { username: search, id: search, discriminator: search, tag: search, limit } })
 		return ds
 	},
 	parse: function(user) {
@@ -418,7 +418,7 @@ const memberManager = {
 	filter: async function(search, guild_id, limit = 10) {
 		const payload = { nick: search, username: search, discriminator: search, id: search, tag: search, limit }
 		if (guild_id) payload.guild_id = guild_id
-		const ds = await cacheRequester.request("FILTER_MEMBERS", payload, 60000)
+		const ds = await passthrough.workers.cache.getData({ op: "FILTER_MEMBERS", params: payload })
 		return ds
 	},
 	parse: function(member, user) {

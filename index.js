@@ -42,9 +42,7 @@ const db = mysql.createPool({
 
 	await client.rain.initialize()
 	console.log("Client connected to data stream")
-	client.connector.channel.assertQueue(config.amqp_cache_queue, { durable: false, autoDelete: true })
-	client.connector.channel.assertQueue(config.amqp_client_action_queue, { durable: false, autoDelete: true })
-	client.connector.channel.assertQueue(config.amqp_client_request_queue, { durable: false, autoDelete: true })
+	client.connector.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
 
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
@@ -53,21 +51,17 @@ const db = mysql.createPool({
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
 
-	const CacheQueueManager = require("./modules/managers/CacheQueueManager")
-	const cacheRequester = new CacheQueueManager()
-	passthrough.cacheRequester = cacheRequester
+	const CacheRequester = require("./modules/managers/CacheRequester")
+	const GatewayRequester = require("./modules/managers/GatewayRequester")
+	const cache = new CacheRequester()
+	const gateway = new GatewayRequester()
+	passthrough.workers = { cache, gateway }
 
-	client.connector.channel.consume(config.amqp_cache_queue, data => {
+	client.connector.channel.consume(config.amqp_data_queue, data => {
 		client.connector.channel.ack(data)
 
-		/** @type {import("./typings").InboundData} */
 		const d = JSON.parse(data.content.toString())
-
-		if (d.from === "GATEWAY") {
-			ThunderStorm.handle(d.data, client)
-		} else if (d.from === "CACHE") {
-			cacheRequester.onMessage(d)
-		}
+		ThunderStorm.handle(d, client)
 	})
 
 	// Utility files
@@ -145,12 +139,6 @@ const db = mysql.createPool({
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
 	require("./commands/status.js")
 
-	/** @type {import("./typings").ActionRequestData<"GATEWAY_LOGIN">} */
-	const payload = {
-		event: "GATEWAY_LOGIN",
-		data: {},
-		time: new Date().toUTCString(),
-		cluster: config.cluster_id
-	}
-	client.connector.channel.sendToQueue(config.amqp_client_action_queue, Buffer.from(JSON.stringify(payload)))
+	const ready = await gateway.login()
+	ThunderStorm.handle(ready, client)
 })()

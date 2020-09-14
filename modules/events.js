@@ -248,14 +248,7 @@ async function manageReady() {
 			user: client.user.id,
 			shards: config.shard_list.length,
 			send: (packet) => {
-				/** @type {import("../typings").ActionRequestData<"GATEWAY_SEND_MESSAGE">} */
-				const payload = {
-					event: "GATEWAY_SEND_MESSAGE",
-					data: packet,
-					time: new Date().toUTCString(),
-					cluster: config.cluster_id
-				}
-				client.connector.channel.sendToQueue(config.amqp_client_action_queue, Buffer.from(JSON.stringify(payload)))
+				passthrough.workers.gateway.sendMessage(packet)
 			}
 		})
 

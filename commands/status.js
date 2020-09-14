@@ -25,18 +25,12 @@ const activities = {
  */
 function startAnnouncement(duration, message) {
 	clearInterval(updateInterval)
-	/** @type {import("../typings").ActionRequestData<"GATEWAY_STATUS_UPDATE">} */
-	const payload = {
-		event: "GATEWAY_STATUS_UPDATE",
-		data: {
-			name: message,
-			type: 0,
-			url: "https://www.twitch.tv/papiophidian/"
-		},
-		time: new Date().toUTCString(),
-		cluster: config.cluster_id
+	const data = {
+		name: message,
+		type: 0,
+		url: "https://www.twitch.tv/papiophidian/"
 	}
-	client.connector.channel.sendToQueue(config.amqp_client_action_queue, Buffer.from(JSON.stringify(payload)))
+	passthrough.workers.gateway.statusUpdate(data)
 	enqueued = setTimeout(() => {
 		update()
 		updateInterval = setInterval(() => update(), updateTime)
@@ -168,18 +162,12 @@ function update() {
 	// console.log(JSON.stringify(choices, null, 4))
 	const choice = utils.arrayRandom(choices)
 	if (choice) {
-		/** @type {import("../typings").ActionRequestData<"GATEWAY_STATUS_UPDATE">} */
-		const payload = {
-			event: "GATEWAY_STATUS_UPDATE",
-			data: {
-				name: `${choice.message} | ${prefix}help | ${config.cluster_id}`,
-				type: activities[choice.type] || choice.type,
-				url: "https://www.twitch.tv/papiophidian/"
-			},
-			time: new Date().toUTCString(),
-			cluster: config.cluster_id
+		const data = {
+			name: `${choice.message} | ${prefix}help | ${config.cluster_id}`,
+			type: activities[choice.type] || choice.type,
+			url: "https://www.twitch.tv/papiophidian/"
 		}
-		client.connector.channel.sendToQueue(config.amqp_client_action_queue, Buffer.from(JSON.stringify(payload)))
+		passthrough.workers.gateway.statusUpdate(data)
 	} else {
 		console.error("Warning: no status messages available!")
 	}

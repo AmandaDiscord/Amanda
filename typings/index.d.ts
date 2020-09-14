@@ -217,19 +217,20 @@ export interface SpotifyImage {
 	width: number;
 }
 
-export interface ActionEvents {
-	GATEWAY_LOGIN: any;
-	GATEWAY_STATUS_UPDATE: GatewayStatusUpdateData;
-	GATEWAY_SEND_MESSAGE: import("lavacord").DiscordPacket;
-	CACHE_REQUEST_DATA: CacheRequestData<keyof CacheOperations>;
-	CACHE_SAVE_DATA: CacheSaveData;
-}
-
 export interface GatewayStatusUpdateData {
 	name: string;
 	type: number;
 	url?: string;
 	status?: number;
+}
+
+export interface PresenceData {
+	status: number;
+	game?: {
+		name: string;
+		type: number;
+		url?: string;
+	};
 }
 
 interface CacheUserData { username?: string; id?: string; discriminator?: string; tag?: string; };
@@ -239,6 +240,8 @@ interface CacheMemberData { nick?: string; guild_id?: string };
 interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; };
 
 export interface CacheOperations {
+	GET_STATS: any;
+
 	FIND_GUILD: CacheGuildData;
 	FILTER_GUILDS: CacheGuildData & { limit?: number; };
 
@@ -256,27 +259,12 @@ export interface CacheOperations {
 	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };
 }
 
-export interface ActionRequestData<E extends keyof ActionEvents> {
-	event: E;
-	data: ActionEvents[E];
-	time: string;
-	cluster: string;
-}
-
 export interface CacheRequestData<E extends keyof CacheOperations> {
 	op: E;
 	params: CacheOperations[E];
-	threadID: string;
 }
 
 export interface CacheSaveData {
 	type: "GUILD" | "CHANNEL" | "USER" | "MEMBER" | "PERMISSION_OVERWRITES" | "ROLE";
 	data: any;
-}
-
-export interface InboundData {
-	from: "CACHE" | "GATEWAY";
-	data: any;
-	time: string;
-	threadID: string;
 }

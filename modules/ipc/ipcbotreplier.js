@@ -81,7 +81,7 @@ class ClientReplier extends Replier {
 		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
-		const gs = await passthrough.cacheRequester.request("GET_USER_GUILDS", { id: userID })
+		const gs = await passthrough.workers.cache.getData({ op: "GET_USER_GUILDS", params: { id: userID } })
 		for (const guild of gs) {
 			let isNowPlaying = false
 			if (np) {

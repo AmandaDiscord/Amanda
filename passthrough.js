@@ -27,7 +27,7 @@ process._ptcreated = true
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix
  * @property {import("raincache")<import("raincache/src/connector/AmqpConnector"), import("raincache/src/connector/AmqpConnector")>} rain
- * @property {import("./modules/managers/CacheQueueManager")} cacheRequester
+ * @property {{ cache: import("./modules/managers/CacheRequester"), gateway: import("./modules/managers/GatewayRequester") }} workers
  */
 
 /**

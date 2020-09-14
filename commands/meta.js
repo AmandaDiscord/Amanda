@@ -144,13 +144,13 @@ commands.assign([
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
-				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} cluster_` // SC: U+2004 THREE-PER-EM SPACE
+				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} in ${config.cluster_id} cluster_` // SC: U+2004 THREE-PER-EM SPACE
 			}
 			if (suffix.toLowerCase() == "music") {
 				const songsPlayed = periodicHistory.getSize("song_start")
 				const qs = passthrough.queues.cache
 				/** @type {Array<Array<import("@amanda/discordtypings").VoiceStateData & { user: import("@amanda/discordtypings").UserData }>>} */
-				const allStates = await Promise.all(qs.map(q => passthrough.cacheRequester.request("FILTER_VOICE_STATES", { channel_id: q.voiceChannel.id, limit: 30 })))
+				const allStates = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { channel_id: q.voiceChannel.id, limit: 30 } })
 				const listeningcount = allStates.filter(channelStates => channelStates.filter(s => !s.user.bot)).length
 				embed
 					.addFields([
