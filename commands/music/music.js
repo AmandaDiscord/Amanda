@@ -629,7 +629,7 @@ commands.assign([
 	{
 		usage: "<search terms>",
 		description: "Play music and put it next in the queue",
-		aliases: ["insert", "i"],
+		aliases: ["insert"],
 		category: "audio",
 		example: "&insert despacito",
 		process(msg, suffix, lang) {
@@ -708,7 +708,7 @@ commands.assign([
 	},
 	{
 		usage: "None",
-		description: "Toggles repeat mode for the queue",
+		description: "Toggles repeat (queue) mode for the queue",
 		aliases: ["repeat", "loop"],
 		category: "audio",
 		example: "&repeat",
