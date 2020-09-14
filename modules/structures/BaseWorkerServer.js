@@ -3,9 +3,8 @@ const server = express()
 
 const config = require("../../config")
 
-server.use(express.json({ type: ["application/json", "text/plain"] }))
+server.use(express.json({ type: ["application/json", "text/plain"], limit: "50mb" }))
 server.use(express.urlencoded({ extended: true }))
-server.use(express.bodyParser({ limit: "50mb" }))
 
 class BaseWorkerServer {
 	/**
