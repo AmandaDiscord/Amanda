@@ -727,7 +727,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
-		}
+		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
 	})
 
 	worker.post("/gateway", async (request, response) => {
