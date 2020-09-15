@@ -8,7 +8,6 @@ const { client, constants } = passthrough
 const { contentify, createMessageCollector } = require("./discordutils")
 
 const SnowflakeUtil = require("discord.js/src/util/Snowflake")
-const { hasPermission } = require("./sql")
 
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
@@ -466,8 +465,10 @@ const memberManager = {
 		// @ts-ignore
 		else toCheck = permission
 
-		if ((permissions.allow & toCheck) == toCheck) return true
-		if ((permissions.deny & toCheck) == toCheck) return false
+		if (permissions.allow & toCheck) return true
+		else if (permissions.deny & toCheck) return false
+
+		if (!(permissions.allow & toCheck)) return false
 		else return true
 	}
 }
