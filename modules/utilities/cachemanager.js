@@ -300,13 +300,14 @@ const userManager = {
 				const selectmessage = await message.channel.send(await contentify(message.channel, embed))
 				const cb = (newmessage) => {
 					const index = Number(newmessage.content)
-					if (!index || !list[index - 1]) return res(null)
+					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
 					if (message.channel.type != "dm") newmessage.delete().catch(() => {})
 					return res(list[index - 1])
 				}
-				const onFail = async () => {
+				// eslint-disable-next-line no-inner-declarations
+				async function onFail() {
 					embed.setTitle("User selection cancelled").setDescription("").setFooter("")
 					selectmessage.edit(await contentify(selectmessage.channel, embed))
 					return res(null)
@@ -393,14 +394,15 @@ const memberManager = {
 				const embed = new Discord.MessageEmbed().setTitle("Member selection").setDescription(list.map((item, i) => `${i + 1}. ${item.user.tag}`).join("\n")).setFooter(`Type a number between 1 - ${list.length}`).setColor(constants.standard_embed_color)
 				const selectmessage = await message.channel.send(await contentify(message.channel, embed))
 				const cb = (newmessage) => {
-					const index = parseInt(newmessage.content)
-					if (!index || !list[index - 1]) return null
+					const index = Number(newmessage.content)
+					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
 					newmessage.delete().catch(() => {})
 					return res(list[index - 1])
 				}
-				const onFail = async () => {
+				// eslint-disable-next-line no-inner-declarations
+				async function onFail() {
 					embed.setTitle("Member selection cancelled").setDescription("").setFooter("")
 					selectmessage.edit(await contentify(message.channel, embed))
 					return res(null)

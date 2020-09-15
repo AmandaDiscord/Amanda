@@ -576,12 +576,15 @@ class Queue {
 	async voiceStateUpdate(newState) {
 		const lang = await this.getLang()
 		// Update own channel
-		// @ts-ignore
-		if (newState.id == client.user.id && newState.channelID) this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
+		if (newState.id == client.user.id && newState.channelID) {
+			// @ts-ignore
+			this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
+		}
 		// Detect number of users left in channel
+		/** @type {Array<any>} */
 		const inGuild = (await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: newState.guildID } })) || []
 		const count = inGuild.filter(item => item.channel_id === this.voiceChannel.id && item.user && !item.user.bot)
-		if (count == 0 || !count) {
+		if ((count && typeof count === "number" && count == 0) || (count && Array.isArray(count) && count.length == 0) || !count) {
 			if (!this.voiceLeaveTimeout.isActive) {
 				this.voiceLeaveTimeout.run()
 				this.voiceLeaveWarningMessagePromise = this.textChannel.send(utils.replace(lang.audio.music.prompts.noUsersLeft, { "time": this.voiceLeaveTimeout.delay / 1000 }))

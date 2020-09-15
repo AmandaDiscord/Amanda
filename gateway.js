@@ -77,14 +77,14 @@ const connection = new AmpqpConnector({
 
 		if (game.name || game.type || game.url) payload["game"] = game
 
+		Object.assign(presence, payload)
+
+		response.status(200).send(worker.createDataResponse(presence)).end()
+
 		for (const shard of Object.values(Gateway.shardManager.shards)) {
 			await shard.statusUpdate(payload)
 			await new Promise((res) => setTimeout(() => res(undefined), 5000))
 		}
-
-		Object.assign(presence, payload)
-
-		response.status(200).send(worker.createDataResponse(presence)).end()
 	})
 
 
