@@ -150,7 +150,7 @@ commands.assign([
 				const songsPlayed = periodicHistory.getSize("song_start")
 				const qs = passthrough.queues.cache
 				/** @type {Array<Array<import("@amanda/discordtypings").VoiceStateData & { user: import("@amanda/discordtypings").UserData }>>} */
-				const allStates = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { channel_id: q.voiceChannel.id, limit: 30 } })
+				const allStates = await Promise.all(qs.map(q => passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { channel_id: q.voiceChannel.id, limit: 30 } })))
 				const listeningcount = allStates.filter(channelStates => channelStates.filter(s => !s.user.bot)).length
 				embed
 					.addFields([
@@ -188,12 +188,13 @@ commands.assign([
 				const allowed = await utils.sql.hasPermission(msg.author, "eval")
 				if (!allowed) return
 				const ram = process.memoryUsage()
-				profiler.once("gc", info => {
-					const now = process.memoryUsage()
-					return msg.channel.send(`Garbage Collection completed in ${utils.numberComma(info.duration)}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
-				})
-				if (global.gc) global.gc()
-				else return msg.channel.send("The global Garbage Collector variable is not exposed")
+				if (global.gc) {
+					profiler.once("gc", info => {
+						const now = process.memoryUsage()
+						return msg.channel.send(`Garbage Collection completed in ${utils.numberComma(info.duration)}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
+					})
+					global.gc()
+				} else return msg.channel.send("The global Garbage Collector variable is not exposed")
 			} else {
 				const stats = await utils.getOwnStats()
 				const allStats = stats
