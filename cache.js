@@ -820,7 +820,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				"USER": rain.cache.user
 			}
 			try {
-				await methods[type].update(query.data.id, data)
+				await methods[type].update(query.data.id, query.data)
 			} catch (e) {
 				return sendInternalError(e)
 			}
