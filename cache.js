@@ -165,6 +165,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 		} else if (data.op === "FIND_CHANNEL") {
 			/** @type {{ id?: string, name?: string, guild_id?: string }} */
+			// @ts-ignore
 			const query = data.params || {}
 			let members
 			try {
@@ -220,6 +221,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 		} else if (data.op === "FILTER_CHANNELS") {
 			/** @type {{ id?: string, name?: string, guild_id?: string, limit?: number }} */
+			// @ts-ignore
 			const query = data.params || { limit: 10 }
 			let members
 			try {
@@ -279,6 +281,20 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
+
+		} else if (data.op === "GET_USER") {
+			/** @type {{ id: string }} */
+			// @ts-ignore
+			const query = data.params || {}
+			if (!query.id) return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			let user
+			try {
+				user = await rain.cache.user.get(query.id)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const obj = user && user.boundObject ? user.boundObject : (user ? user : null)
+			return response.status(200).send(worker.createDataResponse(obj)).end()
 
 		} else if (data.op === "FIND_USER") {
 			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string }} */
@@ -409,6 +425,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 		} else if (data.op === "FIND_MEMBER") {
 			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string }} */
+			// @ts-ignore
 			const query = data.params || {}
 			let members
 			try {
@@ -477,6 +494,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 		} else if (data.op === "FILTER_MEMBERS") {
 			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string, limit?: number }} */
+			// @ts-ignore
 			const query = data.params || { limit: 10 }
 			let members = []
 			try {
@@ -590,6 +608,67 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
 					pass++
 				}
+			}
+			return response.status(200).send(worker.createDataResponse(matched)).end()
+
+		} else if (data.op === "GET_MEMBERS_IN_ROLE") {
+			/** @type {{ role_id: string, guild_id: string }} */
+			// @ts-ignore
+			const query = data.params || {}
+
+			if (!query.guild_id || !query.role_id) return response.status(400).send(worker.createErrorResponse("Missing guild_id or role_id fields"))
+			let members
+			try {
+				members = await rain.cache.member.getIndexMembers(query.guild_id)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			const batchLimit = 50
+			let pass = 1
+			let passing = true
+			const matched = []
+			while (passing) {
+				const starting = (batchLimit * pass) - batchLimit
+				const batch = members.slice(starting, starting + batchLimit)
+
+				if (batch.length === 0) {
+					passing = false
+					continue
+				}
+
+				let mems
+				try {
+					mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
+				} catch (e) {
+					return sendInternalError(e)
+				}
+
+				for (const member of mems) {
+					if (!passing) continue
+					const mobj = member && member.boundObject ? member.boundObject : (member || {})
+					let user
+					try {
+						user = await rain.cache.user.get(mobj.id)
+					} catch (e) {
+						return sendInternalError(e)
+					}
+					const uobj = user && user.boundObject ? user.boundObject : (user || {})
+
+					if (mobj.guild_id != query.guild_id) continue
+
+					if (mobj.roles.includes(query.role_id)) {
+						end()
+						continue
+					} else {
+						continue
+					}
+
+					// eslint-disable-next-line no-inner-declarations
+					function end() {
+						matched.push({ user: uobj, ...mobj })
+					}
+				}
+				pass++
 			}
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
@@ -727,6 +806,25 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
+
+		} else if (data.op === "SAVE_DATA") {
+			/** @type {import("./typings").CacheSaveData} */
+			// @ts-ignore
+			const query = data.params || {}
+			if (!query.type || !query.data) return response.status(400).send(worker.createErrorResponse("Missing type or data field"))
+			/** @type {import("./typings").CacheSaveData["type"]} */
+			const type = query.type
+			const methods = {
+				"GUILD": rain.cache.guild,
+				"CHANNEL": rain.cache.channel,
+				"USER": rain.cache.user
+			}
+			try {
+				await methods[type].update(query.data.id, data)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			return response.status(200).send(worker.createDataResponse("Saved"))
 		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
 	})
 

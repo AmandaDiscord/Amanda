@@ -36,6 +36,10 @@ h1
 nav
 	background-color: #333
 	display: flex
+	position: sticky
+	position: -webkit-sticky
+	top: 0
+	z-index: 1000
 
 	a.navitem
 		color: #ddd
@@ -132,15 +136,24 @@ a.no-underline
 		justify-self: right
 
 .about
-	@include fatbox
-	max-width: 800px
 	margin-left: auto
 	margin-right: auto
-	font-size: 24px
+	font-size: 20px
+	text-align: center
 
-	*:first-child
-		margin-bottom: 16px
-		color: #111
+.avatar
+	max-width: 96px
+	padding: 10px
+	border-radius: 50%
+	display: inline-block
+	&:hover .avatar-text
+		visibility: visible
+
+	.avatar-text
+		visibility: hidden
+		position: absolute
+
+
 
 .config-overview
 	@include fatbox

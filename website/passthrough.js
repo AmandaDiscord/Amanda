@@ -13,6 +13,7 @@
  * @property {import("./modules/ipcserver")} ipc
  * @property {import("@amanda/reloader")} reloader
  * @property {import("discord-bot-analytics")} analytics
+ * @property {import("../modules/managers/CacheRequester")} cache
  */
 
 /**

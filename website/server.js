@@ -9,12 +9,14 @@ const config = require("../config")
 const dba = require("discord-bot-analytics")
 const Reloader = require("@amanda/reloader")
 const path = require("path")
+const CacheRequester = require("../modules/managers/CacheRequester")
 require("dnscache")({ enable: true })
 
 // Passthrough
 
 const passthrough = require("./passthrough")
 passthrough.config = config
+passthrough.cache = new CacheRequester()
 
 // Reloader
 

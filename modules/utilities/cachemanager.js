@@ -78,6 +78,7 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
+		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "CHANNEL", data: d } })
 		return d || null
 	},
 	/**
@@ -238,8 +239,11 @@ const userManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await client.rain.cache.user.get(id)
+		let d = await client.rain.cache.user.get(id)
 		if (d) {
+			const o = d.boundObject ? d.boundObject : d
+			// @ts-ignore
+			if (!o.username) d = await userManager.fetch(id)
 			if (convert) return userManager.parse(d)
 			else return d
 		} else {
@@ -257,6 +261,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
+		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "USER", data: d } })
 		return d || null
 	},
 	/**
@@ -387,6 +392,7 @@ const memberManager = {
 				const list = []
 				for (const member of memdata) {
 					if (list.find(item => item.id === member.id) || list.length === 10) continue
+					if (!member.user) member.user = await userManager.get(member.id, true, false)
 					list.push(new Discord.GuildMember(member, client))
 				}
 				if (list.length == 1) return res(list[0])
@@ -502,6 +508,7 @@ const guildManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
+		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "GUILD", data: d } })
 		return d || null
 	},
 	parse: function(guild) {

@@ -240,23 +240,25 @@ interface CacheMemberData { nick?: string; guild_id?: string };
 interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; };
 
 export interface CacheOperations {
-	GET_STATS: any;
-
 	FIND_GUILD: CacheGuildData;
 	FILTER_GUILDS: CacheGuildData & { limit?: number; };
 
 	FIND_CHANNEL: CacheChannelData;
 	FILTER_CHANNELS: CacheChannelData & { limit?: number; };
 
+	GET_USER: { id: string; };
 	FIND_USER: CacheUserData;
 	FILTER_USERS: CacheUserData & { limit?: number; };
 
 	FIND_MEMBER: CacheMemberData & CacheUserData;
 	FILTER_MEMBERS: CacheMemberData & { limit?: number } & CacheUserData;
 	GET_USER_GUILDS: { id: string; };
+	GET_MEMBERS_IN_ROLE: { guild_id: string; role_id: string; };
 
 	FIND_VOICE_STATE: CacheVoiceStateData
 	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };
+
+	SAVE_DATA: CacheSaveData;
 }
 
 export interface CacheRequestData<E extends keyof CacheOperations> {
@@ -265,6 +267,6 @@ export interface CacheRequestData<E extends keyof CacheOperations> {
 }
 
 export interface CacheSaveData {
-	type: "GUILD" | "CHANNEL" | "USER" | "MEMBER" | "PERMISSION_OVERWRITES" | "ROLE";
+	type: "GUILD" | "CHANNEL" | "USER";
 	data: any;
 }

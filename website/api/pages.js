@@ -3,7 +3,7 @@
 const types = require("../../typings")
 
 const passthrough = require("../passthrough")
-const { snow, config, ipc } = passthrough
+const { snow, config, ipc, cache } = passthrough
 
 const {render} = require("pinski/plugins")
 
@@ -16,10 +16,10 @@ const validators = require("../modules/validator.js")()
 module.exports = [
 	{
 		route: "/about", methods: ["GET"], code: async () => {
-			await Promise.all(["320067006521147393", "176580265294954507", "405208699313848330"].map(userID =>
-				snow.user.cache.fetch(userID, key => snow.user.getUser(key))
-			))
-			return render(200, "pug/about.pug", {users: snow.user.cache})
+			const devs = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599471049310208" } })
+			const donors = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599593879371796" } })
+			const translators = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "755604509664739439" } })
+			return render(200, "pug/about.pug", {devs, donors, translators})
 		}
 	},
 	{
@@ -33,7 +33,7 @@ module.exports = [
 			const session = await utils.getSession(cookies)
 
 			if (session) {
-				const user = await snow.user.cache.fetchUser(session.userID)
+				const user = await cache.getData({ op: "GET_USER", params: { id: session.userID } })
 				return ipc.replier.requestGetDashGuilds(session.userID, true).then(({guilds, npguilds}) => {
 					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 					const csrfToken = utils.generateCSRF()
