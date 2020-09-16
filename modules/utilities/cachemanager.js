@@ -78,7 +78,7 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
-		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "CHANNEL", data: d } })
+		if (d) await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "CHANNEL", data: d } })
 		return d || null
 	},
 	/**
@@ -261,7 +261,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "USER", data: d } })
+		if (d) await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "USER", data: d } })
 		return d || null
 	},
 	/**
@@ -508,7 +508,7 @@ const guildManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
-		await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "GUILD", data: d } })
+		if (d) await passthrough.workers.cache.getData({ op: "SAVE_DATA", params: { type: "GUILD", data: d } })
 		return d || null
 	},
 	parse: function(guild) {
