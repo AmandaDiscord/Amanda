@@ -24,14 +24,14 @@ async function reportAndSetTimeout() {
 	setTimeout(reportAndSetTimeout, 10*60*1000)
 }
 
-ipc.waitForClientID().then(clientID => {
-	if (clientID === "405208699313848330") {
+ipc.waitForClientID().then(clusterID => {
+	if (clusterID === "pencil") {
 		console.log("Stat reporting active")
 		setTimeout(() => {
 			reportAndSetTimeout()
 		}, 1000)
 	} else {
-		console.log("Stat reporting would be active, but wrong client ID")
+		console.log("Stat reporting would be active, but wrong cluster ID")
 	}
 })
 
