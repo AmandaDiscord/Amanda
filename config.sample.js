@@ -10,6 +10,11 @@ module.exports = {
 	weeb_api_key: "weeb.sh api key here",
 	genius_access_token: "genius api key here",
 	redis_password: "redis password here",
+	top_api_key: "top.gg api key here",
+	botson_api_key: "bots.ondiscord.xyz api key here",
+	boats_api_key: "discord.boats api key here",
+	dbl_api_key: "discordbotlist.com api key here",
+	botsgg_api_key: "discord.bots.gg api key here",
 	amqp_data_queue: `amqp-gateway-${cluster_id}`,
 
 	// Environment

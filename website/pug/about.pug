@@ -1,10 +1,12 @@
 mixin user(user)
-	img(src="https://cdn.discordapp.com/avatars/" + user.id + "/" + user.avatar + ".png?size=128", alt=user.username + "'s avatar").avatar
+	img(src="https://cdn.discordapp.com/avatars/" + user.id + "/" + user.avatar + ".png?size=128", alt=user.username + "'s avatar.").avatar
 
 doctype html
 html
 	include includes/head.pug
 		title About | Amanda
+
+	<script src="https://discordbotlist.com/widget/index.js" async></script>
 
 	body
 		include includes/nav.pug
@@ -36,3 +38,19 @@ html
 			each member in translators
 				if member.user.avatar
 					+user(member.user)
+		p
+			| ​
+		p
+			| ​
+		div.title
+			div.box Listings
+		div.about
+			<a href="https://top.gg/bot/405208699313848330">
+				<img src="https://top.gg/api/widget/405208699313848330.svg" alt="Amanda's top dot gg listing widget." />
+			</a>
+			<a href="https://bots.ondiscord.xyz/bots/405208699313848330">
+				<img src="https://bots.ondiscord.xyz/bots/405208699313848330/embed?theme=dark" alt="Amanda's bots on Discord listing widget." />
+			</a>
+			<a href = "https://discord.boats/bot/405208699313848330">
+				<img src="https://discord.boats/api/widget/405208699313848330?type=png" alt="Amanda's Discord boats listing widget.">
+			</a>
