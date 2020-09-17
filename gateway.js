@@ -70,12 +70,14 @@ const connection = new AmpqpConnector({
 
 		const payload = {}
 		const game = {}
-		if (data.name) game["name"] = data.name
-		if (data.type === 0 || data.type) game["type"] = data.type || 0
-		if (data.url) game["url"] = data.url
-		if (data.status) payload["status"] = data.status
+		if (data.name !== undefined) game["name"] = data.name
+		if (data.type !== undefined) game["type"] = data.type
+		if (data.url !== undefined) game["url"] = data.url
+		if (data.status !== undefined) payload["status"] = data.status
 
 		if (game.name || game.type || game.url) payload["game"] = game
+
+		if (payload.game && payload.game.name && payload.game.type === undefined) payload.game.type = 0
 
 		Object.assign(presence, payload)
 

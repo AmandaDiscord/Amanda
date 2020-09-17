@@ -162,9 +162,12 @@ function update() {
 	// console.log(JSON.stringify(choices, null, 4))
 	const choice = utils.arrayRandom(choices)
 	if (choice) {
+		let type
+		if (typeof choice.type === "string") type = activities[choice.type]
+		else type = choice.type
 		const data = {
 			name: `${choice.message} | ${prefix}help | ${config.cluster_id}`,
-			type: activities[choice.type] || choice.type,
+			type: choice.type,
 			url: "https://www.twitch.tv/papiophidian/"
 		}
 		passthrough.workers.gateway.statusUpdate(data)
