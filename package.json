@@ -51,8 +51,8 @@
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
-    "@types/node": "^13.9.2",
-    "eslint": "^7.8.1",
+    "@types/node": "^13.13.21",
+    "eslint": "^7.9.0",
     "tap": "^14.10.8",
     "typescript": "~4.0.2"
   }
