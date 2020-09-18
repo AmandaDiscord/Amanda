@@ -31,6 +31,7 @@ async function report() {
 		fetch(`${botsggBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { Authorization: config.botsgg_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) })
 	])
 	if (errors.length > 0) Promise.reject(errors)
+	console.log("Stats sent")
 }
 
 async function reportAndSetTimeout() {
