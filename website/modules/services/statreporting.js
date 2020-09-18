@@ -24,11 +24,11 @@ async function report() {
 	const errors = []
 	await Promise.all([
 		analytics.sendReport({ servers: stats.guilds, channels: stats.channels, users: stats.users, ram_used: stats.combinedRam, received_messages: 0, sent_messages: 0 }).catch(errors.push),
-		fetch(`${topBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { Authorization: config.top_api_key }, body: JSON.stringify({ server_count: stats.guilds, shard_count: shardCount }) }).catch(errors.push),
-		fetch(`${botsonBaseURL}/bots/${clientID}/guilds`, { method: "POST", headers: { Authorization: config.botson_api_key }, body: JSON.stringify({ guildCount: stats.guilds }) }).catch(errors.push),
-		fetch(`${boatsBaseURL}/bot/${clientID}`, { method: "POST", headers: { Authorization: config.boats_api_key }, body: JSON.stringify({ server_count: stats.guilds }) }).catch(errors.push),
-		fetch(`${dblBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { Authorization: config.dbl_api_key }, body: JSON.stringify({ guilds: stats.guilds, users: stats.users, voice_connections: stats.connections }) }).catch(errors.push),
-		fetch(`${botsggBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { Authorization: config.botsgg_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) })
+		fetch(`${topBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.top_api_key }, body: JSON.stringify({ server_count: stats.guilds, shard_count: shardCount }) }).catch(errors.push),
+		fetch(`${botsonBaseURL}/bots/${clientID}/guilds`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.botson_api_key }, body: JSON.stringify({ guildCount: stats.guilds }) }).catch(errors.push),
+		fetch(`${boatsBaseURL}/bot/${clientID}`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.boats_api_key }, body: JSON.stringify({ server_count: stats.guilds }) }).catch(errors.push),
+		fetch(`${dblBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.dbl_api_key }, body: JSON.stringify({ guilds: stats.guilds, users: stats.users, voice_connections: stats.connections }) }).catch(errors.push),
+		fetch(`${botsggBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.botsgg_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) })
 	])
 	if (errors.length > 0) Promise.reject(errors)
 	console.log("Stats sent")
@@ -40,14 +40,14 @@ async function reportAndSetTimeout() {
 	timeout = setTimeout(reportAndSetTimeout, 10*60*1000)
 }
 
-ipc.waitForClientID().then(clusterID => {
-	if (clusterID === "pencil") {
+ipc.waitForClientID().then(id => {
+	if (id === clientID) {
 		console.log("Stat reporting active")
 		setTimeout(() => {
 			reportAndSetTimeout()
 		}, 1000)
 	} else {
-		console.log("Stat reporting would be active, but wrong cluster ID")
+		console.log("Stat reporting would be active, but wrong client ID")
 	}
 })
 

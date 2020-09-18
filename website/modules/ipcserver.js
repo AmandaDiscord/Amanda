@@ -39,7 +39,7 @@ class IPC {
 			this.server.on("cluster", (data, socket) => {
 				const {clientID, total, clusterID} = data
 				console.log(`Socket identified as ${clusterID}, total of ${total} shards (${clientID})`)
-				this.clientID = clientID
+				if (!this.clientID) this.clientID = clientID
 				this.totalShards = this.totalShards ? this.totalShards + total : total
 				if (!this.shardsPerCluster) {
 					/** @type {Map<string, number>} */
@@ -131,8 +131,8 @@ class IPC {
 	waitForClientID() {
 		if (this.clientID) return Promise.resolve(this.clientID)
 		else return new Promise(resolve => {
-			this.server.once("cluster", ({ clusterID }) => {
-				resolve(clusterID)
+			this.server.once("cluster", ({ clientID }) => {
+				resolve(clientID)
 			})
 		})
 	}
