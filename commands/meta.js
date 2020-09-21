@@ -411,7 +411,7 @@ commands.assign([
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		process(msg, suffix, lang) {
-			return msg.channel.send(`${constants.baseURL}/to/privacy`)
+			return msg.channel.send(`<${constants.baseURL}/to/privacy>`)
 		}
 	},
 	{
