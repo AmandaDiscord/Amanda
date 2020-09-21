@@ -78,6 +78,11 @@ class TriviaGame extends Game {
 		this.lang = lang
 		/** @type {"trivia"} */
 		this.type
+		/**
+		 * Map a userID to an answer index (A = 0, B = 1, C = 2, D = 3)
+		 * @type {Map<string, number>}
+		 */
+		this.receivedAnswers = new Map()
 	}
 	async start() {
 		const correctAnswer = this.data.correct_answer.trim()
@@ -109,12 +114,6 @@ class TriviaGame extends Game {
 		this.channel.send(await utils.contentify(this.channel, embed))
 		// Setup timer
 		this.timer = setTimeout(() => this.end(), 20000)
-		// Prepare to receive answers
-		/**
-		 * Map a userID to an answer index (A = 0, B = 1, C = 2, D = 3)
-		 * @type {Map<string, number>}
-		 */
-		this.receivedAnswers = new Map()
 	}
 	/**
 	 * @param {Discord.Message} msg
