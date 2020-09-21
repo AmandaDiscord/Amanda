@@ -18,7 +18,8 @@ module.exports = [
 	["/to/add", "https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot"],
 	["/to/todo", "https://github.com/AmandaDiscord/Amanda/projects"],
 	["/to/twitter", "https://twitter.com/AmandaDiscord"],
-	["/to/github", "https://github.com/AmandaDiscord"]
+	["/to/github", "https://github.com/AmandaDiscord"],
+	["/to/privacy", "https://github.com/AmandaDiscord/Amanda/blob/rained-in/PRIVACYPOLICY"]
 ].map(entry => ({
 	route: entry[0],
 	methods: ["GET"],

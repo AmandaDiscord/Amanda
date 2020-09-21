@@ -1,0 +1,44 @@
+Amanda's Privacy Policy
+Last edited 9/20/2020 at 11:xxPM UTC-7
+
+
+Amanda may collect and store data sent to her from Discord permanently and/or temporarily unless a valid request in which
+the requester has ownership over data requests said data to be deleted. Whether a User has ownership over data or not
+is determined by if a User is making a request regarding their own User/Member data or if they are the owner of a Guild
+or are making a request on the data owner's behalf.
+Users making requests regarding data must DM PapiOphidian#0110 (User ID: 320067006521147393) on Discord.
+Requests regarding data may take up to one or more weeks to provide a User with or take action against said data.
+
+
+WHAT IS STORED:
+Data which is collected and stored by Amanda from Discord will be referred to as "cache". Data falling into a category
+outside of what is sent via Discord will be referred to as local data.
+
+Amanda's cache includes but is not limited to Users, Channels, Guilds, User-Guild Membership relationships,
+Guild Member voice states and Roles.
+
+Local data includes but is not limited to Amanda related permission levels and Users which occupy said permission levels,
+a User's economy related data, a User's "waifu" data, a Users YouTube playlists which are local to Amanda and their
+occupant's data, a User's Amanda premium status, and User and Guild settings which Amanda uses.
+
+
+WHY THIS DATA IS STORED:
+All cache and local data is stored on first party owned machines in countries which respect data privacy laws which
+may or may not be "remote" in relation to Amanda.
+
+The cache is a remote storage provider which serves as a data store for data sent to Amanda from Discord in a
+semi-persistent state. This is used to keep as much data as possible out of Amanda's memory to provide more of it to
+Amanda to perform operations relating to Amanda's client code base. It is also used to persist data across restarts
+of Amanda and avoid requesting data from Discord which could be cached each time Amanda is restarted or needs to
+access said data. Finally, cached data is used by first party and third party services (see
+"REGARDING THIRD PARTY SERVICES" for more info) to measure growth over time and provide current statistics regarding the
+state of Amanda.
+
+Local data is stored when users interact with Amanda and make use of services in which Amanda provides. These services
+include but are not limited to creating and managing playlists through Amanda, participating in economy related activities,
+or configuring Amanda via arbitrary settings Amanda offers.
+
+
+REGARDING THIRD PARTY SERVICES:
+When providing third party services data, said data is aggregated as to not provide said service with data which can
+be used to profile.

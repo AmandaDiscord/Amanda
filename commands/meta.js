@@ -410,13 +410,8 @@ commands.assign([
 		 * @param {string} suffix
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
-		async process(msg, suffix, lang) {
-			const embed = new Discord.MessageEmbed().setAuthor("Privacy").setDescription("Amanda may collect basic user information. This data includes but is not limited to usernames, discriminators, profile pictures and user identifiers also known as snowflakes. This information is exchanged solely between services related to the improvement or running of Amanda and [Discord](https://discordapp.com/terms). It is not exchanged with any other providers. That's a promise. If you do not want your information to be used by the bot, remove it from your servers and do not use it").setColor(constants.standard_embed_color)
-			try {
-				await msg.author.send(embed)
-				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") msg.channel.send(lang.meta.privacy.prompts.dmSuccess)
-				return
-			} catch (reason) { return msg.channel.send(await utils.contentify(msg.channel, embed)) }
+		process(msg, suffix, lang) {
+			return msg.channel.send(`${constants.baseURL}/to/privacy`)
 		}
 	},
 	{
