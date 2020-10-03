@@ -903,7 +903,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 							// eslint-disable-next-line no-inner-declarations
 							function end() {
 								matched.push(obj)
-								passing = false
 							}
 						}
 						pass++
