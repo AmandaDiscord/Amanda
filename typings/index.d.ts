@@ -259,6 +259,9 @@ export interface CacheOperations {
 	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };
 
 	SAVE_DATA: CacheSaveData;
+
+	DELETE_USER: { id: string };
+	DELETE_USERS: CacheUserData & { limit?: number; ids?: Array<string>; confirm?: boolean; };
 }
 
 export interface CacheRequestData<E extends keyof CacheOperations> {

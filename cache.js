@@ -811,7 +811,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			/** @type {import("./typings").CacheSaveData} */
 			// @ts-ignore
 			const query = data.params || {}
-			if (!query.type || !query.data) return response.status(400).send(worker.createErrorResponse("Missing type or data field"))
+			if (!query.type || !query.data) return response.status(400).send(worker.createErrorResponse("Missing type or data field")).end()
 			/** @type {import("./typings").CacheSaveData["type"]} */
 			const type = query.type
 			const methods = {
@@ -824,7 +824,99 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			} catch (e) {
 				return sendInternalError(e)
 			}
-			return response.status(200).send(worker.createDataResponse("Saved"))
+			return response.status(200).send(worker.createDataResponse("Saved")).end()
+
+
+		} else if (data.op === "DELETE_USER") {
+			/** @type {{ id: string }}} */
+			// @ts-ignore
+			const query = data.params || {}
+			if (!query.id) return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			try {
+				await rain.cache.user.removeFromIndex(query.id)
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			return response.status(200).send(worker.createDataResponse("Deleted")).end()
+
+		} else if (data.op === "DELETE_USERS") {
+			/** @type {import("./typings").CacheUserData & { limit?: number, ids?: Array<string>, confirm?: boolean }}} */
+			// @ts-ignore
+			const query = data.params || {}
+			if (!query.ids && !query.discriminator && !query.id && !query.tag && !query.username) {
+				if (!query.confirm) return response.status(400).send(worker.createErrorResponse("Missing all fields")).end()
+				else {
+					await rain.cache.user.removeIndex()
+					return response.status(200).send(worker.createDataResponse("Deleted all")).end()
+				}
+			}
+			try {
+				if (query.id) {
+					await rain.cache.user.removeFromIndex(query.id)
+				} else {
+					let members
+					try {
+						members = await rain.cache.user.getIndexMembers()
+					} catch (e) {
+						return sendInternalError(e)
+					}
+					const batchLimit = 50
+					let pass = 1
+					let passing = true
+					const matched = []
+					while (passing) {
+						const starting = (batchLimit * pass) - batchLimit
+						const batch = members.slice(starting, starting + batchLimit)
+
+						if (batch.length === 0) {
+							passing = false
+							continue
+						}
+
+						let users
+						try {
+							users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
+						} catch (e) {
+							return sendInternalError(e)
+						}
+
+						for (const user of users) {
+							if (query.limit && matched.length === query.limit) {
+								passing = false
+								continue
+							}
+							const obj = user && user.boundObject ? user.boundObject : (user || {})
+
+							if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
+								end()
+								continue
+							} else if (query.discriminator && obj.discriminator === query.discriminator) {
+								end()
+								continue
+							} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
+								end()
+								continue
+							} else {
+								continue
+							}
+
+							// eslint-disable-next-line no-inner-declarations
+							function end() {
+								matched.push(obj)
+								passing = false
+							}
+						}
+						pass++
+					}
+					if (matched.length > 0) return response.status(200).send(worker.createDataResponse(matched.map(m => m.id))).end()
+					else return response.status(200).send(worker.createDataResponse([]))
+				}
+			} catch (e) {
+				return sendInternalError(e)
+			}
+			return sendInternalError("How did we get here?")
+
+
 		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
 	})
 
@@ -874,6 +966,8 @@ async function handleCache(event) {
 		/** @type {import("@amanda/discordtypings").MessageData} */
 		// @ts-ignore
 		const typed = event.d
+
+		if (typed.webhook_id) return
 
 		if (typed.member && typed.author) await rain.cache.member.update(typed.author.id, typed.guild_id, { guild_id: typed.guild_id, user: typed.author, id: typed.author.id, ...typed.member })
 		else if (typed.author) await rain.cache.user.update(typed.author.id, typed.author)
