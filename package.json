@@ -44,9 +44,9 @@
     "raincache": "github:AmandaDiscord/RainCache#301c2b1662503106ebaad3e0437f6e4e63cf5757",
     "simple-git": "^2.20.1",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#c153a2eaac55c06f86ae8dd6d71c7bff78b36b7d",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#5492da03b03a2ba0ec3cdf16b5866ea191d1b751",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#c0584f6a5a167cce5a0d8828eb1b5c94e490e560"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#fdc79467da660445c21572285ad30d04ef0f5570"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
