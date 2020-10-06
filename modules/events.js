@@ -222,7 +222,6 @@ async function manageReady() {
 	})
 
 	if (firstStart) {
-		client.readyAt = new Date()
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
 
