@@ -94,7 +94,12 @@ const channelManager = {
 			// @ts-ignore
 			if (await channelManager.typeOf(message.channel) === "dm") return res(null)
 			string = string.toLowerCase()
-			if (/<#(\d+)>/.exec(string)) string = /<#(\d+)>/.exec(string)[1]
+			if (/<#(\d+)>/.exec(string)) {
+				string = /<#(\d+)>/.exec(string)[1]
+				const d = await channelManager.get(string, true, true)
+				// @ts-ignore
+				return res(d)
+			}
 			if (!string) {
 				// @ts-ignore
 				if (self) return channelManager.get(message.channel.id, true, true).then(data => res(data))
@@ -274,7 +279,12 @@ const userManager = {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
 			string = string.toLowerCase()
-			if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
+			if (/<@!?(\d+)>/.exec(string)) {
+				string = /<@!?(\d+)>/.exec(string)[1]
+				const d = await userManager.get(string, true, true)
+				// @ts-ignore
+				return res(d)
+			}
 			if (!string) {
 				if (self) return res(message.author)
 				else return res(null)
@@ -374,13 +384,18 @@ const memberManager = {
 	 * @param {Discord.Message} message Message Object
 	 * @param {string} string String to search members by
 	 * @param {boolean} [self=false] If the function should return the `message` author's member Object
-	 * @returns {?Promise<?Discord.GuildMember>}
+	 * @returns {Promise<?Discord.GuildMember>}
 	 */
 	find: function(message, string, self = false) {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
 			string = string.toLowerCase()
-			if (/<@!?(\d+)>/.exec(string)) string = /<@!?(\d+)>/.exec(string)[1]
+			if (/<@!?(\d+)>/.exec(string)) {
+				string = /<@!?(\d+)>/.exec(string)[1]
+				const d = await memberManager.get(string, message.guild.id, true, true)
+				// @ts-ignore
+				return res(d)
+			}
 
 			if (!string) {
 				if (self) return res(message.member)
