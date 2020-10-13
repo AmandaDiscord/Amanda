@@ -105,40 +105,29 @@ reloadEvent.once(path.basename(__filename), () => {
 
 /**
  * @param {Discord.User} user
- * @param {{waifu?: {id: string}, claimer?: {id: string}}} info
+ * @param {string} otherid
  */
-function getHeartType(user, info) {
+function getHeartType(user, otherid) {
 	// Full hearts for Amanda! Amanda loves everyone.
 	if (user.id == client.user.id) return "full"
 	// User doesn't love anyone. Sad.
-	if (!info.waifu) return "broken"
-	// Full heart if user loves Amanda.
-	if (info.waifu.id == client.user.id) return "full"
-	// User isn't loved by anyone. Oh dear...
-	if (!info.claimer) return "broken"
-	// If we get here, then the user both loves and is loved back, but not by Amanda.
-	// User is loved back by the same person
-	if (info.waifu.id == info.claimer.id) return "full"
-	// So the user must be loved by someone else.
-	return "broken"
+	if (!otherid) return "broken"
+	// If we get here, then the user is in a relationship
+	return "full"
 }
 
 const giverTier1 = 100000
 const giverTier2 = 1000000
 const giverTier3 = 10000000
 
-commands.assign([
+/** @type {Array<{ usage: string, description: string, aliases: Array<string>, category: string, example?: string, process: (message?: import("thunderstorm").Message, suffix?: string, lang?: import("@amanda/lang").Lang) => any }>} */
+const cmds = [
 	{
 		usage: "[music|games]",
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
 		example: "&stats",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster`
@@ -230,11 +219,6 @@ commands.assign([
 		aliases: ["ping", "pong"],
 		category: "meta",
 		example: "&ping",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
@@ -250,9 +234,6 @@ commands.assign([
 		aliases: ["forcestatupdate"],
 		category: "admin",
 		example: "&forcestatupdate",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 */
 		async process(msg) {
 			const permissions = await utils.sql.hasPermission(msg.author, "eval")
 			if (!permissions) return
@@ -265,11 +246,6 @@ commands.assign([
 		aliases: ["restartnotify"],
 		category: "admin",
 		example: "&restartnotify",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
@@ -282,11 +258,6 @@ commands.assign([
 		aliases: ["invite", "inv"],
 		category: "meta",
 		example: "&invite",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
@@ -301,11 +272,6 @@ commands.assign([
 		aliases: ["info", "inf"],
 		category: "meta",
 		example: "&info",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const [c1, c2] = await Promise.all([
 				utils.cacheManager.users.get("320067006521147393", true, true),
@@ -339,11 +305,6 @@ commands.assign([
 		aliases: ["donate", "patreon"],
 		category: "meta",
 		example: "&donate",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
@@ -358,11 +319,8 @@ commands.assign([
 		aliases: ["commits", "commit", "git", "changes", "changelog"],
 		category: "meta",
 		example: "&git",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 */
 		async process(msg) {
-			msg.channel.sendTyping()
+			await msg.channel.sendTyping()
 			const limit = 5
 			const authorNameMap = {
 				"Cadence Ember": "Cadence",
@@ -405,11 +363,6 @@ commands.assign([
 		aliases: ["privacy"],
 		category: "meta",
 		example: "&privacy",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			return msg.channel.send(`<${constants.baseURL}/to/privacy>`)
 		}
@@ -420,11 +373,6 @@ commands.assign([
 		aliases: ["user"],
 		category: "meta",
 		example: "&user PapiOphidian",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let user, member
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
@@ -469,11 +417,6 @@ commands.assign([
 		aliases: ["avatar", "pfp"],
 		category: "meta",
 		example: "&avatar PapiOphidian",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00004000))) canEmbedLinks = false
@@ -512,16 +455,21 @@ commands.assign([
 		}
 	},*/
 	{
+		usage: "None",
+		description: "See Amanda's to-do list",
+		aliases: ["todo", "trello", "tasks"],
+		category: "meta",
+		example: "&todo",
+		process(msg, suffix) {
+			msg.channel.send(`Todo board: ${config.website_protocol}://${config.website_domain}/to/todo`)
+		}
+	},
+	{
 		usage: "<emoji>",
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
 		category: "meta",
 		example: "&wumbo :amandathink:",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const emoji = Util.parseEmoji(suffix)
@@ -540,11 +488,6 @@ commands.assign([
 		aliases: ["profile"],
 		category: "meta",
 		example: "&profile PapiOphidian",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let user, member
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00008000))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
@@ -554,7 +497,7 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))
-			msg.channel.sendTyping()
+			await msg.channel.sendTyping()
 
 			let themeoverlay = "profile"
 			const themedata = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "profiletheme"])
@@ -564,15 +507,19 @@ commands.assign([
 				utils.sql.hasPermission(user, "owner"),
 				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
 				utils.coinsManager.getRow(user.id),
-				utils.waifu.get(user.id),
+				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
+				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
 				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
 			])
 
+			const otherid = info ? (info.user1 === user.id ? info.user2 : info.user1) : null
+			let other
+			if (otherid) other = await utils.cacheManager.users.get(otherid, true, true)
+
 			avatar.resize(111, 111)
 
-			const heartType = getHeartType(user, info)
+			const heartType = getHeartType(user, otherid)
 			const heart = images.get(`heart-${heartType}`)
 
 			/** @type {string} */
@@ -641,9 +588,9 @@ commands.assign([
 				if (!badgeImage && giverImage) canvas.composite(giverImage, 219, 120)
 				else if (badgeImage && giverImage) canvas.composite(giverImage, 289, 120)
 				if (boosting) {
-					if (!badge && !giverImage) canvas.composite(images.get("badge-booster").resize(34, 34), 219, 120)
-					else if (!badge || !giverImage) canvas.composite(images.get("badge-booster").resize(34, 34), 289, 120)
-					else canvas.composite(images.get("badge-booster").resize(34, 34), 349, 120)
+					if (!badge && !giverImage) canvas.composite(images.get("badge-booster").resize(50, 50), 219, 120)
+					else if (!badge || !giverImage) canvas.composite(images.get("badge-booster").resize(50, 50), 289, 120)
+					else canvas.composite(images.get("badge-booster").resize(50, 50), 349, 120)
 				}
 
 				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
@@ -651,16 +598,17 @@ commands.assign([
 				canvas.composite(images.get("discoin"), 62, 215)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, utils.numberComma(money.coins))
 				canvas.composite(heart, 62, 259)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 42 ? `${info.waifu.tag.slice(0, 40)}...` : info.waifu.tag : "Nobody, yet")
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : other ? other.tag.length > 42 ? `${other.tag.slice(0, 40)}...` : other.tag : "Nobody, yet")
 
 				let huntercoords = [219, 125]
 				if (badge && boosting && giverImage) huntercoords = [419, 125]
 				else if (badge && (boosting || giverImage)) huntercoords = [359, 125]
 				else if (badge || boosting || giverImage) huntercoords = [289, 125]
-				if (hunter) canvas.composite(images.get("badge-hunter").resize(34, 34), huntercoords[0], huntercoords[1])
+				if (hunter) canvas.composite(images.get("badge-hunter").resize(50, 50), huntercoords[0], huntercoords[1])
 			}
 
 			function buildNewProfile() {
+				canvas.mask(images.get("profile-background-mask"), 0, 0)
 				canvas.composite(job.image, 0, 0)
 				avatar.mask(images.get("circle-mask"), 0, 0)
 				canvas.composite(avatar, 32, 85)
@@ -675,7 +623,7 @@ commands.assign([
 				canvas.composite(images.get("discoin"), 508, 156)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, utils.numberComma(money.coins))
 				canvas.composite(heart, 508, 207)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : info.waifu ? info.waifu.tag.length > 22 ? `${info.waifu.tag.slice(0, 19)}...` : info.waifu.tag : "Nobody, yet")
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : other ? other.tag.length > 22 ? `${other.tag.slice(0, 19)}...` : other.tag : "Nobody, yet")
 				if (hunter) {
 					canvas.composite(images.get("badge-hunter").resize(34, 34), 508, 250)
 					canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 260, "Amanda Bug Catcher")
@@ -697,11 +645,6 @@ commands.assign([
 		aliases: ["settings", "setting"],
 		category: "configuration",
 		example: "&settings self lang es",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
 			if ((await utils.cacheManager.channels.typeOf(msg.channel)) === "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
@@ -887,11 +830,6 @@ commands.assign([
 		aliases: ["language", "lang"],
 		category: "configuration",
 		example: "&language es",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang)
 		}
@@ -903,11 +841,6 @@ commands.assign([
 		aliases: ["serverlanguage", "serverlang"],
 		category: "configuration",
 		example: "&serverlanguage es",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang)
 		}
@@ -919,11 +852,6 @@ commands.assign([
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
 		example: "&background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
 		}
@@ -935,11 +863,6 @@ commands.assign([
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
 		example: "&help audio",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let embed
 			if (suffix) {
@@ -1151,4 +1074,6 @@ commands.assign([
 			}
 		}
 	}
-])
+]
+
+commands.assign(cmds)

@@ -46,6 +46,7 @@ imageStore.save("badge-giver3", "./images/badges/GivingHandTier3_50x50.png")
 
 // Masks
 imageStore.save("circle-mask", "./images/masks/circle_mask.png")
+imageStore.save("profile-background-mask", "./images/masks/profile_background_mask.png")
 
 
 // Fonts

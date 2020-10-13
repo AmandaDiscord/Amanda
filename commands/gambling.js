@@ -30,7 +30,7 @@ commands.assign([
 			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
-			msg.channel.sendTyping()
+			await msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
 			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID = ?", msg.author.id)
@@ -440,7 +440,7 @@ commands.assign([
 			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
-			msg.channel.sendTyping()
+			await msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
 				utils.jimpStores.images.get("wheel-canvas"),

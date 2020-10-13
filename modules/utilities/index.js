@@ -47,10 +47,7 @@ const utils = { // I really hate that we have to nest an import then destructure
 		...require("./sql")
 	},
 	...require("./text"),
-	...require("./time"),
-	waifu: {
-		...require("./waifu")
-	}
+	...require("./time")
 }
 
 module.exports = utils

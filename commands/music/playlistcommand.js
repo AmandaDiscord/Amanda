@@ -162,7 +162,7 @@ commands.assign([
 			} else if (action.toLowerCase() == "add") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				if (!args[2]) return msg.channel.send(utils.replace(lang.audio.music.prompts.playableRequired, { "username": msg.author.username }))
-				msg.channel.sendTyping()
+				await msg.channel.sendTyping()
 
 				const search = args.slice(2).join(" ")
 				const match = common.inputToID(search)

@@ -125,12 +125,12 @@ const db = mysql.createPool({
 		"./commands/music/music.js",
 		"./commands/music/playlistcommand.js",
 		"./commands/admin.js",
+		"./commands/couples.js",
 		"./commands/gambling.js",
 		"./commands/games.js",
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",
-		"./commands/todo.js",
 		"./commands/webhookalias.js",
 		"./modules/events.js",
 		"./modules/stdin.js"

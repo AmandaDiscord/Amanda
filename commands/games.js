@@ -213,7 +213,7 @@ async function startGame(channel, options) {
 	// Select category
 	let category = options.category || null
 	if (options.suffix) {
-		channel.sendTyping()
+		await channel.sendTyping()
 		const [
 			success,
 			/** @type {{ trivia_categories: {id: number, name: string}[] }} */
@@ -242,7 +242,7 @@ async function startGame(channel, options) {
 	// Check games in progress
 	if (games.cache.find(g => g.type == "trivia" && g.id == channel.id)) return channel.send(utils.replace(options.lang.games.trivia.prompts.gameInProgress, { "username": options.msg ? options.msg.author.username : "" }))
 	// Send typing
-	channel.sendTyping()
+	await channel.sendTyping()
 	// Get new game data
 	/** @type {Array<{response_code: number, results: Array<TriviaResponse>}>} */
 	const body = await JSONHelper(`https://opentdb.com/api.php?amount=1${category ? `&category=${category}` : ""}`, channel, options.lang)
