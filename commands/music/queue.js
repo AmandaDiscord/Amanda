@@ -541,7 +541,8 @@ class Queue {
 	sendNewNP(force = false) {
 		if (this.np && !force) return Promise.resolve()
 		else {
-			return this.textChannel.send(this._buildNPEmbed()).then(x => {
+			const result = this._buildNPEmbed()
+			return this.textChannel.send(result ? result : `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯`).then(x => {
 				this.np = x
 				this._makeReactionMenu()
 			})
@@ -681,7 +682,7 @@ class QueueWrapper {
 	 */
 	async showRelated(channel) {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
-		if (this.queue.songs[0].typeWhileGetRelated) channel.sendTyping()
+		if (this.queue.songs[0].typeWhileGetRelated) await channel.sendTyping()
 		const content = await this.queue.songs[0].showRelated()
 		channel.send(content)
 	}
