@@ -1,8 +1,10 @@
+/* eslint-disable no-async-promise-executor */
 // @ts-check
 
 const Discord = require("thunderstorm")
 
 const sql = require("./sql")
+const { shortTime } = require("./time")
 
 const passthrough = require("../../passthrough")
 const { client } = passthrough
@@ -160,8 +162,52 @@ async function contentify(channel, content) {
 	return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
 }
 
+/**
+ * @param {string} id
+ * @param {Discord.Message} [msg]
+ * @returns {Promise<{ allowed: boolean, ban?: "temporary" | "permanent", reason?: string }>}
+ */
+async function rateLimiter(id, msg) {
+	const banned = await sql.get("SELECT * FROM Bans WHERE userID =?", id)
+	const tempmsg = `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} temporarily banned from using commands.`
+	if (banned) {
+		if (banned.temporary && msg) {
+			if (banned.expires <= Date.now()) {
+				await Promise.all([
+					sql.all("DELETE FROM Bans WHERE userID =?", id),
+					sql.all("DELETE FROM Timeouts WHERE userID =?", id)
+				])
+				return { allowed: true }
+			} else return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(banned.expires).toUTCString()}` }
+		} else if (!banned.temporary && msg) return { allowed: false, ban: "permanent", reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} permanently banned from using commands.` }
+		else return { allowed: false }
+	}
+	const [timer, premium] = await Promise.all([
+		sql.get("SELECT * FROM Timeouts WHERE userID =?", id),
+		sql.get("SELECT * FROM Premium WHERE userID =?", id)
+	])
+	if (premium) return { allowed: true }
+	if (timer) {
+		if (timer.expires <= Date.now()) {
+			await sql.all("DELETE FROM Timeouts WHERE userID =?", id)
+			return { allowed: true }
+		}
+		if (timer.amount > 6) {
+			const expiresAt = Date.now() + (1000 * 60 * 60)
+			await sql.all("INSERT INTO Bans (userID, temporary, expires) VALUES (?, ?, ?)", [id, 1, expiresAt])
+			return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(expiresAt).toUTCString()}` }
+		}
+		return { allowed: false, reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} on a command cooldown. You can use commands again in ${shortTime(timer.expires - Date.now(), "ms")}` }
+	} else {
+		const expiresAt = Date.now() + (1000 * 5)
+		await sql.all("REPLACE INTO Timeouts (userID, expires, amount) VALUES (?, ?, ?)", [id, expiresAt, 1])
+		return { allowed: true }
+	}
+}
+
 module.exports.userFlagEmojis = userFlagEmojis
 module.exports.emojiURL = emojiURL
 module.exports.resolveWebhookMessageAuthor = resolveWebhookMessageAuthor
 module.exports.contentify = contentify
 module.exports.createMessageCollector = createMessageCollector
+module.exports.rateLimiter = rateLimiter
