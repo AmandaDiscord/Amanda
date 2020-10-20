@@ -569,10 +569,12 @@ commands.assign([
 				if (subcommandObject.voiceChannel == "required") {
 					const voiceChannel = await common.detectVoiceChannel(msg, false, lang)
 					if (!voiceChannel) return
+					if (subcommmandData.queue && subcommmandData.queue.voiceChannel && subcommmandData.queue.voiceChannel.id != voiceChannel.id) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "ask") {
 					const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 					if (!voiceChannel) return
+					if (subcommmandData.queue && subcommmandData.queue.voiceChannel && subcommmandData.queue.voiceChannel.id != voiceChannel.id) return
 					subcommmandData.voiceChannel = voiceChannel
 				} else if (subcommandObject.voiceChannel == "provide") {
 					const voiceChannel = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
