@@ -123,7 +123,7 @@ const giverTier3 = 10000000
 /** @type {Array<{ usage: string, description: string, aliases: Array<string>, category: string, example?: string, process: (message?: import("thunderstorm").Message, suffix?: string, lang?: import("@amanda/lang").Lang) => any }>} */
 const cmds = [
 	{
-		usage: "[music|games]",
+		usage: "[music|games|gateway|cache]",
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
@@ -184,6 +184,41 @@ const cmds = [
 					})
 					global.gc()
 				} else return msg.channel.send("The global Garbage Collector variable is not exposed")
+			} else if (suffix.toLowerCase() == "gateway") {
+				const before = Date.now()
+				const stats = await passthrough.workers.gateway.getStats()
+				const ram = stats.ram.rss - (stats.ram.heapTotal - stats.ram.heapUsed)
+				embed
+					.addFields([
+						{
+							name: leadingIdentity,
+							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
+							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
+							inline: true
+						},
+						{
+							name: leadingSpace,
+							value: `**❯ Shards:**\n[${stats.shards.join(", ")}]`,
+							inline: true
+						}
+					])
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
+			} else if (suffix.toLowerCase() == "cache") {
+				const before = Date.now()
+				const stats = await passthrough.workers.cache.getStats()
+				const ram = stats.ram.rss - (stats.ram.heapTotal - stats.ram.heapUsed)
+				embed
+					.addFields([
+						{
+							name: leadingIdentity,
+							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
+							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
+							inline: true
+						}
+					])
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else {
 				const stats = await utils.getOwnStats()
 				const allStats = stats
