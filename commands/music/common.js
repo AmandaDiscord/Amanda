@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 // @ts-check
 
 /** @type {import("node-fetch").default} */
@@ -174,7 +175,13 @@ const common = {
 	searchYouTube: function(input, region = "") {
 		const node = common.nodes.getByRegion(region)
 		if (node.search_with_invidious) {
-			return common.invidious.search(input, node.host).then(common.invidious.searchResultsToTracks)
+			let d
+			try {
+				d = common.invidious.search(input, node.host).then(common.invidious.searchResultsToTracks)
+			} catch (e) {
+				return []
+			}
+			return d
 		} else {
 			return common.getTracks(`ytsearch:${input}`, region)
 		}
