@@ -101,12 +101,12 @@ const connection = new AmpqpConnector({
 			try {
 				await shard.connector.betterWs.sendMessage(data)
 			} catch {
-				return response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${data}`)).end()
+				return response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${JSON.stringify(data)}`)).end()
 			}
 			response.status(200).send(worker.createDataResponse("Message sent")).end()
 		} else {
 			console.log(`No shard found to send WS Message:\n${require("util").inspect(data, true, 2, true)}`)
-			response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${data}`)).end()
+			response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${JSON.stringify(data)}`)).end()
 		}
 	})
 })().catch(console.error)
