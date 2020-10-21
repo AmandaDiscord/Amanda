@@ -94,8 +94,9 @@ const channelManager = {
 			// @ts-ignore
 			if (await channelManager.typeOf(message.channel) === "dm") return res(null)
 			string = string.toLowerCase()
-			if (/<#(\d+)>/.exec(string)) {
-				string = /<#(\d+)>/.exec(string)[1]
+			const match = /<#(\d+)>/.exec(string)
+			if (match && match[1]) {
+				string = match[1]
 				const d = await channelManager.get(string, true, true)
 				// @ts-ignore
 				return res(d)
@@ -279,8 +280,9 @@ const userManager = {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
 			string = string.toLowerCase()
-			if (/<@!?(\d+)>/.exec(string)) {
-				string = /<@!?(\d+)>/.exec(string)[1]
+			const match = /<@!?(\d+)>/.exec(string)
+			if (match && match[1]) {
+				string = match[1]
 				const d = await userManager.get(string, true, true)
 				// @ts-ignore
 				return res(d)
@@ -358,8 +360,9 @@ const memberManager = {
 		])
 		const roles = []
 		if (md && ud) {
-			if (convert) return memberManager.parse({ roles, ...md }, ud)
-			else return { user: ud, roles, ...md }
+			Object.assign(md, { user: ud })
+			if (convert) return memberManager.parse({ roles, ...md })
+			else return { roles, ...md }
 		} else {
 			if (fetch) {
 				const fetched = await memberManager.fetch(id, guildID)
@@ -390,9 +393,12 @@ const memberManager = {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
 			string = string.toLowerCase()
-			if (/<@!?(\d+)>/.exec(string)) {
-				string = /<@!?(\d+)>/.exec(string)[1]
+			const match = /<@!?(\d+)>/.exec(string)
+			if (match && match[1]) {
+				string = match[1]
+				console.log(string, match)
 				const d = await memberManager.get(string, message.guild.id, true, true)
+				console.log(d)
 				// @ts-ignore
 				return res(d)
 			}
@@ -443,8 +449,8 @@ const memberManager = {
 		const ds = await passthrough.workers.cache.getData({ op: "FILTER_MEMBERS", params: payload })
 		return ds
 	},
-	parse: function(member, user) {
-		return new Discord.GuildMember({ user: user, ...member }, client)
+	parse: function(member) {
+		return new Discord.GuildMember(member, client)
 	},
 	/**
 	 * @param {string} userID
