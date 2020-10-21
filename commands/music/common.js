@@ -178,7 +178,7 @@ const common = {
 			let d
 			try {
 				d = common.invidious.search(input, node.host).then(common.invidious.searchResultsToTracks)
-			} catch (e) {
+			} catch {
 				return []
 			}
 			return d
@@ -311,30 +311,34 @@ const common = {
 		 * @param {{type: string, title: string, videoId: string, author: string, lengthSeconds: number, liveNow: boolean}[]} results
 		 */
 		searchResultsToTracks: function(results) {
-			return results.filter(result => result.type === "video").map(result => ({
-				track: encode({
-					flags: 1,
-					version: 2,
-					title: result.title,
-					author: result.author,
-					length: BigInt(result.lengthSeconds) * BigInt(1000),
-					identifier: result.videoId,
-					isStream: result.liveNow, // this is a guess
-					uri: `https://www.youtube.com/watch?v=${result.videoId}`,
-					source: "youtube",
-					position: BigInt(0)
-				}),
-				info: {
-					identifier: result.videoId,
-					isSeekable: true,
-					author: result.author,
-					length: result.lengthSeconds * 1000,
-					isStream: result.liveNow,
-					position: 0,
-					title: result.title,
-					uri: `https://www.youtube.com/watch?v=${result.videoId}`
-				}
-			}))
+			try {
+				return results.filter(result => result.type === "video").map(result => ({
+					track: encode({
+						flags: 1,
+						version: 2,
+						title: result.title,
+						author: result.author,
+						length: BigInt(result.lengthSeconds) * BigInt(1000),
+						identifier: result.videoId,
+						isStream: result.liveNow, // this is a guess
+						uri: `https://www.youtube.com/watch?v=${result.videoId}`,
+						source: "youtube",
+						position: BigInt(0)
+					}),
+					info: {
+						identifier: result.videoId,
+						isSeekable: true,
+						author: result.author,
+						length: result.lengthSeconds * 1000,
+						isStream: result.liveNow,
+						position: 0,
+						title: result.title,
+						uri: `https://www.youtube.com/watch?v=${result.videoId}`
+					}
+				}))
+			} catch {
+				return []
+			}
 		},
 
 		/**
