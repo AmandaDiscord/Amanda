@@ -398,7 +398,10 @@ commands.assign([
 				const name = currentQueueNode ? `${currentQueueNode[0].toUpperCase()}${currentQueueNode.slice(1, currentQueueNode.length)}` : lang.audio.debug.returns.unnamedNode
 				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
-			const invidiousHostname = new URL(common.invidious.getOrigin((currentQueueNode || node.id))).hostname
+			let final
+			if (currentQueueNode) final = constants.lavalinkNodes.find(n => n.id === currentQueueNode) || common.nodes.first()
+			else final = node
+			const invidiousHostname = new URL(final.invidious_origin).hostname
 			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.cacheManager.channels.hasPermissions({ id: channel.id, guild_id: msg.guild.id }, item[1])}`))
 			const details = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
