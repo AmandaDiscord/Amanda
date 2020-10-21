@@ -396,9 +396,7 @@ const memberManager = {
 			const match = /<@!?(\d+)>/.exec(string)
 			if (match && match[1]) {
 				string = match[1]
-				console.log(string, match)
 				const d = await memberManager.get(string, message.guild.id, true, true)
-				console.log(d)
 				// @ts-ignore
 				return res(d)
 			}
