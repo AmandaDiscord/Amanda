@@ -233,7 +233,7 @@ const cmds = [
 		}
 	},
 	{
-		usage: "<amount: number>",
+		usage: "<amount: number|all|half>",
 		description: "Withdraw money from your couple balance",
 		aliases: ["withdraw"],
 		category: "couples",
@@ -242,34 +242,59 @@ const cmds = [
 			const row = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
 			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
 			if (row.balance === 0) return msg.channel.send(`${msg.author.username}, there is no money to withdraw.`)
-			const num = Number(suffix)
-			if (isNaN(num)) return msg.channel.send(`${msg.author.username}, that is not a valid amount.`)
-			if (num <= 0) return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0.`)
-			if (num > row.balance) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
+			let amount
+			if (suffix == "all" || suffix == "half") {
+				if (suffix == "all") {
+					amount = row.balance
+				} else {
+					amount = Math.floor(row.balance / 2)
+				}
+			} else {
+				const num = utils.parseNumber(suffix)
+				if (isNaN(num)) return msg.channel.send(`${msg.author.username}, that is not a valid amount.`)
+				if (num <= 0) return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0.`)
+				amount = num
+			}
+			if (amount > row.balance) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
 			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance - num, msg.author.id, msg.author.id]),
-				utils.coinsManager.award(msg.author.id, num)
+				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance - amount, msg.author.id, msg.author.id]),
+				utils.coinsManager.award(msg.author.id, amount)
 			])
-			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(num)} to your balance.`)
+			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} to your balance.`)
 		}
 	},
 	{
-		usage: "<amount: number>",
+		usage: "<amount: number|all|half>",
 		description: "Deposit money to your couple balance",
 		aliases: ["deposit"],
 		category: "couples",
 		example: "&deposit 5000",
 		async process(msg, suffix, lang) {
-			const row = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
-			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
-			const num = Number(suffix)
-			if (isNaN(num)) return msg.channel.send(`${msg.author.username}, that is not a valid amount.`)
-			if (num <= 0) return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0.`)
-			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance + num, msg.author.id, msg.author.id]),
-				utils.coinsManager.award(msg.author.id, -num)
+			const [row, money] = await Promise.all([
+				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
+				utils.coinsManager.get(msg.author.id)
 			])
-			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(num)} from your balance.`)
+			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
+			let amount
+			if (suffix == "all" || suffix == "half") {
+				if (money == 0) return msg.channel.send(`${msg.author.username}, you don't have any amandollars to deposit`)
+				if (suffix == "all") {
+					amount = money
+				} else {
+					amount = Math.floor(money / 2)
+				}
+			} else {
+				const num = utils.parseNumber(suffix)
+				if (isNaN(num)) return msg.channel.send(`${msg.author.username}, that is not a valid amount.`)
+				if (num <= 0) return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0.`)
+				if (num > money) return msg.channel.send(`${msg.author.username}, you do not have that many amandollars`)
+				amount = num
+			}
+			await Promise.all([
+				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance + amount, msg.author.id, msg.author.id]),
+				utils.coinsManager.award(msg.author.id, -amount)
+			])
+			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} from your balance.`)
 		}
 	},
 	{

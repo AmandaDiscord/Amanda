@@ -67,7 +67,7 @@ commands.assign([
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send("You need to provide a duration in ms and a message to announce")
 			const dur = args[0]
-			const duration = Number(dur)
+			const duration = utils.parseNumber(dur)
 			if (isNaN(duration) || duration === 0) return msg.channel.send("That's not a valid duration")
 			if (!args[1]) return msg.channel.send("You need to provide a message to announce")
 			const message = suffix.substring(args[0].length + 1)

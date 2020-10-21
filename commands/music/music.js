@@ -189,7 +189,7 @@ const subcommandsMap = new Map([
 		code: (msg, args, { queue, lang }) => {
 			let amount
 			if (args[1]) {
-				amount = Math.floor(Number(args[1]))
+				amount = Math.floor(utils.parseNumber(args[1]))
 				if (isNaN(amount)) return msg.channel.send(lang.audio.music.prompts.invalidSkips)
 				if (amount < 1) return msg.channel.send(lang.audio.music.prompts.invalidSkipsAmount)
 				if (queue.songs.length < amount) return msg.channel.send(lang.audio.music.prompts.tooManySkips)

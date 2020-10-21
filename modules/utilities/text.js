@@ -61,6 +61,18 @@ function numberComma(number) {
 	return String(number).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
 }
 
+/**
+ * Converts a string to a number. The string may include commas.
+ * @param {string} string
+ */
+function parseNumber(string) {
+	const numstr = string.replace(/,/g, "")
+	const num = Number(numstr)
+	if (isNaN(num)) return NaN
+	else return num
+}
+
 module.exports.progressBar = progressBar
 module.exports.stringify = stringify
 module.exports.numberComma = numberComma
+module.exports.parseNumber = parseNumber

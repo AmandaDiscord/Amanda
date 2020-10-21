@@ -97,7 +97,7 @@ commands.assign([
 					bet = Math.floor(money / 2)
 				}
 			} else {
-				bet = Math.floor(Number(args[0]))
+				bet = Math.floor(utils.parseNumber(args[0]))
 				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.invalidBet, { "username": msg.author.username }))
 				if (bet < 2) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.betSmall, { "username": msg.author.username }))
 				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, { "username": msg.author.username }))
@@ -172,7 +172,7 @@ commands.assign([
 					bet = Math.floor(money / 2)
 				}
 			} else {
-				bet = Math.floor(Number(args[0]))
+				bet = Math.floor(utils.parseNumber(args[0]))
 				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBet, { "username": msg.author.username }))
 				if (bet < 1) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.betSmall, { "username": msg.author.username }))
 				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, { "username": msg.author.username }))
@@ -406,7 +406,7 @@ commands.assign([
 					gift = Math.floor(authorCoins / 2)
 				}
 			} else {
-				gift = Math.floor(Number(args[0]))
+				gift = Math.floor(utils.parseNumber(args[0]))
 				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidGift, { "username": msg.author.username }))
 				if (gift < 1) return msg.channel.send(utils.replace(lang.gambling.give.prompts.giftSmall, { "username": msg.author.username }))
 				if (gift > authorCoins) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
@@ -457,7 +457,7 @@ commands.assign([
 					amount = Math.floor(money / 2)
 				}
 			} else {
-				amount = Math.floor(Number(suffix))
+				amount = Math.floor(utils.parseNumber(suffix))
 				if (isNaN(amount)) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmount, { "username": msg.author.username }))
 				if (amount < 2) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.betSmall, { "username": msg.author.username }))
 				if (amount > money) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, { "username": msg.author.username }))

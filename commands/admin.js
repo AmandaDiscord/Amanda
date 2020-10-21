@@ -50,7 +50,7 @@ commands.assign([
 				depth ? depth = depth.substring(0).split(" ")[0] : undefined
 				if (!depth) depth = 0
 				else {
-					depth = Math.floor(Number(depth))
+					depth = Math.floor(utils.parseNumber(depth))
 					if (isNaN(depth)) depth = 0
 					suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring(0).split(" ")[0]}`, "")
 				}
@@ -129,7 +129,7 @@ commands.assign([
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.admin.award.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
-			const award = Math.floor(Number(args[0]))
+			const award = Math.floor(utils.parseNumber(args[0]))
 			if (isNaN(award)) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
 			if (!usertxt) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
