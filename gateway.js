@@ -98,11 +98,11 @@ const connection = new AmpqpConnector({
 		const sid = Number((BigInt(data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
 		const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
 		if (shard) {
-			await shard.connector.betterWs.sendMessage(data).catch(() => response.status(500).send(worker.createErrorResponse("Unable to send message")).end())
+			await shard.connector.betterWs.sendMessage(data).catch(() => response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${data}`)).end())
 			response.status(200).send(worker.createDataResponse("Message sent")).end()
 		} else {
 			console.log(`No shard found to send WS Message:\n${require("util").inspect(data, true, 2, true)}`)
-			response.status(500).send(worker.createErrorResponse("Unable to send message")).end()
+			response.status(500).send(worker.createErrorResponse(`Unable to send message\nMessage: ${data}`)).end()
 		}
 	})
 })().catch(console.error)
