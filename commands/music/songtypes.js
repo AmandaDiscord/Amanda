@@ -200,9 +200,8 @@ class YouTubeSong extends Song {
 		this.live = false
 
 		this.related = new utils.AsyncValueCache(
-		/** @returns {Promise<any[]>} */
-			async () => {
-				return fetch(`${await this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).then(async data => {
+			() => {
+				return fetch(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).then(async data => {
 					const json = await data.json()
 					this.typeWhileGetRelated = false
 					return json.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
@@ -216,7 +215,7 @@ class YouTubeSong extends Song {
 					let host = null
 					let region = null
 					if (this.queue) {
-						host = (await this.queue.player).node.host
+						host = common.nodes.getByID(this.queue.nodeID).host
 						region = this.queue.guild.region
 					}
 					return common.invidious.getTrack(this.id, host, region).then(t => {
@@ -284,16 +283,16 @@ class YouTubeSong extends Song {
 			} else {
 				return "No related content available for the current song."
 			}
-		}).catch(async () => {
+		}).catch(() => {
 			this.typeWhileGetRelated = false
 			return `Invidious didn't return valid data.\
-				\n<${await this.getInvidiousOrigin()}/api/v1/videos/${this.id}>\
-				\n<${await this.getInvidiousOrigin()}/v/${this.id}>\
+				\n<${this.getInvidiousOrigin()}/api/v1/videos/${this.id}>\
+				\n<${this.getInvidiousOrigin()}/v/${this.id}>\
 				\n<https://youtu.be/${this.id}>`
 		})
 	}
-	async getInvidiousOrigin() {
-		return common.invidious.getOrigin(this.queue && (await this.queue.player).node.host)
+	getInvidiousOrigin() {
+		return common.nodes.getByID(this.queue.nodeID).invidious_origin
 	}
 	showInfo() {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
@@ -559,6 +558,7 @@ class SoundCloudSong extends Song {
 	}
 }
 
+// @ts-ignore
 class SpotifySong extends YouTubeSong {
 	/**
 	 * @param {import("../../typings").SpotifyTrack & { track?: string, youtubeID?: string }} data
@@ -598,6 +598,8 @@ class SpotifySong extends YouTubeSong {
 			class: "SpotifySong",
 			trackNumber: this.trackNumber,
 			durationMS: this.lengthSeconds * 1000,
+			lengthSeconds: this.lengthSeconds,
+			uploader: this.artist,
 			title: this.title,
 			uri: this.uri,
 			artist: this.artist,
@@ -638,6 +640,7 @@ function makeYouTubeSongFromData(data) {
  * @param {string} track
  */
 function makeSoundCloudSong(trackNumber, title, lengthSeconds, live, uri, track) {
+	// @ts-ignore
 	return new SoundCloudSong({
 		identifier: `soundcloud:tracks:${trackNumber}`,
 		title: title,

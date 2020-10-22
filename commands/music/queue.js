@@ -221,7 +221,7 @@ class Queue {
 				["Text channel", this.textChannel.id],
 				["Voice channel", this.voiceChannel.id],
 				["Using Invidious", String(config.use_invidious)],
-				["Invidious origin", `\`${common.invidious.getOrigin(this.nodeID)}\``],
+				["Invidious origin", `\`${node.invidious_origin}\``],
 				["Queue node", node ? node.name : "Unnamed"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)

@@ -179,7 +179,7 @@ const common = {
 			try {
 				d = common.invidious.search(input, node.host).then(common.invidious.searchResultsToTracks)
 			} catch {
-				return []
+				return Promise.resolve([])
 			}
 			return d
 		} else {
