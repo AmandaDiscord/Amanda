@@ -162,9 +162,6 @@ class Queue {
 		if (this.langCache) return Promise.resolve(this.langCache)
 		return utils.getLang(this.guild.id, "guild")
 	}
-	getUsedLavalinkNode() {
-		return this.nodeID || null
-	}
 	toObject() {
 		return {
 			guild: this.guild.toJSON(),
@@ -215,7 +212,8 @@ class Queue {
 			const embed = new Discord.MessageEmbed()
 			embed.setTitle("Music error occurred.")
 			embed.setDescription("The next message is the message that was sent to the user.")
-			const usedNode = this.getUsedLavalinkNode()
+			const nodeID = this.nodeID
+			const node = common.nodes.getByID(nodeID)
 			const details = [
 				["Cluster", config.cluster_id],
 				["Guild", this.guild.name],
@@ -224,7 +222,7 @@ class Queue {
 				["Voice channel", this.voiceChannel.id],
 				["Using Invidious", String(config.use_invidious)],
 				["Invidious origin", `\`${common.invidious.getOrigin(this.nodeID)}\``],
-				["Queue node", usedNode ? usedNode : "Unnamed"]
+				["Queue node", node ? node.name : "Unnamed"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>

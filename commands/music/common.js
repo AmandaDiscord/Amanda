@@ -259,6 +259,10 @@ const common = {
 			return constants.lavalinkNodes.find(n => n.enabled && n.host === host) || common.nodes.first()
 		},
 
+		getByID(id) {
+			return constants.lavalinkNodes.find(n => n.enabled && n.id == id) || common.nodes.first()
+		},
+
 		getByRegion(region) {
 			return constants.lavalinkNodes.find(n => n.enabled && n.regions.includes(region)) || common.nodes.first()
 			// eslint-disable-next-line no-unreachable

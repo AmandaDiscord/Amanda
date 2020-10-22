@@ -47,8 +47,8 @@ const subcommandsMap = new Map([
 				// Get the track
 				if (config.use_invidious) { // Resolve tracks with Invidious
 					const queue = queues.cache.get(msg.guild.id)
-					const node = (queue && queue.getUsedLavalinkNode()) || common.nodes.getByRegion(guild.region)
-					common.invidious.getData(match.id, typeof node === "string" ? `${node[0].toUpperCase()}${node.slice(1, node.length)}` : node.host).then(async data => {
+					const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(guild.region)
+					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
@@ -393,13 +393,13 @@ commands.assign([
 			const node = common.nodes.getByRegion(guild.region)
 			let extraNodeInfo = ""
 			const currentQueue = queues.cache.get(msg.guild.id)
-			const currentQueueNode = currentQueue && currentQueue.getUsedLavalinkNode()
+			const currentQueueNode = currentQueue ? currentQueue.nodeID : null
 			if (currentQueueNode && currentQueueNode !== node.id) {
 				const name = currentQueueNode ? `${currentQueueNode[0].toUpperCase()}${currentQueueNode.slice(1, currentQueueNode.length)}` : lang.audio.debug.returns.unnamedNode
 				extraNodeInfo = `\n↳ ${utils.replace(lang.audio.debug.returns.queueUsing, { "name": name })}`
 			}
 			let final
-			if (currentQueueNode) final = constants.lavalinkNodes.find(n => n.id === currentQueueNode) || common.nodes.first()
+			if (currentQueueNode) final = common.nodes.getByID(currentQueueNode)
 			else final = node
 			const invidiousHostname = new URL(final.invidious_origin).hostname
 			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.cacheManager.channels.hasPermissions({ id: channel.id, guild_id: msg.guild.id }, item[1])}`))
