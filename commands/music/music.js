@@ -353,8 +353,9 @@ commands.assign([
 			}
 
 			function send(text, announce = true, throwFailed = false) {
-				return msg.author.send(text).then(() => {
-					if (msg.channel.type == "text" && announce) msg.channel.send(lang.audio.token.returns.dmSuccess)
+				return msg.author.send(text).then(async () => {
+					const type = await utils.cacheManager.channels.typeOf(msg.channel)
+					if (type == "text" && announce) msg.channel.send(lang.audio.token.returns.dmSuccess)
 				}).catch(() => {
 					if (announce) msg.channel.send(lang.audio.token.prompts.dmFailed)
 					if (throwFailed) throw new Error("DM failed")

@@ -219,7 +219,7 @@ class ClientReplier extends Replier {
 	}
 
 	/**
-	 * @return {Promise<import("snowtransfer/src/methods/Guilds").GuildMember>}
+	 * @return {Promise<import("@amanda/discordtypings").MemberData>}
 	 */
 	requestGetGuildMember(guildID, userID) {
 		return new Promise((resolve, reject) => {

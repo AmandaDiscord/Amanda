@@ -1,15 +1,17 @@
-const CloudStorm = require("cloudstorm")
+const Client = require("cloudstorm")
 const fetchdefault = require("node-fetch").default
 /** @type {fetchdefault} */
 // @ts-ignore
 const fetch = require("node-fetch")
+const util = require("util")
+const repl = require("repl")
 
 const AmpqpConnector = require("raincache").Connectors.AmqpConnector
 
 const config = require("./config")
 const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
 
-const Gateway = new CloudStorm.Client(config.bot_token, {
+const Gateway = new Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
 	firstShardId: config.shard_list[0],
 	shardAmount: config.total_shards,
@@ -35,6 +37,33 @@ const connection = new AmpqpConnector({
 	console.log("Gateway initialized.")
 
 	connection.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
+
+	/**
+	 * @param {string} input
+	 * @param {import("vm").Context} context
+	 * @param {string} filename
+	 * @param {(err: Error|null, result: any) => any} callback
+	 */
+	async function customEval(input, context, filename, callback) {
+		let depth = 0
+		if (input == "exit\n") return process.exit()
+		if (input.startsWith(":")) {
+			const depthOverwrite = input.split(" ")[0]
+			depth = +depthOverwrite.slice(1)
+			input = input.slice(depthOverwrite.length + 1)
+		}
+		const result = await eval(input)
+		const output = util.inspect(result, false, depth, true)
+		return callback(undefined, output)
+	}
+
+	const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
+
+	Object.assign(cli.context, { Gateway, worker, presence, readyPayload, connection })
+
+	cli.once("exit", () => {
+		process.exit()
+	})
 
 	Gateway.on("event", data => {
 		if (data.t === "READY") readyPayload = data

@@ -1,6 +1,8 @@
 // @ts-check
 
 const RainCache = require("raincache")
+const repl = require("repl")
+const util = require("util")
 
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
 const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
@@ -32,6 +34,34 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 	console.log("Cache initialized.")
 
 	connection.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
+
+	/**
+	 * @param {string} input
+	 * @param {import("vm").Context} context
+	 * @param {string} filename
+	 * @param {(err: Error|null, result: any) => any} callback
+	 */
+	// @ts-ignore
+	async function customEval(input, context, filename, callback) {
+		let depth = 0
+		if (input == "exit\n") return process.exit()
+		if (input.startsWith(":")) {
+			const depthOverwrite = input.split(" ")[0]
+			depth = +depthOverwrite.slice(1)
+			input = input.slice(depthOverwrite.length + 1)
+		}
+		const result = await eval(input)
+		const output = util.inspect(result, false, depth, true)
+		return callback(undefined, output)
+	}
+
+	const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
+
+	Object.assign(cli.context, { rain, worker, connection })
+
+	cli.once("exit", () => {
+		process.exit()
+	})
 
 	worker.get("/stats", (request, response) => {
 		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime() })).end()
@@ -82,9 +112,11 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					if (match) continue
 					const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
 
+					// @ts-ignore
 					if (query.id && obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
 						end()
 						continue
@@ -143,9 +175,11 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					if (!query.id && !query.name) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (obj.name === (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
 						end()
 						continue
@@ -197,11 +231,14 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					if (match) continue
 					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
 
+					// @ts-ignore
 					if (query.guild_id && obj.guild_id != query.guild_id) continue
 
+					// @ts-ignore
 					if (query.id && obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
 						end()
 						continue
@@ -257,14 +294,17 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					}
 					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
 
+					// @ts-ignore
 					if (query.guild_id && obj.guild_id != query.guild_id) continue
 
 					if (!query.id && !query.name && !query.guild_id) {
 						end()
 						continue
+					// @ts-ignore
 					} if (query.id && obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
 						end()
 						continue
@@ -330,15 +370,19 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					if (match) continue
 					const obj = user && user.boundObject ? user.boundObject : (user || {})
 
+					// @ts-ignore
 					if (query.id && obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.discriminator && obj.discriminator === query.discriminator) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
 						end()
 						continue
@@ -397,15 +441,19 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					if (!query.id && !query.username && !query.discriminator && !query.tag) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.id && obj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.discriminator && obj.discriminator === query.discriminator) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
 						end()
 						continue
@@ -458,23 +506,30 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				for (const member of mems) {
 					if (match) continue
 					const mobj = member && member.boundObject ? member.boundObject : (member || {})
+					// @ts-ignore
 					const user = await rain.cache.user.get(mobj.id)
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
+					// @ts-ignore
 					if (query.guild_id && mobj.guild_id != query.guild_id) continue
 
+					// @ts-ignore
 					if (query.id && mobj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
 						end()
 						continue
@@ -546,12 +601,15 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					} if (query.id && mobj.id === query.id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
 						end()
 						continue
@@ -648,14 +706,17 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					const mobj = member && member.boundObject ? member.boundObject : (member || {})
 					let user
 					try {
+						// @ts-ignore
 						user = await rain.cache.user.get(mobj.id)
 					} catch (e) {
 						return sendInternalError(e)
 					}
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
+					// @ts-ignore
 					if (mobj.guild_id != query.guild_id) continue
 
+					// @ts-ignore
 					if (mobj.roles.includes(query.role_id)) {
 						end()
 						continue
@@ -708,17 +769,21 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					const sobj = state && state.boundObject ? state.boundObject : (state || {})
 					let user
 					try {
+						// @ts-ignore
 						user = await rain.cache.user.get(state.user_id)
 					} catch (e) {
 						return sendInternalError(e)
 					}
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
+					// @ts-ignore
 					if (query.guild_id && sobj.guild_id != query.guild_id) continue
 
+					// @ts-ignore
 					if (query.channel_id && sobj.channel_id === query.channel_id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.user_id && sobj.user_id === query.user_id) {
 						end()
 						continue
@@ -776,20 +841,24 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					const sobj = state && state.boundObject ? state.boundObject : (state || {})
 					let user
 					try {
+						// @ts-ignore
 						user = await rain.cache.user.get(sobj.user_id)
 					} catch (e) {
 						return sendInternalError(e)
 					}
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
+					// @ts-ignore
 					if (query.guild_id && sobj.guild_id != query.guild_id) continue
 
 					if (!query.channel_id && !query.user_id) {
 						end()
 						continue
+					// @ts-ignore
 					} if (query.channel_id && sobj.channel_id === query.channel_id) {
 						end()
 						continue
+					// @ts-ignore
 					} else if (query.user_id && sobj.user_id === query.user_id) {
 						end()
 						continue
@@ -887,12 +956,15 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 							}
 							const obj = user && user.boundObject ? user.boundObject : (user || {})
 
+							// @ts-ignore
 							if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
 								end()
 								continue
+							// @ts-ignore
 							} else if (query.discriminator && obj.discriminator === query.discriminator) {
 								end()
 								continue
+							// @ts-ignore
 							} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
 								end()
 								continue
@@ -921,7 +993,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 	worker.post("/gateway", async (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
-		/** @type {import("thunderstorm/typings/internal").InboundDataType<keyof import("thunderstorm/typings/internal").CloudStormEventDataTable>} */
+		/** @type {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} */
 		const data = request.body
 		await handleCache(data)
 		response.status(200).send(worker.createDataResponse("Cached")).end()
@@ -934,7 +1006,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
  * We obviously want to wait for the cache ops to complete because most of the code still runs under the assumption
  * that rain AT LEAST has some data regarding an entity. I would hate to fetch info about something if we would have
  * just waited for cache ops to finish actually caching things for the worker to be able to access.
- * @param {import("thunderstorm/typings/internal").InboundDataType<keyof import("thunderstorm/typings/internal").CloudStormEventDataTable>} event
+ * @param {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} event
  */
 async function handleCache(event) {
 	if (event.t === "GUILD_CREATE") {
@@ -968,6 +1040,7 @@ async function handleCache(event) {
 
 		if (typed.webhook_id) return
 
+		// @ts-ignore
 		if (typed.member && typed.author) await rain.cache.member.update(typed.author.id, typed.guild_id, { guild_id: typed.guild_id, user: typed.author, id: typed.author.id, ...typed.member })
 		else if (typed.author) await rain.cache.user.update(typed.author.id, typed.author)
 

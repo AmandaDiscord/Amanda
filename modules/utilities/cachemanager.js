@@ -381,6 +381,7 @@ const memberManager = {
 	fetch: async function(id, guildID) {
 		const md = await client._snow.guild.getGuildMember(guildID, id)
 		const ud = await userManager.get(id, true, false)
+		// @ts-ignore
 		return (md && ud) ? { id: ud.id, guild_id: guildID, user: ud, ...md } : null
 	},
 	/**
