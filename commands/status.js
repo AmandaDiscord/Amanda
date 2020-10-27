@@ -168,7 +168,7 @@ function update() {
 		else type = choice.type
 		const data = {
 			name: `${choice.message} | ${prefix}help | ${config.cluster_id}`,
-			type: choice.type,
+			type: type,
 			url: "https://www.twitch.tv/papiophidian/"
 		}
 		passthrough.workers.gateway.statusUpdate(data)
