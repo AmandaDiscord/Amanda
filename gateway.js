@@ -65,6 +65,8 @@ const connection = new AmpqpConnector({
 		process.exit()
 	})
 
+	Gateway.on("debug", console.log)
+
 	Gateway.on("event", data => {
 		if (data.t === "READY") readyPayload = data
 		// Send data (Gateway -> Cache) (Cache sends data to Client worker)
@@ -91,7 +93,7 @@ const connection = new AmpqpConnector({
 	})
 
 
-	worker.patch("/status-update", async (request, response) => {
+	worker.patch("/status-update", (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
 		/** @type {import("./typings").GatewayStatusUpdateData} */
 		const data = request.body
@@ -112,10 +114,7 @@ const connection = new AmpqpConnector({
 
 		response.status(200).send(worker.createDataResponse(presence)).end()
 
-		for (const shard of Object.values(Gateway.shardManager.shards)) {
-			await shard.statusUpdate(payload)
-			await new Promise((res) => setTimeout(() => res(undefined), 5000))
-		}
+		Gateway.shardManager.statusUpdate(payload)
 	})
 
 
