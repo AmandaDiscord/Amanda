@@ -137,10 +137,12 @@ async function manageMessage(msg, isEdit = false) {
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	const cmd = commands.cache.find(c => c.aliases.includes(cmdTxt))
-	const timeout = await utils.rateLimiter(msg.author.id, msg)
-	if (!timeout.allowed) {
-		if (timeout.reason) return msg.channel.send(timeout.reason)
-		else return
+	if (cmd) {
+		const timeout = await utils.rateLimiter(msg.author.id, msg)
+		if (!timeout.allowed) {
+			if (timeout.reason) return msg.channel.send(timeout.reason)
+			else return
+		}
 	}
 	let lang
 	const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
