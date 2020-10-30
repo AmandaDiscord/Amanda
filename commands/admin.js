@@ -138,10 +138,10 @@ commands.assign([
 			utils.coinsManager.award(member.id, award)
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
-				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": award, "mention2": String(member) }))
+				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": utils.numberComma(award), "mention2": String(member) }))
 				.setColor(constants.money_embed_color)
 			msg.channel.send(await utils.contentify(msg.channel, embed))
-			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": award })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
+			return member.send(utils.replace(memlang.admin.award.returns.dm, { "mention": String(msg.author), "number": utils.numberComma(award) })).catch(() => msg.channel.send(lang.admin.award.prompts.dmFailed))
 		}
 	}
 ])
