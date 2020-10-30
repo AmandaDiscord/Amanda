@@ -67,6 +67,7 @@ const connection = new AmpqpConnector({
 	})
 
 	Gateway.on("debug", console.log)
+	Gateway.on("error", console.error)
 
 	Gateway.on("event", data => {
 		if (data.t === "READY") readyPayload = data
