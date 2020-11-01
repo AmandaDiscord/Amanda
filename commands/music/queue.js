@@ -107,8 +107,8 @@ class Queue {
 		this.player.then(player => {
 			player.on("end", event => this._onEnd(event))
 			player.on("playerUpdate", async data => {
-				const lang = await this.getLang()
 				if (!this.isPaused) {
+					const lang = await this.getLang()
 					const newSongStartTime = data.state.time - data.state.position
 					// commenting this out: it may break the error check, but it will improve the web time
 					// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
@@ -289,6 +289,17 @@ class Queue {
 	 */
 	_onEnd(event) {
 		if (event.reason == "REPLACED") return
+		if (event.type === "TrackStuckEvent") {
+			this.audit.push({ action: "Queue Skip (Song got stuck)", platform: "System", user: "Amanda" })
+			if (this.songs[0]) {
+				let reason = ""
+				if (event.error) reason += `${event.error}\n`
+				if (event.reason) reason += event.reason
+				this.songs[0].error = reason ? reason : `\`\`\`js\n${JSON.stringify({ error: "Track got stuck" }, null, 4)}`
+				console.log("Song error call D")
+				this._reportError()
+			}
+		}
 		this._nextSong()
 	}
 	async _nextSong() {
@@ -419,6 +430,20 @@ class Queue {
 		this.auto = false
 		player.stop()
 		this._dissolve()
+	}
+	/**
+	 * @param {number} position
+	 * @returns {Promise<0 | 1 | 2 | 3 | 4>} Returns 0 on success. 1 if no song. 2 if the song is live. 3 if the position is > song length. 4 if error
+	 */
+	async seek(position) {
+		const song = this.songs[0]
+		if (!song) return 1
+		if (song.live) return 2
+		if (position > (song.lengthSeconds * 1000)) return 3
+		const player = await this.player
+		const result = await player.seek(position)
+		if (result) return 0
+		else return 4
 	}
 	toggleAuto() {
 		this.auto = !this.auto

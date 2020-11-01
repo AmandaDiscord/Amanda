@@ -45,6 +45,38 @@ function shortTime(number, scale, precision = ["d", "h", "m", "s"]) {
 	return timestr
 }
 
+/**
+ * @param {string} input
+ * @returns {number | null}
+ */
+function parseDuration(input) {
+	if (!input) return null
+	const individual = input.split(/(?! [^\d]+) /g)
+	let totalTime = 0
+	for (const frame of individual) {
+		const reg = /([\d]+) ?([\w]+)?/
+		const test = frame.match(reg)
+		if (test == null) return null
+		if (!test[1]) return null
+		/** @type [string, string, string] */
+		const [inp, duration, identifier] = [test[0], test[1], test[2]]
+		const num = Number(duration)
+		if (isNaN(num)) return null
+		let multiply = 1
+		if (identifier) {
+			if (identifier.startsWith("w")) multiply = 1000 * 60 * 60 * 24 * 7
+			else if (identifier.startsWith("d")) multiply = 1000 * 60 * 60 * 24
+			else if (identifier.startsWith("h")) multiply = 1000 * 60 * 60
+			else if (identifier.startsWith("ms") || identifier.startsWith("mil")) multiply = 1000
+			else if (identifier.startsWith("m")) multiply = 1000 * 60
+			else if (identifier.startsWith("s")) multiply = 1000
+		}
+		totalTime += num * multiply
+	}
+	return totalTime
+}
+
 module.exports.upcomingDate = upcomingDate
 module.exports.getSixTime = getSixTime
 module.exports.shortTime = shortTime
+module.exports.parseDuration = parseDuration

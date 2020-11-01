@@ -183,17 +183,17 @@ const cmds = [
 				utils.sql.all("DELETE FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
 				married.balance ? utils.coinsManager.award(otherid, married.balance) : Promise.resolve(null)
 			])
-			msg.channel.send(utils.replace(lang.interaction.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": partner.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
+			msg.channel.send(utils.replace(lang.couples.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": partner.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
 			const memsettings = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [otherid, "waifualert"])
 			let guildsettings
 			const memlang = await utils.getLang(otherid, "self")
 			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.interaction.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
 				else return
 			}
-			return partner.send(`${utils.replace(memlang.interaction.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
+			return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
 		}
 	},
 	{
@@ -343,7 +343,7 @@ const cmds = [
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Couple Leaderboard" : "Couple Leaderboard"
-			const footerHelp = `&coupleleaderboard ${lang.interaction.waifuleaderboard.help.usage}`
+			const footerHelp = `&coupleleaderboard ${lang.couples.coupleleaderboard.help.usage}`
 
 			if (rows.length) {
 				const usersToResolve = new Set()
@@ -365,7 +365,7 @@ const cmds = [
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)
 					.setDescription(displayRows.join("\n"))
-					.setFooter(utils.replace(lang.interaction.waifuleaderboard.returns.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
+					.setFooter(utils.replace(lang.couples.coupleleaderboard.returns.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` | ${footerHelp}`) // SC: U+2002 EN SPACE
 					.setColor(constants.money_embed_color)
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))

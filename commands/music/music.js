@@ -293,6 +293,21 @@ const subcommandsMap = new Map([
 				.setDescription(lyrics)
 			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
+	}],
+	["seek", {
+		queue: "required",
+		code: async (msg, args, { lang, queue }) => {
+			const suffix = args.slice(1).join(" ")
+			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide a duration to seek to. Example: \`&m seek 20s\``)
+			const duration = utils.parseDuration(suffix)
+			if (!duration || isNaN(duration)) return msg.channel.send(`${msg.author.username}, that is not valid duration.`)
+			const result = await queue.seek(duration)
+			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			else if (result === 2) return msg.channel.send(`${msg.author.username}, you can't seek live music`)
+			else if (result === 3) return msg.channel.send(`${msg.author.username}, the duration you provided is greater than the current song's length`)
+			else if (result === 4) return msg.channel.send(`${msg.author.username}, there was an error with seeking to that position. Your duration was parsed properly as ${utils.numberComma(duration)} milliseconds, but LavaLink did not seek. This is a bug. Please report this: <${constants.server}>`)
+			else return
+		}
 	}]
 ])
 
@@ -740,6 +755,16 @@ commands.assign([
 		example: "&lyrics",
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "lyrics", lang)
+		}
+	},
+	{
+		usage: "[position]",
+		description: "Seeks the current song playing to a duration",
+		aliases: ["seek"],
+		category: "audio",
+		example: "&seek 2min 3sec",
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `seek${suffix ? ` ${suffix}` : ""}`, lang)
 		}
 	}
 ])
