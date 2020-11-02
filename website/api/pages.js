@@ -13,13 +13,19 @@ const utils = require("../modules/utilities.js")
 const validators = require("../modules/validator.js")()
 // reloader.useSync("./modules/validator.js", validators)
 
+const aboutCache = { devs: [], donors: [], translators: [], lastCache: 0 }
+const aboutCacheExpires = 1000 * 60 * 60
+
 module.exports = [
 	{
 		route: "/about", methods: ["GET"], code: async () => {
-			const devs = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599471049310208" } })
-			const donors = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599593879371796" } })
-			const translators = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "755604509664739439" } })
-			return render(200, "pug/about.pug", {devs, donors, translators})
+			if (aboutCache.lastCache <= Date.now() - aboutCacheExpires) {
+				aboutCache.devs = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599471049310208" } })
+				aboutCache.donors = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599593879371796" } })
+				aboutCache.translators = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "755604509664739439" } })
+				aboutCache.lastCache = Date.now()
+			}
+			return render(200, "pug/about.pug", { devs: aboutCache.devs, donors: aboutCache.donors, translators: aboutCache.translators })
 		}
 	},
 	{
