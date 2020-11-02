@@ -114,10 +114,12 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {string} guildID
 	 */
-	REPLY_GET_QUEUE_STATE(guildID) {
+	async REPLY_GET_QUEUE_STATE(guildID) {
 		const queue = getQueue(guildID)
 		if (!queue) return null
-		return queue.wrapper.getState()
+		const state = await queue.wrapper.getState()
+		console.log(state)
+		return state
 	}
 
 	/**
@@ -242,7 +244,8 @@ class ClientReplier extends Replier {
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
 	async sendNewQueue(queue) {
-		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state: await queue.wrapper.getState() } })
+		const state = await queue.wrapper.getState()
+		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state } })
 	}
 
 	sendDeleteQueue(guildID) {
