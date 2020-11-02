@@ -118,7 +118,6 @@ class ClientReplier extends Replier {
 		const queue = getQueue(guildID)
 		if (!queue) return null
 		const state = await queue.wrapper.getState()
-		console.log(state)
 		return state
 	}
 
