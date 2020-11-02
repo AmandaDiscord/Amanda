@@ -150,9 +150,9 @@ class Queue {
 		this.np = null
 		/** @type {import("@amanda/reactionmenu")} */
 		this.npMenu = null
-		this.npUpdater = new FrequencyUpdater(() => {
+		this.npUpdater = new FrequencyUpdater(async () => {
 			if (this.np) {
-				const embed = this._buildNPEmbed()
+				const embed = await this._buildNPEmbed()
 				if (embed) this.np.edit(embed)
 			}
 		})
@@ -545,12 +545,14 @@ class Queue {
 	 * Create and return an embed containing details about the current song.
 	 *	Returns null if no songs.
 	 */
-	_buildNPEmbed() {
+	async _buildNPEmbed() {
 		const song = this.songs[0]
 		if (song) {
 			const embed = new Discord.MessageEmbed()
 			const lang = this.langCache || Lang.en_us
-			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `**${Util.escapeMarkdown(song.title)}**\n\n${song.getProgress(this.timeSeconds, this.isPaused)}` }))
+			const progress = song.getProgress(this.timeSeconds, this.isPaused)
+			const link = await song.showLink()
+			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
 			embed.setColor(constants.standard_embed_color)
 			return embed
 		} else return null
@@ -561,10 +563,10 @@ class Queue {
 	 * @param {boolean} force If false, don't create more NP messages. If true, force creation of a new one.
 	 * @returns {Promise<void>}
 	 */
-	sendNewNP(force = false) {
+	async sendNewNP(force = false) {
 		if (this.np && !force) return Promise.resolve()
 		else {
-			const result = this._buildNPEmbed()
+			const result = await this._buildNPEmbed()
 			return this.textChannel.send(result ? result : `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯`).then(x => {
 				this.np = x
 				this._makeReactionMenu()

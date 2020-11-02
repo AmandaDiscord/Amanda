@@ -114,6 +114,9 @@ class Song {
 	showRelated() {
 		return Promise.resolve("This isn't a real song.")
 	}
+	showLink() {
+		return Promise.resolve(constants.baseURL)
+	}
 	/**
 	 * Get sendable data with information about this song
 	 * @returns {Promise<string|Discord.MessageEmbed>}
@@ -260,7 +263,7 @@ class YouTubeSong extends Song {
 		const rightTime = common.prettySeconds(max)
 		if (time > max) time = max
 		const leftTime = common.prettySeconds(time)
-		const bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
+		const bar = utils.progressBar(18, time, max, paused ? " [PAUSED] " : "")
 		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 	}
 	async getRelated() {
@@ -293,6 +296,9 @@ class YouTubeSong extends Song {
 	}
 	getInvidiousOrigin() {
 		return common.nodes.getByID(this.queue.nodeID).invidious_origin
+	}
+	showLink() {
+		return this.showInfo()
 	}
 	showInfo() {
 		return Promise.resolve(`https://www.youtube.com/watch?v=${this.id}`)
@@ -389,6 +395,11 @@ class FriskySong extends Song {
 	showRelated() {
 		return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
 	}
+	showLink() {
+		return this.stationInfoGetter.get().then(stream => {
+			return `https://beta.frisky.fm/mix/${stream.mix.id}`
+		}).catch(() => "https://beta.frisy.fm")
+	}
 	showInfo() {
 		return this.stationInfoGetter.get().then(stream => {
 			const mix = stream.mix
@@ -438,7 +449,7 @@ class FriskySong extends Song {
 	getProgress(time) {
 		const part = "= ⋄ ==== ⋄ ==="
 		const fragment = part.substr(7 - this._filledBarOffset, 7)
-		const bar = `${fragment.repeat(5)}` // SC: ZWSP x 2
+		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
 		// eslint-disable-next-line no-irregular-whitespace
@@ -524,7 +535,7 @@ class SoundCloudSong extends Song {
 		const rightTime = common.prettySeconds(max)
 		if (time > max) time = max
 		const leftTime = common.prettySeconds(time)
-		const bar = utils.progressBar(35, time, max, paused ? " [PAUSED] " : "")
+		const bar = utils.progressBar(18, time, max, paused ? " [PAUSED] " : "")
 		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 	}
 
@@ -534,6 +545,10 @@ class SoundCloudSong extends Song {
 
 	showRelated() {
 		return Promise.resolve("Try finding related songs on SoundCloud.")
+	}
+
+	showLink() {
+		return this.showInfo()
 	}
 
 	showInfo() {
@@ -612,6 +627,10 @@ class SpotifySong extends YouTubeSong {
 	}
 	showRelated() {
 		return Promise.resolve("Try finding related songs on Spotify.")
+	}
+	showLink() {
+		const ID = this.uri.match(/spotify:track:([\d\w]+)/)[1]
+		return Promise.resolve(`https://open.spotify.com/track/${ID}`)
 	}
 	async showInfo() {
 		const ID = this.uri.match(/spotify:track:([\d\w]+)/)[1]
