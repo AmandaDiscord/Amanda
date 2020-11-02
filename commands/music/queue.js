@@ -70,8 +70,6 @@ class Queue {
 		this.voiceChannel = voiceChannel
 		this.textChannel = textChannel
 		this.wrapper = new QueueWrapper(this)
-		/** @type {Map<string, Discord.GuildMember>} */
-		this.listeners = new Map()
 		this.songStartTime = 0
 		this.pausedAt = null
 		/** @type {import("./songtypes").Song[]} */
@@ -795,8 +793,12 @@ class QueueWrapper {
 		}
 	}
 
-	getMembers() {
-		return [...this.queue.listeners.values()].map(m => ({
+	async getMembers() {
+		/**
+		 * @type {Array<Discord.GuildMember>}
+		 */
+		const data = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.queue.guild.id } }).then(d => d.map(g => utils.cacheManager.members.parse(g)))
+		return data.map(m => ({
 			id: m.id,
 			name: m.displayName,
 			avatar: m.user.displayAvatarURL({ format: "png", size: 64, dynamic: false }),
@@ -811,14 +813,14 @@ class QueueWrapper {
 		}
 	}
 
-	getState() {
+	async getState() {
 		return {
 			guildID: this.queue.guild.id,
 			playing: !this.queue.isPaused,
 			songStartTime: this.queue.songStartTime,
 			pausedAt: this.queue.pausedAt,
 			songs: this.queue.songs.map(s => s.getState()),
-			members: this.getMembers(),
+			members: await this.getMembers(),
 			voiceChannel: {
 				id: this.queue.voiceChannel.id,
 				name: this.queue.voiceChannel.name

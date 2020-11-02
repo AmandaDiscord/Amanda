@@ -581,7 +581,6 @@ commands.assign([
 				if (!queue) return msg.channel.send(utils.replace(lang.audio.music.prompts.nothingPlaying, { "username": msg.author.username }))
 				subcommmandData.queue = queue
 
-				subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 			}
 			// Provide a voice channel?
 			if (subcommandObject.voiceChannel) {

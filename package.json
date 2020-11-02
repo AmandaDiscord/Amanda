@@ -41,7 +41,7 @@
     "node-fetch": "^2.6.1",
     "node-ipc": "^9.1.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "raincache": "github:AmandaDiscord/RainCache#6e593af98d97f1ad7b8323f0de7b3791c70022af",
+    "raincache": "github:AmandaDiscord/RainCache#728f645b2ea65f6c4234299f78d65aadc28b9fc9",
     "simple-git": "^2.21.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#9b55a3630a11f0836911e55c06787c15aeb30957",

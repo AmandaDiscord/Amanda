@@ -241,8 +241,8 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
-	sendNewQueue(queue) {
-		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state: queue.wrapper.getState() } })
+	async sendNewQueue(queue) {
+		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state: await queue.wrapper.getState() } })
 	}
 
 	sendDeleteQueue(guildID) {
@@ -298,8 +298,8 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
-	sendMembersUpdate(queue) { // TODO: this is jank
-		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guild.id, members: queue.wrapper.getMembers() } })
+	async sendMembersUpdate(queue) { // TODO: this is jank
+		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guild.id, members: await queue.wrapper.getMembers() } })
 	}
 
 	/**
