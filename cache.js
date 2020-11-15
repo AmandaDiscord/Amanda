@@ -14,7 +14,9 @@ const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`
 })
 
-// @ts-ignore
+let opAmount = 0
+let totalOps = 0
+
 const rain = new RainCache({
 	storage: {
 		default: new RedisStorageEngine({
@@ -41,7 +43,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 	 * @param {string} filename
 	 * @param {(err: Error|null, result: any) => any} callback
 	 */
-	// @ts-ignore
 	async function customEval(input, context, filename, callback) {
 		let depth = 0
 		if (input == "exit\n") return process.exit()
@@ -64,7 +65,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 	})
 
 	worker.get("/stats", (request, response) => {
-		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime() })).end()
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), activeOPs: opAmount, totalOPs: totalOps })).end()
 	})
 
 	worker.post("/request", async (request, response) => {
@@ -78,71 +79,31 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			return response.status(500).send(worker.createErrorResponse(error)).end()
 		}
 
-		if (data.op === "FIND_GUILD") {
-			/** @type {{ id?: string, name?: string }} */
-			// @ts-ignore
-			const query = data.params || {}
+		/**
+		 * @param {"filter" | "find"} mode
+		 * @param {"guild" | "channel" | "user" | "member" | "voiceState"} name
+		 * @param {Object.<string, any>} properties
+		 * @param {{ limit?: number }} [options]
+		 * @returns {Promise<Array<any>>}
+		 */
+		async function filterCache(mode, name, properties, options) {
+			opAmount++
+			totalOps++
+			if (!options) options = { limit: 10 }
+			const table = rain.cache[name]
+			const failed = ["failed"]
+			if (!table) {
+				sendInternalError(`No cache table found: ${name}`)
+				opAmount--
+				return failed
+			}
 			let members
 			try {
-				members = await rain.cache.guild.getIndexMembers()
+				members = await table.getIndexMembers()
 			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			let match
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
-
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let guilds
-				try {
-					guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const guild of guilds) {
-					if (match) continue
-					const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
-
-					// @ts-ignore
-					if (query.id && obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						match = obj
-						passing = false
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(match)).end()
-
-		} else if (data.op === "FILTER_GUILDS") {
-			/** @type {{ id?: string, name?: string, limit?: number }} */
-			// @ts-ignore
-			const query = data.params || { limit: 10 }
-			let members
-			try {
-				members = await rain.cache.guild.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
+				sendInternalError(e)
+				opAmount--
+				return failed
 			}
 			const batchLimit = 50
 			let pass = 1
@@ -157,479 +118,161 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					continue
 				}
 
-				let guilds
+				let objects
 				try {
-					guilds = await Promise.all(batch.map(id => rain.cache.guild.get(id)))
+					// @ts-ignore
+					if (["member", "voiceState"].includes(name)) objects = await Promise.all(batch.map(id => table.get(id, properties.guild_id)))
+					// @ts-ignore
+					else objects = await Promise.all(batch.map(id => table.get(id)))
 				} catch (e) {
-					return sendInternalError(e)
+					sendInternalError(e)
+					opAmount--
+					return failed
 				}
 
-				for (const guild of guilds) {
+				for (const instance of objects) {
 					if (!passing) continue
-					if (query.limit && matched.length === query.limit) {
+					if (options.limit && matched.length === options.limit) {
 						passing = false
 						continue
 					}
-					const obj = guild && guild.boundObject ? guild.boundObject : (guild || {})
+					if (!instance) continue
+					const obj = instance && instance.boundObject ? instance.boundObject : (instance || {})
 
-					if (!query.id && !query.name) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (obj.name === (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
+					if (properties.guild_id && obj.guild_id != properties.guild_id) continue
+
+					const keys = Object.keys(properties)
+
+					for (const key of keys) {
+						if (key === "guild_id") continue
+						const property = properties[key]
+
+						if (keys.length === 0) {
+							end()
+							continue
+						} else {
+							const objp = obj[key]
+							if (typeof objp === "string" && objp.toLowerCase().includes(property)) {
+								end()
+								continue
+							} else {
+								if (objp === property) {
+									end()
+									continue
+								} else continue
+							}
+						}
 					}
 
 					// eslint-disable-next-line no-inner-declarations
 					function end() {
+						if (mode === "find") {
+							passing = false
+							return
+						}
 						matched.push(obj)
 					}
 				}
 				pass++
 			}
-			return response.status(200).send(worker.createDataResponse(matched)).end()
+			opAmount--
+			return matched
+		}
+
+
+		if (data.op === "FIND_GUILD") {
+			const d = await filterCache("find", "guild", data.params || {})
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
+
+
+		} else if (data.op === "FILTER_GUILDS") {
+			const q = data.params || {}
+			// @ts-ignore
+			const limit = q.limit
+			// @ts-ignore
+			delete q.limit
+			const d = await filterCache("filter", "guild", q, { limit })
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "FIND_CHANNEL") {
-			/** @type {{ id?: string, name?: string, guild_id?: string }} */
-			// @ts-ignore
-			const query = data.params || {}
-			let members
-			try {
-				members = await rain.cache.channel.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			let match
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
+			const d = await filterCache("find", "channel", data.params || {})
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let channels
-				try {
-					channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
-				} catch(e) {
-					return sendInternalError(e)
-				}
-
-				for (const channel of channels) {
-					if (match) continue
-					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
-
-					// @ts-ignore
-					if (query.guild_id && obj.guild_id != query.guild_id) continue
-
-					// @ts-ignore
-					if (query.id && obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						match = obj
-						passing = false
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(match)).end()
 
 		} else if (data.op === "FILTER_CHANNELS") {
-			/** @type {{ id?: string, name?: string, guild_id?: string, limit?: number }} */
+			const q = data.params || {}
 			// @ts-ignore
-			const query = data.params || { limit: 10 }
-			let members
-			try {
-				members = await rain.cache.channel.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			const matched = []
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
-
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let channels
-				try {
-					channels = await Promise.all(batch.map(id => rain.cache.channel.get(id)))
-				} catch(e) {
-					return sendInternalError(e)
-				}
-
-				for (const channel of channels) {
-					if (!passing) continue
-					if (query.limit && matched.length === query.limit) {
-						passing = false
-						continue
-					}
-					const obj = channel && channel.boundObject ? channel.boundObject : (channel || {})
-
-					// @ts-ignore
-					if (query.guild_id && obj.guild_id != query.guild_id) continue
-
-					if (!query.id && !query.name && !query.guild_id) {
-						end()
-						continue
-					// @ts-ignore
-					} if (query.id && obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.name && (obj.name ? obj.name.toLowerCase().includes(query.name.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						matched.push(obj)
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(matched)).end()
+			const limit = q.limit
+			// @ts-ignore
+			delete q.limit
+			const d = await filterCache("filter", "channel", q, { limit })
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "GET_USER") {
+			opAmount++
+			totalOps++
 			/** @type {{ id: string }} */
 			// @ts-ignore
 			const query = data.params || {}
-			if (!query.id) return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			if (!query.id) {
+				opAmount--
+				return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			}
 			let user
 			try {
 				user = await rain.cache.user.get(query.id)
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
 			const obj = user && user.boundObject ? user.boundObject : (user ? user : null)
+			opAmount--
 			return response.status(200).send(worker.createDataResponse(obj)).end()
 
+
 		} else if (data.op === "FIND_USER") {
-			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string }} */
-			// @ts-ignore
-			const query = data.params || {}
-			let members
-			try {
-				members = await rain.cache.user.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			let match
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
+			const d = await filterCache("find", "user", data.params || {})
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let users
-				try {
-					users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const user of users) {
-					if (match) continue
-					const obj = user && user.boundObject ? user.boundObject : (user || {})
-
-					// @ts-ignore
-					if (query.id && obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.discriminator && obj.discriminator === query.discriminator) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						match = obj
-						passing = false
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(match)).end()
 
 		} else if (data.op === "FILTER_USERS") {
-			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, limit?: number }} */
+			const q = data.params || {}
 			// @ts-ignore
-			const query = data.params || { limit: 10 }
-			let members
-			try {
-				members = await rain.cache.user.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			const matched = []
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
-
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let users
-				try {
-					users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const user of users) {
-					if (!passing) continue
-					if (query.limit && matched.length === query.limit) {
-						passing = false
-						continue
-					}
-					const obj = user && user.boundObject ? user.boundObject : (user || {})
-
-					if (!query.id && !query.username && !query.discriminator && !query.tag) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.id && obj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.discriminator && obj.discriminator === query.discriminator) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						matched.push(obj)
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(matched)).end()
+			const limit = q.limit
+			// @ts-ignore
+			delete q.limit
+			const d = await filterCache("filter", "user", q, { limit })
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "FIND_MEMBER") {
-			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string }} */
-			// @ts-ignore
-			const query = data.params || {}
-			let members
-			try {
-				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
-				else members = await rain.cache.member.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			let match
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
+			const d = await filterCache("find", "member", data.params || {})
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let mems
-				try {
-					if (query.guild_id) mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
-					else mems = await Promise.all(batch.map(id => rain.cache.member.get(id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const member of mems) {
-					if (match) continue
-					const mobj = member && member.boundObject ? member.boundObject : (member || {})
-					// @ts-ignore
-					const user = await rain.cache.user.get(mobj.id)
-					const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-					// @ts-ignore
-					if (query.guild_id && mobj.guild_id != query.guild_id) continue
-
-					// @ts-ignore
-					if (query.id && mobj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						match = { user: uobj, ...mobj }
-						passing = false
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(match)).end()
 
 		} else if (data.op === "FILTER_MEMBERS") {
-			/** @type {{ id?: string, username?: string, discriminator?: string, tag?: string, nick?: string, guild_id?: string, limit?: number }} */
+			const q = data.params || {}
 			// @ts-ignore
-			const query = data.params || { limit: 10 }
-			let members = []
-			try {
-				if (query.guild_id) members = await rain.cache.member.getIndexMembers(query.guild_id)
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			const matched = []
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
+			const limit = q.limit
+			// @ts-ignore
+			delete q.limit
+			const d = await filterCache("filter", "member", q, { limit })
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let mems
-				try {
-					if (query.guild_id) mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
-					else mems = []
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const member of mems) {
-					if (!passing) continue
-					if (query.limit && matched.length === query.limit) {
-						passing = false
-						continue
-					}
-					const mobj = member && member.boundObject ? member.boundObject : (member || {})
-					let user
-					try {
-						user = await rain.cache.user.get(mobj.id)
-					} catch (e) {
-						return sendInternalError(e)
-					}
-					const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-					if (query.guild_id && mobj.guild_id != query.guild_id) continue
-
-					if (!query.id && !query.username && !query.discriminator && !query.tag && !query.guild_id && !query.nick) {
-						end()
-						continue
-					} if (query.id && mobj.id === query.id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.username && (uobj.username ? uobj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.discriminator && uobj.discriminator === query.discriminator) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.tag && (uobj.username && uobj.discriminator ? `${uobj.username}#${uobj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-						end()
-						continue
-					} else if (query.nick && (mobj.nick ? mobj.nick.toLowerCase().includes(query.nick.toLowerCase()) : false)) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						matched.push({ user: uobj, ...mobj })
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(matched)).end()
 
 		} else if (data.op === "GET_USER_GUILDS") {
+			opAmount++
+			totalOps++
 			/** @type {{ id: string }} */
 			// @ts-ignore
 			const query = data.params || {}
@@ -638,6 +281,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			try {
 				guilds = await rain.cache.guild.getIndexMembers()
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
 			const batchLimit = 100
@@ -661,24 +305,32 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						// @ts-ignore
 						indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
 					} catch (e) {
+						opAmount--
 						return sendInternalError(e)
 					}
 					indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
 					pass++
 				}
 			}
+			opAmount--
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
 		} else if (data.op === "GET_MEMBERS_IN_ROLE") {
+			opAmount++
+			totalOps++
 			/** @type {{ role_id: string, guild_id: string }} */
 			// @ts-ignore
 			const query = data.params || {}
 
-			if (!query.guild_id || !query.role_id) return response.status(400).send(worker.createErrorResponse("Missing guild_id or role_id fields"))
+			if (!query.guild_id || !query.role_id) {
+				opAmount--
+				return response.status(400).send(worker.createErrorResponse("Missing guild_id or role_id fields"))
+			}
 			let members
 			try {
 				members = await rain.cache.member.getIndexMembers(query.guild_id)
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
 			const batchLimit = 50
@@ -698,6 +350,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				try {
 					mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
 				} catch (e) {
+					opAmount--
 					return sendInternalError(e)
 				}
 
@@ -709,6 +362,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						// @ts-ignore
 						user = await rain.cache.user.get(mobj.id)
 					} catch (e) {
+						opAmount--
 						return sendInternalError(e)
 					}
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
@@ -731,156 +385,37 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				}
 				pass++
 			}
+			opAmount--
 			return response.status(200).send(worker.createDataResponse(matched)).end()
 
 
 		} else if (data.op === "FIND_VOICE_STATE") {
-			/** @type {{ channel_id?: string, user_id?: string, guild_id?: string }} */
-			// @ts-ignore
-			const query = data.params || {}
-			let members
-			try {
-				members = await rain.cache.voiceState.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			let match
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
+			const d = await filterCache("find", "voiceState", data.params || {})
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let states
-				try {
-					states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const state of states) {
-					if (match) continue
-					const sobj = state && state.boundObject ? state.boundObject : (state || {})
-					let user
-					try {
-						// @ts-ignore
-						user = await rain.cache.user.get(state.user_id)
-					} catch (e) {
-						return sendInternalError(e)
-					}
-					const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-					// @ts-ignore
-					if (query.guild_id && sobj.guild_id != query.guild_id) continue
-
-					// @ts-ignore
-					if (query.channel_id && sobj.channel_id === query.channel_id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.user_id && sobj.user_id === query.user_id) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						match = { user: uobj, ...sobj }
-						passing = false
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(match)).end()
 
 		} else if (data.op === "FILTER_VOICE_STATES") {
-			/** @type {{ channel_id?: string, user_id?: string, guild_id?: string, limit?: number }} */
+			const q = data.params || {}
 			// @ts-ignore
-			const query = data.params || { limit: 10 }
-			let members
-			try {
-				members = await rain.cache.voiceState.getIndexMembers()
-			} catch (e) {
-				return sendInternalError(e)
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			const matched = []
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
-
-				if (batch.length === 0) {
-					passing = false
-					continue
-				}
-
-				let states
-				try {
-					states = await Promise.all(batch.map(id => rain.cache.voiceState.get(id, query.guild_id)))
-				} catch (e) {
-					return sendInternalError(e)
-				}
-
-				for (const state of states) {
-					if (!passing) continue
-					if (query.limit && matched.length === query.limit) {
-						passing = false
-						continue
-					}
-					if (!state) continue
-					const sobj = state && state.boundObject ? state.boundObject : (state || {})
-					let user
-					try {
-						// @ts-ignore
-						user = await rain.cache.user.get(sobj.user_id)
-					} catch (e) {
-						return sendInternalError(e)
-					}
-					const uobj = user && user.boundObject ? user.boundObject : (user || {})
-
-					// @ts-ignore
-					if (query.guild_id && sobj.guild_id != query.guild_id) continue
-
-					if (!query.channel_id && !query.user_id) {
-						end()
-						continue
-					// @ts-ignore
-					} if (query.channel_id && sobj.channel_id === query.channel_id) {
-						end()
-						continue
-					// @ts-ignore
-					} else if (query.user_id && sobj.user_id === query.user_id) {
-						end()
-						continue
-					} else {
-						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						matched.push({ user: uobj, ...sobj })
-					}
-				}
-				pass++
-			}
-			return response.status(200).send(worker.createDataResponse(matched)).end()
+			const limit = q.limit
+			// @ts-ignore
+			delete q.limit
+			const d = await filterCache("filter", "voiceState", q, { limit })
+			if (d[0] === "failed") return
+			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "SAVE_DATA") {
+			opAmount++
+			totalOps++
 			/** @type {import("./typings").CacheSaveData} */
 			// @ts-ignore
 			const query = data.params || {}
-			if (!query.type || !query.data) return response.status(400).send(worker.createErrorResponse("Missing type or data field")).end()
+			if (!query.type || !query.data) {
+				opAmount--
+				return response.status(400).send(worker.createErrorResponse("Missing type or data field")).end()
+			}
 			/** @type {import("./typings").CacheSaveData["type"]} */
 			const type = query.type
 			const methods = {
@@ -891,31 +426,45 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			try {
 				await methods[type].update(query.data.id, query.data)
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
+			opAmount--
 			return response.status(200).send(worker.createDataResponse("Saved")).end()
 
 
 		} else if (data.op === "DELETE_USER") {
+			opAmount++
+			totalOps++
 			/** @type {{ id: string }}} */
 			// @ts-ignore
 			const query = data.params || {}
-			if (!query.id) return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			if (!query.id) {
+				opAmount--
+				return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
+			}
 			try {
 				await rain.cache.user.removeFromIndex(query.id)
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
 			return response.status(200).send(worker.createDataResponse("Deleted")).end()
 
+
 		} else if (data.op === "DELETE_USERS") {
+			opAmount++
+			totalOps++
 			/** @type {import("./typings").CacheUserData & { limit?: number, ids?: Array<string>, confirm?: boolean }}} */
 			// @ts-ignore
 			const query = data.params || {}
 			if (!query.ids && !query.discriminator && !query.id && !query.tag && !query.username) {
-				if (!query.confirm) return response.status(400).send(worker.createErrorResponse("Missing all fields")).end()
-				else {
+				if (!query.confirm) {
+					opAmount--
+					return response.status(400).send(worker.createErrorResponse("Missing all fields")).end()
+				} else {
 					await rain.cache.user.removeIndex()
+					opAmount--
 					return response.status(200).send(worker.createDataResponse("Deleted all")).end()
 				}
 			}
@@ -927,6 +476,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					try {
 						members = await rain.cache.user.getIndexMembers()
 					} catch (e) {
+						opAmount--
 						return sendInternalError(e)
 					}
 					const batchLimit = 50
@@ -946,6 +496,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						try {
 							users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
 						} catch (e) {
+							opAmount--
 							return sendInternalError(e)
 						}
 
@@ -979,12 +530,15 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						}
 						pass++
 					}
+					opAmount--
 					if (matched.length > 0) return response.status(200).send(worker.createDataResponse(matched.map(m => m.id))).end()
 					else return response.status(200).send(worker.createDataResponse([]))
 				}
 			} catch (e) {
+				opAmount--
 				return sendInternalError(e)
 			}
+			opAmount--
 			return sendInternalError("How did we get here?")
 
 
@@ -993,10 +547,10 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 	worker.post("/gateway", async (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
+		response.status(200).send(worker.createDataResponse("ACK")).end()
 		/** @type {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} */
 		const data = request.body
 		await rain.eventProcessor.inbound(data)
-		response.status(200).send(worker.createDataResponse("Cached")).end()
 		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(JSON.stringify(request.body)))
 	})
 })()
