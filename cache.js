@@ -99,7 +99,8 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			let members
 			try {
-				members = await table.getIndexMembers()
+				if (properties.guild_id) members = await table.getIndexMembers(properties.guild_id)
+				else members = await table.getIndexMembers()
 			} catch (e) {
 				sendInternalError(e)
 				opAmount--
@@ -118,6 +119,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					continue
 				}
 
+				/** @type {Array<any>} */
 				let objects
 				try {
 					// @ts-ignore
@@ -130,6 +132,8 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					return failed
 				}
 
+				if (objects.length === 0) continue
+
 				for (const instance of objects) {
 					if (!passing) continue
 					if (options.limit && matched.length === options.limit) {
@@ -141,25 +145,38 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 					if (properties.guild_id && obj.guild_id != properties.guild_id) continue
 
+					if (name === "member") {
+						const user = await rain.cache.user.get(obj.id)
+						const uobj = user && user.boundObject ? user.boundObject : (user || {})
+						obj.user = uobj
+					}
+
 					const keys = Object.keys(properties)
 
 					for (const key of keys) {
 						if (key === "guild_id") continue
 						const property = properties[key]
 
-						if (keys.length === 0) {
-							end()
-							continue
-						} else {
-							const objp = obj[key]
-							if (typeof objp === "string" && objp.toLowerCase().includes(property)) {
+						if (name === "member") m(obj.user)
+						m(obj)
+						continue
+
+						// eslint-disable-next-line no-inner-declarations
+						function m(o) {
+							if (keys.length === 0) {
 								end()
-								continue
+								return
 							} else {
-								if (objp === property) {
+								const objp = o[key]
+								if (typeof objp === "string" && objp.toLowerCase().includes(property)) {
 									end()
-									continue
-								} else continue
+									return
+								} else {
+									if (objp === property) {
+										end()
+										return
+									} else return
+								}
 							}
 						}
 					}
@@ -168,7 +185,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					function end() {
 						if (mode === "find") {
 							passing = false
-							return
 						}
 						matched.push(obj)
 					}
