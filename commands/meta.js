@@ -216,6 +216,12 @@ const cmds = [
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
 							inline: true
+						},
+						{
+							name: leadingSpace,
+							value: `**❯ Current Operation Count:**\n${utils.numberComma(stats.activeOPs)}\n`
+							+ `**❯ Total Operations:**\n${utils.numberComma(stats.totalOPs)}`,
+							inline: true
 						}
 					])
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
