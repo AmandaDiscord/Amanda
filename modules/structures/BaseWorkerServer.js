@@ -1,5 +1,6 @@
 const express = require("express")
 const server = express()
+server.disable("x-powered-by")
 
 const config = require("../../config")
 
@@ -34,8 +35,7 @@ class BaseWorkerServer {
 	 * @param {string} provided
 	 */
 	authenticate(provided) {
-		if (provided === this.password) return true
-		else return false
+		return provided === this.password
 	}
 	/**
 	 * @param {string} path

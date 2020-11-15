@@ -33,8 +33,8 @@ class BaseWorkerRequester {
 		if (!response) return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ url: `${this.baseURL}${path}`, method: method, payload: payload })}`))
 
 		if (response.status != 200) {
-			const data = await response.json()
-			return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ status: response.status, error: data.error })}`))
+			const d = await response.json()
+			return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ status: response.status, error: d.error })}`))
 		}
 
 		const data = await response.json()

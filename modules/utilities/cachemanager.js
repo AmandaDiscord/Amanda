@@ -232,9 +232,8 @@ const channelManager = {
 		// @ts-ignore
 		else toCheck = permission
 
-		if ((permissions.allow & toCheck) == toCheck) return true
-		if ((permissions.deny & toCheck) == toCheck) return false
-		else return true
+		if ((permissions.allow & toCheck) == toCheck) return
+		return (permissions.deny & toCheck) ? false : true
 	}
 }
 
@@ -496,8 +495,7 @@ const memberManager = {
 		if (permissions.allow & toCheck) return true
 		else if (permissions.deny & toCheck) return false
 
-		if (!(permissions.allow & toCheck)) return false
-		else return true
+		return (permissions.allow & toCheck) ? true : false
 	}
 }
 

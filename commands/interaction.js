@@ -34,7 +34,7 @@ const cmds = [
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
-			if (!(args.length >= 1)) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
+			if (args.length <= 1) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
 			let mem1, mem2
 			if (args.length == 1) {
 				mem1 = msg.member

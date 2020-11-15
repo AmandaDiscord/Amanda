@@ -260,7 +260,7 @@ const cmds = [
 			const nmsg = await msg.channel.send(message)
 			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = await utils.contentify(msg.channel, embed)
-			nmsg.edit(await utils.contentify(msg.channel, embed))
+			nmsg.edit(content)
 		}
 	},
 	{
@@ -363,9 +363,9 @@ const cmds = [
 			}
 			const res = await new Promise((r) => {
 				simpleGit.status((err, status) => {
-					simpleGit.log({ "--no-decorate": null }, (err, log) => {
+					simpleGit.log({ "--no-decorate": null }, (err2, log) => {
 						Promise.all(Array(limit).fill(undefined).map((_, i) => new Promise(resolve => {
-							simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash], (err, diff) => {
+							simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash], (err3, diff) => {
 								resolve(diff)
 							})
 						}))).then(diffs => {

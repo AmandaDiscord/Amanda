@@ -58,8 +58,8 @@ function parseDuration(input) {
 		const test = frame.match(reg)
 		if (test == null) return null
 		if (!test[1]) return null
-		/** @type [string, string, string] */
-		const [inp, duration, identifier] = [test[0], test[1], test[2]]
+		/** @type [string, string] */
+		const [duration, identifier] = [test[1], test[2]]
 		const num = Number(duration)
 		if (isNaN(num)) return null
 		let multiply = 1

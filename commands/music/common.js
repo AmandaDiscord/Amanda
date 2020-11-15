@@ -265,9 +265,8 @@ const common = {
 
 		getByRegion(region) {
 			return constants.lavalinkNodes.find(n => n.enabled && n.regions.includes(region)) || common.nodes.first()
-			// eslint-disable-next-line no-unreachable
-			const lowUsage = common.nodes.lowUsage()
-			return lowUsage.find(node => node.regions.includes(region)) || lowUsage[0]
+			// const lowUsage = common.nodes.lowUsage()
+			// return lowUsage.find(node => node.regions.includes(region)) || lowUsage[0]
 		}
 	},
 
@@ -619,6 +618,7 @@ const common = {
 			try {
 				text = await fetch(url).then(res => res.text())
 			} catch (e) {
+				console.error(e)
 				throw e
 			}
 			const ss = "Spotify.Entity"
@@ -734,7 +734,6 @@ const common = {
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
-			const mdata = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))

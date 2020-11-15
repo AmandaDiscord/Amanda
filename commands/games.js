@@ -24,17 +24,6 @@ const absoluteMax = 1000
 
 streaks.setDestroyDuration("trivia", 1000 * 60 * 15)
 
-/**
- * @typedef TriviaResponse
- * @property {string} category
- * @property {string} type
- * @property {string} difficulty
- * @property {string} question
- * @property {string} correct_answer
- * @property {Array<string>} incorrect_answers
- */
-undefined
-
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
@@ -217,14 +206,14 @@ async function startGame(channel, options) {
 		const [
 			success,
 			/** @type {{ trivia_categories: {id: number, name: string}[] }} */
-			data
+			d
 		] = await JSONHelper("https://opentdb.com/api_category.php", channel, options.lang)
 		if (!success) return
 		if (options.suffix.includes("categor")) {
 			options.msg.author.send(
 				new Discord.MessageEmbed()
 					.setTitle(options.lang.games.trivia.prompts.categories)
-					.setDescription(`${data.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
+					.setDescription(`${d.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
 			).then(() => {
 				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, { "username": options.msg.author.username }))
 			}).catch(() => {
@@ -232,8 +221,8 @@ async function startGame(channel, options) {
 			})
 			return
 		} else {
-			let f = data.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()))
-			if (options.suffix.toLowerCase().endsWith("music")) f = data.trivia_categories.filter(c => c.name == "Entertainment: Music")
+			let f = d.trivia_categories.filter(c => c.name.toLowerCase().includes(options.suffix.toLowerCase()))
+			if (options.suffix.toLowerCase().endsWith("music")) f = d.trivia_categories.filter(c => c.name == "Entertainment: Music")
 			if (f.length == 0) return channel.send(utils.replace(options.lang.games.trivia.prompts.noCategory, { "username": options.msg.author.username }))
 			else if (f.length >= 2) return channel.send(`${utils.replace(options.lang.games.trivia.prompts.multipleCategories, { "username": "Hey", "string": (`**${f[0].name}**, **${f[1].name}**${(f.length == 2 ? ". " : `, and ${f.length - 2} more. `)}Use \`&trivia categories\` for the list of available categories.`) })}`)
 			else category = f[0].id
@@ -286,10 +275,7 @@ function sweeper(difficulty, size) {
 
 	if (size) {
 		let num
-		if (size < 4) {
-			num = 8
-			error = true
-		} else if (size > 14) {
+		if (size < 4 || size > 14) {
 			num = 8
 			error = true
 		} else num = size
@@ -450,3 +436,13 @@ commands.assign([
 		}
 	}
 ])
+
+/**
+ * @typedef TriviaResponse
+ * @property {string} category
+ * @property {string} type
+ * @property {string} difficulty
+ * @property {string} question
+ * @property {string} correct_answer
+ * @property {Array<string>} incorrect_answers
+ */

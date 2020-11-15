@@ -47,7 +47,7 @@ commands.assign([
 				if (!suffix) return msg.channel.send(lang.admin.evaluate.prompts.noInput)
 				let result, depth
 				depth = suffix.split("--depth:")[1]
-				depth ? depth = depth.substring(0).split(" ")[0] : undefined
+				depth = depth ? depth.substring(0).split(" ")[0] : undefined
 				if (!depth) depth = 0
 				else {
 					depth = Math.floor(utils.parseNumber(depth))

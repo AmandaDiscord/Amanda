@@ -646,8 +646,7 @@ class SpotifySong extends YouTubeSong {
  * @param {{ track: string, info: { identifier: string, title: string, length: number, author: string } }} data
  */
 function makeYouTubeSongFromData(data) {
-	if (config.use_invidious) return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
-	else return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
+	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
 }
 
 /**
