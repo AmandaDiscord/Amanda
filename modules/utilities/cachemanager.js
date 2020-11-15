@@ -232,7 +232,7 @@ const channelManager = {
 		// @ts-ignore
 		else toCheck = permission
 
-		if ((permissions.allow & toCheck) == toCheck) return
+		if ((permissions.allow & toCheck) == toCheck) return true
 		return (permissions.deny & toCheck) ? false : true
 	}
 }
