@@ -91,11 +91,6 @@ function createMessageCollector(filter = {}, callback, onFail) {
 			} catch (e) {
 				if (onFail) return onFail()
 			}
-		} else {
-			if (maxMatches === 1 && onFail) {
-				onFail()
-				return clear()
-			}
 		}
 	}
 }
