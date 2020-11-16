@@ -139,8 +139,10 @@ const cmds = [
 				const songsPlayed = periodicHistory.getSize("song_start")
 				const qs = passthrough.queues.cache
 				/** @type {Array<Array<import("@amanda/discordtypings").VoiceStateData & { user: import("@amanda/discordtypings").UserData }>>} */
-				const allStates = await Promise.all(qs.map(q => passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { channel_id: q.voiceChannel.id, limit: 30 } })))
-				const listeningcount = allStates.filter(channelStates => channelStates.filter(s => !s.user.bot)).length
+				const allStates = await Promise.all(qs.map(q =>
+					passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { channel_id: q.voiceChannel.id, limit: 30 } })
+				))
+				const listeningcount = allStates.length
 				embed
 					.addFields([
 						{
