@@ -75,144 +75,9 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 		if (!data.op) return response.status(400).send(worker.createErrorResponse("No op in payload")).end()
 
-		function sendInternalError(error) {
-			return response.status(500).send(worker.createErrorResponse(error)).end()
-		}
-
-		/**
-		 * @param {"filter" | "find"} mode
-		 * @param {"guild" | "channel" | "user" | "member" | "voiceState"} name
-		 * @param {Object.<string, any>} properties
-		 * @param {{ limit?: number }} [options]
-		 * @returns {Promise<Array<any>>}
-		 */
-		async function filterCache(mode, name, properties, options) {
-			opAmount++
-			totalOps++
-			if (!options) options = { limit: 10 }
-			const table = rain.cache[name]
-			const getWithGuilds = ["member", "voiceState"].includes(name)
-			const failed = ["failed"]
-			if (!table) {
-				sendInternalError(`No cache table found: ${name}`)
-				opAmount--
-				return failed
-			}
-			let members
-			try {
-				if (getWithGuilds && properties.guild_id) members = await table.getIndexMembers(properties.guild_id)
-				else members = await table.getIndexMembers()
-			} catch (e) {
-				sendInternalError(e)
-				opAmount--
-				return failed
-			}
-			const batchLimit = 50
-			let pass = 1
-			let passing = true
-			const matched = []
-			while (passing) {
-				const starting = (batchLimit * pass) - batchLimit
-				const batch = members.slice(starting, starting + batchLimit)
-
-				if (batch.length === 0) {
-					passing = false
-					cont()
-					continue
-				}
-
-				/** @type {Array<any>} */
-				let objects
-				try {
-					// @ts-ignore
-					if (getWithGuilds && properties.guild_id) objects = await Promise.all(batch.map(id => table.get(id, properties.guild_id)))
-					// @ts-ignore
-					else objects = await Promise.all(batch.map(id => table.get(id)))
-				} catch (e) {
-					sendInternalError(e)
-					opAmount--
-					return failed
-				}
-
-				const filtered = objects.filter(item => item !== null)
-
-				if (filtered.length === 0) {
-					cont()
-					continue
-				}
-
-				for (const instance of filtered) {
-					if (!passing) continue
-					if (options.limit && matched.length === options.limit) {
-						passing = false
-						continue
-					}
-					if (!instance) continue
-					const obj = instance && instance.boundObject ? instance.boundObject : (instance || {})
-
-					if (properties.guild_id && obj.guild_id != properties.guild_id) continue
-
-					if (name === "member") {
-						const user = await rain.cache.user.get(obj.id)
-						const uobj = user && user.boundObject ? user.boundObject : (user || {})
-						obj.user = uobj
-					}
-
-					const keys = Object.keys(properties)
-
-					const nonGuildKeys = keys.filter(i => i !== "guild_id")
-					if (nonGuildKeys.length === 0) {
-						end()
-						cont()
-						continue
-					}
-
-					for (const key of nonGuildKeys) {
-						const property = properties[key]
-
-						if (name === "member") m(obj.user)
-						m(obj)
-
-						// eslint-disable-next-line no-inner-declarations
-						function m(o) {
-							let objp = o[key]
-							if (name === "member" && key === "tag" && o.user) {
-								objp = `${o.user.username}#${o.user.discriminator}`
-							}
-							if (typeof objp === "string" && typeof property === "string" && objp.toLowerCase().includes(property.toLowerCase())) {
-								end()
-								return
-							} else {
-								if (objp === property) {
-									end()
-									return
-								} else return
-							}
-						}
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						if (mode === "find") {
-							passing = false
-						}
-						matched.push(obj)
-					}
-				}
-				// eslint-disable-next-line no-inner-declarations
-				function cont() {
-					pass++
-				}
-				cont()
-				continue
-			}
-			opAmount--
-			return matched
-		}
-
 
 		if (data.op === "FIND_GUILD") {
-			const d = await filterCache("find", "guild", data.params || {})
+			const d = await filterCache(response, "find", "guild", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -223,13 +88,13 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			const limit = q.limit
 			// @ts-ignore
 			delete q.limit
-			const d = await filterCache("filter", "guild", q, { limit })
+			const d = await filterCache(response, "filter", "guild", q, { limit })
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "FIND_CHANNEL") {
-			const d = await filterCache("find", "channel", data.params || {})
+			const d = await filterCache(response, "find", "channel", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -240,7 +105,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			const limit = q.limit
 			// @ts-ignore
 			delete q.limit
-			const d = await filterCache("filter", "channel", q, { limit })
+			const d = await filterCache(response, "filter", "channel", q, { limit })
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -260,7 +125,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				user = await rain.cache.user.get(query.id)
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			const obj = user && user.boundObject ? user.boundObject : (user ? user : null)
 			opAmount--
@@ -268,7 +133,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 
 		} else if (data.op === "FIND_USER") {
-			const d = await filterCache("find", "user", data.params || {})
+			const d = await filterCache(response, "find", "user", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -279,13 +144,13 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			const limit = q.limit
 			// @ts-ignore
 			delete q.limit
-			const d = await filterCache("filter", "user", q, { limit })
+			const d = await filterCache(response, "filter", "user", q, { limit })
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
 		} else if (data.op === "FIND_MEMBER") {
-			const d = await filterCache("find", "member", data.params || {})
+			const d = await filterCache(response, "find", "member", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -296,7 +161,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			const limit = q.limit
 			// @ts-ignore
 			delete q.limit
-			const d = await filterCache("filter", "member", q, { limit })
+			const d = await filterCache(response, "filter", "member", q, { limit })
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -313,7 +178,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				guilds = await rain.cache.guild.getIndexMembers()
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			const batchLimit = 100
 			let pass = 1
@@ -337,7 +202,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
 					} catch (e) {
 						opAmount--
-						return sendInternalError(e)
+						return sendInternalError(e, response)
 					}
 					indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
 					pass++
@@ -362,7 +227,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				members = await rain.cache.member.getIndexMembers(query.guild_id)
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			const batchLimit = 50
 			let pass = 1
@@ -382,7 +247,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					mems = await Promise.all(batch.map(id => rain.cache.member.get(id, query.guild_id)))
 				} catch (e) {
 					opAmount--
-					return sendInternalError(e)
+					return sendInternalError(e, response)
 				}
 
 				for (const member of mems) {
@@ -394,7 +259,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						user = await rain.cache.user.get(mobj.id)
 					} catch (e) {
 						opAmount--
-						return sendInternalError(e)
+						return sendInternalError(e, response)
 					}
 					const uobj = user && user.boundObject ? user.boundObject : (user || {})
 
@@ -403,15 +268,10 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 					// @ts-ignore
 					if (mobj.roles.includes(query.role_id)) {
-						end()
+						end("filter", matched, { user: uobj, ...mobj })
 						continue
 					} else {
 						continue
-					}
-
-					// eslint-disable-next-line no-inner-declarations
-					function end() {
-						matched.push({ user: uobj, ...mobj })
 					}
 				}
 				pass++
@@ -421,7 +281,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 
 		} else if (data.op === "FIND_VOICE_STATE") {
-			const d = await filterCache("find", "voiceState", data.params || {})
+			const d = await filterCache(response, "find", "voiceState", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -432,7 +292,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			const limit = q.limit
 			// @ts-ignore
 			delete q.limit
-			const d = await filterCache("filter", "voiceState", q, { limit })
+			const d = await filterCache(response, "filter", "voiceState", q, { limit })
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
@@ -458,7 +318,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				await methods[type].update(query.data.id, query.data)
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			opAmount--
 			return response.status(200).send(worker.createDataResponse("Saved")).end()
@@ -475,10 +335,10 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				return response.status(400).send(worker.createErrorResponse("Missing id field")).end()
 			}
 			try {
-				await rain.cache.user.removeFromIndex(query.id)
+				await rain.cache.user.remove(query.id)
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			return response.status(200).send(worker.createDataResponse("Deleted")).end()
 
@@ -493,22 +353,18 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				if (!query.confirm) {
 					opAmount--
 					return response.status(400).send(worker.createErrorResponse("Missing all fields")).end()
-				} else {
-					await rain.cache.user.removeIndex()
-					opAmount--
-					return response.status(200).send(worker.createDataResponse("Deleted all")).end()
 				}
 			}
 			try {
 				if (query.id) {
-					await rain.cache.user.removeFromIndex(query.id)
+					await rain.cache.user.remove(query.id)
 				} else {
 					let members
 					try {
 						members = await rain.cache.user.getIndexMembers()
 					} catch (e) {
 						opAmount--
-						return sendInternalError(e)
+						return sendInternalError(e, response)
 					}
 					const batchLimit = 50
 					let pass = 1
@@ -528,7 +384,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 							users = await Promise.all(batch.map(id => rain.cache.user.get(id)))
 						} catch (e) {
 							opAmount--
-							return sendInternalError(e)
+							return sendInternalError(e, response)
 						}
 
 						for (const user of users) {
@@ -536,41 +392,32 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 								passing = false
 								continue
 							}
+							/** @type {{ username: string, discriminator: string }} */
+							// @ts-ignore
 							const obj = user && user.boundObject ? user.boundObject : (user || {})
 
-							// @ts-ignore
-							if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) {
-								end()
-								continue
-							// @ts-ignore
-							} else if (query.discriminator && obj.discriminator === query.discriminator) {
-								end()
-								continue
-							// @ts-ignore
-							} else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) {
-								end()
-								continue
-							} else {
-								continue
-							}
+							let en = false
+							if (query.username && (obj.username ? obj.username.toLowerCase().includes(query.username.toLowerCase()) : false)) en = true
+							else if (query.discriminator && obj.discriminator === query.discriminator) en = true
+							else if (query.tag && (obj.username && obj.discriminator ? `${obj.username}#${obj.discriminator}`.toLowerCase() === query.tag.toLowerCase() : false)) en = true
 
-							// eslint-disable-next-line no-inner-declarations
-							function end() {
-								matched.push(obj)
-							}
+							if (en) {
+								end("filter", matched, obj)
+								continue
+							} else continue
 						}
 						pass++
 					}
 					opAmount--
-					if (matched.length > 0) return response.status(200).send(worker.createDataResponse(matched.map(m => m.id))).end()
+					if (matched.length > 0) return response.status(200).send(worker.createDataResponse(matched.map(ma => ma.id))).end()
 					else return response.status(200).send(worker.createDataResponse([]))
 				}
 			} catch (e) {
 				opAmount--
-				return sendInternalError(e)
+				return sendInternalError(e, response)
 			}
 			opAmount--
-			return sendInternalError("How did we get here?")
+			return sendInternalError("How did we get here?", response)
 
 
 		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
@@ -585,3 +432,149 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(JSON.stringify(request.body)))
 	})
 })()
+
+/**
+ * @param {import("express").Response} response
+ * @param {"filter" | "find"} mode
+ * @param {"guild" | "channel" | "user" | "member" | "voiceState"} name
+ * @param {Object.<string, any>} properties
+ * @param {{ limit?: number }} [options]
+ * @returns {Promise<Array<any>>}
+ */
+async function filterCache(response, mode, name, properties, options) {
+	opAmount++
+	totalOps++
+	if (!options) options = { limit: 10 }
+	const table = rain.cache[name]
+	const getWithGuilds = ["member", "voiceState"].includes(name)
+	const failed = ["failed"]
+	if (!table) {
+		sendInternalError(`No cache table found: ${name}`, response)
+		opAmount--
+		return failed
+	}
+	let members
+	try {
+		if (getWithGuilds && properties.guild_id) members = await table.getIndexMembers(properties.guild_id)
+		else members = await table.getIndexMembers()
+	} catch (e) {
+		sendInternalError(e, response)
+		opAmount--
+		return failed
+	}
+	const cont = () => {
+		pass++
+	}
+	const batchLimit = 50
+	let pass = 1
+	let passing = true
+	const matched = []
+	while (passing) {
+		const starting = (batchLimit * pass) - batchLimit
+		const batch = members.slice(starting, starting + batchLimit)
+
+		if (batch.length === 0) {
+			passing = false
+			cont()
+			continue
+		}
+
+		/** @type {Array<any>} */
+		let objects
+		try {
+			// @ts-ignore
+			if (getWithGuilds && properties.guild_id) objects = await Promise.all(batch.map(id => table.get(id, properties.guild_id)))
+			// @ts-ignore
+			else objects = await Promise.all(batch.map(id => table.get(id)))
+		} catch (e) {
+			sendInternalError(e, response)
+			opAmount--
+			return failed
+		}
+
+		const filtered = objects.filter(item => item !== null)
+
+		if (filtered.length === 0) {
+			cont()
+			continue
+		}
+
+		for (const instance of filtered) {
+			if (!passing) continue
+			if (options.limit && matched.length === options.limit) {
+				passing = false
+				continue
+			}
+			if (!instance) continue
+			const obj = instance && instance.boundObject ? instance.boundObject : (instance || {})
+
+			if (properties.guild_id && obj.guild_id != properties.guild_id) continue
+
+			if (name === "member") {
+				const user = await rain.cache.user.get(obj.id)
+				const uobj = user && user.boundObject ? user.boundObject : (user || {})
+				obj.user = uobj
+			}
+
+			const keys = Object.keys(properties)
+
+			const nonGuildKeys = keys.filter(i => i !== "guild_id")
+			if (nonGuildKeys.length === 0) {
+				passing = end(mode, matched, obj)
+				cont()
+				continue
+			}
+
+			for (const key of nonGuildKeys) {
+				const property = properties[key]
+
+				if (name === "member") passing = m(obj.user, key, property, mode, matched, name)
+				else passing = m(obj, key, property, mode, matched, name)
+			}
+		}
+		cont()
+		continue
+	}
+	opAmount--
+	return matched
+}
+
+/**
+ * @param {any} o
+ * @param {string} key
+ * @param {any} property
+ * @param {"find" | "filter"} mode
+ * @param {Array<any>} matched
+ * @param {string} name
+ */
+function m(o, key, property, mode, matched, name) {
+	let objp = o[key]
+	if (name === "member" && key === "tag" && o.user) {
+		objp = `${o.user.username}#${o.user.discriminator}`
+	}
+	if (typeof objp === "string" && typeof property === "string" && objp.toLowerCase().includes(property.toLowerCase())) {
+		return end(mode, matched, o)
+	} else {
+		if (objp === property) {
+			return end(mode, matched, o)
+		} else return true
+	}
+}
+
+/**
+ * @param {"find" | "filter"} mode
+ * @param {Array<any>} matched
+ * @param {any} obj
+ */
+function end(mode, matched, obj) {
+	matched.push(obj)
+	return mode === "filter"
+}
+
+/**
+ * @param {any} error
+ * @param {import("express").Response} response
+ */
+function sendInternalError(error, response) {
+	return response.status(500).send(worker.createErrorResponse(error)).end()
+}
