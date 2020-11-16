@@ -161,8 +161,13 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					const keys = Object.keys(properties)
 
 					const nonGuildKeys = keys.filter(i => i !== "guild_id")
+					if (nonGuildKeys.length === 0) {
+						end()
+						cont()
+						continue
+					}
 
-					for (const key of keys) {
+					for (const key of nonGuildKeys) {
 						const property = properties[key]
 
 						if (name === "member") m(obj.user)
@@ -170,20 +175,18 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 						// eslint-disable-next-line no-inner-declarations
 						function m(o) {
-							if (nonGuildKeys.length === 0) {
+							let objp = o[key]
+							if (name === "member" && key === "tag" && o.user) {
+								objp = `${o.user.username}#${o.user.discriminator}`
+							}
+							if (typeof objp === "string" && typeof property === "string" && objp.toLowerCase().includes(property.toLowerCase())) {
 								end()
 								return
 							} else {
-								const objp = o[key]
-								if (typeof objp === "string" && objp.toLowerCase().includes(property)) {
+								if (objp === property) {
 									end()
 									return
-								} else {
-									if (objp === property) {
-										end()
-										return
-									} else return
-								}
+								} else return
 							}
 						}
 					}
