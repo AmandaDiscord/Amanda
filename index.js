@@ -128,6 +128,7 @@ const db = mysql.createPool({
 		"./commands/couples.js",
 		"./commands/gambling.js",
 		"./commands/games.js",
+		"./commands/hidden.js",
 		"./commands/images.js",
 		"./commands/interaction.js",
 		"./commands/meta.js",

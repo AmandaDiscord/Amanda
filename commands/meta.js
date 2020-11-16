@@ -1060,7 +1060,7 @@ const cmds = [
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor(constants.standard_embed_color)
 						msg.channel.send(await utils.contentify(msg.channel, embed))
-					} else if (commands.categories.get(suffix)) {
+					} else if (suffix != "hidden" && commands.categories.get(suffix)) {
 						const cat = commands.categories.get(suffix)
 						const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 						embed = new Discord.MessageEmbed()
@@ -1111,7 +1111,7 @@ const cmds = [
 				embed = new Discord.MessageEmbed()
 					.setAuthor("Command Categories")
 					.setDescription(
-						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin").join("\n❯ ")}\n\n${lang.meta.help.returns.main}\n\n${utils.replace(lang.meta.help.returns.info, { "link": constants.invite_link_for_help })}`)
+						`❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")}\n\n${lang.meta.help.returns.main}\n\n${utils.replace(lang.meta.help.returns.info, { "link": constants.invite_link_for_help })}`)
 					.setColor(constants.standard_embed_color)
 				msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
