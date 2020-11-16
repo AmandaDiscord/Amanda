@@ -20,7 +20,7 @@ commands.assign([
 		description: "*slaps top of slot machine.* This baby can make you loose all your amandollars",
 		aliases: ["slot", "slots"],
 		category: "gambling",
-		example: "&slot 1000",
+		examples: ["slot 1000"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -130,7 +130,7 @@ commands.assign([
 		description: "Flips a coin",
 		aliases: ["flip"],
 		category: "gambling",
-		example: "&flip",
+		examples: ["flip"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -146,7 +146,7 @@ commands.assign([
 		description: "Place a bet on a random flip for a chance of Discoins",
 		aliases: ["betflip", "bf"],
 		category: "gambling",
-		example: "&bf 1000 h",
+		examples: ["bf 1000 h"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -237,7 +237,7 @@ commands.assign([
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
-		example: "&coins PapiOphidian",
+		examples: ["coins PapiOphidian"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -263,7 +263,7 @@ commands.assign([
 		description: "A daily command that gives a random amount of Discoins",
 		aliases: ["daily"],
 		category: "gambling",
-		example: "&daily",
+		examples: ["daily"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -297,7 +297,7 @@ commands.assign([
 		description: "Gets the leaderboard for people with the most coins",
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
-		example: "&lb 2",
+		examples: ["lb 2"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -376,7 +376,7 @@ commands.assign([
 		description: "Gives discoins to a user from your account",
 		aliases: ["give"],
 		category: "gambling",
-		example: "&give half PapiOphidian",
+		examples: ["give half PapiOphidian"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -430,7 +430,7 @@ commands.assign([
 		description: "A Wheel of Fortune for a chance at making more Discoins",
 		aliases: ["wheel", "wof"],
 		category: "gambling",
-		example: "&wheel 1000",
+		examples: ["wheel 1000"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix

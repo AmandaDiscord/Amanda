@@ -53,11 +53,7 @@ commands.assign([
 		description: "Make an announcement with the client activity",
 		category: "admin",
 		aliases: ["announce"],
-		example: "&announce 60000 sub to papiophidian on twitch | &help",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 */
+		examples: ["announce 60000 sub to papiophidian on twitch | &help"],
 		async process(msg, suffix) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return

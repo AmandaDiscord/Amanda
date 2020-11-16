@@ -120,14 +120,13 @@ const giverTier1 = 100000
 const giverTier2 = 1000000
 const giverTier3 = 10000000
 
-/** @type {Array<{ usage: string, description: string, aliases: Array<string>, category: string, example?: string, process: (message?: import("thunderstorm").Message, suffix?: string, lang?: import("@amanda/lang").Lang) => any }>} */
-const cmds = [
+commands.assign([
 	{
 		usage: "[music|games|gateway|cache]",
 		description: "Displays detailed statistics",
 		aliases: ["statistics", "stats"],
 		category: "meta",
-		example: "&stats",
+		examples: ["stats"],
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
 			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster`
@@ -261,7 +260,7 @@ const cmds = [
 		description: "Gets latency to Discord",
 		aliases: ["ping", "pong"],
 		category: "meta",
-		example: "&ping",
+		examples: ["ping"],
 		async process(msg, suffix, lang) {
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
@@ -276,7 +275,7 @@ const cmds = [
 		description: "",
 		aliases: ["forcestatupdate"],
 		category: "admin",
-		example: "&forcestatupdate",
+		examples: ["forcestatupdate"],
 		async process(msg) {
 			const permissions = await utils.sql.hasPermission(msg.author, "eval")
 			if (!permissions) return
@@ -288,7 +287,7 @@ const cmds = [
 		description: "",
 		aliases: ["restartnotify"],
 		category: "admin",
-		example: "&restartnotify",
+		examples: ["restartnotify"],
 		async process(msg, suffix, lang) {
 			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
@@ -300,7 +299,7 @@ const cmds = [
 		description: "Add Amanda to a server",
 		aliases: ["invite", "inv"],
 		category: "meta",
-		example: "&invite",
+		examples: ["invite"],
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setTitle(lang.meta.invite.returns.invited)
@@ -314,7 +313,7 @@ const cmds = [
 		description: "Displays information about Amanda",
 		aliases: ["info", "inf"],
 		category: "meta",
-		example: "&info",
+		examples: ["info"],
 		async process(msg, suffix, lang) {
 			const [c1, c2] = await Promise.all([
 				utils.cacheManager.users.get("320067006521147393", true, true),
@@ -347,7 +346,7 @@ const cmds = [
 		description: "Get information on how to donate",
 		aliases: ["donate", "patreon"],
 		category: "meta",
-		example: "&donate",
+		examples: ["donate"],
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
@@ -361,7 +360,7 @@ const cmds = [
 		description: "Gets the latest git commits to Amanda",
 		aliases: ["commits", "commit", "git", "changes", "changelog"],
 		category: "meta",
-		example: "&git",
+		examples: ["git"],
 		async process(msg) {
 			await msg.channel.sendTyping()
 			const limit = 5
@@ -405,7 +404,7 @@ const cmds = [
 		description: "Details Amanda's privacy statement",
 		aliases: ["privacy"],
 		category: "meta",
-		example: "&privacy",
+		examples: ["privacy"],
 		process(msg, suffix, lang) {
 			return msg.channel.send(`<${constants.baseURL}/to/privacy>`)
 		}
@@ -415,7 +414,7 @@ const cmds = [
 		description: "Provides information about a user",
 		aliases: ["user"],
 		category: "meta",
-		example: "&user PapiOphidian",
+		examples: ["user PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
@@ -459,7 +458,7 @@ const cmds = [
 		description: "Gets a user's avatar",
 		aliases: ["avatar", "pfp"],
 		category: "meta",
-		example: "&avatar PapiOphidian",
+		examples: ["avatar PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00004000))) canEmbedLinks = false
@@ -484,7 +483,7 @@ const cmds = [
 		description: "Gets a server's icon",
 		aliases: ["icon"],
 		category: "meta",
-		example: "&icon",
+		examples: ["&icon"],
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf() === "dm") return msg.channel.send(utils.replace(lang.meta.icon.prompts.guildOnly, { "username": msg.author.username }))
 			const url = msg.guild.iconURL({ format: "png", size: 2048, dynamic: true })
@@ -502,7 +501,7 @@ const cmds = [
 		description: "See Amanda's to-do list",
 		aliases: ["todo", "trello", "tasks"],
 		category: "meta",
-		example: "&todo",
+		examples: ["todo"],
 		process(msg, suffix) {
 			msg.channel.send(`Todo board: ${config.website_protocol}://${config.website_domain}/to/todo`)
 		}
@@ -512,7 +511,7 @@ const cmds = [
 		description: "Makes an emoji bigger",
 		aliases: ["wumbo"],
 		category: "meta",
-		example: "&wumbo :amandathink:",
+		examples: ["wumbo :amandathink:"],
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const emoji = Util.parseEmoji(suffix)
@@ -530,7 +529,7 @@ const cmds = [
 		description: "Get profile information about someone",
 		aliases: ["profile"],
 		category: "meta",
-		example: "&profile PapiOphidian",
+		examples: ["profile PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00008000))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
@@ -687,7 +686,7 @@ const cmds = [
 		description: "Modify settings Amanda will use for yourself or server wide",
 		aliases: ["settings", "setting"],
 		category: "configuration",
-		example: "&settings self lang es",
+		examples: ["settings self lang es"],
 		async process(msg, suffix, lang) {
 			const args = suffix.split(" ")
 			if ((await utils.cacheManager.channels.typeOf(msg.channel)) === "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
@@ -872,7 +871,7 @@ const cmds = [
 		description: "Set the language that Amanda will use to talk to you",
 		aliases: ["language", "lang"],
 		category: "configuration",
-		example: "&language es",
+		examples: ["language es"],
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang)
 		}
@@ -883,7 +882,7 @@ const cmds = [
 		description: "Set the language that Amanda will use in your server",
 		aliases: ["serverlanguage", "serverlang"],
 		category: "configuration",
-		example: "&serverlanguage es",
+		examples: ["serverlanguage es"],
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang)
 		}
@@ -894,7 +893,7 @@ const cmds = [
 		description: "Set the background displayed on &profile",
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
-		example: "&background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg",
+		examples: ["background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg"],
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
 		}
@@ -905,76 +904,27 @@ const cmds = [
 		description: "Your average help command",
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
-		example: "&help audio",
+		examples: ["help audio"],
 		async process(msg, suffix, lang) {
 			let embed
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
 					embed = new Discord.MessageEmbed()
-						.setAuthor("&music: command help (aliases: music, m)")
-						.addFields([
-							{
-								name: "play",
-								value: "Play a song or add it to the end of the queue. Use any YouTube video or playlist URL or video name as an argument.\n`&music play https://youtube.com/watch?v=e53GDo-wnSs` or\n`&music play https://soundcloud.com/luisfonsiofficial/despacito` or\n`&music play despacito`"
-							},
-							{
-								name: "insert",
-								value: "Works the same as play, but inserts the song at the start of the queue instead of at the end.\n`&music insert https://youtube.com/watch?v=e53GDo-wnSs`"
-							},
-							{
-								name: "now",
-								value: "Show the current song.\n`&music now`"
-							},
-							{
-								name: "pause",
-								value: "Pause playback.\n`&music pause`"
-							},
-							{
-								name: "resume",
-								value: "Resume playback. (Unpause.)\n`&music resume`"
-							},
-							{
-								name: "info",
-								value: "Shows information about the current song/Frisky station\n`&music info`"
-							},
-							{
-								name: "related [play|insert] [index]",
-								value: "Show videos related to what's currently playing. Specify either `play` or `insert` and an index number to queue that song.\
-												`\n&music related` (shows related songs)\
-												`\n&music rel play 8` (adds related song #8 to the end of the queue)"
-							},
-							{
-								name: "auto",
-								value: "Enable or disable auto mode.\
-												\nWhen auto mode is enabled, when the end of the queue is reached, the top recommended song will be queued automatically, and so music will play endlessly.\
-												\n`&music auto`"
-							},
-							{
-								name: "queue [remove|clear] [index]",
-								value: "Display or edit the current queue.\
-												\n`&music queue`\
-												\n`&music queue remove 2`"
-							},
-							{
-								name: "skip",
-								value: "Skip the current song and move to the next item in the queue.\n`&music skip`"
-							},
-							{
-								name: "stop",
-								value: "Empty the queue and leave the voice channel.\n`&music stop`"
-							},
-							{
-								name: "audit",
-								value: "Show an audit log of important actions done to a server's queue"
-							},
-							{
-								name: "playlist",
-								value: "Manage playlists. Try `&help playlist` for more info."
-							}
-						])
+						.setAuthor(`${passthrough.statusPrefix}music: command help (Aliases: m)`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
+					const blacklist = ["soundcloud", "music", "frisky", "debug", "token"]
+					const audio = commands.cache.filter(c => c.category === "audio" && !blacklist.includes(c.aliases[0]))
+					audio.map(cmd => {
+						const info = getDocs(cmd)
+						if (cmd.aliases[0] === "playlist") {
+							info.usage = `See \`${passthrough.statusPrefix}help playlist\``
+							info.description = ""
+						}
+						const aliases = cmd.aliases.slice(1, cmd.aliases.length)
+						embed.addField(`${cmd.aliases[0]} (Aliases: ${aliases.length > 0 ? aliases.join(", ") : "N.A."})`, `${info.description ? `${info.description}\n` : ""}*Arguments*: ${info.usage}\n\n*Examples*:\n${cmd.examples ? cmd.examples.map(i => `${passthrough.statusPrefix}music ${i}`).join("\n") : "N.A."}`)
+					})
 					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
@@ -1049,14 +999,10 @@ const cmds = [
 				} else {
 					const command = commands.cache.find(c => c.aliases.includes(suffix))
 					if (command) {
-						let info = { usage: command.usage, description: command.description }
-						if (lang[command.category]) {
-							const langcommand = lang[command.category][command.aliases[0]]
-							if (langcommand) info = { usage: langcommand.help.usage, description: langcommand.help.description }
-						}
+						const info = getDocs(command)
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
-							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExample: ${command.example || "N.A."}`)
+							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples: ${command.examples ? command.examples.map(i => `${(i.startsWith("amanda, ") || i.startsWith(`${client.user.username.toLowerCase()}, `)) ? "" : passthrough.statusPrefix}${i}`) : "N.A."}`)
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor(constants.standard_embed_color)
 						msg.channel.send(await utils.contentify(msg.channel, embed))
@@ -1115,8 +1061,14 @@ const cmds = [
 					.setColor(constants.standard_embed_color)
 				msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
+			function getDocs(command) {
+				let info = { usage: command.usage, description: command.description }
+				if (lang[command.category]) {
+					const langcommand = lang[command.category][command.aliases[0]]
+					if (langcommand) info = { usage: langcommand.help.usage, description: langcommand.help.description }
+				}
+				return info
+			}
 		}
 	}
-]
-
-commands.assign(cmds)
+])

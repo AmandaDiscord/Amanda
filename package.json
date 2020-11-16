@@ -15,7 +15,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#c4532138417583475714ff357c03bbc93e207b8e",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#8ded1865a01d6d631d3c56a44b6a049e1dc1f32c",
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
     "@amanda/lang": "github:AmandaDiscord/Lang#70c61cac04eeac5d472d2b93bdcf5bd92d0641c1",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#3a29a4620e0cfa739c01294eb060916b8d49ba6b",
@@ -24,7 +24,7 @@
     "buffer-signature": "^1.1.0",
     "cloudstorm": "github:AmandaDiscord/CloudStorm#eccf142bf5e8417e7aae43bb23c6797db402e13b",
     "discord-bot-analytics": "^1.0.14",
-    "discord.js": "github:AmandaDiscord/discord.js#737b00128b846bbe000f2a69e010f2cc5be94db7",
+    "discord.js": "12.4.1",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.1.0",
     "express": "^4.17.1",
@@ -39,10 +39,10 @@
     "mysql2": "^2.2.5",
     "nedb-promises": "^4.1.0",
     "node-fetch": "^2.6.1",
-    "node-ipc": "^9.1.1",
+    "node-ipc": "^9.1.3",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "raincache": "github:AmandaDiscord/RainCache#728f645b2ea65f6c4234299f78d65aadc28b9fc9",
-    "simple-git": "^2.21.0",
+    "simple-git": "^2.22.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#9b55a3630a11f0836911e55c06787c15aeb30957",
     "taihou": "^2.0.3",
@@ -52,7 +52,7 @@
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^14.14.3",
     "@types/node-fetch": "^2.5.7",
-    "eslint": "^7.12.0",
+    "eslint": "^7.13.0",
     "tap": "^14.10.8",
     "typescript": "~4.0.3"
   }

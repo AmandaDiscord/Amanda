@@ -14,16 +14,13 @@ const responses = ["That's not strange at all...", "W-What? Why?", "I find it st
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
-/**
- * @type {Array<import("../typings").Command<[import("@amanda/lang").Lang]>>}
- */
 const cmds = [
 	{
 		usage: "<user 1> <user 2>",
 		description: "Ships two people",
 		aliases: ["ship"],
 		category: "interaction",
-		example: "&ship PapiOphidian Cadence",
+		examples: ["ship PapiOphidian Cadence"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -85,7 +82,7 @@ const cmds = [
 		description: "Beans a user",
 		aliases: ["bean"],
 		category: "interaction",
-		example: "&bean PapiOphidian",
+		examples: ["bean PapiOphidian"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -157,7 +154,7 @@ for (const source of interactionSources) {
 		description: source.description,
 		aliases: [source.name],
 		category: "interaction",
-		example: `&${source.name} Amanda`,
+		example: `${source.name} Amanda`,
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix

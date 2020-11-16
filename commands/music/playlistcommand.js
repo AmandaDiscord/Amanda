@@ -23,17 +23,11 @@ const bulkAddCollectionChannels = new Set()
 
 commands.assign([
 	{
+		usage: "none",
 		aliases: ["playlist", "playlists", "pl"],
 		category: "audio",
 		description: "Create, play, and edit playlists.",
-		usage: "",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]

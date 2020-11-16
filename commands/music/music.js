@@ -308,6 +308,13 @@ const subcommandsMap = new Map([
 			else if (result === 4) return msg.channel.send(`${msg.author.username}, there was an error with seeking to that position. Your duration was parsed properly as ${utils.numberComma(duration)} milliseconds, but LavaLink did not seek. This is a bug. Please report this: <${constants.server}>`)
 			else return
 		}
+	}],
+	["help", {
+		code: function(msg, args, { lang }) {
+			const helpCommand = commands.cache.get("help")
+			if (!helpCommand) return msg.channel.send("Help command not loaded")
+			helpCommand.process(msg, "music", lang)
+		}
 	}]
 ])
 
@@ -318,13 +325,16 @@ const subcommandAliasMap = new Map([
 	["insert", "play"],
 	["q", "queue"],
 	["s", "skip"],
+	["leave", "stop"],
 	["n", "now"],
+	["np", "now"],
 	["rel", "related"],
 	["pl", "playlist"],
 	["playlists", "playlist"],
 	["repeat", "loop"],
 	["l", "loop"],
-	["a", "audit"]
+	["a", "audit"],
+	["h", "help"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
@@ -334,12 +344,7 @@ commands.assign([
 		description: "Obtain a web dashboard login token",
 		aliases: ["token", "musictoken", "webtoken", "musictokens", "webtokens"],
 		category: "audio",
-		example: "&token new",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
+		examples: ["token new"],
 		async process(msg, suffix, lang) {
 			if (suffix == "delete") {
 				await deleteAll()
@@ -383,14 +388,8 @@ commands.assign([
 		description: "Provides debugging information for if audio commands are not working as intended",
 		aliases: ["debug"],
 		category: "audio",
-		example: "&debug general",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
+		examples: ["debug general"],
 		async process(msg, suffix, lang) {
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.cacheManager.channels.find(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
@@ -438,15 +437,9 @@ commands.assign([
 		description: "Play Frisky Radio: https://friskyradio.com",
 		aliases: ["frisky"],
 		category: "audio",
-		example: "&frisky chill",
+		examples: ["frisky chill"],
 		order: 3,
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
@@ -552,18 +545,12 @@ commands.assign([
 	},
 	{
 		usage: "none",
-		description: "Play music from YouTube",
+		description: "Play music from multiple sources",
 		aliases: ["music", "m"],
 		category: "audio",
 		order: 1,
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			// No DMs
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args
 			const args = suffix.split(" ")
@@ -614,15 +601,9 @@ commands.assign([
 		description: "Play music from SoundCloud",
 		aliases: ["soundcloud", "sc"],
 		category: "audio",
-		example: "&sc Kanshou No Matenrou",
+		examples: ["soundcloud Kanshou No Matenrou"],
 		order: 2,
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return
@@ -641,7 +622,12 @@ commands.assign([
 		description: "Play music",
 		aliases: ["play", "p"],
 		category: "audio",
-		example: "&play despacito",
+		examples: [
+			"play despacito",
+			"play https://youtube.com/watch?v=e53GDo-wnSs",
+			"play https://soundcloud.com/luisfonsiofficial/despacito",
+			"play https://open.spotify.com/track/6habFhsOp2NvshLv26DqMb"
+		],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `play ${suffix}`, lang)
 		}
@@ -651,7 +637,12 @@ commands.assign([
 		description: "Play music and put it next in the queue",
 		aliases: ["insert"],
 		category: "audio",
-		example: "&insert despacito",
+		examples: [
+			"insert despacito",
+			"insert https://youtube.com/watch?v=e53GDo-wnSs",
+			"insert https://soundcloud.com/luisfonsiofficial/despacito",
+			"insert https://open.spotify.com/track/6habFhsOp2NvshLv26DqMb"
+		],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `insert ${suffix}`, lang)
 		}
@@ -661,7 +652,7 @@ commands.assign([
 		description: "Show the server's current queue",
 		aliases: ["queue", "q"],
 		category: "audio",
-		example: "&queue",
+		examples: ["queue"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `queue${suffix ? ` ${suffix}` : ""}`, lang)
 		}
@@ -671,7 +662,7 @@ commands.assign([
 		description: "Skips the songs in the queue",
 		aliases: ["skip", "s"],
 		category: "audio",
-		example: "&skip 3",
+		examples: ["skip 3"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `skip${suffix ? ` ${suffix}` : ""}`, lang)
 		}
@@ -679,9 +670,9 @@ commands.assign([
 	{
 		usage: "None",
 		description: "Stops all currently playing music",
-		aliases: ["stop"],
+		aliases: ["stop", "leave"],
 		category: "audio",
-		example: "&stop",
+		examples: ["stop"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "stop", lang)
 		}
@@ -691,7 +682,7 @@ commands.assign([
 		description: "Pauses current playback",
 		aliases: ["pause"],
 		category: "audio",
-		example: "&pause",
+		examples: ["pause"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "pause", lang)
 		}
@@ -701,7 +692,7 @@ commands.assign([
 		description: "Resumes current playback",
 		aliases: ["resume"],
 		category: "audio",
-		example: "&resume",
+		examples: ["resume"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "resume", lang)
 		}
@@ -711,17 +702,21 @@ commands.assign([
 		description: "Shows what's currently playing",
 		aliases: ["now", "np", "n"],
 		category: "audio",
-		example: "&now",
+		examples: ["now"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "now", lang)
 		}
 	},
 	{
-		usage: "None",
+		usage: "[play|insert] [index]",
 		description: "Shows related songs to what's currently playing",
 		aliases: ["related", "rel"],
 		category: "audio",
-		example: "&related",
+		examples: [
+			"related",
+			"related play 2",
+			"related insert 8"
+		],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "related", lang)
 		}
@@ -731,7 +726,7 @@ commands.assign([
 		description: "Toggles repeat (queue) mode for the queue",
 		aliases: ["repeat", "loop"],
 		category: "audio",
-		example: "&repeat",
+		examples: ["repeat"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "repeat", lang)
 		}
@@ -741,7 +736,7 @@ commands.assign([
 		description: "Toggles auto play for first related song",
 		aliases: ["auto"],
 		category: "audio",
-		example: "&auto",
+		examples: ["auto"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "auto", lang)
 		}
@@ -751,7 +746,7 @@ commands.assign([
 		description: "Gets song lyrics from Genius",
 		aliases: ["lyrics"],
 		category: "audio",
-		example: "&lyrics",
+		examples: ["lyrics"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "lyrics", lang)
 		}
@@ -761,7 +756,7 @@ commands.assign([
 		description: "Seeks the current song playing to a duration",
 		aliases: ["seek"],
 		category: "audio",
-		example: "&seek 2min 3sec",
+		examples: ["seek 2min 3sec"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `seek${suffix ? ` ${suffix}` : ""}`, lang)
 		}

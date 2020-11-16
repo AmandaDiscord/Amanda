@@ -35,12 +35,7 @@ commands.assign([
 		description: "Executes arbitrary JavaScript in the bot process. Requires bot owner permissions",
 		aliases: ["evaluate", "eval"],
 		category: "admin",
-		example: "&eval client.token",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
+		examples: ["eval client.token"],
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (allowed) {
@@ -76,12 +71,7 @@ commands.assign([
 		description: "Executes a shell operation",
 		aliases: ["execute", "exec"],
 		category: "admin",
-		example: "&exec rm -rf /",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
+		examples: ["exec rm -rf /"],
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return
@@ -117,12 +107,7 @@ commands.assign([
 		description: "Awards a specific user ",
 		aliases: ["award"],
 		category: "admin",
-		example: "&award 10000 PapiOphidian",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
+		examples: ["award 10000 PapiOphidian"],
 		async process(msg, suffix, lang) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (!allowed) return

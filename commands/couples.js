@@ -9,14 +9,13 @@ reloader.sync("./modules/utilities/index.js", utils)
 
 const emojis = require("../modules/emojis")
 
-/** @type {Array<{ usage: string, description: string, aliases: Array<string>, category: string, example?: string, process: (message?: import("thunderstorm").Message, suffix?: string, lang?: import("@amanda/lang").Lang) => any }>} */
-const cmds = [
+commands.assign([
 	{
 		usage: "[User]",
 		description: "Get couple information about a user",
 		aliases: ["couple"],
 		category: "couples",
-		example: "&couple PapiOphidian",
+		examples: ["couple PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
@@ -57,7 +56,7 @@ const cmds = [
 		description: "Propose to a user",
 		aliases: ["marry", "propose"],
 		category: "couples",
-		example: "&marry PapiOphidian",
+		examples: ["marry PapiOphidian"],
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to propose to.`)
 			let user, member
@@ -91,7 +90,7 @@ const cmds = [
 		description: "Accepts a proposal from a user",
 		aliases: ["accept", "acceptmarriage", "acceptproposal"],
 		category: "couples",
-		example: "&accept PapiOphidian",
+		examples: ["accept PapiOphidian"],
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to propose to.`)
 			let user, member
@@ -131,7 +130,7 @@ const cmds = [
 		description: "Declines a proposal from a user",
 		aliases: ["decline", "declinemarriage", "declineproposal"],
 		category: "couples",
-		example: "&decline PapiOphidian",
+		examples: ["decline PapiOphidian"],
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to decline.`)
 			let user, member
@@ -171,7 +170,7 @@ const cmds = [
 		description: "Divorces a user",
 		aliases: ["divorce"],
 		category: "couples",
-		example: "&divorce I'm sorry",
+		examples: ["divorce I'm sorry"],
 		async process(msg, suffix, lang) {
 			const married = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
 			if (!married) return msg.channel.send(`${msg.author.username}, you are not married to anyone`)
@@ -201,7 +200,7 @@ const cmds = [
 		description: "View the balance of a couple",
 		aliases: ["bank", "couplebalance", "couplebal", "cbalance", "cbal"],
 		category: "couples",
-		example: "&cbal PapiOphidian",
+		examples: ["cbal PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
@@ -237,7 +236,7 @@ const cmds = [
 		description: "Withdraw money from your couple balance",
 		aliases: ["withdraw"],
 		category: "couples",
-		example: "&withdraw 69",
+		examples: ["withdraw 69"],
 		async process(msg, suffix, lang) {
 			const row = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
 			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
@@ -268,7 +267,7 @@ const cmds = [
 		description: "Deposit money to your couple balance",
 		aliases: ["deposit"],
 		category: "couples",
-		example: "&deposit 5000",
+		examples: ["deposit 5000"],
 		async process(msg, suffix, lang) {
 			const [row, money] = await Promise.all([
 				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
@@ -302,7 +301,7 @@ const cmds = [
 		description: "Displays the leaderboard of the richest couples",
 		aliases: ["coupleleaderboard", "couplelb"],
 		category: "couples",
-		example: "&couplelb 2",
+		examples: ["couplelb 2"],
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
@@ -371,6 +370,4 @@ const cmds = [
 			} else msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
 		}
 	}
-]
-
-commands.assign(cmds)
+])

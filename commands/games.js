@@ -387,7 +387,7 @@ commands.assign([
 		description: "Play a game of trivia with other members and win Discoins",
 		aliases: ["trivia", "t"],
 		category: "games",
-		example: "&t Science: Computers",
+		examples: ["t Science: Computers"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -402,7 +402,7 @@ commands.assign([
 		description: "Starts a game of minesweeper using the Discord spoiler system",
 		aliases: ["minesweeper", "ms"],
 		category: "games",
-		example: "&ms hard --raw --size:10",
+		examples: ["ms hard --raw --size:10"],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
