@@ -616,6 +616,10 @@ class Queue {
 		// Detect number of users left in channel
 		/** @type {Array<any>} */
 		const inGuild = (await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: newState.guildID } })) || []
+		for (const state of inGuild) {
+			if (state.channel_id !== this.voiceChannel.id) continue
+			state.user = await utils.cacheManager.users.get(state.user_id, true, true)
+		}
 		const count = inGuild.filter(item => item.channel_id === this.voiceChannel.id && item.user && !item.user.bot)
 		if ((count && typeof count === "number" && count == 0) || (count && Array.isArray(count) && count.length == 0) || !count) {
 			if (!this.voiceLeaveTimeout.isActive) {
@@ -798,7 +802,6 @@ class QueueWrapper {
 		 * @type {Array<Discord.GuildMember>}
 		 */
 		const data = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.queue.guild.id } }).then(d => Promise.all(d.map(g => utils.cacheManager.members.get(g.user_id, this.queue.guild.id))))
-		console.log(data)
 		return data.map(m => ({
 			id: m.id,
 			name: m.displayName,
