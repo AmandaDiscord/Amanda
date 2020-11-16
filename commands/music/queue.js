@@ -797,7 +797,8 @@ class QueueWrapper {
 		/**
 		 * @type {Array<Discord.GuildMember>}
 		 */
-		const data = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.queue.guild.id } }).then(d => d.map(g => utils.cacheManager.members.parse(g)))
+		const data = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.queue.guild.id } }).then(d => Promise.all(d.map(g => utils.cacheManager.members.get(g.user_id, this.queue.guild.id))))
+		console.log(data)
 		return data.map(m => ({
 			id: m.id,
 			name: m.displayName,
