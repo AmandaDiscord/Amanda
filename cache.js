@@ -117,6 +117,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 				if (batch.length === 0) {
 					passing = false
+					cont()
 					continue
 				}
 
@@ -133,11 +134,14 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					return failed
 				}
 
-				objects = objects.filter(item => item !== null)
+				const filtered = objects.filter(item => item !== null)
 
-				if (objects.length === 0) continue
+				if (filtered.length === 0) {
+					cont()
+					continue
+				}
 
-				for (const instance of objects) {
+				for (const instance of filtered) {
 					if (!passing) continue
 					if (options.limit && matched.length === options.limit) {
 						passing = false
@@ -158,12 +162,11 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 					const nonGuildKeys = keys.filter(i => i !== "guild_id")
 
-					for (const key of nonGuildKeys) {
+					for (const key of keys) {
 						const property = properties[key]
 
 						if (name === "member") m(obj.user)
 						m(obj)
-						continue
 
 						// eslint-disable-next-line no-inner-declarations
 						function m(o) {
@@ -193,7 +196,12 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 						matched.push(obj)
 					}
 				}
-				pass++
+				// eslint-disable-next-line no-inner-declarations
+				function cont() {
+					pass++
+				}
+				cont()
+				continue
 			}
 			opAmount--
 			return matched
