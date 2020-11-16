@@ -91,6 +91,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			totalOps++
 			if (!options) options = { limit: 10 }
 			const table = rain.cache[name]
+			const getWithGuilds = ["member", "voiceState"].includes(name)
 			const failed = ["failed"]
 			if (!table) {
 				sendInternalError(`No cache table found: ${name}`)
@@ -99,7 +100,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			let members
 			try {
-				if (properties.guild_id) members = await table.getIndexMembers(properties.guild_id)
+				if (getWithGuilds && properties.guild_id) members = await table.getIndexMembers(properties.guild_id)
 				else members = await table.getIndexMembers()
 			} catch (e) {
 				sendInternalError(e)
@@ -123,7 +124,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				let objects
 				try {
 					// @ts-ignore
-					if (["member", "voiceState"].includes(name)) objects = await Promise.all(batch.map(id => table.get(id, properties.guild_id)))
+					if (getWithGuilds && properties.guild_id) objects = await Promise.all(batch.map(id => table.get(id, properties.guild_id)))
 					// @ts-ignore
 					else objects = await Promise.all(batch.map(id => table.get(id)))
 				} catch (e) {
@@ -131,6 +132,8 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 					opAmount--
 					return failed
 				}
+
+				objects = objects.filter(item => item !== null)
 
 				if (objects.length === 0) continue
 
@@ -153,8 +156,9 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 					const keys = Object.keys(properties)
 
-					for (const key of keys) {
-						if (key === "guild_id") continue
+					const nonGuildKeys = keys.filter(i => i !== "guild_id")
+
+					for (const key of nonGuildKeys) {
 						const property = properties[key]
 
 						if (name === "member") m(obj.user)
@@ -163,7 +167,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 						// eslint-disable-next-line no-inner-declarations
 						function m(o) {
-							if (keys.length === 0) {
+							if (nonGuildKeys.length === 0) {
 								end()
 								return
 							} else {
