@@ -1002,7 +1002,7 @@ commands.assign([
 						const info = getDocs(command)
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
-							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples:\n${command.examples ? command.examples.map(i => `${(i.startsWith("amanda, ") || i.startsWith(`${client.user.username.toLowerCase()}, `)) ? "" : passthrough.statusPrefix}${i}`) : "N.A."}`)
+							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples:\n${command.examples ? command.examples.map(i => `${(i.startsWith("amanda, ") || i.startsWith(`${client.user.username.toLowerCase()}, `)) ? "" : passthrough.statusPrefix}${i}`).join("\n") : "N.A."}`)
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor(constants.standard_embed_color)
 						msg.channel.send(await utils.contentify(msg.channel, embed))
