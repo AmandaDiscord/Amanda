@@ -3,7 +3,6 @@
 const Discord = require("thunderstorm")
 /** @type {import("node-fetch").default} */
 const fetch = require("node-fetch")
-const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
@@ -277,7 +276,7 @@ class YouTubeSong extends Song {
 					.setTitle("Related content from YouTube")
 					.setDescription(
 						related.map((v, i) =>
-							`${i + 1}. **${Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
+							`${i + 1}. **${Discord.Util.escapeMarkdown(v.title)}** (${common.prettySeconds(v.lengthSeconds)})`
 						+ `\n — ${v.author}`
 						)
 					)

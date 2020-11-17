@@ -11,9 +11,6 @@ const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
-const SnowflakeUtil = require("discord.js/src/util/Snowflake")
-const Util = require("discord.js/src/util/Util")
-
 const emojis = require("../modules/emojis")
 
 const passthrough = require("../passthrough")
@@ -330,7 +327,7 @@ commands.assign([
 					},
 					{
 						name: "Code",
-						value: `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) 11.6.4 (ThunderStorm)`
+						value: `[node.js](https://nodejs.org/) ${process.version} + [discord.js](https://www.npmjs.com/package/discord.js) ${Discord.version}`
 					},
 					{
 						name: "Links",
@@ -423,8 +420,7 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			const createdAt = SnowflakeUtil.deconstruct(user.id).date
-			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: createdAt.toUTCString() }])
+			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: msg.author.createdAt.toUTCString() }])
 			if (member) {
 				const guildJoinedTime = member.joinedAt.toUTCString()
 				embed.addFields({ name: "Joined at:", value: guildJoinedTime })
@@ -514,7 +510,7 @@ commands.assign([
 		examples: ["wumbo :amandathink:"],
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
-			const emoji = Util.parseEmoji(suffix)
+			const emoji = Discord.Util.parseEmoji(suffix)
 			if (emoji == null) return msg.channel.send(utils.replace(lang.meta.wumbo.prompts.invalidEmoji, { "username": msg.author.username }))
 			const url = utils.emojiURL(emoji.id, emoji.animated)
 			const embed = new Discord.MessageEmbed()
@@ -728,13 +724,13 @@ commands.assign([
 			const tableNames = { self: "SettingsSelf", server: "SettingsGuild" }
 
 			let scope = args[0].toLowerCase()
-			scope = Util.escapeMarkdown(scope)
+			scope = Discord.Util.escapeMarkdown(scope)
 			if (!["self", "server"].includes(scope)) return msg.channel.send(lang.configuration.settings.prompts.invalidSyntaxScope)
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
 			let settingName = args[1] ? args[1].toLowerCase() : ""
-			settingName = Util.escapeMarkdown(settingName)
+			settingName = Discord.Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
 				const all = await utils.sql.all(`SELECT * FROM ${tableName} WHERE keyID =?`, keyID)
 				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))

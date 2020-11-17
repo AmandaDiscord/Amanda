@@ -4,7 +4,6 @@ const Discord = require("thunderstorm")
 const path = require("path")
 const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
-const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc, internalEvents } = passthrough
@@ -244,7 +243,7 @@ class Queue {
 				const embed = new Discord.MessageEmbed()
 					.setTitle(lang.audio.music.prompts.songNotPlayable)
 					.setDescription(
-						`**${Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
+						`**${Discord.Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
@@ -550,7 +549,7 @@ class Queue {
 			const lang = this.langCache || Lang.en_us
 			const progress = song.getProgress(this.timeSeconds, this.isPaused)
 			const link = await song.showLink()
-			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
+			embed.setDescription(utils.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Discord.Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
 			embed.setColor(constants.standard_embed_color)
 			return embed
 		} else return null

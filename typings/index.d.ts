@@ -1,5 +1,4 @@
 import MySQL = require("MySQL2/promise");
-import Discord = require("discord.js");
 import events = require("events");
 
 export interface FilteredGuild {

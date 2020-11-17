@@ -1,4 +1,4 @@
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 class StreakManager {
 	constructor() {

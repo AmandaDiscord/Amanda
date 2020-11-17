@@ -2,7 +2,6 @@
 
 const Discord = require("thunderstorm")
 const { EventEmitter } = require("events")
-const Collection = require("discord.js").Collection
 
 const passthrough = require("../../passthrough")
 const { client, reloader, ipc, config } = passthrough
@@ -17,8 +16,8 @@ const auditDestroyTimeout = 1000 * 60 * 5
 
 class QueueManager {
 	constructor() {
-		/** @type {Collection<string, import("../../commands/music/queue").Queue>} */
-		this.cache = new Collection()
+		/** @type {Discord.Collection<string, import("../../commands/music/queue").Queue>} */
+		this.cache = new Discord.Collection()
 		this.songsPlayed = 0
 		this.events = new EventEmitter()
 		/** @type {Map<string, Array<{ action: string, platform: string, user: string }>>} */

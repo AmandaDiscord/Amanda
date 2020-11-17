@@ -2,7 +2,7 @@
 
 const ipc = require("node-ipc")
 const Server = require("node-ipc/dao/socketServer")
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 /**
  * original ipc server doesn't have complete typings

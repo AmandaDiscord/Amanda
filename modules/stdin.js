@@ -1,6 +1,6 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 const path = require("path")
 const repl = require("repl")
 const util = require("util")

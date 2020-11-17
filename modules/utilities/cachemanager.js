@@ -7,8 +7,6 @@ const { client, constants } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
 
-const SnowflakeUtil = require("discord.js/src/util/Snowflake")
-
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
 	KICK_MEMBERS: 0x00000002,
@@ -553,9 +551,10 @@ const guildManager = {
 function validate(id) {
 	if (!(/^\d+$/.test(id))) return false
 
-	const deconstructed = SnowflakeUtil.deconstruct(id)
-	if (!deconstructed || !deconstructed.date) return false
-	if (deconstructed.date.getTime() > Date.now()) return false
+	const deconstructed = Discord.Util.SnowflakeUtil.deconstruct(id)
+	if (!deconstructed || !deconstructed.timestamp) return false
+	const date = new Date(deconstructed.timestamp)
+	if (date.getTime() > Date.now()) return false
 	return true
 }
 

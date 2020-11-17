@@ -14,8 +14,6 @@ const { client, reloader, config, constants } = passthrough
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
-const Util = require("discord.js/src/util/Util")
-
 class VoiceStateCallback {
 	/**
 	 * @param {Discord.Message} msg
@@ -504,7 +502,7 @@ const common = {
 			let tracks = await common.searchYouTube(search, textChannel.guild.region)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
-			const results = tracks.map((track, index) => `${index + 1}. **${Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
+			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
 			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
 				if (typeof index != "number") return
 				const track = tracks[index]
@@ -535,7 +533,7 @@ const common = {
 			}
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
-			const results = tracks.map((track, index) => `${index + 1}. **${Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
+			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(Math.floor(track.info.length / 1000))})`)
 			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
 				if (typeof index != "number") return
 				const track = tracks[index]

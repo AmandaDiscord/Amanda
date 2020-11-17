@@ -1,6 +1,6 @@
 // @ts-check
 
-const Discord = require("discord.js")
+const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
 

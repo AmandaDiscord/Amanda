@@ -108,7 +108,7 @@ const connection = new AmpqpConnector({
 		if (data.url !== undefined) game["url"] = data.url
 		if (data.status !== undefined) payload["status"] = data.status
 
-		if (game.name || game.type || game.url) payload["game"] = game
+		if (game.name || game.type || game.url) payload["activities"] = [game]
 
 		if (payload.game && payload.game.name && payload.game.type === undefined) payload.game.type = 0
 
@@ -116,7 +116,7 @@ const connection = new AmpqpConnector({
 
 		response.status(200).send(worker.createDataResponse(presence)).end()
 
-		Gateway.shardManager.statusUpdate(payload)
+		Gateway.shardManager.presenceUpdate(payload)
 	})
 
 

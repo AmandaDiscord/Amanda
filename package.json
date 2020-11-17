@@ -15,16 +15,15 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#8ded1865a01d6d631d3c56a44b6a049e1dc1f32c",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#96e525121f3436356542be99066222be7078c32b",
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
     "@amanda/lang": "github:AmandaDiscord/Lang#70c61cac04eeac5d472d2b93bdcf5bd92d0641c1",
-    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#3a29a4620e0cfa739c01294eb060916b8d49ba6b",
+    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#thunderstorm",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
     "buffer-signature": "^1.1.0",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#eccf142bf5e8417e7aae43bb23c6797db402e13b",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#d6bd1674a640820143d11401fba355f40ef83061",
     "discord-bot-analytics": "^1.0.14",
-    "discord.js": "12.4.1",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.1.0",
     "express": "^4.17.1",
@@ -41,19 +40,19 @@
     "node-fetch": "^2.6.1",
     "node-ipc": "^9.1.3",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "raincache": "github:AmandaDiscord/RainCache#728f645b2ea65f6c4234299f78d65aadc28b9fc9",
+    "raincache": "github:AmandaDiscord/RainCache#494962c8e1cacda30f8ce7feb8cabea95fdcefa6",
     "simple-git": "^2.22.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#9b55a3630a11f0836911e55c06787c15aeb30957",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#456813e5eb551ddeab7bf6148a9b3651261d6f0a",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#b80cead6b8678b51995221df2c5aa1672ae81ddb"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#9ce94541cd3b75a70fbb7024d3695ab54414e706"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
     "@types/node": "^14.14.3",
     "@types/node-fetch": "^2.5.7",
     "eslint": "^7.13.0",
-    "tap": "^14.10.8",
-    "typescript": "~4.0.3"
+    "tap": "^14.11.0",
+    "typescript": "~4.0.5"
   }
 }

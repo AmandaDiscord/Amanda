@@ -5,7 +5,6 @@ const crypto = require("crypto")
 const Discord = require("thunderstorm")
 const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
-const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { config, client, reloader, commands, queues, frisky, constants } = passthrough
@@ -109,7 +108,7 @@ const subcommandsMap = new Map([
 						.setTitle(lang.audio.playlist.prompts.playlistSection)
 						.setColor(constants.standard_embed_color)
 						.setDescription(
-							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
+							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
 						+ `\n${lang.audio.playlist.prompts.query}`
 						+ options.map((o, i) => `\n${buttons[i]} ${o}`).join("")
 						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
@@ -178,7 +177,7 @@ const subcommandsMap = new Map([
 				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(queue.getTotalLength()) })}`
 				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
-				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Util.escapeMarkdown(guild.name) })).setDescription(body).setColor(constants.standard_embed_color)
+				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(guild.name) })).setDescription(body).setColor(constants.standard_embed_color)
 				))
 			}
 		}

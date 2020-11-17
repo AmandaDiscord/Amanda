@@ -3,7 +3,6 @@
 const Discord = require("thunderstorm")
 const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
-const Util = require("discord.js/src/util/Util")
 
 const passthrough = require("../../passthrough")
 const { client, config, reloader, commands, constants } = passthrough
@@ -74,7 +73,7 @@ commands.assign([
 					if (user) {
 						let username = user.username
 						if (username.length > 14) username = `${username.slice(0, 13)}…`
-						return `\`${Util.escapeMarkdown(username)}\``
+						return `\`${Discord.Util.escapeMarkdown(username)}\``
 					} else return "(?)"
 				}
 				const users = await Promise.all(playlists.map(p => getAuthor(p.author)))
@@ -324,7 +323,7 @@ commands.assign([
 				const user = await utils.cacheManager.users.get(playlistRow.author, true, true)
 				if (user) author.push(`${user.tag} — ${playlistName}`, user.displayAvatarURL({ format: "png", size: 32, dynamic: false }))
 				else author.push(playlistName)
-				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
+				const rows = orderedSongs.map((s, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(s.name)}** (${common.prettySeconds(s.length)})`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0)) })}`
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(author[0], author[1])
