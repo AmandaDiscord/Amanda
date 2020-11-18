@@ -13,7 +13,7 @@ const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
 const RatelimitBucket = require("cloudstorm/dist/structures/RatelimitBucket")
 
 // `saveLimit` save operations can be performed every `saveReset` milliseconds
-const saveLimit = 100
+const saveLimit = 200
 const saveReset = 7500
 const saveBucket = new RatelimitBucket(saveLimit, saveReset)
 
@@ -323,7 +323,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			saveBucket.queue(() => methods[type].update(query.data.id, query.data))
 			opAmount--
-			return response.status(200).send(worker.createDataResponse("Queued")).end()
+			return response.status(200).send(worker.createDataResponse("ACK")).end()
 
 
 		} else if (data.op === "DELETE_USER") {
