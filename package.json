@@ -22,7 +22,7 @@
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
     "buffer-signature": "^1.1.0",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#27bc905485ded8d44747e285abdfdfc25ae79ab7",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#e1fb78433c915d0ca80d56606f1f66a5b9f1de80",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.1.0",
