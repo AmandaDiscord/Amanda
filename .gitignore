@@ -12,3 +12,4 @@ dblimg.png
 \#*#
 /.nyc_output
 /coverage
+package-lock.json
