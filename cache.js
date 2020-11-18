@@ -10,6 +10,13 @@ const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
 const config = require("./config")
 const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
 
+const RatelimitBucket = require("cloudstorm/dist/structures/RatelimitBucket")
+
+// `saveLimit` save operations can be performed every `saveReset` milliseconds
+const saveLimit = 100
+const saveReset = 7500
+const saveBucket = new RatelimitBucket(saveLimit, saveReset)
+
 const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`
 })
@@ -65,7 +72,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 	})
 
 	worker.get("/stats", (request, response) => {
-		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), activeOPs: opAmount, totalOPs: totalOps })).end()
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), activeOPs: opAmount, totalOPs: totalOps, savesQueued: saveBucket.fnQueue.length })).end()
 	})
 
 	worker.post("/request", async (request, response) => {
@@ -314,14 +321,9 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 				"CHANNEL": rain.cache.channel,
 				"USER": rain.cache.user
 			}
-			try {
-				await methods[type].update(query.data.id, query.data)
-			} catch (e) {
-				opAmount--
-				return sendInternalError(e, response)
-			}
+			saveBucket.queue(() => methods[type].update(query.data.id, query.data))
 			opAmount--
-			return response.status(200).send(worker.createDataResponse("Saved")).end()
+			return response.status(200).send(worker.createDataResponse("Queued")).end()
 
 
 		} else if (data.op === "DELETE_USER") {
@@ -423,12 +425,12 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
 	})
 
-	worker.post("/gateway", async (request, response) => {
+	worker.post("/gateway", (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
 		response.status(200).send(worker.createDataResponse("ACK")).end()
 		/** @type {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} */
 		const data = request.body
-		await rain.eventProcessor.inbound(data)
+		saveBucket.queue(() => rain.eventProcessor.inbound(data))
 		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(JSON.stringify(request.body)))
 	})
 })()
