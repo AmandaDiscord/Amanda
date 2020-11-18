@@ -141,9 +141,20 @@ a.no-underline
 	font-size: 20px
 	text-align: center
 
+	.avatar
+		max-width: 96px
+		border-radius: 50%
+		padding: 10px
+		display: inline-block
+		&:hover .avatar-text
+			visibility: visible
+
+		.avatar-text
+			visibility: hidden
+			position: absolute
+
 .avatar
 	max-width: 96px
-	padding: 10px
 	border-radius: 50%
 	display: inline-block
 	&:hover .avatar-text
