@@ -67,8 +67,7 @@ class Validator {
 			if (result instanceof Promise) {
 				result.then(processSuccess)
 				result.catch(processError)
-			} else
-				processSuccess(result)
+			} else processSuccess(result)
 
 		} catch (error) {
 			processError()

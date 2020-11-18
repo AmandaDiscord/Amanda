@@ -36,10 +36,13 @@ class QueueManager {
 	 * @param {Discord.PartialChannel} textChannel
 	 * @param {string} [host]
 	 */
-	getOrCreate(voiceChannel, textChannel, host = null) {
+	async getOrCreate(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
 		if (this.cache.has(guildID)) return this.cache.get(guildID)
-		else return this.create(voiceChannel, textChannel, host)
+		else {
+			const q = await this.create(voiceChannel, textChannel, host)
+			return q
+		}
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
@@ -59,7 +62,7 @@ class QueueManager {
 		} else this.audits.set(guildID, [])
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, guild, host)
 		this.cache.set(guildID, instance)
-		ipc.replier.sendNewQueue(instance)
+		await ipc.replier.sendNewQueue(instance)
 		this.events.emit("create", instance)
 		return instance
 	}
@@ -123,7 +126,7 @@ class QueueManager {
 				queue.np = message
 				queue._startNPUpdates()
 				queue._makeReactionMenu()
-				ipc.replier.sendNewQueue(queue)
+				await ipc.replier.sendNewQueue(queue)
 			}
 		})
 		setTimeout(() => passthrough.nedb.queue.update({ _id: `QueueStore_${config.cluster_id}` }, { _id: `QueueStore_${config.cluster_id}`, queues: [] }, { upsert: true }), 1000 * 60 * 2)

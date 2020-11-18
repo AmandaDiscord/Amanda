@@ -45,7 +45,7 @@ class ServerReplier extends Replier {
 	}
 
 	requestFromGuild(guildID, op, data) {
-		return this.requestFromCluster(this.ipc.clusters.keyArray()[0], op, data)
+		return this.requestFromCluster(this.ipc.clusters.firstKey(), op, data)
 	}
 
 	broadcast(op, data) {
