@@ -18,11 +18,11 @@ utils.addTemporaryListener(reloader.reloadEvent, "ipcreplier.js", path.basename(
 
 class ServerReplier extends Replier {
 	/**
-	 * @param {import("./ipcserver")} ipc
+	 * @param {import("./ipcserver")} ipcserver
 	 */
-	constructor(ipc) {
+	constructor(ipcserver) {
 		super()
-		this.ipc = ipc
+		this.ipc = ipcserver
 	}
 
 	async onMessage(socket, raw) {
@@ -88,12 +88,12 @@ class ServerReplier extends Replier {
 					} else if (combineMethod === "add") {
 						resolve(parts.reduce((acc, cur) => (acc + cur), 0))
 					} else if (combineMethod === "addProps") {
-						const result = parts.reduce((acc, part) => {
-							Object.keys(part).forEach(key => {
+						const result = parts.reduce((acc, p) => {
+							Object.keys(p).forEach(key => {
 								if (acc[key]) {
-									acc[key] += part[key]
+									acc[key] += p[key]
 								} else {
-									acc[key] = part[key]
+									acc[key] = p[key]
 								}
 							})
 							return acc

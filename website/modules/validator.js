@@ -11,7 +11,7 @@
 class Validator {
 	constructor() {
 		this.state = {}
-		this.nextValue
+		this.nextValue = undefined
 		/** @type {Operation[]} */
 		this.operations = []
 		this.stage = 0

@@ -20,7 +20,7 @@ const clientID = "405208699313848330"
 
 async function report() {
 	const stats = await ipc.replier.requestGetStats()
-	const shardCount = [...ipc.shardsPerCluster.values()].reduce((acc, cur) => acc += cur, 0)
+	const shardCount = [...ipc.shardsPerCluster.values()].reduce((acc, cur) => acc + cur, 0)
 	const errors = []
 	await Promise.all([
 		analytics.sendReport({ servers: stats.guilds, channels: stats.channels, users: stats.users, ram_used: stats.combinedRam, received_messages: 0, sent_messages: 0 }).catch(errors.push),

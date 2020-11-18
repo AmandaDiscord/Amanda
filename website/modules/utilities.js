@@ -112,11 +112,9 @@ const utils = {
 		let result = true
 		const row = await utils.sql.get("SELECT * FROM CSRFTokens WHERE token = ?", token)
 		// Token doesn't exist? Fail.
-		if (!row) result = false
 		// Expired? Fail.
-		else if (row.expires < Date.now()) result = false
 		// Checking against a loginToken, but row loginToken differs? Fail.
-		else if (loginToken && row.loginToken != loginToken) result = false
+		if (!row || (row.expires < Date.now()) || (loginToken && row.loginToken != loginToken)) result = false
 		// Looking good.
 		if (consume) await utils.sql.all("DELETE FROM CSRFTokens WHERE token = ?", token)
 		return result

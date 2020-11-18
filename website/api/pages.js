@@ -123,7 +123,7 @@ module.exports = [
 				.then(async state => {
 					/** @type {URLSearchParams} */
 					const params = state.params
-					const config = {
+					const cfg = {
 						use_invidious: params.has("use-invidious"),
 					}
 					const lavalinkNodes =
@@ -133,9 +133,9 @@ module.exports = [
 								enabled: params.has("enable-node-"+i)
 							}))
 
-					console.log({config, lavalinkNodes})
+					console.log({cfg, lavalinkNodes})
 
-					await ipc.replier.requestUpdateConfig({config, lavalinkNodes})
+					await ipc.replier.requestUpdateConfig({cfg, lavalinkNodes})
 
 					return {
 						statusCode: 303,
