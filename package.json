@@ -45,7 +45,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#456813e5eb551ddeab7bf6148a9b3651261d6f0a",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#7d6375cef37c80178baec3bd5011e4bcef89ad31"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#3a3f37cc67ac064eab7a7b65216e242ad6dfc8bb"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2",
