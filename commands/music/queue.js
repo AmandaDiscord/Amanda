@@ -577,30 +577,18 @@ class Queue {
 	_makeReactionMenu() {
 		if (this.npMenu) this.npMenu.destroy(true, "text")
 		this.npMenu = new ReactionMenu(this.np, client, [
-			{ emoji: "⏯", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
-				if (!t) return
-				const bO = t.boundObject ? t.boundObject : t
-				// @ts-ignore
-				if (bO.channel_id != this.voiceChannel.id) return
+			{ emoji: "⏯", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+				if (!this.listeners.has(user.id)) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 				this.wrapper.togglePlaying("reaction")
 			} },
-			{ emoji: "⏭", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
-				if (!t) return
-				const bO = t.boundObject ? t.boundObject : t
-				// @ts-ignore
-				if (bO.channel_id != this.voiceChannel.id) return
+			{ emoji: "⏭", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+				if (!this.listeners.has(user.id)) return
 				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
-			{ emoji: "⏹", remove: "user", actionType: "js", actionData: async (msg, emoji, user) => {
-				const t = await client.rain.cache.voiceState.get(user.id, this.guild.id)
-				if (!t) return
-				const bO = t.boundObject ? t.boundObject : t
-				// @ts-ignore
-				if (bO.channel_id != this.voiceChannel.id) return
+			{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+				if (!this.listeners.has(user.id)) return
 				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()
 			} }
