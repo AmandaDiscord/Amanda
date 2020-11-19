@@ -3,8 +3,6 @@
 const passthrough = require("../passthrough")
 
 const utils = require("../modules/utilities")
-/** typescript is stupid */
-const UVCProto = utils.UpdatingValueCache.prototype
 
 const opcodes = {
 	"IDENTIFY": 1,
@@ -42,7 +40,7 @@ const { ipc, snow } = passthrough
 
 /** @type {Session[]} */
 const sessions = []
-/** @type {Map<string, UVCProto>} */
+/** @type {Map<string, typeof utils.UpdatingValueCache.prototype>} */
 const states = new Map()
 
 function getState(guildID) {
@@ -340,23 +338,35 @@ class Session {
 		})
 	}
 
-	togglePlayback() {
-		if (!this.loggedin) return
+	async allowedToAction() {
+		if (!this.loggedin) return false
+		const state = await getState(this.guild.id)
+		if (!state.members.find(i => i.id === this.user.id)) return false
+		return true
+	}
+
+	async togglePlayback() {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
 		ipc.replier.requestTogglePlayback(this.guild.id)
 	}
 
-	skip() {
-		if (!this.loggedin) return
+	async skip() {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
 		ipc.replier.requestSkip(this.guild.id)
 	}
 
-	stop() {
-		if (!this.loggedin) return
+	async stop() {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
 		ipc.replier.requestStop(this.guild.id)
 	}
 
-	requestQueueRemove(data) {
-		if (!this.loggedin) return
+	async requestQueueRemove(data) {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
+
 		if (data && data.d && typeof data.d.index === "number") {
 			ipc.replier.requestQueueRemove(this.guild.id, data.d.index)
 		}
@@ -369,16 +379,18 @@ class Session {
 		})
 	}
 
-	requestAttributesChange(data) {
-		if (!this.loggedin) return
+	async requestAttributesChange(data) {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
 		if (typeof data === "object" && typeof data.d === "object") {
 			if (typeof data.d.auto === "boolean") ipc.replier.requestToggleAuto(this.guild.id)
 			if (typeof data.d.loop === "boolean") ipc.replier.requestToggleLoop(this.guild.id)
 		}
 	}
 
-	requestClearQueue() {
-		if (!this.loggedin) return
+	async requestClearQueue() {
+		const allowed = await this.allowedToAction()
+		if (!allowed) return
 		ipc.replier.requestClearQueue(this.guild.id)
 	}
 }
