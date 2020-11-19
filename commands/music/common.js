@@ -429,7 +429,7 @@ const common = {
 		handleSong:
 		/**
 		 * @param {import("./songtypes").Song} song
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
@@ -444,7 +444,7 @@ const common = {
 
 		fromData:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any} data
 		 * @param {boolean} insert
@@ -458,7 +458,7 @@ const common = {
 
 		fromDataArray:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} data
 		 * @param {boolean} insert
@@ -472,7 +472,7 @@ const common = {
 
 		fromSongArray:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} songs
 		 * @param {boolean} insert
@@ -491,7 +491,7 @@ const common = {
 
 		fromSearch:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -499,7 +499,9 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
-			let tracks = await common.searchYouTube(search, textChannel.guild.region)
+			/** @type {Discord.Guild} */
+			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
+			let tracks = await common.searchYouTube(search, g ? g.region : undefined)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
@@ -517,7 +519,7 @@ const common = {
 
 		fromSoundCloudSearch:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -544,7 +546,7 @@ const common = {
 
 		fromSoundCloudLink:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -568,7 +570,7 @@ const common = {
 		},
 		fromSpotifyLink:
 		/**
-		 * @param {Discord.Message["channel"]} textChannel
+		 * @param {Discord.PartialChannel} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -724,17 +726,21 @@ const common = {
 	 * @param {Discord.VoiceState} state
 	 */
 	voiceStateUpdate: async function(state) {
-		if (state.id === client.user.id) return
 		if (!state.guildID) return // we should only process voice state updates that are in guilds
-		const queues = passthrough.queues
-		const queue = queues.cache.get(state.guildID)
+		const queue = passthrough.queues.cache.get(state.guildID)
 
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
+			if (queue) {
+				const member = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
+				queue.listeners.set(state.id, member)
+			}
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))
+		} else {
+			if (queue) queue.listeners.delete(state.id)
 		}
 
 		if (queue) queue.voiceStateUpdate(state)

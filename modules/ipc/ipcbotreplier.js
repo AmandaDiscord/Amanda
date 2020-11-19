@@ -300,8 +300,8 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
-	async sendMembersUpdate(queue) { // TODO: this is jank
-		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guild.id, members: await queue.wrapper.getMembers() } })
+	sendMembersUpdate(queue) {
+		this.ipc.send({ op: "MEMBERS_UPDATE", data: { guildID: queue.guild.id, members: queue.wrapper.getMembers() } })
 	}
 
 	/**

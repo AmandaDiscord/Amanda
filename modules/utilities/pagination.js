@@ -76,7 +76,7 @@ function tableifyRows(rows, align, surround = () => "", spacer = " ") { // SC:
 }
 
 /**
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {string[]} title
  * @param {string[][]} rows
  */
@@ -213,7 +213,7 @@ function playlistSection(items, startString, endString, shuffle) {
 }
 
 /**
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {string} authorID
  * @param {string} title
  * @param {string} failedTitle

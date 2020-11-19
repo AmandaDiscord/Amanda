@@ -575,16 +575,21 @@ commands.assign([
 					if (!voiceChannel) return
 					if (subcommmandData.queue && subcommmandData.queue.voiceChannel && subcommmandData.queue.voiceChannel.id != voiceChannel.id) return
 					subcommmandData.voiceChannel = voiceChannel
+					if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 				} else if (subcommandObject.voiceChannel == "ask") {
 					const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 					if (!voiceChannel) return
 					if (subcommmandData.queue && subcommmandData.queue.voiceChannel && subcommmandData.queue.voiceChannel.id != voiceChannel.id) return
 					subcommmandData.voiceChannel = voiceChannel
+					if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 				} else if (subcommandObject.voiceChannel == "provide") {
 					const voiceChannel = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
 					let vcdata
 					// @ts-ignore
-					if (voiceChannel) vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)
+					if (voiceChannel) {
+						vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)
+						if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
+					}
 
 					// @ts-ignore
 					subcommmandData.voiceChannel = vcdata ? vcdata : undefined

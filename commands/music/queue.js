@@ -59,7 +59,7 @@ class Queue {
 	/**
 	 * @param {queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.Message["channel"]} textChannel
+	 * @param {Discord.PartialChannel} textChannel
 	 * @param {Discord.Guild} guild
 	 * @param {string} [host]
 	 */
@@ -81,6 +81,10 @@ class Queue {
 		/** @type {import("@amanda/lang").Lang} */
 		this.langCache = undefined
 		this.audit = queues.audits.get(this.guild.id)
+		/**
+		 * @type {Discord.Collection<string, Discord.GuildMember>}
+		 */
+		this.listeners = new Discord.Collection()
 
 		this.voiceLeaveTimeout = new utils.BetterTimeout()
 			.setCallback(() => {
@@ -612,18 +616,19 @@ class Queue {
 			// @ts-ignore
 			this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		}
-		// Detect number of users left in channel
-		/** @type {Array<any>} */
-		const inGuild = (await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: newState.guildID } })) || []
-		for (const state of inGuild) {
-			if (state.channel_id !== this.voiceChannel.id) continue
-			state.user = await utils.cacheManager.users.get(state.user_id, true, true)
-		}
-		const count = inGuild.filter(item => item.channel_id === this.voiceChannel.id && item.user && !item.user.bot)
+		const count = this.listeners.filter(item => item.user && !item.user.bot).size
 		if ((count && typeof count === "number" && count == 0) || (count && Array.isArray(count) && count.length == 0) || !count) {
-			if (!this.voiceLeaveTimeout.isActive) {
-				this.voiceLeaveTimeout.run()
-				this.voiceLeaveWarningMessagePromise = this.textChannel.send(utils.replace(lang.audio.music.prompts.noUsersLeft, { "time": this.voiceLeaveTimeout.delay / 1000 }))
+			/** @type {Array<Discord.GuildMember>} */
+			const mems = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.guild.id, channel_id: this.voiceChannel.id } }).then(states => Promise.all(states.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))))
+			if (mems.length > 0 && mems.find(i => !i.user.bot)) {
+				for (const mem of mems) {
+					this.listeners.set(mem.id, mem)
+				}
+			} else {
+				if (!this.voiceLeaveTimeout.isActive) {
+					this.voiceLeaveTimeout.run()
+					this.voiceLeaveWarningMessagePromise = this.textChannel.send(utils.replace(lang.audio.music.prompts.noUsersLeft, { "time": this.voiceLeaveTimeout.delay / 1000 }))
+				}
 			}
 		} else {
 			this.voiceLeaveTimeout.clear()
@@ -713,7 +718,7 @@ class QueueWrapper {
 		this.queue.stop()
 	}
 	/**
-	 * @param {Discord.Message["channel"]} channel
+	 * @param {Discord.PartialChannel} channel
 	 */
 	async showRelated(channel) {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
@@ -773,7 +778,7 @@ class QueueWrapper {
 		}
 	}
 	/**
-	 * @param {Discord.Message["channel"]} channel
+	 * @param {Discord.PartialChannel} channel
 	 */
 	async showInfo(channel) {
 		const content = await this.queue.songs[0].showInfo()
@@ -796,12 +801,8 @@ class QueueWrapper {
 		}
 	}
 
-	async getMembers() {
-		/**
-		 * @type {Array<Discord.GuildMember>}
-		 */
-		const data = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.queue.guild.id } }).then(d => Promise.all(d.map(g => utils.cacheManager.members.get(g.user_id, this.queue.guild.id))))
-		return data.map(m => ({
+	getMembers() {
+		return this.queue.listeners.map(m => ({
 			id: m.id,
 			name: m.displayName,
 			avatar: m.user.displayAvatarURL({ format: "png", size: 64, dynamic: false }),

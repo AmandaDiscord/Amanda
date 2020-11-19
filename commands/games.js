@@ -29,7 +29,7 @@ reloader.sync("./modules/utilities/index.js", utils)
 
 class Game {
 	/**
-	 * @param {Discord.Message["channel"]} channel
+	 * @param {Discord.PartialChannel} channel
 	 * @param {string} type
 	 */
 	constructor(channel, type) {
@@ -54,7 +54,7 @@ module.exports.Game = Game
 
 class TriviaGame extends Game {
 	/**
-	 * @param {Discord.Message["channel"]} channel
+	 * @param {Discord.PartialChannel} channel
 	 * @param {{response_code: number, results: Array<TriviaResponse>}} data
 	 * @param {number} category
 	 * @param {Lang.Lang} lang
@@ -179,7 +179,7 @@ module.exports.TriviaGame = TriviaGame
 
 /**
  * @param {string} body
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {Lang.Lang} lang
  * @returns {Promise<[boolean, any]>}
  */
@@ -195,7 +195,7 @@ async function JSONHelper(body, channel, lang) {
 	}
 }
 /**
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {{ suffix?: string, msg?: Discord.Message, category?: number, lang: Lang.Lang }} options
  */
 async function startGame(channel, options) {

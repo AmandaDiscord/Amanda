@@ -136,7 +136,7 @@ async function resolveWebhookMessageAuthor(msg) {
 }
 
 /**
- * @param {Discord.Message["channel"]} channel
+ * @param {Discord.PartialChannel} channel
  * @param {string|Discord.MessageEmbed} content
  */
 async function contentify(channel, content) {
