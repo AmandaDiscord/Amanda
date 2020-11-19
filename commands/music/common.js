@@ -732,7 +732,7 @@ const common = {
 		// Process waiting to join
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
-			if (queue) {
+			if (queue && state.channelID === queue.voiceChannel.id) {
 				const member = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
 				queue.listeners.set(state.id, member)
 			}
