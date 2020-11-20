@@ -125,6 +125,7 @@ module.exports = [
 					const params = state.params
 					const cfg = {
 						use_invidious: params.has("use-invidious"),
+						allow_ai: params.has("allow-ai")
 					}
 					const lavalinkNodes =
 						Array(+params.get("number-of-nodes"))
@@ -133,9 +134,9 @@ module.exports = [
 								enabled: params.has("enable-node-"+i)
 							}))
 
-					console.log({cfg, lavalinkNodes})
+					console.log({config: cfg, lavalinkNodes})
 
-					await ipc.replier.requestUpdateConfig({cfg, lavalinkNodes})
+					await ipc.replier.requestUpdateConfig({config: cfg, lavalinkNodes})
 
 					return {
 						statusCode: 303,

@@ -17,8 +17,9 @@ html
 			table.config-table
 				thead
 					tr
-						th(scope="col") Shard #
+						th(scope="col") Cluster #
 						th(scope="col") Using Invidious
+						th(scope="col") Allow AI
 				tbody
 					each data, index in shardData
 						- let config = data.config
@@ -28,12 +29,20 @@ html
 								div.use-invidious
 									div(class=(config.use_invidious ? "true" : "")).status
 									= config.use_invidious
+							td
+								div.use-invidious
+									div(class=(config.allow_ai ? "true" : "")).status
+									= config.allow_ai
 
 			h2 Update all shards to...
 			form(method="post" action="/formapi/updateconfig").form-with-rows
 				label.form-row-label
 					span Use Invidious
 					input(type="checkbox" name="use-invidious" checked=shardData[0].config.use_invidious)
+
+				label.form-row-label
+					span Allow AI
+						input(type="checkbox" name="allow-ai" checked=shardData[0].config.allow_ai)
 
 				input(type="hidden" name="number-of-nodes" value=shardData[0].lavalinkNodes.length)
 
