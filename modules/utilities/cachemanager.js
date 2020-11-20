@@ -483,6 +483,12 @@ const memberManager = {
 		if (!guildID) return true
 		if (!permissions) permissions = await memberManager.permissionsFor(userID, guildID)
 
+		if (permissions.allow & permissionstable["ADMINISTRATOR"]) return true
+		/** @type {Discord.Guild} */
+		// @ts-ignore
+		const g = await guildManager.get(guildID, true, true)
+		if (g.ownerID === userID) return true
+
 		/** @type {number} */
 		let toCheck
 		if (permissionstable[permission]) toCheck = permissionstable[permission]
