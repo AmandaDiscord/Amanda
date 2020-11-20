@@ -735,7 +735,7 @@ const common = {
 			if (queue && state.channelID === queue.voiceChannel.id) {
 				const member = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
 				queue.listeners.set(state.id, member)
-			}
+			} else if (queue) queue.listeners.delete(state.id)
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))
