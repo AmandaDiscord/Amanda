@@ -671,9 +671,9 @@ class ExternalSong extends Song {
 		try {
 			info = await common.getTracks(this.uri, this.queue.guild.region)
 		} catch {
-			this.error = `Missing track for ${this.title}`
+			return this.error = `Missing track for ${this.title}`
 		}
-		if (!Array.isArray(info) || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
+		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
 	}
 	toObject() {
