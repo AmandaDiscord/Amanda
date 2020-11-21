@@ -66,7 +66,7 @@ class TriviaGame extends Game {
 		this.earningsDisabled = false
 		this.lang = lang
 		/** @type {"trivia"} */
-		this.type
+		this.type = "trivia"
 		/**
 		 * Map a userID to an answer index (A = 0, B = 1, C = 2, D = 3)
 		 * @type {Map<string, number>}

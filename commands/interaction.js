@@ -31,7 +31,7 @@ const cmds = [
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
-			if (args.length <= 1) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
+			if (!args.length) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
 			let mem1, mem2
 			if (args.length == 1) {
 				mem1 = msg.member
@@ -182,7 +182,7 @@ const genderMap = new Map([
 /**
  * @param {Discord.Message} msg
  * @param {string} suffix
- * @param {{name: string, description: string, shortcut: string, fetch?: () => Promise<string>, footer?: string, traaOverride?: boolean, url?: () => Promise<string>}} source
+ * @param {{name: string, description: string, shortcut: string, footer?: string, traaOverride?: boolean, url?: () => Promise<string>}} source
  * @param {import("@amanda/lang").Lang} lang
  */
 async function doInteraction(msg, suffix, source, lang) {
@@ -214,7 +214,6 @@ async function doInteraction(msg, suffix, source, lang) {
 		}*/
 	}
 	if (!fetched) {
-		if (source.fetch) fetched = source.fetch()
 		if (source.shortcut == "nekos.life") {
 			source.footer = "Powered by nekos.life"
 			fetched = new Promise((resolve, reject) => {
@@ -248,7 +247,7 @@ async function doInteraction(msg, suffix, source, lang) {
  * @returns {Promise<string>}
  */
 async function getGif(type) {
-	const gif = await utils.sql.get("SELECT * FROM InteractionGifs WHERE type =? ORDER BY RAND()", type)
+	const gif = await utils.sql.get("SELECT * FROM InteractionGifs WHERE type =? ORDER BY RAND() LIMIT 1", type)
 	return gif.url
 }
 
