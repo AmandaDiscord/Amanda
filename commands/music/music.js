@@ -31,7 +31,8 @@ const subcommandsMap = new Map([
 			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const insert = args[0][0] == "i"
-			const search = args.slice(1).join(" ")
+			let search = args.slice(1).join(" ")
+			if (msg.attachments && msg.attachments[0] && msg.attachments[0].url) search = msg.attachments[0].url
 			if (search.trim().length === 0) {
 				return msg.channel.send(lang.audio.music.prompts.playNoArguments)
 			}
@@ -147,6 +148,8 @@ const subcommandsMap = new Map([
 				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else if (match && match.type === "spotify") {
 				common.inserters.fromSpotifyLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
+			} else if (match && match.type === "external") {
+				common.inserters.fromExternalLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else {
 				// User input wasn't a playlist and wasn't a video. Start a search.
 				common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
@@ -587,7 +590,9 @@ commands.assign([
 					let vcdata
 					// @ts-ignore
 					if (voiceChannel) {
-						vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)
+						const o = voiceChannel.boundObject ? voiceChannel.boundObject : voiceChannel
+						// @ts-ignore
+						vcdata = await utils.cacheManager.channels.get(o.channel_id, true, true)
 						if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 					}
 

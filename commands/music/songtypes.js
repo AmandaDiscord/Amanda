@@ -632,12 +632,85 @@ class SpotifySong extends YouTubeSong {
 		return Promise.resolve(`https://open.spotify.com/track/${ID}`)
 	}
 	async showInfo() {
-		const ID = this.uri.match(/spotify:track:([\d\w]+)/)[1]
+		const ID = await this.showLink()
 		const YT = await super.showInfo()
 		return Promise.resolve(`https://open.spotify.com/track/${ID}\n${YT}`)
 	}
 	prepare() {
 		return this.prepareCache.get()
+	}
+}
+
+class ExternalSong extends Song {
+	/**
+	 * @param {string} link
+	 */
+	constructor(link) {
+		super()
+		this.title = "Unknown Track"
+		this.live = true
+		this.thumbnail = {
+			src: constants.local_placeholder,
+			width: 616,
+			height: 440
+		}
+		this.uri = link
+		this.track = "!"
+		this.lengthSeconds = 0
+		this.npUpdateFrequency = 15000
+		this.queueLine = `**${this.title}** (LIVE)`
+		this.typeWhileGetRelated = false
+		this.noPauseReason = "You can't pause external audio."
+		this.id = String(Date.now())
+		this._filledBarOffset = 0
+
+		this.validate()
+	}
+	async prepare() {
+		let info
+		try {
+			info = await common.getTracks(this.uri, this.queue.guild.region)
+		} catch {
+			this.error = `Missing track for ${this.title}`
+		}
+		if (!Array.isArray(info) || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
+		this.track = info[0].track
+	}
+	toObject() {
+		return {
+			class: "ExternalSong",
+			lengthSeconds: this.lengthSeconds,
+			uri: this.uri,
+			id: this.id,
+			track: this.track
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try finding related songs on other websites")
+	}
+	showLink() {
+		return Promise.resolve(this.uri)
+	}
+	showInfo() {
+		return this.showLink()
+	}
+	/**
+	 * @param {number} time
+	 */
+	getProgress(time) {
+		const part = "= ⋄ ==== ⋄ ==="
+		const fragment = part.substr(7 - this._filledBarOffset, 7)
+		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
+		this._filledBarOffset++
+		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+		// eslint-disable-next-line no-irregular-whitespace
+		return `\`[ ${common.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+	}
+	resume() {
+		return this.prepare()
 	}
 }
 
@@ -678,6 +751,10 @@ function makeSpotifySong(data, id = undefined, track = undefined) {
 	return new SpotifySong(data)
 }
 
+function makeExternalSong(link) {
+	return new ExternalSong(link)
+}
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
@@ -686,3 +763,5 @@ module.exports.SoundCloudSong = SoundCloudSong
 module.exports.makeSoundCloudSong = makeSoundCloudSong
 module.exports.SpotifySong = SpotifySong
 module.exports.makeSpotifySong = makeSpotifySong
+module.exports.ExternalSong = ExternalSong
+module.exports.makeExternalSong = makeExternalSong

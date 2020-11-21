@@ -114,6 +114,10 @@ class QueueManager {
 						const song = songTypes.makeSpotifySong({ track_number: s.trackNumber, duration_ms: s.durationMS, name: s.title, uri: s.uri, artists: [{ name: s.artist }] }, s.id, s.track)
 						queue.songs.push(song)
 						console.log(`Added SpotifySong ${song.title}`)
+					} else if (s.class === "ExternalSong") {
+						const song = songTypes.makeExternalSong(s.uri)
+						queue.songs.push(song)
+						console.log("Added ExternalSong")
 					}
 				})
 				if (queue.songs[0]) {

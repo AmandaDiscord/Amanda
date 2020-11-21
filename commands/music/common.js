@@ -1,7 +1,8 @@
 /* eslint-disable no-useless-catch */
 // @ts-check
 
-/** @type {import("node-fetch").default} */
+/** @type {import("node-fetch")["default"]} */
+// @ts-ignore
 const fetch = require("node-fetch")
 const Discord = require("thunderstorm")
 const path = require("path")
@@ -27,7 +28,7 @@ class VoiceStateCallback {
 		this.timeout = setTimeout(() => this.cancel(), timeoutMs)
 		this.callback = callback
 		this.active = true
-		common.voiceStateCallbackManager.getAll(this.msg.author.id, this.msg.guild).forEach(o => o.cancel()) // this works? (common declared later)
+		common.voiceStateCallbackManager.getAll(this.msg.author.id, this.msg.guild.id).forEach(o => o.cancel()) // this works? (common declared later)
 		this.add()
 	}
 	add() {
@@ -94,7 +95,7 @@ const common = {
 	 * @returns {({type: string, id?: string, list?: string, link?: string})|null}
 	 */
 	function(input) {
-		input = input.replace(/(<|>)/g, "")
+		input = input.replace(/(^<|>$)/g, "")
 		try {
 			let inputAsURL = input
 			if (inputAsURL.includes(".com/") && !inputAsURL.startsWith("http")) inputAsURL = `https://${inputAsURL}`
@@ -131,7 +132,7 @@ const common = {
 					// Got an ID!
 					return { type: "video", id: id }
 				} else return null // YouTube-compatible, but can't resolve to a video.
-			} else return null // Unknown site.
+			} else return { type: "external", link: url.toString() } // Possibly a link to an audio file
 		} catch (e) {
 			// Not a URL. Might be an ID?
 			if (input.match(/^[A-Za-z0-9_-]{11}$/)) return { type: "video", id: input }
@@ -500,6 +501,7 @@ const common = {
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
 			/** @type {Discord.Guild} */
+			// @ts-ignore
 			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
 			let tracks = await common.searchYouTube(search, g ? g.region : undefined)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
@@ -527,9 +529,12 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
 			let tracks
 			try {
-				tracks = await common.getTracks(`scsearch:${search}`, textChannel.guild.region)
+				tracks = await common.getTracks(`scsearch:${search}`, g.region)
 			} catch {
 				return textChannel.send(lang.audio.music.prompts.noResults)
 			}
@@ -554,9 +559,12 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
 			let tracks
 			try {
-				tracks = await common.getTracks(link, textChannel.guild.region)
+				tracks = await common.getTracks(link, g.region)
 			} catch {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
@@ -589,6 +597,28 @@ const common = {
 			const tracks = common.spotify.getTrackInfo(data)
 			const songs = tracks.map(track => songtypes.makeSpotifySong(track))
 			return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
+		},
+		fromExternalLink:
+		/**
+		 * @param {Discord.PartialChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const songtypes = require("./songtypes")
+			let data
+			try {
+				data = await fetch(link, { method: "HEAD" })
+			} catch {
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
+			const mime = data.headers.get("content-type") || data.headers.get("Content-Type")
+			if (!mime || !mime.startsWith("audio/")) return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			const song = songtypes.makeExternalSong(link)
+			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
 		}
 	},
 
@@ -675,6 +705,8 @@ const common = {
 		// Already in a voice channel? Use that!
 		const state = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
 		if (state) {
+			/** @type {Discord.VoiceChannel} */
+			// @ts-ignore
 			const cdata = await utils.cacheManager.channels.get(state.channel_id, true, true)
 			return common.verifyVoiceChannel(cdata, msg, lang)
 		}
@@ -704,10 +736,10 @@ const common = {
 	 * @param {Discord.VoiceChannel} voiceChannel Voice channel to check
 	 * @param {Discord.Message} msg Message to direct errors at
 	 * @param {import("@amanda/lang").Lang} lang
-	 * @return {(Discord.VoiceChannel|null)}
+	 * @return {Promise<(Discord.VoiceChannel|null)>}
 	 */
 	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
-		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id })
+		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id, guild_id: voiceChannel.guild.id })
 		const viewable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms)
 		const joinable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms)
 		const speakable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
@@ -733,9 +765,13 @@ const common = {
 		// If someone else changed state, and their new state has a channel (i.e. just joined or switched channel)
 		if (state.channelID) {
 			if (queue && state.channelID === queue.voiceChannel.id) {
+				/** @type {Discord.GuildMember} */
+				// @ts-ignore
 				const member = await utils.cacheManager.members.get(state.id, state.guildID, true, true)
 				queue.listeners.set(state.id, member)
 			} else if (queue) queue.listeners.delete(state.id)
+			/** @type {Discord.VoiceChannel} */
+			// @ts-ignore
 			const vc = await utils.cacheManager.channels.get(state.channelID, true, true)
 			// Trigger all callbacks for that user in that guild
 			common.voiceStateCallbackManager.getAll(state.id, state.guildID).forEach(s => s.trigger(vc))
