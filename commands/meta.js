@@ -11,7 +11,7 @@ const simpleGit = require("simple-git")(__dirname)
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
-const emojis = require("../modules/emojis")
+const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
 const { client, constants, config, commands, reloadEvent, reloader, games, queues, periodicHistory, ipc } = passthrough

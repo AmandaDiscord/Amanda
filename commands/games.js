@@ -10,7 +10,7 @@ const path = require("path")
 const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
 
-const emojis = require("../modules/emojis")
+const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
 const { constants, client, commands, reloader, games, streaks } = passthrough

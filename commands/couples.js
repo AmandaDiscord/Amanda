@@ -7,7 +7,7 @@ const { constants, client, commands, reloader } = passthrough
 const utils = require("../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
-const emojis = require("../modules/emojis")
+const emojis = require("../emojis")
 
 commands.assign([
 	{

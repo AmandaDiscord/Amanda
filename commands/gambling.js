@@ -3,7 +3,7 @@
 const Jimp = require("jimp")
 const Discord = require("thunderstorm")
 
-const emojis = require("../modules/emojis")
+const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
 const { constants, client, commands, reloader } = passthrough
