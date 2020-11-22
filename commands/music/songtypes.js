@@ -706,8 +706,115 @@ class ExternalSong extends Song {
 		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		// eslint-disable-next-line no-irregular-whitespace
 		return `\`[ ${common.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+	}
+	resume() {
+		return this.prepare()
+	}
+}
+
+class ListenMoeSong extends Song {
+	/**
+	 * @param {"jp" | "kp"} station
+	 */
+	constructor(station) {
+		super()
+
+		this.station = station
+		this.stationData = passthrough.listenMoe[station]
+		this.live = true
+		this.thumbnail = {
+			src: constants.listen_moe_placeholder,
+			width: 64,
+			height: 64
+		}
+		this.uri = this.stationData.Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].vorbis
+		this.track = "!"
+		this.npUpdateFrequency = 15000
+		this.typeWhileGetRelated = false
+		this.noPauseReason = "You can't pause live audio."
+		this._filledBarOffset = 0
+
+		this.validate()
+	}
+	get lengthSeconds() {
+		return this.stationData.lastTrack.duration
+	}
+	set lengthSeconds(value) {
+		void value
+	}
+	get id() {
+		return String((this.stationData.lastTrack.albums && this.stationData.lastTrack.albums[0] ? (this.stationData.lastTrack.albums[0].id || this.stationData.lastTrack.id) : this.stationData.lastTrack.id))
+	}
+	set id(value) {
+		void value
+	}
+	get title() {
+		return this.stationData.lastTrack.title
+	}
+	set title(value) {
+		void value
+	}
+	get queueLine() {
+		return `**${this.title}** (${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"})`
+	}
+	set queueLine(value) {
+		void value
+	}
+	/**
+	 * @returns {Promise<void>}
+	 */
+	async prepare() {
+		let info
+		try {
+			info = await common.getTracks(this.uri, this.queue.guild.region)
+		} catch {
+			return this.error = `Missing track for ${this.title}`
+		}
+		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
+		this.track = info[0].track
+	}
+	toObject() {
+		return {
+			class: "ListenMoeSong",
+			station: this.station,
+			lengthSeconds: this.lengthSeconds,
+			uri: this.uri,
+			id: this.id,
+			track: this.track
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try the other stations on <https://listen.moe>")
+	}
+	showLink() {
+		return Promise.resolve(`https://listen.moe/albums/${this.id}`)
+	}
+	async showInfo() {
+		const link = await this.showLink()
+		return `https://listen.moe\n${link}`
+	}
+	/**
+	 * @param {number} fallback
+	 */
+	getProgress(fallback) {
+		let time
+		if (this.stationData.lastTrackStartedAt) time = Math.floor((Date.now() - this.stationData.lastTrackStartedAt) / 1000)
+		else time = fallback
+		const part = "= ⋄ ==== ⋄ ==="
+		const fragment = part.substr(7 - this._filledBarOffset, 7)
+		let bar
+		if (!this.lengthSeconds) bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
+		else {
+			if (time > this.lengthSeconds) time = this.lengthSeconds
+			bar = utils.progressBar(18, time, this.lengthSeconds)
+		}
+		this._filledBarOffset++
+		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+		return `\`[ ${common.prettySeconds(time)} ​${bar}​ ${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"} ]\`` // SC: ZWSP x 2
 	}
 	resume() {
 		return this.prepare()
@@ -751,8 +858,18 @@ function makeSpotifySong(data, id = undefined, track = undefined) {
 	return new SpotifySong(data)
 }
 
+/**
+ * @param {string} link
+ */
 function makeExternalSong(link) {
 	return new ExternalSong(link)
+}
+
+/**
+ * @param {"jp" | "kp"} station
+ */
+function makeListenMoeSong(station) {
+	return new ListenMoeSong(station)
 }
 
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
@@ -765,3 +882,5 @@ module.exports.SpotifySong = SpotifySong
 module.exports.makeSpotifySong = makeSpotifySong
 module.exports.ExternalSong = ExternalSong
 module.exports.makeExternalSong = makeExternalSong
+module.exports.ListenMoeSong = ListenMoeSong
+module.exports.makeListenMoeSong = makeListenMoeSong

@@ -13,6 +13,7 @@ const SnowTransfer = require("snowtransfer")
 const ThunderStorm = require("thunderstorm")
 
 const CommandManager = require("@amanda/commandmanager")
+const ListenMoe = require("./modules/ListenMoe")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")
@@ -23,6 +24,8 @@ const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)
+const listenMoeJP = new ListenMoe(ListenMoe.Constants.baseJPOPGatewayURL)
+const listenMoeKP = new ListenMoe(ListenMoe.Constants.baseKPOPGatewayURL)
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
 /** @type {import("./typings").internalEvents} */
 const internalEvents = new events.EventEmitter()
@@ -49,7 +52,7 @@ const db = mysql.createPool({
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
-	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb })
+	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
 
 	const CacheRequester = require("./modules/managers/CacheRequester")
 	const GatewayRequester = require("./modules/managers/GatewayRequester")

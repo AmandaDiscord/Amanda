@@ -116,8 +116,13 @@ class QueueManager {
 						console.log(`Added SpotifySong ${song.title}`)
 					} else if (s.class === "ExternalSong") {
 						const song = songTypes.makeExternalSong(s.uri)
+						// @ts-ignore
 						queue.songs.push(song)
 						console.log("Added ExternalSong")
+					} else if (s.class === "ListenMoeSong") {
+						const song = songTypes.makeListenMoeSong(s.station)
+						queue.songs.push(song)
+						console.log("Added ListenMoeSong")
 					}
 				})
 				if (queue.songs[0]) {

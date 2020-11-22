@@ -546,6 +546,32 @@ commands.assign([
 		}
 	},
 	{
+		usage: "[jp|kp]",
+		description: "Play music from listen.moe",
+		aliases: ["listenmoe", "lm"],
+		category: "audio",
+		async process(msg, suffix, lang) {
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (["jp", "kp", "jpop", "kpop"].includes(suffix.toLowerCase())) { // valid station?
+				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
+				if (!voiceChannel) return
+				if (suffix.toLowerCase() === "jpop") suffix = "jp"
+				else if (suffix.toLocaleLowerCase() === "kpop") suffix = "kp"
+				// @ts-ignore
+				const song = songTypes.makeListenMoeSong(suffix)
+				return common.inserters.handleSong(song, msg.channel, voiceChannel, false, msg)
+			} else {
+				const embed = new Discord.MessageEmbed()
+					.setColor(constants.standard_embed_color)
+					.setTitle("Listen.moe — Schedule")
+					.setDescription(`KPOP: ${passthrough.listenMoe.kp.lastTrack.title} (${common.prettySeconds(passthrough.listenMoe.kp.lastTrack.duration)})\n`
+					+ `JPOP: ${passthrough.listenMoe.jp.lastTrack.title} (${common.prettySeconds(passthrough.listenMoe.jp.lastTrack.duration)})`)
+					.setFooter(`Use ${passthrough.statusPrefix}listenmoe [station] to play a station`)
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
+			}
+		}
+	},
+	{
 		usage: "none",
 		description: "Play music from multiple sources",
 		aliases: ["music", "m"],
