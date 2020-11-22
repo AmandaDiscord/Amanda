@@ -600,14 +600,16 @@ class Queue {
 	async voiceStateUpdate(newState) {
 		const lang = await this.getLang()
 		// Update own channel
-		if (newState.id == client.user.id && newState.channelID) {
+		if (newState.id == client.user.id && newState.channelID && newState.channelID !== this.voiceChannel.id) {
 			// @ts-ignore
 			this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		}
 		const count = this.listeners.filter(item => item.user && !item.user.bot).size
 		if ((count && typeof count === "number" && count == 0) || (count && Array.isArray(count) && count.length == 0) || !count) {
 			/** @type {Array<Discord.GuildMember>} */
-			const mems = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.guild.id, channel_id: this.voiceChannel.id } }).then(states => Promise.all(states.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))))
+			let mems
+			if (newState.channelID) mems = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.guild.id, channel_id: this.voiceChannel.id } }).then(states => Promise.all(states.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))))
+			else mems = []
 			if (mems.length > 0 && mems.find(i => !i.user.bot)) {
 				for (const mem of mems) {
 					this.listeners.set(mem.id, mem)

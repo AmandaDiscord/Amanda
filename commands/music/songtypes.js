@@ -671,7 +671,8 @@ class ExternalSong extends Song {
 		try {
 			info = await common.getTracks(this.uri, this.queue.guild.region)
 		} catch {
-			return this.error = `Missing track for ${this.title}`
+			this.error = `Missing track for ${this.title}`
+			return
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
@@ -761,15 +762,13 @@ class ListenMoeSong extends Song {
 	set queueLine(value) {
 		void value
 	}
-	/**
-	 * @returns {Promise<void>}
-	 */
 	async prepare() {
 		let info
 		try {
 			info = await common.getTracks(this.uri, this.queue.guild.region)
 		} catch {
-			return this.error = `Missing track for ${this.title}`
+			this.error = `Missing track for ${this.title}`
+			return
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
