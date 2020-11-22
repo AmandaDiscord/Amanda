@@ -906,7 +906,7 @@ commands.assign([
 						.setAuthor(`${passthrough.statusPrefix}music: command help (Aliases: m)`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
-					const blacklist = ["soundcloud", "music", "frisky", "debug", "token"]
+					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe"]
 					const audio = commands.cache.filter(c => c.category === "audio" && !blacklist.includes(c.aliases[0]))
 					audio.map(cmd => {
 						const info = getDocs(cmd)

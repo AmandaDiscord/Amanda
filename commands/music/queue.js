@@ -605,7 +605,7 @@ class Queue {
 			this.voiceChannel = await utils.cacheManager.channels.get(newState.channelID, true, true)
 		}
 		const count = this.listeners.filter(item => item.user && !item.user.bot).size
-		if ((count && typeof count === "number" && count == 0) || (count && Array.isArray(count) && count.length == 0) || !count) {
+		if (!count) {
 			/** @type {Array<Discord.GuildMember>} */
 			let mems
 			if (newState.channelID) mems = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.guild.id, channel_id: this.voiceChannel.id } }).then(states => Promise.all(states.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))))
