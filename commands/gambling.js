@@ -250,10 +250,24 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
-			const money = await utils.coinsManager.get(user.id)
+			const money = await utils.coinsManager.getRow(user.id)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag }))
-				.setDescription(`${utils.numberComma(money)} ${emojis.discoin}`)
+				.setDescription(`${utils.numberComma(money.coins)} ${emojis.discoin}`)
+				.addFields([
+					{
+						name: "Lifetime received amandollars",
+						value: utils.numberComma(money.woncoins)
+					},
+					{
+						name: "Lifetime lost amandollars",
+						value: utils.numberComma(money.lostcoins)
+					},
+					{
+						name: "Lifetime given amandollars",
+						value: utils.numberComma(money.givencoins)
+					}
+				])
 				.setColor(constants.money_embed_color)
 			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
