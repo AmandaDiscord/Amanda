@@ -1,13 +1,17 @@
 // @ts-check
 
-/** @type {import("node-fetch").default} */
+/** @type {import("node-fetch")["default"]} */
+// @ts-ignore
 const fetch = require("node-fetch")
 const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("thunderstorm")
 const Jimp = require("jimp")
 const path = require("path")
-const simpleGit = require("simple-git")(__dirname)
+/** @type {import("simple-git")["default"]} */
+// @ts-ignore
+const sG = require("simple-git")
+const simpleGit = sG(__dirname)
 const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
@@ -113,9 +117,10 @@ function getHeartType(user, otherid) {
 	return "full"
 }
 
-const giverTier1 = 100000
-const giverTier2 = 1000000
-const giverTier3 = 10000000
+const giverTier1 = 100000 // 100,000
+const giverTier2 = 1000000 // 1,000,000
+const giverTier3 = 10000000 // 10,000,000
+const giverTier4 = 100000000 // 100,000,000
 
 commands.assign([
 	{
@@ -308,18 +313,18 @@ commands.assign([
 		category: "meta",
 		examples: ["info"],
 		async process(msg, suffix, lang) {
-			const [c1, c2] = await Promise.all([
-				utils.cacheManager.users.get("320067006521147393", true, true),
-				utils.cacheManager.users.get("176580265294954507", true, true)
-			])
+			/**
+			 * @type {Discord.User}
+			 */
+			// @ts-ignore
+			const owner = await utils.cacheManager.users.get("320067006521147393", true, true)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor("Amanda", client.user.displayAvatarURL({ format: "png", size: 32 }))
 				.setDescription(lang.meta.info.returns.thanks)
 				.addFields([
 					{
 						name: lang.meta.info.returns.creators,
-						value: `${c1.tag} ${utils.userFlagEmojis(c1).join(" ")} <:NitroBadge:421774688507920406>\n` +
-							`${c2.tag} ${utils.userFlagEmojis(c2).join(" ")} <:NitroBadge:421774688507920406> <:boostlvl4:582555056369434635>`
+						value: `${owner.tag} ${utils.userFlagEmojis(owner).join(" ")} <:NitroBadge:421774688507920406>`
 					},
 					{
 						name: "Code",
@@ -362,6 +367,7 @@ commands.assign([
 				"Papi": "PapiOphidian"
 			}
 			const res = await new Promise((r) => {
+				// @ts-ignore
 				simpleGit.status((err, status) => {
 					simpleGit.log({ "--no-decorate": null }, (err2, log) => {
 						Promise.all(Array(limit).fill(undefined).map((_, i) => new Promise(resolve => {
@@ -543,7 +549,7 @@ commands.assign([
 				utils.coinsManager.getRow(user.id),
 				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
-				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "discoin"]),
+				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "badge-giver4", "discoin"]),
 				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
 			])
 
@@ -560,7 +566,7 @@ commands.assign([
 			let badge
 			if (isOwner) badge = "badge-developer"
 			else if (isPremium) badge = "badge-donator"
-			/** @type {import("snowtransfer/src/methods/Guilds").GuildMember} */
+			/** @type {import("@amanda/discordtypings").MemberData} */
 			let mem
 			const memberFetchTimeout = 2000
 			try {
@@ -571,6 +577,7 @@ commands.assign([
 				})
 				mem = await Promise.race([utils.cacheManager.members.get(user.id, "475599038536744960", true, false), TProm])
 			} catch(e) {
+				// @ts-ignore
 				mem = { roles: [] }
 			}
 			let boosting, hunter
@@ -582,7 +589,8 @@ commands.assign([
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
 			let giverImage
-			if (money.givencoins >= giverTier3) giverImage = images.get("badge-giver3").clone()
+			if (money.givencoins >= giverTier4) giverImage = images.get("badge-giver4").clone()
+			else if (money.givencoins >= giverTier3) giverImage = images.get("badge-giver3").clone()
 			else if (money.givencoins >= giverTier2) giverImage = images.get("badge-giver2").clone()
 			else if (money.givencoins >= giverTier1) giverImage = images.get("badge-giver1").clone()
 
@@ -635,9 +643,9 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : other ? other.tag.length > 42 ? `${other.tag.slice(0, 40)}...` : other.tag : "Nobody, yet")
 
 				let huntercoords = [219, 125]
-				if (badge && boosting && giverImage) huntercoords = [419, 125]
-				else if (badge && (boosting || giverImage)) huntercoords = [359, 125]
-				else if (badge || boosting || giverImage) huntercoords = [289, 125]
+				if (badge && boosting && giverImage) huntercoords = [419, 120]
+				else if (badge && (boosting || giverImage)) huntercoords = [359, 120]
+				else if (badge || boosting || giverImage) huntercoords = [289, 120]
 				if (hunter) canvas.composite(images.get("badge-hunter").resize(50, 50), huntercoords[0], huntercoords[1])
 			}
 
@@ -761,10 +769,10 @@ commands.assign([
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
 					const finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
 					return msg.channel.send(
-						`Default value: ${values[0]}\n`
-						+ `Server value: ${values[1] != null ? values[1] : "[unset]"}\n`
-						+ `Your value: ${values[2] != null ? values[2] : "[unset]"}\n`
-						+ `Computed value: ${finalValue}`
+						`Default value: ${values[0]}\n\
+						${setting.scope.includes("server") ? `Server value: ${values[1] != null ? values[1] : "[unset]"}\n` : ""}\
+						${setting.scope.includes("self") ? `Your value: ${values[2] != null ? values[2] : "[unset]"}\n` : ""}\
+						Computed value: ${finalValue}`
 					)
 				}
 			}
@@ -791,7 +799,7 @@ commands.assign([
 				let allowed = false
 				if (isEval) allowed = true
 				if (isPremium) allowed = true
-				const link = value.startsWith("http")
+				const link = value.startsWith("http") || !!msg.attachments[0]
 				if (!allowed && link) return msg.channel.send(lang.configuration.settings.prompts.donorRequired)
 				if (!link) {
 					const choices = ["default", "vicinity", "sakura"]
@@ -799,15 +807,24 @@ commands.assign([
 					await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "defaultprofilebackground", value])
 					return msg.channel.send(lang.configuration.settings.returns.updated)
 				}
+				if (msg.attachments[0]) value = msg.attachments[0].url
+				let head
+				try {
+					head = await fetch(value, { method: "HEAD" })
+				} catch {
+					console.log(`Failed to fetch HEAD for new background URL in settings command: ${value}`)
+					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)
+				}
+				const allowedMimes = ["image/png", "image/jpeg", "image/bmp", "image/tiff"]
+				const mime = head.headers.get("content-type") || head.headers.get("Content-Type")
+				if (!mime || !allowedMimes.includes(mime)) return msg.channel.send(`Unsupported file type. Supported types are ${allowedMimes.map(item => item.replace("image/", "")).join(", ")}.`)
 				let data
 				try {
 					data = await fetch(value).then(d => d.buffer())
-				} catch (e) {
+				} catch {
 					console.log(`Failed to fetch new background URL in settings command: ${value}`)
 					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)
 				}
-				const type = bs.identify(data)
-				if (!["image/png", "image/jpeg"].includes(type.mimeType)) return msg.channel.send("You may only set a background of a PNG or a JPEG")
 				const image = await Jimp.read(data)
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
@@ -1041,7 +1058,7 @@ commands.assign([
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						})
 					} else {
-						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor("B60000")
+						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor(0xB60000)
 						msg.channel.send(await utils.contentify(msg.channel, embed))
 					}
 				}

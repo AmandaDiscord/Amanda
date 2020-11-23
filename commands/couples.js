@@ -35,6 +35,7 @@ commands.assign([
 				])
 			} else if (!user1) user1 = await utils.cacheManager.users.get(info.user1, true, true)
 			else if (!user2) user2 = await utils.cacheManager.users.get(info.user2, true, true)
+			const marriedAt = new Date(info.marriedAt)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(`Couple info for ${user1.tag} and ${user2.tag}`)
 				.addFields([
@@ -45,6 +46,10 @@ commands.assign([
 					{
 						name: "Balance",
 						value: utils.numberComma(info.balance)
+					},
+					{
+						name: "Married for",
+						value: utils.shortTime((Date.now() - marriedAt.getTime()), "ms")
 					}
 				])
 				.setColor(constants.standard_embed_color)

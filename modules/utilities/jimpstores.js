@@ -43,6 +43,7 @@ imageStore.save("badge-booster", "./images/badges/Booster_50x50.png")
 imageStore.save("badge-giver1", "./images/badges/GivingHand_50x50.png")
 imageStore.save("badge-giver2", "./images/badges/GivingHandTier2_50x50.png")
 imageStore.save("badge-giver3", "./images/badges/GivingHandTier3_50x50.png")
+imageStore.save("badge-giver4", "./images/badges/GivingHandTier4_50x50.png")
 
 // Masks
 imageStore.save("circle-mask", "./images/masks/circle_mask.png")

@@ -1,5 +1,7 @@
 // @ts-check
 
+const { parseNumber } = require("./text")
+
 /** @param {Date} date */
 function upcomingDate(date) {
 	const currentHours = date.getUTCHours()
@@ -60,7 +62,7 @@ function parseDuration(input) {
 		if (!test[1]) return null
 		/** @type [string, string] */
 		const [duration, identifier] = [test[1], test[2]]
-		const num = Number(duration)
+		const num = parseNumber(duration)
 		if (isNaN(num)) return null
 		let multiply = 1
 		if (identifier) {
@@ -71,7 +73,7 @@ function parseDuration(input) {
 			else if (identifier.startsWith("m")) multiply = 1000 * 60
 			else if (identifier.startsWith("s")) multiply = 1000
 		}
-		totalTime += num * multiply
+		totalTime += (num * multiply)
 	}
 	return totalTime
 }
