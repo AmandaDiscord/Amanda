@@ -261,7 +261,7 @@ commands.assign([
 			}
 			if (amount > row.balance) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
 			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance - amount, msg.author.id, msg.author.id]),
+				utils.sql.all("UPDATE Couples SET balance =?, marriedAt =? WHERE (user1 =? OR user2 =?)", [row.balance - amount, row.marriedAt, msg.author.id, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} to your balance.`)
@@ -295,7 +295,7 @@ commands.assign([
 				amount = num
 			}
 			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =? WHERE (user1 =? OR user2 =?)", [row.balance + amount, msg.author.id, msg.author.id]),
+				utils.sql.all("UPDATE Couples SET balance =?, marriedAt =? WHERE (user1 =? OR user2 =?)", [row.balance + amount, row.marriedAt, msg.author.id, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, -amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} from your balance.`)
