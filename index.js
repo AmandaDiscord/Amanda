@@ -67,6 +67,11 @@ const db = mysql.createPool({
 		ThunderStorm.handle(d, client)
 	})
 
+	listenMoeJP.on("error", console.error)
+	listenMoeKP.on("error", console.error)
+	listenMoeJP.on("unknown", console.log)
+	listenMoeKP.on("unknown", console.log)
+
 	// Utility files
 
 	reloader.watch([
