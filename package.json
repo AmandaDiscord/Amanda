@@ -5,7 +5,7 @@
   "main": "index.js",
   "author": "PapiOphidian",
   "scripts": {
-    "start": "node --expose-gc --optimize_for_size index.js",
+    "start": "node --optimize_for_size index.js",
     "website": "cd website && node server.js",
     "test": "tap"
   },
@@ -21,19 +21,16 @@
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#3a29a4620e0cfa739c01294eb060916b8d49ba6b",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
-    "buffer-signature": "^1.1.0",
     "cloudstorm": "github:AmandaDiscord/CloudStorm#e1fb78433c915d0ca80d56606f1f66a5b9f1de80",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.1.0",
     "express": "^4.17.1",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
-    "gc-profiler": "^1.4.1",
     "genius-lyrics-api": "^3.0.3",
     "heapdump": "^0.3.15",
     "jimp": "^0.16.1",
     "lavacord": "github:AmandaDiscord/Lavacord#eb3c759a973aec154a26ba848b40ed71e74c2162",
-    "mime": "^2.4.6",
     "mixin-deep": "^2.0.1",
     "mysql2": "^2.2.5",
     "nedb-promises": "^4.1.0",
@@ -41,17 +38,17 @@
     "node-ipc": "^9.1.3",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "raincache": "github:AmandaDiscord/RainCache#494962c8e1cacda30f8ce7feb8cabea95fdcefa6",
-    "simple-git": "^2.22.0",
+    "simple-git": "^2.23.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#456813e5eb551ddeab7bf6148a9b3651261d6f0a",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#6e785cf8b3c504711bf9312e5090e709c541dd79"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#98f0f8e40735f06ec1c148e4716ee397bdc1a137"
   },
   "devDependencies": {
-    "@types/mysql2": "github:types/mysql2",
+    "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
     "@types/node": "^14.14.3",
     "@types/node-fetch": "^2.5.7",
-    "eslint": "^7.13.0",
+    "eslint": "^7.14.0",
     "tap": "^14.11.0",
     "typescript": "~4.0.5"
   }

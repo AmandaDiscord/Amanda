@@ -75,16 +75,15 @@ commands.assign([
 	}
 ])
 
-function refresh() {
-	return Promise.all([
+async function refresh() {
+	const [_messages, _ranges, _users] = await Promise.all([
 		utils.sql.all("SELECT id, dates, users, message, type, demote FROM StatusMessages"),
 		utils.sql.all("SELECT label, startmonth, startday, endmonth, endday FROM StatusRanges"),
 		utils.sql.all("SELECT label, userID FROM StatusUsers")
-	]).then(([_messages, _ranges, _users]) => {
-		messages = _messages
-		ranges = _ranges
-		users = _users
-	})
+	])
+	messages = _messages
+	ranges = _ranges
+	users = _users
 }
 
 internalEvents.once("prefixes", async (prefixes, statusPrefix) => {

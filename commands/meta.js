@@ -3,7 +3,6 @@
 /** @type {import("node-fetch")["default"]} */
 // @ts-ignore
 const fetch = require("node-fetch")
-const bs = require("buffer-signature")
 const fs = require("fs")
 const Discord = require("thunderstorm")
 const Jimp = require("jimp")
@@ -12,7 +11,6 @@ const path = require("path")
 // @ts-ignore
 const sG = require("simple-git")
 const simpleGit = sG(__dirname)
-const profiler = require("gc-profiler")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const emojis = require("../emojis")
@@ -172,17 +170,6 @@ commands.assign([
 					}
 				])
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
-			} else if (suffix.toLowerCase() == "gc") {
-				const allowed = await utils.sql.hasPermission(msg.author, "eval")
-				if (!allowed) return
-				const ram = process.memoryUsage()
-				if (global.gc) {
-					profiler.once("gc", info => {
-						const now = process.memoryUsage()
-						return msg.channel.send(`Garbage Collection completed in ${utils.numberComma(info.duration)}ms.\nrss: ${bToMB(ram.rss)} → ${bToMB(now.rss)}\nheapTotal: ${bToMB(ram.heapTotal)} → ${bToMB(now.heapTotal)}\nheapUsed: ${bToMB(ram.heapUsed)} → ${bToMB(now.heapUsed)}\nexternal: ${bToMB(ram.external)} → ${bToMB(now.external)}\nComputed: ${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))} → ${bToMB(now.rss - (now.heapTotal - now.heapUsed))}`)
-					})
-					global.gc()
-				} else return msg.channel.send("The global Garbage Collector variable is not exposed")
 			} else if (suffix.toLowerCase() == "gateway") {
 				const before = Date.now()
 				const stats = await passthrough.workers.gateway.getStats()
