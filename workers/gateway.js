@@ -8,8 +8,8 @@ const repl = require("repl")
 
 const AmpqpConnector = require("raincache").Connectors.AmqpConnector
 
-const config = require("./config")
-const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
+const config = require("../config")
+const BaseWorkerServer = require("../modules/structures/BaseWorkerServer")
 
 const Gateway = new Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
@@ -71,18 +71,10 @@ const connection = new AmpqpConnector({
 
 	Gateway.on("event", data => {
 		if (data.t === "READY") readyPayload = data
-		// Send data (Gateway -> Cache) (Cache sends data to Client worker)
-		const timeoutpromise = new Promise((resolve) => setTimeout(() => resolve(undefined), 5000))
+		// Send data (Gateway -> Cache)
 		const d = JSON.stringify(data)
-
-		Promise.race([
-			timeoutpromise,
-			fetch(`${config.cache_server_protocol}://${config.cache_server_domain}/gateway`, { body: d, headers: { authorization: config.redis_password }, method: "POST" })
-		]).then(res => {
-			if (!res) connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(d))
-		}).catch(() => {
-			connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(d))
-		})
+		fetch(`${config.cache_server_protocol}://${config.cache_server_domain}/gateway`, { body: d, headers: { authorization: config.redis_password }, method: "POST" })
+		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(d))
 	})
 
 	worker.get("/stats", (request, response) => {
@@ -97,7 +89,7 @@ const connection = new AmpqpConnector({
 
 	worker.patch("/status-update", (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
-		/** @type {import("./typings").GatewayStatusUpdateData} */
+		/** @type {import("../typings").GatewayStatusUpdateData} */
 		const data = request.body
 		if (!data.name && !data.status && !data.type && !data.url) return response.status(406).send(worker.createErrorResponse("Missing all status update fields")).end()
 

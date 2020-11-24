@@ -26,6 +26,8 @@ module.exports = {
 	cache_server_domain: "localhost:10600",
 	gateway_server_protocol: "http",
 	gateway_server_domain: "localhost:10800",
+	rest_server_protocol: "http",
+	rest_server_domain: "localhost:10700",
 	website_ipc_bind: "localhost",
 	invidious_origin: "https://invidio.us",
 	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",

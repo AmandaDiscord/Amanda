@@ -20,7 +20,7 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
 
-const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
+const rest = new SnowTransfer(config.bot_token, { disableEveryone: true, baseHost: `${config.rest_server_protocol}://${config.rest_server_domain}` })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)

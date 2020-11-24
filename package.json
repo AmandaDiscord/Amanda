@@ -40,6 +40,7 @@
     "raincache": "github:AmandaDiscord/RainCache#494962c8e1cacda30f8ce7feb8cabea95fdcefa6",
     "simple-git": "^2.23.0",
     "simple-youtube-api": "^5.2.1",
+    "snowgate": "github:AmandaDiscord/SnowGate#32780ad2127ac650165b528ef8bcee6490ab21b9",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#456813e5eb551ddeab7bf6148a9b3651261d6f0a",
     "taihou": "^2.0.3",
     "thunderstorm": "github:AmandaDiscord/ThunderStorm#98f0f8e40735f06ec1c148e4716ee397bdc1a137"

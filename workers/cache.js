@@ -7,8 +7,8 @@ const util = require("util")
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
 const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
 
-const config = require("./config")
-const BaseWorkerServer = require("./modules/structures/BaseWorkerServer")
+const config = require("../config")
+const BaseWorkerServer = require("../modules/structures/BaseWorkerServer")
 
 const RatelimitBucket = require("cloudstorm/dist/structures/RatelimitBucket")
 
@@ -77,7 +77,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 	worker.post("/request", async (request, response) => {
 		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
-		/** @type {import("./typings").CacheRequestData<keyof import("./typings").CacheOperations>} */
+		/** @type {import("../typings").CacheRequestData<keyof import("../typings").CacheOperations>} */
 		const data = request.body
 
 		if (!data.op) return response.status(400).send(worker.createErrorResponse("No op in payload")).end()
@@ -307,14 +307,14 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		} else if (data.op === "SAVE_DATA") {
 			opAmount++
 			totalOps++
-			/** @type {import("./typings").CacheSaveData} */
+			/** @type {import("../typings").CacheSaveData} */
 			// @ts-ignore
 			const query = data.params || {}
 			if (!query.type || !query.data) {
 				opAmount--
 				return response.status(400).send(worker.createErrorResponse("Missing type or data field")).end()
 			}
-			/** @type {import("./typings").CacheSaveData["type"]} */
+			/** @type {import("../typings").CacheSaveData["type"]} */
 			const type = query.type
 			const methods = {
 				"GUILD": rain.cache.guild,
@@ -348,7 +348,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		} else if (data.op === "DELETE_USERS") {
 			opAmount++
 			totalOps++
-			/** @type {import("./typings").CacheUserData & { limit?: number, ids?: Array<string>, confirm?: boolean }}} */
+			/** @type {import("../typings").CacheUserData & { limit?: number, ids?: Array<string>, confirm?: boolean }}} */
 			// @ts-ignore
 			const query = data.params || {}
 			if (!query.ids && !query.discriminator && !query.id && !query.tag && !query.username) {
@@ -431,7 +431,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		/** @type {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} */
 		const data = request.body
 		saveBucket.queue(() => rain.eventProcessor.inbound(data))
-		connection.channel.sendToQueue(config.amqp_data_queue, Buffer.from(JSON.stringify(request.body)))
 	})
 })()
 
