@@ -676,6 +676,11 @@ class ExternalSong extends Song {
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
+		if (info[0].info.isSeekable) {
+			this.live = false
+			this.lengthSeconds = info[0].info.length
+			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		}
 	}
 	toObject() {
 		return {
@@ -700,14 +705,23 @@ class ExternalSong extends Song {
 	}
 	/**
 	 * @param {number} time
+	 * @param {boolean} paused
 	 */
-	getProgress(time) {
-		const part = "= ⋄ ==== ⋄ ==="
-		const fragment = part.substr(7 - this._filledBarOffset, 7)
-		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
-		this._filledBarOffset++
-		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		return `\`[ ${common.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+	getProgress(time, paused) {
+		let bar
+		const leftTime = common.prettySeconds(time)
+		const rightTime = this.live ? common.prettySeconds(this.lengthSeconds) : "LIVE"
+		if (this.live) {
+			const part = "= ⋄ ==== ⋄ ==="
+			const fragment = part.substr(7 - this._filledBarOffset, 7)
+			bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
+			this._filledBarOffset++
+			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+		} else {
+			if (time > this.lengthSeconds) time = this.lengthSeconds
+			bar = utils.progressBar(18, time, this.lengthSeconds, paused ? " [PAUSED] " : "")
+		}
+		return `\`[ ${leftTime} ​${bar}​ ${rightTime} ]\`` // SC: ZWSP x 2
 	}
 	resume() {
 		return this.prepare()
