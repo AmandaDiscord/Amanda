@@ -3,7 +3,10 @@
 const constants = require("../../constants")
 
 const passthrough = require("../../passthrough")
-const { client } = passthrough
+const { client, reloader } = passthrough
+
+const common = require("../../commands/music/common")
+reloader.sync("./commands/music/common.js", common)
 
 /**
  * @returns {[number, number]} [removedCount, addedCount]
@@ -65,17 +68,21 @@ async function syncConnections() {
 		} else { // try disconnecting from nodes
 			if (!clientNode) continue // only consider situations where the client node is known
 			// if no queues are using the node, disconnect it.
-			let fq
 			for (const q of queues.cache.values()) {
-				const p = await q.player
-				const found = p.node === clientNode
-				if (found) fq = q
+				if (q.nodeID === node.id) {
+					const p = await q.player
+					const newLocalNode = common.nodes.getByRegion(q.guild.region)
+					const newNode = client.lavalink.nodes.get(newLocalNode.id)
+					const player = client.lavalink.switch(p, newNode)
+					q.player = player
+					q.nodeID = newLocalNode.id
+					await player
+					q.addPlayerListeners()
+				}
 			}
-			if (!fq) {
-				client.lavalink.removeNode(clientNode.host)
-				clientNode.destroy()
-				cleanedCount++
-			}
+			client.lavalink.removeNode(clientNode.id)
+			clientNode.destroy()
+			cleanedCount++
 		}
 	}
 

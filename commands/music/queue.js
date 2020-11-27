@@ -105,48 +105,7 @@ class Queue {
 			channel: this.voiceChannel.id,
 			node: host
 		})
-		this.player.then(player => {
-			player.on("end", event => this._onEnd(event))
-			player.on("playerUpdate", async data => {
-				if (!this.isPaused) {
-					const lang = await this.getLang()
-					const newSongStartTime = data.state.time - data.state.position
-					// commenting this out: it may break the error check, but it will improve the web time
-					// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
-					this.songStartTime = newSongStartTime
-					ipc.replier.sendTimeUpdate(this)
-					// }
-					if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
-						if (!this.songs[0].error) {
-							console.log(
-								"Song didn't start."
-								+ ` Region: ${guild.region}`
-								+ `, guildID: ${this.guild.id}`
-							)
-							this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
-						}
-						console.log("Song error call A")
-						this._reportError()
-					}
-				}
-			})
-			player.on("error", details => {
-				if (details.type === "WebSocketClosedEvent") {
-					// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
-					// Simply respond by stopping the queue, since that was the intention.
-					// This should therefore clean up the queueStore and the website correctly.
-					this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
-					return this.stop()
-				}
-				console.error("Lavalink error event at", new Date().toUTCString(), details)
-				if (this.songs[0]) {
-					this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
-					console.log("Song error call B")
-					this._reportError()
-					// This may automatically continue to the next song, presumably because the end event may also be fired.
-				}
-			})
-		})
+		this.addPlayerListeners()
 		/** @type {Discord.Message} */
 		this.np = null
 		/** @type {import("@amanda/reactionmenu")} */
@@ -158,6 +117,49 @@ class Queue {
 			}
 		})
 		this.getLang().then(lng => this.langCache = lng)
+	}
+	async addPlayerListeners() {
+		const player = await this.player
+		player.on("end", event => this._onEnd(event))
+		player.on("playerUpdate", async data => {
+			if (!this.isPaused) {
+				const lang = await this.getLang()
+				const newSongStartTime = data.state.time - data.state.position
+				// commenting this out: it may break the error check, but it will improve the web time
+				// if (Math.abs(newSongStartTime - this.songStartTime) > 100 && data.state.position !== 0) {
+				this.songStartTime = newSongStartTime
+				ipc.replier.sendTimeUpdate(this)
+				// }
+				if (newSongStartTime > this.songStartTime + 3500 && data.state.position === 0) {
+					if (!this.songs[0].error) {
+						console.log(
+							"Song didn't start."
+							+ ` Region: ${this.guild.region}`
+							+ `, guildID: ${this.guild.id}`
+						)
+						this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord
+					}
+					console.log("Song error call A")
+					this._reportError()
+				}
+			}
+		})
+		player.on("error", details => {
+			if (details.type === "WebSocketClosedEvent") {
+				// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
+				// Simply respond by stopping the queue, since that was the intention.
+				// This should therefore clean up the queueStore and the website correctly.
+				this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
+				return this.stop()
+			}
+			console.error("Lavalink error event at", new Date().toUTCString(), details)
+			if (this.songs[0]) {
+				this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
+				console.log("Song error call B")
+				this._reportError()
+				// This may automatically continue to the next song, presumably because the end event may also be fired.
+			}
+		})
 	}
 	getLang() {
 		if (this.langCache) return Promise.resolve(this.langCache)
