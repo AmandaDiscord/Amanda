@@ -680,6 +680,7 @@ class ExternalSong extends Song {
 			this.live = false
 			this.lengthSeconds = info[0].info.length
 			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+			this.noPauseReason = undefined
 		}
 	}
 	toObject() {
@@ -710,7 +711,7 @@ class ExternalSong extends Song {
 	getProgress(time, paused) {
 		let bar
 		const leftTime = common.prettySeconds(time)
-		const rightTime = this.live ? common.prettySeconds(this.lengthSeconds) : "LIVE"
+		const rightTime = this.live ? "LIVE" : common.prettySeconds(this.lengthSeconds)
 		if (this.live) {
 			const part = "= ⋄ ==== ⋄ ==="
 			const fragment = part.substr(7 - this._filledBarOffset, 7)
