@@ -138,6 +138,11 @@ commands.assign([
 				const songsPlayed = periodicHistory.getSize("song_start")
 				const qs = passthrough.queues.cache
 				const listeningcount = qs.reduce((acc, cur) => acc + cur.listeners.filter(m => !m.user.bot).size, 0)
+				const nodes = constants.lavalinkNodes.map(n => n.id)
+				let nodeStr = ""
+				for (const node of nodes) {
+					nodeStr += `${node}: ${queues.cache.filter(q => q.nodeID === node).size}\n`
+				}
 				embed
 					.addFields([
 						{
@@ -149,7 +154,8 @@ commands.assign([
 						{
 							name: leadingSpace,
 							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": utils.numberComma(client.lavalink.players.size) })}\n` +
-								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma(listeningcount) })}`,
+								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma(listeningcount) })}\n` +
+								`**Node usage:**\n${nodeStr || "No nodes"}`,
 							inline: true
 						}
 					])
