@@ -3,10 +3,7 @@
 const constants = require("../../constants")
 
 const passthrough = require("../../passthrough")
-const { client, reloader } = passthrough
-
-const common = require("../../commands/music/common")
-reloader.sync("./commands/music/common.js", common)
+const { client } = passthrough
 
 /**
  * @returns {[number, number]} [removedCount, addedCount]
@@ -63,7 +60,9 @@ async function syncConnections() {
 		if (node.enabled) { // try connecting to nodes
 			if (clientNode) continue // only consider situations where the client node is unknown
 			// connect to the node
-			client.lavalink.createNode(node)
+			const newNode = client.lavalink.createNode(node)
+			await newNode.connect()
+			console.log(`${newNode.id} LavaLink node connected`)
 			addedCount++
 		} else { // try disconnecting from nodes
 			if (!clientNode) continue // only consider situations where the client node is known
@@ -71,17 +70,14 @@ async function syncConnections() {
 			for (const q of queues.cache.values()) {
 				if (q.nodeID === node.id) {
 					const p = await q.player
-					const newLocalNode = common.nodes.getByRegion(q.guild.region)
+					const newLocalNode = constants.lavalinkNodes.find(i => i.enabled === true) || constants.lavalinkNodes[0]
 					const newNode = client.lavalink.nodes.get(newLocalNode.id)
-					const player = client.lavalink.switch(p, newNode)
-					q.player = player
+					await client.lavalink.switch(p, newNode)
 					q.nodeID = newLocalNode.id
-					await player
-					q.addPlayerListeners()
 				}
 			}
 			client.lavalink.removeNode(clientNode.id)
-			clientNode.destroy()
+			console.log(`${clientNode.id} LavaLink node destroyed`)
 			cleanedCount++
 		}
 	}
