@@ -155,7 +155,7 @@ commands.assign([
 							name: leadingSpace,
 							value: `${utils.replace(lang.meta.statistics.returns.voiceConnections, { "number": utils.numberComma(client.lavalink.players.size) })}\n` +
 								`${utils.replace(lang.meta.statistics.returns.usersListening, { "number": utils.numberComma(listeningcount) })}\n` +
-								`**Node usage:**\n${nodeStr || "No nodes"}`,
+								`**❯ Node usage:**\n${nodeStr || "No nodes"}`,
 							inline: true
 						}
 					])
