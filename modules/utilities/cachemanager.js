@@ -557,7 +557,7 @@ const guildManager = {
 function validate(id) {
 	if (!(/^\d+$/.test(id))) return false
 
-	const deconstructed = Discord.Util.SnowflakeUtil.deconstruct(id)
+	const deconstructed = Discord.SnowflakeUtil.deconstruct(id)
 	if (!deconstructed || !deconstructed.timestamp) return false
 	const date = new Date(deconstructed.timestamp)
 	if (date.getTime() > Date.now()) return false
