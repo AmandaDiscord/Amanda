@@ -40,8 +40,22 @@ class ServerReplier extends Replier {
 	/**
 	 * Get the socket that corresponds to a guild ID.
 	 */
-	getShardIDForGuild(id) {
-		return Number((BigInt(id) >> BigInt(22)) % BigInt(this.ipc.totalShards))
+	getShardIDForGuild(id, clientID = passthrough.clientID) {
+		const preferred = this.getShardsForClient(clientID)
+		return Number((BigInt(id) >> BigInt(22)) % BigInt(preferred.length ? preferred.length : this.getShardsForClient(this.getIdealClient()).length))
+	}
+
+	getIdealClient() {
+		return this.ipc.clusterShards.find(item => item.clientID === passthrough.clientID) ? passthrough.clientID : (this.ipc.clusterShards.first() ? this.ipc.clusterShards.first().clientID : passthrough.clientID)
+	}
+
+	getShardsForClient(id) {
+		/** @type {Array<number>} */
+		const shards = []
+		for (const cluster of this.ipc.clusterShards.values()) {
+			if (cluster.clientID === id) cluster.shards.forEach((item) => shards.push(item))
+		}
+		return shards
 	}
 
 	requestFromGuild(guildID, op, data) {
@@ -65,7 +79,12 @@ class ServerReplier extends Replier {
 			return Promise.reject(new Error("No clients connected, requestAll would never resolve."))
 		}
 		const raw = this.buildRequest(op, data)
-		this.ipc.broadcast(raw)
+		if (["GET_STATS"].includes(op)) {
+			if (this.ipc.clusterShards.filter(item => item.clientID === passthrough.clientID).size === 0) return Promise.reject(new Error("No live clients connected, requestAll would never resolve."))
+			for (const [key, value] of this.ipc.clusterShards) {
+				if (value.clientID === passthrough.clientID) this.ipc.send(this.ipc.clusters.get(key), raw)
+			}
+		} else this.ipc.broadcast(raw)
 		return new Promise(resolve => {
 			const parts = []
 			this.outgoingPersist.add(raw.threadID)

@@ -29,24 +29,22 @@ class IPC {
 		ipc.config.networkPort = port
 		ipc.config.retry = 1000
 		ipc.config.silent = true
-		/** @type {string} */
-		this.clientID = null
+		/** @type {boolean} */
+		this.initialized = false
+		/** @type {Discord.Collection<string, { clientID: string, shards: Array<number> }>} */
+		this.clusterShards = new Discord.Collection()
 
 		ipc.serveNet(() => {
 			// @ts-ignore
 			this.server.on("message", this.receive.bind(this))
 			// @ts-ignore
 			this.server.on("cluster", (data, socket) => {
-				const {clientID, total, clusterID} = data
-				console.log(`Socket identified as ${clusterID}, total of ${total} shards (${clientID})`)
-				if (!this.clientID) this.clientID = clientID
-				this.totalShards = this.totalShards ? this.totalShards + total : total
-				if (!this.shardsPerCluster) {
-					/** @type {Map<string, number>} */
-					this.shardsPerCluster = new Map()
-				}
-				this.shardsPerCluster.set(clusterID, total)
+				const {clientID, shards, clusterID} = data
+				console.log(`Socket identified as ${clusterID}, total of ${shards.length} shards (${clientID})`)
+				if (!this.initialized) this.initialized = true
+
 				this.clusters.set(clusterID, socket)
+				this.clusterShards.set(clusterID, { clientID, shards })
 			})
 			// @ts-ignore
 			this.server.on("socket.disconnected", dsocket => {
@@ -54,10 +52,7 @@ class IPC {
 				this.clusters.forEach((socket, id) => {
 					if (socket == dsocket) {
 						this.clusters.delete(id)
-						if (this.shardsPerCluster.get(id)) {
-							this.totalShards -= this.shardsPerCluster.get(id)
-							this.shardsPerCluster.delete(id)
-						}
+						this.clusterShards.delete(id)
 						disconnected.push(id)
 					}
 				})
@@ -74,7 +69,6 @@ class IPC {
 		 * @type {Discord.Collection<string, any>}
 		 */
 		this.clusters = new Discord.Collection()
-		this.totalShards = 1
 
 		this.replier = null
 	}
@@ -126,13 +120,13 @@ class IPC {
 	}
 
 	/**
-	 * @returns {Promise<string>}
+	 * @returns {Promise<boolean>}
 	 */
 	waitForClientID() {
-		if (this.clientID) return Promise.resolve(this.clientID)
+		if (this.initialized) return Promise.resolve(true)
 		else return new Promise(resolve => {
 			this.server.once("cluster", ({ clientID }) => {
-				resolve(clientID)
+				resolve(true)
 			})
 		})
 	}

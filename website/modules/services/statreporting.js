@@ -5,10 +5,10 @@ const fetchdefault = require("node-fetch").default
 // @ts-ignore
 const fetch = require("node-fetch")
 
-const { analytics, ipc, reloader, config } = require("../../passthrough")
+const { analytics, ipc, reloader, config, clientID } = require("../../passthrough")
 
 let timeout
-let cancelled = false
+let cancelled = false // Cancelled on Twitter
 
 const topBaseURL = "https://top.gg/api"
 const botsonBaseURL = "https://bots.ondiscord.xyz/bot-api"
@@ -16,11 +16,9 @@ const boatsBaseURL = "https://discord.boats/api"
 const dblBaseURL = "https://discordbotlist.com/api/v1"
 const botsggBaseURL = "https://discord.bots.gg/api/v1"
 
-const clientID = "405208699313848330"
-
 async function report() {
 	const stats = await ipc.replier.requestGetStats()
-	const shardCount = [...ipc.shardsPerCluster.values()].reduce((acc, cur) => acc + cur, 0)
+	const shardCount = ipc.replier.getShardsForClient(clientID).length
 	const errors = []
 	await Promise.all([
 		analytics.sendReport({ servers: stats.guilds, channels: stats.channels, users: stats.users, ram_used: stats.combinedRam, received_messages: 0, sent_messages: 0 }).catch(errors.push),
@@ -36,19 +34,16 @@ async function report() {
 
 async function reportAndSetTimeout() {
 	if (cancelled) return
-	await report().catch(() => console.log("Public apis suck but we're continuing anyway"))
+	if (ipc.replier.getIdealClient() != clientID) console.log("Live client not connected. Skipping stat loop.")
+	else await report().catch(() => console.log("Public apis suck but we're continuing anyway"))
 	timeout = setTimeout(reportAndSetTimeout, 10*60*1000)
 }
 
-ipc.waitForClientID().then(id => {
-	if (id === clientID) {
-		console.log("Stat reporting active")
-		setTimeout(() => {
-			reportAndSetTimeout()
-		}, 1000)
-	} else {
-		console.log("Stat reporting would be active, but wrong client ID")
-	}
+ipc.waitForClientID().then(() => {
+	console.log("Stat reporting active")
+	setTimeout(() => {
+		reportAndSetTimeout()
+	}, 1000)
 })
 
 reloader.reloadEvent.once("statreporting.js", () => {

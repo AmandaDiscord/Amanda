@@ -14,6 +14,7 @@
  * @property {import("@amanda/reloader")} reloader
  * @property {import("discord-bot-analytics")} analytics
  * @property {import("../modules/managers/CacheRequester")} cache
+ * @property {string} clientID
  */
 
 /**

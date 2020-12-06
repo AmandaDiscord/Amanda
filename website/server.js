@@ -69,6 +69,8 @@ Object.assign(passthrough, server.getExports())
 		db.query("SET CHARACTER SET utf8mb4")
 	])
 
+	passthrough.clientID = "405208699313848330"
+
 	server.addSassDir("sass")
 	server.addRoute("/main.css", "sass/main.sass", "sass")
 

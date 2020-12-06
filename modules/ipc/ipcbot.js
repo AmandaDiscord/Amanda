@@ -37,7 +37,7 @@ class IPC {
 			})
 			this.socket.on("connect", () => {
 				shouldBeConnected = true
-				this.socket.emit("cluster", { clientID: client.user.id, total: config.shard_list.length, clusterID: config.cluster_id })
+				this.socket.emit("cluster", { clientID: client.user.id, shards: config.shard_list, clusterID: config.cluster_id })
 				console.log("Connected to web")
 			})
 			this.socket.on("disconnect", () => {
