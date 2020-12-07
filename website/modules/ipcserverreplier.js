@@ -79,8 +79,11 @@ class ServerReplier extends Replier {
 			return Promise.reject(new Error("No clients connected, requestAll would never resolve."))
 		}
 		const raw = this.buildRequest(op, data)
+		let expecting = connectedClientCount
 		if (["GET_STATS"].includes(op)) {
-			if (this.ipc.clusterShards.filter(item => item.clientID === passthrough.clientID).size === 0) return Promise.reject(new Error("No live clients connected, requestAll would never resolve."))
+			const total = this.ipc.clusterShards.filter(item => item.clientID === passthrough.clientID).size
+			if (total === 0) return Promise.reject(new Error("No live clients connected, requestAll would never resolve."))
+			expecting = total
 			for (const [key, value] of this.ipc.clusterShards) {
 				if (value.clientID === passthrough.clientID) this.ipc.send(this.ipc.clusters.get(key), raw)
 			}
@@ -90,7 +93,7 @@ class ServerReplier extends Replier {
 			this.outgoingPersist.add(raw.threadID)
 			this.outgoing.set(raw.threadID, part => {
 				parts.push(part)
-				if (parts.length === connectedClientCount) {
+				if (parts.length === expecting) {
 					if (combineMethod === "truthy") {
 						resolve(parts.find(p => p))
 					} else if (combineMethod === "concat") {
