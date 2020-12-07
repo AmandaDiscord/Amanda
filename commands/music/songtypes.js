@@ -637,9 +637,9 @@ class SpotifySong extends YouTubeSong {
 		return Promise.resolve(`https://open.spotify.com/track/${ID}`)
 	}
 	async showInfo() {
-		const ID = await this.showLink()
+		const SP = await this.showLink()
 		const YT = await super.showInfo()
-		return Promise.resolve(`https://open.spotify.com/track/${ID}\n${YT}`)
+		return Promise.resolve(`${SP}\n${YT}`)
 	}
 	prepare() {
 		return this.prepareCache.get()
