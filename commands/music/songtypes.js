@@ -591,11 +591,15 @@ class SpotifySong extends YouTubeSong {
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
 				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.guild.region).then(tracks => {
-					if (!tracks[0]) this.error = `No results for ${this.title}`
-					else if (!tracks[0].track) this.error = `Missing track for ${this.title}`
+					if (!tracks.length) this.error = `No results for ${this.title}`
+					let decided
+					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
+					if (found) decided = found
+					else decided = tracks[0]
+					if (!decided.track) this.error = `Missing track for ${this.title}`
 					else {
-						this.id = tracks[0].info.identifier
-						this.lengthSeconds = Math.ceil(tracks[0].info.length / 1000)
+						this.id = decided.info.identifier
+						this.lengthSeconds = Math.ceil(decided.info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 						ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
 						return youtubePrepareCache.get()
