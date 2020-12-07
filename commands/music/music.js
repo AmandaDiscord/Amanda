@@ -148,6 +148,8 @@ const subcommandsMap = new Map([
 				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else if (match && match.type === "spotify") {
 				common.inserters.fromSpotifyLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
+			} else if (match && match.type === "newgrounds") {
+				common.inserters.fromNewgroundsLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else if (match && match.type === "external") {
 				common.inserters.fromExternalLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else {
@@ -644,10 +646,30 @@ commands.assign([
 			if (!voiceChannel) return
 
 			if (suffix.match(/https:\/\/(?:www.)?soundcloud.com\//)) {
-				suffix = suffix.replace(/(<|>)/g, "")
+				suffix = suffix.replace(/(^<|>$)/g, "")
 				return common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, false, suffix, lang)
 			} else {
 				return common.inserters.fromSoundCloudSearch(msg.channel, voiceChannel, msg.author, false, suffix, lang)
+			}
+		}
+	},
+	{
+		usage: "<search terms>",
+		description: "Play music from Newgrounds",
+		aliases: ["newgrounds", "ng"],
+		category: "audio",
+		examples: ["newgrounds Spaze - Underworld"],
+		order: 2,
+		async process(msg, suffix, lang) {
+			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
+			if (!voiceChannel) return
+
+			if (suffix.match(/https:\/\/(?:www.)?newgrounds.com\/audio\/listen/)) {
+				suffix = suffix.replace(/(^<|>$)/g, "")
+				return common.inserters.fromNewgroundsLink(msg.channel, voiceChannel, msg, false, suffix, lang)
+			} else {
+				return common.inserters.fromNewgroundsSearch(msg.channel, voiceChannel, msg.author, false, suffix, lang)
 			}
 		}
 	},

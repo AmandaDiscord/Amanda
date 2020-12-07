@@ -681,11 +681,12 @@ class ExternalSong extends Song {
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
-		if (info[0].info.isSeekable) {
+		if (info[0].info.isSeekable && !info[0].info.length > (1000 * 60 * 60 * 2)) {
 			this.live = false
 			this.lengthSeconds = info[0].info.length
 			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 			this.noPauseReason = undefined
+			ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
 		}
 	}
 	toObject() {
@@ -840,6 +841,82 @@ class ListenMoeSong extends Song {
 	}
 }
 
+class NewgroundsSong extends Song {
+	/**
+	 * @param {{ href: string, author: string, title: string, id: number, mp3URL: string, duration: number, track?: string }} data
+	 */
+	constructor(data) {
+		super()
+		this.title = data.title
+		this.author = data.author
+		this.uri = data.href
+		this.streamURL = data.mp3URL
+		this.id = String(data.id)
+		this.live = false
+		this.lengthSeconds = data.duration
+		this.thumbnail = {
+			src: "http://www.newgrounds.com/downloads/designassets/assets/ng_logo.png",
+			width: 1200,
+			height: 1200
+		}
+		this.track = data.track || "!"
+		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		this.npUpdateFrequency = 5000
+		this.error = ""
+		this.typeWhileGetRelated = false
+
+		this.validate()
+	}
+	toObject() {
+		return {
+			class: "NewgroundsSong",
+			href: this.uri,
+			title: this.title,
+			author: this.author,
+			id: this.id,
+			mp3URL: this.streamURL,
+			duration: this.lengthSeconds,
+			track: this.track
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try finding related songs on NewGrounds")
+	}
+	async prepare() {
+		if (this.track && this.track != "!") return
+		let data
+		try {
+			data = await common.getTracks(this.streamURL, this.queue.guild.region)
+		} catch {
+			this.error = `Missing track for ${this.title}`
+			return
+		}
+		if (!Array.isArray(data) || !data || !data[0] || !data[0].track) this.error = `Missing track for ${this.title}`
+		this.track = data[0].track
+	}
+	showLink() {
+		return Promise.resolve(this.uri)
+	}
+	showInfo() {
+		return this.showLink()
+	}
+	/**
+	 * @param {number} time milliseconds
+	 * @param {boolean} paused
+	 */
+	getProgress(time, paused) {
+		const max = this.lengthSeconds
+		const rightTime = common.prettySeconds(max)
+		if (time > max) time = max
+		const leftTime = common.prettySeconds(time)
+		const bar = utils.progressBar(18, time, max, paused ? " [PAUSED] " : "")
+		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+	}
+}
+
 /**
  * @param {{ track: string, info: { identifier: string, title: string, length: number, author: string } }} data
  */
@@ -891,6 +968,13 @@ function makeListenMoeSong(station) {
 	return new ListenMoeSong(station)
 }
 
+/**
+	 * @param {{ href: string, author: string, title: string, id: number, mp3URL: string, duration: number, track?: string }} data
+	 */
+function makeNewgroundsSong(data) {
+	return new NewgroundsSong(data)
+}
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
@@ -903,3 +987,5 @@ module.exports.ExternalSong = ExternalSong
 module.exports.makeExternalSong = makeExternalSong
 module.exports.ListenMoeSong = ListenMoeSong
 module.exports.makeListenMoeSong = makeListenMoeSong
+module.exports.NewgroundsSong = NewgroundsSong
+module.exports.makeNewgroundsSong = makeNewgroundsSong

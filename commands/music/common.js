@@ -8,6 +8,7 @@ const Discord = require("thunderstorm")
 const path = require("path")
 const { encode } = require("@lavalink/encoding")
 const genius = require("genius-lyrics-api")
+const entities = require("entities")
 
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
@@ -108,6 +109,8 @@ const common = {
 				return { type: "soundcloud", link: url.toString() }
 			} else if (url.hostname == "open.spotify.com" && (url.pathname.startsWith("/playlist") || url.pathname.startsWith("/track"))) {
 				return { type: "spotify", link: url.toString() }
+			} else if (url.hostname == "newgrounds.com" && url.pathname.startsWith("/audio/listen")) {
+				return { type: "newgrounds", link: url.toString() }
 			} else if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") { // Is it CloudTube?
 				try {
 					const id = url.pathname.match(/video\/([\w-]{11})$/)[1]
@@ -619,6 +622,55 @@ const common = {
 			if (!mime || !mime.startsWith("audio/")) return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			const song = songtypes.makeExternalSong(link)
 			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
+		},
+		fromNewgroundsSearch:
+		/**
+		 * @param {Discord.PartialChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.User} author
+		 * @param {boolean} insert
+		 * @param {string} search
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, author, insert, search, lang) {
+			/** @type {Array<{ href: string, image: string, title: string, author: string }>} */
+			let tracks
+			try {
+				tracks = await common.newgrounds.search(search)
+			} catch {
+				return textChannel.send(lang.audio.music.prompts.noResults)
+			}
+			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
+			tracks = tracks.slice(0, 10)
+			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(`${track.author} - ${track.title}`)}**`)
+			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(async index => {
+				if (typeof index != "number") return
+				const track = tracks[index]
+				const data = await common.newgrounds.getData(track.href)
+				const song = require("./songtypes").makeNewgroundsSong(data)
+				common.inserters.handleSong(song, textChannel, voiceChannel, insert)
+			})
+		},
+		fromNewgroundsLink:
+		/**
+		 * @param {Discord.PartialChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const songtypes = require("./songtypes")
+			let data
+			try {
+				data = await common.newgrounds.getData(link)
+			} catch (e) {
+				console.error(e)
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
+			const song = songtypes.makeNewgroundsSong(data)
+			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
 		}
 	},
 
@@ -675,6 +727,85 @@ const common = {
 			} else if (data.type == "playlist") {
 				return data.tracks.items.map(d => d.track)
 			}
+		}
+	},
+
+	newgrounds: {
+		/**
+		 * @param {string} text
+		 */
+		search: async function(text) {
+			let html
+			try {
+				html = await fetch(`https://newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).then(res => res.text())
+			} catch(e) {
+				console.error(e)
+				throw e
+			}
+			const ss = "<ul class=\"itemlist spaced\">"
+			const start = html.indexOf(ss)
+			const afterStart = html.substring(start)
+			const end = afterStart.indexOf("</ul>")
+			let results = afterStart.slice(ss.length, end).trim()
+
+			const parsed = []
+
+			let passing = true
+			while (passing) {
+				if (!results.includes("<li>")) {
+					passing = false
+					continue
+				}
+				const li = results.slice(0, results.indexOf("</li>"))
+
+				// Get the link to the list entry
+				const hrefStart = li.indexOf("<a href=")
+				const hrefAfter = li.substring("<a href=".length + 1 + hrefStart)
+				const hrefEnd = hrefAfter.indexOf("\"")
+				const href = hrefAfter.slice(0, hrefEnd)
+
+				// Get the icon of the list entry
+				const imgStart = li.indexOf("<img src=")
+				const imgAfter = li.substring("<img src=".length + 1 + imgStart)
+				const imgEnd = imgAfter.indexOf("\"")
+				const image = imgAfter.slice(0, imgEnd)
+
+				// Get the title of the list entry
+				const titleStart = li.indexOf("<h4>")
+				const titleAfter = li.substring("<h4>".length + titleStart)
+				const titleEnd = titleAfter.indexOf("</h4>")
+				const title = titleAfter.slice(0, titleEnd)
+					.replace(/<mark class="search-highlight">/g, "")
+					.replace(/<\/mark>/g, "")
+					.trim()
+
+				// Get the author of the list entry
+				const authorStart = li.indexOf("<strong>")
+				const authorAfter = li.substring("<strong>".length + authorStart)
+				const authorEnd = authorAfter.indexOf("</strong>")
+				const author = authorAfter.slice(0, authorEnd)
+
+				const meta = { href: href, image: image, title: entities.decodeHTML(title), author: author }
+
+				parsed.push(meta)
+
+				results = results.substring(li.length + 5).trim()
+			}
+
+			return parsed
+		},
+		/**
+		 * @param {string} link
+		 */
+		getData: async function(link) {
+			const ID = link.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)[1]
+			let data
+			try {
+				data = await fetch(`https://newgrounds.com/audio/load/${ID}/3`, { method: "GET", headers: { "x-requested-with": "XMLHttpRequest" } }).then(d => d.json())
+			} catch {
+				throw new Error("Cannot extract NewGrounds track info")
+			}
+			return { id: data.id, href: data.url, title: data.title, author: data.author, duration: data.duration, mp3URL: data.sources[0].src }
 		}
 	},
 
@@ -740,9 +871,11 @@ const common = {
 	 */
 	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
 		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id, guild_id: voiceChannel.guild.id })
-		const viewable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms)
-		const joinable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms)
-		const speakable = await utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
+		const [viewable, joinable, speakable] = await Promise.all([
+			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms),
+			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms),
+			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
+		])
 		if ((!viewable && !joinable)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))
 			return null

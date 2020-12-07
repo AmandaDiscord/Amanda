@@ -123,6 +123,10 @@ class QueueManager {
 						const song = songTypes.makeListenMoeSong(s.station)
 						queue.songs.push(song)
 						console.log("Added ListenMoeSong")
+					} else if (s.class === "NewgroundsSong") {
+						const song = songTypes.makeNewgroundsSong(s)
+						queue.songs.push(song)
+						console.log("Added NewgroundsSong")
 					}
 				})
 				if (queue.songs[0]) {
