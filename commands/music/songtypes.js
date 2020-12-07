@@ -597,6 +597,7 @@ class SpotifySong extends YouTubeSong {
 						this.id = tracks[0].info.identifier
 						this.lengthSeconds = Math.ceil(tracks[0].info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+						ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
 						return youtubePrepareCache.get()
 					}
 				}).catch(message => {

@@ -318,6 +318,10 @@ class ClientReplier extends Replier {
 	sendPresenceAnnouncement(duration, message) {
 		this.ipc.send({ op: "PRESENCE_ANNOUNCEMENT", data: { duration, message } })
 	}
+
+	sendSongTimeUpdate(queue, index, lengthSeconds) {
+		this.ipc.send({ op: "SONG_TIME_UPDATE", data: { guildID: queue.guild.id, index, lengthSeconds } })
+	}
 }
 
 const replier = new ClientReplier()

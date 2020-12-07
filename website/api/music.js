@@ -22,7 +22,8 @@ const opcodes = {
 	"ATTRIBUTES_CHANGE": 15,
 	"REQUEST_ATTRIBUTES_CHANGE": 16,
 	"REQUEST_CLEAR_QUEUE": 17,
-	"REMOVE_ALL_SONGS": 18
+	"REMOVE_ALL_SONGS": 18,
+	"SONG_TIME_UPDATE": 19
 }
 
 const opcodeMethodMap = new Map([
@@ -193,6 +194,16 @@ addProcessors([
 		},
 		sessionCallback: (session, cache, { attributes }) => {
 			session.attributesChange(attributes)
+		}
+	},
+	{
+		op: "SONG_TIME_UPDATE",
+		updateCallback: (cache, data) => {
+			cache.songs[data.index].length = data.lengthSeconds
+			return cache
+		},
+		sessionCallback: (session, cache, data) => {
+			session.songTimeUpdate(data.index, data.lengthSeconds)
 		}
 	}
 ])
@@ -392,6 +403,16 @@ class Session {
 		const allowed = await this.allowedToAction()
 		if (!allowed) return
 		ipc.replier.requestClearQueue(this.guild.id)
+	}
+
+	songTimeUpdate(index, lengthSeconds) {
+		this.send({
+			op: opcodes.SONG_TIME_UPDATE,
+			d: {
+				index: index,
+				lengthSeconds: lengthSeconds
+			}
+		})
 	}
 }
 
