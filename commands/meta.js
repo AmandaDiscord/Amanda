@@ -415,7 +415,7 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.user.prompts.invalidUser, { "username": msg.author.username }))
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			embed.addFields([{ name: "User ID", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
+			embed.addFields([{ name: "User ID:", value: user.id }, { name: "Account created at:", value: user.createdAt.toUTCString() }])
 			if (member) {
 				embed.addFields({ name: "Joined at:", value: member.joinedAt.toUTCString() })
 			}
@@ -915,7 +915,7 @@ commands.assign([
 						.setAuthor(`${passthrough.statusPrefix}music: command help (Aliases: m)`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
-					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe"]
+					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe", "newgrounds"]
 					const audio = commands.cache.filter(c => c.category === "audio" && !blacklist.includes(c.aliases[0]))
 					audio.map(cmd => {
 						const info = getDocs(cmd)
