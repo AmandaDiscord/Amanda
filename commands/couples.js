@@ -338,7 +338,7 @@ commands.assign([
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
 				const memberIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
-				rows = await utils.sql.all(`SELECT * FROM Couples WHERE (user1 OR user2) IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY price DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
+				rows = await utils.sql.all(`SELECT * FROM Couples WHERE (user1 OR user2) IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY balance DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM Couples WHERE (user1 OR user2) IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
 			} else {
 				rows = await utils.sql.all("SELECT * FROM Couples ORDER BY balance DESC LIMIT ? OFFSET ?", [itemsPerPage, offset])
