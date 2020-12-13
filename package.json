@@ -43,7 +43,7 @@
     "snowgate": "github:AmandaDiscord/SnowGate#74a652149dd43ff1604bc069c2f568e417d9b6a6",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#456813e5eb551ddeab7bf6148a9b3651261d6f0a",
     "taihou": "^2.0.3",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#943519574f22e042465be67e84dae40b156e156d"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#bbcfcbe88c05f672a7c6da549fd937e87f16ea7d"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
