@@ -218,9 +218,9 @@ export interface SpotifyImage {
 
 export interface GatewayStatusUpdateData {
 	name: string;
-	type: number;
+	type: 0 | 1 | 2 | 3 | 5;
 	url?: string;
-	status?: number;
+	status?: "online" | "idle" | "dnd" | "offline";
 }
 
 export interface PresenceData {
@@ -232,11 +232,11 @@ export interface PresenceData {
 	};
 }
 
-interface CacheUserData { username?: string; id?: string; discriminator?: string; tag?: string; };
-interface CacheGuildData { name?: string; id?: string; };
-interface CacheChannelData { name?: string; id?: string; guild_id?: string; };
-interface CacheMemberData { nick?: string; guild_id?: string };
-interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; };
+interface CacheUserData { username?: string; id?: string; discriminator?: string; tag?: string; }
+interface CacheGuildData { name?: string; id?: string; }
+interface CacheChannelData { name?: string; id?: string; guild_id?: string; }
+interface CacheMemberData { nick?: string; guild_id?: string }
+interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; }
 
 export interface CacheOperations {
 	FIND_GUILD: CacheGuildData;

@@ -26,6 +26,7 @@ const activities = {
  */
 function startAnnouncement(duration, message) {
 	clearInterval(updateInterval)
+	/** @type {{ name: string, type: 0 | 1 | 2 | 3 | 5, url: string }} */
 	const data = {
 		name: message,
 		type: 0,
