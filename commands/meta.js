@@ -260,7 +260,7 @@ commands.assign([
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
 			const gateway = await passthrough.workers.gateway.getStats()
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }, { name: lang.meta.ping.returns.heartbeat, value: `[${gateway.latency.map(i => `${i}ms`).join(", ")}]` }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.heartbeat, value: gateway.latency.map((i, index) => `Shard: ${gateway.shards[index]} ${i}ms`).join("\n") }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = await utils.contentify(msg.channel, embed)
 			nmsg.edit(content)
 		}
