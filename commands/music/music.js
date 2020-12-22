@@ -28,8 +28,11 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, { voiceChannel, lang }) => {
-			// @ts-ignore
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			const existing = queues.cache.get(msg.guild.id)
+			if (existing) {
+				if (voiceChannel.id !== existing.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": existing.voiceChannel.name }))
+			}
 			const insert = args[0][0] == "i"
 			let search = args.slice(1).join(" ")
 			if (msg.attachments && msg.attachments[0] && msg.attachments[0].url) search = msg.attachments[0].url
@@ -161,7 +164,8 @@ const subcommandsMap = new Map([
 	["stop", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, voiceChannel, lang }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			queue.audit.push({ action: "Queue Stop", user: msg.author.tag, platform: "Discord" })
 			queue.wrapper.stop()
 		}
@@ -190,7 +194,8 @@ const subcommandsMap = new Map([
 	["skip", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue, lang }) => {
+		code: (msg, args, { queue, lang, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			let amount
 			if (args[1]) {
 				amount = Math.floor(utils.parseNumber(args[1]))
@@ -206,14 +211,16 @@ const subcommandsMap = new Map([
 	["auto", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, voiceChannel, lang }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			queue.wrapper.toggleAuto(msg)
 		}
 	}],
 	["loop", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, voiceChannel, lang }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			queue.wrapper.toggleLoop(msg)
 		}
 	}],
@@ -234,14 +241,16 @@ const subcommandsMap = new Map([
 	["pause", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, voiceChannel, lang }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			queue.wrapper.pause(msg)
 		}
 	}],
 	["resume", {
 		voiceChannel: "required",
 		queue: "required",
-		code: (msg, args, { queue }) => {
+		code: (msg, args, { queue, voiceChannel, lang }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			queue.wrapper.resume(msg)
 		}
 	}],
@@ -300,7 +309,9 @@ const subcommandsMap = new Map([
 	}],
 	["seek", {
 		queue: "required",
-		code: async (msg, args, { lang, queue }) => {
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			const suffix = args.slice(1).join(" ")
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide a duration to seek to. Example: \`&m seek 20s\``)
 			const duration = utils.parseDuration(suffix)
@@ -318,6 +329,26 @@ const subcommandsMap = new Map([
 			const helpCommand = commands.cache.get("help")
 			if (!helpCommand) return msg.channel.send("Help command not loaded")
 			helpCommand.process(msg, "music", lang)
+		}
+	}],
+	["volume", {
+		queue: "required",
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
+			const suffix = args.slice(1).join(" ")
+			if (!suffix) {
+				const player = await queue.player
+				return msg.channel.send(`The current volume of the queue is ${player.state.filters.volume ? Math.floor(player.state.filters.volume * 100) : 100}%`)
+			}
+			const vol = Number(suffix.replace("%", ""))
+			if (!vol || isNaN(vol)) return msg.channel.send(`${msg.author.username}, that is not a valid volume amount.`)
+			if (vol > 500) return msg.channel.send(`${msg.author.username}, volumes greater than 5 are not allowed.`)
+			if (vol < 1) return msg.channel.send(`${msg.author.username}, volumes less than 1 are not allowed.`)
+			const result = await queue.volume(vol / 100)
+			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			else if (result === 2) return msg.channel.send(`${msg.author.username}, there was an error with applying the volume to the queue`)
+			else return msg.react("✅")
 		}
 	}]
 ])
@@ -338,7 +369,9 @@ const subcommandAliasMap = new Map([
 	["repeat", "loop"],
 	["l", "loop"],
 	["a", "audit"],
-	["h", "help"]
+	["h", "help"],
+	["vol", "volume"],
+	["v", "volume"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
@@ -566,8 +599,8 @@ commands.assign([
 				const embed = new Discord.MessageEmbed()
 					.setColor(constants.standard_embed_color)
 					.setTitle("Listen.moe — Schedule")
-					.setDescription(`KPOP: ${passthrough.listenMoe.kp.lastTrack.title} (${common.prettySeconds(passthrough.listenMoe.kp.lastTrack.duration)})\n`
-					+ `JPOP: ${passthrough.listenMoe.jp.lastTrack.title} (${common.prettySeconds(passthrough.listenMoe.jp.lastTrack.duration)})`)
+					.setDescription(`KPOP: ${passthrough.listenMoe.kp.nowPlaying.title} (${passthrough.listenMoe.kp.nowPlaying.duration ? common.prettySeconds(passthrough.listenMoe.kp.nowPlaying.duration) : "LIVE"})\n`
+					+ `JPOP: ${passthrough.listenMoe.jp.nowPlaying.title} (${passthrough.listenMoe.jp.nowPlaying.duration ? common.prettySeconds(passthrough.listenMoe.jp.nowPlaying.duration) : "LIVE"})`)
 					.setFooter(`Use ${passthrough.statusPrefix}listenmoe [station] to play a station`)
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
@@ -592,13 +625,14 @@ commands.assign([
 			// Create data for subcommand
 			const subcommmandData = {}
 			subcommmandData.lang = lang
+
 			// Provide a queue?
 			if (subcommandObject.queue == "required") {
 				const queue = queues.cache.get(msg.guild.id)
 				if (!queue) return msg.channel.send(utils.replace(lang.audio.music.prompts.nothingPlaying, { "username": msg.author.username }))
 				subcommmandData.queue = queue
-
 			}
+
 			// Provide a voice channel?
 			if (subcommandObject.voiceChannel) {
 				if (subcommandObject.voiceChannel == "required") {
@@ -628,6 +662,7 @@ commands.assign([
 					subcommmandData.voiceChannel = vcdata ? vcdata : undefined
 				}
 			}
+
 			// Hand over execution to the subcommand
 			// @ts-ignore
 			subcommandObject.code(msg, args, subcommmandData)
@@ -816,6 +851,16 @@ commands.assign([
 		examples: ["seek 2min 3sec"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `seek${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "[number: percentage]",
+		description: "Sets the volume of the current song playing",
+		aliases: ["volume", "vol"],
+		category: "audio",
+		examples: ["volume 80%"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `volume${suffix ? ` ${suffix}` : ""}`, lang)
 		}
 	}
 ])

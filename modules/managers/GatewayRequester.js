@@ -4,13 +4,13 @@ const config = require("../../config")
 
 class GatewayRequester extends BaseWorkerRequester {
 	constructor() {
-		super(`${config.gateway_server_protocol}://${config.gateway_server_domain}`, config.redis_password)
+		super(`${config.gateway_server_protocol}://${config.gateway_server_domain}`, config.bot_token)
 	}
 	getStats() {
 		return this._makeRequest("/stats", "GET")
 	}
 	/**
-	 * @returns {Promise<import("thunderstorm/typings/internal").InboundDataType<"READY">>}
+	 * @returns {Promise<import("thunderstorm/dist/internal").InboundDataType<"READY">>}
 	 */
 	login() {
 		return this._makeRequest("/login", "GET")

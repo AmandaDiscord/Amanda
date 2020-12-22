@@ -13,7 +13,7 @@ const SnowTransfer = require("snowtransfer")
 const ThunderStorm = require("thunderstorm")
 
 const CommandManager = require("@amanda/commandmanager")
-const ListenMoe = require("./modules/ListenMoe")
+const ListenMoe = require("listensomemoe")
 
 const passthrough = require("./passthrough")
 const Amanda = require("./modules/structures/Discord/Amanda")

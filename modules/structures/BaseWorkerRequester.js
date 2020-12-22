@@ -16,9 +16,9 @@ class BaseWorkerRequester {
 	/**
 	 * @param {string} path
 	 * @param {"GET" | "PATCH" | "POST"} method
-	 * @param {any} body
+	 * @param {any} [body]
 	 */
-	async _makeRequest(path, method = "GET", body) {
+	async _makeRequest(path, method = "GET", body = undefined) {
 		if (!path.startsWith("/")) path = `/${path}`
 		const payload = {}
 		const headers = {}
@@ -28,7 +28,7 @@ class BaseWorkerRequester {
 		payload["method"] = method
 		payload["headers"] = headers
 
-
+		// @ts-ignore
 		const response = await fetch(encodeURI(`${this.baseURL}${path}`), payload)
 		if (!response) return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ url: `${this.baseURL}${path}`, method: method, payload: payload })}`))
 

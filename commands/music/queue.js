@@ -531,6 +531,21 @@ class Queue {
 		this.addSong(item, insert)
 		return 0
 	}
+	/**
+	 * Sets the volume of the player.
+	 * Returns 0 on success.
+	 * Returns 1 if there is no song.
+	 * Returns 2 if there is no result.
+	 * @param {number} num
+	 */
+	async volume(num) {
+		const song = this.songs[0]
+		if (!song) return 1
+		const player = await this.player
+		const result = await player.volume(num)
+		if (result) return 0
+		else return 2
+	}
 	get time() {
 		if (this.isPaused) return this.pausedAt - this.songStartTime
 		else return Date.now() - this.songStartTime

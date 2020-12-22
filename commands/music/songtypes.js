@@ -760,19 +760,19 @@ class ListenMoeSong extends Song {
 		this.validate()
 	}
 	get lengthSeconds() {
-		return this.stationData.lastTrack.duration
+		return this.stationData.nowPlaying.duration
 	}
 	set lengthSeconds(value) {
 		void value
 	}
 	get id() {
-		return String((this.stationData.lastTrack.albums && this.stationData.lastTrack.albums[0] ? (this.stationData.lastTrack.albums[0].id || this.stationData.lastTrack.id) : this.stationData.lastTrack.id))
+		return String((this.stationData.nowPlaying.albums && this.stationData.nowPlaying.albums[0] ? (this.stationData.nowPlaying.albums[0].id || this.stationData.nowPlaying.id) : this.stationData.nowPlaying.id))
 	}
 	set id(value) {
 		void value
 	}
 	get title() {
-		return this.stationData.lastTrack.title
+		return this.stationData.nowPlaying.title
 	}
 	set title(value) {
 		void value
@@ -855,7 +855,7 @@ class NewgroundsSong extends Song {
 		this.live = false
 		this.lengthSeconds = data.duration
 		this.thumbnail = {
-			src: "http://www.newgrounds.com/downloads/designassets/assets/ng_logo.png",
+			src: constants.newgrounds_placeholder,
 			width: 1200,
 			height: 1200
 		}

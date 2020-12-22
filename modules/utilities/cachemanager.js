@@ -89,7 +89,6 @@ const channelManager = {
 	find: function(message, string, self) {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
-			// @ts-ignore
 			if (await channelManager.typeOf(message.channel) === "dm") return res(null)
 			string = string.toLowerCase()
 			const match = /<#(\d+)>/.exec(string)

@@ -15,6 +15,7 @@ module.exports = {
 	spotify_placeholder: `${baseURL}/images/spotify-logo.png`,
 	local_placeholder: `${baseURL}/images/local.png`,
 	listen_moe_placeholder: `${baseURL}/images/listen-moe-logo.png`,
+	newgrounds_placeholder: `${baseURL}/images/ng-logo.png`,
 	avatar: `${baseURL}/images/amanda.png`,
 	chewey_api: "https://api.chewey-bot.top",
 	money_embed_color: 0xf8e71c,

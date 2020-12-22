@@ -19,13 +19,14 @@ const Gateway = new Client(config.bot_token, {
 	reconnect: true
 })
 
-const worker = new BaseWorkerServer("gateway", config.redis_password)
+const worker = new BaseWorkerServer("gateway", config.bot_token)
 
 const presence = {}
 
 /**
- * @type {import("thunderstorm/typings/internal").InboundDataType<"READY">}
+ * @type {import("thunderstorm/dist/internal").InboundDataType<"READY">}
  */
+// @ts-ignore
 let readyPayload = {}
 
 const connection = new AmpqpConnector({
@@ -70,6 +71,7 @@ const connection = new AmpqpConnector({
 	Gateway.on("error", console.error)
 
 	Gateway.on("event", data => {
+		// @ts-ignore
 		if (data.t === "READY") readyPayload = data
 		// Send data (Gateway -> Cache)
 		const d = JSON.stringify(data)
@@ -78,7 +80,8 @@ const connection = new AmpqpConnector({
 	})
 
 	worker.get("/stats", (request, response) => {
-		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), shards: Object.values(Gateway.shardManager.shards).map(s => s.id) })).end()
+		const shards = Object.values(Gateway.shardManager.shards)
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), shards: shards.map(s => s.id), latency: shards.map(s => s.latency) })).end()
 	})
 
 	worker.get("/login", (request, response) => {

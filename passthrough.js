@@ -28,7 +28,7 @@ process._ptcreated = true
  * @property {string} statusPrefix
  * @property {import("raincache")<import("raincache/src/connector/AmqpConnector"), import("raincache/src/connector/AmqpConnector")>} rain
  * @property {{ cache: import("./modules/managers/CacheRequester"), gateway: import("./modules/managers/GatewayRequester") }} workers
- * @property {{ jp: import("./modules/ListenMoe"), kp: import("./modules/ListenMoe") }} listenMoe
+ * @property {{ jp: import("listensomemoe"), kp: import("listensomemoe") }} listenMoe
  */
 
 /**

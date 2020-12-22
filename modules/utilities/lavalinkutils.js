@@ -50,8 +50,6 @@ function add(data) {
  * @returns {Promise<[number, number]>} cleaned nodes, added nodes
  */
 async function syncConnections() {
-	const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
-
 	let cleanedCount = 0
 	let addedCount = 0
 
@@ -67,15 +65,7 @@ async function syncConnections() {
 		} else { // try disconnecting from nodes
 			if (!clientNode) continue // only consider situations where the client node is known
 			// if no queues are using the node, disconnect it.
-			for (const q of queues.cache.values()) {
-				if (q.nodeID === node.id) {
-					const p = await q.player
-					const newLocalNode = constants.lavalinkNodes.find(i => i.enabled === true) || constants.lavalinkNodes[0]
-					const newNode = client.lavalink.nodes.get(newLocalNode.id)
-					await client.lavalink.switch(p, newNode)
-					q.nodeID = newLocalNode.id
-				}
-			}
+			await fallover(node.id)
 			client.lavalink.removeNode(clientNode.id)
 			console.log(`${clientNode.id} LavaLink node destroyed`)
 			cleanedCount++
@@ -85,7 +75,30 @@ async function syncConnections() {
 	return [cleanedCount, addedCount]
 }
 
+/**
+ * @param {string} nodeID The nodeID that will be switched off of
+ */
+async function fallover(nodeID) {
+	const queues = passthrough.queues // file load order means queueStore cannot be extracted at top of file
+
+	for (const q of queues.cache.values()) {
+		if (q.nodeID === nodeID) {
+			const p = await q.player
+			const newLocalNode = constants.lavalinkNodes.find(i => i.enabled === true) || constants.lavalinkNodes[0]
+			if (!newLocalNode) {
+				const audit = queues.audits.get(q.guild.id)
+				if (audit) audit.push({ action: "Queue Destroy (Error while load balancing)", platform: "Discord", user: "Amanda" })
+				q._dissolve()
+			}
+			const newNode = client.lavalink.nodes.get(newLocalNode.id)
+			await client.lavalink.switch(p, newNode)
+			q.nodeID = newLocalNode.id
+		}
+	}
+}
+
 module.exports.applyChanges = applyChanges
 module.exports.removeByName = removeByName
 module.exports.add = add
 module.exports.syncConnections = syncConnections
+module.exports.fallover = fallover

@@ -184,7 +184,8 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
+							value: `**${lang.meta.ping.returns.heartbeat}:**\n${stats.latency.map((i, index) => `Shard: ${stats.shards[index]} ${i}ms`).join("\n")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
 							inline: true
@@ -219,13 +220,15 @@ commands.assign([
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else {
 				const stats = await utils.getOwnStats()
+				const gateway = await passthrough.workers.gateway.getStats()
 				const allStats = stats
 				const nmsg = await msg.channel.send(lang.meta.statistics.prompts.slow)
 				embed
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
+							value: `**${lang.meta.ping.returns.heartbeat}:**\n${gateway.latency.map((i, index) => `Shard: ${gateway.shards[index]} ${i}ms`).join("\n")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
 							inline: true
@@ -256,7 +259,8 @@ commands.assign([
 			const array = ["So young... So damaged...", "We've all got no where to go...", "You think you have time...", "Only answers to those who have known true despair...", "Hopeless...", "Only I know what will come tomorrow...", "So dark... So deep... The secrets that you keep...", "Truth is false...", "Despair..."]
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
+			const gateway = await passthrough.workers.gateway.getStats()
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }, { name: lang.meta.ping.returns.heartbeat, value: `[${gateway.latency.map(i => `${i}ms`).join(", ")}]` }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = await utils.contentify(msg.channel, embed)
 			nmsg.edit(content)
 		}
