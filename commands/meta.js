@@ -184,7 +184,7 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**${lang.meta.ping.returns.heartbeat}:**\n${stats.latency.map((i, index) => `Shard: ${stats.shards[index]} ${i}ms`).join("\n")}\n`
+							value: `**${lang.meta.ping.returns.heartbeat}:**\n${stats.latency.map((i, index) => `Shard ${stats.shards[index]}: ${i}ms`).join("\n")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
@@ -227,7 +227,7 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**${lang.meta.ping.returns.heartbeat}:**\n${gateway.latency.map((i, index) => `Shard: ${gateway.shards[index]} ${i}ms`).join("\n")}\n`
+							value: `**${lang.meta.ping.returns.heartbeat}:**\n${gateway.latency.map((i, index) => `Shard ${gateway.shards[index]}: ${i}ms`).join("\n")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
@@ -260,7 +260,7 @@ commands.assign([
 			const message = utils.arrayRandom(array)
 			const nmsg = await msg.channel.send(message)
 			const gateway = await passthrough.workers.gateway.getStats()
-			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.heartbeat, value: gateway.latency.map((i, index) => `Shard: ${gateway.shards[index]} ${i}ms`).join("\n") }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
+			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.heartbeat, value: gateway.latency.map((i, index) => `Shard ${gateway.shards[index]}: ${i}ms`).join("\n") }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = await utils.contentify(msg.channel, embed)
 			nmsg.edit(content)
 		}
