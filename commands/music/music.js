@@ -3,7 +3,7 @@
 
 const crypto = require("crypto")
 const Discord = require("thunderstorm")
-const path = require("path")
+const mixinDeep = require("mixin-deep")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
@@ -343,12 +343,95 @@ const subcommandsMap = new Map([
 			}
 			const vol = Number(suffix.replace("%", ""))
 			if (!vol || isNaN(vol)) return msg.channel.send(`${msg.author.username}, that is not a valid volume amount.`)
-			if (vol > 500) return msg.channel.send(`${msg.author.username}, volumes greater than 5 are not allowed.`)
-			if (vol < 1) return msg.channel.send(`${msg.author.username}, volumes less than 1 are not allowed.`)
+			if (vol > 500) return msg.channel.send(`${msg.author.username}, volumes greater than 500% are not allowed.`)
+			if (vol < 1) return msg.channel.send(`${msg.author.username}, volumes less than 1% are not allowed.`)
 			const result = await queue.volume(vol / 100)
 			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
 			else if (result === 2) return msg.channel.send(`${msg.author.username}, there was an error with applying the volume to the queue`)
 			else return msg.react("✅")
+		}
+	}],
+	["pitch", {
+		queue: "required",
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
+			const suffix = args.slice(1).join(" ")
+			if (!suffix) {
+				const curPitch = queue.pitchAmount
+				return msg.channel.send(`The current pitch of the queue is ${curPitch} semitone${(curPitch > 1) || (curPitch < -1) ? "s" : ""}`)
+			}
+			const semi = Number(suffix)
+			if (!semi || isNaN(semi)) return msg.channel.send(`${msg.author.username}, that is not a valid pitch amount.`)
+			if (semi > 24) return msg.channel.send(`${msg.author.username}, pitches greater than 9 semitones are not allowed.`)
+			if (semi < -24) return msg.channel.send(`${msg.author.username}, pitches less than 9 semitones are not allowed.`)
+			const pitch = 2 ** (semi / 12)
+			const result = await queue.pitch(pitch)
+			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			else if (result === 2) return msg.channel.send(`${msg.author.username}, there was an error with applying the volume to the queue`)
+			else return msg.react("✅")
+		}
+	}],
+	["speed", {
+		queue: "required",
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
+			const suffix = args.slice(1).join(" ")
+			if (!suffix) {
+				const curSpeed = queue.speedAmount
+				return msg.channel.send(`The current speed of the queue is ${curSpeed * 100}%`)
+			}
+			const speed = Number(suffix.replace("%", ""))
+			if (!speed || isNaN(speed)) return msg.channel.send(`${msg.author.username}, that is not a valid speed.`)
+			if (speed > 500) return msg.channel.send(`${msg.author.username}, speeds greater than 500% are not allowed.`)
+			if (speed < 1) return msg.channel.send(`${msg.author.username}, speeds less than 1% are not allowed.`)
+			const result = await queue.speed(speed / 100)
+			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			else if (result === 2) return msg.channel.send(`${msg.author.username}, you can't change the speed of live audio!`)
+			else if (result === 3) return msg.channel.send(`${msg.author.username}, there was an error with applying the volume to the queue`)
+			else return msg.react("✅")
+		}
+	}],
+	["nightcore", {
+		queue: "required",
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
+			if (!queue.songs[0]) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			if (queue.songs[0].live) return msg.channel.send(`${msg.author.username}, you can't toggle nightcore mode on live audio!`)
+			const player = await queue.player
+			const oldFilters = player.state.filters
+			const newFilters = mixinDeep(oldFilters, { timescale: { pitch: queue.nightcore ? queue.pitchAmount : 1.3, speed: queue.nightcore ? queue.speedAmount : 1.3 } })
+			const result = await player.filters(newFilters)
+
+			if (!result) return msg.channel.send(`${msg.author.username}, there was an error when applying the nightcore filter to the current playing song`)
+			queue.speedAmount = queue.nightcore ? queue.speedAmount : 1.3
+			queue.pitchAmount = queue.nightcore ? queue.pitchAmount : 1.3
+			passthrough.ipc.replier.sendAttributesChange(queue)
+			queue.nightcore = !queue.nightcore
+			queue.antiNightcore = false
+			return msg.channel.send(`${msg.author.username}, nightcore mode has been turned ${queue.nightcore ? "on" : "off"}`)
+		}
+	}],
+	["antinightcore", {
+		queue: "required",
+		voiceChannel: "required",
+		code: async (msg, args, { lang, queue, voiceChannel }) => {
+			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
+			if (!queue.songs[0]) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
+			if (queue.songs[0].live) return msg.channel.send(`${msg.author.username}, you can't toggle anti-nightcore mode on live audio!`)
+			const player = await queue.player
+			const oldFilters = player.state.filters
+			const newFilters = mixinDeep(oldFilters, { timescale: { pitch: queue.antiNightcore ? queue.pitchAmount : 0.7, speed: queue.antiNightcore ? queue.speedAmount : 0.7 } })
+			const result = await player.filters(newFilters)
+			if (!result) return msg.channel.send(`${msg.author.username}, there was an error when applying the anti-nightcore filter to the current playing song`)
+			queue.speedAmount = queue.antiNightcore ? queue.speedAmount : 0.7
+			queue.pitchAmount = queue.antiNightcore ? queue.pitchAmount : 0.7
+			passthrough.ipc.replier.sendAttributesChange(queue)
+			queue.nightcore = false
+			queue.antiNightcore = !queue.antiNightcore
+			return msg.channel.send(`${msg.author.username}, anti-nightcore mode has been turned ${queue.antiNightcore ? "on" : "off"}`)
 		}
 	}]
 ])
@@ -371,7 +454,10 @@ const subcommandAliasMap = new Map([
 	["a", "audit"],
 	["h", "help"],
 	["vol", "volume"],
-	["v", "volume"]
+	["v", "volume"],
+	["nc", "nightcore"],
+	["anc", "antinightcore"],
+	["daycore", "antinightcore"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
@@ -861,6 +947,46 @@ commands.assign([
 		examples: ["volume 80%"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, `volume${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "[number: percentage]",
+		description: "Sets the speed of the queue playback",
+		aliases: ["speed"],
+		category: "audio",
+		examples: ["speed 150%"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `speed${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "[number: semitones]",
+		description: "Sets the pitch of the queue playback",
+		aliases: ["pitch"],
+		category: "audio",
+		examples: ["pitch -3"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `pitch${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Toggles a queue's nightcore mode",
+		aliases: ["nightcore", "nc"],
+		category: "audio",
+		examples: ["nightcore"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "nightcore", lang)
+		}
+	},
+	{
+		usage: "None",
+		description: "Toggles a queue's anti-nightcore mode",
+		aliases: ["antinightcore", "anc", "daycore"],
+		category: "audio",
+		examples: ["antinightcore"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, "antinightcore", lang)
 		}
 	}
 ])

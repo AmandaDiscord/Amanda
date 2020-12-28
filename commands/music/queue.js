@@ -4,6 +4,7 @@ const Discord = require("thunderstorm")
 const path = require("path")
 const Lang = require("@amanda/lang")
 const ReactionMenu = require("@amanda/reactionmenu")
+const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
 const { config, constants, client, reloader, ipc, internalEvents } = passthrough
@@ -76,6 +77,10 @@ class Queue {
 		/** @type {boolean} */
 		this.auto = false
 		this.loop = false
+		this.nightcore = false
+		this.antiNightcore = false
+		this.pitchAmount = 1
+		this.speedAmount = 1
 		this.errorChain = 0
 		this.shouldDisplayErrors = true
 		/** @type {import("@amanda/lang").Lang} */
@@ -307,6 +312,11 @@ class Queue {
 	}
 	async _nextSong() {
 		const lang = await this.getLang()
+		if (this.songs[1] && this.songs[1].live && (this.nightcore || this.antiNightcore || (this.speedAmount != 1))) {
+			this.nightcore = false
+			this.antiNightcore = false
+			await this.speed(1.0, true)
+		}
 		// Special case for loop 1
 		if (this.songs.length === 1 && this.loop && !this.songs[0].error) {
 			this.play()
@@ -536,15 +546,55 @@ class Queue {
 	 * Returns 0 on success.
 	 * Returns 1 if there is no song.
 	 * Returns 2 if there is no result.
-	 * @param {number} num
+	 * @param {number} num A float defaulting to 1.0
 	 */
-	async volume(num) {
-		const song = this.songs[0]
-		if (!song) return 1
+	async volume(num = 1.0) {
+		if (!this.songs[0]) return 1
 		const player = await this.player
 		const result = await player.volume(num)
 		if (result) return 0
 		else return 2
+	}
+	/**
+	 * Sets the pitch of the player.
+	 * Returns 0 on success.
+	 * Returns 1 if there is no song.
+	 * Returns 2 if there is no result.
+	 * @param {number} num A float defaulting to 1.0
+	 * @param {boolean} apply Whether or not the method should assign the number to the queue attributes
+	 */
+	async pitch(num = 1.0, apply = true) {
+		if (!this.songs[0]) return 1
+		const player = await this.player
+		const oldFilters = Discord.Util.cloneObject(player.state.filters) // Object.assign is mutative
+		const newFilters = mixinDeep(oldFilters, { timescale: { pitch: num } })
+		const result = await player.filters(newFilters)
+		if (result) {
+			if (apply) this.pitchAmount = num
+			return 0
+		} else return 2
+	}
+	/**
+	 * Sets the speed of the player.
+	 * Returns 0 on success.
+	 * Returns 1 if there is no song.
+	 * Returns 2 if the song is live.
+	 * Returns 3 if there is no result.
+	 * @param {number} num A float defaulting to 1.0
+	 * @param {boolean} apply Whether or not the method should assign the number to the queue attributes
+	 */
+	async speed(num = 1.0, apply = true) {
+		if (!this.songs[0]) return 1
+		if (this.songs[0].live) return 2
+		const player = await this.player
+		const oldFilters = Discord.Util.cloneObject(player.state.filters) // Object.assign is mutative
+		const newFilters = mixinDeep(oldFilters, { timescale: { speed: num } })
+		const result = await player.filters(newFilters)
+		if (result) {
+			if (apply) this.speedAmount = num
+			ipc.replier.sendAttributesChange(this)
+			return 0
+		} else return 3
 	}
 	get time() {
 		if (this.isPaused) return this.pausedAt - this.songStartTime
@@ -820,7 +870,8 @@ class QueueWrapper {
 	getAttributes() {
 		return {
 			auto: this.queue.auto,
-			loop: this.queue.loop
+			loop: this.queue.loop,
+			speed: this.queue.speedAmount
 		}
 	}
 
