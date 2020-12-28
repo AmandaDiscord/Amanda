@@ -406,8 +406,8 @@ const subcommandsMap = new Map([
 			const result = await player.filters(newFilters)
 
 			if (!result) return msg.channel.send(`${msg.author.username}, there was an error when applying the nightcore filter to the current playing song`)
-			queue.speedAmount = queue.nightcore ? queue.speedAmount : 1.3
-			queue.pitchAmount = queue.nightcore ? queue.pitchAmount : 1.3
+			queue.speedAmount = queue.nightcore ? 1.0 : 1.3
+			queue.pitchAmount = queue.nightcore ? 1.0 : 1.3
 			passthrough.ipc.replier.sendAttributesChange(queue)
 			queue.nightcore = !queue.nightcore
 			queue.antiNightcore = false
@@ -426,8 +426,8 @@ const subcommandsMap = new Map([
 			const newFilters = mixinDeep(oldFilters, { timescale: { pitch: queue.antiNightcore ? queue.pitchAmount : 0.7, speed: queue.antiNightcore ? queue.speedAmount : 0.7 } })
 			const result = await player.filters(newFilters)
 			if (!result) return msg.channel.send(`${msg.author.username}, there was an error when applying the anti-nightcore filter to the current playing song`)
-			queue.speedAmount = queue.antiNightcore ? queue.speedAmount : 0.7
-			queue.pitchAmount = queue.antiNightcore ? queue.pitchAmount : 0.7
+			queue.speedAmount = queue.antiNightcore ? 1.0 : 0.7
+			queue.pitchAmount = queue.antiNightcore ? 1.0 : 0.7
 			passthrough.ipc.replier.sendAttributesChange(queue)
 			queue.nightcore = false
 			queue.antiNightcore = !queue.antiNightcore
