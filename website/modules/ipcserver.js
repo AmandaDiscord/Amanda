@@ -125,7 +125,7 @@ class IPC {
 	waitForClientID() {
 		if (this.initialized) return Promise.resolve(true)
 		else return new Promise(resolve => {
-			this.server.once("cluster", ({ clientID }) => {
+			this.server.once("cluster", () => {
 				resolve(true)
 			})
 		})

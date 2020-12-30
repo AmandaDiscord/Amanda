@@ -15,6 +15,7 @@ const botsonBaseURL = "https://bots.ondiscord.xyz/bot-api"
 const boatsBaseURL = "https://discord.boats/api"
 const dblBaseURL = "https://discordbotlist.com/api/v1"
 const botsggBaseURL = "https://discord.bots.gg/api/v1"
+const delBaseURL = "https://api.discordextremelist.xyz/v2"
 
 async function report() {
 	const stats = await ipc.replier.requestGetStats()
@@ -26,27 +27,32 @@ async function report() {
 		fetch(`${botsonBaseURL}/bots/${clientID}/guilds`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.botson_api_key }, body: JSON.stringify({ guildCount: stats.guilds }) }).catch(errors.push),
 		fetch(`${boatsBaseURL}/bot/${clientID}`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.boats_api_key }, body: JSON.stringify({ server_count: stats.guilds }) }).catch(errors.push),
 		fetch(`${dblBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.dbl_api_key }, body: JSON.stringify({ guilds: stats.guilds, users: stats.users, voice_connections: stats.connections }) }).catch(errors.push),
-		fetch(`${botsggBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.botsgg_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) })
+		fetch(`${botsggBaseURL}/bots/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.botsgg_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) }).catch(errors.push),
+		fetch(`${delBaseURL}/bot/${clientID}/stats`, { method: "POST", headers: { "content-type": "application/json", Authorization: config.del_api_key }, body: JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }) }).catch(errors.push)
 	])
 	if (errors.length > 0) Promise.reject(errors)
 	console.log("Stats sent")
 }
 
-async function reportAndSetTimeout() {
+async function reportStats() {
 	if (cancelled) return
 	if (ipc.replier.getIdealClient() != clientID) console.log("Live client not connected. Skipping stat loop.")
-	else await report().catch(() => console.log("Public apis suck but we're continuing anyway"))
-	timeout = setTimeout(reportAndSetTimeout, 10*60*1000)
+	else await report().catch(errors => console.log(`Public apis suck but we're continuing anyway\n${errors}`))
 }
 
 ipc.waitForClientID().then(() => {
 	console.log("Stat reporting active")
-	setTimeout(() => {
-		reportAndSetTimeout()
-	}, 1000)
+	if (timeout) {
+		clearInterval(timeout)
+		timeout = null
+	}
+	timeout = setInterval(() => {
+		reportStats()
+	}, 1000 * 60 * 10)
 })
 
 reloader.reloadEvent.once("statreporting.js", () => {
 	cancelled = true
-	clearTimeout(timeout)
+	clearInterval(timeout)
+	timeout = null
 })
