@@ -433,6 +433,19 @@ const subcommandsMap = new Map([
 			queue.antiNightcore = !queue.antiNightcore
 			return msg.channel.send(`${msg.author.username}, anti-nightcore mode has been turned ${queue.antiNightcore ? "on" : "off"}`)
 		}
+	}],
+	["youtube", {
+		code: async (msg, args, { lang }) => {
+			const suffix = args.slice(1).join(" ")
+			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide search terms.`)
+			/** @type {Discord.Guild} */
+			// @ts-ignore
+			const guild = await utils.cacheManager.guilds.get(msg.guild.id)
+			const tracks = await common.searchYouTube(suffix, guild.region)
+			if (tracks && tracks[0] && tracks[0].info && tracks[0].info.identifier) {
+				return msg.channel.send(`https://www.youtube.com/watch?v=${tracks[0].info.identifier}`)
+			} else return msg.channel.send(lang.audio.music.prompts.noResults)
+		}
 	}]
 ])
 
@@ -457,7 +470,8 @@ const subcommandAliasMap = new Map([
 	["v", "volume"],
 	["nc", "nightcore"],
 	["anc", "antinightcore"],
-	["daycore", "antinightcore"]
+	["daycore", "antinightcore"],
+	["yt", "youtube"]
 ])
 for (const key of subcommandsMap.keys()) subcommandAliasMap.set(key, key)
 
@@ -987,6 +1001,16 @@ commands.assign([
 		examples: ["antinightcore"],
 		process(msg, suffix, lang) {
 			return commands.cache.get("music").process(msg, "antinightcore", lang)
+		}
+	},
+	{
+		usage: "<search terms>",
+		description: "Search YouTube and return the first result",
+		aliases: ["youtube", "yt"],
+		category: "audio",
+		examples: ["youtube despacito"],
+		process(msg, suffix, lang) {
+			return commands.cache.get("music").process(msg, `youtube${suffix ? ` ${suffix}` : ""}`, lang)
 		}
 	}
 ])

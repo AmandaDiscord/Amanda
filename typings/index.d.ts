@@ -10,6 +10,7 @@ export interface FilteredGuild {
 
 export interface InternalEvents {
 	prefixes: [Array<string>, string];
+	// @ts-ignore
 	QueueManager: [import("../modules/managers/QueueManager")]
 }
 

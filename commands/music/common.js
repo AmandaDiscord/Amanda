@@ -174,6 +174,9 @@ const common = {
 		})
 	},
 
+	/**
+	 * @returns {Promise<{track: string, info: import("../../typings").LavalinkInfo}[]>}
+	 */
 	searchYouTube: function(input, region = "") {
 		const node = common.nodes.getByRegion(region)
 		if (node.search_with_invidious) {
