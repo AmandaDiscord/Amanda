@@ -3,6 +3,7 @@
 const Jimp = require("jimp")
 const crypto = require("crypto")
 /** @type {import("node-fetch").default} */
+// @ts-ignore
 const fetch = require("node-fetch")
 const Discord = require("thunderstorm")
 
@@ -154,7 +155,7 @@ for (const source of interactionSources) {
 		description: source.description,
 		aliases: [source.name],
 		category: "interaction",
-		example: `${source.name} Amanda`,
+		examples: [`${source.name} Amanda`],
 		/**
 		 * @param {import("thunderstorm").Message} msg
 		 * @param {string} suffix
@@ -225,6 +226,7 @@ async function doInteraction(msg, suffix, source, lang) {
 		} else if (source.shortcut == "weeb.sh") {
 			source.footer = "Powered by weeb.sh"
 			fetched = new Promise((resolve, reject) => {
+				// @ts-ignore
 				weeb.toph.getRandomImage(source.name, { nsfw: false, fileType: "gif" }).then(data => {
 					resolve(data.url)
 				})

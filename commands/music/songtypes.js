@@ -2,6 +2,7 @@
 
 const Discord = require("thunderstorm")
 /** @type {import("node-fetch").default} */
+// @ts-ignore
 const fetch = require("node-fetch")
 
 const passthrough = require("../../passthrough")
@@ -96,6 +97,7 @@ class Song {
 	 * @param {number} time milliseconds
 	 * @param {boolean} paused
 	 */
+	// @ts-ignore
 	getProgress(time, paused) {
 		return ""
 	}
@@ -681,7 +683,7 @@ class ExternalSong extends Song {
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
-		if (info[0].info.isSeekable && !info[0].info.length > (1000 * 60 * 60 * 2)) {
+		if (info[0].info.isSeekable && info[0].info.length < (1000 * 60 * 60 * 2)) {
 			this.live = false
 			this.lengthSeconds = info[0].info.length
 			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
@@ -759,24 +761,28 @@ class ListenMoeSong extends Song {
 
 		this.validate()
 	}
+	// @ts-ignore
 	get lengthSeconds() {
 		return this.stationData.nowPlaying.duration
 	}
 	set lengthSeconds(value) {
 		void value
 	}
+	// @ts-ignore
 	get id() {
 		return String((this.stationData.nowPlaying.albums && this.stationData.nowPlaying.albums[0] ? (this.stationData.nowPlaying.albums[0].id || this.stationData.nowPlaying.id) : this.stationData.nowPlaying.id))
 	}
 	set id(value) {
 		void value
 	}
+	// @ts-ignore
 	get title() {
 		return this.stationData.nowPlaying.title
 	}
 	set title(value) {
 		void value
 	}
+	// @ts-ignore
 	get queueLine() {
 		return `**${this.title}** (${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"})`
 	}

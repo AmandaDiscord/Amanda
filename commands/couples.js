@@ -25,15 +25,21 @@ commands.assign([
 			if (!user) return msg.channel.send(`${msg.author.username}, that is not a valid user.`)
 			const info = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id])
 			if (!info) return msg.channel.send("No couple info.")
-			let user1, user2
+			/** @type {Discord.User} */
+			let user1
+			/** @type {Discord.User} */
+			let user2
 			if (info.user1 === msg.author.id) user1 = msg.author
 			else if (info.user2 === msg.author.id) user2 = msg.author
 			if (!user1 && !user2) {
+				// @ts-ignore
 				[user1, user2] = await Promise.all([
 					utils.cacheManager.users.get(info.user1, true, true),
 					utils.cacheManager.users.get(info.user2, true, true)
 				])
+				// @ts-ignore
 			} else if (!user1) user1 = await utils.cacheManager.users.get(info.user1, true, true)
+			// @ts-ignore
 			else if (!user2) user2 = await utils.cacheManager.users.get(info.user2, true, true)
 			const marriedAt = new Date(info.marriedAt)
 			const embed = new Discord.MessageEmbed()
@@ -180,6 +186,8 @@ commands.assign([
 			const married = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
 			if (!married) return msg.channel.send(`${msg.author.username}, you are not married to anyone`)
 			const otherid = married.user1 === msg.author.id ? married.user2 : married.user1
+			/** @type {Discord.User} */
+			// @ts-ignore
 			const partner = await utils.cacheManager.users.get(otherid, true, true)
 			const faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"]
 			const face = utils.arrayRandom(faces)
@@ -194,10 +202,10 @@ commands.assign([
 			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
-				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
+				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.couples.divorce.prompts.dmFailed))
 				else return
 			}
-			return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.interaction.divorce.prompts.dmFailed))
+			return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.couples.divorce.prompts.dmFailed))
 		}
 	},
 	{
@@ -218,15 +226,21 @@ commands.assign([
 				if (user.id === msg.author.id) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
 				else return msg.channel.send(`${msg.author.username}, that person is not married to anyone.`)
 			}
-			let user1, user2
+			/** @type {Discord.User} */
+			let user1
+			/** @type {Discord.User} */
+			let user2
 			if (row.user1 === msg.author.id) user1 = msg.author
 			else if (row.user2 === msg.author.id) user2 = msg.author
 			if (!user1 && !user2) {
+				// @ts-ignore
 				[user1, user2] = await Promise.all([
 					utils.cacheManager.users.get(row.user1, true, true),
 					utils.cacheManager.users.get(row.user2, true, true)
 				])
+				// @ts-ignore
 			} else if (!user1) user1 = await utils.cacheManager.users.get(row.user1, true, true)
+			// @ts-ignore
 			else if (!user2) user2 = await utils.cacheManager.users.get(row.user2, true, true)
 
 			const embed = new Discord.MessageEmbed()
@@ -358,6 +372,7 @@ commands.assign([
 				}
 				await Promise.all([...usersToResolve].map(userID =>
 					utils.cacheManager.users.get(userID, true, true)
+						// @ts-ignore
 						.then(user => user.tag)
 						.catch(() => userID) // fall back to userID if user no longer exists
 						.then(display => userTagMap.set(userID, display))

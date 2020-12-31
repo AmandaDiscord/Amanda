@@ -2,7 +2,7 @@ const Discord = require("thunderstorm")
 
 class StreakManager {
 	constructor() {
-		/** @type {Discord.Collection<string, { ID: string, command: string, amount: number, timeout?: NodeJS.Timeout }>} */
+		/** @type {Discord.Collection<string, { ID: string, command: string, amount: number, timeout?: NodeJS.Timeout | false }>} */
 		this.cache = new Discord.Collection()
 		/** @type {Map<string, number>} */
 		this.destructionDurations = new Map()

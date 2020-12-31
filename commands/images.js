@@ -1,6 +1,7 @@
 // @ts-check
 
 /** @type {import("node-fetch").default} */
+// @ts-ignore
 const fetch = require("node-fetch")
 const Discord = require("thunderstorm")
 

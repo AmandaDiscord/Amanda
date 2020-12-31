@@ -4,6 +4,7 @@ const Discord = require("thunderstorm")
 const path = require("path")
 const { Manager } = require("lavacord")
 /** @type {import("node-fetch").default} */
+// @ts-ignore
 const fetch = require("node-fetch")
 const ReactionMenu = require("@amanda/reactionmenu")
 
@@ -12,8 +13,6 @@ const { client, config, constants, commands, reloader, reloadEvent, internalEven
 
 const common = require("../commands/music/common")
 reloader.sync("./commands/music/common.js", common)
-
-const lastAttemptedLogins = []
 
 let prefixes = []
 let statusPrefix = "&"
@@ -70,7 +69,9 @@ utils.addTemporaryListener(client, "message", path.basename(__filename), manageM
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
 utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), async (data) => {
-	const channel = new Discord.PartialChannel({ id: data.channel_id })
+	const channel = new Discord.PartialChannel({ id: data.channel_id }, client)
+	/** @type {Discord.User} */
+	// @ts-ignore
 	const user = await utils.cacheManager.users.get(data.user_id, true, true)
 	ReactionMenu.handler(data, channel, user, client)
 })
@@ -267,13 +268,16 @@ async function manageReady() {
 		})
 
 		client.lavalink.on("error", (error, node) => {
-			console.error(`Failed to initialise Lavalink: ${error.message}`)
+			// @ts-ignore
+			console.error(`Failed to initialise Lavalink: ${error && error.message ? error.message : error}`)
 		})
 
 		await client.lavalink.connect()
 
 		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
 			result.forEach(async row => {
+				/** @type {Discord.TextChannel} */
+				// @ts-ignore
 				const channel = await utils.cacheManager.channels.get(row.channelID, true, true)
 				if (channel) channel.send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {

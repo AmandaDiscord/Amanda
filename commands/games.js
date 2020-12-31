@@ -268,7 +268,6 @@ function sweeper(difficulty, size) {
 		pieceBomb = "💣"
 
 	if (difficulty) {
-		if (difficulty == "easy") bombs = 6
 		if (difficulty == "medium") bombs = 8
 		if (difficulty == "hard") bombs = 10
 	}
@@ -415,8 +414,7 @@ commands.assign([
 
 			if (sfx.includes("--size:")) {
 				const tsize = +sfx.split("--size:")[1].split(" ")[0]
-				if (isNaN(tsize)) size = 8
-				else size = Math.floor(Number(tsize))
+				if (!isNaN(tsize)) size = Math.floor(Number(tsize))
 			}
 
 			if (sfx.includes("medium")) difficulty = "medium"
