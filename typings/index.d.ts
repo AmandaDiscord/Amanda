@@ -240,9 +240,6 @@ interface CacheMemberData { nick?: string; guild_id?: string }
 interface CacheVoiceStateData { channel_id?: string; guild_id?: string; user_id?: string; }
 
 export interface CacheOperations {
-	FIND_GUILD: CacheGuildData;
-	FILTER_GUILDS: CacheGuildData & { limit?: number; };
-
 	FIND_CHANNEL: CacheChannelData;
 	FILTER_CHANNELS: CacheChannelData & { limit?: number; };
 
@@ -254,11 +251,6 @@ export interface CacheOperations {
 	FILTER_MEMBERS: CacheMemberData & { limit?: number } & CacheUserData;
 	GET_USER_GUILDS: { id: string; };
 	GET_MEMBERS_IN_ROLE: { guild_id: string; role_id: string; };
-
-	FIND_VOICE_STATE: CacheVoiceStateData
-	FILTER_VOICE_STATES: CacheVoiceStateData & { limit?: number; };
-
-	SAVE_DATA: CacheSaveData;
 
 	DELETE_USER: { id: string };
 	DELETE_USERS: CacheUserData & { limit?: number; ids?: Array<string>; confirm?: boolean; };

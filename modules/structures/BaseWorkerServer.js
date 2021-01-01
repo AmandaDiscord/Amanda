@@ -23,7 +23,6 @@ class BaseWorkerServer {
 		/** @type {number} */
 		let port
 		if (this.worker === "cache") port = Number(config.cache_server_domain.split(":")[1])
-		else if (this.worker === "gateway") port = Number(config.gateway_server_domain.split(":")[1])
 		else {
 			console.error("Invalid worker type")
 			process.exit()

@@ -675,8 +675,16 @@ class Queue {
 		if (!count) {
 			/** @type {Array<Discord.GuildMember>} */
 			let mems
-			if (newState.channelID) mems = await passthrough.workers.cache.getData({ op: "FILTER_VOICE_STATES", params: { guild_id: this.guild.id, channel_id: this.voiceChannel.id } }).then(states => Promise.all(states.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))))
-			else mems = []
+			if (newState.channelID) {
+				const indexes = await client.rain.cache.voiceState.getIndexMembers()
+				const filtered = []
+				for (const ind of indexes) {
+					const result = await client.rain.cache.voiceState.get(ind, newState.guildID)
+					if (result && result.boundObject.channel_id === this.voiceChannel.id) filtered.push(result)
+				}
+				// @ts-ignore
+				mems = await Promise.all(filtered.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true)))
+			} else mems = []
 			if (mems.length > 0 && mems.find(i => !i.user.bot)) {
 				for (const mem of mems) {
 					this.listeners.set(mem.id, mem)

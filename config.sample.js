@@ -15,6 +15,7 @@ module.exports = {
 	boats_api_key: "discord.boats api key here",
 	dbl_api_key: "discordbotlist.com api key here",
 	botsgg_api_key: "discord.bots.gg api key here",
+	del_api_key: "discordextremelist.xyz api key here",
 	amqp_data_queue: `amqp-gateway-${cluster_id}`,
 
 	// Environment
@@ -24,8 +25,6 @@ module.exports = {
 	website_domain: "localhost:10400",
 	cache_server_protocol: "http",
 	cache_server_domain: "localhost:10600",
-	gateway_server_protocol: "http",
-	gateway_server_domain: "localhost:10800",
 	rest_server_protocol: "http",
 	rest_server_domain: "localhost:10700",
 	website_ipc_bind: "localhost",

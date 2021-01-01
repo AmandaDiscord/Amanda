@@ -59,7 +59,15 @@ class ServerReplier extends Replier {
 	}
 
 	requestFromGuild(guildID, op, data) {
-		return this.requestFromCluster(this.ipc.clusters.firstKey(), op, data)
+		const ideal = this.getIdealClient()
+		const shardID = this.getShardIDForGuild(guildID, )
+		let cluster
+		for (const key of this.ipc.clusterShards.keys()) {
+			const entry = this.ipc.clusterShards.get(key)
+			if (entry.clientID === ideal && entry.shards.includes(shardID)) cluster = key
+		}
+		if (!cluster) return Promise.reject(new Error("No cluster connected to requestFromGuild"))
+		return this.requestFromCluster(cluster, op, data)
 	}
 
 	broadcast(op, data) {
@@ -81,11 +89,12 @@ class ServerReplier extends Replier {
 		const raw = this.buildRequest(op, data)
 		let expecting = connectedClientCount
 		if (["GET_STATS"].includes(op)) {
-			const total = this.ipc.clusterShards.filter(item => item.clientID === passthrough.clientID).size
-			if (total === 0) return Promise.reject(new Error("No live clients connected, requestAll would never resolve."))
+			const preferred = this.getIdealClient()
+			const total = this.ipc.clusterShards.filter(item => item.clientID === preferred).size
+			if (total === 0) return Promise.reject(new Error("No preferred clients connected, requestAll would never resolve."))
 			expecting = total
 			for (const [key, value] of this.ipc.clusterShards) {
-				if (value.clientID === passthrough.clientID) this.ipc.send(this.ipc.clusters.get(key), raw)
+				if (value.clientID === preferred) this.ipc.send(this.ipc.clusters.get(key), raw)
 			}
 		} else this.ipc.broadcast(raw)
 		return new Promise(resolve => {

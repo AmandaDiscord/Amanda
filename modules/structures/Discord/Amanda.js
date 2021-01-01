@@ -9,10 +9,12 @@ const config = require("../../../config")
 
 const AmpqpConnector = RainCache.Connectors.AmqpConnector
 const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
+const MemoryStorageEngine = RainCache.Engines.MemoryStorageEngine
 
 const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`
 })
+const mem = new MemoryStorageEngine()
 // @ts-ignore
 const rain = new RainCache({
 	storage: {
@@ -21,7 +23,9 @@ const rain = new RainCache({
 				host: config.amqp_origin,
 				password: config.redis_password
 			}
-		})
+		}),
+		guild: mem,
+		voiceState: mem
 	},
 	debug: false
 }, connection, connection)
@@ -44,7 +48,6 @@ class Amanda extends Discord.Client {
 		this.passthrough = passthrough
 
 		this.rain = rain
-		this.connector = connection
 	}
 }
 

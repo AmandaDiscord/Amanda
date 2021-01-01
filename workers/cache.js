@@ -10,12 +10,6 @@ const RedisStorageEngine = RainCache.Engines.RedisStorageEngine
 const config = require("../config")
 const BaseWorkerServer = require("../modules/structures/BaseWorkerServer")
 
-const RatelimitBucket = require("cloudstorm/dist/structures/RatelimitBucket")
-
-// `saveLimit` save operations can be performed every `saveReset` milliseconds
-const saveLimit = 200
-const saveReset = 7500
-const saveBucket = new RatelimitBucket(saveLimit, saveReset)
 
 const connection = new AmpqpConnector({
 	amqpUrl: `amqp://${config.amqp_username}:${config.redis_password}@${config.amqp_origin}:${config.amqp_port}/amanda-vhost`
@@ -42,8 +36,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 	await rain.initialize()
 	console.log("Cache initialized.")
 
-	connection.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
-
 	/**
 	 * @param {string} input
 	 * @param {import("vm").Context} context
@@ -65,14 +57,14 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 	const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 
-	Object.assign(cli.context, { rain, worker, connection })
+	Object.assign(cli.context, { rain, worker })
 
 	cli.once("exit", () => {
 		process.exit()
 	})
 
 	worker.get("/stats", (request, response) => {
-		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), activeOPs: opAmount, totalOPs: totalOps, savesQueued: saveBucket.fnQueue.length })).end()
+		return response.status(200).send(worker.createDataResponse({ ram: process.memoryUsage(), uptime: process.uptime(), activeOPs: opAmount, totalOPs: totalOps })).end()
 	})
 
 	worker.post("/request", async (request, response) => {
@@ -83,24 +75,7 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 		if (!data.op) return response.status(400).send(worker.createErrorResponse("No op in payload")).end()
 
 
-		if (data.op === "FIND_GUILD") {
-			const d = await filterCache(response, "find", "guild", data.params || {})
-			if (d[0] === "failed") return
-			return response.status(200).send(worker.createDataResponse(d)).end()
-
-
-		} else if (data.op === "FILTER_GUILDS") {
-			const q = data.params || {}
-			// @ts-ignore
-			const limit = q.limit
-			// @ts-ignore
-			delete q.limit
-			const d = await filterCache(response, "filter", "guild", q, { limit })
-			if (d[0] === "failed") return
-			return response.status(200).send(worker.createDataResponse(d)).end()
-
-
-		} else if (data.op === "FIND_CHANNEL") {
+		if (data.op === "FIND_CHANNEL") {
 			const d = await filterCache(response, "find", "channel", data.params || {})
 			if (d[0] === "failed") return
 			return response.status(200).send(worker.createDataResponse(d)).end()
@@ -173,51 +148,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			return response.status(200).send(worker.createDataResponse(d)).end()
 
 
-		} else if (data.op === "GET_USER_GUILDS") {
-			opAmount++
-			totalOps++
-			/** @type {{ id: string }} */
-			// @ts-ignore
-			const query = data.params || {}
-
-			let guilds
-			try {
-				guilds = await rain.cache.guild.getIndexMembers()
-			} catch (e) {
-				opAmount--
-				return sendInternalError(e, response)
-			}
-			const batchLimit = 100
-			let pass = 1
-			let passing = true
-			const matched = []
-			if (query.id) {
-
-				while (passing) {
-					const starting = (batchLimit * pass) - batchLimit
-					const batch = guilds.slice(starting, starting + batchLimit)
-
-					if (batch.length === 0) {
-						passing = false
-						continue
-					}
-
-					/** @type {Array<[string, boolean]>} */
-					let indexed
-					try {
-						// @ts-ignore
-						indexed = await Promise.all(batch.map(async id => [id, await rain.cache.member.isIndexed(query.id, id)]))
-					} catch (e) {
-						opAmount--
-						return sendInternalError(e, response)
-					}
-					indexed.filter(i => i[1]).forEach(item => matched.push(item[0]))
-					pass++
-				}
-			}
-			opAmount--
-			return response.status(200).send(worker.createDataResponse(matched)).end()
-
 		} else if (data.op === "GET_MEMBERS_IN_ROLE") {
 			opAmount++
 			totalOps++
@@ -285,45 +215,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 			}
 			opAmount--
 			return response.status(200).send(worker.createDataResponse(matched)).end()
-
-
-		} else if (data.op === "FIND_VOICE_STATE") {
-			const d = await filterCache(response, "find", "voiceState", data.params || {})
-			if (d[0] === "failed") return
-			return response.status(200).send(worker.createDataResponse(d)).end()
-
-
-		} else if (data.op === "FILTER_VOICE_STATES") {
-			const q = data.params || {}
-			// @ts-ignore
-			const limit = q.limit
-			// @ts-ignore
-			delete q.limit
-			const d = await filterCache(response, "filter", "voiceState", q, { limit })
-			if (d[0] === "failed") return
-			return response.status(200).send(worker.createDataResponse(d)).end()
-
-
-		} else if (data.op === "SAVE_DATA") {
-			opAmount++
-			totalOps++
-			/** @type {import("../typings").CacheSaveData} */
-			// @ts-ignore
-			const query = data.params || {}
-			if (!query.type || !query.data) {
-				opAmount--
-				return response.status(400).send(worker.createErrorResponse("Missing type or data field")).end()
-			}
-			/** @type {import("../typings").CacheSaveData["type"]} */
-			const type = query.type
-			const methods = {
-				"GUILD": rain.cache.guild,
-				"CHANNEL": rain.cache.channel,
-				"USER": rain.cache.user
-			}
-			saveBucket.queue(() => methods[type].update(query.data.id, query.data))
-			opAmount--
-			return response.status(200).send(worker.createDataResponse("ACK")).end()
 
 
 		} else if (data.op === "DELETE_USER") {
@@ -423,14 +314,6 @@ const worker = new BaseWorkerServer("cache", config.redis_password);
 
 
 		} else response.status(400).send(worker.createErrorResponse("Invalid op")).end()
-	})
-
-	worker.post("/gateway", (request, response) => {
-		if (!request.body) return response.status(204).send(worker.createErrorResponse("No payload")).end()
-		response.status(200).send(worker.createDataResponse("ACK")).end()
-		/** @type {import("thunderstorm/dist/internal").InboundDataType<keyof import("thunderstorm/dist/internal").CloudStormEventDataTable>} */
-		const data = request.body
-		saveBucket.queue(() => rain.eventProcessor.inbound(data))
 	})
 })()
 

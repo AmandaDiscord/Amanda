@@ -81,14 +81,18 @@ class ClientReplier extends Replier {
 		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
-		const gs = await passthrough.workers.cache.getData({ op: "GET_USER_GUILDS", params: { id: userID } })
+		const gs = []
+		for (const id of await client.rain.cache.guild.getIndexMembers()) {
+			const result = await client.rain.cache.member.isIndexed(userID, id)
+			if (result) gs.push(id)
+		}
 		for (const guild of gs) {
 			let isNowPlaying = false
 			if (np) {
 				if (manager && manager.cache.has(guild)) isNowPlaying = true
 				if (await client.rain.cache.voiceState.get(userID, guild)) isNowPlaying = true
 			}
-			const g = await utils.cacheManager.guilds.get(guild, true, false)
+			const g = await utils.cacheManager.guilds.get(guild, true, true)
 			// @ts-ignore
 			if (isNowPlaying) npguilds.push(filterGuild(g))
 			// @ts-ignore
@@ -103,7 +107,7 @@ class ClientReplier extends Replier {
 	 * @param {string} input.guildID
 	 */
 	async REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
-		const guild = await utils.cacheManager.guilds.get(guildID, true, false)
+		const guild = await utils.cacheManager.guilds.get(guildID, true, true)
 		if (!guild) return null
 		const member = await client.rain.cache.member.isIndexed(userID, guildID)
 		if (!member) return null

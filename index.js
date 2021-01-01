@@ -1,4 +1,8 @@
 // @ts-check
+const fs = require("fs")
+const path = require("path")
+const events = require("events")
+const workers = require("worker_threads")
 
 const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
@@ -7,8 +11,6 @@ const Frisky = require("frisky-client")
 /** @type {typeof import("./typings/Taihou")} */
 const WeebSH = require("taihou")
 const Reloader = require("@amanda/reloader")
-const fs = require("fs")
-const events = require("events")
 const SnowTransfer = require("snowtransfer")
 const ThunderStorm = require("thunderstorm")
 
@@ -20,6 +22,7 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
 
+const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
 const rest = new SnowTransfer(config.bot_token, { disableEveryone: true, baseHost: `${config.rest_server_protocol}://${config.rest_server_domain}` })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
@@ -43,13 +46,10 @@ const db = mysql.createPool({
 (async () => {
 	// DB
 
-	await client.rain.initialize()
-	console.log("Client connected to data stream")
-	client.connector.channel.assertQueue(config.amqp_data_queue, { durable: false, autoDelete: true })
-
 	await Promise.all([
 		db.query("SET NAMES 'utf8mb4'"),
-		db.query("SET CHARACTER SET utf8mb4")
+		db.query("SET CHARACTER SET utf8mb4"),
+		client.rain.initialize()
 	])
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
@@ -57,14 +57,20 @@ const db = mysql.createPool({
 	const CacheRequester = require("./modules/managers/CacheRequester")
 	const GatewayRequester = require("./modules/managers/GatewayRequester")
 	const cache = new CacheRequester()
-	const gateway = new GatewayRequester()
+	const gateway = new GatewayRequester(GatewayWorker)
 	passthrough.workers = { cache, gateway }
 
-	client.connector.channel.consume(config.amqp_data_queue, data => {
-		client.connector.channel.ack(data)
-
-		const d = JSON.parse(data.content.toString())
-		ThunderStorm.handle(d, client)
+	GatewayWorker.on("message", (message) => {
+		const { op, data, threadID } = message
+		if (op === "DISCORD") {
+			client.rain.eventProcessor.inbound(data)
+			return ThunderStorm.handle(message.data, client)
+		} else {
+			if (op === "ERROR_RESPONSE") return console.error(data)
+			if (gateway.outgoing.has(threadID)) {
+				gateway.outgoing.use(threadID)(data)
+			} else console.log(`Not a thread:\n${message}`)
+		}
 	})
 
 	listenMoeJP.on("error", console.error)
@@ -147,7 +153,4 @@ const db = mysql.createPool({
 
 	// no reloading for statuses. statuses will be periodically fetched from mysql.
 	require("./commands/status.js")
-
-	const ready = await gateway.login()
-	ThunderStorm.handle(ready, client)
 })()

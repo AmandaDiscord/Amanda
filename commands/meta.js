@@ -221,7 +221,7 @@ commands.assign([
 			} else {
 				const stats = await utils.getOwnStats()
 				const gateway = await passthrough.workers.gateway.getStats()
-				const allStats = stats
+				const allStats = await ipc.replier.requestGetAllStats()
 				const nmsg = await msg.channel.send(lang.meta.statistics.prompts.slow)
 				embed
 					.addFields([
