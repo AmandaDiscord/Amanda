@@ -123,7 +123,7 @@ const common = {
 			} else if (url.hostname == "youtu.be") { // Is it youtu.be?
 				const id = url.pathname.slice(1)
 				return { type: "video", id: id }
-			} else if (url.hostname == "youtube.com" || url.hostname == "invidio.us" || url.hostname == "hooktube.com") { // Is it YouTube-compatible?
+			} else if (url.hostname == "youtube.com" || url.hostname == "invidio.us" || url.hostname == "hooktube.com" || url.hostname === "m.youtube.com") { // Is it YouTube-compatible?
 				// Is it a playlist?
 				if (url.searchParams.get("list")) {
 					const result = { type: "playlist", list: url.searchParams.get("list") }
