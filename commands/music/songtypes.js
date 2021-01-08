@@ -463,7 +463,9 @@ class FriskySong extends Song {
 			await this.stationUpdate()
 		}
 		if (this.track == "!") {
-			return common.getTracks(this.stationData.beta_url, this.queue.guild.region).then(tracks => {
+			let mp3URL = this.stationData.beta_url
+			if (this.station === "chill") mp3URL = this.stationData.url
+			return common.getTracks(mp3URL, this.queue.guild.region).then(tracks => {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)
