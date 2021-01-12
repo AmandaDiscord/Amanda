@@ -603,7 +603,7 @@ class SpotifySong extends YouTubeSong {
 					if (!decided.track) this.error = `Missing track for ${this.title}`
 					else {
 						this.id = decided.info.identifier
-						this.lengthSeconds = Math.ceil(decided.info.length / 1000)
+						this.lengthSeconds = Math.round(decided.info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 						ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
 						return youtubePrepareCache.get()
@@ -690,9 +690,9 @@ class ExternalSong extends Song {
 		}
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
 		this.track = info[0].track
-		if (info[0].info.isSeekable && info[0].info.length < (1000 * 60 * 60 * 2)) {
+		if (info[0].info.isSeekable) {
 			this.live = false
-			this.lengthSeconds = info[0].info.length
+			this.lengthSeconds = Math.round(info[0].info.length / 1000)
 			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 			this.noPauseReason = undefined
 			ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
@@ -934,7 +934,7 @@ class NewgroundsSong extends Song {
  * @param {{ track: string, info: { identifier: string, title: string, length: number, author: string } }} data
  */
 function makeYouTubeSongFromData(data) {
-	return new YouTubeSong(data.info.identifier, data.info.title, Math.ceil(data.info.length / 1000), data.track || null, data.info.author)
+	return new YouTubeSong(data.info.identifier, data.info.title, Math.round(data.info.length / 1000), data.track || null, data.info.author)
 }
 
 /**
