@@ -656,7 +656,12 @@ class ExternalSong extends Song {
 	 */
 	constructor(link) {
 		super()
-		this.title = "Unknown Track"
+		const to = new URL(link)
+		let name
+		const pathnamereg = /\/?(\w+)\.\w+/
+		if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
+		else name = to.pathname.match(pathnamereg)[1]
+		this.title = name.replace(/_/g, " ")
 		this.live = true
 		this.thumbnail = {
 			src: constants.local_placeholder,
