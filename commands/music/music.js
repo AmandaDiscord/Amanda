@@ -362,7 +362,7 @@ const subcommandsMap = new Map([
 				return msg.channel.send(`The current pitch of the queue is ${curPitch} semitone${(curPitch > 1) || (curPitch < -1) ? "s" : ""}`)
 			}
 			const semi = Number(suffix)
-			if (!semi || isNaN(semi)) return msg.channel.send(`${msg.author.username}, that is not a valid pitch amount.`)
+			if (semi === undefined || isNaN(semi)) return msg.channel.send(`${msg.author.username}, that is not a valid pitch amount.`)
 			if (semi > 24) return msg.channel.send(`${msg.author.username}, pitches greater than 9 semitones are not allowed.`)
 			if (semi < -24) return msg.channel.send(`${msg.author.username}, pitches less than 9 semitones are not allowed.`)
 			const pitch = 2 ** (semi / 12)
