@@ -279,8 +279,7 @@ const userManager = {
 			const match = /<@!?(\d+)>/.exec(string)
 			if (match && match[1]) {
 				string = match[1]
-				const d = await userManager.get(string, true, true)
-				// @ts-ignore
+				const d = message.mentions.length === 1 ? message.mentions[0].user : message.mentions.find(item => item.id === string).user
 				return res(d)
 			}
 			if (!string) {
@@ -393,8 +392,7 @@ const memberManager = {
 			const match = /<@!?(\d+)>/.exec(string)
 			if (match && match[1]) {
 				string = match[1]
-				const d = await memberManager.get(string, message.guild.id, true, true)
-				// @ts-ignore
+				const d = message.mentions.length === 1 ? message.mentions[0] : message.mentions.find(item => item.id === string)
 				return res(d)
 			}
 
