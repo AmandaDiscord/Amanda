@@ -359,7 +359,7 @@ const subcommandsMap = new Map([
 			const suffix = args.slice(1).join(" ")
 			if (!suffix) {
 				const curPitch = Math.round(Math.log2(queue.pitchAmount) * 12)
-				return msg.channel.send(`The current pitch of the queue is ${curPitch} semitone${(curPitch > 1) || (curPitch < -1) ? "s" : ""}`)
+				return msg.channel.send(`The current pitch of the queue is ${curPitch === 0 || curPitch > 0 ? "+" : ""}${curPitch} semitone${(curPitch > 1) || (curPitch < -1) ? "s" : ""}`)
 			}
 			const semi = Number(suffix)
 			if (semi === undefined || isNaN(semi)) return msg.channel.send(`${msg.author.username}, that is not a valid pitch amount.`)
