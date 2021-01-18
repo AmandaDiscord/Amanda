@@ -358,7 +358,7 @@ const subcommandsMap = new Map([
 			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			const suffix = args.slice(1).join(" ")
 			if (!suffix) {
-				const curPitch = queue.pitchAmount
+				const curPitch = Math.ceil(Math.log(2) / Math.log(queue.pitchAmount)) * 12
 				return msg.channel.send(`The current pitch of the queue is ${curPitch} semitone${(curPitch > 1) || (curPitch < -1) ? "s" : ""}`)
 			}
 			const semi = Number(suffix)
