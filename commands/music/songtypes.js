@@ -4,6 +4,7 @@ const Discord = require("thunderstorm")
 /** @type {import("node-fetch").default} */
 // @ts-ignore
 const fetch = require("node-fetch")
+const entities = require("entities")
 
 const passthrough = require("../../passthrough")
 const { constants, reloader, frisky, config, ipc } = passthrough
@@ -661,7 +662,7 @@ class ExternalSong extends Song {
 		const pathnamereg = /\/?(\w+)\.\w+/
 		if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
 		else name = to.pathname.match(pathnamereg)[1]
-		this.title = name.replace(/_/g, " ")
+		this.title = entities.decodeHTML(name.replace(/_/g, " "))
 		this.live = true
 		this.thumbnail = {
 			src: constants.local_placeholder,
