@@ -88,7 +88,7 @@ async function fallover(nodeID) {
 			if (!newLocalNode) {
 				const audit = queues.audits.get(q.guild.id)
 				if (audit) audit.push({ action: "Queue Destroy (Error while load balancing)", platform: "Discord", user: "Amanda" })
-				q._dissolve()
+				q.stop()
 			}
 			const newNode = client.lavalink.nodes.get(newLocalNode.id)
 			await client.lavalink.switch(p, newNode)
