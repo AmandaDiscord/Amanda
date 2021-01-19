@@ -606,7 +606,7 @@ class SpotifySong extends YouTubeSong {
 						this.id = decided.info.identifier
 						this.lengthSeconds = Math.round(decided.info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
-						ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
+						ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
 						return youtubePrepareCache.get()
 					}
 				}).catch(message => {
@@ -696,7 +696,7 @@ class ExternalSong extends Song {
 			this.lengthSeconds = Math.round(info[0].info.length / 1000)
 			this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 			this.noPauseReason = undefined
-			ipc.replier.sendSongTimeUpdate(this.queue, this.queue.songs.indexOf(this), this.lengthSeconds)
+			ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
 		}
 	}
 	toObject() {
@@ -755,6 +755,10 @@ class ListenMoeSong extends Song {
 		this.station = station
 		this.stationData = passthrough.listenMoe[station]
 		this.live = true
+		this.lengthSeconds = this.stationData.nowPlaying.duration
+		this.id = this._id
+		this.title = this.stationData.nowPlaying.title
+		this.queueLine = `**${this.title}** (${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"})`
 		this.thumbnail = {
 			src: constants.listen_moe_placeholder,
 			width: 64,
@@ -769,44 +773,25 @@ class ListenMoeSong extends Song {
 
 		this.validate()
 	}
-	// @ts-ignore
-	get lengthSeconds() {
-		return this.stationData.nowPlaying.duration
-	}
-	set lengthSeconds(value) {
-		void value
-	}
-	// @ts-ignore
-	get id() {
+	get _id() {
 		return String((this.stationData.nowPlaying.albums && this.stationData.nowPlaying.albums[0] ? (this.stationData.nowPlaying.albums[0].id || this.stationData.nowPlaying.id) : this.stationData.nowPlaying.id))
 	}
-	set id(value) {
-		void value
-	}
-	// @ts-ignore
-	get title() {
-		return this.stationData.nowPlaying.title
-	}
-	set title(value) {
-		void value
-	}
-	// @ts-ignore
-	get queueLine() {
-		return `**${this.title}** (${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"})`
-	}
-	set queueLine(value) {
-		void value
-	}
 	async prepare() {
-		let info
-		try {
-			info = await common.getTracks(this.uri, this.queue.guild.region)
-		} catch {
-			this.error = `Missing track for ${this.title}`
-			return
+		if (!this.bound) {
+			this.bound = this.stationUpdate.bind(this)
+			this.stationData.on("trackUpdate", this.bound)
 		}
-		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
-		this.track = info[0].track
+		if (this.track === "!") {
+			let info
+			try {
+				info = await common.getTracks(this.uri, this.queue.guild.region)
+			} catch {
+				this.error = `Missing track for ${this.title}`
+				return
+			}
+			if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
+			this.track = info[0].track
+		} else return Promise.resolve()
 	}
 	toObject() {
 		return {
@@ -852,6 +837,19 @@ class ListenMoeSong extends Song {
 	}
 	resume() {
 		return this.prepare()
+	}
+	destroy() {
+		if (this.bound) this.stationData.removeListener("trackUpdate", this.bound)
+	}
+	/**
+	 * @param {import("listensomemoe/dist/Types").Track} track
+	 */
+	stationUpdate(track) {
+		this.title = track.title
+		this.lengthSeconds = track.duration
+		this.id = this._id
+		this.queueLine = `**${this.title}** (${this.lengthSeconds ? common.prettySeconds(this.lengthSeconds) : "LIVE"})`
+		ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
 	}
 }
 

@@ -31,8 +31,7 @@ class Session {
 			[opcodes.REMOVE_SONG, "removeSong"],
 			[opcodes.MEMBERS_CHANGE, "membersChange"],
 			[opcodes.ATTRIBUTES_CHANGE, "attributesChange"],
-			[opcodes.REMOVE_ALL_SONGS, "removeAllSongs"],
-			[opcodes.SONG_TIME_UPDATE, "songTimeUpdate"]
+			[opcodes.REMOVE_ALL_SONGS, "removeAllSongs"]
 		])
 
 		this.ws.addEventListener("open", () => this.onOpen())
@@ -198,12 +197,6 @@ class Session {
 			op: opcodes.REQUEST_ATTRIBUTES_CHANGE,
 			d: data
 		})
-	}
-
-	songTimeUpdate(data) {
-		if (this.state && this.state.songs && this.state.songs[data.d.index]) {
-			this.state.songs[data.d.index].length = data.d.lengthSeconds
-		}
 	}
 }
 
