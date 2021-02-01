@@ -596,11 +596,10 @@ class SpotifySong extends YouTubeSong {
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
 				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.guild.region).then(tracks => {
-					if (!tracks.length) this.error = `No results for ${this.title}`
-					let decided
+					if (!tracks[0]) this.error = `No results for ${this.title}`
+					let decided = tracks[0]
 					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
 					if (found) decided = found
-					else decided = tracks[0]
 					if (!decided.track) this.error = `Missing track for ${this.title}`
 					else {
 						this.id = decided.info.identifier
