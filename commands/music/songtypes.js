@@ -232,7 +232,7 @@ class YouTubeSong extends Song {
 				} else { // Resolve track with Lavalink
 					return common.getTracks(this.id, this.queue.guild.region).then(tracks => {
 						if (!tracks[0]) this.error = `No results for ID ${this.id}`
-						else if (!tracks[0].track) this.error = `Missing track for ID ${this.id}`
+						else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
 						else {
 							this.track = tracks[0].track
 							if (tracks[0].info) this.uploader = tracks[0].info.author
