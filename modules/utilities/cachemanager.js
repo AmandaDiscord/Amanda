@@ -76,7 +76,7 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
-		if (d) await client.rain.cache.channel.update(d.id, d)
+		if (d && d.id) await client.rain.cache.channel.update(d.id, d)
 		return d || null
 	},
 	/**

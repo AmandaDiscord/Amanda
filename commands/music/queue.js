@@ -387,6 +387,7 @@ class Queue {
 	 * @returns {Promise<?string>} null on success, string reason on failure
 	 */
 	async pause() {
+		if (!this.songs[0]) return "This is a bug. There was no songs in the queue to pause. The queue was likely restored from restart."
 		if (this.songs[0].noPauseReason) return this.songs[0].noPauseReason
 		else if (this.isPaused) {
 			if (this.langCache) return this.langCache.audio.music.prompts.queueAlreadyPaused
