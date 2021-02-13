@@ -53,13 +53,14 @@ class QueueManager {
 		const guildID = voiceChannel.guild.id
 		/** @type {Discord.Guild} */
 		// @ts-ignore
-		const guild = await utils.cacheManager.guilds.get(guildID)
+		const guild = await utils.cacheManager.guilds.get(guildID, true, true)
 		if (this.audits.get(guildID)) {
 			if (this.enqueuedAuditDestructions.get(guildID)) {
 				clearTimeout(this.enqueuedAuditDestructions.get(guildID))
 				this.enqueuedAuditDestructions.delete(guildID)
 			}
 		} else this.audits.set(guildID, [])
+		if (!guild) return console.log(`Guild no longer exists to client? gid: ${guildID}`)
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, guild, host)
 		this.cache.set(guildID, instance)
 		await ipc.replier.sendNewQueue(instance)
