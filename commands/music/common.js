@@ -1,9 +1,7 @@
 /* eslint-disable no-useless-catch */
 // @ts-check
 
-/** @type {import("node-fetch")["default"]} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const c = require("centra")
 const Discord = require("thunderstorm")
 const path = require("path")
 const { encode } = require("@lavalink/encoding")
@@ -156,11 +154,7 @@ const common = {
 		const params = new URLSearchParams()
 		params.append("identifier", input)
 
-		return fetch(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`, {
-			headers: {
-				"Authorization": node.password
-			}
-		}).then(async data => {
+		return c(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`).header("Authorization", node.password).send().then(async data => {
 			const json = await data.json()
 			if (json.exception) throw json.exception.message
 			// sometimes the track length can be extremely long and it doesn't play.
@@ -292,7 +286,7 @@ const common = {
 		 * @param {string} [host] host of lavalink node that will be used with this data
 		 */
 		getData: function(id, host = null) {
-			return fetch(`${common.invidious.getOrigin(host)}/api/v1/videos/${id}`).then(async data => {
+			return c(`${common.invidious.getOrigin(host)}/api/v1/videos/${id}`).send().then(async data => {
 				const json = await data.json()
 				if (json.error) throw new Error(json.error)
 				else return json
@@ -308,7 +302,7 @@ const common = {
 			const url = new URL(`${common.invidious.getOrigin(host)}/api/v1/search`)
 			url.searchParams.append("q", input)
 			url.searchParams.append("type", input)
-			return fetch(url.toString()).then(async data => {
+			return c(url.toString()).send().then(async data => {
 				const json = await data.json()
 				if (json.error) throw new Error(json.error)
 				else return json
@@ -356,7 +350,7 @@ const common = {
 		 * @returns {Promise<import("../../typings").InvidiousPlaylist>}
 		 */
 		getPlaylistPage: function(id, pageNumber = 1, host = null) {
-			return fetch(`${common.invidious.getOrigin(host)}/api/v1/playlists/${id}?page=${pageNumber}`).then(res => res.json())
+			return c(`${common.invidious.getOrigin(host)}/api/v1/playlists/${id}?page=${pageNumber}`).send().then(res => res.json())
 		},
 
 		/**
@@ -617,11 +611,11 @@ const common = {
 			const songtypes = require("./songtypes")
 			let data
 			try {
-				data = await fetch(link, { method: "HEAD" })
+				data = await c(link, "head").send()
 			} catch {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
-			const mime = data.headers.get("content-type") || data.headers.get("Content-Type")
+			const mime = data.headers["content-type"]
 			if (!mime || !mime.startsWith("audio/")) return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			const song = songtypes.makeExternalSong(link)
 			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
@@ -701,7 +695,7 @@ const common = {
 			let text
 			// eslint-disable-next-line no-useless-catch
 			try {
-				text = await fetch(url).then(res => res.text())
+				text = await c(url).send().then(res => res.text())
 			} catch (e) {
 				console.error(e)
 				throw e
@@ -740,7 +734,7 @@ const common = {
 		search: async function(text) {
 			let html
 			try {
-				html = await fetch(`https://newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).then(res => res.text())
+				html = await c(`https://newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).send().then(res => res.text())
 			} catch(e) {
 				console.error(e)
 				throw e
@@ -804,7 +798,7 @@ const common = {
 			const ID = link.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)[1]
 			let data
 			try {
-				data = await fetch(`https://newgrounds.com/audio/load/${ID}/3`, { method: "GET", headers: { "x-requested-with": "XMLHttpRequest" } }).then(d => d.json())
+				data = await c(`https://newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
 			} catch {
 				throw new Error("Cannot extract NewGrounds track info")
 			}

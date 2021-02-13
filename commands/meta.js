@@ -1,8 +1,6 @@
 // @ts-check
 
-/** @type {import("node-fetch")["default"]} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const centra = require("centra")
 const fs = require("fs")
 const Discord = require("thunderstorm")
 const Jimp = require("jimp")
@@ -129,7 +127,8 @@ commands.assign([
 		examples: ["stats"],
 		async process(msg, suffix, lang) {
 			const embed = new Discord.MessageEmbed().setColor(constants.standard_embed_color)
-			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster`
+			const sid = msg.guild ? Number((BigInt(msg.guild.id) >> BigInt(22)) % BigInt(config.total_shards)) : 0
+			const leadingIdentity = `${client.user.tag} <:online:606664341298872324>\n${config.cluster_id} cluster, shard ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
 			function bothStats(stats, allStats, key) {
 				return `${utils.numberComma(allStats[key])} total, _${utils.numberComma(stats[key])} in ${config.cluster_id} cluster_` // SC: U+2004 THREE-PER-EM SPACE
@@ -227,7 +226,7 @@ commands.assign([
 					.addFields([
 						{
 							name: leadingIdentity,
-							value: `**${lang.meta.ping.returns.heartbeat}:**\n${gateway.latency.map((i, index) => `Shard ${gateway.shards[index]}: ${i}ms`).join("\n")}\n`
+							value: `**${lang.meta.ping.returns.heartbeat}:**\n${Math.floor(gateway.latency.reduce((acc, cur) => acc + cur, 0) / gateway.latency.length)}ms avg\n`
 							+ `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms\n`
 							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
 							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stats.ram)}`,
@@ -806,17 +805,17 @@ commands.assign([
 				if (msg.attachments[0]) value = msg.attachments[0].url
 				let head
 				try {
-					head = await fetch(value, { method: "HEAD" })
+					head = await centra(value, "head").send()
 				} catch {
 					console.log(`Failed to fetch HEAD for new background URL in settings command: ${value}`)
 					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)
 				}
 				const allowedMimes = ["image/png", "image/jpeg", "image/bmp", "image/tiff"]
-				const mime = head.headers.get("content-type") || head.headers.get("Content-Type")
+				const mime = head.headers["content-type"]
 				if (!mime || !allowedMimes.includes(mime)) return msg.channel.send(`Unsupported file type. Supported types are ${allowedMimes.map(item => item.replace("image/", "")).join(", ")}.`)
 				let data
 				try {
-					data = await fetch(value).then(d => d.buffer())
+					data = await centra(value).send().then(d => d.body)
 				} catch {
 					console.log(`Failed to fetch new background URL in settings command: ${value}`)
 					return msg.channel.send(lang.configuration.settings.prompts.invalidLink)

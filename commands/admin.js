@@ -1,10 +1,8 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const fetchdefault = require("node-fetch").default
-/** @type {fetchdefault} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const centra = require("centra")
+const fetch = centra // aliasing
 const util = require("util")
 const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")

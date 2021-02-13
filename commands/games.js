@@ -1,9 +1,6 @@
 // @ts-check
 
-const fetchdefault = require("node-fetch").default
-/** @type {fetchdefault} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const centra = require("centra")
 const entities = require("entities")
 const Discord = require("thunderstorm")
 const path = require("path")
@@ -185,7 +182,7 @@ module.exports.TriviaGame = TriviaGame
  */
 async function JSONHelper(body, channel, lang) {
 	try {
-		if (body.startsWith("http")) body = await fetch(body).then(data => data.json())
+		if (body.startsWith("http")) body = await centra(body).send().then(data => data.json())
 		return [true, body]
 	} catch (error) {
 		const embed = new Discord.MessageEmbed()

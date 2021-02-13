@@ -1,7 +1,4 @@
-const fetchdefault = require("node-fetch").default
-/** @type {fetchdefault} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const c = require("centra")
 const util = require("util")
 
 class BaseWorkerRequester {
@@ -29,12 +26,12 @@ class BaseWorkerRequester {
 		payload["headers"] = headers
 
 		// @ts-ignore
-		const response = await fetch(encodeURI(`${this.baseURL}${path}`), payload)
+		const response = await c(encodeURI(`${this.baseURL}${path}`), method).body(payload, "json").send()
 		if (!response) return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ url: `${this.baseURL}${path}`, method: method, payload: payload })}`))
 
-		if (response.status != 200) {
+		if (response.statusCode != 200) {
 			const d = await response.json()
-			return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ status: response.status, error: d.error })}`))
+			return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ status: response.statusCode, error: d.error })}`))
 		}
 
 		const data = await response.json()

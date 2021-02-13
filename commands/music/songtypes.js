@@ -1,9 +1,7 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-/** @type {import("node-fetch").default} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const c = require("centra")
 const entities = require("entities")
 
 const passthrough = require("../../passthrough")
@@ -206,7 +204,7 @@ class YouTubeSong extends Song {
 
 		this.related = new utils.AsyncValueCache(
 			() => {
-				return fetch(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).then(async data => {
+				return c(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).send().then(async data => {
 					const json = await data.json()
 					this.typeWhileGetRelated = false
 					return json.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)

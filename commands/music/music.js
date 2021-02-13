@@ -186,8 +186,7 @@ const subcommandsMap = new Map([
 				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
 				const totalLength = `\n${utils.replace(lang.audio.music.prompts.totalLength, { "number": common.prettySeconds(queue.getTotalLength()) })}`
 				const body = `${utils.compactRows.removeMiddle(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
-				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(guild.name) })).setDescription(body).setColor(constants.standard_embed_color)
-				))
+				msg.channel.send(await utils.contentify(msg.channel, new Discord.MessageEmbed().setTitle(utils.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(guild.name) })).setDescription(body).setColor(constants.standard_embed_color)))
 			}
 		}
 	}],

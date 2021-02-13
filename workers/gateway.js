@@ -52,7 +52,7 @@ const presence = {}
 			Gateway.shardManager.presenceUpdate(payload)
 		} else if (op === "SEND_MESSAGE") {
 
-			const sid = Number((BigInt(data.d.guild_id) >> BigInt(22)) % BigInt(config.shard_list.length))
+			const sid = Number((BigInt(data.d.guild_id) >> BigInt(22)) % BigInt(config.total_shards))
 			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
 			if (shard) {
 				try {

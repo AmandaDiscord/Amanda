@@ -3,9 +3,7 @@
 const Discord = require("thunderstorm")
 const path = require("path")
 const { Manager } = require("lavacord")
-/** @type {import("node-fetch").default} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const centra = require("centra")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
@@ -165,7 +163,7 @@ async function manageMessage(msg, isEdit = false) {
 				.setDescription(msgTxt)
 				.setColor(0xdd2d2d)
 			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send(embed)
-			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
+			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`).catch(() => console.log("Error with sending alert that command failed. Probably a 403 resp code"))
 
 			// Report to #amanda-error-log
 			embed.setTitle("Command error occurred.")
@@ -202,7 +200,7 @@ async function manageMessage(msg, isEdit = false) {
 			if (!chat) return
 			if (chat.toLowerCase().startsWith("say") || chat.toLowerCase().startsWith("repeat")) return msg.channel.send("No thanks")
 			try {
-				fetch(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).then(async res => {
+				centra(`http://ask.pannous.com/api?input=${encodeURIComponent(chat)}`).send().then(async res => {
 					const data = await res.json()
 					if (!data.output || !data.output[0] || !data.output[0].actions) return msg.channel.send("Terribly sorry but my Ai isn't working as of recently (◕︵◕)\nHopefully, the issue gets resolved soon. Until then, why not try some of my other features?")
 					let text = data.output[0].actions.say.text.replace(/Jeannie/gi, client.user.username).replace(/Master/gi, msg.member ? msg.member.displayName : msg.author.username).replace(/Pannous/gi, "PapiOphidian")
@@ -253,7 +251,7 @@ async function manageReady() {
 		constants.lavalinkNodes = lavalinkNodes
 		client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
-			shards: config.shard_list.length,
+			shards: config.total_shards,
 			send: (packet) => {
 				passthrough.workers.gateway.sendMessage(packet)
 			}

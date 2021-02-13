@@ -2,9 +2,7 @@
 
 const Jimp = require("jimp")
 const crypto = require("crypto")
-/** @type {import("node-fetch").default} */
-// @ts-ignore
-const fetch = require("node-fetch")
+const c = require("centra")
 const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
@@ -218,7 +216,7 @@ async function doInteraction(msg, suffix, source, lang) {
 		if (source.shortcut == "nekos.life") {
 			source.footer = "Powered by nekos.life"
 			fetched = new Promise((resolve, reject) => {
-				fetch(`https://nekos.life/api/v2/img/${source.name}`).then(async body => {
+				c(`https://nekos.life/api/v2/img/${source.name}`).send().then(async body => {
 					const data = await body.json()
 					resolve(data.url)
 				}).catch(reject)
