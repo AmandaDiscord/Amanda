@@ -570,15 +570,15 @@ commands.assign([
 						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
 					}, memberFetchTimeout)
 				})
-				mem = await Promise.race([utils.cacheManager.members.get(user.id, "475599038536744960", true, false), TProm])
+				mem = await Promise.race([utils.cacheManager.members.get(user.id, "475599038536744960", false, false), TProm])
 			} catch(e) {
 				// @ts-ignore
 				mem = { roles: [] }
 			}
 			let boosting, hunter
 			if (mem) {
-				boosting = mem.roles.includes("613685290938138625")
-				hunter = mem.roles.includes("497586624390234112")
+				boosting = (!!mem.roles && mem.roles.includes("613685290938138625"))
+				hunter = (!!mem.roles && mem.roles.includes("497586624390234112"))
 			}
 			/** @type {import("jimp")} */
 			let badgeImage
