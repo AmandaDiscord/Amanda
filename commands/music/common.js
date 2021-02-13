@@ -437,6 +437,7 @@ const common = {
 		 */
 		async function(song, textChannel, voiceChannel, insert, context) {
 			const queue = await passthrough.queues.getOrCreate(voiceChannel, textChannel)
+			if (!queue) return
 			const result = queue.addSong(song, insert)
 			if (context instanceof Discord.Message && result == 0) {
 				context.react("✅")
@@ -482,6 +483,7 @@ const common = {
 		async function(textChannel, voiceChannel, songs, insert, context) {
 			if (insert) songs.reverse()
 			const queue = await passthrough.queues.getOrCreate(voiceChannel, textChannel)
+			if (!queue) return
 			const results = songs.map(song => {
 				return queue.addSong(song, insert)
 			})

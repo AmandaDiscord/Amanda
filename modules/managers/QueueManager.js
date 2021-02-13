@@ -97,6 +97,7 @@ class QueueManager {
 			else {
 				// @ts-ignore
 				const queue = await this.getOrCreate(voiceChannel, textChannel, host)
+				if (!queue) return
 				q.songs.forEach(s => {
 					if (s.class == "YouTubeSong") {
 						const song = new songTypes.YouTubeSong(s.id, s.title, s.lengthSeconds, s.track, s.uploader)
