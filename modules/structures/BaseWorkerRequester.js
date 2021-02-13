@@ -12,22 +12,19 @@ class BaseWorkerRequester {
 	}
 	/**
 	 * @param {string} path
-	 * @param {"GET" | "PATCH" | "POST"} method
+	 * @param {"get" | "patch" | "post"} method
 	 * @param {any} [body]
 	 */
-	async _makeRequest(path, method = "GET", body = undefined) {
+	async _makeRequest(path, method = "get", body = undefined) {
 		if (!path.startsWith("/")) path = `/${path}`
-		const payload = {}
+		/** @type {Object.<string, string>} */
 		const headers = {}
-		if (body) payload["body"] = JSON.stringify(body)
 		if (this.auth) headers["Authorization"] = this.auth
 
-		payload["method"] = method
-		payload["headers"] = headers
-
-		// @ts-ignore
-		const response = await c(encodeURI(`${this.baseURL}${path}`), method).body(payload, "json").send()
-		if (!response) return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ url: `${this.baseURL}${path}`, method: method, payload: payload })}`))
+		const r = c(this.baseURL, method).path(path).header(headers)
+		if (body) r.body(body, "json")
+		const response = await r.send()
+		if (!response) return Promise.reject(new Error(`An error occured when requesting from a worker\n${util.inspect({ url: `${this.baseURL}${path}`, method: method, payload: body })}`))
 
 		if (response.statusCode != 200) {
 			const d = await response.json()

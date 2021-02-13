@@ -181,9 +181,10 @@ module.exports.TriviaGame = TriviaGame
  * @returns {Promise<[boolean, any]>}
  */
 async function JSONHelper(body, channel, lang) {
+	let d
 	try {
-		if (body.startsWith("http")) body = await centra(body).send().then(data => data.json())
-		return [true, body]
+		if (body.startsWith("http")) d = await centra(body).send().then(data => data.json())
+		return [true, d]
 	} catch (error) {
 		const embed = new Discord.MessageEmbed()
 			.setDescription(lang.games.trivia.prompts.parsingError)

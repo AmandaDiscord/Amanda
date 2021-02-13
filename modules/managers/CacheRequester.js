@@ -7,13 +7,13 @@ class CacheRequester extends BaseWorkerRequester {
 		super(`${config.cache_server_protocol}://${config.cache_server_domain}`, config.redis_password)
 	}
 	getStats() {
-		return this._makeRequest("/stats", "GET")
+		return this._makeRequest("/stats", "get")
 	}
 	/**
 	 * @param {import("../../typings").CacheRequestData<keyof import("../../typings").CacheOperations>} query
 	 */
 	getData(query) {
-		return this._makeRequest("/request", "POST", query)
+		return this._makeRequest("/request", "post", query)
 	}
 }
 
