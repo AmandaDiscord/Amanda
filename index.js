@@ -23,7 +23,7 @@ const config = require("./config.js")
 const constants = require("./constants.js")
 
 const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
-const rest = new SnowTransfer(config.bot_token, { disableEveryone: true, baseHost: `${config.rest_server_protocol}://${config.rest_server_domain}` })
+const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
 const reloader = new Reloader(true, __dirname)
