@@ -288,6 +288,7 @@ const common = {
 		getData: function(id, host = null) {
 			return c(`${common.invidious.getOrigin(host)}/api/v1/videos/${id}`).send().then(async data => {
 				const json = await data.json()
+				if (!json) throw new Error(`null response from YouTube for ${id}`)
 				if (json.error) throw new Error(json.error)
 				else return json
 			})
