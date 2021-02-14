@@ -655,7 +655,7 @@ class Queue {
 				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 				this.wrapper.skip()
 			} },
-			{ emoji: "⏹", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
+			{ emoji: "⏹️", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.listeners.has(user.id)) return
 				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 				this.wrapper.stop()

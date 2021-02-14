@@ -18,7 +18,7 @@
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#b32eedcf19f130d74ca2319096366ad42c0d28b5",
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
     "@amanda/lang": "github:AmandaDiscord/Lang#70c61cac04eeac5d472d2b93bdcf5bd92d0641c1",
-    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#2f0719b596509974c63f47cfd670e02802244e09",
+    "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#f67a1d6e94ff4caa10c39fa1e3b33b564b2954de",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
     "@types/centra": "^2.2.0",
