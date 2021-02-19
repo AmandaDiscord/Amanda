@@ -698,7 +698,7 @@ const common = {
 			let text
 			// eslint-disable-next-line no-useless-catch
 			try {
-				text = await c(url).send().then(res => res.text())
+				text = await c(url).header("User-Agent", `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) Neko/1.0 (KHTML, like Gecko) Amanda/1.0`).send().then(res => res.text())
 			} catch (e) {
 				console.error(e)
 				throw e
