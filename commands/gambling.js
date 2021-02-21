@@ -21,18 +21,13 @@ commands.assign([
 		aliases: ["slot", "slots"],
 		category: "gambling",
 		examples: ["slot 1000"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
-			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID = ?", msg.author.id)
+			const isPremium = await utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 			let cooldownInfo
 			// avg % assumes 5 fruits + heart, heart payouts [0, 1.25, 4, 20], triple fruit payout 5
 			if (isPremium) {
@@ -130,11 +125,6 @@ commands.assign([
 		aliases: ["flip"],
 		category: "gambling",
 		examples: ["flip"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			const flip = utils.arrayRandom(["heads <:coinH:402219464348925954>", "tails <:coinT:402219471693021196>"])
 			return msg.channel.send(utils.replace(lang.gambling.flip.returns.flip, { "flip": flip }))
@@ -146,11 +136,6 @@ commands.assign([
 		aliases: ["betflip", "bf"],
 		category: "gambling",
 		examples: ["bf 1000 h"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
@@ -181,7 +166,7 @@ commands.assign([
 				selfChosenSide = true
 			}
 			if (args[1] != "h" && args[1] != "t") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidSide, { "username": msg.author.username }))
-			const isPremium = await utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+			const isPremium = await utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 			let cooldownInfo
 			if (isPremium) {
 				cooldownInfo = {
@@ -236,11 +221,6 @@ commands.assign([
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
 		examples: ["coins PapiOphidian"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let user, member
 			if (msg.channel.type == "text") {
@@ -255,15 +235,15 @@ commands.assign([
 				.addFields([
 					{
 						name: "Lifetime received amandollars",
-						value: utils.numberComma(money.woncoins)
+						value: utils.numberComma(money.won_coins)
 					},
 					{
 						name: "Lifetime lost amandollars",
-						value: utils.numberComma(money.lostcoins)
+						value: utils.numberComma(money.lost_coins)
 					},
 					{
 						name: "Lifetime given amandollars",
-						value: utils.numberComma(money.givencoins)
+						value: utils.numberComma(money.given_coins)
 					}
 				])
 				.setColor(constants.money_embed_color)
@@ -276,16 +256,11 @@ commands.assign([
 		aliases: ["daily"],
 		category: "gambling",
 		examples: ["daily"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
 			const [row, donor] = await Promise.all([
-				utils.sql.get("SELECT lastClaim FROM DailyCooldown WHERE userID = ?", msg.author.id),
-				utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+				utils.sql.get("SELECT last_claim FROM daily_cooldown WHERE user_id = $1", msg.author.id),
+				utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 			])
 			if (!row || row.lastClaim + dailyCooldownTime < Date.now()) {
 				let amount
@@ -296,7 +271,7 @@ commands.assign([
 					.setColor(constants.money_embed_color)
 				msg.channel.send(await utils.contentify(msg.channel, embed))
 				utils.coinsManager.award(msg.author.id, amount)
-				utils.sql.all("REPLACE INTO DailyCooldown VALUES (?, ?)", [msg.author.id, Date.now()])
+				utils.sql.all("INSERT INTO daily_cooldown (user_id, last_claim) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_claim = $2", [msg.author.id, Date.now()])
 			} else {
 				const timeRemaining = utils.shortTime(row.lastClaim - Date.now() + dailyCooldownTime, "ms")
 				msg.channel.send(utils.replace(lang.gambling.daily.prompts.cooldown, { "username": msg.author.username, "number": timeRemaining }))
@@ -309,11 +284,6 @@ commands.assign([
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
 		examples: ["lb 2"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			const maxPages = 20
 			const itemsPerPage = 10
@@ -346,13 +316,13 @@ commands.assign([
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
 				const memIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
-				rows = await utils.sql.all(`SELECT userID, coins FROM money WHERE userID IN (${Array(memIDs.length).fill("?").join(", ")}) ORDER BY coins DESC LIMIT ?`, [...memIDs, maxPages * itemsPerPage])
+				rows = await utils.sql.all(`SELECT user_id, coins FROM money WHERE user_id IN (${memIDs.map((it, ind) => `$${ind + 1}`).join(", ")}) ORDER BY coins DESC LIMIT $${memIDs.length + 1}`, [...memIDs, maxPages * itemsPerPage])
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {
 				// using global:
 				// request exact page from database and do no filtering
-				rows = await utils.sql.all("SELECT userID, coins FROM money ORDER BY coins DESC LIMIT ? OFFSET ?", [itemsPerPage, offset])
+				rows = await utils.sql.all("SELECT user_id, coins FROM money ORDER BY coins DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM money")).count
 			}
 
@@ -362,11 +332,11 @@ commands.assign([
 
 			if (rows.length) {
 				// Load usernames
-				const displayRows = await Promise.all(rows.map(async ({ userID, coins }, index) => {
-					const [tag, isBot] = await utils.cacheManager.users.get(userID, true, true)
+				const displayRows = await Promise.all(rows.map(async ({ user_id, coins }, index) => {
+					const [tag, isBot] = await utils.cacheManager.users.get(user_id, true, true)
 						// @ts-ignore
 						.then(user => [user.tag, user.bot])
-						.catch(() => [userID, false]) // fall back to userID if user no longer exists
+						.catch(() => [user_id, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
 					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(coins)} ${emojis.discoin}`
@@ -388,11 +358,6 @@ commands.assign([
 		aliases: ["give"],
 		category: "gambling",
 		examples: ["give half PapiOphidian"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
@@ -404,8 +369,8 @@ commands.assign([
 			if (member.id == msg.author.id) return msg.channel.send(lang.gambling.give.prompts.cannotGiveSelf)
 			const [authorCoins, memsettings, guildsettings] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),
-				utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [member.id, "gamblingalert"]),
-				utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "gamblingalert"])
+				utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [member.id, "gamblingalert"]),
+				utils.sql.get("SELECT * FROM settings_guild WHERE key_id = $1 AND setting = $2", [msg.guild.id, "gamblingalert"])
 			])
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
@@ -441,11 +406,6 @@ commands.assign([
 		aliases: ["wheel", "wof"],
 		category: "gambling",
 		examples: ["wheel 1000"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)

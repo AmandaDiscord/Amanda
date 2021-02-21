@@ -21,6 +21,7 @@ module.exports = {
 	// Environment
 	machine_id: "lmao_dev_compname",
 	mysql_domain: "example.com",
+	sql_domain: "example.com",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	cache_server_protocol: "http",

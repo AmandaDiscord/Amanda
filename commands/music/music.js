@@ -488,14 +488,14 @@ commands.assign([
 			} else if (suffix == "new") {
 				await deleteAll()
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
-				await utils.sql.all("INSERT INTO WebTokens VALUES (?, ?, ?)", [msg.author.id, hash, 1])
+				await utils.sql.all("INSERT INTO web_tokens (user_id, token, staging) VALUES ($1, $2, $3)", [msg.author.id, hash, 1])
 				send(utils.replace(lang.audio.token.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
 				).then(() => {
 					return send(`\`${hash}\``, false, false)
 				// eslint-disable-next-line no-empty-function
 				}).catch(() => {})
 			} else {
-				const existing = await utils.sql.get("SELECT * FROM WebTokens WHERE userID = ?", msg.author.id)
+				const existing = await utils.sql.get("SELECT * FROM web_tokens WHERE user_id = $1", msg.author.id)
 				if (existing) {
 					send(lang.audio.token.returns.generated, true, true).then(() => {
 						send(`\`${existing.token}\``, false, false)
@@ -505,7 +505,7 @@ commands.assign([
 			}
 
 			function deleteAll() {
-				return utils.sql.all("DELETE FROM WebTokens WHERE userID = ?", msg.author.id)
+				return utils.sql.all("DELETE FROM web_tokens WHERE user_id = $1", msg.author.id)
 			}
 
 			function send(text, announce = true, throwFailed = false) {

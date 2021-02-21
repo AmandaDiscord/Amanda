@@ -110,20 +110,20 @@ function emojiURL(id, animated = false) {
 async function resolveWebhookMessageAuthor(msg) {
 	const { cacheManager } = require("./cachemanager") // lazy require
 	const row = await sql.get(
-		"SELECT userID, user_username, user_discriminator FROM WebhookAliases \
-		WHERE webhookID = ? AND webhook_username = ?",
+		"SELECT user_id, user_username, user_discriminator FROM webhook_aliases \
+		WHERE webhook_id = $1 AND webhook_username = $2",
 		[msg.webhookID, msg.author.username]
 	)
 	if (!row) return null
 	/** @type {Discord.User} */
 	let newAuthor
 	let newUserData
-	await cacheManager.users.get(row.userID, true).then(m => {
+	await cacheManager.users.get(row.user_id, true).then(m => {
 		// @ts-ignore
 		newAuthor = m
 	}).catch(() => {
 		newUserData = {
-			id: row.userID,
+			id: row.user_id,
 			bot: false,
 			username: row.user_username,
 			discriminator: row.user_discriminator,
@@ -163,14 +163,14 @@ async function contentify(channel, content) {
  * @returns {Promise<{ allowed: boolean, ban?: "temporary" | "permanent", reason?: string }>}
  */
 async function rateLimiter(id, msg) {
-	const banned = await sql.get("SELECT * FROM Bans WHERE userID =?", id)
+	const banned = await sql.get("SELECT * FROM bans WHERE user_id = $1", id)
 	const tempmsg = `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} temporarily banned from using commands.`
 	if (banned) {
 		if (banned.temporary && msg) {
 			if (banned.expires <= Date.now()) {
 				await Promise.all([
-					sql.all("DELETE FROM Bans WHERE userID =?", id),
-					sql.all("DELETE FROM Timeouts WHERE userID =?", id)
+					sql.all("DELETE FROM bans WHERE user_id = $1", id),
+					sql.all("DELETE FROM timeouts WHERE user_id = $1", id)
 				])
 				return { allowed: true }
 			} else return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(banned.expires).toUTCString()}` }
@@ -178,24 +178,24 @@ async function rateLimiter(id, msg) {
 		else return { allowed: false }
 	}
 	const [timer, premium] = await Promise.all([
-		sql.get("SELECT * FROM Timeouts WHERE userID =?", id),
-		sql.get("SELECT * FROM Premium WHERE userID =?", id)
+		sql.get("SELECT * FROM timeouts WHERE user_id = $1", id),
+		sql.get("SELECT * FROM premium WHERE user_id = $1", id)
 	])
 	if (premium) return { allowed: true }
 	if (timer) {
 		if (timer.expires <= Date.now()) {
-			await sql.all("DELETE FROM Timeouts WHERE userID =?", id)
+			await sql.all("DELETE FROM timeouts WHERE user_id = $1", id)
 			return { allowed: true }
 		}
 		if (timer.amount > 6) {
 			const expiresAt = Date.now() + (1000 * 60 * 60)
-			await sql.all("INSERT INTO Bans (userID, temporary, expires) VALUES (?, ?, ?)", [id, 1, expiresAt])
+			await sql.all("INSERT INTO bans (user_id, temporary, expires) VALUES ($1, $2, $3)", [id, 1, expiresAt])
 			return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(expiresAt).toUTCString()}` }
 		}
 		return { allowed: false, reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} on a command cooldown. You can use commands again in ${shortTime(timer.expires - Date.now(), "ms")}` }
 	} else {
 		const expiresAt = Date.now() + (1000 * 5)
-		await sql.all("REPLACE INTO Timeouts (userID, expires, amount) VALUES (?, ?, ?)", [id, expiresAt, 1])
+		await sql.all("INSERT INTO timeouts (user_id, expires, amount) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires = $2, amount = $3", [id, expiresAt, 1])
 		return { allowed: true }
 	}
 }

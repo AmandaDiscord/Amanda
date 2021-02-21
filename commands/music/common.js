@@ -42,7 +42,7 @@ class VoiceStateCallback {
 	 */
 	async trigger(voiceChannel) {
 		let lang
-		const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [this.msg.author.id, "language"])
+		const selflang = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [this.msg.author.id, "language"])
 		if (selflang) lang = await utils.getLang(this.msg.author.id, "self")
 		else if (this.msg.guild) lang = await utils.getLang(this.msg.guild.id, "guild")
 		else lang = await utils.getLang(this.msg.author.id, "self")

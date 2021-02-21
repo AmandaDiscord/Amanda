@@ -51,7 +51,7 @@ class PeriodicHistory {
 		})
 
 		this.fetch = new utils.AsyncValueCache(async () => {
-			const rows = await utils.sql.all("SELECT field, timestamp FROM PeriodicHistory")
+			const rows = await utils.sql.all("SELECT field, timestamp FROM periodic_history")
 			// TODO: also sweep the database
 			rows.forEach(row => {
 				const queue = this.getOrCreate(row.field)
@@ -77,7 +77,7 @@ class PeriodicHistory {
 	add(field, timestamp) {
 		const queue = this.getOrCreate(field)
 		queue.add(timestamp)
-		return utils.sql.all("insert into PeriodicHistory (field, timestamp) values (?, ?)", [field, Date.now()])
+		return utils.sql.all("insert into periodic_history (field, timestamp) values ($1, $2)", [field, Date.now()])
 	}
 
 	/**
@@ -109,7 +109,7 @@ class PeriodicHistory {
 		for (const field of this.store.keys()) {
 			const queue = this.store.get(field)
 			const removed = queue.sweep()
-			if (removed || force) utils.sql.all("DELETE FROM PeriodicHistory WHERE field = ? AND timestamp < ?", [field, Date.now() - queue.ttl])
+			if (removed || force) utils.sql.all("DELETE FROM periodic_history WHERE field = $1 AND timestamp < $2", [field, Date.now() - queue.ttl])
 		}
 	}
 }

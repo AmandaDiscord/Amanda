@@ -23,7 +23,7 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(`${msg.author.username}, that is not a valid user.`)
-			const info = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id])
+			const info = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id)
 			if (!info) return msg.channel.send("No couple info.")
 			/** @type {Discord.User} */
 			let user1
@@ -41,7 +41,7 @@ commands.assign([
 			} else if (!user1) user1 = await utils.cacheManager.users.get(info.user1, true, true)
 			// @ts-ignore
 			else if (!user2) user2 = await utils.cacheManager.users.get(info.user2, true, true)
-			const marriedAt = new Date(info.marriedAt)
+			const marriedAt = new Date(info.married_at)
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(`Couple info for ${user1.tag} and ${user2.tag}`)
 				.addFields([
@@ -77,16 +77,16 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix)
 			if (!user) return msg.channel.send(`${msg.author.tag}, that is not a valid user.`)
 			const [authorrel, userrel, proposed, memsettings, guildsettings] = await Promise.all([
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
-				utils.sql.get("SELECT * FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id]),
-				utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "waifualert"]),
-				msg.guild ? utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"]) : Promise.resolve(null)
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
+				utils.sql.get("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id]),
+				utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [user.id, "waifualert"]),
+				msg.guild ? utils.sql.get("SELECT * FROM settings_guild WHERE key_id = $1 AND setting = $2", [msg.guild.id, "waifualert"]) : Promise.resolve(null)
 			])
 			if (authorrel) return msg.channel.send(`${msg.author.username}, you are already married.`)
 			if (userrel) return msg.channel.send(`${msg.author.username}, ${user.username} is already married.`)
 			if (proposed) return msg.channel.send(`${msg.author.username}, you're already proposed to ${user.tag}.`)
-			await utils.sql.all("INSERT INTO PendingRelations (user1, user2) VALUES (?, ?)", [msg.author.id, user.id])
+			await utils.sql.all("INSERT INTO pending_relations (user1, user2) VALUES ($1, $2)", [msg.author.id, user.id])
 			msg.channel.send(`${msg.author.username} has succesfully proposed to ${user.tag}. They can use \`&accept ${msg.author.tag}\` or \`&decline ${msg.author.tag}\` to marry or decline`)
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
@@ -111,9 +111,9 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix)
 			if (!user) return msg.channel.send(`${msg.author.tag}, that is not a valid user.`)
 			const [authorrel, userrel, pending] = await Promise.all([
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
-				utils.sql.get("SELECT * FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id])
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
+				utils.sql.get("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id])
 			])
 			if (!pending) return msg.channel.send(`${msg.author.username}, ${user.tag} has not proposed to you yet.`)
 			if (pending.user1 === msg.author.id) return msg.channel.send(`${msg.author.username}, you cannot accept your own proposal.`)
@@ -127,11 +127,11 @@ commands.assign([
 				msg.channel.send(`${msg.author.username}, ${user.username} is already married to someone.`)
 			}
 			if (del) {
-				return utils.sql.all("DELETE FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id])
+				return utils.sql.all("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id])
 			}
 			await Promise.all([
-				utils.sql.all("DELETE FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id]),
-				utils.sql.all("INSERT INTO Couples (user1, user2) VALUES (?, ?)", [msg.author.id, user.id])
+				utils.sql.all("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id]),
+				utils.sql.all("INSERT INTO couples (user1, user2) VALUES ($1, $2)", [msg.author.id, user.id])
 			])
 			return msg.channel.send(`${msg.author.username} is now married to ${user.tag}.`)
 		}
@@ -151,9 +151,9 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix)
 			if (!user) return msg.channel.send(`${msg.author.tag}, that is not a valid user.`)
 			const [authorrel, userrel, pending] = await Promise.all([
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
-				utils.sql.get("SELECT * FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id])
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
+				utils.sql.get("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id])
 			])
 			if (!pending) return msg.channel.send(`${msg.author.username}, ${user.tag} has not proposed to you yet.`)
 			if (pending.user1 === msg.author.id) return msg.channel.send(`${msg.author.username}, you cannot decline your own proposal.`)
@@ -167,11 +167,11 @@ commands.assign([
 				msg.channel.send(`${msg.author.username}, ${user.username} is already married.`)
 			}
 			if (del) {
-				return utils.sql.all("DELETE FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id])
+				return utils.sql.all("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id])
 			}
 			await Promise.all([
-				utils.sql.all("DELETE FROM PendingRelations WHERE (user1 =? OR user2 =?) AND (user1 =? OR user2 =?)", [msg.author.id, msg.author.id, user.id, user.id]),
-				utils.sql.all("DELETE FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, user.id])
+				utils.sql.all("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id]),
+				utils.sql.all("DELETE FROM couples WHERE user1 = $1 OR user2 = $2", [msg.author.id, user.id])
 			])
 			return msg.channel.send(`${msg.author.username} has declined ${user.tag}'s marriage proposal.`)
 		}
@@ -183,7 +183,7 @@ commands.assign([
 		category: "couples",
 		examples: ["divorce I'm sorry"],
 		async process(msg, suffix, lang) {
-			const married = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
+			const married = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id)
 			if (!married) return msg.channel.send(`${msg.author.username}, you are not married to anyone`)
 			const otherid = married.user1 === msg.author.id ? married.user2 : married.user1
 			/** @type {Discord.User} */
@@ -192,14 +192,14 @@ commands.assign([
 			const faces = ["( ≧Д≦)", "●︿●", "(  ❛︵❛.)", "╥﹏╥", "(っ◞‸◟c)"]
 			const face = utils.arrayRandom(faces)
 			await Promise.all([
-				utils.sql.all("DELETE FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
+				utils.sql.all("DELETE FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
 				married.balance ? utils.coinsManager.award(otherid, married.balance) : Promise.resolve(null)
 			])
 			msg.channel.send(utils.replace(lang.couples.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": partner.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
-			const memsettings = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [otherid, "waifualert"])
+			const memsettings = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [otherid, "waifualert"])
 			let guildsettings
 			const memlang = await utils.getLang(otherid, "self")
-			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM SettingsGuild WHERE keyID =? AND setting =?", [msg.guild.id, "waifualert"])
+			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM settings_guild WHERE key_id $1 AND setting $2", [msg.guild.id, "waifualert"])
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
 				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.couples.divorce.prompts.dmFailed))
@@ -221,7 +221,7 @@ commands.assign([
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(`${msg.author.tag}, that is not a valid user.`)
-			const row = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id])
+			const row = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id)
 			if (!row) {
 				if (user.id === msg.author.id) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
 				else return msg.channel.send(`${msg.author.username}, that person is not married to anyone.`)
@@ -257,7 +257,7 @@ commands.assign([
 		category: "couples",
 		examples: ["withdraw 69"],
 		async process(msg, suffix, lang) {
-			const row = await utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id])
+			const row = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id)
 			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
 			if (row.balance === 0) return msg.channel.send(`${msg.author.username}, there is no money to withdraw.`)
 			let amount
@@ -275,7 +275,7 @@ commands.assign([
 			}
 			if (amount > row.balance) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
 			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =?, marriedAt =? WHERE (user1 =? OR user2 =?)", [row.balance - amount, row.marriedAt, msg.author.id, msg.author.id]),
+				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [row.balance - amount, row.married_at, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} to your balance.`)
@@ -289,7 +289,7 @@ commands.assign([
 		examples: ["deposit 5000"],
 		async process(msg, suffix, lang) {
 			const [row, money] = await Promise.all([
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [msg.author.id, msg.author.id]),
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
 				utils.coinsManager.get(msg.author.id)
 			])
 			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
@@ -309,7 +309,7 @@ commands.assign([
 				amount = num
 			}
 			await Promise.all([
-				utils.sql.all("UPDATE Couples SET balance =?, marriedAt =? WHERE (user1 =? OR user2 =?)", [row.balance + amount, row.marriedAt, msg.author.id, msg.author.id]),
+				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [row.balance + amount, row.married_at, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, -amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} from your balance.`)
@@ -352,10 +352,10 @@ commands.assign([
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
 				const memberIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
-				rows = await utils.sql.all(`SELECT * FROM Couples WHERE (user1 OR user2) IN (${Array(memberIDs.length).fill("?").join(", ")}) ORDER BY balance DESC LIMIT ? OFFSET ?`, [...memberIDs, itemsPerPage, offset])
-				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM Couples WHERE (user1 OR user2) IN (${Array(memberIDs.length).fill("?").join(", ")})`, memberIDs)).count
+				rows = await utils.sql.all(`SELECT * FROM couples WHERE (user1 OR user2) IN (${memberIDs.map((it, ind) => `$${ind + 1}`).join(", ")}) ORDER BY balance DESC LIMIT $${memberIDs.length + 1} OFFSET ${memberIDs.length + 2}`, [...memberIDs, itemsPerPage, offset])
+				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM couples WHERE (user1 OR user2) IN (${memberIDs.map((it, ind) => `$${ind + 1}`).join(", ")})`, memberIDs)).count
 			} else {
-				rows = await utils.sql.all("SELECT * FROM Couples ORDER BY balance DESC LIMIT ? OFFSET ?", [itemsPerPage, offset])
+				rows = await utils.sql.all("SELECT * FROM couples ORDER BY balance DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM Couples")).count
 			}
 

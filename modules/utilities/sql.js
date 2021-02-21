@@ -7,27 +7,31 @@ const { db } = passthrough
 
 /**
  * @param {string} string
- * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
- * @param {import("mysql2/promise").Pool|import("mysql2/promise").PoolConnection} [connection=undefined]
+ * @param {string|number|symbol|Array<string|number|symbol>} [prepared=undefined]
+ * @param {import("pg").PoolClient} [connection=undefined]
  * @param {number} [attempts=2]
- * @returns {Promise<Array<import("mysql2/promise").RowDataPacket>>}
+ * @returns {Promise<Array<any>>}
  */
 function all(string, prepared = undefined, connection = undefined, attempts = 2) {
 	if (!connection) connection = db
-	if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
+	/** @type {Array<string|number|symbol>} */
+	let prep
+	if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
+	else if (prepared !== undefined && Array.isArray(prepared)) prep = prepared
+
 	return new Promise((resolve, reject) => {
 		if (Array.isArray(prepared) && prepared.includes(undefined)) {
 			return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
 		}
-		connection.execute(string, prepared).then(result => {
-			const rows = result[0]
-			// @ts-ignore
+		const query = { text: string, values: prep }
+		connection.query(Array.isArray(prep) ? query : query.text).then(result => {
+			const rows = result.rows
 			resolve(rows)
 		}).catch(err => {
 			console.error(err)
 			attempts--
 			console.log(string, prepared)
-			if (attempts) all(string, prepared, connection, attempts).then(resolve).catch(reject)
+			if (attempts) all(string, prep, connection, attempts).then(resolve).catch(reject)
 			else reject(err)
 		})
 	})
@@ -36,15 +40,12 @@ function all(string, prepared = undefined, connection = undefined, attempts = 2)
 /**
  * @param {string} string
  * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
- * @param {import("mysql2/promise").Pool|import("mysql2/promise").PoolConnection} [connection=undefined]
- * @returns {Promise<import("mysql2/promise").RowDataPacket>}
+ * @param {import("pg").PoolClient} [connection=undefined]
+ * @returns {Promise<any>}
  */
-function get(string, prepared = undefined, connection = undefined) {
-	return all(string, prepared, connection).then(rows => rows[0])
-}
-
-function getConnection() {
-	return db.getConnection()
+async function get(string, prepared = undefined, connection = undefined) {
+	const rows = await all(string, prepared, connection)
+	return rows[0]
 }
 
 /**
@@ -53,12 +54,11 @@ function getConnection() {
  * @returns {Promise<boolean>}
  */
 async function hasPermission(user, permission) {
-	let result = await get(`SELECT ${permission} FROM UserPermissions WHERE userID = ?`, user.id)
+	let result = await get(`SELECT ${permission} FROM user_permissions WHERE user_id = $1`, user.id)
 	if (result) result = Object.values(result)[0]
 	return !!result
 }
 
 module.exports.all = all
 module.exports.get = get
-module.exports.getConnection = getConnection
 module.exports.hasPermission = hasPermission

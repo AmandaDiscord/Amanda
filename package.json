@@ -21,7 +21,6 @@
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#f67a1d6e94ff4caa10c39fa1e3b33b564b2954de",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
-    "@types/centra": "^2.2.0",
     "centra": "^2.4.2",
     "cloudstorm": "github:AmandaDiscord/CloudStorm#e1fb78433c915d0ca80d56606f1f66a5b9f1de80",
     "discord-bot-analytics": "^1.0.14",
@@ -38,9 +37,10 @@
     "mysql2": "^2.2.5",
     "nedb-promises": "^4.1.1",
     "node-ipc": "^9.1.3",
+    "pg": "^8.5.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "raincache": "github:AmandaDiscord/RainCache#62db17f3f67edfe268670d09f9611add1b31408c",
-    "simple-git": "^2.31.0",
+    "simple-git": "^2.35.0",
     "simple-youtube-api": "^5.2.1",
     "snowgate": "github:AmandaDiscord/SnowGate#74a652149dd43ff1604bc069c2f568e417d9b6a6",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#7d1c3d99a93da98ca72ed4117b07a31491db2a44",
@@ -48,10 +48,11 @@
     "thunderstorm": "github:AmandaDiscord/ThunderStorm#274c4fb14bfdcbcaa7fd38afc252031fcda222d1"
   },
   "devDependencies": {
+    "@types/centra": "^2.2.0",
     "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
     "@types/node": "^14.14.3",
-    "eslint": "^7.19.0",
+    "eslint": "^7.20.0",
     "tap": "^14.11.0",
-    "typescript": "~4.1.3"
+    "typescript": "~4.1.5"
   }
 }

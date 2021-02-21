@@ -15,10 +15,6 @@ commands.assign([
 		description: "Link a webhook account to your account. The webhook will be able to act as you.",
 		aliases: ["webhookalias"],
 		category: "admin",
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 */
 		process(msg, suffix) {
 			const messageID = suffix
 			new Promise((resolve, reject) => {
@@ -37,8 +33,8 @@ commands.assign([
 								msg.channel.send("That's not the right confirmation code.")
 							} else {
 								utils.sql.all(
-									"INSERT INTO WebhookAliases (webhookID, webhook_username, userID, user_username, user_discriminator) \
-									VALUES (?, ?, ?, ?, ?)",
+									"INSERT INTO webhook_aliases (webhook_id, webhook_username, user_id, user_username, user_discriminator) \
+									VALUES ($1, $2, $3, $4, $5)",
 									[link.webhookID, link.author.username, msg.author.id, msg.author.username, msg.author.discriminator]
 								)
 								msg.channel.send("Alias created. The webhook can now act as you.")

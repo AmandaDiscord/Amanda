@@ -4,7 +4,7 @@ const path = require("path")
 const events = require("events")
 const workers = require("worker_threads")
 
-const mysql = require("mysql2/promise")
+const Postgres = require("pg")
 const YouTube = require("simple-youtube-api")
 const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
@@ -35,22 +35,21 @@ const internalEvents = new events.EventEmitter()
 
 reloader.reloadEvent.setMaxListeners(20)
 
-const db = mysql.createPool({
-	host: config.mysql_domain,
+const pool = new Postgres.Pool({
+	host: config.sql_domain,
 	user: "amanda",
 	password: config.mysql_password,
-	database: "money",
-	connectionLimit: 5
-});
+	database: "main",
+	max: 5
+})
 
-(async () => {
+;(async () => {
 	// DB
 
-	await Promise.all([
-		db.query("SET NAMES 'utf8mb4'"),
-		db.query("SET CHARACTER SET utf8mb4"),
-		client.rain.initialize()
-	])
+	const db = await pool.connect()
+	console.log("Connected to database")
+
+	await client.rain.initialize()
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
 

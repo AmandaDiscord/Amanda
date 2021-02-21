@@ -34,10 +34,10 @@ async function sendStats(msg) {
 	const now = Date.now()
 	const myid = client.user.id
 	const ramUsageKB = Math.floor(stats.ram / 1024)
-	const shard = 0
+	const shard = config.shard_list[0]
 	await utils.sql.all(
-		"INSERT INTO StatLogs (time, id, ramUsageKB, users, guilds, channels, voiceConnections, uptime, shard) \
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+		"INSERT INTO stat_logs (time, id, ram_usage_kb, users, guilds, channels, voice_connections, uptime, shard) \
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
 		, [now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
 	)
 	if (msg) msg.react("👌")
@@ -45,32 +45,33 @@ async function sendStats(msg) {
 }
 
 async function updateCache() {
-	const backgroundRows = await utils.sql.all("SELECT keyID, value FROM SettingsSelf WHERE setting = 'profilebackground'")
-	const mineRows = await utils.sql.all("SELECT userID, url FROM BackgroundSync WHERE machineID = ?", config.machine_id)
+	const backgroundRows = await utils.sql.all("SELECT key_id, value FROM settings_self WHERE setting = 'profilebackground'")
+	const mineRows = await utils.sql.all("SELECT user_id, url FROM background_sync WHERE machine_id = $1", config.machine_id)
 	const mineMap = new Map(mineRows.map(r => [r.userID, r.url]))
 	const updatedPrepared = []
 	let updatedQuery = ""
+	let amnt = 1
 	await Promise.all(backgroundRows.map(async row => {
-		const mine = mineMap.get(row.keyID)
+		const mine = mineMap.get(row.key_id)
 		if (!mine || mine !== row.value) {
 			let image
 			try {
 				image = await Jimp.read(row.value)
 			} catch (e) {
-				// await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = ? AND keyID = ?", ["profilebackground", row.keyID])
-				return console.log(`Image cache update for ${row.keyID} failed. Deleted entry`)
+				// await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = $1 AND keyID = $2", ["profilebackground", row.keyID])
+				return console.log(`Image cache update for ${row.key_id} failed. Deleted entry`)
 			}
 			image.cover(800, 500)
 			// jimp automatically converts the buffer to the format specified by the file extension
-			await image.writeAsync(`./images/backgrounds/cache/${row.keyID}.png`)
-			updatedPrepared.push(config.machine_id, row.keyID, row.value)
+			await image.writeAsync(`./images/backgrounds/cache/${row.key_id}.png`)
+			updatedPrepared.push(config.machine_id, row.key_id, row.value)
 			if (updatedQuery) updatedQuery += ", "
-			updatedQuery += "(?, ?, ?)"
-			console.log(`Saved background for ${row.keyID}`)
+			updatedQuery += `($${amnt++}, $${amnt++}, $${amnt++})`
+			console.log(`Saved background for ${row.key_id}`)
 		}
 	}))
 	if (updatedPrepared.length) {
-		await utils.sql.all(`REPLACE INTO BackgroundSync (machineID, userID, url) VALUES ${updatedQuery}`, updatedPrepared)
+		await utils.sql.all(`INSERT INTO background_sync (machine_id, user_id, url) VALUES ${updatedQuery} ON CONFLICT (machine_id, user_id) DO NOTHING`, updatedPrepared)
 		console.log("Background cache update complete")
 	} else {
 		console.log("No changes to backgrounds since last call")
@@ -283,7 +284,7 @@ commands.assign([
 		category: "admin",
 		examples: ["restartnotify"],
 		async process(msg, suffix, lang) {
-			await utils.sql.all("REPLACE INTO RestartNotify VALUES (?, ?, ?)", [client.user.id, msg.author.id, msg.channel.id])
+			await utils.sql.all("INSERT INTO restart_notify (bot_id, mention_id, channel_id) VALUES ($1, $2, $3) ON CONFLICT (bot_id, mention_id) DO UPDATE SET channel_id = $3", [client.user.id, msg.author.id, msg.channel.id])
 			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, 0x00000040))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
@@ -535,14 +536,14 @@ commands.assign([
 			await msg.channel.sendTyping()
 
 			let themeoverlay = "profile"
-			const themedata = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "profiletheme"])
+			const themedata = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID = $1 AND setting = $2", [user.id, "profiletheme"])
 			if (themedata && themedata.value && themedata.value == "light") themeoverlay = "profile-light"
 
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
 				utils.sql.hasPermission(user, "owner"),
-				utils.sql.get("SELECT * FROM Premium WHERE userID =?", user.id),
+				utils.sql.get("SELECT * FROM premium WHERE user_id = $1", user.id),
 				utils.coinsManager.getRow(user.id),
-				utils.sql.get("SELECT * FROM Couples WHERE user1 =? OR user2 =?", [user.id, user.id]),
+				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
 				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
 				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "badge-giver4", "discoin"]),
 				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
@@ -584,20 +585,20 @@ commands.assign([
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
 			let giverImage
-			if (money.givencoins >= giverTier4) giverImage = images.get("badge-giver4").clone()
-			else if (money.givencoins >= giverTier3) giverImage = images.get("badge-giver3").clone()
-			else if (money.givencoins >= giverTier2) giverImage = images.get("badge-giver2").clone()
-			else if (money.givencoins >= giverTier1) giverImage = images.get("badge-giver1").clone()
+			if (money.given_coins >= giverTier4) giverImage = images.get("badge-giver4").clone()
+			else if (money.given_coins >= giverTier3) giverImage = images.get("badge-giver3").clone()
+			else if (money.given_coins >= giverTier2) giverImage = images.get("badge-giver2").clone()
+			else if (money.given_coins >= giverTier1) giverImage = images.get("badge-giver1").clone()
 
 
 			async function getDefaultBG() {
-				const attempt = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "defaultprofilebackground"])
+				const attempt = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [user.id, "defaultprofilebackground"])
 				if (attempt && attempt.value && attempt.value != "default") return images.get(`canvas-${attempt.value}`).clone()
 				else return images.get("canvas").clone()
 			}
 
 			async function getOverlay() {
-				const attempt = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [user.id, "profilestyle"])
+				const attempt = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [user.id, "profilestyle"])
 				if (attempt && attempt.value && attempt.value != "new") return { style: "old", image: images.get(`old-${themeoverlay}`).clone() }
 				else return { style: "new", image: images.get(themeoverlay).clone() }
 			}
@@ -720,7 +721,7 @@ commands.assign([
 				}
 			}
 
-			const tableNames = { self: "SettingsSelf", server: "SettingsGuild" }
+			const tableNames = { self: "settings_self", server: "settings_guild" }
 
 			let scope = args[0].toLowerCase()
 			scope = Discord.Util.escapeMarkdown(scope)
@@ -731,7 +732,7 @@ commands.assign([
 			let settingName = args[1] ? args[1].toLowerCase() : ""
 			settingName = Discord.Util.escapeMarkdown(settingName)
 			if (args[1] == "view") {
-				const all = await utils.sql.all(`SELECT * FROM ${tableName} WHERE keyID =?`, keyID)
+				const all = await utils.sql.all(`SELECT * FROM ${tableName} WHERE key_id = $1`, keyID)
 				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
@@ -747,7 +748,7 @@ commands.assign([
 
 			let value = args[2]
 			if (!value) {
-				const row = await utils.sql.get(`SELECT value FROM ${tableName} WHERE keyID = ? AND setting = ?`, [keyID, settingName])
+				const row = await utils.sql.get(`SELECT value FROM ${tableName} WHERE key_id = $1 AND setting = $2`, [keyID, settingName])
 				if (scope == "server") {
 					value = row ? row.value : setting.default
 					if (setting.type == "boolean") value = `${(!!+value)}`
@@ -755,7 +756,7 @@ commands.assign([
 					else return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueInherited, { "setting": settingName, "value": value }))
 				} else if (scope == "self") {
 					let serverRow
-					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM SettingsGuild WHERE keyID = ? AND setting = ?", [msg.guild.id, settingName])
+					if (msg.channel.type == "text") serverRow = await utils.sql.get("SELECT value FROM settings_guild WHERE key_id = $1 AND setting = $2", [msg.guild.id, settingName])
 					let values = [
 						setting.default,
 						serverRow ? serverRow.value : null,
@@ -781,7 +782,7 @@ commands.assign([
 						return msg.channel.send(lang.configuration.settings.prompts.noBackground)
 					}
 				}
-				await utils.sql.all(`DELETE FROM ${tableName} WHERE keyID = ? AND setting = ?`, [keyID, settingName])
+				await utils.sql.all(`DELETE FROM ${tableName} WHERE key_id = $1 AND setting = $2`, [keyID, settingName])
 				return msg.channel.send(lang.configuration.settings.returns.deleted)
 			}
 
@@ -789,7 +790,7 @@ commands.assign([
 				await msg.channel.sendTyping()
 				const [isEval, isPremium] = await Promise.all([
 					utils.sql.hasPermission(msg.author, "owner"),
-					utils.sql.get("SELECT * FROM Premium WHERE userID =?", msg.author.id)
+					utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 				])
 				let allowed = false
 				if (isEval) allowed = true
@@ -799,7 +800,7 @@ commands.assign([
 				if (!link) {
 					const choices = ["default", "vicinity", "sakura"]
 					if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a background of ${choices.join(" or ")}`)
-					await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "defaultprofilebackground", value])
+					await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, "defaultprofilebackground", value])
 					return msg.channel.send(lang.configuration.settings.returns.updated)
 				}
 				if (msg.attachments[0]) value = msg.attachments[0].url
@@ -824,8 +825,8 @@ commands.assign([
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
 				await fs.promises.writeFile(`./images/backgrounds/cache/${msg.author.id}.png`, buffer)
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
-				await utils.sql.all("REPLACE INTO BackgroundSync (machineID, userID, url) VALUES (?, ?, ?)", [config.machine_id, keyID, value])
+				await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, settingName, value])
+				await utils.sql.all("INSERT INTO background_sync (machine_id, user_id, url) VALUES ($1, $2, $3) ON CONFLICT (machine_id, user_id) DO UPDATE SET url = $3", [config.machine_id, keyID, value])
 				ipc.replier.sendBackgroundUpdateRequired()
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
@@ -833,21 +834,21 @@ commands.assign([
 			if (settingName == "profiletheme") {
 				const choices = ["dark", "light"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a theme of ${choices.join(" or ")}`)
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "profiletheme", value])
+				await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, "profiletheme", value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (settingName == "profilestyle") {
 				const choices = ["new", "old"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a style of ${choices.join(" or ")}`)
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, "profilestyle", value])
+				await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, "profilestyle", value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
 			if (settingName == "language") {
 				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
 				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": `\n${codes.map(c => `\`${c}\``).join(", ")}` }))
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
+				await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, settingName, value])
 				const Lang = require("@amanda/lang")
 				const newlang = Lang[value.replace("-", "_")] || Lang.en_us
 				return msg.channel.send(newlang.configuration.settings.returns.updated)
@@ -857,13 +858,13 @@ commands.assign([
 				value = args[2].toLowerCase()
 				if (!["true", "false"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxBoolean, { "setting": settingName, "value": value }))
 				const value_result = args[2] == "true" ? "1" : "0"
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value_result])
+				await utils.sql.all(`INSERT INTO ${tableName} (keyId, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, settingName, value_result])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else if (setting.type == "string") {
 				value = args[2].toLowerCase()
 				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
-				await utils.sql.all(`REPLACE INTO ${tableName} (keyID, setting, value) VALUES (?, ?, ?)`, [keyID, settingName, value])
+				await utils.sql.all(`INSERT INTO ${tableName} (key_id, setting, value) VALUES ($1, $2, $3) ON CONFLICT (key_id, setting) DO UPDATE SET value = $3`, [keyID, settingName, value])
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else throw new Error(`Invalid reference data type for setting \`${settingName}\``)

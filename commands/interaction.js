@@ -164,20 +164,6 @@ for (const source of interactionSources) {
 	cmds.push(newCommand)
 }
 
-const attempts = [
-	(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g1, g2]),
-	(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid, count(GenderGifCharacters.gifid) as count from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (((gender like ? or gender = '*') and importance = 0) or ((gender like ? or gender = '*') and importance = 1)) group by GenderGifCharacters.gifid having count(GenderGifCharacters.gifid) >= 2", [type, g2, g1]),
-	(type, g1, g2) => utils.sql.all("select url, GenderGifCharacters.gifid from GenderGifsV2 inner join GenderGifCharacters on GenderGifsV2.gifid = GenderGifCharacters.gifid where type = ? and (gender like ? or gender = '*')", [type, (g2 == "_" ? g1 : g2)])
-]
-
-const genderMap = new Map([
-	["474711440607936512", "f"],
-	["474711506551046155", "m"],
-	["474711526247366667", "n"],
-	["316829871206563840", "f"],
-	["316829948616638465", "m"]
-])
-
 /**
  * @param {Discord.Message} msg
  * @param {string} suffix
@@ -194,23 +180,6 @@ async function doInteraction(msg, suffix, source, lang) {
 	if (typeof member != "string") {
 		if (member.user.id == msg.author.id) return msg.channel.send(utils.arrayRandom(responses))
 		if (member.user.id == client.user.id) return msg.channel.send(utils.replace(lang.interaction[source.name].returns.amanda, { "username": msg.author.username }))
-		/* if (source.traaOverride) {
-			const g1 = msg.member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
-			const g2 = member.roles.cache.map(r => genderMap.get(r.id)).find(r => r) || "_"
-			// console.log(msg.member.user.username, g1, member.user.username, g2)
-			if (g1 != "_" || g2 != "_") {
-				let found = false
-				let i = 0
-				while (!found && i < attempts.length) {
-					const rows = await attempts[i](source.name, g1, g2)
-					if (rows.length) {
-						fetched = Promise.resolve(utils.arrayRandom(rows).url)
-						found = true
-					}
-					i++
-				}
-			}
-		}*/
 	}
 	if (!fetched) {
 		if (source.shortcut == "nekos.life") {
@@ -247,7 +216,7 @@ async function doInteraction(msg, suffix, source, lang) {
  * @returns {Promise<string>}
  */
 async function getGif(type) {
-	const gif = await utils.sql.get("SELECT * FROM InteractionGifs WHERE type =? ORDER BY RAND() LIMIT 1", type)
+	const gif = await utils.sql.get("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RAND() LIMIT 1", type)
 	return gif.url
 }
 

@@ -78,9 +78,9 @@ commands.assign([
 
 async function refresh() {
 	const [_messages, _ranges, _users] = await Promise.all([
-		utils.sql.all("SELECT id, dates, users, message, type, demote FROM StatusMessages"),
-		utils.sql.all("SELECT label, startmonth, startday, endmonth, endday FROM StatusRanges"),
-		utils.sql.all("SELECT label, userID FROM StatusUsers")
+		utils.sql.all("SELECT id, dates, users, message, type, demote FROM status_messages"),
+		utils.sql.all("SELECT label, start_month, start_day, end_month, end_day FROM status_ranges"),
+		utils.sql.all("SELECT label, user_id FROM status_users")
 	])
 	messages = _messages
 	ranges = _ranges
@@ -100,7 +100,7 @@ internalEvents.once("prefixes", async (prefixes, statusPrefix) => {
 
 /** @return {Array<string>} */
 function getCurrentGroups() {
-	return users.filter(o => o.userID == client.user.id).map(o => o.label)
+	return users.filter(o => o.user_id == client.user.id).map(o => o.label)
 }
 
 function getCurrentRanges() {
@@ -113,25 +113,25 @@ function getCurrentRanges() {
 		// 2. If months specified and dates not, check month within range
 		// 3. If dates specified and months not, check dates within range
 		// 4. If nothing specified, date is always within range.
-		const monthSpecified = !(range.startmonth == null || range.endmonth == null)
-		const dateSpecified = !(range.startday == null || range.endday == null)
+		const monthSpecified = !(range.start_month == null || range.end_month == null)
+		const dateSpecified = !(range.start_day == null || range.end_day == null)
 		if (monthSpecified && dateSpecified) {
 			// Case 1
 			const startDate = new Date()
 			startDate.setHours(0, 0, 0)
-			startDate.setMonth(range.startmonth - 1, range.startday)
+			startDate.setMonth(range.start_month - 1, range.start_day)
 			const endDate = new Date()
 			endDate.setHours(0, 0, 0)
-			endDate.setMonth(range.endmonth - 1, range.endday)
+			endDate.setMonth(range.end_month - 1, range.end_day)
 			if (endDate < startDate) endDate.setFullYear(startDate.getFullYear() + 1)
 			endDate.setTime(endDate.getTime() + 1000 * 60 * 60 * 24)
 			return startDate <= date && endDate > date
 		} else if (monthSpecified) {
 			// Case 2
-			return range.startmonth <= currentMonth && range.endmonth >= currentMonth
+			return range.start_month <= currentMonth && range.end_month >= currentMonth
 		} else if (dateSpecified) {
 			// Case 3
-			return range.startday <= currentDate && range.endday >= currentDate
+			return range.start_day <= currentDate && range.end_day >= currentDate
 		} else {
 			// Case 4
 			return true

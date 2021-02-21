@@ -25,9 +25,9 @@ addTemporaryListener(reloadEvent, "@amanda/lang", path.basename(__filename), () 
 async function getLang(id, type) {
 	let code, row
 	if (type === "self") {
-		row = await sql.get("SELECT * FROM SettingsSelf WHERE keyID = ? AND setting = ?", [id, "language"])
+		row = await sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [id, "language"])
 	} else if (type === "guild") {
-		row = await sql.get("SELECT * FROM SettingsGuild WHERE keyID = ? AND setting = ?", [id, "language"])
+		row = await sql.get("SELECT * FROM settings_guild WHERE key_id = $1 AND setting = $2", [id, "language"])
 	}
 	if (row) {
 		code = row.value

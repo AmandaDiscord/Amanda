@@ -47,7 +47,7 @@ if (config.cluster_id === "pencil") {
 }
 async function autoPayTimeoutFunction() {
 	/** @type {Array<string>} */
-	const donors = await utils.sql.all("SELECT * FROM Premium").then(rows => rows.map(r => r.userID))
+	const donors = await utils.sql.all("SELECT * FROM premium").then(rows => rows.map(r => r.user_id))
 	for (const ID of donors) {
 		await utils.coinsManager.award(ID, 10000)
 	}
@@ -144,7 +144,7 @@ async function manageMessage(msg, isEdit = false) {
 		}
 	}
 	let lang
-	const selflang = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID =? AND setting =?", [msg.author.id, "language"])
+	const selflang = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [msg.author.id, "language"])
 	if (selflang) lang = await utils.getLang(msg.author.id, "self")
 	else if (msg.guild && msg.guild.id) lang = await utils.getLang(msg.guild.id, "guild")
 	else lang = await utils.getLang(msg.author.id, "self")
@@ -219,7 +219,7 @@ async function manageMessage(msg, isEdit = false) {
 async function manageReady() {
 	const firstStart = starting
 	starting = false
-	utils.sql.all("SELECT * FROM AccountPrefixes WHERE userID = ?", [client.user.id]).then(result => {
+	utils.sql.all("SELECT * FROM account_prefixes WHERE user_id = $1", client.user.id).then(result => {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
 		passthrough.statusPrefix = statusPrefix
@@ -234,8 +234,8 @@ async function manageReady() {
 		/** @type {[any, any]} */
 		// eslint-disable-next-line prefer-const
 		let [lavalinkNodes, lavalinkNodeRegions] = await Promise.all([
-			utils.sql.all("SELECT * FROM LavalinkNodes"),
-			utils.sql.all("SELECT * FROM LavalinkNodeRegions")
+			utils.sql.all("SELECT * FROM lavalink_nodes"),
+			utils.sql.all("SELECT * FROM lavalink_node_regions")
 		])
 		lavalinkNodes = lavalinkNodes.map(node => {
 			node = { ...node }
@@ -272,17 +272,17 @@ async function manageReady() {
 
 		await client.lavalink.connect()
 
-		utils.sql.all("SELECT * FROM RestartNotify WHERE botID = ?", [client.user.id]).then(result => {
+		utils.sql.all("SELECT * FROM restart_notify WHERE bot_id = $1", client.user.id).then(result => {
 			result.forEach(async row => {
 				/** @type {Discord.TextChannel} */
 				// @ts-ignore
-				const channel = await utils.cacheManager.channels.get(row.channelID, true, true)
-				if (channel) channel.send(`<@${row.mentionID}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
+				const channel = await utils.cacheManager.channels.get(row.channel_id, true, true)
+				if (channel) channel.send(`<@${row.mention_id}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {
-					new Discord.PartialUser({ id: row.mentionID }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mentionID}`))
+					new Discord.PartialUser({ id: row.mention_id }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mention_id}`))
 				}
 			})
-			utils.sql.all("DELETE FROM RestartNotify WHERE botID = ?", [client.user.id])
+			utils.sql.all("DELETE FROM restart_notify WHERE bot_id = $1", client.user.id)
 		})
 
 		passthrough.ipc.connect()
