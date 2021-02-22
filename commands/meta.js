@@ -38,7 +38,7 @@ async function sendStats(msg) {
 	await utils.sql.all(
 		"INSERT INTO stat_logs (time, id, ram_usage_kb, users, guilds, channels, voice_connections, uptime, shard) \
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
-		, [now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, stats.uptime, shard]
+		, [now, myid, ramUsageKB, stats.users, stats.guilds, stats.channels, stats.connections, Math.floor(stats.uptime), shard]
 	)
 	if (msg) msg.react("👌")
 	return console.log("Sent stats.", new Date().toUTCString())
