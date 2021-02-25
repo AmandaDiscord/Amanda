@@ -598,7 +598,7 @@ class SpotifySong extends YouTubeSong {
 					let decided = tracks[0]
 					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
 					if (found) decided = found
-					if (!decided.track) this.error = `Missing track for ${this.title}`
+					if (!decided || !decided.track) this.error = `Missing track for ${this.title}`
 					else {
 						this.id = decided.info.identifier
 						this.lengthSeconds = Math.round(decided.info.length / 1000)
