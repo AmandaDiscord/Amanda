@@ -40,18 +40,18 @@
     "node-ipc": "^9.1.3",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "raincache": "github:AmandaDiscord/RainCache#62db17f3f67edfe268670d09f9611add1b31408c",
-    "simple-git": "^2.31.0",
+    "simple-git": "^2.35.2",
     "simple-youtube-api": "^5.2.1",
     "snowgate": "github:AmandaDiscord/SnowGate#74a652149dd43ff1604bc069c2f568e417d9b6a6",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#a60ec27077ea49935e2ac34bcff6192211bd0217",
     "taihou": "^2.0.4",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#274c4fb14bfdcbcaa7fd38afc252031fcda222d1"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#408d4417a580f4d0c2369019abaee3d649de636f"
   },
   "devDependencies": {
     "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
-    "@types/node": "^14.14.3",
+    "@types/node": "^14.14.31",
     "eslint": "^7.19.0",
     "tap": "^14.11.0",
-    "typescript": "~4.1.3"
+    "typescript": "^4.1.5"
   }
 }
