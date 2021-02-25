@@ -26,8 +26,7 @@ process._ptcreated = true
  * @property {import("./modules/ipc/ipcbot")} ipc
  * @property {import("taihou")} weeb
  * @property {string} statusPrefix
- * @property {import("raincache")<import("raincache/src/connector/AmqpConnector"), import("raincache/src/connector/AmqpConnector")>} rain
- * @property {{ cache: import("./modules/managers/CacheRequester"), gateway: import("./modules/managers/GatewayRequester") }} workers
+ * @property {{ gateway: import("./modules/managers/GatewayRequester") }} workers
  * @property {{ jp: import("listensomemoe"), kp: import("listensomemoe") }} listenMoe
  */
 

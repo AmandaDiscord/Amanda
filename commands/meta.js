@@ -197,27 +197,6 @@ commands.assign([
 						}
 					])
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
-			} else if (suffix.toLowerCase() == "cache") {
-				const before = Date.now()
-				const stats = await passthrough.workers.cache.getStats()
-				const ram = stats.ram.rss - (stats.ram.heapTotal - stats.ram.heapUsed)
-				embed
-					.addFields([
-						{
-							name: leadingIdentity,
-							value: `**❯ ${lang.meta.statistics.returns.latency}:**\n${utils.numberComma(Date.now() - before)}ms\n`
-							+ `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stats.uptime, "sec")}\n`
-							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(ram)}\n`,
-							inline: true
-						},
-						{
-							name: leadingSpace,
-							value: `**❯ Current Operation Count:**\n${utils.numberComma(stats.activeOPs)}\n`
-							+ `**❯ Total Operations:**\n${utils.numberComma(stats.totalOPs)}`,
-							inline: true
-						}
-					])
-				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else {
 				const stats = await utils.getOwnStats()
 				const gateway = await passthrough.workers.gateway.getStats()
@@ -536,7 +515,7 @@ commands.assign([
 			await msg.channel.sendTyping()
 
 			let themeoverlay = "profile"
-			const themedata = await utils.sql.get("SELECT * FROM SettingsSelf WHERE keyID = $1 AND setting = $2", [user.id, "profiletheme"])
+			const themedata = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [user.id, "profiletheme"])
 			if (themedata && themedata.value && themedata.value == "light") themeoverlay = "profile-light"
 
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([

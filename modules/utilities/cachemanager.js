@@ -6,6 +6,7 @@ const passthrough = require("../../passthrough")
 const { client, constants } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
+const sql = require("./sql")
 
 const permissionstable = {
 	CREATE_INSTANT_INVITE: 0x00000001,
@@ -42,6 +43,13 @@ const permissionstable = {
 	ALL: 0x00000000
 }
 
+/**
+ * @param {import("thunderstorm/src/internal").InboundDataType} data
+ */
+async function process(data) {
+	void await data
+}
+
 for (const key of Object.keys(permissionstable)) {
 	if (key === "ALL") continue
 	permissionstable["ALL"] = permissionstable["ALL"] | permissionstable[key]
@@ -54,9 +62,7 @@ const channelManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		/** @type {import("@amanda/discordtypings").ChannelData} */
-		// @ts-ignore
-		const d = await client.rain.cache.channel.get(id)
+		const d = null
 		if (d) {
 			if (convert) return channelManager.parse(d)
 			else return d
@@ -76,7 +82,7 @@ const channelManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
-		if (d && d.id) await client.rain.cache.channel.update(d.id, d)
+		if (d && d.id) undefined
 		return d || null
 	},
 	/**
@@ -147,7 +153,7 @@ const channelManager = {
 			limit
 		}
 		if (guild_id) payload.guild_id = guild_id
-		const ds = await passthrough.workers.cache.getData({ op: "FILTER_CHANNELS", params: payload })
+		const ds = []
 		return ds
 	},
 	parse: function(channel) {
@@ -179,7 +185,7 @@ const channelManager = {
 	 */
 	getOverridesFor: async function(channel) {
 		const value = { allow: 0x00000000, deny: 0x00000000 }
-		const perms = await client.rain.cache.permOverwrite.get(client.user.id, channel.id)
+		const perms = null
 		if (perms) {
 			// @ts-ignore
 			value.allow |= (perms.allow || 0)
@@ -241,7 +247,7 @@ const userManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		let d = await client.rain.cache.user.get(id)
+		let d = null
 		if (d) {
 			const o = d.boundObject ? d.boundObject : d
 			// @ts-ignore
@@ -263,7 +269,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		if (d) await client.rain.cache.user.update(d.id, d)
+		if (d) undefined
 		return d || null
 	},
 	/**
@@ -333,7 +339,7 @@ const userManager = {
 	 * @param {number} [limit]
 	 */
 	filter: async function(search, limit = 10) {
-		const ds = await passthrough.workers.cache.getData({ op: "FILTER_USERS", params: { username: search, id: search, discriminator: search, tag: search, limit } })
+		const ds = []
 		return ds
 	},
 	parse: function(user) {
@@ -350,7 +356,7 @@ const memberManager = {
 	 */
 	get: async function(id, guildID, fetch = false, convert = true) {
 		const [md, ud] = await Promise.all([
-			client.rain.cache.member.get(id, guildID),
+			Promise.resolve(null),
 			userManager.get(id, true, false)
 		])
 		const roles = []
@@ -439,7 +445,7 @@ const memberManager = {
 	filter: async function(search, guild_id, limit = 10) {
 		const payload = { nick: search, username: search, discriminator: search, id: search, tag: search, limit }
 		if (guild_id) payload.guild_id = guild_id
-		const ds = await passthrough.workers.cache.getData({ op: "FILTER_MEMBERS", params: payload })
+		const ds = []
 		return ds
 	},
 	parse: function(member) {
@@ -457,7 +463,7 @@ const memberManager = {
 
 		/** @type {Array<string>} */
 		const roles = clientmemdata.roles || []
-		const roledata = await Promise.all(roles.map(id => client.rain.cache.role.get(id, guildID)))
+		const roledata = await Promise.all(roles.map(id => Promise.resolve(null)))
 		if (!roledata) return value
 		for (const role of roledata) {
 			if (!role) continue
@@ -507,7 +513,7 @@ const guildManager = {
 	 * @param {boolean} [convert]
 	 */
 	get: async function(id, fetch = false, convert = true) {
-		const d = await client.rain.cache.guild.get(id)
+		const d = null
 		if (d) {
 			if (convert) return guildManager.parse(d) // fetching all members, channels and userdata took too long so the Guild#channels and Guild#members Maps will be empty
 			else return d
@@ -527,7 +533,7 @@ const guildManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
-		if (d) await client.rain.cache.guild.update(d.id, d)
+		if (d) undefined
 		return d || null
 	},
 	parse: function(guild) {
@@ -561,4 +567,4 @@ function validate(id) {
 	return true
 }
 
-module.exports.cacheManager = { validate, users: userManager, channels: channelManager, members: memberManager, guilds: guildManager }
+module.exports.cacheManager = { validate, users: userManager, channels: channelManager, members: memberManager, guilds: guildManager, process: process }

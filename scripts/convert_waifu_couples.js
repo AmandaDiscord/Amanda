@@ -3,9 +3,9 @@ const mysql = require("mysql2/promise")
 const config = require("../config.js")
 
 const db = mysql.createPool({
-	host: config.mysql_domain,
+	host: config.sql_domain,
 	user: "amanda",
-	password: config.mysql_password,
+	password: config.sql_password,
 	database: "money",
 	connectionLimit: 5
 })

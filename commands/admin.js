@@ -18,7 +18,7 @@ reloader.sync("./commands/music/common.js", common)
 
 const replaceBlackList = [
 	client.token,
-	config.mysql_password,
+	config.sql_password,
 	config.yt_api_key,
 	config.chewey_api_key,
 	config.lavalink_password,

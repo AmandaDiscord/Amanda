@@ -35,8 +35,8 @@ var ex = ex || []
 		let exportObject = ex.find(e => e.name == exportName)
 		if (exportObject) loader.addItem(exportObject)
 		else element.addEventListener("load", () => {
-			let exportObject = ex.find(e => e.name == exportName)
-			loader.addItem(exportObject)
+			let eO = ex.find(e => e.name == exportName)
+			loader.addItem(eO)
 		})
 	}
 }

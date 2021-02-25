@@ -3,7 +3,7 @@
 /**
  * @typedef {Object} Passthrough
  * @property {import("../config")} config
- * @property {import("mysql2/promise").Pool} db
+ * @property {import("pg").PoolClient} db
  * @property {import("snowtransfer")} snow
  * @property {() => {}} loadAPI
  * @property {(page: any) => Promise<any>} resolveTemplates
@@ -13,7 +13,6 @@
  * @property {import("./modules/ipcserver")} ipc
  * @property {import("@amanda/reloader")} reloader
  * @property {import("discord-bot-analytics")} analytics
- * @property {import("../modules/managers/CacheRequester")} cache
  * @property {string} clientID
  */
 

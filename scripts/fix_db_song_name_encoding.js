@@ -1,4 +1,4 @@
-const config = require("../config.json")
+const config = require("../config.js")
 
 const mysql = require("mysql2/promise")
 const YouTube = require("simple-youtube-api")
@@ -6,7 +6,7 @@ const YouTube = require("simple-youtube-api")
 let db = mysql.createPool({
 	host: config.mysql_domain,
 	user: "amanda",
-	password: config.mysql_password,
+	password: config.sql_password,
 	database: "money",
 	connectionLimit: 5
 })

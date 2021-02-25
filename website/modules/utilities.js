@@ -1,45 +1,52 @@
 // @ts-check
 
-const mysql = require("mysql2/promise")
 const crypto = require("crypto")
 const util = require("util")
 const events = require("events")
 
 const passthrough = require("../passthrough")
-const { db, ipc, reloader } = passthrough
+const { db, reloader } = passthrough
 
 const utils = {
 	sql: {
 		/**
 		 * @param {string} string
-		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-		 * @param {mysql.Pool|mysql.PoolConnection} [connection]
+		 * @param {string|number|symbol|Array<string|number|symbol>} [prepared=undefined]
+		 * @param {import("pg").PoolClient} [connection=undefined]
 		 * @param {number} [attempts=2]
 		 * @returns {Promise<Array<any>>}
 		 */
-		"all": function(string, prepared = undefined, connection = undefined, attempts = 2) {
-			if (!connection) connection = db
-			if (prepared !== undefined && typeof (prepared) != "object") prepared = [prepared]
-			return new Promise((resolve, reject) => {
-				if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
-				connection.execute(string, prepared).then(result => {
-					const rows = result[0]
-					// @ts-ignore
-					resolve(rows)
-				}).catch(err => {
-					console.error(err)
-					attempts--
-					if (attempts) utils.sql.all(string, prepared, connection, attempts).then(resolve).catch(reject)
-					else reject(err)
-				})
+	all: function(string, prepared = undefined, connection = undefined, attempts = 2) {
+		if (!connection) connection = db
+		/** @type {Array<string|number|symbol>} */
+		let prep
+		if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
+		else if (prepared !== undefined && Array.isArray(prepared)) prep = prepared
+
+		return new Promise((resolve, reject) => {
+			if (Array.isArray(prepared) && prepared.includes(undefined)) {
+				return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
+			}
+			const query = { text: string, values: prep }
+			connection.query(Array.isArray(prep) ? query : query.text).then(result => {
+				const rows = result.rows
+				resolve(rows)
+			}).catch(err => {
+				console.error(err)
+				attempts--
+				console.log(string, prepared)
+				if (attempts) utils.sql.all(string, prep, connection, attempts).then(resolve).catch(reject)
+				else reject(err)
 			})
-		},
+		})
+	},
 		/**
 		 * @param {string} string
-		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared]
-		 * @param {mysql.Pool|mysql.PoolConnection} [connection]
+		 * @param {string|number|symbol|Array<(string|number|symbol)>} [prepared=undefined]
+		 * @param {import("pg").PoolClient} [connection=undefined]
+		 * @returns {Promise<any>}
 		 */
-		"get": async function(string, prepared = undefined, connection = undefined) {
+		get: async function(string, prepared = undefined, connection = undefined) {
 			return (await utils.sql.all(string, prepared, connection))[0]
 		}
 	},
@@ -57,13 +64,6 @@ const utils = {
 			target.removeListener(name, code)
 			console.log(`removed event ${name}`)
 		})
-	},
-
-	/**
-	 * @returns {Promise<mysql.PoolConnection>}
-	 */
-	getConnection: function() {
-		return db.getConnection()
 	},
 
 	/**
@@ -89,12 +89,12 @@ const utils = {
 	/**
 	 * Get a session from a token or a cookie map. Returns null if no session.
 	 * @param {string|Map<string, string>} token
-	 * @returns {Promise<{userID: string, token: string, staging: number}>}
+	 * @returns {Promise<{user_id: string, token: string, staging: number}>}
 	 */
 	getSession: function(token) {
 		if (token instanceof Map) token = token.get("token")
 		if (token) {
-			return utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", token).then(row => {
+			return utils.sql.get("SELECT * FROM web_tokens WHERE token = $1", token).then(row => {
 				if (row) return row
 				else return null
 			})
@@ -104,19 +104,19 @@ const utils = {
 	generateCSRF: function(loginToken = null) {
 		const token = crypto.randomBytes(32).toString("hex")
 		const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
-		utils.sql.all("INSERT INTO CSRFTokens (token, loginToken, expires) VALUES (?, ?, ?)", [token, loginToken, expires])
+		utils.sql.all("INSERT INTO csrf_tokens (token, login_token, expires) VALUES (?, ?, ?)", [token, loginToken, expires])
 		return token
 	},
 
 	checkCSRF: async function(token, loginToken, consume) {
 		let result = true
-		const row = await utils.sql.get("SELECT * FROM CSRFTokens WHERE token = ?", token)
+		const row = await utils.sql.get("SELECT * FROM csrf_tokens WHERE token = $1", token)
 		// Token doesn't exist? Fail.
 		// Expired? Fail.
 		// Checking against a loginToken, but row loginToken differs? Fail.
-		if (!row || (row.expires < Date.now()) || (loginToken && row.loginToken != loginToken)) result = false
+		if (!row || (row.expires < Date.now()) || (loginToken && row.login_token != loginToken)) result = false
 		// Looking good.
-		if (consume) await utils.sql.all("DELETE FROM CSRFTokens WHERE token = ?", token)
+		if (consume) await utils.sql.all("DELETE FROM csrf_tokens WHERE token = $1", token)
 		return result
 	},
 

@@ -38,9 +38,9 @@ reloader.reloadEvent.setMaxListeners(20)
 const pool = new Postgres.Pool({
 	host: config.sql_domain,
 	user: "amanda",
-	password: config.mysql_password,
+	password: config.sql_password,
 	database: "main",
-	max: 5
+	max: 2
 })
 
 ;(async () => {
@@ -49,20 +49,18 @@ const pool = new Postgres.Pool({
 	const db = await pool.connect()
 	console.log("Connected to database")
 
-	await client.rain.initialize()
-
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
 
-	const CacheRequester = require("./modules/managers/CacheRequester")
 	const GatewayRequester = require("./modules/managers/GatewayRequester")
-	const cache = new CacheRequester()
 	const gateway = new GatewayRequester(GatewayWorker)
-	passthrough.workers = { cache, gateway }
+	passthrough.workers = { gateway }
 
 	GatewayWorker.on("message", (message) => {
 		const { op, data, threadID } = message
+		const utils = require("./modules/utilities")
+
 		if (op === "DISCORD") {
-			client.rain.eventProcessor.inbound(data)
+			utils.cacheManager.process(data)
 			return ThunderStorm.handle(message.data, client)
 		} else {
 			if (op === "ERROR_RESPONSE") return console.error(data)
@@ -71,6 +69,8 @@ const pool = new Postgres.Pool({
 			} else console.log(`Not a thread:\n${message}`)
 		}
 	})
+
+	client._snow.requestHandler.on("requestError", console.error)
 
 	listenMoeJP.on("error", console.error)
 	listenMoeKP.on("error", console.error)

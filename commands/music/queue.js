@@ -677,10 +677,10 @@ class Queue {
 			/** @type {Array<Discord.GuildMember>} */
 			let mems
 			if (newState.channelID) {
-				const indexes = await client.rain.cache.voiceState.getIndexMembers()
+				const indexes = []
 				const filtered = []
 				for (const ind of indexes) {
-					const result = await client.rain.cache.voiceState.get(ind, newState.guildID)
+					const result = null
 					if (result && result.boundObject.channel_id === this.voiceChannel.id) filtered.push(result)
 				}
 				// @ts-ignore

@@ -747,7 +747,7 @@ commands.assign([
 					subcommmandData.voiceChannel = voiceChannel
 					if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
+					const voiceChannel = null
 					let vcdata
 					// @ts-ignore
 					if (voiceChannel) {

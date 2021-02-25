@@ -249,9 +249,9 @@ class Session {
 			const cookies = utils.getCookies({ headers: { cookie: data.d.cookie } })
 			const session = await utils.getSession(cookies)
 			if (!session) return
-			const guild = await ipc.replier.requestGetGuildForUser(session.userID, data.d.guildID)
+			const guild = await ipc.replier.requestGetGuildForUser(session.user_id, data.d.guildID)
 			if (!guild) return
-			const user = await snow.user.cache.fetchUser(session.userID)
+			const user = await snow.user.cache.fetchUser(session.user_id)
 			if (!user) return
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies

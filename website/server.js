@@ -4,19 +4,17 @@ const fs = require("fs")
 const {Pinski} = require("pinski")
 const {setInstance} = require("pinski/plugins")
 const Snow = require("snowtransfer")
-const mysql = require("mysql2/promise")
+const Postgres = require("pg")
 const config = require("../config")
 const dba = require("discord-bot-analytics")
 const Reloader = require("@amanda/reloader")
 const path = require("path")
-const CacheRequester = require("../modules/managers/CacheRequester")
 require("dnscache")({ enable: true })
 
 // Passthrough
 
 const passthrough = require("./passthrough")
 passthrough.config = config
-passthrough.cache = new CacheRequester()
 
 // Reloader
 
@@ -30,26 +28,13 @@ passthrough.snow = snow
 
 // DB
 
-const db = mysql.createPool({
-	host: config.mysql_domain,
+const pool = new Postgres.Pool({
+	host: config.sql_domain,
 	user: "amanda",
-	password: config.mysql_password,
-	database: "money",
-	connectionLimit: 5
+	password: config.sql_password,
+	database: "main",
+	max: 2
 })
-passthrough.db = db
-
-// Utils
-
-reloader.watch(["./website/modules/utilities.js"])
-
-// IPC (which requires utils)
-
-const IPC = require("./modules/ipcserver.js")
-const ipc = new IPC("website", config.website_ipc_bind, 6544)
-passthrough.ipc = ipc
-reloader.watch(["./modules/ipc/ipcreplier.js"])
-reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
 
 const analytics = new dba(config.chewey_api_key, null)
 passthrough.analytics = analytics
@@ -64,10 +49,20 @@ setInstance(server)
 Object.assign(passthrough, server.getExports())
 
 ;(async () => {
-	await Promise.all([
-		db.query("SET NAMES 'utf8mb4'"),
-		db.query("SET CHARACTER SET utf8mb4")
-	])
+	const db = await pool.connect()
+	passthrough.db = db
+
+	// Utils
+
+	reloader.watch(["./website/modules/utilities.js"])
+
+	// IPC (which requires utils)
+
+	const IPC = require("./modules/ipcserver.js")
+	const ipc = new IPC("website", config.website_ipc_bind, 6544)
+	passthrough.ipc = ipc
+	reloader.watch(["./modules/ipc/ipcreplier.js"])
+	reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
 
 	passthrough.clientID = "405208699313848330"
 

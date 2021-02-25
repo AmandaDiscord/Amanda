@@ -3,7 +3,7 @@
 const types = require("../../typings")
 
 const passthrough = require("../passthrough")
-const { snow, config, ipc, cache } = passthrough
+const { snow, config, ipc } = passthrough
 
 const {render} = require("pinski/plugins")
 
@@ -20,9 +20,9 @@ module.exports = [
 	{
 		route: "/about", methods: ["GET"], code: async () => {
 			if (aboutCache.lastCache <= Date.now() - aboutCacheExpires) {
-				aboutCache.devs = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599471049310208" } })
-				aboutCache.donors = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "475599593879371796" } })
-				aboutCache.translators = await cache.getData({ op: "GET_MEMBERS_IN_ROLE", params: { guild_id: "475599038536744960", role_id: "755604509664739439" } })
+				aboutCache.devs = []
+				aboutCache.donors = []
+				aboutCache.translators = []
 				aboutCache.lastCache = Date.now()
 			}
 			return render(200, "pug/about.pug", { devs: aboutCache.devs, donors: aboutCache.donors, translators: aboutCache.translators })
@@ -39,8 +39,8 @@ module.exports = [
 			const session = await utils.getSession(cookies)
 
 			if (session) {
-				const user = await cache.getData({ op: "GET_USER", params: { id: session.userID } })
-				return ipc.replier.requestGetDashGuilds(session.userID, true).then(({guilds, npguilds}) => {
+				const user = {}
+				return ipc.replier.requestGetDashGuilds(session.user_id, true).then(({guilds, npguilds}) => {
 					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 					const csrfToken = utils.generateCSRF()
 					return render(200, "pug/selectserver.pug", { user, npguilds, displayNoSharedServers, guilds, csrfToken })
@@ -60,7 +60,7 @@ module.exports = [
 			.ensureParams(["token", "csrftoken"])
 			.useCSRF(utils)
 			.do({
-				code: (_) => utils.sql.get("SELECT * FROM WebTokens WHERE token = ?", _.params.get("token"))
+				code: (_) => utils.sql.get("SELECT * FROM WebTokens WHERE token = $1", _.params.get("token"))
 				, assign: "row"
 				, expected: v => v !== undefined
 				, errorValue: [400, "Invalid token"]
@@ -91,8 +91,8 @@ module.exports = [
 			const session = await utils.getSession(cookies)
 
 			let allowed = false
-			if (session && session.userID) {
-				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = ?", session.userID)
+			if (session && session.user_id) {
+				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = $1", session.user_id)
 				if (row && row.eval) allowed = true
 			}
 
@@ -111,8 +111,8 @@ module.exports = [
 			const session = await utils.getSession(cookies)
 
 			let allowed = false
-			if (session && session.userID) {
-				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = ?", session.userID)
+			if (session && session.user_id) {
+				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = $1", session.user_id)
 				if (row && row.eval) allowed = true
 			}
 
@@ -208,7 +208,7 @@ module.exports = [
 				, expected: v => v != null
 				, errorValue: "Shard not available for server view."
 			}).do({
-				code: () => ipc.replier.requestGetGuildForUser(session.userID, guildID)
+				code: () => ipc.replier.requestGetGuildForUser(session.user_id, guildID)
 				, assign: "guild"
 				, expected: v => v != null
 				, errorValue: "USER_NOT_IN_GUILD"

@@ -834,7 +834,7 @@ const common = {
 	 */
 	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		const state = await client.rain.cache.voiceState.get(msg.author.id, msg.guild.id)
+		const state = null
 		if (state) {
 			/** @type {Discord.VoiceChannel} */
 			// @ts-ignore
