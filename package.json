@@ -43,7 +43,7 @@
     "simple-git": "^2.31.0",
     "simple-youtube-api": "^5.2.1",
     "snowgate": "github:AmandaDiscord/SnowGate#74a652149dd43ff1604bc069c2f568e417d9b6a6",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#7d1c3d99a93da98ca72ed4117b07a31491db2a44",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#a60ec27077ea49935e2ac34bcff6192211bd0217",
     "taihou": "^2.0.4",
     "thunderstorm": "github:AmandaDiscord/ThunderStorm#274c4fb14bfdcbcaa7fd38afc252031fcda222d1"
   },
