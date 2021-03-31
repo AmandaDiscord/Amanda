@@ -677,18 +677,13 @@ class Queue {
 			/** @type {Array<Discord.GuildMember>} */
 			let mems
 			if (newState.channelID) {
-				const indexes = []
-				const filtered = []
-				for (const ind of indexes) {
-					const result = null
-					if (result && result.boundObject.channel_id === this.voiceChannel.id) filtered.push(result)
-				}
+				const filtered = await utils.orm.db.select("voice_states", { guild_id: newState.guildID, channel_id: this.voiceChannel.id }, { select: ["user_id"] })
 				// @ts-ignore
 				mems = await Promise.all(filtered.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true)))
 			} else mems = []
 			if (mems.length > 0 && mems.find(i => !i.user.bot)) {
 				for (const mem of mems) {
-					this.listeners.set(mem.id, mem)
+					if (!mem.user.bot) this.listeners.set(mem.id, mem)
 				}
 			} else {
 				if (!this.voiceLeaveTimeout.isActive) {

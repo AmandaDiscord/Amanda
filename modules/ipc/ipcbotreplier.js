@@ -81,16 +81,12 @@ class ClientReplier extends Replier {
 		const manager = passthrough.queues
 		const guilds = []
 		const npguilds = []
-		const gs = []
-		for (const id of []) {
-			const result = false
-			if (result) gs.push(id)
-		}
+		const gs = await utils.sql.all("SELECT guild_id FROM members WHERE id = $1", userID).then(rows => rows.map(r => r.guild_id))
 		for (const guild of gs) {
 			let isNowPlaying = false
 			if (np) {
 				if (manager && manager.cache.has(guild)) isNowPlaying = true
-				if (manager) isNowPlaying = true
+				if (await utils.sql.get("SELECT * FROM voice_states WHERE user_id = $1", userID)) isNowPlaying = true
 			}
 			const g = await utils.cacheManager.guilds.get(guild, true, true)
 			// @ts-ignore
@@ -109,7 +105,7 @@ class ClientReplier extends Replier {
 	async REPLY_GET_GUILD_FOR_USER({ userID, guildID }) {
 		const guild = await utils.cacheManager.guilds.get(guildID, true, true)
 		if (!guild) return null
-		const member = false
+		const member = await utils.sql.get("SELECT * FROM members WHERE guild_id = $1 AND id = $2", [guildID, userID])
 		if (!member) return null
 		// @ts-ignore
 		return filterGuild(guild)

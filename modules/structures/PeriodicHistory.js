@@ -51,7 +51,7 @@ class PeriodicHistory {
 		})
 
 		this.fetch = new utils.AsyncValueCache(async () => {
-			const rows = await utils.sql.all("SELECT field, timestamp FROM periodic_history")
+			const rows = await utils.orm.db.select("periodic_history")
 			// TODO: also sweep the database
 			rows.forEach(row => {
 				const queue = this.getOrCreate(row.field)
@@ -77,7 +77,7 @@ class PeriodicHistory {
 	add(field, timestamp) {
 		const queue = this.getOrCreate(field)
 		queue.add(timestamp)
-		return utils.sql.all("insert into periodic_history (field, timestamp) values ($1, $2)", [field, Date.now()])
+		return utils.orm.db.insert("periodic_history", { field: field, timestamp: Date.now() })
 	}
 
 	/**

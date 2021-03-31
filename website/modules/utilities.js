@@ -104,7 +104,7 @@ const utils = {
 	generateCSRF: function(loginToken = null) {
 		const token = crypto.randomBytes(32).toString("hex")
 		const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
-		utils.sql.all("INSERT INTO csrf_tokens (token, login_token, expires) VALUES (?, ?, ?)", [token, loginToken, expires])
+		utils.sql.all("INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", [token, loginToken, expires])
 		return token
 	},
 

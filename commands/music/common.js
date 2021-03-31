@@ -14,6 +14,8 @@ const { client, reloader, config, constants } = passthrough
 const utils = require("../../modules/utilities")
 reloader.sync("./modules/utilities/index.js", utils)
 
+const fakeAgent = `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) Neko/1.0 (KHTML, like Gecko) Amanda/1.0`
+
 class VoiceStateCallback {
 	/**
 	 * @param {Discord.Message} msg
@@ -42,7 +44,7 @@ class VoiceStateCallback {
 	 */
 	async trigger(voiceChannel) {
 		let lang
-		const selflang = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [this.msg.author.id, "language"])
+		const selflang = await utils.orm.db.get("settings_self", { key_id: this.msg.author.id, setting: "language" })
 		if (selflang) lang = await utils.getLang(this.msg.author.id, "self")
 		else if (this.msg.guild) lang = await utils.getLang(this.msg.guild.id, "guild")
 		else lang = await utils.getLang(this.msg.author.id, "self")
@@ -614,12 +616,12 @@ const common = {
 			const songtypes = require("./songtypes")
 			let data
 			try {
-				data = await c(link, "head").send()
+				data = await c(link, "head").header("User-Agent", fakeAgent).send()
 			} catch {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
 			const mime = data.headers["content-type"]
-			if (!mime || !mime.startsWith("audio/")) return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			if (!mime || (!mime.startsWith("audio/") && !mime.startsWith("video/"))) return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			const song = songtypes.makeExternalSong(link)
 			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
 		},
@@ -698,7 +700,7 @@ const common = {
 			let text
 			// eslint-disable-next-line no-useless-catch
 			try {
-				text = await c(url).header("User-Agent", `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) Neko/1.0 (KHTML, like Gecko) Amanda/1.0`).send().then(res => res.text())
+				text = await c(url).header("User-Agent", fakeAgent).send().then(res => res.text())
 			} catch (e) {
 				console.error(e)
 				throw e
@@ -737,7 +739,7 @@ const common = {
 		search: async function(text) {
 			let html
 			try {
-				html = await c(`https://newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).send().then(res => res.text())
+				html = await c(`https://www.newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).send().then(res => res.text())
 			} catch(e) {
 				console.error(e)
 				throw e
@@ -801,7 +803,7 @@ const common = {
 			const ID = link.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)[1]
 			let data
 			try {
-				data = await c(`https://newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
+				data = await c(`https://www.newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
 			} catch {
 				throw new Error("Cannot extract NewGrounds track info")
 			}
@@ -834,7 +836,7 @@ const common = {
 	 */
 	detectVoiceChannel: async function(msg, wait, lang) {
 		// Already in a voice channel? Use that!
-		const state = null
+		const state = await utils.orm.db.get("voice_states", { user_id: msg.author.id, guild_id: msg.guild.id })
 		if (state) {
 			/** @type {Discord.VoiceChannel} */
 			// @ts-ignore

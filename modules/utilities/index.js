@@ -46,6 +46,9 @@ const utils = { // I really hate that we have to nest an import then destructure
 	sql: {
 		...require("./sql")
 	},
+	orm: {
+		...require("./orm")
+	},
 	...require("./text"),
 	...require("./time")
 }

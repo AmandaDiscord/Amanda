@@ -47,7 +47,7 @@ if (config.cluster_id === "pencil") {
 }
 async function autoPayTimeoutFunction() {
 	/** @type {Array<string>} */
-	const donors = await utils.sql.all("SELECT * FROM premium").then(rows => rows.map(r => r.user_id))
+	const donors = await utils.orm.db.select("premium").then(rows => rows.map(r => r.user_id))
 	for (const ID of donors) {
 		await utils.coinsManager.award(ID, 10000)
 	}
@@ -144,7 +144,7 @@ async function manageMessage(msg, isEdit = false) {
 		}
 	}
 	let lang
-	const selflang = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [msg.author.id, "language"])
+	const selflang = await utils.orm.db.get("settings_self", { key_id: msg.author.id, setting: "language" })
 	if (selflang) lang = await utils.getLang(msg.author.id, "self")
 	else if (msg.guild && msg.guild.id) lang = await utils.getLang(msg.guild.id, "guild")
 	else lang = await utils.getLang(msg.author.id, "self")
@@ -219,7 +219,7 @@ async function manageMessage(msg, isEdit = false) {
 async function manageReady() {
 	const firstStart = starting
 	starting = false
-	utils.sql.all("SELECT * FROM account_prefixes WHERE user_id = $1", client.user.id).then(result => {
+	utils.orm.db.select("account_prefixes", { user_id: client.user.id }).then(result => {
 		prefixes = result.map(r => r.prefix)
 		statusPrefix = result.find(r => r.status).prefix
 		passthrough.statusPrefix = statusPrefix
@@ -231,21 +231,22 @@ async function manageReady() {
 		console.log(`Successfully logged in as ${client.user.username}`)
 		process.title = client.user.username
 
-		/** @type {[any, any]} */
 		// eslint-disable-next-line prefer-const
-		let [lavalinkNodes, lavalinkNodeRegions] = await Promise.all([
-			utils.sql.all("SELECT * FROM lavalink_nodes"),
-			utils.sql.all("SELECT * FROM lavalink_node_regions")
+		const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
+			utils.orm.db.select("lavalink_nodes"),
+			utils.orm.db.select("lavalink_node_regions")
 		])
-		lavalinkNodes = lavalinkNodes.map(node => {
-			node = { ...node }
-			node.regions = lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region)
-			node.password = config.lavalink_password
-			node.enabled = !!node.enabled
-			node.id = node.name.toLowerCase()
-			node.search_with_invidious = !!node.search_with_invidious
-			node.resumeKey = `${client.user.id}/${config.cluster_id}`
-			return node
+		const lavalinkNodes = lavalinkNodeData.map(node => {
+			const newData = {
+				regions: lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region),
+				password: config.lavalink_password,
+				enabled: !!node.enabled,
+				id: node.name.toLowerCase(),
+				search_with_invidious: !!node.search_with_invidious,
+				resumeKey: `${client.user.id}/${config.cluster_id}`
+			}
+			const n = Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name })
+			return n
 		})
 
 		constants.lavalinkNodes = lavalinkNodes
@@ -272,7 +273,7 @@ async function manageReady() {
 
 		await client.lavalink.connect()
 
-		utils.sql.all("SELECT * FROM restart_notify WHERE bot_id = $1", client.user.id).then(result => {
+		utils.orm.db.select("restart_notify", { bot_id: client.user.id }).then(result => {
 			result.forEach(async row => {
 				/** @type {Discord.TextChannel} */
 				// @ts-ignore
@@ -282,7 +283,7 @@ async function manageReady() {
 					new Discord.PartialUser({ id: row.mention_id }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mention_id}`))
 				}
 			})
-			utils.sql.all("DELETE FROM restart_notify WHERE bot_id = $1", client.user.id)
+			utils.orm.db.delete("restart_notify", { bot_id: client.user.id })
 		})
 
 		passthrough.ipc.connect()

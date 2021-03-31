@@ -20,9 +20,12 @@ module.exports = [
 	{
 		route: "/about", methods: ["GET"], code: async () => {
 			if (aboutCache.lastCache <= Date.now() - aboutCacheExpires) {
-				aboutCache.devs = []
-				aboutCache.donors = []
-				aboutCache.translators = []
+				const data = await utils.sql.all("SELECT users.tag, users.avatar, users.id, member_roles.role_id FROM users INNER JOIN member_roles ON users.id = member_roles.id WHERE member_roles.role_id = $1 OR member_roles.role_id = $2 OR member_roles.role_id = $3", ["475599471049310208", "475599593879371796", "755604509664739439"]).then(rows => rows.map(r => {
+					return { id: r.id, role_id: r.role_id, user: { id: r.id, tag: r.tag, avatar: r.avatar } }
+				}))
+				aboutCache.devs = data.filter(r => r.role_id === "475599471049310208")
+				aboutCache.donors = data.filter(r => r.role_id === "475599593879371796")
+				aboutCache.translators = data.filter(r => r.role_id === "755604509664739439")
 				aboutCache.lastCache = Date.now()
 			}
 			return render(200, "pug/about.pug", { devs: aboutCache.devs, donors: aboutCache.donors, translators: aboutCache.translators })
@@ -39,7 +42,7 @@ module.exports = [
 			const session = await utils.getSession(cookies)
 
 			if (session) {
-				const user = {}
+				const user = await utils.sql.get("SELECT * FROM users WHERE id = $1", session.user_id)
 				return ipc.replier.requestGetDashGuilds(session.user_id, true).then(({guilds, npguilds}) => {
 					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 					const csrfToken = utils.generateCSRF()
@@ -60,7 +63,7 @@ module.exports = [
 			.ensureParams(["token", "csrftoken"])
 			.useCSRF(utils)
 			.do({
-				code: (_) => utils.sql.get("SELECT * FROM WebTokens WHERE token = $1", _.params.get("token"))
+				code: (_) => utils.sql.get("SELECT * FROM web_tokens WHERE token = $1", _.params.get("token"))
 				, assign: "row"
 				, expected: v => v !== undefined
 				, errorValue: [400, "Invalid token"]
@@ -92,7 +95,7 @@ module.exports = [
 
 			let allowed = false
 			if (session && session.user_id) {
-				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = $1", session.user_id)
+				const row = await utils.sql.get("SELECT * FROM user_permissions WHERE user_id = $1", session.user_id)
 				if (row && row.eval) allowed = true
 			}
 
@@ -112,7 +115,7 @@ module.exports = [
 
 			let allowed = false
 			if (session && session.user_id) {
-				const row = await utils.sql.get("SELECT * FROM UserPermissions WHERE userID = $1", session.user_id)
+				const row = await utils.sql.get("SELECT * FROM user_permissions WHERE user_id = $1", session.user_id)
 				if (row && row.eval) allowed = true
 			}
 

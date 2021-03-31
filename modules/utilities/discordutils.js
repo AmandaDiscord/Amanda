@@ -3,7 +3,7 @@
 
 const Discord = require("thunderstorm")
 
-const sql = require("./sql")
+const { db } = require("./orm")
 const { shortTime } = require("./time")
 
 const passthrough = require("../../passthrough")
@@ -109,11 +109,7 @@ function emojiURL(id, animated = false) {
  */
 async function resolveWebhookMessageAuthor(msg) {
 	const { cacheManager } = require("./cachemanager") // lazy require
-	const row = await sql.get(
-		"SELECT user_id, user_username, user_discriminator FROM webhook_aliases \
-		WHERE webhook_id = $1 AND webhook_username = $2",
-		[msg.webhookID, msg.author.username]
-	)
+	const row = await db.get("webhook_aliases", { webhook_id: msg.webhookID, webhook_username: msg.author.username }, { select: ["user_id", "user_username", "user_discriminator"] })
 	if (!row) return null
 	/** @type {Discord.User} */
 	let newAuthor
@@ -145,7 +141,7 @@ async function contentify(channel, content) {
 	/** @type {number} */
 	// @ts-ignore
 	if (content instanceof Discord.MessageEmbed) {
-		if (!(await cacheManager.channels.hasPermissions({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, 0x00004000))) { // EMBED_LINKS (https://discord.com/developers/docs/topics/permissions#permissions)
+		if (!(await cacheManager.channels.hasPermissions({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, "EMBED_LINKS"))) {
 			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? `${content.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
 			if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 			value += "\nPlease allow me to embed content"
@@ -163,14 +159,14 @@ async function contentify(channel, content) {
  * @returns {Promise<{ allowed: boolean, ban?: "temporary" | "permanent", reason?: string }>}
  */
 async function rateLimiter(id, msg) {
-	const banned = await sql.get("SELECT * FROM bans WHERE user_id = $1", id)
+	const banned = await db.get("bans", { user_id: id })
 	const tempmsg = `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} temporarily banned from using commands.`
 	if (banned) {
 		if (banned.temporary && msg) {
 			if (banned.expires <= Date.now()) {
 				await Promise.all([
-					sql.all("DELETE FROM bans WHERE user_id = $1", id),
-					sql.all("DELETE FROM timeouts WHERE user_id = $1", id)
+					db.delete("bans", { user_id: id }),
+					db.delete("timeouts", { user_id: id })
 				])
 				return { allowed: true }
 			} else return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(banned.expires).toUTCString()}` }
@@ -178,24 +174,24 @@ async function rateLimiter(id, msg) {
 		else return { allowed: false }
 	}
 	const [timer, premium] = await Promise.all([
-		sql.get("SELECT * FROM timeouts WHERE user_id = $1", id),
-		sql.get("SELECT * FROM premium WHERE user_id = $1", id)
+		db.get("timeouts", { user_id: id }),
+		db.get("premium", { user_id: id })
 	])
-	if (premium) return { allowed: true }
+	if (premium && premium.state === 1) return { allowed: true }
 	if (timer) {
 		if (timer.expires <= Date.now()) {
-			await sql.all("DELETE FROM timeouts WHERE user_id = $1", id)
+			await db.delete("timeouts", { user_id: id })
 			return { allowed: true }
 		}
 		if (timer.amount > 6) {
 			const expiresAt = Date.now() + (1000 * 60 * 60)
-			await sql.all("INSERT INTO bans (user_id, temporary, expires) VALUES ($1, $2, $3)", [id, 1, expiresAt])
+			db.insert("bans", { user_id: id, temporary: 1, expires: expiresAt })
 			return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(expiresAt).toUTCString()}` }
 		}
 		return { allowed: false, reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} on a command cooldown. You can use commands again in ${shortTime(timer.expires - Date.now(), "ms")}` }
 	} else {
 		const expiresAt = Date.now() + (1000 * 5)
-		await sql.all("INSERT INTO timeouts (user_id, expires, amount) VALUES ($1, $2, $3) ON CONFLICT (user_id) DO UPDATE SET expires = $2, amount = $3", [id, expiresAt, 1])
+		db.upsert("timeouts", { user_id: id, expires: expiresAt, amount: 1 })
 		return { allowed: true }
 	}
 }

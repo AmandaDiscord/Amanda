@@ -96,10 +96,10 @@ commands.assign([
 				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": "`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`" }))
 			}
 			if (playlistName.length > 24) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameLimit, { "username": msg.author.username }))
-			const playlistRow = await utils.sql.get("SELECT * FROM playlists WHERE name = $1", playlistName)
+			const playlistRow = await utils.orm.db.get("playlists", { name: playlistName })
 			if (!playlistRow) {
 				if (args[1] == "create") {
-					await utils.sql.all("INSERT INTO playlists (author, name) VALUES ($1, $2)", [msg.author.id, playlistName])
+					await utils.orm.db.insert("playlists", { author: msg.author.id, name: playlistName })
 					return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistCreated, { "username": msg.author.username, "playlist": playlistName }))
 				} else return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotExist, { "username": msg.author.username, "playlist": playlistName }))
 			}
@@ -123,7 +123,7 @@ commands.assign([
 				console.log("unbreakDatabase was called!")
 				// await utils.sql.all("BEGIN TRANSACTION") apparently transactions are only optimal for HUGE volumes of data, see: https://stackoverflow.com/questions/14675147/why-does-transaction-commit-improve-performance-so-much-with-php-mysql-innodb#comment57894347_35084678
 				await Promise.all(songs.map((row, index) => {
-					return utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND video_id = $3", [(songs[index + 1] ? songs[index + 1].video_id : null), row.playlist_id, row.video_id])
+					return utils.orm.db.update("playlist_songs", { next: (songs[index + 1] ? songs[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })
 				}))
 				// await utils.sql.all("END TRANSACTION")
 				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.databaseFixed, { "username": msg.author.username }))
@@ -204,7 +204,7 @@ commands.assign([
 
 				Promise.all([
 					utils.sql.all("INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $4)", [result.id, result.title, result.lengthSeconds, result.id]),
-					utils.sql.all("INSERT INTO playlist_songs VALUES ($1, $2, NULL)", [playlistRow.playlist_id, result.id]),
+					utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: result.id, next: null }),
 					utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $3", [result.id, playlistRow.playlist_id, result.id])
 				]).then(() => {
 					msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistAdded, { "username": msg.author.username, "song": result.title, "playlist": playlistName }))
@@ -219,8 +219,8 @@ commands.assign([
 				if (!orderedSongs[index]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
 				const toRemove = orderedSongs[index]
 				await Promise.all([
-					utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next = $3", [toRemove.next, toRemove.playlist_id, toRemove.video_id]),
-					utils.sql.all("DELETE FROM playlist_songs WHERE playlist_id = $1 AND video_id = $2", [playlistRow.playlist_id, toRemove.video_id])
+					utils.orm.db.update("playlist_songs", { next: toRemove.next }, { playlist_id: toRemove.playlist_id, next: toRemove.video_id }),
+					utils.orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: toRemove.video_id })
 				])
 				return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistRemoved, { "username": msg.author.username, "song": toRemove.name, "playlist": playlistName }))
 			} else if (action.toLowerCase() == "move") {
@@ -233,13 +233,13 @@ commands.assign([
 				if (!orderedSongs[to]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
 				const fromRow = orderedSongs[from], toRow = orderedSongs[to]
 				if (from < to) {
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next = $3", [fromRow.next, fromRow.playlist_id, fromRow.video_id]) // update row before item
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND video_id = $3", [toRow.next, fromRow.playlist_id, fromRow.video_id]) // update moved item
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND video_id = $3", [fromRow.video_id, fromRow.playlist_id, toRow.video_id]) // update row before moved item
+					await utils.orm.db.update("playlist_songs", { next: fromRow.next }, { playlist_id: fromRow.playlist_id, next: fromRow.video_id }) // update row before item
+					await utils.orm.db.update("playlist_songs", { next: toRow.next }, { playlist_id: fromRow.playlist_id, video_id: fromRow.video_id }) // update moved item
+					await utils.orm.db.update("playlist_songs", { next: fromRow.video_id }, { playlist_id: fromRow.playlist_id, video_id: toRow.video_id }) // update row before moved item
 				} else if (from > to) {
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next = $3", [fromRow.next, fromRow.playlist_id, fromRow.video_id]) // update row before item
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next = $3", [fromRow.video_id, fromRow.playlist_id, toRow.video_id]) // update row before moved item
-					await utils.sql.all("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND video_id = $3", [toRow.video_id, fromRow.playlist_id, fromRow.video_id]) // update moved item
+					await utils.orm.db.update("playlist_songs", { next: fromRow.next }, { playlist_id: fromRow.playlist_id, next: fromRow.video_id }) // update row before item
+					await utils.orm.db.update("playlist_songs", { next: fromRow.video_id }, { playlist_id: fromRow.playlist_id, next: toRow.video_id }) // update row before moved item
+					await utils.orm.db.update("playlist_songs", { next: toRow.video_id }, { playlist_id: fromRow.playlist_id, video_id: fromRow.video_id }) // update moved item
 				} else return msg.channel.send(`${msg.author.username}, Those two indexes are equal.`)
 				return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistMoved, { "username": msg.author.username, "song": fromRow.name, "index": to + 1 }))
 			} else if (action.toLowerCase() == "search" || action.toLowerCase() == "find") {
@@ -284,15 +284,9 @@ commands.assign([
 						))
 						if (i != videos.length - 1) {
 							const nextVideo = videos[i + 1]
-							promises.push(utils.sql.all(
-								"INSERT INTO playlist_songs (playlist_id, video_id, next) VALUES ($1, $2, $3)",
-								[playlistRow.playlist_id, video.videoId, nextVideo.videoId]
-							))
+							promises.push(new Promise((res) => res(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: nextVideo.videoId }))))
 						} else {
-							promises.push(utils.sql.all(
-								"INSERT INTO playlist_songs (playlist_id, video_id, next) VALUES ($1, $2, NULL)",
-								[playlistRow.playlist_id, video.videoId]
-							))
+							promises.push(new Promise((res) => res(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: null }))))
 						}
 					}
 					promises.push(utils.sql.all(
@@ -309,8 +303,8 @@ commands.assign([
 				new ReactionMenu(message, client, [
 					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
-							utils.sql.all("DELETE FROM playlists WHERE playlist_id = $1", playlistRow.playlist_id),
-							utils.sql.all("DELETE FROM playlist_songs WHERE playlist_id = $1", playlistRow.playlist_id)
+							utils.orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
+							utils.orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id })
 						])
 						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
 						message.edit(await utils.contentify(msg.channel, deletePromptEmbed))

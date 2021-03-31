@@ -35,10 +35,10 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "nedb-promises": "^4.1.1",
-    "node-ipc": "^9.1.3",
+    "node-ipc": "^9.1.4",
     "pg": "^8.5.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "simple-git": "^2.35.2",
+    "simple-git": "^2.37.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#a60ec27077ea49935e2ac34bcff6192211bd0217",
     "taihou": "^2.0.4",
@@ -47,9 +47,9 @@
   "devDependencies": {
     "@types/centra": "^2.2.0",
     "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
-    "@types/node": "^14.14.31",
-    "eslint": "^7.20.0",
+    "@types/node": "^14.14.37",
+    "eslint": "^7.23.0",
     "tap": "^14.11.0",
-    "typescript": "~4.1.5"
+    "typescript": "~4.2.3"
   }
 }

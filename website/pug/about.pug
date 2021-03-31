@@ -1,6 +1,6 @@
 mixin user(user)
 	- let avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith("a_") ? "gif" : "png?size=128"}`
-	img(src=avatar, alt=user.username + "'s avatar.").avatar
+	img(src=avatar, alt=user.tag + "'s avatar.").avatar
 
 doctype html
 html

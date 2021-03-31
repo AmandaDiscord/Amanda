@@ -488,14 +488,14 @@ commands.assign([
 			} else if (suffix == "new") {
 				await deleteAll()
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
-				await utils.sql.all("INSERT INTO web_tokens (user_id, token, staging) VALUES ($1, $2, $3)", [msg.author.id, hash, 1])
+				utils.orm.db.insert("web_tokens", { user_id: msg.author.id, token: hash, staging: 1 })
 				send(utils.replace(lang.audio.token.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
 				).then(() => {
 					return send(`\`${hash}\``, false, false)
 				// eslint-disable-next-line no-empty-function
 				}).catch(() => {})
 			} else {
-				const existing = await utils.sql.get("SELECT * FROM web_tokens WHERE user_id = $1", msg.author.id)
+				const existing = await utils.orm.db.get("web_tokens", { user_id: msg.author.id })
 				if (existing) {
 					send(lang.audio.token.returns.generated, true, true).then(() => {
 						send(`\`${existing.token}\``, false, false)
@@ -505,7 +505,7 @@ commands.assign([
 			}
 
 			function deleteAll() {
-				return utils.sql.all("DELETE FROM web_tokens WHERE user_id = $1", msg.author.id)
+				return utils.orm.db.delete("web_tokens", { user_id: msg.author.id })
 			}
 
 			function send(text, announce = true, throwFailed = false) {
@@ -529,10 +529,10 @@ commands.assign([
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.cacheManager.channels.find(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
-			/** @type {Object.<string, Array<[string, number]>>} */
+			/** @type {Object.<string, Array<[string, bigint]>>} */
 			const types = {
-				text: [["Read Messages", 0x00000400], ["Read Message History", 0x00010000], ["Send Messages", 0x00000800], ["Embed Content", 0x00004000], ["Add Reactions", 0x00000040]],
-				voice: [["View Channel", 0x00000400], ["Join", 0x00100000], ["Speak", 0x00200000]]
+				text: [["Read Messages", BigInt(0x00000400)], ["Read Message History", BigInt(0x00010000)], ["Send Messages", BigInt(0x00000800)], ["Embed Content", BigInt(0x00004000)], ["Add Reactions", BigInt(0x00000040)]],
+				voice: [["View Channel", BigInt(0x00000400)], ["Join", BigInt(0x00100000)], ["Speak", BigInt(0x00200000)]]
 			}
 
 			/** @type {Discord.Guild} */
@@ -747,17 +747,13 @@ commands.assign([
 					subcommmandData.voiceChannel = voiceChannel
 					if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 				} else if (subcommandObject.voiceChannel == "provide") {
-					const voiceChannel = null
+					const voiceChannel = await utils.orm.db.get("voice_states", { user_id: msg.author.id, guild_id: msg.guild.id })
 					let vcdata
-					// @ts-ignore
 					if (voiceChannel) {
-						const o = voiceChannel.boundObject ? voiceChannel.boundObject : voiceChannel
-						// @ts-ignore
-						vcdata = await utils.cacheManager.channels.get(o.channel_id, true, true)
+						vcdata = await utils.cacheManager.channels.get(voiceChannel.channel_id, true, true)
 						if (subcommmandData.queue) subcommmandData.queue.listeners.set(msg.author.id, msg.member)
 					}
 
-					// @ts-ignore
 					subcommmandData.voiceChannel = vcdata ? vcdata : undefined
 				}
 			}

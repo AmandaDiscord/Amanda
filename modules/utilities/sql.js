@@ -26,7 +26,7 @@ function all(string, prepared = undefined, connection = undefined, attempts = 2)
 		const query = { text: string, values: prep }
 		connection.query(Array.isArray(prep) ? query : query.text).then(result => {
 			const rows = result.rows
-			resolve(rows)
+			resolve(rows || [])
 		}).catch(err => {
 			console.error(err)
 			attempts--
@@ -45,7 +45,7 @@ function all(string, prepared = undefined, connection = undefined, attempts = 2)
  */
 async function get(string, prepared = undefined, connection = undefined) {
 	const rows = await all(string, prepared, connection)
-	return rows[0]
+	return rows[0] || null
 }
 
 /**
