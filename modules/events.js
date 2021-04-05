@@ -266,7 +266,7 @@ async function manageReady() {
 		try {
 			await client.lavalink.connect()
 		} catch (e) {
-			console.log("There was a lavalink connect error")
+			console.log("There was a lavalink connect error. One of the nodes may be offline or unreachable")
 		}
 
 		utils.orm.db.select("restart_notify", { bot_id: client.user.id }).then(result => {

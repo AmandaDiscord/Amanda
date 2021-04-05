@@ -262,7 +262,7 @@ class Database {
 					buffer.length = 0
 				}
 				const nonPrimaryColumns = props2.filter(column => !model.primaryKey.includes(column))
-				statement += ` ON CONFLICT (${model.primaryKey.join(", ")}) DO UPDATE SET ${nonPrimaryColumns.map(column => `${column} = excluded.${column}`).join(", ")}`
+				statement += ` ON CONFLICT (${model.primaryKey.join(", ")}) DO ${nonPrimaryColumns.length ? `UPDATE SET ${nonPrimaryColumns.map(column => `${column} = excluded.${column}`).join(", ")}` : "NOTHING"}`
 			}
 
 		} else if (method === "delete") {
@@ -289,7 +289,7 @@ const Guilds = new Model("guilds", { id: str, name: str, icon: str, member_count
 const InteractionGifs = new Model("interaction_gifs", { type: str, url: str })
 const LavalinkNodeRegions = new Model("lavalink_node_regions", { host: str, region: str }, ["host", "region"])
 const LavalinkNodes = new Model("lavalink_nodes", { host: str, port: num, invidious_origin: str, enabled: num, search_with_invidious: num, name: str }, ["host"])
-const MemberRoles = new Model("member_roles", { id: str, guild_id: str, role_id: str }, [], { useBuffer: true })
+const MemberRoles = new Model("member_roles", { id: str, guild_id: str, role_id: str }, ["guild_id", "id", "role_id"], { useBuffer: true })
 const Members = new Model("members", { id: str, guild_id: str, nick: str, joined_at: str }, ["id", "guild_id"])
 const Money = new Model("money", { user_id: str, coins: num, won_coins: num, lost_coins: num, given_coins: num }, ["user_id"])
 const MoneyCooldown = new Model("money_cooldown", { user_id: str, command: str, date: num, value: num })
