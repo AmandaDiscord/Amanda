@@ -23,8 +23,7 @@ const replaceBlackList = [
 	config.chewey_api_key,
 	config.lavalink_password,
 	config.weeb_api_key,
-	config.genius_access_token,
-	config.redis_password
+	config.genius_access_token
 ]
 
 commands.assign([

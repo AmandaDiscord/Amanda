@@ -110,8 +110,7 @@ function processData(data) {
 	}
 	case "CHANNEL_DELETE": {
 		if (!data.d.guild_id) return
-		sql.all("DELETE FROM channels WHERE id = $1; DELETE FROM channel_overrides WHERE channel_id = $1; DELETE FROM voice_states WHERE channel_id = $1", data.d.channel_id)
-		db.delete("channels", { guild_id: data.d.guild_id, id: data.d.channel_id })
+		sql.all("DELETE FROM channels WHERE id = $1; DELETE FROM channel_overrides WHERE channel_id = $1; DELETE FROM voice_states WHERE channel_id = $1", data.d.id)
 		break
 	}
 	case "GUILD_MEMBER_ADD":
