@@ -68,6 +68,7 @@ function upsertMember(member, guild_id) {
 }
 
 function upsertUser(user) {
+	if (!user.username || !user.discriminator || user.id) return
 	db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar || null, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 }
 
@@ -99,7 +100,15 @@ function processData(data) {
 		break
 	}
 	case "GUILD_DELETE": {
-		if (!data.d.unavailable) sql.all(`DELETE FROM guilds WHERE id = "${data.d.id}"; DELETE FROM channels WHERE guild_id = "${data.d.id}"; DELETE FROM members WHERE guild_id = "${data.d.id}"; DELETE FROM member_roles WHERE guild_id = "${data.d.id}"; DELETE FROM channel_overrides WHERE guild_id = "${data.d.id}"; DELETE FROM roles WHERE guild_id = "${data.d.id}"; DELETE FROM voice_states WHERE guild_id = "${data.d.id}"`)
+		if (!data.d.unavailable) {
+			db.delete("guilds", { id: data.d.id })
+			db.delete("channels", { guild_id: data.d.id })
+			db.delete("members", { guild_id: data.d.id })
+			db.delete("member_roles", { guild_id: data.d.id })
+			db.delete("channel_overrides", { guild_id: data.d.id })
+			db.delete("roles", { guild_id: data.d.id })
+			db.delete("voice_states", { guild_id: data.d.id })
+		}
 		break
 	}
 	case "CHANNEL_CREATE":
@@ -110,7 +119,9 @@ function processData(data) {
 	}
 	case "CHANNEL_DELETE": {
 		if (!data.d.guild_id) return
-		sql.all(`DELETE FROM channels WHERE id = "${data.d.id}"; DELETE FROM channel_overrides WHERE channel_id = "${data.d.id}"; DELETE FROM voice_states WHERE channel_id = "${data.d.id}"`)
+		db.delete("channels", { id: data.d.id })
+		db.delete("channel_overrides", { channel_id: data.d.id })
+		db.delete("voice_states", { channel_id: data.d.id })
 		break
 	}
 	case "GUILD_MEMBER_ADD":
@@ -119,7 +130,10 @@ function processData(data) {
 		break
 	}
 	case "GUILD_MEMBER_DELETE": {
-		sql.all(`DELETE FROM members WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"; DELETE FROM member_roles WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"; DELETE FROM channel_overrides WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"`)
+		const pl = { guild_id: data.d.guild_id, id: data.d.user.id }
+		db.delete("members", pl)
+		db.delete("member_roles", pl)
+		db.delete("channel_overrides", pl)
 		break
 	}
 	case "GUILD_ROLE_CREATE":
