@@ -82,11 +82,12 @@ async function transact(user1, user2, amount) {
  */
 async function updateCooldown(userID, command, info) {
 	let winChance = info.max
-	const cooldown = await db.get("money_cooldown", { user_id: userID, command: command })
+	const uidcmdpl = { user_id: userID, command: command }
+	const cooldown = await db.get("money_cooldown", uidcmdpl)
 	if (cooldown) {
 		winChance = Math.max(info.min, Math.min(info.max, Number(cooldown.value) + Math.floor((Date.now() - Number(cooldown.date)) / info.regen.time) * info.regen.amount))
 		const newValue = winChance - info.step
-		db.update("money_cooldown", { date: Date.now(), value: newValue }, { user_id: userID, command: command })
+		db.update("money_cooldown", { date: Date.now(), value: newValue }, uidcmdpl)
 	} else db.insert("money_cooldown", { user_id: userID, command: command, date: Date.now(), value: info.max - info.step })
 	return winChance
 }

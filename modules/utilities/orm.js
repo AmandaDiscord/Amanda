@@ -193,7 +193,7 @@ class Database {
 			statement += mapped.join(", ")
 			if (options.where) {
 				const where = Object.keys(options.where).map(key => {
-					const value = properties[key]
+					const value = options.where[key]
 					if (value === null) return `${key} IS NULL`
 					const previous = prepared.indexOf(value)
 					const index = (previous !== -1) ? previous + 1 : preparedAmount++
