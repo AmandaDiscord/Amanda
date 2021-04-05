@@ -216,7 +216,7 @@ async function doInteraction(msg, suffix, source, lang) {
  * @returns {Promise<string>}
  */
 async function getGif(type) {
-	const gif = await utils.sql.get("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RAND() LIMIT 1", type)
+	const gif = await utils.sql.get("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RANDOM() LIMIT 1", type)
 	return gif.url
 }
 
