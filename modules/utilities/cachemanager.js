@@ -593,7 +593,7 @@ const memberManager = {
 	 * @param {number} [limit]
 	 */
 	filter: async function(search, guild_id, limit = 10) {
-		const statement = `SELECT members.id, members.nick, members.joined_at, members.guild_id, users.tag, users.avatar, users.bot FROM users INNER JOIN members ON members.id = users.id WHERE (users.id LIKE $1 OR LOWER(users.tag) LIKE LOWER($1)) AND members.guild_id = $2 LIMIT ${limit}`
+		const statement = `SELECT members.id, members.nick, members.joined_at, members.guild_id, users.tag, users.avatar, users.bot FROM users INNER JOIN members ON members.id = users.id WHERE (users.id LIKE $1 OR LOWER(users.tag) LIKE LOWER($1) OR LOWER(members.nick) LIKE LOWER($1)) AND members.guild_id = $2 LIMIT ${limit}`
 		const prepared = [`${search.replace(/%/g, "\\%")}%`, guild_id]
 		const ds = await sql.all(statement, prepared)
 		return ds.map(m => {
