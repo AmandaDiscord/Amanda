@@ -2,12 +2,36 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
+const path = require("path")
 
 const { db } = require("./orm")
 const { shortTime } = require("./time")
+const { addTemporaryListener } = require("./eventutils")
 
 const passthrough = require("../../passthrough")
-const { client } = passthrough
+const { client, internalEvents } = passthrough
+
+let starting = true
+if (client.readyAt != null) starting = false
+
+/** @type {Array<string>} */
+let prefixes = []
+let statusPrefix = "&"
+
+if (!starting) onReady()
+else addTemporaryListener(client, "ready", path.basename(__filename), onReady)
+
+function onReady() {
+	const firstStart = starting
+	starting = false
+	db.select("account_prefixes", { user_id: client.user.id }).then(result => {
+		prefixes = result.map(r => r.prefix)
+		statusPrefix = result.find(r => r.status).prefix
+		passthrough.statusPrefix = statusPrefix
+		console.log(`Loaded ${prefixes.length} prefixes: ${prefixes.join(" ")}`)
+		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
+	})
+}
 
 /**
  * @param {Discord.User} user
@@ -43,7 +67,8 @@ function testFlag(flags, flag) {
  * @param {(message?: Discord.Message) => any} callback
  * @param {() => any} [onFail]
  */
-function createMessageCollector(filter = {}, callback, onFail) {
+function createMessageCollector(filter, callback, onFail) {
+	if (!filter) filter = {}
 	let timerdur = (1000 * 60), maxMatches = 1
 	if (filter.timeout) timerdur = filter.timeout
 	if (filter.matches) maxMatches = filter.matches
@@ -196,9 +221,40 @@ async function rateLimiter(id, msg) {
 	}
 }
 
+/**
+ * @param {Discord.Message} msg
+ */
+async function getPrefixes(msg) {
+	const value = prefixes.filter(i => i.includes(client.user.id) || i.includes(client.user.username.toLowerCase()))
+	const userPrefix = await db.get("settings_self", { key_id: msg.author.id, setting: "prefix" })
+	let ur = false
+	let gr = false
+	/** @type {string} */
+	let custom = statusPrefix
+
+	if (userPrefix) {
+		value.push(userPrefix.value)
+		ur = true
+		custom = userPrefix.value
+	}
+
+	if (msg.guild) {
+		const guildPrefix = await db.get("settings_guild", { key_id: msg.guild.id, setting: "prefix" })
+		if (guildPrefix) {
+			value.push(guildPrefix.value)
+			gr = true
+			if (custom === statusPrefix) custom = guildPrefix.value
+		}
+	}
+
+	if (!ur && !gr) return { main: custom, array: prefixes }
+	else return { main: custom, array: value }
+}
+
 module.exports.userFlagEmojis = userFlagEmojis
 module.exports.emojiURL = emojiURL
 module.exports.resolveWebhookMessageAuthor = resolveWebhookMessageAuthor
 module.exports.contentify = contentify
 module.exports.createMessageCollector = createMessageCollector
 module.exports.rateLimiter = rateLimiter
+module.exports.getPrefixes = getPrefixes

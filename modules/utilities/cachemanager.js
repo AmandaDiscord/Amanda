@@ -254,7 +254,7 @@ const channelManager = {
 	filter: async function(search, guild_id, limit = 10) {
 		const prepared = [`%${search.replace(/%/g, "\\%")}`]
 		if (guild_id) prepared.push(guild_id)
-		const ds = await sql.all(`SELECT * FROM channels WHERE (id LIKE $1 OR name LIKE $1)${guild_id ? " AND guild_id = $2" : ""} LIMIT ${limit}`, prepared)
+		const ds = await sql.all(`SELECT * FROM channels WHERE (id LIKE $1 OR LOWER(name) LIKE LOWER($1))${guild_id ? " AND guild_id = $2" : ""} LIMIT ${limit}`, prepared)
 		return ds || []
 	},
 	parse: function(channel) {
@@ -444,7 +444,7 @@ const userManager = {
 	 * @param {number} [limit]
 	 */
 	filter: async function(search, limit = 10) {
-		const ds = await sql.all(`SELECT * FROM users WHERE (tag LIKE $1 OR id LIKE $1) LIMIT ${limit}`, `%${search.replace(/%/g, "\\%")}`)
+		const ds = await sql.all(`SELECT * FROM users WHERE (LOWER(tag) LIKE LOWER($1) OR id LIKE $1) LIMIT ${limit}`, `%${search.replace(/%/g, "\\%")}`)
 		return ds.map(r => {
 			const arr = r.tag.split("#")
 			const username = arr.slice(0, arr.length - 1).join("#")
@@ -593,7 +593,7 @@ const memberManager = {
 	 * @param {number} [limit]
 	 */
 	filter: async function(search, guild_id, limit = 10) {
-		const statement = `SELECT members.id, members.nick, members.joined_at, members.guild_id, users.tag, users.avatar, users.bot FROM members INNER JOIN users ON members.guild_id = $2 WHERE (members.nick LIKE $1 OR members.id LIKE $1 OR users.tag LIKE $1) LIMIT ${limit}`
+		const statement = `SELECT members.id, members.nick, members.joined_at, members.guild_id, users.tag, users.avatar, users.bot FROM users INNER JOIN members ON members.id = users.id WHERE (users.id LIKE $1 OR LOWER(users.tag) LIKE LOWER($1)) AND members.guild_id = $2 LIMIT ${limit}`
 		const prepared = [`${search.replace(/%/g, "\\%")}%`, guild_id]
 		const ds = await sql.all(statement, prepared)
 		return ds.map(m => {

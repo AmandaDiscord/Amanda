@@ -55,7 +55,7 @@ async function updateCache() {
 				image = await Jimp.read(row.value)
 			} catch (e) {
 				// await utils.sql.all("DELETE FROM SettingsSelf WHERE setting = $1 AND keyID = $2", ["profilebackground", row.keyID])
-				return console.log(`Image cache update for ${row.key_id} failed. Deleted entry`)
+				return console.log(`Image cache update for ${row.key_id} failed.`)
 			}
 			image.cover(800, 500)
 			// jimp automatically converts the buffer to the format specified by the file extension
@@ -663,7 +663,7 @@ commands.assign([
 			const args = suffix.split(" ")
 			if ((await utils.cacheManager.channels.typeOf(msg.channel)) === "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
-			/** @type {Object.<string, { type: string, default: string, scope: Array<string> | string }>} */
+			/** @type {Object.<string, { type: "boolean" | "string", default: string, scope: Array<"self" | "server"> | "self" | "server" }>} */
 			const settings = {
 				"waifualert": {
 					type: "boolean",
@@ -694,27 +694,33 @@ commands.assign([
 					type: "string",
 					default: "en-us",
 					scope: ["self", "server"]
+				},
+				"prefix": {
+					type: "string",
+					default: Discord.Util.escapeMarkdown(passthrough.statusPrefix),
+					scope: ["self", "server"]
 				}
 			}
 
+			/** @type {{ self: "settings_self", server: "settings_guild" }} */
 			const tableNames = { self: "settings_self", server: "settings_guild" }
 
-			let scope = args[0].toLowerCase()
-			scope = Discord.Util.escapeMarkdown(scope)
+			/** @type {"self" | "server"} */
+			// @ts-ignore
+			const scope = args[0].toLowerCase()
 			if (!["self", "server"].includes(scope)) return msg.channel.send(lang.configuration.settings.prompts.invalidSyntaxScope)
-			/** @type {"settings_self" | "settings_guild"} */
 			const tableName = tableNames[scope]
 			const keyID = scope == "self" ? msg.author.id : msg.guild.id
 
 			let settingName = args[1] ? args[1].toLowerCase() : ""
 			settingName = Discord.Util.escapeMarkdown(settingName)
-			if (args[1] == "view") {
+			if (args[1] === "view") {
 				const all = await utils.orm.db.select(tableName, { key_id: keyID })
 				if (all.length == 0) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.noSettings, { "scope": scope }))
 				return msg.channel.send(all.map(a => `${a.setting}: ${a.value}`).join("\n"))
 			}
 
-			if (scope == "server") {
+			if (scope === "server") {
 				const bool = await utils.cacheManager.members.hasPermission(msg.author.id, msg.guild.id, "MANAGE_GUILD")
 				if (!bool) return msg.channel.send(lang.configuration.settings.prompts.manageServer)
 			}
@@ -723,7 +729,7 @@ commands.assign([
 			if (!setting) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxName, { "usage": lang.configuration.settings.help.usage, "settings": Object.keys(settings).filter(k => settings[k].scope.includes(scope)).map(k => `\`${k}\``).join(", ") }))
 			if (!setting.scope.includes(scope)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSettingScope, { "setting": settingName, "scope": scope }))
 
-			let value = args[2]
+			let value = args.slice(2).join(" ")
 			if (!value) {
 				const row = await utils.orm.db.get(tableName, { key_id: keyID, setting: settingName }, { select: ["value"] })
 				if (scope == "server") {
@@ -764,7 +770,7 @@ commands.assign([
 				return msg.channel.send(lang.configuration.settings.returns.deleted)
 			}
 
-			if (settingName == "profilebackground") {
+			if (settingName === "profilebackground") {
 				await msg.channel.sendTyping()
 				const [isEval, isPremium] = await Promise.all([
 					utils.sql.hasPermission(msg.author, "owner"),
@@ -809,37 +815,54 @@ commands.assign([
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
-			if (settingName == "profiletheme") {
+			if (settingName === "profiletheme") {
 				const choices = ["dark", "light"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a theme of ${choices.join(" or ")}`)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: "profiletheme", value: value })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
-			if (settingName == "profilestyle") {
+			if (settingName === "profilestyle") {
 				const choices = ["new", "old"]
 				if (!choices.includes(value)) return msg.channel.send(`${msg.author.username}, you can only choose a style of ${choices.join(" or ")}`)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: "profilestyle", value: value })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
-			if (settingName == "language") {
+			if (settingName === "language") {
 				const codes = ["en-us", "en-owo", "es", "nl", "pl"]
 				if (!codes.includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidLangCode, { "username": msg.author.username, "codes": `\n${codes.map(c => `\`${c}\``).join(", ")}` }))
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value })
 				const Lang = require("@amanda/lang")
+				/** @type {import("@amanda/lang").Lang} */
 				const newlang = Lang[value.replace("-", "_")] || Lang.en_us
 				return msg.channel.send(newlang.configuration.settings.returns.updated)
 			}
 
-			if (setting.type == "boolean") {
+			if (settingName === "prefix") {
+				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
+				if (value === "\"\"" || value === "''" || value === "``") return msg.channel.send("Invalid prefix")
+				let val = value
+				console.log(value)
+				const match = value.match(/^(["'`])([\w\d ]{1,48})(["'`])$/)
+				if (match) {
+					if (match[1] === match[3]) {
+						val = match[2]
+					}
+				}
+				console.log(val)
+				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: val })
+				return msg.channel.send(lang.configuration.settings.returns.updated)
+			}
+
+			if (setting.type === "boolean") {
 				value = args[2].toLowerCase()
 				if (!["true", "false"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxBoolean, { "setting": settingName, "value": value }))
 				const value_result = args[2] == "true" ? "1" : "0"
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value_result })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
-			} else if (setting.type == "string") {
+			} else if (setting.type === "string") {
 				value = args[2].toLowerCase()
 				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value })
@@ -879,6 +902,28 @@ commands.assign([
 		examples: ["background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg"],
 		process(msg, suffix, lang) {
 			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
+		}
+	},
+
+	{
+		usage: "[prefix]",
+		description: "Sets a new prefix for yourself",
+		aliases: ["prefix", "pre"],
+		category: "configuration",
+		examples: ["prefix $"],
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, `self prefix${suffix ? ` ${suffix}` : ""}`, lang)
+		}
+	},
+
+	{
+		usage: "[prefix]",
+		description: "Sets a new prefix for the server",
+		aliases: ["serverprefix", "spre"],
+		category: "configuration",
+		examples: ["serverprefix $"],
+		process(msg, suffix, lang) {
+			commands.cache.get("settings").process(msg, `server prefix${suffix ? ` ${suffix}` : ""}`, lang)
 		}
 	},
 

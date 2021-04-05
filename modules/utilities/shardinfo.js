@@ -10,9 +10,9 @@ async function getOwnStats() {
 	return {
 		uptime: process.uptime(),
 		ram: ram.rss - (ram.heapTotal - ram.heapUsed),
-		users: await get("SELECT COUNT(*) AS count FROM users WHERE added_by = $1", config.cluster_id).then(d => d.count),
-		guilds: await get("SELECT COUNT(*) AS count FROM guilds WHERE added_by = $1", config.cluster_id).then(d => d.count),
-		channels: await get("SELECT COUNT(*) AS count FROM channels").then(d => d.count),
+		users: await get("SELECT COUNT(*) AS count FROM users WHERE added_by = $1", config.cluster_id).then(d => Number(d.count || 0)),
+		guilds: await get("SELECT COUNT(*) AS count FROM guilds WHERE added_by = $1", config.cluster_id).then(d => Number(d.count || 0)),
+		channels: await get("SELECT COUNT(*) AS count FROM channels").then(d => Number(d.count || 0)),
 		connections: client.lavalink.players.size
 	}
 }

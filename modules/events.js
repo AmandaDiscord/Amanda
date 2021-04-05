@@ -7,13 +7,11 @@ const centra = require("centra")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
-const { client, config, constants, commands, reloader, reloadEvent, internalEvents } = passthrough
+const { client, config, constants, commands, reloader, reloadEvent } = passthrough
 
 const common = require("../commands/music/common")
 reloader.sync("./commands/music/common.js", common)
 
-let prefixes = []
-let statusPrefix = "&"
 let starting = true
 const messagesReceived = new Map()
 if (client.readyAt != null) starting = false
@@ -130,8 +128,9 @@ async function manageMessage(msg, isEdit = false) {
 		messagesReceived.set(msg.id, msg)
 		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
 	}
-	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${statusPrefix}\` or \`@${client.user.tag}\`. Try using \`${statusPrefix}help\` for a complete list of my commands.`)
-	const prefix = prefixes.find(p => msg.content.startsWith(p))
+	const prefixes = await utils.getPrefixes(msg)
+	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${prefixes.main}\` or \`@${client.user.tag}\`. Try using \`${prefixes.main}help\` for a complete list of my commands.`)
+	const prefix = prefixes.array.find(p => msg.content.startsWith(p))
 	if (!prefix) return
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
@@ -219,13 +218,6 @@ async function manageMessage(msg, isEdit = false) {
 async function manageReady() {
 	const firstStart = starting
 	starting = false
-	utils.orm.db.select("account_prefixes", { user_id: client.user.id }).then(result => {
-		prefixes = result.map(r => r.prefix)
-		statusPrefix = result.find(r => r.status).prefix
-		passthrough.statusPrefix = statusPrefix
-		console.log(`Loaded ${prefixes.length} prefixes: ${prefixes.join(" ")}`)
-		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
-	})
 
 	if (firstStart) {
 		console.log(`Successfully logged in as ${client.user.username}`)
@@ -271,7 +263,11 @@ async function manageReady() {
 			console.error(`Failed to initialise Lavalink: ${error && error.message ? error.message : error}`)
 		})
 
-		await client.lavalink.connect()
+		try {
+			await client.lavalink.connect()
+		} catch (e) {
+			console.log("There was a lavalink connect error")
+		}
 
 		utils.orm.db.select("restart_notify", { bot_id: client.user.id }).then(result => {
 			result.forEach(async row => {
