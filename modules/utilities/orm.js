@@ -200,7 +200,7 @@ class Database {
 					if (previous === -1) prepared.push(value)
 					return `${key} = $${index}`
 				})
-				statement += `WHERE ${where.join(" AND ")}`
+				statement += ` WHERE ${where.join(" AND ")}`
 			}
 
 		} else if (method === "insert" || method === "upsert") {
