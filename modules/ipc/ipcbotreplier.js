@@ -86,7 +86,7 @@ class ClientReplier extends Replier {
 			let isNowPlaying = false
 			if (np) {
 				if (manager && manager.cache.has(guild)) isNowPlaying = true
-				if (await utils.sql.get("SELECT * FROM voice_states WHERE user_id = $1", userID)) isNowPlaying = true
+				if (await utils.sql.get("SELECT * FROM voice_states WHERE user_id = $1 AND guild_id = $2", [userID, guild])) isNowPlaying = true
 			}
 			const g = await utils.cacheManager.guilds.get(guild, true, true)
 			// @ts-ignore
