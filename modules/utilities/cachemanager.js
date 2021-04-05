@@ -99,7 +99,7 @@ function processData(data) {
 		break
 	}
 	case "GUILD_DELETE": {
-		if (!data.d.unavailable) sql.all("DELETE FROM guilds WHERE id = $1; DELETE FROM channels WHERE guild_id = $1; DELETE FROM members WHERE guild_id = $1; DELETE FROM member_roles WHERE guild_id = $1; DELETE FROM channel_overrides WHERE guild_id = $1; DELETE FROM roles WHERE guild_id = $1; DELETE FROM voice_states WHERE guild_id = $1", data.d.id)
+		if (!data.d.unavailable) sql.all(`DELETE FROM guilds WHERE id = "${data.d.id}"; DELETE FROM channels WHERE guild_id = "${data.d.id}"; DELETE FROM members WHERE guild_id = "${data.d.id}"; DELETE FROM member_roles WHERE guild_id = "${data.d.id}"; DELETE FROM channel_overrides WHERE guild_id = "${data.d.id}"; DELETE FROM roles WHERE guild_id = "${data.d.id}"; DELETE FROM voice_states WHERE guild_id = "${data.d.id}"`)
 		break
 	}
 	case "CHANNEL_CREATE":
@@ -110,7 +110,7 @@ function processData(data) {
 	}
 	case "CHANNEL_DELETE": {
 		if (!data.d.guild_id) return
-		sql.all("DELETE FROM channels WHERE id = $1; DELETE FROM channel_overrides WHERE channel_id = $1; DELETE FROM voice_states WHERE channel_id = $1", data.d.id)
+		sql.all(`DELETE FROM channels WHERE id = "${data.d.id}"; DELETE FROM channel_overrides WHERE channel_id = "${data.d.id}"; DELETE FROM voice_states WHERE channel_id = "${data.d.id}"`)
 		break
 	}
 	case "GUILD_MEMBER_ADD":
@@ -119,7 +119,7 @@ function processData(data) {
 		break
 	}
 	case "GUILD_MEMBER_DELETE": {
-		sql.all("DELETE FROM members WHERE guild_id = $1 AND id = $2; DELETE FROM member_roles WHERE guild_id = $1 AND id = $2; DELETE FROM channel_overrides WHERE guild_id = $1 AND id = $1", [data.d.guild_id, data.d.user.id])
+		sql.all(`DELETE FROM members WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"; DELETE FROM member_roles WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"; DELETE FROM channel_overrides WHERE guild_id = "${data.d.guild_id}" AND id = "${data.d.user.id}"`)
 		break
 	}
 	case "GUILD_ROLE_CREATE":
