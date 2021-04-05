@@ -262,7 +262,7 @@ commands.assign([
 				utils.sql.get("SELECT last_claim FROM daily_cooldown WHERE user_id = $1", msg.author.id),
 				utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 			])
-			if (!row || Number(row.lastClaim) + dailyCooldownTime < Date.now()) {
+			if (!row || Number(row.last_claim) + dailyCooldownTime < Date.now()) {
 				let amount
 				if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500) + 1
 				else amount = Math.floor(Math.random() * (500 - 100) + 100) + 1
@@ -273,7 +273,7 @@ commands.assign([
 				utils.coinsManager.award(msg.author.id, amount)
 				utils.orm.db.upsert("daily_cooldown", { user_id: msg.author.id, last_claim: Date.now() })
 			} else {
-				const timeRemaining = utils.shortTime(Number(row.lastClaim) - Date.now() + dailyCooldownTime, "ms")
+				const timeRemaining = utils.shortTime(Number(row.last_claim) - Date.now() + dailyCooldownTime, "ms")
 				msg.channel.send(utils.replace(lang.gambling.daily.prompts.cooldown, { "username": msg.author.username, "number": timeRemaining }))
 			}
 		}
