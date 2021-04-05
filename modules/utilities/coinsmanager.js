@@ -50,7 +50,7 @@ async function set(userID, value) {
  * @param {number} value
  */
 async function award(userID, value) {
-	const row = await db.get("money", { user_id: userID })
+	const row = await getRow(userID)
 	if (row) {
 		const earned = value > 0
 		const coinfield = earned ? "won_coins" : "lost_coins"
