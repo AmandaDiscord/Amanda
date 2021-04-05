@@ -51,7 +51,7 @@ commands.assign([
 					},
 					{
 						name: "Balance",
-						value: utils.numberComma(info.balance)
+						value: utils.numberComma(Number(info.balance))
 					},
 					{
 						name: "Married for",
@@ -193,7 +193,7 @@ commands.assign([
 			const face = utils.arrayRandom(faces)
 			await Promise.all([
 				utils.sql.all("DELETE FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
-				married.balance ? utils.coinsManager.award(otherid, married.balance) : Promise.resolve(null)
+				Number(married.balance || 0) ? utils.coinsManager.award(otherid, Number(married.balance)) : Promise.resolve(null)
 			])
 			msg.channel.send(utils.replace(lang.couples.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": partner.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
 			const memsettings = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [otherid, "waifualert"])
@@ -245,7 +245,7 @@ commands.assign([
 
 			const embed = new Discord.MessageEmbed()
 				.setAuthor(`Couple balance for ${user1.tag} and ${user2.tag}`)
-				.setDescription(`${utils.numberComma(row.balance)} ${emojis.discoin}`)
+				.setDescription(`${utils.numberComma(Number(row.balance))} ${emojis.discoin}`)
 				.setColor(constants.money_embed_color)
 			return msg.channel.send(await utils.contentify(msg.channel, embed))
 		}
@@ -259,13 +259,13 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			const row = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id)
 			if (!row) return msg.channel.send(`${msg.author.username}, you are not married to anyone.`)
-			if (row.balance === 0) return msg.channel.send(`${msg.author.username}, there is no money to withdraw.`)
+			if (Number(row.balance) === 0) return msg.channel.send(`${msg.author.username}, there is no money to withdraw.`)
 			let amount
 			if (suffix == "all" || suffix == "half") {
 				if (suffix == "all") {
-					amount = row.balance
+					amount = Number(row.balance)
 				} else {
-					amount = Math.floor(row.balance / 2)
+					amount = Math.floor(Number(row.balance) / 2)
 				}
 			} else {
 				const num = utils.parseNumber(suffix)
@@ -273,9 +273,9 @@ commands.assign([
 				if (num <= 0) return msg.channel.send(`${msg.author.username}, you must provide a number greater than 0.`)
 				amount = num
 			}
-			if (amount > row.balance) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
+			if (amount > Number(row.balance)) return msg.channel.send(`${msg.author.username}, you cannot withdraw more than what is in the couple balance.`)
 			await Promise.all([
-				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [row.balance - amount, row.married_at, msg.author.id]),
+				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [Number(row.balance) - amount, row.married_at, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} to your balance.`)
@@ -309,7 +309,7 @@ commands.assign([
 				amount = num
 			}
 			await Promise.all([
-				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [row.balance + amount, row.married_at, msg.author.id]),
+				utils.sql.all("UPDATE couples SET balance = $1, married_at = $2 WHERE (user1 = $3 OR user2 = $3)", [Number(row.balance) + amount, row.married_at, msg.author.id]),
 				utils.coinsManager.award(msg.author.id, -amount)
 			])
 			return msg.channel.send(`${msg.author.username}, successfully transacted ${utils.numberComma(amount)} from your balance.`)
@@ -351,9 +351,8 @@ commands.assign([
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				const memberIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
-				rows = await utils.sql.all(`SELECT * FROM couples WHERE (user1 OR user2) IN (${memberIDs.map((it, ind) => `$${ind + 1}`).join(", ")}) ORDER BY balance DESC LIMIT $${memberIDs.length + 1} OFFSET ${memberIDs.length + 2}`, [...memberIDs, itemsPerPage, offset])
-				availableRowCount = (await utils.sql.get(`SELECT count(*) AS count FROM couples WHERE (user1 OR user2) IN (${memberIDs.map((it, ind) => `$${ind + 1}`).join(", ")})`, memberIDs)).count
+				rows = await utils.sql.all(`SELECT * FROM couples INNER JOIN members ON (couples.user1 = members.id OR couples.user2 = members.id) WHERE members.guild_id = $1 ORDER BY balance DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
+				availableRowCount = rows.length
 			} else {
 				rows = await utils.sql.all("SELECT * FROM couples ORDER BY balance DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
 				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM Couples")).count
@@ -379,7 +378,7 @@ commands.assign([
 				))
 				const displayRows = rows.map((row, index) => {
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${userTagMap.get(row.user1)} & ${userTagMap.get(row.user2)} :: ${utils.numberComma(row.balance)} ${emojis.discoin}`
+					return `${ranking}. ${userTagMap.get(row.user1)} & ${userTagMap.get(row.user2)} :: ${utils.numberComma(Number(row.balance))} ${emojis.discoin}`
 				})
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)

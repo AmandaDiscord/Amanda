@@ -23,7 +23,7 @@ commands.assign([
 		examples: ["slot 1000"],
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, BigInt(0x00008000)))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
@@ -262,7 +262,7 @@ commands.assign([
 				utils.sql.get("SELECT last_claim FROM daily_cooldown WHERE user_id = $1", msg.author.id),
 				utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
 			])
-			if (!row || row.lastClaim + dailyCooldownTime < Date.now()) {
+			if (!row || Number(row.lastClaim) + dailyCooldownTime < Date.now()) {
 				let amount
 				if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500) + 1
 				else amount = Math.floor(Math.random() * (500 - 100) + 100) + 1
@@ -271,9 +271,9 @@ commands.assign([
 					.setColor(constants.money_embed_color)
 				msg.channel.send(await utils.contentify(msg.channel, embed))
 				utils.coinsManager.award(msg.author.id, amount)
-				utils.sql.all("INSERT INTO daily_cooldown (user_id, last_claim) VALUES ($1, $2) ON CONFLICT (user_id) DO UPDATE SET last_claim = $2", [msg.author.id, Date.now()])
+				utils.orm.db.upsert("daily_cooldown", { user_id: msg.author.id, last_claim: Date.now() })
 			} else {
-				const timeRemaining = utils.shortTime(row.lastClaim - Date.now() + dailyCooldownTime, "ms")
+				const timeRemaining = utils.shortTime(Number(row.lastClaim) - Date.now() + dailyCooldownTime, "ms")
 				msg.channel.send(utils.replace(lang.gambling.daily.prompts.cooldown, { "username": msg.author.username, "number": timeRemaining }))
 			}
 		}
@@ -315,14 +315,13 @@ commands.assign([
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				const memIDs = await client.rain.cache.member.getIndexMembers(msg.guild.id)
-				rows = await utils.sql.all(`SELECT user_id, coins FROM money WHERE user_id IN (${memIDs.map((it, ind) => `$${ind + 1}`).join(", ")}) ORDER BY coins DESC LIMIT $${memIDs.length + 1}`, [...memIDs, maxPages * itemsPerPage])
+				rows = await utils.sql.all(`SELECT user_id, coins FROM money INNER JOIN members ON members.id = money.user_id WHERE members.guild_id = $1 ORDER BY COINS DESC LIMIT ${maxPages * itemsPerPage}`, msg.guild.id)
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {
 				// using global:
 				// request exact page from database and do no filtering
-				rows = await utils.sql.all("SELECT user_id, coins FROM money ORDER BY coins DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
+				rows = await utils.sql.all(`SELECT user_id, coins FROM money ORDER BY coins DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
 				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM money")).count
 			}
 
@@ -339,7 +338,7 @@ commands.assign([
 						.catch(() => [user_id, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(coins)} ${emojis.discoin}`
+					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(Number(coins))} ${emojis.discoin}`
 				}))
 
 				// Display results
@@ -408,7 +407,7 @@ commands.assign([
 		examples: ["wheel 1000"],
 		async process(msg, suffix, lang) {
 			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, 0x00008000))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, BigInt(0x00008000)))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),

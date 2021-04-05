@@ -19,7 +19,7 @@ async function create(userID, extra = 0) {
  */
 async function get(userID) {
 	const row = await db.get("money", { user_id: userID })
-	if (row) return row.coins
+	if (row) return Number(row.coins)
 	else return create(userID)
 }
 
@@ -28,7 +28,7 @@ async function get(userID) {
  */
 async function getRow(userID) {
 	const row = await db.get("money", { user_id: userID })
-	if (row) return row
+	if (row) return { user_id: row.user_id, coins: Number(row.coins), won_coins: Number(row.coins), lost_coins: Number(row.lost_coins), given_coins: Number(row.given_coins) }
 	else {
 		await create(userID)
 		return { user_id: userID, coins: startingCoins, won_coins: 0, lost_coins: 0, given_coins: 0 }
@@ -84,7 +84,7 @@ async function updateCooldown(userID, command, info) {
 	let winChance = info.max
 	const cooldown = await db.get("money_cooldown", { user_id: userID, command: command })
 	if (cooldown) {
-		winChance = Math.max(info.min, Math.min(info.max, cooldown.value + Math.floor((Date.now() - cooldown.date) / info.regen.time) * info.regen.amount))
+		winChance = Math.max(info.min, Math.min(info.max, Number(cooldown.value) + Math.floor((Date.now() - Number(cooldown.date)) / info.regen.time) * info.regen.amount))
 		const newValue = winChance - info.step
 		db.update("money_cooldown", { date: Date.now(), value: newValue }, { user_id: userID, command: command })
 	} else db.insert("money_cooldown", { user_id: userID, command: command, date: Date.now(), value: info.max - info.step })

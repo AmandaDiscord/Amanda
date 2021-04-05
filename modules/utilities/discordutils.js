@@ -188,7 +188,7 @@ async function rateLimiter(id, msg) {
 	const tempmsg = `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} temporarily banned from using commands.`
 	if (banned) {
 		if (banned.temporary && msg) {
-			if (banned.expires <= Date.now()) {
+			if (Number(banned.expires) <= Date.now()) {
 				await Promise.all([
 					db.delete("bans", { user_id: id }),
 					db.delete("timeouts", { user_id: id })
@@ -204,7 +204,7 @@ async function rateLimiter(id, msg) {
 	])
 	if (premium && premium.state === 1) return { allowed: true }
 	if (timer) {
-		if (timer.expires <= Date.now()) {
+		if (Number(timer.expires) <= Date.now()) {
 			await db.delete("timeouts", { user_id: id })
 			return { allowed: true }
 		}
@@ -213,7 +213,7 @@ async function rateLimiter(id, msg) {
 			db.insert("bans", { user_id: id, temporary: 1, expires: expiresAt })
 			return { allowed: false, ban: "temporary", reason: tempmsg + ` Expires at ${new Date(expiresAt).toUTCString()}` }
 		}
-		return { allowed: false, reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} on a command cooldown. You can use commands again in ${shortTime(timer.expires - Date.now(), "ms")}` }
+		return { allowed: false, reason: `${id === msg.author.id ? `${msg.author.tag}, you are` : "That person is"} on a command cooldown. You can use commands again in ${shortTime(Number(timer.expires) - Date.now(), "ms")}` }
 	} else {
 		const expiresAt = Date.now() + (1000 * 5)
 		db.upsert("timeouts", { user_id: id, expires: expiresAt, amount: 1 })
