@@ -69,7 +69,7 @@ function upsertMember(member, guild_id) {
 
 function upsertUser(user) {
 	if (!user.username || !user.discriminator || user.id) return
-	db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar || null, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
+	else db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar || null, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 }
 
 /**
@@ -389,7 +389,7 @@ const userManager = {
 	 */
 	fetch: async function(id) {
 		const d = await client._snow.user.getUser(id)
-		if (d) db.upsert("users", { id: d.id, tag: `${d.username}#${d.discriminator}`, avatar: d.avatar || null, bot: d.bot ? 1 : 0, added_by: config.cluster_id })
+		if (d && d.id && d.username && d.discriminator) db.upsert("users", { id: d.id, tag: `${d.username}#${d.discriminator}`, avatar: d.avatar || null, bot: d.bot ? 1 : 0, added_by: config.cluster_id })
 		return d || null
 	},
 	/**
