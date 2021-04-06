@@ -199,7 +199,7 @@ commands.assign([
 			const memsettings = await utils.sql.get("SELECT * FROM settings_self WHERE key_id = $1 AND setting = $2", [otherid, "waifualert"])
 			let guildsettings
 			const memlang = await utils.getLang(otherid, "self")
-			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM settings_guild WHERE key_id $1 AND setting $2", [msg.guild.id, "waifualert"])
+			if (msg.guild) guildsettings = await utils.sql.get("SELECT * FROM settings_guild WHERE key_id = $1 AND setting = $2", [msg.guild.id, "waifualert"])
 			if (memsettings && memsettings.value == 0) return
 			if (guildsettings && guildsettings.value == 0) {
 				if (memsettings && memsettings.value == 1) return partner.send(`${utils.replace(memlang.couples.divorce.returns.dm, { "tag": msg.author.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" })} ${face}`).catch(() => msg.channel.send(lang.couples.divorce.prompts.dmFailed))
@@ -355,7 +355,7 @@ commands.assign([
 				availableRowCount = rows.length
 			} else {
 				rows = await utils.sql.all("SELECT * FROM couples ORDER BY balance DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
-				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM Couples")).count
+				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM couples")).count
 			}
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)

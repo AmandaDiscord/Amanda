@@ -48,7 +48,7 @@ class Database {
 
 	/**
 	 * @param {string} statement
-	 * @param {Array<any>} prepared
+	 * @param {Array<any>} [prepared]
 	 */
 	raw(statement, prepared) {
 		return all(statement, prepared)
