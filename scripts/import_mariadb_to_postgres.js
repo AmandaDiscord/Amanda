@@ -6,8 +6,10 @@ const config = require("../config.js")
 
 const passthrough = require("../passthrough")
 
+const old_sql_domain = ""
+
 const db = mysql.createPool({
-	host: config.sql_domain,
+	host: old_sql_domain,
 	user: "amanda",
 	password: config.sql_password,
 	database: "money",
@@ -39,6 +41,7 @@ const column_translations = {
 	machineID: "machine_id",
 	playlistID: "playlist_id",
 	videoID: "video_id",
+	playCount: "play_count",
 	botID: "bot_id",
 	channelID: "channel_id",
 	woncoins: "won_coins",
@@ -81,7 +84,7 @@ const table_translations = {
 				if (column_translations[column]) payload[column_translations[column]] = row[column]
 				else payload[column] = row[column]
 			}
-			orm.db.insert(pg_table, payload)
+			await orm.db.insert(pg_table, payload)
 			console.log(`Done with entry:\n${util.inspect(payload)}\nFor Table: ${table} => ${pg_table}`)
 		}
 		console.log(`Done with table ${table} => ${pg_table}\n\n`)
