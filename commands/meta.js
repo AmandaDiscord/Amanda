@@ -509,7 +509,6 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.meta.profile.prompts.invalidUser, { "username": msg.author.username }))
 			await msg.channel.sendTyping()
-			console.log(user)
 
 			let themeoverlay = "profile"
 			const themedata = await utils.orm.db.get("settings_self", { key_id: user.id, setting: "profiletheme" })
@@ -843,14 +842,12 @@ commands.assign([
 				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				if (value === "\"\"" || value === "''" || value === "``") return msg.channel.send("Invalid prefix")
 				let val = value
-				console.log(value)
 				const match = value.match(/^(["'`])([\w\d ]{1,48})(["'`])$/)
 				if (match) {
 					if (match[1] === match[3]) {
 						val = match[2]
 					}
 				}
-				console.log(val)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: val })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
