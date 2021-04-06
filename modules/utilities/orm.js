@@ -84,27 +84,29 @@ class Database {
 	 * @param {"insert" | "upsert"} method
 	 */
 	_in(table, properties, options, method) {
-		let res
-		if (options.useBuffer) {
-			/** @type {Model} */
-			const model = this.tables[table]
-			if (this.buffers[model.table].bufferValues.insert.length === model.options.bufferSize) {
-				clearTimeout(this.buffers[model.table].timeouts.insert)
-				this.buffers[model.table].timeouts.insert = null
-				res = this._buildStatement(method, table, properties, { useBuffer: true })
-			} else {
-				this.buffers[model.table].bufferValues.insert.push(properties)
-				if (!this.buffers[model.table].timeouts.insert) {
-					this.buffers[model.table].timeouts.insert = setTimeout(() => {
-						const r = this._buildStatement(method, table, undefined, { useBuffer: true })
-						all(r.statement, r.prepared)
-						this.buffers[model.table].timeouts.insert = null
-					}, model.options.bufferTimeout)
+		return new Promise((r, rej) => {
+			let res
+			if (options.useBuffer) {
+				/** @type {Model} */
+				const model = this.tables[table]
+				if (this.buffers[model.table].bufferValues.insert.length === model.options.bufferSize) {
+					clearTimeout(this.buffers[model.table].timeouts.insert)
+					this.buffers[model.table].timeouts.insert = null
+					res = this._buildStatement(method, table, properties, { useBuffer: true })
+				} else {
+					this.buffers[model.table].bufferValues.insert.push(properties)
+					if (!this.buffers[model.table].timeouts.insert) {
+						this.buffers[model.table].timeouts.insert = setTimeout(() => {
+							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
+							r(all(res2.statement, res2.prepared).catch(rej))
+							this.buffers[model.table].timeouts.insert = null
+						}, model.options.bufferTimeout)
+					}
+					return
 				}
-				return
-			}
-		} else res = this._buildStatement(method, table, properties)
-		all(res.statement, res.prepared)
+			} else res = this._buildStatement(method, table, properties)
+			return r(all(res.statement, res.prepared).catch(rej))
+		})
 	}
 
 	/**
