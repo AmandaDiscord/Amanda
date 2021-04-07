@@ -598,14 +598,13 @@ class SpotifySong extends YouTubeSong {
 					let decided = tracks[0]
 					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
 					if (found) decided = found
-					if (!decided.track) this.error = `Missing track for ${this.title}`
-					else {
+					if (decided && decided.track) {
 						this.id = decided.info.identifier
 						this.lengthSeconds = Math.round(decided.info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
 						ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
 						return youtubePrepareCache.get()
-					}
+					} else this.error = `Missing track for ${this.title}`
 				}).catch(message => {
 					this.error = message
 				})
