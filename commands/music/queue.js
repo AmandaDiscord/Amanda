@@ -303,7 +303,7 @@ class Queue {
 				let reason = ""
 				if (event.error) reason += `${event.error}\n`
 				if (event.reason) reason += event.reason
-				this.songs[0].error = reason ? reason : `\`\`\`js\n${JSON.stringify({ error: "Track got stuck" }, null, 4)}`
+				this.songs[0].error = reason.length ? reason.trim() : "Song got stuck"
 				console.log("Song error call D")
 				this._reportError()
 			}
