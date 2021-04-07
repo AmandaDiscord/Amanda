@@ -351,7 +351,7 @@ commands.assign([
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				rows = await utils.sql.all(`SELECT * FROM couples INNER JOIN members ON (couples.user1 = members.id OR couples.user2 = members.id) WHERE members.guild_id = $1 ORDER BY balance DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
+				rows = await utils.sql.all(`SELECT * FROM couples INNER JOIN members ON (couples.user1 = members.id OR couples.user2 = members.id) WHERE members.guild_id = $1 ORDER BY balance DESC LIMIT ${itemsPerPage} OFFSET ${offset}`, msg.guild.id)
 				availableRowCount = rows.length
 			} else {
 				rows = await utils.sql.all("SELECT * FROM couples ORDER BY balance DESC LIMIT $1 OFFSET $2", [itemsPerPage, offset])
