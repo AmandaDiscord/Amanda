@@ -12,16 +12,16 @@ function applyChanges() {
 	let removedCount = 0
 	let addedCount = 0
 	for (const node of client.lavalink.nodes.values()) {
-		if (!constants.lavalinkNodes.find(n => n.host === node.host)) {
+		if (!constants.lavalinkNodes.find(n => n.id === node.id)) {
 			removedCount++
-			const nodeInstance = client.lavalink.nodes.get(node.host)
-			client.lavalink.removeNode(node.host)
+			const nodeInstance = client.lavalink.nodes.get(node.id)
+			client.lavalink.removeNode(node.id)
 			nodeInstance.destroy()
 		}
 	}
 
 	for (const node of constants.lavalinkNodes) {
-		if (!client.lavalink.nodes.has(node.host)) {
+		if (!client.lavalink.nodes.has(node.id)) {
 			addedCount++
 			client.lavalink.createNode(node)
 		}
@@ -54,7 +54,7 @@ async function syncConnections() {
 	let addedCount = 0
 
 	for (const node of constants.lavalinkNodes) { // loop through all known nodes
-		const clientNode = [...client.lavalink.nodes.values()].find(n => n.host === node.host) // get the matching client node
+		const clientNode = [...client.lavalink.nodes.values()].find(n => n.id === node.id) // get the matching client node
 		if (node.enabled) { // try connecting to nodes
 			if (clientNode) continue // only consider situations where the client node is unknown
 			// connect to the node
@@ -89,6 +89,7 @@ async function fallover(nodeID) {
 				const audit = queues.audits.get(q.guild.id)
 				if (audit) audit.push({ action: "Queue Destroy (Error while load balancing)", platform: "Discord", user: "Amanda" })
 				q.stop()
+				continue
 			}
 			const newNode = client.lavalink.nodes.get(newLocalNode.id)
 			await client.lavalink.switch(p, newNode)

@@ -51,7 +51,7 @@ for (const key of Object.keys(permissionstable)) {
 }
 
 function upsertChannel(channel, guild_id) {
-	db.upsert("channels", { id: channel.id, type: channel.type, guild_id: guild_id, name: channel.name })
+	db.upsert("channels", { id: channel.id, type: channel.type, guild_id: guild_id, name: channel.name, rtc_region: channel.rtc_region || null })
 
 	for (const overwrite of channel.permission_overwrites || []) {
 		db.upsert("channel_overrides", { id: overwrite.id, type: overwrite.type, allow: overwrite.allow, deny: overwrite.deny, guild_id: guild_id, channel_id: channel.id })
