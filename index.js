@@ -49,8 +49,6 @@ const pool = new Postgres.Pool({
 	console.log("Connected to database")
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
-	const { cacheManager } = require("./modules/utilities/cachemanager")
-	await cacheManager.guilds.delete()
 
 	// Gateway
 	const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
