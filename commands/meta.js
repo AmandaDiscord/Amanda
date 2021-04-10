@@ -260,7 +260,7 @@ commands.assign([
 		examples: ["restartnotify"],
 		async process(msg, suffix, lang) {
 			utils.orm.db.upsert("restart_notify", { bot_id: client.user.id, mention_id: msg.author.id, channel_id: msg.channel.id })
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ADD_REACTIONS"))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, Discord.Constants.PERMISSION_FLAGS["ADD_REACTIONS"]))) return msg.channel.send(lang.admin.restartnotify.returns.confirmation)
 			msg.react("✅")
 		}
 	},
@@ -430,7 +430,7 @@ commands.assign([
 		examples: ["avatar PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let canEmbedLinks = true
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "EMBED_LINKS"))) canEmbedLinks = false
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, Discord.Constants.PERMISSION_FLAGS["EMBED_LINKS"]))) canEmbedLinks = false
 			/** @type {Discord.User} */
 			let user = null
 			if (msg.channel.type == "text") {
@@ -489,7 +489,7 @@ commands.assign([
 			const embed = new Discord.MessageEmbed()
 				.setImage(url)
 				.setColor(constants.standard_embed_color)
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "EMBED_LINKS"))) return msg.channel.send(url)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, Discord.Constants.PERMISSION_FLAGS["EMBED_LINKS"]))) return msg.channel.send(url)
 			return msg.channel.send(embed)
 		}
 	},
@@ -501,7 +501,7 @@ commands.assign([
 		examples: ["profile PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ATTACH_FILES"))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, Discord.Constants.PERMISSION_FLAGS["ATTACH_FILES"]))) return msg.channel.send(lang.meta.profile.prompts.permissionDenied)
 			if (suffix.indexOf("--light") != -1) suffix = suffix.replace("--light", "")
 			if (msg.channel.type == "text") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
@@ -1058,7 +1058,7 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if ((await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ADD_REACTIONS"))) embed.setFooter(lang.meta.help.returns.mobile)
+						if ((await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, Discord.Constants.PERMISSION_FLAGS["ADD_REACTIONS"]))) embed.setFooter(lang.meta.help.returns.mobile)
 						msg.channel.send(await utils.contentify(msg.channel, embed)).then(message => {
 							const mobileEmbed = new Discord.MessageEmbed()
 								.setAuthor(`Command Category: ${suffix}`)

@@ -27,7 +27,7 @@ const cmds = [
 		 */
 		async process(msg, suffix, lang) {
 			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, Discord.Constants.PERMISSION_FLAGS["ATTACH_FILES"]))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
 			if (!args.length) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))

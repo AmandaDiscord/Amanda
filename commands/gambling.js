@@ -23,7 +23,7 @@ commands.assign([
 		examples: ["slot 1000"],
 		async process(msg, suffix, lang) {
 			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, Discord.Constants.PERMISSION_FLAGS["ATTACH_FILES"]))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
@@ -407,7 +407,7 @@ commands.assign([
 		examples: ["wheel 1000"],
 		async process(msg, suffix, lang) {
 			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, Discord.Constants.PERMISSION_FLAGS["ATTACH_FILES"]))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),

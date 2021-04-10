@@ -872,9 +872,9 @@ const common = {
 	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
 		const perms = await utils.cacheManager.channels.getOverridesFor({ id: voiceChannel.id })
 		const [viewable, joinable, speakable] = await Promise.all([
-			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms),
-			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms),
-			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, Discord.Constants.PERMISSION_FLAGS["VIEW_CHANNEL"], perms),
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, Discord.Constants.PERMISSION_FLAGS["CONNECT"], perms),
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, Discord.Constants.PERMISSION_FLAGS["SPEAK"], perms)
 		])
 		if ((!viewable && !joinable)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))

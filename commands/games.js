@@ -160,7 +160,7 @@ class TriviaGame extends Game {
 			.setColor(this.color)
 		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `<@${r.userID}> (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax })} ${emojis.discoin})` : ""}`).join("\n") })
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
-		if (this.channel.type === "dm" || await utils.cacheManager.channels.clientHasPermission({ id: this.channel.id, guild_id: this.channel.guild.id }, "ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
+		if (this.channel.type === "dm" || await utils.cacheManager.channels.clientHasPermission({ id: this.channel.id, guild_id: this.channel.guild.id }, Discord.Constants.PERMISSION_FLAGS["ADD_REACTIONS"])) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
 		return this.channel.send(await utils.contentify(this.channel, embed)).then(msg => {
 			new ReactionMenu(msg, client, [
