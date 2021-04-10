@@ -121,12 +121,11 @@ async function paginate(channel, pageCount, callback) {
 				makeTimeout()
 			} }
 		])
-		const channelType = await cacheManager.channels.typeOf(channel)
 		// eslint-disable-next-line no-inner-declarations
 		function makeTimeout() {
 			clearTimeout(reactionMenuExpires)
 			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true, channelType === "dm" ? "dm" : "text")
+				reactionMenu.destroy(true, msg.channel.type === "dm" ? "dm" : "text")
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()

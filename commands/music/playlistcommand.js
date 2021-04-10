@@ -27,7 +27,7 @@ commands.assign([
 		category: "audio",
 		description: "Create, play, and edit playlists.",
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]
 			if (playlistName == "show") {
@@ -165,12 +165,6 @@ commands.assign([
 				const NOT_AN_ID = Symbol("NOT_AN_ID")
 				const NO_TRACKS = Symbol("NO_TRACKS")
 
-				/**
-				 * @type {Discord.Guild}
-				 */
-				// @ts-ignore
-				const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
-
 				// Resolve the content
 				/** @type {{id: string, title: string, lengthSeconds: number}|null} */
 				// Just trust me on this eslint control:
@@ -182,7 +176,7 @@ commands.assign([
 							return { id: data.videoId, title: data.title, lengthSeconds: data.lengthSeconds }
 						})
 					} else { // Resolve tracks with Lavalink
-						return common.getTracks(match.id, guild.region).then(tracks => {
+						return common.getTracks(match.id).then(tracks => {
 							if (tracks && tracks[0]) {
 								// If the ID worked, add the song
 								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
@@ -191,7 +185,7 @@ commands.assign([
 					}
 				})().catch(() => {
 					// Treating as ID failed, so start a search
-					return common.getTracks(`ytsearch:${search}`, guild.region).then(tracks => {
+					return common.getTracks(`ytsearch:${search}`).then(tracks => {
 						if (tracks && tracks[0]) {
 							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
 						} else return null // no results

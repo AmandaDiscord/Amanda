@@ -22,7 +22,6 @@ const Amanda = require("./modules/structures/Discord/Amanda")
 const config = require("./config.js")
 const constants = require("./constants.js")
 
-const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
 const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
@@ -50,7 +49,11 @@ const pool = new Postgres.Pool({
 	console.log("Connected to database")
 
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
+	const { cacheManager } = require("./modules/utilities/cachemanager")
+	await cacheManager.guilds.delete()
 
+	// Gateway
+	const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
 	const GatewayRequester = require("./modules/managers/GatewayRequester")
 	const gateway = new GatewayRequester(GatewayWorker)
 	passthrough.workers = { gateway }

@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#b32eedcf19f130d74ca2319096366ad42c0d28b5",
-    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#b20be3850a9af0fc7d7109516f3b529a2ef66164",
+    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#d4eb385ac527fa51f6cf4c1a95cf629183ab9a13",
     "@amanda/lang": "github:AmandaDiscord/Lang#70c61cac04eeac5d472d2b93bdcf5bd92d0641c1",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#f67a1d6e94ff4caa10c39fa1e3b33b564b2954de",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
@@ -26,7 +26,6 @@
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.2.0",
-    "express": "^4.17.1",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "genius-lyrics-api": "^3.0.6",
     "heapdump": "^0.3.15",
@@ -40,16 +39,15 @@
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "simple-git": "^2.37.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#a60ec27077ea49935e2ac34bcff6192211bd0217",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#c8941170c5f1fda9732a76cb95a8b71e0070f25d",
     "taihou": "^2.0.4",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#408d4417a580f4d0c2369019abaee3d649de636f"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#e695a1952d0ffed7fa8a7105a572d82c9dbe9495"
   },
   "devDependencies": {
     "@types/centra": "^2.2.0",
-    "@types/mysql2": "github:types/mysql2#d4ef3b2292f328049f7e4c545f6adab7d6a350a9",
     "@types/node": "^14.14.37",
-    "eslint": "^7.23.0",
-    "tap": "^14.11.0",
-    "typescript": "~4.2.3"
+    "eslint": "^7.24.0",
+    "tap": "^15.0.2",
+    "typescript": "~4.2.4"
   }
 }

@@ -1,5 +1,5 @@
 Amanda's Privacy Policy
-Last edited 9/21/2020 at 12:26AM UTC-7
+Last edited 4/10/2021 at 11:27AM UTC-7
 
 
 This privacy policy may be updated at any time for any reason to continue to meet the needs of Amanda. New policy updates will take
@@ -32,7 +32,7 @@ WHY THIS DATA IS STORED:
 All cache and local data is stored on first party owned machines in countries which respect data privacy laws which
 may or may not be "remote" in relation to Amanda.
 
-The cache is a remote storage provider which serves as a data store for data sent to Amanda from Discord in a
+The cache serves as a data store for data sent to Amanda from Discord in a
 semi-persistent state. This is used to keep as much data as possible out of Amanda's memory to provide more of it to
 Amanda to perform operations relating to Amanda's client code base. It's primary function is to hold data Discord sends which is
 necessary for a client connected to Discord to operate beyond providing bare minimum actions. Discord does not send a lot of data

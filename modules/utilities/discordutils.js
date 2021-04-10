@@ -166,7 +166,7 @@ async function contentify(channel, content) {
 	/** @type {number} */
 	// @ts-ignore
 	if (content instanceof Discord.MessageEmbed) {
-		if (!(await cacheManager.channels.hasPermissions({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, "EMBED_LINKS"))) {
+		if (!(await cacheManager.channels.clientHasPermission({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, "EMBED_LINKS"))) {
 			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? `${content.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
 			if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 			value += "\nPlease allow me to embed content"

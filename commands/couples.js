@@ -18,7 +18,7 @@ commands.assign([
 		examples: ["couple PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+			if (msg.channel.type !== "dm") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
@@ -71,7 +71,7 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to propose to.`)
 			let user, member
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+			if (msg.channel.type !== "dm") {
 				member = await utils.cacheManager.members.find(msg, suffix)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix)
@@ -105,7 +105,7 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to propose to.`)
 			let user, member
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+			if (msg.channel.type !== "dm") {
 				member = await utils.cacheManager.members.find(msg, suffix)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix)
@@ -145,7 +145,7 @@ commands.assign([
 		async process(msg, suffix, lang) {
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide someone to decline.`)
 			let user, member
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+			if (msg.channel.type !== "dm") {
 				member = await utils.cacheManager.members.find(msg, suffix)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix)
@@ -216,7 +216,7 @@ commands.assign([
 		examples: ["cbal PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "text") {
+			if (msg.channel.type !== "dm") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
@@ -331,7 +331,7 @@ commands.assign([
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 			if (isLocal) {
 				args.shift() // if it exists, page number will now definitely be in args[0]
-				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 			}
 
 			// Set up page number

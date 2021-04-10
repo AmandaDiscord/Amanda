@@ -151,7 +151,7 @@ const common = {
 	 * @returns {Promise<{track: string, info: import("../../typings").LavalinkInfo}[]>}
 	 */
 	getTracks: function(input, region = "") {
-		const node = common.nodes.getByRegion(region)
+		const node = common.nodes.preferred(region)
 
 		const params = new URLSearchParams()
 		params.append("identifier", input)
@@ -174,7 +174,7 @@ const common = {
 	 * @returns {Promise<{track: string, info: import("../../typings").LavalinkInfo}[]>}
 	 */
 	searchYouTube: function(input, region = "") {
-		const node = common.nodes.getByRegion(region)
+		const node = common.nodes.preferred(region)
 		if (node.search_with_invidious) {
 			let d
 			try {
@@ -250,6 +250,13 @@ const common = {
 	nodes: {
 		lowUsage() {
 			return client.lavalink.idealNodes.map(node => constants.lavalinkNodes.find(n => n.host === node.host)).filter(node => node.enabled)
+		},
+
+		/**
+		 * @param {string} [region]
+		 */
+		preferred(region) {
+			return common.nodes.lowUsage().find(item => item.regions.includes(region)) || common.nodes.lowUsage()[0] || common.nodes.first()
 		},
 
 		first() {
@@ -505,10 +512,7 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
-			let tracks = await common.searchYouTube(search, g ? g.region : undefined)
+			let tracks = await common.searchYouTube(search, voiceChannel.rtcRegion)
 			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
@@ -534,12 +538,9 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
 			let tracks
 			try {
-				tracks = await common.getTracks(`scsearch:${search}`, g.region)
+				tracks = await common.getTracks(`scsearch:${search}`, voiceChannel.rtcRegion)
 			} catch {
 				return textChannel.send(lang.audio.music.prompts.noResults)
 			}
@@ -564,12 +565,9 @@ const common = {
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async function(textChannel, voiceChannel, msg, insert, link, lang) {
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const g = await utils.cacheManager.guilds.get(voiceChannel.guild.id, true, true)
 			let tracks
 			try {
-				tracks = await common.getTracks(link, g.region)
+				tracks = await common.getTracks(link, voiceChannel.rtcRegion)
 			} catch {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
@@ -872,11 +870,11 @@ const common = {
 	 * @return {Promise<(Discord.VoiceChannel|null)>}
 	 */
 	verifyVoiceChannel: async function(voiceChannel, msg, lang) {
-		const perms = await utils.cacheManager.channels.permissionsFor({ id: voiceChannel.id, guild_id: voiceChannel.guild.id })
+		const perms = await utils.cacheManager.channels.getOverridesFor({ id: voiceChannel.id })
 		const [viewable, joinable, speakable] = await Promise.all([
-			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms),
-			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms),
-			utils.cacheManager.channels.hasPermissions({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "VIEW_CHANNEL", perms),
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "CONNECT", perms),
+			utils.cacheManager.channels.clientHasPermission({ id: voiceChannel.id, guild_id: voiceChannel.guild.id }, "SPEAK", perms)
 		])
 		if ((!viewable && !joinable)) {
 			msg.channel.send(utils.replace(lang.audio.music.prompts.voiceCantJoin, { "username": msg.author.username }))

@@ -22,8 +22,8 @@ commands.assign([
 		category: "gambling",
 		examples: ["slot 1000"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, BigInt(0x00008000)))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.slot.prompts.guildOnly, { "username": msg.author.username }))
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.gambling.slot.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const args = suffix.split(" ")
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
@@ -137,7 +137,7 @@ commands.assign([
 		category: "gambling",
 		examples: ["bf 1000 h"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			const money = await utils.coinsManager.get(msg.author.id)
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBetandSide, { "username": msg.author.username }))
@@ -257,7 +257,7 @@ commands.assign([
 		category: "gambling",
 		examples: ["daily"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.daily.prompts.guildOnly, { "username": msg.author.username }))
 			const [row, donor] = await Promise.all([
 				utils.sql.get("SELECT last_claim FROM daily_cooldown WHERE user_id = $1", msg.author.id),
 				utils.sql.get("SELECT * FROM premium WHERE user_id = $1", msg.author.id)
@@ -294,7 +294,7 @@ commands.assign([
 			const isLocal = ["local", "guild", "server"].includes(args[0])
 
 			if (isLocal) {
-				if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+				if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
 				args.shift() // if it exists, page number will now definitely be in args[0]
 			}
 
@@ -358,7 +358,7 @@ commands.assign([
 		category: "gambling",
 		examples: ["give half PapiOphidian"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.give.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidAmountandUser, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
@@ -406,8 +406,8 @@ commands.assign([
 		category: "gambling",
 		examples: ["wheel 1000"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, BigInt(0x00008000)))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.guildOnly, { "username": msg.author.username }))
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.gambling.wheel.prompts.permissionDenied)
 			await msg.channel.sendTyping()
 			const [money, canv, triangle] = await Promise.all([
 				utils.coinsManager.get(msg.author.id),

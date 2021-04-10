@@ -101,7 +101,7 @@ class Queue {
 
 		this.voiceLeaveWarningMessagePromise = null
 		if (!host) {
-			const node = common.nodes.getByRegion(this.guild.region)
+			const node = common.nodes.preferred(this.voiceChannel.rtcRegion)
 			host = node.id
 		}
 		this.nodeID = host
@@ -139,7 +139,7 @@ class Queue {
 					if (!this.songs[0].error) {
 						console.log(
 							"Song didn't start."
-							+ ` Region: ${this.guild.region}`
+							+ ` Region: ${this.voiceChannel.rtcRegion || "auto"}`
 							+ `, guildID: ${this.guild.id}`
 						)
 						this.songs[0].error = lang.audio.music.prompts.songNotPlayingDiscord

@@ -26,8 +26,8 @@ const cmds = [
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
-			if (!(await utils.cacheManager.channels.hasPermissions({ id: msg.channel.id, guild_id: msg.guild.id }, BigInt(0x00008000)))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.interaction.ship.prompts.guildOnly, { "username": msg.author.username }))
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild.id }, "ATTACH_FILES"))) return msg.channel.send(lang.interaction.ship.prompts.permissionDenied)
 			suffix = suffix.replace(/ +/g, " ")
 			const args = suffix.split(" ")
 			if (!args.length) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUsers, { "username": msg.author.username }))
@@ -88,7 +88,7 @@ const cmds = [
 		 * @param {import("@amanda/lang").Lang} lang
 		 */
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
+			if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.interaction.bean.prompts.guildOnly, { "username": msg.author.username }))
 			if (!suffix) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await utils.cacheManager.members.find(msg, suffix, true)
 			if (!member) return msg.channel.send(utils.replace(lang.interaction.bean.prompts.invalidUser, { "username": msg.author.username }))

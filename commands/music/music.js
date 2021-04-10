@@ -28,7 +28,7 @@ const subcommandsMap = new Map([
 	["play", {
 		voiceChannel: "ask",
 		code: async (msg, args, { voiceChannel, lang }) => {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const existing = queues.cache.get(msg.guild.id)
 			if (existing) {
 				if (voiceChannel.id !== existing.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": existing.voiceChannel.name }))
@@ -41,23 +41,20 @@ const subcommandsMap = new Map([
 			}
 			const match = common.inputToID(search)
 
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
 
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
 				if (config.use_invidious) { // Resolve tracks with Invidious
 					const queue = queues.cache.get(msg.guild.id)
-					const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(guild.region)
+					const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(voiceChannel.rtcRegion)
 					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
 						const url = common.invidious.dataToURL(data)
 						// The ID worked. Add the song
-						const track = await common.invidious.urlToTrack(url, guild.region)
+						const track = await common.invidious.urlToTrack(url, voiceChannel.rtcRegion)
 						if (track) {
 							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
 							common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
@@ -68,7 +65,7 @@ const subcommandsMap = new Map([
 						common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
 					})
 				} else { // Resolve tracks with Lavalink
-					common.getTracks(match.id, guild.region).then(tracks => {
+					common.getTracks(match.id, voiceChannel.rtcRegion).then(tracks => {
 						if (tracks[0]) {
 							// If the ID worked, add the song
 							common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
@@ -80,7 +77,7 @@ const subcommandsMap = new Map([
 				}
 			} else if (match && match.type == "playlist" && match.list) { // Linked to a playlist. `list` is set, `id` may or may not be.
 				// Get the tracks
-				let tracks = await common.getTracks(match.list, guild.region)
+				let tracks = await common.getTracks(match.list, voiceChannel.rtcRegion)
 				// Figure out what index was linked to, if any
 				/** @type {number} */
 				let linkedIndex = null
@@ -437,10 +434,7 @@ const subcommandsMap = new Map([
 		code: async (msg, args, { lang }) => {
 			const suffix = args.slice(1).join(" ")
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide search terms.`)
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const guild = await utils.cacheManager.guilds.get(msg.guild.id)
-			const tracks = await common.searchYouTube(suffix, guild.region)
+			const tracks = await common.searchYouTube(suffix)
 			if (tracks && tracks[0] && tracks[0].info && tracks[0].info.identifier) {
 				return msg.channel.send(`https://www.youtube.com/watch?v=${tracks[0].info.identifier}`)
 			} else return msg.channel.send(lang.audio.music.prompts.noResults)
@@ -509,9 +503,8 @@ commands.assign([
 			}
 
 			function send(text, announce = true, throwFailed = false) {
-				return msg.author.send(text).then(async () => {
-					const type = await utils.cacheManager.channels.typeOf(msg.channel)
-					if (type == "text" && announce) msg.channel.send(lang.audio.token.returns.dmSuccess)
+				return msg.author.send(text).then(() => {
+					if (msg.channel.type == "text" && announce) msg.channel.send(lang.audio.token.returns.dmSuccess)
 				}).catch(() => {
 					if (announce) msg.channel.send(lang.audio.token.prompts.dmFailed)
 					if (throwFailed) throw new Error("DM failed")
@@ -526,7 +519,7 @@ commands.assign([
 		category: "audio",
 		examples: ["debug general"],
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.debug.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.debug.prompts.guildOnly)
 			const channel = await utils.cacheManager.channels.find(msg, suffix, true)
 			if (!channel) return msg.channel.send(lang.audio.debug.prompts.invalidChannel)
 			/** @type {Object.<string, Array<[string, bigint]>>} */
@@ -535,13 +528,9 @@ commands.assign([
 				voice: [["View Channel", BigInt(0x00000400)], ["Join", BigInt(0x00100000)], ["Speak", BigInt(0x00200000)]]
 			}
 
-			/** @type {Discord.Guild} */
-			// @ts-ignore
-			const guild = await utils.cacheManager.guilds.get(msg.guild.id, true, true)
-
 			const perms = channel.type == "text" ? types.text : types.voice
 			const emoji = channel.type == "text" ? "674569797278892032" : "674569797278760961"
-			const node = common.nodes.getByRegion(guild.region)
+			const node = common.nodes.preferred()
 			let extraNodeInfo = ""
 			const currentQueue = queues.cache.get(msg.guild.id)
 			const currentQueueNode = currentQueue ? currentQueue.nodeID : null
@@ -553,7 +542,8 @@ commands.assign([
 			if (currentQueueNode) final = common.nodes.getByID(currentQueueNode)
 			else final = node
 			const invidiousHostname = new URL(final.invidious_origin).hostname
-			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.cacheManager.channels.hasPermissions({ id: channel.id, guild_id: msg.guild.id }, item[1])}`))
+			const overrides = await utils.cacheManager.channels.getOverridesFor({ id: channel.id })
+			const permss = await Promise.all(perms.map(async item => `${item[0]}: ${await utils.cacheManager.channels.clientHasPermission({ id: channel.id, guild_id: msg.guild.id }, item[1], overrides)}`))
 			const details = new Discord.MessageEmbed()
 				.setColor(constants.standard_embed_color)
 				.setAuthor(utils.replace(lang.audio.debug.returns.infoFor, { "channel": channel.name }), utils.emojiURL(emoji))
@@ -576,7 +566,7 @@ commands.assign([
 		examples: ["frisky chill"],
 		order: 3,
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (suffix === "classic") suffix = "classics" // alias
 			if (suffix === "originals") suffix = "original" // alias
 			if (["original", "deep", "chill", "classics"].includes(suffix)) { // valid station?
@@ -685,7 +675,7 @@ commands.assign([
 		aliases: ["listenmoe", "lm"],
 		category: "audio",
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (["jp", "kp", "jpop", "kpop"].includes(suffix.toLowerCase())) { // valid station?
 				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 				if (!voiceChannel) return
@@ -713,7 +703,7 @@ commands.assign([
 		order: 1,
 		async process(msg, suffix, lang) {
 			// No DMs
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			// Args
 			const args = suffix.split(" ")
 			// Find subcommand
@@ -771,7 +761,7 @@ commands.assign([
 		examples: ["soundcloud Kanshou No Matenrou"],
 		order: 2,
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return
 
@@ -791,7 +781,7 @@ commands.assign([
 		examples: ["newgrounds Spaze - Underworld"],
 		order: 2,
 		async process(msg, suffix, lang) {
-			if (await utils.cacheManager.channels.typeOf(msg.channel) === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
+			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
 			if (!voiceChannel) return
 

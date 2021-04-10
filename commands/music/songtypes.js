@@ -219,7 +219,7 @@ class YouTubeSong extends Song {
 					let region = null
 					if (this.queue) {
 						host = common.nodes.getByID(this.queue.nodeID).host
-						region = this.queue.guild.region
+						region = this.queue.voiceChannel.rtcRegion
 					}
 					return common.invidious.getTrack(this.id, host, region).then(t => {
 						this.track = t
@@ -228,7 +228,7 @@ class YouTubeSong extends Song {
 						else this.error = `${error.name} - ${error.message}`
 					})
 				} else { // Resolve track with Lavalink
-					return common.getTracks(this.id, this.queue.guild.region).then(tracks => {
+					return common.getTracks(this.id, this.queue.voiceChannel.rtcRegion).then(tracks => {
 						if (!tracks[0]) this.error = `No results for ID ${this.id}`
 						else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
 						else {
@@ -464,7 +464,7 @@ class FriskySong extends Song {
 		if (this.track == "!") {
 			let mp3URL = this.stationData.beta_url
 			if (this.station === "chill") mp3URL = this.stationData.url
-			return common.getTracks(mp3URL, this.queue.guild.region).then(tracks => {
+			return common.getTracks(mp3URL, this.queue.voiceChannel.rtcRegion).then(tracks => {
 				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
 				else {
 					console.error(tracks)
@@ -593,7 +593,7 @@ class SpotifySong extends YouTubeSong {
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
-				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.guild.region).then(tracks => {
+				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.voiceChannel.rtcRegion).then(tracks => {
 					if (!tracks[0]) this.error = `No results for ${this.title}`
 					let decided = tracks[0]
 					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
@@ -680,7 +680,7 @@ class ExternalSong extends Song {
 	async prepare() {
 		let info
 		try {
-			info = await common.getTracks(this.uri, this.queue.guild.region)
+			info = await common.getTracks(this.uri, this.queue.voiceChannel.rtcRegion)
 		} catch {
 			this.error = `Missing track for ${this.title}`
 			return
@@ -780,7 +780,7 @@ class ListenMoeSong extends Song {
 		if (this.track === "!") {
 			let info
 			try {
-				info = await common.getTracks(this.uri, this.queue.guild.region)
+				info = await common.getTracks(this.uri, this.queue.voiceChannel.rtcRegion)
 			} catch {
 				this.error = `Missing track for ${this.title}`
 				return
@@ -897,7 +897,7 @@ class NewgroundsSong extends Song {
 		if (this.track && this.track != "!") return
 		let data
 		try {
-			data = await common.getTracks(this.streamURL, this.queue.guild.region)
+			data = await common.getTracks(this.streamURL, this.queue.voiceChannel.rtcRegion)
 		} catch {
 			this.error = `Missing track for ${this.title}`
 			return

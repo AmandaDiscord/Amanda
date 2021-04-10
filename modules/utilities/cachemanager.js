@@ -1,54 +1,13 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const path = require("path")
 
 const passthrough = require("../../passthrough")
-const { client, config, constants, reloader } = passthrough
+const { client, config, constants } = passthrough
 
 const { contentify, createMessageCollector } = require("./discordutils")
 const sql = require("./sql")
 const { db } = require("./orm")
-
-const permissionstable = {
-	CREATE_INSTANT_INVITE: BigInt(0x00000001),
-	KICK_MEMBERS: BigInt(0x00000002),
-	BAN_MEMBERS: BigInt(0x00000004),
-	ADMINISTRATOR: BigInt(0x00000008),
-	MANAGE_CHANNELS: BigInt(0x00000010),
-	MANAGE_GUILD: BigInt(0x00000020),
-	ADD_REACTIONS: BigInt(0x00000040),
-	VIEW_AUDIT_LOG: BigInt(0x00000080),
-	PRIORITY_SPEAKER: BigInt(0x00000100),
-	STREAM: BigInt(0x00000200),
-	VIEW_CHANNEL: BigInt(0x00000400),
-	SEND_MESSAGES: BigInt(0x00000800),
-	SEND_TTS_MESSAGES: BigInt(0x00001000),
-	MANAGE_MESSAGES: BigInt(0x00002000),
-	EMBED_LINKS: BigInt(0x00004000),
-	ATTACH_FILES: BigInt(0x00008000),
-	READ_MESSAGE_HISTORY: BigInt(0x00010000),
-	MENTION_EVERYONE: BigInt(0x00020000),
-	USE_EXTERNAL_EMOJIS: BigInt(0x00040000),
-	VIEW_GUILD_INSIGHTS: BigInt(0x00080000),
-	CONNECT: BigInt(0x00100000),
-	SPEAK: BigInt(0x00200000),
-	MUTE_MEMBERS: BigInt(0x00400000),
-	DEAFEN_MEMBERS: BigInt(0x00800000),
-	MOVE_MEMBERS: BigInt(0x01000000),
-	USE_VAD: BigInt(0x02000000),
-	CHANGE_NICKNAME: BigInt(0x04000000),
-	MANAGE_NICKNAMES: BigInt(0x08000000),
-	MANAGE_ROLES: BigInt(0x10000000),
-	MANAGE_WEBHOOKS: BigInt(0x20000000),
-	MANAGE_EMOJIS: BigInt(0x40000000),
-	ALL: BigInt(0x00000000)
-}
-
-for (const key of Object.keys(permissionstable)) {
-	if (key === "ALL") continue
-	permissionstable["ALL"] |= permissionstable[key]
-}
 
 function upsertChannel(channel, guild_id) {
 	db.upsert("channels", { id: channel.id, type: channel.type, guild_id: guild_id, name: channel.name, rtc_region: channel.rtc_region || null })
@@ -80,7 +39,7 @@ function processData(data) {
 	switch (data.t) {
 	case "GUILD_CREATE":
 	case "GUILD_UPDATE": {
-		db.upsert("guilds", { id: data.d.id, name: data.d.name, icon: data.d.icon, member_count: data.d.member_count || 2, owner_id: data.d.owner_id, permissions: data.d.permissions || 0, region: data.d.region, added_by: config.cluster_id })
+		db.upsert("guilds", { id: data.d.id, name: data.d.name, icon: data.d.icon, member_count: data.d.member_count || 2, owner_id: data.d.owner_id, added_by: config.cluster_id })
 
 		for (const channel of data.d.channels || empty) {
 			upsertChannel(channel, data.d.id)
@@ -101,13 +60,7 @@ function processData(data) {
 	}
 	case "GUILD_DELETE": {
 		if (!data.d.unavailable) {
-			db.delete("guilds", { id: data.d.id })
-			db.delete("channels", { guild_id: data.d.id })
-			db.delete("members", { guild_id: data.d.id })
-			db.delete("member_roles", { guild_id: data.d.id })
-			db.delete("channel_overrides", { guild_id: data.d.id })
-			db.delete("roles", { guild_id: data.d.id })
-			db.delete("voice_states", { guild_id: data.d.id })
+			guildManager.delete(data.d.id, true)
 		}
 		break
 	}
@@ -200,7 +153,7 @@ const channelManager = {
 	fetch: async function(id) {
 		const d = await client._snow.channel.getChannel(id)
 		// @ts-ignore
-		if (d && d.id && d.guild_id) db.upsert("channels", { id: d.id, type: d.type, guild_id: d.guild_id, name: d.name })
+		if (d && d.id && d.guild_id) db.upsert("channels", { id: d.id, type: d.type, guild_id: d.guild_id, name: d.name, rtc_region: d.rtc_region })
 		return d || null
 	},
 	/**
@@ -213,7 +166,7 @@ const channelManager = {
 	find: function(message, string, self) {
 		// eslint-disable-next-line no-async-promise-executor
 		return new Promise(async (res) => {
-			if (await channelManager.typeOf(message.channel) === "dm") return res(null)
+			if (message.channel.type === "dm") return res(null)
 			string = string.toLowerCase()
 			const match = /<#(\d+)>/.exec(string)
 			if (match && match[1]) {
@@ -277,6 +230,7 @@ const channelManager = {
 		else if (type == 2) return new Discord.VoiceChannel(channel, client)
 		else if (type == 4) return new Discord.CategoryChannel(channel, client)
 		else if (type == 5) return new Discord.NewsChannel(channel, client)
+		else if (type == 13) return new Discord.StageChannel(channel, client)
 		else return new Discord.Channel(channel, client)
 	},
 	/**
@@ -291,6 +245,7 @@ const channelManager = {
 			else if (chan.type == 4) return "category"
 			else if (chan.type == 5) return "news"
 			else if (chan.type == 6) return "store"
+			else if (chan.type === 13) return "stage"
 			else return "text"
 		} else return "text"
 	},
@@ -298,57 +253,25 @@ const channelManager = {
 	 * @param {{ id: string }} channel
 	 */
 	getOverridesFor: async function(channel) {
-		const value = { allow: BigInt(0x00000000), deny: BigInt(0x00000000) }
-		const perms = await db.get("channel_overrides", { id: channel.id })
-		if (perms) {
-			value.allow |= (perms.allow ? BigInt(perms.allow) : BigInt(0))
-			value.deny |= (perms.deny ? BigInt(perms.deny) : BigInt(0))
-		}
-		return value
-	},
-	/**
-	 * @param {{ id: string, guild_id: string }} channel
-	 * @returns {Promise<{ allow: bigint, deny: bigint }>}
-	 */
-	permissionsFor: async function(channel) {
-		const value = { allow: BigInt(0x00000000), deny: BigInt(0x00000000) }
-		if (!channel.guild_id) return { allow: permissionstable["ALL"], deny: BigInt(0x00000000) }
-
-		const chanperms = await channelManager.getOverridesFor(channel)
-		const guildperms = await guildManager.getOverridesFor(channel.guild_id)
-
-		value.allow |= chanperms.allow
-		value.deny |= chanperms.deny
-
-		value.allow |= guildperms.allow
-		value.deny |= guildperms.deny
-
-
-		const clientperms = await memberManager.permissionsFor(client.user.id, channel.guild_id)
-
-		value.allow |= clientperms.allow
-		value.deny |= clientperms.deny
-
-		return value
-	},
-	/**
-	 * @param {{ id: string, guild_id: string }} channel
-	 * @param {bigint | keyof permissionstable} permission
-	 * @param {{ allow: bigint, deny: bigint }} [permissions]
-	 */
-	hasPermissions: async function(channel, permission, permissions) {
-		if (!channel.guild_id) return true
-		if (!permissions) permissions = await channelManager.permissionsFor(channel)
-
-		/** @type {bigint} */
-		let toCheck
-		if (permissionstable[permission]) toCheck = permissionstable[permission]
-		else if (typeof permission === "bigint") toCheck = permission
+		const perms = await db.select("channel_overrides", { channel_id: channel.id })
 		// @ts-ignore
-		else toCheck = permission
+		const permissions = new Discord.Collection(perms.map(i => [i.id, new Discord.PermissionOverwrites(channel, i)]))
+		return permissions
+	},
+	/**
+	 * @param {{ id: string, guild_id: string }} channel
+	 * @param {import("thunderstorm").PermissionResolvable} permission
+	 * @param {Discord.Collection<string, Discord.PermissionOverwrites>} [overrides]
+	 */
+	clientHasPermission: async function(channel, permission, overrides) {
+		if (!channel.guild_id) return true
+		if (!overrides) overrides = await channelManager.getOverridesFor(channel)
 
-		if ((permissions.allow & toCheck) == toCheck) return true
-		return (permissions.deny & toCheck) ? false : true
+		const rolePermissions = await memberManager.rolePermissions(client.user.id, channel.guild_id)
+		const roles = rolePermissions.keyArray()
+		if (roles.find(item => overrides.get(item) && overrides.get(item).allow.has(permission))) return true
+		else if (roles.find(item => overrides.get(item) && overrides.get(item).deny.has(permission))) return false
+		else return true
 	}
 }
 
@@ -494,7 +417,7 @@ const memberManager = {
 			db.get("members", { id: id, guild_id: guildID }),
 			userManager.get(id, true, false)
 		])
-		const roles = await db.select("member_roles", { id: id })
+		const roles = await db.select("member_roles", { id: id, guild_id: guildID }).then(rows => rows.map(r => r.id))
 		// @ts-ignore
 		if (ud && ud.tag) {
 			// @ts-ignore
@@ -633,47 +556,28 @@ const memberManager = {
 	/**
 	 * @param {string} userID
 	 * @param {string} guildID
+	 * @returns {Promise<Discord.Collection<string, Discord.Permissions>>}
 	 */
-	permissionsFor: async function(userID, guildID) {
-		const value = { allow: BigInt(0x00000000), deny: BigInt(0x00000000) }
-
-		const roledata = await sql.all("SELECT roles.permissions FROM roles INNER JOIN member_roles ON roles.id = member_roles.role_id WHERE member_roles.id = $1 AND member_roles.guild_id = $2", [userID, guildID])
-		if (!roledata.length) return value
-		for (const role of roledata) {
-			if (!role) continue
-			if (role.permissions) {
-				value.allow |= BigInt(role.permissions) // OR together the permissions of each role
-			}
-		}
-
-		return value
+	rolePermissions: async function(userID, guildID) {
+		const roledata = await sql.all("SELECT roles.permissions, roles.id FROM roles INNER JOIN member_roles ON roles.id = member_roles.role_id WHERE member_roles.id = $1 AND member_roles.guild_id = $2", [userID, guildID])
+		return new Discord.Collection(roledata.map(row => [row.id, new Discord.Permissions(row.permissions)]))
 	},
 	/**
 	 * @param {string} userID
 	 * @param {string} guildID
-	 * @param {bigint | keyof permissionstable} permission
-	 * @param {{ allow: bigint, deny: bigint }} [permissions]
+	 * @param {import("thunderstorm").PermissionResolvable} permission
+	 * @param {Discord.Collection<string, Discord.Permissions>} [permissions]
 	 */
 	hasPermission: async function(userID, guildID, permission, permissions) {
 		if (!guildID) return true
-		if (!permissions) permissions = await memberManager.permissionsFor(userID, guildID)
+		if (!permissions) permissions = await memberManager.rolePermissions(userID, guildID)
 
-		if (permissions.allow & permissionstable["ADMINISTRATOR"]) return true
 		/** @type {Discord.Guild} */
 		// @ts-ignore
 		const g = await guildManager.get(guildID, true, true)
 		if (g.ownerID === userID) return true
 
-		/** @type {bigint} */
-		let toCheck
-		if (permissionstable[permission]) toCheck = permissionstable[permission]
-		else if (typeof permission === "bigint") toCheck = permission
-		// @ts-ignore
-		else toCheck = permission
-
-		if (permissions.allow & toCheck) return true
-		else if (permissions.deny & toCheck) return false
-		else return true
+		return permissions.find(i => i.has(permission, true)) ? true : false
 	}
 }
 
@@ -704,11 +608,40 @@ const guildManager = {
 	fetch: async function(id) {
 		const d = await client._snow.guild.getGuild(id)
 		// @ts-ignore
-		if (d) db.upsert("guilds", { id: d.id, name: d.name, icon: d.icon, member_count: d.member_count || 2, owner_id: d.owner_id, permissions: d.permissions || 0, region: d.region, added_by: config.cluster_id })
+		if (d) db.upsert("guilds", { id: d.id, name: d.name, icon: d.icon, member_count: d.member_count || 2, owner_id: d.owner_id, permissions: d.permissions || 0, added_by: config.cluster_id })
 		return d || null
 	},
 	parse: function(guild) {
 		return new Discord.Guild(guild, client)
+	},
+	async delete(id, includeMembers = false) {
+		if (!id) {
+			const guilds = await db.select("guilds", { added_by: config.cluster_id }, { select: ["id"] }).then(d => d.map(r => r.id))
+			for (const guild of guilds) {
+				await guildManager.delete(guild)
+			}
+			return
+		}
+
+		const pl1 = { id: id }
+		const pl2 = { guild_id: id }
+
+		const promises = [
+			db.delete("guilds", pl1),
+			db.delete("channels", pl2),
+			db.delete("channel_overrides", pl2),
+			db.delete("roles", pl2),
+			db.delete("voice_states", pl2)
+		]
+
+		if (includeMembers) {
+			promises.push(
+				db.delete("members", pl2),
+				db.delete("member_roles", pl2)
+			)
+		}
+
+		void await Promise.all(promises)
 	},
 	/**
 	 * @param {string} id
