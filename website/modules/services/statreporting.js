@@ -20,12 +20,12 @@ async function report() {
 	const errors = []
 	await Promise.all([
 		analytics.sendReport({ servers: stats.guilds, channels: stats.channels, users: stats.users, ram_used: stats.combinedRam, received_messages: 0, sent_messages: 0 }).catch(errors.push),
-		c(`${topBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.top_api_key).body(JSON.stringify({ server_count: stats.guilds, shard_count: shardCount }), "json").send().catch(errors.push),
-		c(`${botsonBaseURL}/bots/${clientID}/guilds`, "post").header("Authorization", config.botson_api_key).body(JSON.stringify({ guildCount: stats.guilds }), "json").send().catch(errors.push),
-		c(`${boatsBaseURL}/bot/${clientID}`, "post").header("Authorization", config.boats_api_key).body(JSON.stringify({ server_count: stats.guilds }), "json").send().catch(errors.push),
-		c(`${dblBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.dbl_api_key).body(JSON.stringify({ guilds: stats.guilds, users: stats.users, voice_connections: stats.connections }), "json").send().catch(errors.push),
-		c(`${botsggBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.botsgg_api_key).body(JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }), "json").send().catch(errors.push),
-		c(`${delBaseURL}/bot/${clientID}/stats`, "post").header("Authorization", config.del_api_key).body(JSON.stringify({ guildCount: stats.guilds, shardCount: shardCount }), "json").send().catch(errors.push)
+		c(`${topBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.top_api_key).body({ server_count: stats.guilds, shard_count: shardCount }, "json").send().catch(errors.push),
+		c(`${botsonBaseURL}/bots/${clientID}/guilds`, "post").header("Authorization", config.botson_api_key).body({ guildCount: stats.guilds }, "json").send().catch(errors.push),
+		c(`${boatsBaseURL}/bot/${clientID}`, "post").header("Authorization", config.boats_api_key).body({ server_count: stats.guilds }, "json").send().catch(errors.push),
+		c(`${dblBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.dbl_api_key).body({ guilds: stats.guilds, users: stats.users, voice_connections: stats.connections }, "json").send().catch(errors.push),
+		c(`${botsggBaseURL}/bots/${clientID}/stats`, "post").header("Authorization", config.botsgg_api_key).body({ guildCount: stats.guilds, shardCount: shardCount }, "json").send().catch(errors.push),
+		c(`${delBaseURL}/bot/${clientID}/stats`, "post").header("Authorization", config.del_api_key).body({ guildCount: stats.guilds, shardCount: shardCount }, "json").send().catch(errors.push)
 	])
 	if (errors.length > 0) Promise.reject(errors)
 	console.log("Stats sent")
