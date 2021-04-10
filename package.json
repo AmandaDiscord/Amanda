@@ -33,7 +33,7 @@
     "lavacord": "github:AmandaDiscord/Lavacord#d67354ef4f1e5020797d6ffff59bb7ad690a969f",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
-    "nedb-promises": "^4.1.1",
+    "nedb-promises": "^4.1.2",
     "node-ipc": "^9.1.4",
     "pg": "^8.5.1",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
@@ -41,7 +41,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#c8941170c5f1fda9732a76cb95a8b71e0070f25d",
     "taihou": "^2.0.4",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#e695a1952d0ffed7fa8a7105a572d82c9dbe9495"
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#721058a8b0e79753ddf3fbcacebfc9053a7e073f"
   },
   "devDependencies": {
     "@types/centra": "^2.2.0",
