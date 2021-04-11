@@ -249,7 +249,7 @@ const common = {
 
 	nodes: {
 		lowUsage() {
-			return client.lavalink.idealNodes.map(node => constants.lavalinkNodes.find(n => n.host === node.host)).filter(node => node.enabled)
+			return client.lavalink.idealNodes.slice().reverse().map(node => constants.lavalinkNodes.find(n => n.host === node.host)).filter(node => node.enabled)
 		},
 
 		/**
