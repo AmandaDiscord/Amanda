@@ -248,8 +248,12 @@ const common = {
 	},
 
 	nodes: {
-		lowUsage() {
-			return client.lavalink.idealNodes.slice().reverse().map(node => constants.lavalinkNodes.find(n => n.host === node.host)).filter(node => node.enabled)
+		lowUsage() { // lavacord idealNodes sucks, so we'll go by our own logic
+			const used = passthrough.queues.cache.map(i => i.nodeID)
+			/** @type {Array<[string, number]>} */
+			const occurences = constants.lavalinkNodes.map(node => [node.id, used.filter(item => item === node.id).length])
+			const sorted = occurences.sort((a, b) => a[1] - b[1])
+			return sorted.map(i => constants.lavalinkNodes.find(item => item.id === i[0])).filter(n => n.enabled)
 		},
 
 		/**
