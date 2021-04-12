@@ -17,7 +17,7 @@
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#b32eedcf19f130d74ca2319096366ad42c0d28b5",
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#d4eb385ac527fa51f6cf4c1a95cf629183ab9a13",
-    "@amanda/lang": "github:AmandaDiscord/Lang#70c61cac04eeac5d472d2b93bdcf5bd92d0641c1",
+    "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@amanda/reactionmenu": "github:AmandaDiscord/ReactionMenu#f67a1d6e94ff4caa10c39fa1e3b33b564b2954de",
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
