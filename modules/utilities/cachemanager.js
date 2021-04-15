@@ -267,10 +267,15 @@ const channelManager = {
 		if (!channel.guild_id) return true
 		if (!overrides) overrides = await channelManager.getOverridesFor(channel)
 
+		let overrideDeny = false
+		if (overrides.get(client.user.id) && overrides.get(client.user.id).allow.has(permission)) return true
+		else if (overrides.get(client.user.id) && overrides.get(client.user.id).deny.has(permission)) overrideDeny = true
+
 		const rolePermissions = await memberManager.rolePermissions(client.user.id, channel.guild_id)
 		const roles = rolePermissions.keyArray()
 		if (roles.find(item => overrides.get(item) && overrides.get(item).allow.has(permission))) return true
 		else if (roles.find(item => overrides.get(item) && overrides.get(item).deny.has(permission))) return false
+		else if (overrideDeny) return false
 		else return true
 	}
 }
