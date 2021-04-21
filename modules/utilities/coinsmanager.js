@@ -70,8 +70,8 @@ async function transact(user1, user2, amount) {
 	const u2coins = await get(user2)
 
 	await Promise.all([
-		db.update("money", { coins: u2coins + amount, user_id: user2 }),
-		db.update("money", { coins: u1row.coins - amount, given_coins: u1row.given_coins + amount, user_id: user1 })
+		db.update("money", { coins: u2coins + amount }, { user_id: user2 }),
+		db.update("money", { coins: u1row.coins - amount, given_coins: u1row.given_coins + amount }, { user_id: user1 })
 	])
 }
 
