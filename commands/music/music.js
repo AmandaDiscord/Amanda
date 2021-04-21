@@ -150,6 +150,8 @@ const subcommandsMap = new Map([
 				common.inserters.fromSpotifyLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else if (match && match.type === "newgrounds") {
 				common.inserters.fromNewgroundsLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
+			} else if (match && match.type === "twitter") {
+				common.inserters.fromTwitterLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else if (match && match.type === "external") {
 				common.inserters.fromExternalLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
 			} else {

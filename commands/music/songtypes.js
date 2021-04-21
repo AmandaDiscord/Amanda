@@ -650,13 +650,16 @@ class SpotifySong extends YouTubeSong {
 class ExternalSong extends Song {
 	/**
 	 * @param {string} link
+	 * @param {string} [title]
+	 * @param {string} [displayURI]
 	 */
-	constructor(link) {
+	constructor(link, title, displayURI) {
 		super()
 		const to = new URL(link)
 		let name
 		const pathnamereg = /\/?(\w+)\.\w+/
-		if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
+		if (title) name = title
+		else if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
 		else name = to.pathname.match(pathnamereg)[1]
 		this.title = entities.decodeHTML(name.replace(/_/g, " "))
 		this.live = true
@@ -666,6 +669,7 @@ class ExternalSong extends Song {
 			height: 440
 		}
 		this.uri = link
+		this.displayURI = displayURI ? displayURI : this.uri
 		this.track = "!"
 		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
@@ -697,9 +701,11 @@ class ExternalSong extends Song {
 	}
 	toObject() {
 		return {
+			title: this.title,
 			class: "ExternalSong",
 			lengthSeconds: this.lengthSeconds,
 			uri: this.uri,
+			displayURI: this.displayURI,
 			id: this.id,
 			track: this.track
 		}
@@ -711,7 +717,7 @@ class ExternalSong extends Song {
 		return Promise.resolve("Try finding related songs on other websites")
 	}
 	showLink() {
-		return Promise.resolve(this.uri)
+		return Promise.resolve(this.displayURI)
 	}
 	showInfo() {
 		return this.showLink()
@@ -964,9 +970,11 @@ function makeSpotifySong(data, id = undefined, track = undefined) {
 
 /**
  * @param {string} link
+ * @param {string} [title]
+ * @param {string} [displayURI]
  */
-function makeExternalSong(link) {
-	return new ExternalSong(link)
+function makeExternalSong(link, title, displayURI) {
+	return new ExternalSong(link, title, displayURI)
 }
 
 /**

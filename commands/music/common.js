@@ -7,6 +7,7 @@ const path = require("path")
 const { encode } = require("@lavalink/encoding")
 const genius = require("genius-lyrics-api")
 const entities = require("entities")
+const vul = require("video-url-link")
 
 const passthrough = require("../../passthrough")
 const { client, reloader, config, constants } = passthrough
@@ -135,6 +136,8 @@ const common = {
 					// Got an ID!
 					return { type: "video", id: id }
 				} else return null // YouTube-compatible, but can't resolve to a video.
+			} else if (url.hostname == "twitter.com" && url.pathname.match(/\/[\w\d]+\/status\/\d+/)) {
+				return { type: "twitter", link: url.toString() }
 			} else return { type: "external", link: url.toString() } // Possibly a link to an audio file
 		} catch (e) {
 			// Not a URL. Might be an ID?
@@ -675,6 +678,26 @@ const common = {
 			}
 			const song = songtypes.makeNewgroundsSong(data)
 			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
+		},
+		fromTwitterLink:
+		/**
+		 * @param {Discord.PartialChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const songtypes = require("./songtypes")
+			let data
+			try {
+				data = await common.twitter.getData(link)
+			} catch {
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
+			const song = songtypes.makeExternalSong(data.url, data.title, link)
+			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
 		}
 	},
 
@@ -799,10 +822,10 @@ const common = {
 			return parsed
 		},
 		/**
-		 * @param {string} link
+		 * @param {string} url
 		 */
-		getData: async function(link) {
-			const ID = link.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)[1]
+		getData: async function(url) {
+			const ID = url.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)[1]
 			let data
 			try {
 				data = await c(`https://www.newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
@@ -810,6 +833,25 @@ const common = {
 				throw new Error("Cannot extract NewGrounds track info")
 			}
 			return { id: data.id, href: data.url, title: data.title, author: data.author, duration: data.duration, mp3URL: data.sources[0].src }
+		}
+	},
+
+	twitter: {
+		/**
+		 * @param {string} url
+		 * @returns {Promise<{ title: string, url: string }>}
+		 */
+		getData: function(url) {
+			return new Promise((res, rej) => {
+				vul.twitter.getInfo(url, {}, (err, info) => {
+					if (err) return rej(new Error("That twitter url doesn't have a video"))
+					/** @type {Array<{ bitrate: number, content_type: string, url: string }>} */
+					const mp4s = info.variants.filter(v => v.content_type === "video/mp4")
+					if (!mp4s.length) return rej(new Error("No mp4 URLs from link"))
+					const highest = mp4s.sort((a, b) => b.bitrate - a.bitrate)[0]
+					res({ title: info.full_text.replace(/https:\/\/t.co\/[\w\d]+/, "").trim(), url: highest.url })
+				})
+			})
 		}
 	},
 
