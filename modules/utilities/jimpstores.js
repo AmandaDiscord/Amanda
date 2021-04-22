@@ -10,6 +10,7 @@ const fontStore = new FontCache()
 // Backgrounds
 imageStore.save("slot-background", "./images/backgrounds/commands/slot.png")
 imageStore.save("wheel-canvas", "./images/backgrounds/commands/wheel.png")
+imageStore.save("money", "./images/backgrounds/commands/money.png")
 imageStore.save("canvas", "./images/backgrounds/defaultbg.png")
 imageStore.save("canvas-vicinity", "./images/backgrounds/vicinity.png")
 imageStore.save("canvas-sakura", "./images/backgrounds/sakura.png")
@@ -51,6 +52,8 @@ imageStore.save("profile-background-mask", "./images/masks/profile_background_ma
 
 
 // Fonts
+fontStore.save("unispace-20", ".fonts/Unispace-20.fnt")
+fontStore.save("unispace-36", ".fonts/Unispace-36.fnt")
 fontStore.save("whitney-20", ".fonts/Whitney-20.fnt")
 fontStore.save("whitney-20-2", ".fonts/profile/Whitney-20-aaa.fnt")
 fontStore.save("whitney-20-2-black", ".fonts/profile/Whitney-20-aaa-black.fnt")

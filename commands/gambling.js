@@ -229,25 +229,44 @@ commands.assign([
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
 			const money = await utils.coinsManager.getRow(user.id)
-			const embed = new Discord.MessageEmbed()
-				.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag }))
-				.setDescription(`${utils.numberComma(money.coins)} ${emojis.discoin}`)
-				.addFields([
-					{
-						name: "Lifetime received amandollars",
-						value: utils.numberComma(money.won_coins)
-					},
-					{
-						name: "Lifetime lost amandollars",
-						value: utils.numberComma(money.lost_coins)
-					},
-					{
-						name: "Lifetime given amandollars",
-						value: utils.numberComma(money.given_coins)
-					}
-				])
-				.setColor(constants.money_embed_color)
-			return msg.channel.send(await utils.contentify(msg.channel, embed))
+
+			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ATTACH_FILES"))) {
+				const embed = new Discord.MessageEmbed()
+					.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag }))
+					.setDescription(`${utils.numberComma(money.coins)} ${emojis.discoin}`)
+					.addFields([
+						{
+							name: "Lifetime received amandollars",
+							value: utils.numberComma(money.won_coins)
+						},
+						{
+							name: "Lifetime lost amandollars",
+							value: utils.numberComma(money.lost_coins)
+						},
+						{
+							name: "Lifetime given amandollars",
+							value: utils.numberComma(money.given_coins)
+						}
+					])
+					.setColor(constants.money_embed_color)
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
+			}
+
+			await msg.channel.sendTyping()
+
+			const [font, font2, canvas] = await Promise.all([
+				utils.jimpStores.fonts.get("unispace-36"),
+				utils.jimpStores.fonts.get("unispace-20"),
+				utils.jimpStores.images.get("money")
+			])
+
+			canvas.print(font, 50, 233, user.id.replace(/\B(?=(\d{4})+(?!\d))/g, " "))
+			canvas.print(font2, 50, 323, user.tag)
+			canvas.print(font2, 50, 360, `${utils.numberComma(money.coins)} amandollars`)
+
+			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
+			const image = new Discord.MessageAttachment(buffer, "profile.png")
+			return msg.channel.send({ file: image })
 		}
 	},
 	{
