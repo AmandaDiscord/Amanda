@@ -203,7 +203,7 @@ class Database {
 					return `${key} = $${index}`
 				})
 				if (where.length) statement += ` WHERE ${where.join(" AND ")}`
-				throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
+				else throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
 			} else throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
 
 		} else if (method === "insert" || method === "upsert") {
