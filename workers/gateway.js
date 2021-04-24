@@ -4,6 +4,9 @@ const Client = require("cloudstorm")
 
 const config = require("../config")
 
+/** @type {Array<{ s_id: number, data: { op: number, d: any } }>} */
+const queue = []
+
 const Gateway = new Client(config.bot_token, {
 	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
 	firstShardId: config.shard_list[0],
@@ -21,6 +24,27 @@ const presence = {}
 	Gateway.on("event", data => {
 		// Send data (Gateway -> Worker)
 		parentPort.postMessage({ op: "DISCORD", data, threadID: -1 })
+	})
+
+	Gateway.on("shardReady", async (d) => {
+		if (!d.ready) return
+		const squeue = queue.filter(i => i.s_id === d.id)
+		const shards = Object.values(Gateway.shardManager.shards)
+		for (const q of squeue) {
+			const shard = shards.find(s => s.id === d.id)
+			if (shard) {
+				try {
+					await shard.connector.betterWs.sendMessage(q)
+					queue.splice(queue.indexOf(q), 1)
+				} catch {
+					return console.error(`Unable to send message:\n${JSON.stringify(q)}`)
+				}
+			} else {
+				console.error(`No shard found to send WS Message:\n${require("util").inspect(q, true, 2, true)}`)
+			}
+		}
+
+		if (shards.every(s => s.ready) && queue.length) console.log(`All shards are ready, but the queue still has entries in it.\n${require("util").inspect(queue)}`)
 	})
 
 	Gateway.on("error", console.error)
@@ -51,14 +75,19 @@ const presence = {}
 
 			parentPort.postMessage({ op: "RESPONSE", data: presence, threadID })
 
-			Gateway.shardManager.presenceUpdate(payload)
+			for (const shard of Object.values(Gateway.shardManager.shards)) {
+				if (shard.ready) shard.presenceUpdate(payload)
+				// @ts-ignore
+				else queue.push({ s_id: shard.id, data: { op: Client.Constants.GATEWAY_OP_CODES.PRESENCE_UPDATE, d: shard.connector._checkPresenceData(payload) } })
+			}
 		} else if (op === "SEND_MESSAGE") {
 
 			const sid = Number((BigInt(data.d.guild_id) >> BigInt(22)) % BigInt(config.total_shards))
 			const shard = Object.values(Gateway.shardManager.shards).find(s => s.id === sid)
 			if (shard) {
 				try {
-					await shard.connector.betterWs.sendMessage(data)
+					if (shard.ready) await shard.connector.betterWs.sendMessage(data)
+					else queue.push({ s_id: shard.id, data: data })
 				} catch {
 					return parentPort.postMessage({ op: "ERROR_RESPONSE", data: `Unable to send message:\n${JSON.stringify(data)}`, threadID })
 				}
