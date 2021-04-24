@@ -23,6 +23,8 @@ const presence = {}
 		parentPort.postMessage({ op: "DISCORD", data, threadID: -1 })
 	})
 
+	Gateway.on("error", console.error)
+
 	parentPort.on("message", async (message) => {
 		const { op, data, threadID } = message
 
