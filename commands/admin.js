@@ -59,12 +59,16 @@ commands.assign([
 					result = e
 				}
 
-				let output = await utils.stringify(result, depth)
+				let output = await utils.stringify(result, depth, true)
 				for (const item of replaceBlackList) {
 					output = output.replace(new RegExp(item.replace(/\+/g, "\\+"), "g"), constants.fake_token)
 				}
 
-				const nmsg = await msg.channel.send(output)
+				/** @type {string | Discord.MessageAttachment} */
+				let content = output
+				if (output.length > 2000) content = new Discord.MessageAttachment(Buffer.from(output), "eval.txt")
+
+				const nmsg = await msg.channel.send(typeof content === "string" ? content : { file: content })
 				const menu = new ReactionMenu(nmsg, client, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
 				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 			} else return

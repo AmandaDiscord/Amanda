@@ -1,13 +1,10 @@
-// @ts-check
-
 const util = require("util")
 
 /**
  * @param {any} data
- * @param {number} [depth=0]
  * @returns {Promise<string>}
  */
-async function stringify(data, depth = 0) {
+async function stringify(data, depth = 0, returnRaw = false) {
 	/** @type {string} */
 	let result
 	if (data === undefined) result = "(undefined)"
@@ -15,16 +12,19 @@ async function stringify(data, depth = 0) {
 	else if (typeof (data) == "function") result = "(function)"
 	else if (typeof (data) == "string") result = `"${data}"`
 	else if (typeof (data) == "number") result = data.toString()
-	else if (data instanceof Promise) return stringify(await data, depth)
+	else if (data instanceof Promise) return stringify(await data, depth, returnRaw)
 	else if (data.constructor && data.constructor.name && data.constructor.name.toLowerCase().includes("error")) {
 		const errorObject = {}
 		Object.entries(data).forEach(e => {
 			errorObject[e[0]] = e[1]
 		})
 		result = `\`\`\`\n${data.stack}\`\`\` ${await stringify(errorObject)}`
-	} else result = `\`\`\`js\n${util.inspect(data, { depth: depth })}\`\`\``
+	} else {
+		const pre = util.inspect(data, { depth: depth })
+		result = `${pre.length < 2000 ? "```js\n" : ""}${pre}${pre.length < 2000 ? "```" : ""}`
+	}
 
-	if (result.length >= 2000) {
+	if (result.length >= 2000 && !returnRaw) {
 		if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
 		else result = `${result.slice(0, 1998)}…`
 	}
