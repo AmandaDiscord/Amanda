@@ -47,7 +47,7 @@ const cmds = [
 			if (crow) {
 				const otherID = mem1.id === crow.user1 ? crow.user2 : crow.user1
 				const you = mem1.id === msg.author.id
-				if (otherID === mem2.id) return msg.channel.send(`I don't think I have to rate ${you ? "you" : mem1.user.tag} and ${mem2.user.tag} if ${you ? "you two are" : "they're"} married already. ${you ? "you're" : "they're"} a cute couple <:amandacomfy:726132738918318260>`)
+				if (otherID === mem2.id) return msg.channel.send(`I don't think I have to rate ${you ? "you" : mem1.user.tag} and ${mem2.user.tag} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>`)
 			}
 
 			await msg.channel.sendTyping()
