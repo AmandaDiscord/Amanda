@@ -30,8 +30,7 @@ const replaceBlackList = [
 	config.boats_api_key,
 	config.dbl_api_key,
 	config.botsgg_api_key,
-	config.del_api_key,
-	config.listen_moe_password
+	config.del_api_key
 ]
 
 commands.assign([

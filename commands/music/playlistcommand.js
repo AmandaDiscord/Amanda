@@ -71,7 +71,7 @@ commands.assign([
 					// @ts-ignore
 					const user = await utils.cacheManager.users.get(author, true, true)
 					if (user) {
-						let username = user.username
+						let username = user.username || "Unknown"
 						if (username.length > 14) username = `${username.slice(0, 13)}…`
 						return `\`${Discord.Util.escapeMarkdown(username)}\``
 					} else return "(?)"
