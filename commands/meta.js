@@ -537,25 +537,9 @@ commands.assign([
 			let badge
 			if (isOwner) badge = "badge-developer"
 			else if (isPremium) badge = "badge-donator"
-			/** @type {import("@amanda/discordtypings").MemberData} */
-			let mem
-			const memberFetchTimeout = 2000
-			try {
-				const TProm = new Promise((_, reject) => {
-					setTimeout(() => {
-						if (!mem || mem && !mem.roles) return reject(new Error("IPC fetch timeout"))
-					}, memberFetchTimeout)
-				})
-				mem = await Promise.race([utils.cacheManager.members.get(user.id, "475599038536744960", false, false), TProm])
-			} catch(e) {
-				// @ts-ignore
-				mem = { roles: [] }
-			}
-			let boosting, hunter
-			if (mem) {
-				boosting = (!!mem.roles && mem.roles.includes("613685290938138625"))
-				hunter = (!!mem.roles && mem.roles.includes("497586624390234112"))
-			}
+			const roles = await utils.orm.db.select("member_roles", { id: user.id, guild_id: "475599038536744960" }, { select: ["role_id"] }).then(rows => rows.map(r => r.role_id))
+			const boosting = roles.includes("613685290938138625")
+			const hunter = roles.includes("497586624390234112")
 			/** @type {import("jimp")} */
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
@@ -564,7 +548,6 @@ commands.assign([
 			else if (money.given_coins >= giverTier3) giverImage = images.get("badge-giver3").clone()
 			else if (money.given_coins >= giverTier2) giverImage = images.get("badge-giver2").clone()
 			else if (money.given_coins >= giverTier1) giverImage = images.get("badge-giver1").clone()
-
 
 			async function getDefaultBG() {
 				const attempt = await utils.orm.db.get("settings_self", { key_id: user.id, setting: "defaultprofilebackground" })
