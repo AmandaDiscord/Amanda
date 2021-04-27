@@ -138,6 +138,8 @@ const common = {
 				} else return null // YouTube-compatible, but can't resolve to a video.
 			} else if (url.hostname == "twitter.com" && url.pathname.match(/\/[\w\d]+\/status\/\d+/)) {
 				return { type: "twitter", link: url.toString() }
+			} else if (url.hostname === "music.apple.com" && url.pathname.match(/\/album\/[^/]+\//)) {
+				return { type: "itunes", link: url.toString() }
 			} else return { type: "external", link: url.toString() } // Possibly a link to an audio file
 		} catch (e) {
 			// Not a URL. Might be an ID?
@@ -696,8 +698,28 @@ const common = {
 			} catch {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
-			const song = songtypes.makeExternalSong(data.url, data.title, link)
+			const song = songtypes.makeTwitterSong({ uri: data.url, displayURI: link, title: data.title })
 			return common.inserters.handleSong(song, textChannel, voiceChannel, insert, msg)
+		},
+		fromiTunesLink:
+		/**
+		 * @param {Discord.PartialChannel} textChannel
+		 * @param {Discord.VoiceChannel} voiceChannel
+		 * @param {Discord.Message} msg
+		 * @param {boolean} insert
+		 * @param {string} link
+		 * @param {import("@amanda/lang").Lang} lang
+		 */
+		async function(textChannel, voiceChannel, msg, insert, link, lang) {
+			const songtypes = require("./songtypes")
+			let data
+			try {
+				data = await common.itunes.getData(link)
+			} catch {
+				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
+			const songs = data.map(s => songtypes.makeiTunesSong(s))
+			return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
 		}
 	},
 
@@ -844,7 +866,7 @@ const common = {
 		getData: function(url) {
 			return new Promise((res, rej) => {
 				vul.twitter.getInfo(url, {}, (err, info) => {
-					if (err) return rej(new Error("That twitter url doesn't have a video"))
+					if (err) return rej(new Error("That twitter URL doesn't have a video"))
 					/** @type {Array<{ bitrate: number, content_type: string, url: string }>} */
 					const mp4s = info.variants.filter(v => v.content_type === "video/mp4")
 					if (!mp4s.length) return rej(new Error("No mp4 URLs from link"))
@@ -852,6 +874,36 @@ const common = {
 					res({ title: info.full_text.replace(/https:\/\/t.co\/[\w\d]+/, "").trim(), url: highest.url })
 				})
 			})
+		}
+	},
+
+	itunes: {
+		/**
+		 * @param {string} url
+		 * @returns {Promise<Array<import("../../typings").iTunesSearchResult>>}
+		 */
+		getData: async function(url) {
+			const match = url.match(/\/album\/([^/]+)\//)
+			if (!match) throw new Error("Link not an album URL")
+			const decoded = new URL(url)
+			let mode = "track"
+			if (!decoded.searchParams.has("i")) mode = "album"
+			let data
+			try {
+				data = await c("https://itunes.apple.com/search", "get")
+					.header({ Accept: "application/json", "User-Agent": fakeAgent })
+					.query("term", encodeURIComponent(match[1]))
+					.query("country", "US")
+					.query("entity", "song")
+					.send()
+					.then(d => d.json())
+			} catch {
+				throw new Error("Cannot get iTunes data")
+			}
+			let arr = []
+			if (mode === "track") arr = [data.results[0]]
+			else arr = data.results.filter((value, index, self) => self.indexOf(self.find(i => i.trackName === value.trackName)) === index)
+			return arr
 		}
 	},
 

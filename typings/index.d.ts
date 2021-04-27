@@ -1,4 +1,3 @@
-import MySQL = require("MySQL2/promise");
 import events = require("events");
 
 export interface FilteredGuild {
@@ -21,24 +20,6 @@ export class internalEvents extends events.EventEmitter {
 	public on<K extends keyof InternalEvents>(event: K, listener: (...args: InternalEvents[K]) => void): this;
 	public once<K extends keyof InternalEvents>(event: K, listener: (...args: InternalEvents[K]) => void): this;
 	public emit<K extends keyof InternalEvents>(event: K, ...args: InternalEvents[K]): boolean;
-}
-
-export interface SQLWrapper {
-	all(string: string): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: string|number|symbol): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: Array<(string|number|symbol)>): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: string|number|symbol, connection?: MySQL.Pool|MySQL.PoolConnection): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: Array<(string|number|symbol)>, connection?: MySQL.Pool|MySQL.PoolConnection): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: string|number|symbol, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<Array<MySQL.RowDataPacket>>;
-	all(string: string, prepared?: Array<(string|number|symbol)>, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<Array<MySQL.RowDataPacket>>;
-
-	get(string: string): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: string|number|symbol): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: Array<(string|number|symbol)>): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: string|number|symbol, connection?: MySQL.Pool|MySQL.PoolConnection): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: Array<(string|number|symbol)>, connection?: MySQL.Pool|MySQL.PoolConnection): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: string|number|symbol, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<MySQL.RowDataPacket>;
-	get(string: string, prepared?: Array<(string|number|symbol)>, connection?: MySQL.Pool|MySQL.PoolConnection, attempts?: number): Promise<MySQL.RowDataPacket>;
 }
 
 export interface IPCReceiver {
@@ -215,6 +196,41 @@ export interface SpotifyImage {
 	height: number;
 	url: string;
 	width: number;
+}
+
+export interface iTunesSearchResult {
+	wrapperType: string,
+	kind: string,
+	artistId: number,
+	collectionId: number,
+	trackId: number,
+	artistName: string,
+	collectionName: string,
+	trackName: string,
+	collectionCensoredName: string,
+	trackCensoredName: string,
+	artistViewUrl: string,
+	collectionViewUrl: string,
+	trackViewUrl: string,
+	previewUrl: string,
+	artworkUrl30: string,
+	artworkUrl60: string,
+	artworkUrl100: string,
+	collectionPrice: number,
+	trackPrice: number,
+	releaseDate: string,
+	collectionExplicitness: string,
+	trackExplicitness: string,
+	discCount: number,
+	discNumber: number,
+	trackCount: number,
+	trackNumber: number,
+	trackTimeMillis: number,
+	country: string;
+	currency: string;
+	primaryGenreName: string;
+	contentAdvisoryRating: string;
+	isStreamable: boolean;
 }
 
 export interface GatewayStatusUpdateData {

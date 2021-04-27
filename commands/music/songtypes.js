@@ -589,7 +589,6 @@ class SpotifySong extends YouTubeSong {
 		this.typeWhileGetRelated = false
 		this.related = []
 		this.artist = data.artists[0].name
-		const youtubePrepareCache = this.prepareCache
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.id == "!" || this.track == "!") {
@@ -602,8 +601,8 @@ class SpotifySong extends YouTubeSong {
 						this.id = decided.info.identifier
 						this.lengthSeconds = Math.round(decided.info.length / 1000)
 						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+						this.track = decided.track
 						ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
-						return youtubePrepareCache.get()
 					} else this.error = `Missing track for ${this.title}`
 				}).catch(message => {
 					this.error = message
@@ -650,16 +649,13 @@ class SpotifySong extends YouTubeSong {
 class ExternalSong extends Song {
 	/**
 	 * @param {string} link
-	 * @param {string} [title]
-	 * @param {string} [displayURI]
 	 */
-	constructor(link, title, displayURI) {
+	constructor(link) {
 		super()
 		const to = new URL(link)
 		let name
 		const pathnamereg = /\/?(\w+)\.\w+/
-		if (title) name = title
-		else if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
+		if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
 		else name = to.pathname.match(pathnamereg)[1]
 		this.title = entities.decodeHTML(name.replace(/_/g, " "))
 		this.live = true
@@ -669,7 +665,6 @@ class ExternalSong extends Song {
 			height: 440
 		}
 		this.uri = link
-		this.displayURI = displayURI ? displayURI : this.uri
 		this.track = "!"
 		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
@@ -705,7 +700,6 @@ class ExternalSong extends Song {
 			class: "ExternalSong",
 			lengthSeconds: this.lengthSeconds,
 			uri: this.uri,
-			displayURI: this.displayURI,
 			id: this.id,
 			track: this.track
 		}
@@ -717,7 +711,7 @@ class ExternalSong extends Song {
 		return Promise.resolve("Try finding related songs on other websites")
 	}
 	showLink() {
-		return Promise.resolve(this.displayURI)
+		return Promise.resolve(this.uri)
 	}
 	showInfo() {
 		return this.showLink()
@@ -931,6 +925,172 @@ class NewgroundsSong extends Song {
 	}
 }
 
+// Just for name parity
+class TwitterSong extends Song {
+	/**
+	 * @param {{ title: string, uri: string, displayURI: string }} data
+	 */
+	constructor(data) {
+		super()
+
+		this.track = "!"
+		this.title = data.title
+		this.uri = data.uri
+		this.displayURI = data.displayURI
+		this.live = false
+		this.lengthSeconds = 0
+
+		const match = this.displayURI.match(/\/status\/(\d+)/)
+		if (match && match[1]) this.id = `tw/${match[1]}`
+		else this.id = `tw/${this.displayURI}`
+
+		this.thumbnail = {
+			src: constants.twitter_placeholder,
+			width: 1066,
+			height: 877
+		}
+		this.queueLine = `**${this.title}** (LOADING)`
+		this.npUpdateFrequency = 5000
+		this.error = ""
+		this.typeWhileGetRelated = false
+
+		this.validate()
+	}
+	toObject() {
+		return {
+			class: "TwitterSong",
+			uri: this.uri,
+			displayURI: this.displayURI,
+			title: this.title,
+			id: this.id,
+			lengthSeconds: this.lengthSeconds,
+			track: this.track
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try finding related Tweets on Twitter")
+	}
+	async prepare() {
+		if (this.track && this.track != "!") return
+		let data
+		try {
+			data = await common.getTracks(this.uri, this.queue.voiceChannel.rtcRegion)
+		} catch {
+			this.error = `Missing track for ${this.title}`
+			return
+		}
+		if (!Array.isArray(data) || !data || !data[0] || !data[0].track) this.error = `Missing track for ${this.title}`
+		this.track = data[0].track
+		this.lengthSeconds = Math.round(data[0].info.length / 1000)
+		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
+	}
+	showLink() {
+		return Promise.resolve(this.displayURI)
+	}
+	showInfo() {
+		return this.showLink()
+	}
+	/**
+	 * @param {number} time milliseconds
+	 * @param {boolean} paused
+	 */
+	getProgress(time, paused) {
+		const max = this.lengthSeconds
+		const rightTime = common.prettySeconds(max)
+		if (time > max) time = max
+		const leftTime = common.prettySeconds(time)
+		const bar = utils.progressBar(18, time, max, paused ? " [PAUSED] " : "")
+		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+	}
+}
+
+// @ts-ignore
+class iTunesSong extends YouTubeSong {
+	/**
+	 * @param {import("../../typings").iTunesSearchResult} data
+	 */
+	constructor(data) {
+		super("!", data.trackName, Math.floor(data.trackTimeMillis / 1000))
+
+		this.live = false
+		this.id = `appl/${data.trackId}`
+		this.ytID = "!"
+		this.related = []
+		this.artist = data.artistName
+		this.trackViewURL = data.trackViewUrl
+
+		this.thumbnail = {
+			src: data.artworkUrl100,
+			width: 100,
+			height: 100
+		}
+		this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+		this.npUpdateFrequency = 5000
+		this.error = ""
+		this.typeWhileGetRelated = false
+
+		// eslint-disable-next-line require-await
+		this.prepareCache = new utils.AsyncValueCache(async () => {
+			if (this.ytID == "!" || this.track == "!") {
+				return common.searchYouTube(`${this.artist} - ${this.title}`, this.queue.voiceChannel.rtcRegion).then(tracks => {
+					if (!tracks[0]) this.error = `No results for ${this.title}`
+					let decided = tracks[0]
+					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
+					if (found) decided = found
+					if (decided && decided.track) {
+						this.ytID = decided.info.identifier
+						this.lengthSeconds = Math.round(decided.info.length / 1000)
+						this.queueLine = `**${this.title}** (${common.prettySeconds(this.lengthSeconds)})`
+						this.track = decided.track
+						ipc.replier.sendSongUpdate(this.queue, this, this.queue.songs.indexOf(this))
+					} else this.error = `Missing track for ${this.title}`
+				}).catch(message => {
+					this.error = message
+				})
+			}
+		})
+
+		this.validate()
+	}
+	toObject() {
+		return {
+			class: "iTunesSong",
+			trackName: this.title,
+			trackTimeMillis: this.lengthSeconds * 1000,
+			lengthSeconds: this.lengthSeconds,
+			artistName: this.artist,
+			title: this.title,
+			trackViewURL: this.trackViewURL,
+			trackId: this.id,
+			track: this.track,
+			artworkUrl100: this.thumbnail.src,
+			id: this.id,
+			uploader: this.artist
+		}
+	}
+	getRelated() {
+		return Promise.resolve([])
+	}
+	showRelated() {
+		return Promise.resolve("Try finding related songs on iTunes.")
+	}
+	showLink() {
+		return Promise.resolve(this.trackViewURL)
+	}
+	async showInfo() {
+		const iT = await this.showLink()
+		const YT = `https://www.youtube.com/watch?v=${this.ytID}`
+		return Promise.resolve(`${iT}\n${YT}`)
+	}
+	prepare() {
+		return this.prepareCache.get()
+	}
+}
+
 /**
  * @param {{ track: string, info: { identifier: string, title: string, length: number, author: string } }} data
  */
@@ -970,11 +1130,9 @@ function makeSpotifySong(data, id = undefined, track = undefined) {
 
 /**
  * @param {string} link
- * @param {string} [title]
- * @param {string} [displayURI]
  */
-function makeExternalSong(link, title, displayURI) {
-	return new ExternalSong(link, title, displayURI)
+function makeExternalSong(link) {
+	return new ExternalSong(link)
 }
 
 /**
@@ -991,6 +1149,20 @@ function makeNewgroundsSong(data) {
 	return new NewgroundsSong(data)
 }
 
+/**
+ * @param {{ title: string, uri: string, displayURI: string }} data
+ */
+function makeTwitterSong(data) {
+	return new TwitterSong(data)
+}
+
+/**
+ * @param {import("../../typings").iTunesSearchResult} data
+ */
+function makeiTunesSong(data) {
+	return new iTunesSong(data)
+}
+
 module.exports.makeYouTubeSongFromData = makeYouTubeSongFromData
 module.exports.Song = Song
 module.exports.YouTubeSong = YouTubeSong
@@ -1005,3 +1177,7 @@ module.exports.ListenMoeSong = ListenMoeSong
 module.exports.makeListenMoeSong = makeListenMoeSong
 module.exports.NewgroundsSong = NewgroundsSong
 module.exports.makeNewgroundsSong = makeNewgroundsSong
+module.exports.TwitterSong = TwitterSong
+module.exports.makeTwitterSong = makeTwitterSong
+module.exports.iTunesSong = iTunesSong
+module.exports.makeiTunesSong = makeiTunesSong

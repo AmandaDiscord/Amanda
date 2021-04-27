@@ -117,18 +117,26 @@ class QueueManager {
 						queue.songs.push(song)
 						console.log(`Added SpotifySong ${song.title}`)
 					} else if (s.class === "ExternalSong") {
-						const song = songTypes.makeExternalSong(s.uri, s.title, s.displayURI)
+						const song = songTypes.makeExternalSong(s.uri)
 						// @ts-ignore
 						queue.songs.push(song)
-						console.log("Added ExternalSong")
+						console.log(`Added ExternalSong ${song.title}`)
 					} else if (s.class === "ListenMoeSong") {
 						const song = songTypes.makeListenMoeSong(s.station)
 						queue.songs.push(song)
-						console.log("Added ListenMoeSong")
+						console.log(`Added ListenMoeSong ${song.title}`)
 					} else if (s.class === "NewgroundsSong") {
 						const song = songTypes.makeNewgroundsSong(s)
 						queue.songs.push(song)
-						console.log("Added NewgroundsSong")
+						console.log(`Added NewgroundsSong ${song.title}`)
+					} else if (s.class === "TwitterSong") {
+						const song = songTypes.makeTwitterSong(s)
+						queue.songs.push(song)
+						console.log(`Added TwitterSong ${song.title}`)
+					} else if (s.class === "iTunesSong") {
+						const song = songTypes.makeiTunesSong(s)
+						queue.songs.push(song)
+						console.log(`Added iTunesSong ${song.title}`)
 					}
 				})
 				if (queue.songs[0]) {
