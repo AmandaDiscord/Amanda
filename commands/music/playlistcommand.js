@@ -147,7 +147,7 @@ commands.assign([
 					} else if (msgg.content === "undo") {
 						commands.cache.get("playlist").process(msgg, `${playlistName} remove last`, lang, pres)
 					} else {
-						commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang, pres)
+						if (msgg.content !== "stop") commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang, pres)
 					}
 					msg.channel.send(lang.audio.playlist.returns.bulkDone)
 					confirmation.edit(lang.audio.playlist.returns.bulkMenuGone, { embed: null })
