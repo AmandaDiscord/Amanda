@@ -3,6 +3,8 @@
 
 const Discord = require("thunderstorm")
 const path = require("path")
+const c = require("centra")
+const Jimp = require("jimp")
 
 const { db } = require("./orm")
 const { shortTime } = require("./time")
@@ -10,6 +12,9 @@ const { addTemporaryListener } = require("./eventutils")
 
 const passthrough = require("../../passthrough")
 const { client, internalEvents } = passthrough
+
+/** @type {Array<(message: Discord.Message) => any>} */
+const filters = []
 
 let starting = true
 if (client.readyAt != null) starting = false
@@ -32,6 +37,10 @@ function onReady() {
 		if (firstStart) internalEvents.emit("prefixes", prefixes, statusPrefix)
 	})
 }
+
+addTemporaryListener(client, "message", path.basename(__filename), (message) => {
+	filters.forEach(cb => cb(message))
+})
 
 /**
  * @param {Discord.User} user
@@ -79,10 +88,10 @@ function createMessageCollector(filter, callback, onFail) {
 
 	let matches = 0
 	function clear() {
-		client.removeListener("message", listener)
+		filters.splice(filters.indexOf(listener), 1)
 		clearTimeout(timer)
 	}
-	client.on("message", listener)
+	filters.push(listener)
 
 	/**
 	 * @param {Discord.Message} message
@@ -99,7 +108,7 @@ function createMessageCollector(filter, callback, onFail) {
 		else test = false
 
 		if (filter.test && test) {
-			if (filter.test(message)) {
+			if (await filter.test(message)) {
 				try {
 					await callback(message)
 					matches++
@@ -251,6 +260,24 @@ async function getPrefixes(msg) {
 	else return { main: custom, array: value }
 }
 
+/**
+ * @param {string} userID
+ */
+async function getAvatarJimp(userID) {
+	const { cacheManager } = require("./cachemanager") // lazy require
+	/** @type {Discord.User} */
+	// @ts-ignore
+	const user = await cacheManager.users.get(userID, true, true)
+
+	const url = user.displayAvatarURL({ dynamic: true })
+	const validation = await c(url, "head").send()
+	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
+
+	const data = await cacheManager.users.fetch(userID)
+	const newuser = cacheManager.users.parse(data)
+	return Jimp.read(newuser.displayAvatarURL({ dynamic: true }))
+}
+
 module.exports.userFlagEmojis = userFlagEmojis
 module.exports.emojiURL = emojiURL
 module.exports.resolveWebhookMessageAuthor = resolveWebhookMessageAuthor
@@ -258,3 +285,4 @@ module.exports.contentify = contentify
 module.exports.createMessageCollector = createMessageCollector
 module.exports.rateLimiter = rateLimiter
 module.exports.getPrefixes = getPrefixes
+module.exports.getAvatarJimp = getAvatarJimp

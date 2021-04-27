@@ -519,7 +519,7 @@ commands.assign([
 				utils.orm.db.get("premium", { user_id: user.id }),
 				utils.coinsManager.getRow(user.id),
 				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
-				Jimp.read(user.displayAvatarURL({ format: "png", size: 128 })),
+				utils.getAvatarJimp(user.id),
 				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "badge-giver4", "discoin"]),
 				utils.jimpStores.fonts.getAll(["whitney-25", "whitney-20-2", "whitney-25-black", "whitney-20-2-black"])
 			])
@@ -875,8 +875,8 @@ commands.assign([
 		aliases: ["language", "lang"],
 		category: "configuration",
 		examples: ["language es"],
-		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			commands.cache.get("settings").process(msg, `self language ${suffix}`, lang, prefixes)
 		}
 	},
 
@@ -886,8 +886,8 @@ commands.assign([
 		aliases: ["serverlanguage", "serverlang"],
 		category: "configuration",
 		examples: ["serverlanguage es"],
-		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			commands.cache.get("settings").process(msg, `server language ${suffix}`, lang, prefixes)
 		}
 	},
 
@@ -897,8 +897,8 @@ commands.assign([
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
 		examples: ["background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg"],
-		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			commands.cache.get("settings").process(msg, `self profilebackground ${suffix}`, lang, prefixes)
 		}
 	},
 
@@ -908,8 +908,8 @@ commands.assign([
 		aliases: ["prefix", "pre"],
 		category: "configuration",
 		examples: ["prefix $"],
-		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, `self prefix${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			commands.cache.get("settings").process(msg, `self prefix${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 
@@ -919,8 +919,8 @@ commands.assign([
 		aliases: ["serverprefix", "spre"],
 		category: "configuration",
 		examples: ["serverprefix $"],
-		process(msg, suffix, lang) {
-			commands.cache.get("settings").process(msg, `server prefix${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			commands.cache.get("settings").process(msg, `server prefix${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 
@@ -930,13 +930,13 @@ commands.assign([
 		aliases: ["help", "h", "commands", "cmds"],
 		category: "meta",
 		examples: ["help audio"],
-		async process(msg, suffix, lang) {
+		async process(msg, suffix, lang, prefixes) {
 			let embed
 			if (suffix) {
 				suffix = suffix.toLowerCase()
 				if (suffix == "music" || suffix == "m") {
 					embed = new Discord.MessageEmbed()
-						.setAuthor(`${passthrough.statusPrefix}music: command help (Aliases: m)`)
+						.setAuthor(`${prefixes.main}music: command help (Aliases: m)`)
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 						.setColor(constants.standard_embed_color)
 					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe", "newgrounds"]
@@ -944,11 +944,11 @@ commands.assign([
 					audio.map(cmd => {
 						const info = getDocs(cmd)
 						if (cmd.aliases[0] === "playlist") {
-							info.usage = `See \`${passthrough.statusPrefix}help playlist\``
+							info.usage = `See \`${prefixes.main}help playlist\``
 							info.description = ""
 						}
 						const aliases = cmd.aliases.slice(1, cmd.aliases.length)
-						embed.addField(`${cmd.aliases[0]} (Aliases: ${aliases.length > 0 ? aliases.join(", ") : "N.A."})`, `${info.description ? `${info.description}\n` : ""}*Arguments*: ${info.usage}\n\n*Examples*:\n${cmd.examples ? cmd.examples.map(i => `${passthrough.statusPrefix}music ${i}`).join("\n") : "N.A."}`)
+						embed.addField(`${cmd.aliases[0]} (Aliases: ${aliases.length > 0 ? aliases.join(", ") : "N.A."})`, `${info.description ? `${info.description}\n` : ""}*Arguments*: ${info.usage}\n\n*Examples*:\n${cmd.examples ? cmd.examples.map(i => `${prefixes.main}music ${i}`).join("\n") : "N.A."}`)
 					})
 					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else if (suffix.includes("playlist") || suffix == "pl") {
@@ -1027,7 +1027,7 @@ commands.assign([
 						const info = getDocs(command)
 						embed = new Discord.MessageEmbed()
 							.setAuthor(`Help for ${command.aliases[0]}`)
-							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples:\n${command.examples ? command.examples.map(i => `${(i.startsWith("amanda, ") || i.startsWith(`${client.user.username.toLowerCase()}, `)) ? "" : passthrough.statusPrefix}${i}`).join("\n") : "N.A."}`)
+							.setDescription(`Arguments: ${info.usage}\nDescription: ${info.description}\nAliases: ${command.aliases.map(a => `\`${a}\``).join(", ")}\nCategory: ${command.category}\nExamples:\n${command.examples ? command.examples.map(i => `${(i.startsWith("amanda, ") || i.startsWith(`${client.user.username.toLowerCase()}, `)) ? "" : prefixes.main}${i}`).join("\n") : "N.A."}`)
 							.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
 							.setColor(constants.standard_embed_color)
 						msg.channel.send(await utils.contentify(msg.channel, embed))

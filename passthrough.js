@@ -10,7 +10,7 @@ process._ptcreated = true
  * @property {import("./modules/structures/Discord/Amanda")} client
  * @property {import("./config")} config
  * @property {import("./constants")} constants
- * @property {import("@amanda/commandmanager")<[import("thunderstorm").Message, string, import("@amanda/lang").Lang]>} commands
+ * @property {import("@amanda/commandmanager")<[import("thunderstorm").Message, string, import("@amanda/lang").Lang, { main: string, array: Array<string> }]>} commands
  * @property {import("pg").PoolClient} db
  * @property {import("@amanda/reloader")} reloader
  * @property {import("events").EventEmitter} reloadEvent

@@ -150,7 +150,7 @@ async function manageMessage(msg, isEdit = false) {
 
 	if (cmd) {
 		try {
-			await cmd.process(msg, suffix, lang)
+			await cmd.process(msg, suffix, lang, prefixes)
 		} catch (e) {
 			if (e && e.code) {
 				if (e.code == 10008) return

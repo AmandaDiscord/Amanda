@@ -26,7 +26,7 @@ commands.assign([
 		aliases: ["playlist", "playlists", "pl"],
 		category: "audio",
 		description: "Create, play, and edit playlists.",
-		async process(msg, suffix, lang) {
+		async process(msg, suffix, lang, prefixes) {
 			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			const args = suffix.split(" ")
 			const playlistName = args[0]
@@ -35,7 +35,7 @@ commands.assign([
 					"SELECT playlists.playlist_id, playlists.name, playlists.author, playlists.play_count, count(*) as count, sum(songs.length) as length \
 					FROM playlist_songs \
 					INNER JOIN songs USING (video_id) INNER JOIN playlists USING (playlist_id) \
-					GROUP BY playlist_id \
+					GROUP BY playlists.playlist_id \
 					UNION \
 					SELECT playlists.playlist_id, playlists.name, playlists.author, playlists.play_count, 0, 0 \
 					FROM playlists \
@@ -136,17 +136,18 @@ commands.assign([
 				const confirmation = await msg.channel.send(await utils.contentify(msg.channel,
 					new Discord.MessageEmbed()
 						.setTitle(lang.audio.playlist.prompts.bulkListening)
-						.setDescription(utils.replace(lang.audio.playlist.prompts.bulkDescription, { "prefix": passthrough.statusPrefix })
+						.setDescription(utils.replace(lang.audio.playlist.prompts.bulkDescription, { "prefix": prefixes.main })
 						)
 						.setColor(0x22dddd)
 				))
-				utils.createMessageCollector({ channelID: msg.channel.id, userIDs: [msg.author.id] }, (msgg) => {
-					if (msgg.content.startsWith(passthrough.statusPrefix)) {
+				utils.createMessageCollector({ channelID: msg.channel.id, userIDs: [msg.author.id] }, async (msgg) => {
+					const pres = await utils.getPrefixes(msgg)
+					if (msgg.content.startsWith(pres.main)) {
 						return // ignore commands
 					} else if (msgg.content === "undo") {
-						commands.cache.get("playlist").process(msgg, `${playlistName} remove last`, lang)
+						commands.cache.get("playlist").process(msgg, `${playlistName} remove last`, lang, pres)
 					} else {
-						commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang)
+						commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang, pres)
 					}
 					msg.channel.send(lang.audio.playlist.returns.bulkDone)
 					confirmation.edit(lang.audio.playlist.returns.bulkMenuGone, { embed: null })

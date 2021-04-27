@@ -42,11 +42,19 @@ const cmds = [
 			if (mem1 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser1, { "username": msg.author.username }))
 			if (mem2 == null) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.invalidUser2, { "username": msg.author.username }))
 			if (mem1.id == mem2.id) return msg.channel.send(utils.replace(lang.interaction.ship.prompts.selfShip, { "username": msg.author.username }))
+
+			const crow = await utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", mem1.id)
+			if (crow) {
+				const otherID = mem1.id === crow.user1 ? crow.user1 : crow.user2
+				const you = mem1.id === msg.author.id
+				if (otherID === mem2.id) return msg.channel.send(`I don't think I have to rate ${you ? "you" : mem1.user.tag} and ${mem2.user.tag} if ${you ? "you two are" : "they're"} married already. ${you ? "you're" : "they're"} a cute couple <:amandacomfy:726132738918318260>`)
+			}
+
 			await msg.channel.sendTyping()
 			const canvas = new Jimp(300, 100)
 			const [pfp1, pfp2, heart] = await Promise.all([
-				Jimp.read(mem1.user.displayAvatarURL({ format: "png" })),
-				Jimp.read(mem2.user.displayAvatarURL({ format: "png" })),
+				utils.getAvatarJimp(mem1.id),
+				utils.getAvatarJimp(mem2.id),
 				Jimp.read("./images/emojis/heart.png")
 			])
 

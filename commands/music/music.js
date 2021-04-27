@@ -266,11 +266,12 @@ const subcommandsMap = new Map([
 	}],
 	["playlist", {
 		voiceChannel: "provide",
-		code: (msg, args, { voiceChannel, lang }) => {
+		code: async (msg, args, { voiceChannel, lang }) => {
 			if (commands.cache.has("playlist")) {
 				const suffix = args.slice(1).join(" ")
 				const command = commands.cache.get("playlist")
-				return command.process(msg, suffix, lang)
+				const prefixes = await utils.getPrefixes(msg)
+				return command.process(msg, suffix, lang, prefixes)
 			} else throw new Error("Playlist command not loaded")
 		}
 	}],
@@ -323,10 +324,11 @@ const subcommandsMap = new Map([
 		}
 	}],
 	["help", {
-		code: function(msg, args, { lang }) {
+		code: async function(msg, args, { lang }) {
 			const helpCommand = commands.cache.get("help")
 			if (!helpCommand) return msg.channel.send("Help command not loaded")
-			helpCommand.process(msg, "music", lang)
+			const prefixes = await utils.getPrefixes(msg)
+			helpCommand.process(msg, "music", lang, prefixes)
 		}
 	}],
 	["volume", {
@@ -676,7 +678,7 @@ commands.assign([
 		description: "Play music from listen.moe",
 		aliases: ["listenmoe", "lm"],
 		category: "audio",
-		async process(msg, suffix, lang) {
+		async process(msg, suffix, lang, prefixes) {
 			if (msg.channel.type === "dm") return msg.channel.send(lang.audio.music.prompts.guildOnly)
 			if (["jp", "kp", "jpop", "kpop"].includes(suffix.toLowerCase())) { // valid station?
 				const voiceChannel = await common.detectVoiceChannel(msg, true, lang)
@@ -692,7 +694,7 @@ commands.assign([
 					.setTitle("Listen.moe — Schedule")
 					.setDescription(`KPOP: ${passthrough.listenMoe.kp.nowPlaying.title} (${passthrough.listenMoe.kp.nowPlaying.duration ? common.prettySeconds(passthrough.listenMoe.kp.nowPlaying.duration) : "LIVE"})\n`
 					+ `JPOP: ${passthrough.listenMoe.jp.nowPlaying.title} (${passthrough.listenMoe.jp.nowPlaying.duration ? common.prettySeconds(passthrough.listenMoe.jp.nowPlaying.duration) : "LIVE"})`)
-					.setFooter(`Use ${passthrough.statusPrefix}listenmoe [station] to play a station`)
+					.setFooter(`Use ${prefixes.main}listenmoe [station] to play a station`)
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
 		}
@@ -807,8 +809,8 @@ commands.assign([
 			"play https://soundcloud.com/luisfonsiofficial/despacito",
 			"play https://open.spotify.com/track/6habFhsOp2NvshLv26DqMb"
 		],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `play ${suffix}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `play ${suffix}`, lang, prefixes)
 		}
 	},
 	{
@@ -822,8 +824,8 @@ commands.assign([
 			"insert https://soundcloud.com/luisfonsiofficial/despacito",
 			"insert https://open.spotify.com/track/6habFhsOp2NvshLv26DqMb"
 		],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `insert ${suffix}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `insert ${suffix}`, lang, prefixes)
 		}
 	},
 	{
@@ -832,8 +834,8 @@ commands.assign([
 		aliases: ["queue", "q"],
 		category: "audio",
 		examples: ["queue"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `queue${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `queue${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -842,8 +844,8 @@ commands.assign([
 		aliases: ["skip", "s"],
 		category: "audio",
 		examples: ["skip 3"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `skip${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `skip${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -852,8 +854,8 @@ commands.assign([
 		aliases: ["stop", "leave"],
 		category: "audio",
 		examples: ["stop"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "stop", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "stop", lang, prefixes)
 		}
 	},
 	{
@@ -862,8 +864,8 @@ commands.assign([
 		aliases: ["pause"],
 		category: "audio",
 		examples: ["pause"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "pause", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "pause", lang, prefixes)
 		}
 	},
 	{
@@ -872,8 +874,8 @@ commands.assign([
 		aliases: ["resume"],
 		category: "audio",
 		examples: ["resume"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "resume", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "resume", lang, prefixes)
 		}
 	},
 	{
@@ -882,8 +884,8 @@ commands.assign([
 		aliases: ["now", "np", "n"],
 		category: "audio",
 		examples: ["now"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "now", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "now", lang, prefixes)
 		}
 	},
 	{
@@ -896,8 +898,8 @@ commands.assign([
 			"related play 2",
 			"related insert 8"
 		],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "related", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "related", lang, prefixes)
 		}
 	},
 	{
@@ -906,8 +908,8 @@ commands.assign([
 		aliases: ["repeat", "loop"],
 		category: "audio",
 		examples: ["repeat"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "repeat", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "repeat", lang, prefixes)
 		}
 	},
 	{
@@ -916,8 +918,8 @@ commands.assign([
 		aliases: ["auto"],
 		category: "audio",
 		examples: ["auto"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "auto", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "auto", lang, prefixes)
 		}
 	},
 	{
@@ -926,8 +928,8 @@ commands.assign([
 		aliases: ["lyrics"],
 		category: "audio",
 		examples: ["lyrics"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "lyrics", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "lyrics", lang, prefixes)
 		}
 	},
 	{
@@ -936,8 +938,8 @@ commands.assign([
 		aliases: ["seek"],
 		category: "audio",
 		examples: ["seek 2min 3sec"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `seek${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `seek${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -946,8 +948,8 @@ commands.assign([
 		aliases: ["volume", "vol"],
 		category: "audio",
 		examples: ["volume 80%"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `volume${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `volume${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -956,8 +958,8 @@ commands.assign([
 		aliases: ["speed"],
 		category: "audio",
 		examples: ["speed 150%"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `speed${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `speed${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -966,8 +968,8 @@ commands.assign([
 		aliases: ["pitch"],
 		category: "audio",
 		examples: ["pitch -3"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `pitch${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `pitch${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	},
 	{
@@ -976,8 +978,8 @@ commands.assign([
 		aliases: ["nightcore", "nc"],
 		category: "audio",
 		examples: ["nightcore"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "nightcore", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "nightcore", lang, prefixes)
 		}
 	},
 	{
@@ -986,8 +988,8 @@ commands.assign([
 		aliases: ["antinightcore", "anc", "daycore"],
 		category: "audio",
 		examples: ["antinightcore"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, "antinightcore", lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, "antinightcore", lang, prefixes)
 		}
 	},
 	{
@@ -996,8 +998,8 @@ commands.assign([
 		aliases: ["youtube", "yt"],
 		category: "audio",
 		examples: ["youtube despacito"],
-		process(msg, suffix, lang) {
-			return commands.cache.get("music").process(msg, `youtube${suffix ? ` ${suffix}` : ""}`, lang)
+		process(msg, suffix, lang, prefixes) {
+			return commands.cache.get("music").process(msg, `youtube${suffix ? ` ${suffix}` : ""}`, lang, prefixes)
 		}
 	}
 ])

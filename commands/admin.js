@@ -23,7 +23,15 @@ const replaceBlackList = [
 	config.chewey_api_key,
 	config.lavalink_password,
 	config.weeb_api_key,
-	config.genius_access_token
+	config.genius_access_token,
+
+	config.top_api_key,
+	config.botson_api_key,
+	config.boats_api_key,
+	config.dbl_api_key,
+	config.botsgg_api_key,
+	config.del_api_key,
+	config.listen_moe_password
 ]
 
 commands.assign([
@@ -33,7 +41,7 @@ commands.assign([
 		aliases: ["evaluate", "eval"],
 		category: "admin",
 		examples: ["eval client.token"],
-		async process(msg, suffix, lang) {
+		async process(msg, suffix, lang, prefixes) {
 			const allowed = await utils.sql.hasPermission(msg.author, "eval")
 			if (allowed) {
 				if (!suffix) return msg.channel.send(lang.admin.evaluate.prompts.noInput)
@@ -54,7 +62,7 @@ commands.assign([
 
 				let output = await utils.stringify(result, depth)
 				for (const item of replaceBlackList) {
-					output = output.replace(new RegExp(item, "g"), constants.fake_token)
+					output = output.replace(new RegExp(item.replace(/\+/g, "\\+"), "g"), constants.fake_token)
 				}
 
 				const nmsg = await msg.channel.send(output)
