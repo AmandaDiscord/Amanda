@@ -163,7 +163,7 @@ class TriviaGame extends Game {
 		if (this.channel.type === "dm" || await utils.cacheManager.channels.clientHasPermission({ id: this.channel.id, guild_id: this.channel.guild.id }, "ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
 		return this.channel.send(await utils.contentify(this.channel, embed)).then(msg => {
-			new ReactionMenu(msg, client, [
+			new ReactionMenu(msg, [
 				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
 					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
 					else startGame(this.channel, { category: this.category, lang: this.lang })

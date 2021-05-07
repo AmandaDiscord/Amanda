@@ -13,6 +13,9 @@ const common = require("../commands/music/common")
 reloader.sync("./commands/music/common.js", common)
 
 let starting = true
+/**
+ * @type {Map<string, Discord.Message>}
+ */
 const messagesReceived = new Map()
 if (client.readyAt != null) starting = false
 
@@ -64,19 +67,11 @@ reloadEvent.once(path.basename(__filename), () => {
 utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
 if (!starting) manageReady()
 else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
-utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), async (data) => {
-	const channel = new Discord.PartialChannel({ id: data.channel_id }, client)
+utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), async (reaction, u) => {
 	/** @type {Discord.User} */
 	// @ts-ignore
-	const user = await utils.cacheManager.users.get(data.user_id, true, true)
-	ReactionMenu.handler(data, channel, user, client)
-})
-utils.addTemporaryListener(client, "messageUpdate", path.basename(__filename), (message) => {
-	const m = messagesReceived.get(message.id)
-	if (m) {
-		m.content = message.content || ""
-		manageMessage(m, true)
-	}
+	const user = await utils.cacheManager.users.get(u.id, true, true)
+	ReactionMenu.handler(reaction, user)
 })
 utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
 	if (reason) console.error(reason)
@@ -105,6 +100,12 @@ utils.addTemporaryListener(client, "raw", path.basename(__filename), event => {
 			client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
 			const ns = new Discord.VoiceState(state, client)
 			common.voiceStateUpdate(ns)
+		}
+	} else if (event.t === "MESSAGE_UPDATE") {
+		const m = messagesReceived.get(event.d.id)
+		if (m) {
+			m._patch(event.d)
+			manageMessage(m, true)
 		}
 	}
 })

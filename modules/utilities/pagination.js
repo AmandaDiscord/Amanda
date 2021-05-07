@@ -107,7 +107,7 @@ async function paginate(channel, pageCount, callback) {
 	const msg = await channel.send(await callback(page))
 	if (pageCount > 1) {
 		let reactionMenuExpires
-		const reactionMenu = new ReactionMenu(msg, client, [
+		const reactionMenu = new ReactionMenu(msg, [
 			{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: async () => {
 				page--
 				if (page < 0) page = pageCount - 1
@@ -125,7 +125,7 @@ async function paginate(channel, pageCount, callback) {
 		function makeTimeout() {
 			clearTimeout(reactionMenuExpires)
 			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true, msg.channel.type === "dm" ? "dm" : "text")
+				reactionMenu.destroy(true)
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()

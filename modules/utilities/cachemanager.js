@@ -32,7 +32,7 @@ function upsertUser(user) {
 }
 
 /**
- * @param {import("thunderstorm/src/internal").InboundDataType} data
+ * @param {import("thunderstorm/dist/internal").InboundDataType} data
  */
 function processData(data) {
 	const empty = []
@@ -333,7 +333,7 @@ const userManager = {
 			const match = /<@!?(\d+)>/.exec(string)
 			if (match && match[1]) {
 				string = match[1]
-				const d = message.mentions.length === 1 ? message.mentions[0].user : message.mentions.find(item => item.id === string).user
+				const d = message.mentions.users.size === 1 ? message.mentions.users.first() : message.mentions.users.find(item => item.id === string)
 				return res(d)
 			}
 			if (!string) {
@@ -487,7 +487,7 @@ const memberManager = {
 			const match = /<@!?(\d+)>/.exec(string)
 			if (match && match[1]) {
 				string = match[1]
-				const d = message.mentions.length === 1 ? message.mentions[0] : message.mentions.find(item => item.id === string)
+				const d = message.mentions.members.size === 1 ? message.mentions.members.first() : message.mentions.members.find(item => item.id === string)
 				return res(d)
 			}
 

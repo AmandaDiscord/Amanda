@@ -412,7 +412,7 @@ commands.assign([
 				else if (user.presence.activity.state) activity += `\n${user.presence.activity.state}`
 			}*/
 			if (user.bot) {
-				if (user.flags && (user.flags & 1 << 16) == 1 << 16) status = "<:VerifiedBot:719645152003489912>"
+				if (user.flags.has("VERIFIED_BOT")) status = "<:VerifiedBot:719645152003489912>"
 				else status = "<:bot:412413027565174787>"
 			}
 			embed.setThumbnail(user.displayAvatarURL({ format: "png", size: 256, dynamic: true }))
@@ -1053,7 +1053,7 @@ commands.assign([
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
 								.setColor(constants.standard_embed_color)
-							const menu = new ReactionMenu(message, client, [{ emoji: "📱", ignore: "total", actionType: "js", actionData: async () => message.edit(await utils.contentify(message.channel, mobileEmbed)) }])
+							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "js", actionData: async () => message.edit(await utils.contentify(message.channel, mobileEmbed)) }])
 							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
 						})
 					} else {

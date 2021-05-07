@@ -47,28 +47,19 @@ addTemporaryListener(client, "message", path.basename(__filename), (message) => 
  * @returns {Array<string>}
  */
 function userFlagEmojis(user) {
-	const flags = user.flags // All of these emojis are from Papi's Dev House.
+	// All of these emojis are from Papi's Dev House.
 	const arr = [] // The emojis are pushed to the array in order of which they'd appear in Discord.
-	if (!flags) return arr
-	if (testFlag(flags, 1 << 0)) arr.push("<:staff:433155028895793172>") // Discord Employee
-	if (testFlag(flags, 1 << 1)) arr.push("<:partner:421802275326001152>") // Discord partner
-	if (testFlag(flags, 1 << 2)) arr.push("<:HypesquadEvents:719628242449072260>") // HypeSquad Events
-	if (testFlag(flags, 1 << 8)) arr.push("<:balance:479939338696654849>") // House Balance
-	if (testFlag(flags, 1 << 6)) arr.push("<:bravery:479939311593324557>") // House Bravery
-	if (testFlag(flags, 1 << 7)) arr.push("<:brilliance:479939329104412672>") // House Brilliance
-	if (testFlag(flags, 1 << 17)) arr.push("<:VerifiedDeveloper:699408396591300618>") // Verified Bot Developer
-	if (testFlag(flags, 1 << 14)) arr.push("<:BugCatcherlvl2:678721839488434203>") // Bug Hunter Level 2
-	if (testFlag(flags, 1 << 3) && !testFlag(flags, 1 << 14)) arr.push("<:BugCatcher:434087337488678921>") // Bug Hunter Level 1
-	if (testFlag(flags, 1 << 9)) arr.push("<:EarlySupporter:585638218255564800>")
+	if (user.flags.has("DISCORD_EMPLOYEE")) arr.push("<:staff:433155028895793172>") // Discord Employee
+	if (user.flags.has("PARTNERED_SERVER_OWNER")) arr.push("<:partner:421802275326001152>") // Discord partner
+	if (user.flags.has("HYPESQUAD_EVENTS")) arr.push("<:HypesquadEvents:719628242449072260>") // HypeSquad Events
+	if (user.flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>") // House Balance
+	if (user.flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>") // House Bravery
+	if (user.flags.has("HOUSE_BRILLIANCE")) arr.push("<:brilliance:479939329104412672>") // House Brilliance
+	if (user.flags.has("EARLY_VERIFIED_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>") // Verified Bot Developer
+	if (user.flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcherlvl2:678721839488434203>") // Bug Hunter Level 2
+	if (user.flags.has("BUGHUNTER_LEVEL_1") && !user.flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcher:434087337488678921>") // Bug Hunter Level 1
+	if (user.flags.has("EARLY_SUPPORTER")) arr.push("<:EarlySupporter:585638218255564800>")
 	return arr
-}
-
-/**
- * @param {number} flags
- * @param {number} flag
- */
-function testFlag(flags, flag) {
-	return (flags & flag) == flag
 }
 
 /**

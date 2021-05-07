@@ -378,7 +378,7 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npMenu) this.npMenu.destroy(true, "text")
+		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)
 	}
@@ -643,8 +643,8 @@ class Queue {
 		}
 	}
 	_makeReactionMenu() {
-		if (this.npMenu) this.npMenu.destroy(true, "text")
-		this.npMenu = new ReactionMenu(this.np, client, [
+		if (this.npMenu) this.npMenu.destroy(true)
+		this.npMenu = new ReactionMenu(this.np, [
 			{ emoji: "⏯️", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
 				if (!this.listeners.has(user.id)) return
 				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })

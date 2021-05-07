@@ -295,7 +295,7 @@ commands.assign([
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor(0xdd1d1d).setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				const message = await msg.channel.send(await utils.contentify(msg.channel, deletePromptEmbed))
-				new ReactionMenu(message, client, [
+				new ReactionMenu(message, [
 					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
 						await Promise.all([
 							utils.orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
