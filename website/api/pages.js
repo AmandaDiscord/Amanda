@@ -32,6 +32,11 @@ module.exports = [
 		}
 	},
 	{
+		route: "/dream", methods: ["GET"], code: async () => {
+			return render(200, "pug/dream.pug")
+		}
+	},
+	{
 		route: "/donate", methods: ["GET"], code: async () => {
 			return render(200, "pug/donate.pug")
 		}

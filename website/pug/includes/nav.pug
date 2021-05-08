@@ -2,6 +2,7 @@ mixin nav(highlight, url)
 	nav#topnav
 		a(href="/" class=highlight=="home" ? "active" : "").navitem Home
 		a(href="/about" class=highlight=="about" ? "active" : "").navitem About
+		a(href="/dream" class=highlight=="dream" ? "active" : "").navitem Dream
 		a(href="/donate" class=highlight=="donate" ? "active" : "").navitem Donate
 		a(href="/dash" class=highlight=="dash" ? "active" : "").navitem Dashboard
 		if block
