@@ -111,7 +111,7 @@ const subcommandsMap = new Map([
 						.setDescription(
 							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
 						+ `\n${lang.audio.playlist.prompts.query}`
-						+ options.map((o, i) => `\n${buttons[i]} ${o}`).join("")
+						+ options.map((o, i) => `\n<:${buttons[i]}> ${o}`).join("")
 						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
 						)
 					// Send the embed
@@ -139,7 +139,7 @@ const subcommandsMap = new Map([
 					} }
 					// Create the reaction menu
 					// @ts-ignore
-					new ReactionMenu(nmsg, client, Array(3).fill(undefined).map((_, i) => {
+					new ReactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
 						const emoji = buttons[i]
 						return Object.assign({ emoji }, action)
 					}))
