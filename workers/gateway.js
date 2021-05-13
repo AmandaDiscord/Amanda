@@ -34,7 +34,7 @@ const presence = {}
 			const shard = shards.find(s => s.id === d.id)
 			if (shard) {
 				try {
-					await shard.connector.betterWs.sendMessage(q)
+					await shard.connector.betterWs.sendMessage(q.data)
 					queue.splice(queue.indexOf(q), 1)
 				} catch {
 					return console.error(`Unable to send message:\n${JSON.stringify(q)}`)

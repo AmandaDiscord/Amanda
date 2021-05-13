@@ -1053,8 +1053,18 @@ commands.assign([
 									return `**${cmd.aliases[0]}**\n${desc}`
 								}).join("\n\n"))
 								.setColor(constants.standard_embed_color)
-							const menu = new ReactionMenu(message, [{ emoji: "📱", ignore: "total", actionType: "js", actionData: async () => message.edit(await utils.contentify(message.channel, mobileEmbed)) }])
-							setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+							const menu = new ReactionMenu(message,
+								[{ emoji: "📱",
+									ignore: "total",
+									actionType: "js",
+									actionData: async () => {
+										message.edit(await utils.contentify(message.channel, mobileEmbed))
+										menu.destroy(true)
+									}
+								}])
+							setTimeout(() => {
+								if (menu.menus.has(message.id)) menu.destroy(true)
+							}, 5 * 60 * 1000)
 						})
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor(0xB60000)

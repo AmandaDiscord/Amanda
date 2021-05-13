@@ -70,7 +70,9 @@ commands.assign([
 
 				const nmsg = await msg.channel.send(typeof content === "string" ? content : { file: content })
 				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				return setTimeout(() => {
+					if (menu.menus.has(nmsg.id)) menu.destroy(true)
+				}, 5 * 60 * 1000)
 			} else return
 		}
 	},
@@ -105,9 +107,10 @@ commands.assign([
 				if (!stdout && !stderr) result.setDescription("No output.")
 				const nmsg = await msg.channel.send(await utils.contentify(msg.channel, result))
 				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
-				return setTimeout(() => menu.destroy(true), 5 * 60 * 1000)
+				return setTimeout(() => {
+					if (menu.menus.has(nmsg.id)) menu.destroy(true)
+				}, 5 * 60 * 1000)
 			})
-			return
 		}
 	},
 	{

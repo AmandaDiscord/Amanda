@@ -48,6 +48,9 @@ const pool = new Postgres.Pool({
 	const db = await pool.connect()
 	console.log("Connected to database")
 
+	await db.query({ text: "DELETE FROM voice_states WHERE guild_id IN (SELECT id FROM guilds WHERE added_by = $1)", values: [config.cluster_id] })
+	console.log("Deleted all voice states")
+
 	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
 
 	// Gateway
