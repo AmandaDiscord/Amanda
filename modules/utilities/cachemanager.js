@@ -54,7 +54,7 @@ function processData(data) {
 		}
 
 		for (const state of data.d.voice_states || empty) {
-			db.upsert("voice_states", { guild_id: data.d.id, channel_id: state.channel_id, user_id: state.channel_id })
+			db.upsert("voice_states", { guild_id: data.d.id, channel_id: state.channel_id, user_id: state.user_id })
 		}
 		break
 	}
@@ -646,7 +646,7 @@ const guildManager = {
 			)
 		}
 
-		void await Promise.all(promises)
+		await Promise.all(promises)
 	},
 	/**
 	 * @param {string} id

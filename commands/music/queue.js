@@ -679,7 +679,7 @@ class Queue {
 			if (newState.channelID) {
 				const filtered = await utils.orm.db.select("voice_states", { guild_id: newState.guildID, channel_id: this.voiceChannel.id }, { select: ["user_id"] })
 				// @ts-ignore
-				mems = await Promise.all(filtered.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true))).then(d => d.filter(r => r && r.id))
+				mems = await Promise.all(filtered.map(s => utils.cacheManager.members.get(s.user_id, newState.guildID, true, true)))
 			} else mems = []
 			if (mems.length > 0 && mems.find(i => !i.user.bot)) {
 				for (const mem of mems) {
