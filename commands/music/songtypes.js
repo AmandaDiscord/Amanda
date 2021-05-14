@@ -661,8 +661,8 @@ class ExternalSong extends Song {
 		this.live = true
 		this.thumbnail = {
 			src: constants.local_placeholder,
-			width: 616,
-			height: 440
+			width: 512,
+			height: 512
 		}
 		this.uri = link
 		this.track = "!"
