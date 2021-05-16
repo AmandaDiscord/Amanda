@@ -1,6 +1,7 @@
 // @ts-check
 
 const types = require("../../typings")
+const fetch = require("centra")
 
 const passthrough = require("../passthrough")
 const { snow, config, ipc } = passthrough
@@ -238,6 +239,12 @@ module.exports = [
 					return render(500, "pug/error.pug", { message: err })
 				}
 			})
+		}
+	},
+	{
+		route: "/rose-interaction-message", methods: ["POST"], code: async ({ req, body }) => {
+			const resp = await fetch("localhost:10069/message", "post").header(req.headers).body(req.body).send();
+			return { statusCode: resp.statusCode, contentType: "text/plain", content: resp.body.toString() || JSON.stringify({ id: 1 }) }
 		}
 	}
 ]
