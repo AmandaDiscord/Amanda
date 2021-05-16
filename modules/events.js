@@ -42,7 +42,7 @@ function getTimeoutDuration() {
 }
 
 let autoPayTimeout
-if (config.cluster_id === "pencil") {
+if (config.cluster_id === "maple") {
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 	console.log("added timeout autoPayTimeout")
 }
@@ -58,7 +58,7 @@ async function autoPayTimeoutFunction() {
 }
 
 reloadEvent.once(path.basename(__filename), () => {
-	if (config.cluster_id === "pencil") {
+	if (config.cluster_id === "maple") {
 		clearTimeout(autoPayTimeout)
 		console.log("removed timeout autoPayTimeout")
 	}
