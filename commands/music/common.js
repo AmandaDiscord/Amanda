@@ -755,7 +755,7 @@ const common = {
 			const ss = "Spotify.Entity"
 			const start = text.indexOf(ss)
 			const afterStart = text.substring(start)
-			const end = afterStart.indexOf(";")
+			const end = afterStart.indexOf(";\n")
 			const body = text.slice(start + ss.length + 3, start + end)
 			if (!body) throw new Error("Cannot extract Spotify track info")
 			let parsed
@@ -763,6 +763,7 @@ const common = {
 			try {
 				parsed = JSON.parse(body)
 			} catch {
+				console.log(body)
 				throw new Error("Cannot extract Spotify track info")
 			}
 			return parsed

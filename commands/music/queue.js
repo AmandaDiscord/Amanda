@@ -245,7 +245,9 @@ class Queue {
 			rchan.send(embed).then(() => {
 				return rchan.send(contents)
 			// eslint-disable-next-line no-empty-function
-			}).catch(() => {}) // probably missing access error
+			}).catch(() => {
+				// probably missing access error
+			})
 		}
 		this.errorChain++
 		if (this.shouldDisplayErrors) {

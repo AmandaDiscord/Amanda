@@ -279,9 +279,9 @@ commands.assign([
 						))
 						if (i != videos.length - 1) {
 							const nextVideo = videos[i + 1]
-							promises.push(new Promise((res) => res(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: nextVideo.videoId }))))
+							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: nextVideo.videoId })))
 						} else {
-							promises.push(new Promise((res) => res(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: null }))))
+							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: null })))
 						}
 					}
 					promises.push(utils.sql.all(

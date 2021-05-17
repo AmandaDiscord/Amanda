@@ -58,7 +58,6 @@ const subcommandsMap = new Map([
 						if (track) {
 							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
 							common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
-							return
 						}
 					}).catch(() => {
 						// Otherwise, start a search
@@ -492,15 +491,17 @@ commands.assign([
 				send(utils.replace(lang.audio.token.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }), true, true
 				).then(() => {
 					return send(`\`${hash}\``, false, false)
-				// eslint-disable-next-line no-empty-function
-				}).catch(() => {})
+				}).catch(() => {
+					// Just don't error or anything on this
+				})
 			} else {
 				const existing = await utils.orm.db.get("web_tokens", { user_id: msg.author.id })
 				if (existing) {
 					send(lang.audio.token.returns.generated, true, true).then(() => {
 						send(`\`${existing.token}\``, false, false)
-					// eslint-disable-next-line no-empty-function
-					}).catch(() => {})
+					}).catch(() => {
+						// same here
+					})
 				} else send(lang.audio.token.prompts.none)
 			}
 

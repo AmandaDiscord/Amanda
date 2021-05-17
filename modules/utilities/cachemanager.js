@@ -199,7 +199,9 @@ const channelManager = {
 					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
-					newmessage.delete().catch(() => {})
+					newmessage.delete().catch(() => {
+						// Don't throw an error
+					})
 					return res(list[index - 1])
 				}
 				// eslint-disable-next-line no-inner-declarations
@@ -367,7 +369,11 @@ const userManager = {
 					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
 					// eslint-disable-next-line no-empty-function
-					if (message.channel.type != "dm") newmessage.delete().catch(() => {})
+					if (message.channel.type != "dm") {
+						newmessage.delete().catch(() => {
+							// Don't throw an error
+						})
+					}
 					return res(list[index - 1])
 				}
 				// eslint-disable-next-line no-inner-declarations
@@ -514,8 +520,9 @@ const memberManager = {
 					const index = Number(newmessage.content)
 					if (!index || !list[index - 1]) return onFail()
 					selectmessage.delete()
-					// eslint-disable-next-line no-empty-function
-					newmessage.delete().catch(() => {})
+					newmessage.delete().catch(() => {
+						// Don't throw an error
+					})
 					return res(list[index - 1])
 				}
 				// eslint-disable-next-line no-inner-declarations

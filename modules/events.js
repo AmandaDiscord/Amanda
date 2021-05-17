@@ -102,6 +102,7 @@ utils.addTemporaryListener(client, "raw", path.basename(__filename), event => {
 			common.voiceStateUpdate(ns)
 		}
 	} else if (event.t === "MESSAGE_UPDATE") {
+		if (!event.d.edited_timestamp) return
 		const m = messagesReceived.get(event.d.id)
 		if (m) {
 			m._patch(event.d)
@@ -238,8 +239,7 @@ async function manageReady() {
 				search_with_invidious: !!node.search_with_invidious,
 				resumeKey: `${client.user.id}/${config.cluster_id}`
 			}
-			const n = Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name })
-			return n
+			return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name })
 		})
 
 		constants.lavalinkNodes = lavalinkNodes
