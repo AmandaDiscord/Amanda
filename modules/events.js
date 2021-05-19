@@ -108,6 +108,8 @@ utils.addTemporaryListener(client, "raw", path.basename(__filename), event => {
 			m._patch(event.d)
 			manageMessage(m, true)
 		}
+	} else if (event.t === "THREAD_CREATE" || event.t === "THREAD_UDATE" || event.t === "THREAD_DELETE" || event.t === "THREAD_LIST_SYNC") {
+		console.log(event)
 	}
 })
 
