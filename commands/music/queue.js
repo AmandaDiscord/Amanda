@@ -115,10 +115,15 @@ class Queue {
 		this.np = null
 		/** @type {import("@amanda/reactionmenu")} */
 		this.npMenu = null
+		this.npEditable = true
 		this.npUpdater = new FrequencyUpdater(async () => {
 			if (this.np) {
 				const embed = await this._buildNPEmbed()
-				if (embed) this.np.edit(embed)
+				if (embed && this.npEditable) {
+					this.np.edit(embed).catch(e => {
+						if (e && e.httpStatus === 404) this.npEditable = false
+					})
+				}
 			}
 		})
 		this.getLang().then(lng => this.langCache = lng)
@@ -154,12 +159,12 @@ class Queue {
 				// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 				// Simply respond by stopping the queue, since that was the intention.
 				// This should therefore clean up the queueStore and the website correctly.
-				this.audit.push({ action: "Queue Destroy (Error Occurred)", platform: "System", user: "Amanda" })
+				this.audit.push({ action: "Queue Destroy (Socket Closed. Was the channel deleted?)", platform: "System", user: "Amanda" })
 				return this.stop()
 			}
 			console.error("Lavalink error event at", new Date().toUTCString(), details)
 			if (this.songs[0]) {
-				this.songs[0].error = details.error ? details.error : `\`\`\`js\n${JSON.stringify(details, null, 4)}\n\`\`\``
+				this.songs[0].error = details.error ? details.error : "There was an exception when trying to play that track. That's all I know"
 				console.log("Song error call B")
 				this._reportError()
 				// This may automatically continue to the next song, presumably because the end event may also be fired.
