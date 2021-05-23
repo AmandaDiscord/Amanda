@@ -939,58 +939,58 @@ commands.assign([
 						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
 						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. \
 														If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\
-														\nNote that using `add`, `remove`, `move`, `import` and `delete` require you to be the owner (creator) of a playlist.")
+														\nNote that using `add`, `remove`, `move`, `import`, `delete` and `rename` require you to be the owner (creator) of a playlist.")
 						.addFields([
 							{
 								name: "show",
-								value: "Show a list of all playlists.\n`&music playlist show`"
+								value: `Show a list of all playlists.\n\`${prefixes.main}music playlist show\``
 							},
 							{
 								name: "(just a playlist name)",
-								value: "List all songs in a playlist.\n`&music playlist xi`"
+								value: `List all songs in a playlist.\n\`${prefixes.main}music playlist xi\``
 							},
 							{
 								name: "play [start] [end]",
-								value: "Play a playlist.\n\
+								value: `Play a playlist.\n\
 												Optionally, specify values for start and end to play specific songs from a playlist. \
-												Start and end are item index numbers, but you can also use `-` to specify all songs towards the list boundary.\
-												\n`&music playlist xi play` (plays the entire playlist named `xi`)\
-												\n`&music playlist xi play 32` (plays item #32 from the playlist)\
-												\n`&music playlist xi play 3 6` (plays items #3, #4, #5 and #6 from the playlist)\
-												\n`&music playlist xi play 20 -` (plays all items from #20 to the end of the playlist)"
+												Start and end are item index numbers, but you can also use \`-\` to specify all songs towards the list boundary.\
+												\n\`${prefixes.main}music playlist xi play\` (plays the entire playlist named \`xi\`)\
+												\n\`${prefixes.main}music playlist xi play 32\` (plays item #32 from the playlist)\
+												\n\`${prefixes.main}music playlist xi play 3 6\` (plays items #3, #4, #5 and #6 from the playlist)\
+												\n\`${prefixes.main}music playlist xi play 20 -\` (plays all items from #20 to the end of the playlist)`
 							},
 							{
 								name: "shuffle [start] [end]",
-								value: "Play the songs from a playlist, but shuffle them into a random order before queuing them. Works exactly like `play`.\n`&music playlist xi shuffle`"
+								value: `Play the songs from a playlist, but shuffle them into a random order before queuing them. Works exactly like \`play\`.\n\`${prefixes.main}music playlist xi shuffle\``
 							},
 							{
 								name: "add <url>",
-								value: "Add a song to a playlist. Specify a URL the same as `&music play`.\
-												\n`&music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs`"
+								value: `Add a song to a playlist. Specify a URL the same as \`${prefixes.main}music play\`.\
+												\n\`${prefixes.main}music playlist xi add https://youtube.com/watch?v=e53GDo-wnSs\``
 							},
 							{
 								name: "remove <index>",
-								value: "Remove a song from a playlist.\
-												\n`index` is the index of the item to be removed.\
-												\n`&music playlist xi remove 12`"
+								value: `Remove a song from a playlist.\
+												\n\`index\` is the index of the item to be removed.\
+												\n\`${prefixes.main}music playlist xi remove 12\``
 							},
 							{
 								name: "move <index1> <index2>",
-								value: "Move items around within a playlist. \
-												`index1` is the index of the item to be moved, `index2` is the index of the position it should be moved to.\
+								value: `Move items around within a playlist. \
+												\`index1\` is the index of the item to be moved, \`index2\` is the index of the position it should be moved to.\
 												\nThe indexes themselves will not be swapped with each other. Instead, all items in between will be shifted up or down to make room. \
-												`&music playlist xi move 12 13`"
+												\`${prefixes.main}music playlist xi move 12 13\``
 							},
 							{
 								name: "find",
-								value: "Find specific items in a playlist.\
+								value: `Find specific items in a playlist.\
 												\nProvide some text to search for, and matching songs will be shown.\
-												\n`&music playlist undertale find hopes and dreams`"
+												\n\`${prefixes.main}music playlist undertale find hopes and dreams\``
 							},
 							{
 								name: "import <url>",
-								value: "Import a playlist from YouTube into Amanda. `url` is a YouTube playlist URL.\
-												\n`&music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg`"
+								value: `Import a playlist from YouTube into Amanda. \`url\` is a YouTube playlist URL.\
+												\n\`${prefixes.main}music playlist undertale import https://www.youtube.com/playlist?list=PLpJl5XaLHtLX-pDk4kctGxtF4nq6BIyjg\``
 							},
 							{
 								name: "bulk",
@@ -998,7 +998,11 @@ commands.assign([
 							},
 							{
 								name: "delete",
-								value: "Delete a playlist. You'll be asked for confirmation.\n`&music playlist xi delete`"
+								value: `Delete a playlist. You'll be asked for confirmation.\n\`${prefixes.main}music playlist xi delete\``
+							},
+							{
+								name: "rename",
+								value: `Rename a playlist.\n\`${prefixes.main}music playlist xi rename xisongs\``
 							}
 						])
 						.setFooter("<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input")
