@@ -385,6 +385,7 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
+		if (this.npEditable) this.np.edit(new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))
 		if (this.npMenu) this.npMenu.destroy(true)
 		client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)
