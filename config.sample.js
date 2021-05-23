@@ -22,7 +22,6 @@ module.exports = {
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	website_ipc_bind: "localhost",
-	invidious_origin: "https://invidio.us",
 	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",
 	additional_intents: [],
 	shard_list: [0],
@@ -31,7 +30,6 @@ module.exports = {
 	// Settings
 	allow_ai: false,
 	music_dash_enabled: true,
-	use_invidious: false,
 	total_shards: 1,
 	fake_token: "(token)",
 	is_dev_env: true

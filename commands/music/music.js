@@ -45,9 +45,9 @@ const subcommandsMap = new Map([
 			// Linked to a video. ID may or may not work, so fall back to search.
 			if (match && match.type == "video" && match.id) {
 				// Get the track
-				if (config.use_invidious) { // Resolve tracks with Invidious
-					const queue = queues.cache.get(msg.guild.id)
-					const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(voiceChannel.rtcRegion)
+				const queue = queues.cache.get(msg.guild.id)
+				const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(voiceChannel.rtcRegion)
+				if (node.search_with_invidious) { // Resolve tracks with Invidious
 					common.invidious.getData(match.id, node.host).then(async data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
@@ -314,7 +314,12 @@ const subcommandsMap = new Map([
 			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			const suffix = args.slice(1).join(" ")
 			if (!suffix) return msg.channel.send(`${msg.author.username}, you need to provide a duration to seek to. Example: \`&m seek 20s\``)
-			const duration = utils.parseDuration(suffix)
+			let duration
+			if (suffix.includes(":")) {
+				const split = suffix.split(":")
+				if (split.length > 3) return msg.channel.send(`${msg.author.username}, that's an invalid time format. If you wish to provide days, please add 24 x number of days to the hour count or try writing your time similar to 2d 5h 3m`)
+				duration = split.reduce((acc, cur, ind) => acc + Number(cur) * 1000 * (Math.pow(60, split.length - (ind + 1))), 0)
+			} else duration = utils.parseDuration(suffix)
 			if (!duration || isNaN(duration)) return msg.channel.send(`${msg.author.username}, that is not valid duration.`)
 			const result = await queue.seek(duration)
 			if (result === 1) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
@@ -556,7 +561,7 @@ commands.assign([
 				.setAuthor(utils.replace(lang.audio.debug.returns.infoFor, { "channel": channel.name }), utils.emojiURL(emoji))
 				.addField(lang.audio.debug.returns.permissions, permss.join("\n"))
 				.addField("Player:",
-					`${lang.audio.debug.returns.method} ${config.use_invidious ? "Invidious" : "LavaLink"}`
+					`${lang.audio.debug.returns.method} ${node.search_with_invidious ? "Invidious" : "LavaLink"}`
 					+ `\nLavaLink Node: ${node.name}`
 					+ extraNodeInfo
 					+ `\nInvidious Domain: ${invidiousHostname}`

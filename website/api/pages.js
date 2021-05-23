@@ -106,8 +106,8 @@ module.exports = [
 			}
 
 			if (allowed) {
-				const shardData = await ipc.replier.requestUpdateConfig()
-				return render(200, "pug/config.pug", { shardData })
+				const clusterData = await ipc.replier.requestUpdateConfig()
+				return render(200, "pug/config.pug", { clusterData })
 			} else {
 				const csrfToken = utils.generateCSRF()
 				return render(401, "pug/login.pug", { message: "You must log in.", csrfToken })
@@ -133,14 +133,14 @@ module.exports = [
 					/** @type {URLSearchParams} */
 					const params = state.params
 					const cfg = {
-						use_invidious: params.has("use-invidious"),
 						allow_ai: params.has("allow-ai")
 					}
 					const lavalinkNodes =
 						Array(+params.get("number-of-nodes"))
 							.fill(undefined)
 							.map((_, i) => ({
-								enabled: params.has("enable-node-"+i)
+								enabled: params.has(`enable-node-${i}`),
+								search_with_invidious: params.has(`enable-node-${i}-invidious`)
 							}))
 
 					console.log({config: cfg, lavalinkNodes})
@@ -215,7 +215,7 @@ module.exports = [
 			}).do({
 				code: () => ipc.replier.getShardIDForGuild(guildID)
 				, expected: v => v != null
-				, errorValue: "Shard not available for server view."
+				, errorValue: "Cluster not available for server view."
 			}).do({
 				code: () => ipc.replier.requestGetGuildForUser(session.user_id, guildID)
 				, assign: "guild"

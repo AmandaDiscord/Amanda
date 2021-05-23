@@ -1,4 +1,4 @@
-//- Needs shardData
+//- Needs clusterData
 
 doctype html
 html
@@ -18,48 +18,43 @@ html
 				thead
 					tr
 						th(scope="col") Cluster #
-						th(scope="col") Using Invidious
+
 						th(scope="col") Allow AI
 				tbody
-					each data, index in shardData
+					each data, index in clusterData
 						- let config = data.config
 						tr
 							td= index
 							td
 								div.use-invidious
-									div(class=(config.use_invidious ? "true" : "")).status
-									= config.use_invidious
-							td
-								div.use-invidious
 									div(class=(config.allow_ai ? "true" : "")).status
 									= config.allow_ai
 
-			h2 Update all shards to...
+			h2 Update all cluster config
 			form(method="post" action="/formapi/updateconfig").form-with-rows
 				label.form-row-label
-					span Use Invidious
-					input(type="checkbox" name="use-invidious" checked=shardData[0].config.use_invidious)
-
-				label.form-row-label
 					span Allow AI
-						input(type="checkbox" name="allow-ai" checked=shardData[0].config.allow_ai)
+						input(type="checkbox" name="allow-ai" checked=clusterData[0].config.allow_ai)
 
-				input(type="hidden" name="number-of-nodes" value=shardData[0].lavalinkNodes.length)
+				input(type="hidden" name="number-of-nodes" value=clusterData[0].lavalinkNodes.length)
 
-				p Use Lavalink nodes:
+				p Lavalink Nodes:
 
 				table.config-table
 					thead
 						tr
 							th(scope="col") Node #
 							th(scope="col") Name
-							th(scope="col") Enable
+							th(scope="col") Enabled
+							th(scope="col") Search With Invidious
 					tbody
-						each node, index in shardData[0].lavalinkNodes
+						each node, index in clusterData[0].lavalinkNodes
 							tr
 								td= index
 								td= node.name
 								td
 									input(type="checkbox" name=`enable-node-${index}` checked=node.enabled)
+								td
+									input(type="checkbox" name=`enable-node-${index}-invidious` checked=node.search_with_invidious)
 
 				input(type="submit" value="Apply").apply-config

@@ -214,31 +214,16 @@ class YouTubeSong extends Song {
 		// eslint-disable-next-line require-await
 		this.prepareCache = new utils.AsyncValueCache(async () => {
 			if (this.track == "!") {
-				if (config.use_invidious) { // Resolve track with Invidious
-					let host = null
-					let region = null
-					if (this.queue) {
-						host = common.nodes.getByID(this.queue.nodeID).host
-						region = this.queue.voiceChannel.rtcRegion
+				return common.searchYouTube(this.id, this.queue.voiceChannel.rtcRegion).then(tracks => {
+					if (!tracks[0]) this.error = `No results for ID ${this.id}`
+					else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
+					else {
+						this.track = tracks[0].track
+						if (tracks[0].info) this.uploader = tracks[0].info.author
 					}
-					return common.invidious.getTrack(this.id, host, region).then(t => {
-						this.track = t
-					}).catch(error => {
-						if (typeof error === "string") this.error = error
-						else this.error = `${error.name} - ${error.message}`
-					})
-				} else { // Resolve track with Lavalink
-					return common.getTracks(this.id, this.queue.voiceChannel.rtcRegion).then(tracks => {
-						if (!tracks[0]) this.error = `No results for ID ${this.id}`
-						else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
-						else {
-							this.track = tracks[0].track
-							if (tracks[0].info) this.uploader = tracks[0].info.author
-						}
-					}).catch(message => {
-						this.error = message
-					})
-				}
+				}).catch(message => {
+					this.error = message
+				})
 			}
 		})
 

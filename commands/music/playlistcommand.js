@@ -172,18 +172,12 @@ commands.assign([
 				// eslint-disable-next-line require-await
 				const result = await (async () => {
 					if (!match || !match.id || match.type !== "video") throw NOT_AN_ID
-					if (config.use_invidious) { // Resolve tracks with Invidious
-						return common.invidious.getData(match.id).then(data => {
-							return { id: data.videoId, title: data.title, lengthSeconds: data.lengthSeconds }
-						})
-					} else { // Resolve tracks with Lavalink
-						return common.getTracks(match.id).then(tracks => {
-							if (tracks && tracks[0]) {
-								// If the ID worked, add the song
-								return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
-							} else throw NO_TRACKS
-						})
-					}
+					return common.searchYouTube(match.id).then(tracks => {
+						if (tracks && tracks[0]) {
+							// If the ID worked, add the song
+							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
+						} else throw NO_TRACKS
+					})
 				})().catch(() => {
 					// Treating as ID failed, so start a search
 					return common.getTracks(`ytsearch:${search}`).then(tracks => {

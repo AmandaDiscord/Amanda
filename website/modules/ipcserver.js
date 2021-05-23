@@ -108,7 +108,7 @@ class IPC {
 		if (socket) {
 			this.server.emit(socket, "message", raw)
 		} else {
-			throw new Error("Socket does not exist. Did a shard disconnect?")
+			throw new Error("Socket does not exist. Did a cluster disconnect?")
 		}
 	}
 

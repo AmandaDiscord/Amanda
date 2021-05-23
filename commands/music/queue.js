@@ -233,7 +233,7 @@ class Queue {
 				["Guild ID", this.guild.id],
 				["Text channel", this.textChannel.id],
 				["Voice channel", this.voiceChannel.id],
-				["Using Invidious", String(config.use_invidious)],
+				["Using Invidious", String(node.search_with_invidious)],
 				["Invidious origin", `\`${node.invidious_origin}\``],
 				["Queue node", node ? node.name : "Unnamed"]
 			]

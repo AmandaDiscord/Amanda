@@ -27,7 +27,7 @@ export interface IPCReceiver {
 	fn: (data: any) => any;
 }
 
-export interface CombinedShardStats {
+export interface CombinedClusterStats {
 	ping: number[],
 	uptime: number[],
 	ram: number[],

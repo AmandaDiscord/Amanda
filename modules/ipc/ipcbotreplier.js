@@ -232,8 +232,8 @@ class ClientReplier extends Replier {
 	}
 
 	/**
-	 * Request and combine stats from all shards.
-	 * @returns {Promise<types.CombinedShardStats>}
+	 * Request and combine stats from all clusters.
+	 * @returns {Promise<types.CombinedClusterStats>}
 	 */
 	requestGetAllStats() {
 		return this.request("GET_ALL_STATS", null)

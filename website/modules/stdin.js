@@ -13,9 +13,9 @@ const utils = require("./utilities.js")
 async function friendlySaveQueues(callback) {
 	process.stdout.write("Saving... ")
 	const results = await ipc.replier.requestSaveQueues()
-	process.stdout.write("done.\nEach shard updated this many documents:\n")
+	process.stdout.write("done.\nEach cluster updated this many documents:\n")
 	process.stdout.write(JSON.stringify(results)+"\n")
-	process.stdout.write("You may now end the shard processes.")
+	process.stdout.write("You may now end the cluster processes.")
 	callback(undefined, "")
 }
 

@@ -60,7 +60,7 @@ class ServerReplier extends Replier {
 
 	requestFromGuild(guildID, op, data) {
 		const ideal = this.getIdealClient()
-		const shardID = this.getShardIDForGuild(guildID, )
+		const shardID = this.getShardIDForGuild(guildID)
 		let cluster
 		for (const key of this.ipc.clusterShards.keys()) {
 			const entry = this.ipc.clusterShards.get(key)
@@ -261,8 +261,8 @@ class ServerReplier extends Replier {
 	}
 
 	/**
-	 * Request and combine stats from all shards.
-	 * @returns {Promise<types.CombinedShardStats>}
+	 * Request and combine stats from all clusters.
+	 * @returns {Promise<types.CombinedClusterStats>}
 	 */
 	async requestGetStats() {
 		const stats = await this.requestAll("GET_STATS", undefined, null)
@@ -305,7 +305,7 @@ class ServerReplier extends Replier {
 	}
 
 	/**
-	 * Apply settings to the config of all connected shards.
+	 * Apply settings to the config of all connected clusters.
 	 * @param {any} data data to apply over config
 	 */
 	requestUpdateConfig(data = undefined) {
