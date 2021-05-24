@@ -11,8 +11,8 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "node": "12.0.0",
-    "npm": "6.9.0"
+    "node": "14.17.0",
+    "npm": "7.9.0"
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#b32eedcf19f130d74ca2319096366ad42c0d28b5",
@@ -21,7 +21,7 @@
     "@amanda/reloader": "github:AmandaDiscord/Reloader#da4b5df14aece591b0df49b50fe65fd15c8e30be",
     "@lavalink/encoding": "^0.1.1",
     "centra": "^2.4.2",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#a9cd240fee04b2ae4858569abda485d78056cfb7",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#6839e7d9a186a79beb78c1733e81522078ca7ef8",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.2.0",
@@ -47,7 +47,7 @@
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#f70a22b010cc43099d63ac79020ce5044998a7c1",
     "@types/centra": "^2.2.0",
     "@types/node": "^15.0.1",
-    "eslint": "^7.25.0",
+    "eslint": "^7.27.0",
     "tap": "^15.0.9",
     "typescript": "~4.2.4"
   }
