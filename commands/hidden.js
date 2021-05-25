@@ -1,10 +1,10 @@
 const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
-const { commands, client, constants, reloader } = passthrough
+const { commands, client, constants, sync } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/** @type {import("../modules/utilities")} */
+const utils = sync.require("../modules/utilities")
 
 commands.assign([
 	{

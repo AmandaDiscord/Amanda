@@ -2,10 +2,17 @@
 
 const Discord = require("thunderstorm")
 const ReactionMenu = require("@amanda/reactionmenu")
-const { contentify, createMessageCollector } = require("./discordutils")
-const { shuffle: arrayShuffle } = require("./arrayutils")
-const { constants, client } = require("../../passthrough")
-const { cacheManager } = require("./cachemanager")
+
+const passthrough = require("../../passthrough")
+const { sync, constants } = passthrough
+
+/** @type {import("./discordutils")} */
+const discordUtil = sync.require("./discordutils")
+const contentify = discordUtil.contentify
+const createMessageCollector = discordUtil.createMessageCollector
+
+/** @type {import("./arrayutils")} */
+const array = sync.require("./arrayutils")
 
 /**
  * @param {string[]} rows
@@ -205,7 +212,7 @@ function playlistSection(items, startString, endString, shuffle) {
 	to = Math.min(items.length, to)
 	if (startString) items = items.slice(from - 1, to)
 	if (shuffle) {
-		arrayShuffle(items)
+		array.shuffle(items)
 	}
 	if (!startString && !shuffle) items = items.slice() // make copy of array for consistent behaviour
 	return items

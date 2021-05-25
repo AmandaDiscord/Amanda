@@ -1,16 +1,15 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const path = require("path")
 const { Manager } = require("lavacord")
 const centra = require("centra")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
-const { client, config, constants, commands, reloader, reloadEvent } = passthrough
+const { client, config, constants, commands, sync } = passthrough
 
-const common = require("../commands/music/common")
-reloader.sync("./commands/music/common.js", common)
+/** @type {import("../commands/music/common")} */
+const common = sync.require("../commands/music/common")
 
 let starting = true
 /**
@@ -19,8 +18,8 @@ let starting = true
 const messagesReceived = new Map()
 if (client.readyAt != null) starting = false
 
-const utils = require("./utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/** @type {import("./utilities")} */
+const utils = sync.require("./utilities")
 
 // Auto donor payment
 function getTimeoutDuration() {
@@ -57,60 +56,57 @@ async function autoPayTimeoutFunction() {
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, time)
 }
 
-reloadEvent.once(path.basename(__filename), () => {
+sync.events.once(__filename, () => {
 	if (config.cluster_id === "maple") {
 		clearTimeout(autoPayTimeout)
 		console.log("removed timeout autoPayTimeout")
 	}
 })
 
-utils.addTemporaryListener(client, "message", path.basename(__filename), manageMessage)
-if (!starting) manageReady()
-else utils.addTemporaryListener(client, "ready", path.basename(__filename), manageReady)
-utils.addTemporaryListener(client, "messageReactionAdd", path.basename(__filename), async (reaction, u) => {
-	/** @type {Discord.User} */
-	// @ts-ignore
-	const user = await utils.cacheManager.users.get(u.id, true, true)
-	ReactionMenu.handler(reaction, user)
-})
-utils.addTemporaryListener(client, "error", path.basename(__filename), reason => {
-	if (reason) console.error(reason)
-})
-utils.addTemporaryListener(process, "unhandledRejection", path.basename(__filename), reason => {
-	let shouldIgnore = false
-	if (reason && reason.code) {
-		if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) shouldIgnore = true
-		if (reason.code == 500 && reason.name != "AbortError") shouldIgnore = false
-	}
-	if (shouldIgnore) return
-	if (reason) console.error(reason)
-	else console.log("There was an error but no reason")
-})
-utils.addTemporaryListener(client, "raw", path.basename(__filename), event => {
-	if (event.t === "VOICE_STATE_UPDATE") {
-		if (!client.lavalink) return
-		client.lavalink.voiceStateUpdate(event.d)
-	} else if (event.t === "VOICE_SERVER_UPDATE") {
-		if (!client.lavalink) return
-		client.lavalink.voiceServerUpdate(event.d)
-	} else if (event.t === "GUILD_CREATE") {
-		if (!client.lavalink) return
-		if (!event.d.voice_states) return
-		for (const state of event.d.voice_states) {
-			client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
-			const ns = new Discord.VoiceState(state, client)
-			common.voiceStateUpdate(ns)
+setImmediate(() => { // wait for next event loop since heatsync could still be looping over events to remove
+	sync.addTemporaryListener(client, "message", manageMessage)
+	if (!starting) manageReady()
+	else sync.addTemporaryListener(client, "ready", manageReady)
+	sync.addTemporaryListener(client, "messageReactionAdd", async (reaction, u) => {
+		/** @type {Discord.User} */
+		// @ts-ignore
+		const user = await utils.cacheManager.users.get(u.id, true, true)
+		ReactionMenu.handler(reaction, user)
+	})
+	sync.addTemporaryListener(process, "unhandledRejection", reason => {
+		let shouldIgnore = false
+		if (reason && reason.code) {
+			if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) shouldIgnore = true
+			if (reason.code == 500 && reason.name != "AbortError") shouldIgnore = false
 		}
-	} else if (event.t === "MESSAGE_UPDATE") {
-		if (!event.d.edited_timestamp) return
-		const m = messagesReceived.get(event.d.id)
-		if (m) {
-			m._patch(event.d)
-			manageMessage(m, true)
+		if (shouldIgnore) return
+		if (reason) console.error(reason)
+		else console.log("There was an error but no reason")
+	})
+	sync.addTemporaryListener(client, "raw", event => {
+		if (event.t === "VOICE_STATE_UPDATE") {
+			if (!client.lavalink) return
+			client.lavalink.voiceStateUpdate(event.d)
+		} else if (event.t === "VOICE_SERVER_UPDATE") {
+			if (!client.lavalink) return
+			client.lavalink.voiceServerUpdate(event.d)
+		} else if (event.t === "GUILD_CREATE") {
+			if (!client.lavalink) return
+			if (!event.d.voice_states) return
+			for (const state of event.d.voice_states) {
+				client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
+				const ns = new Discord.VoiceState(state, client)
+				common.voiceStateUpdate(ns)
+			}
+		} else if (event.t === "MESSAGE_UPDATE") {
+			if (!event.d.edited_timestamp) return
+			const m = messagesReceived.get(event.d.id)
+			if (m) {
+				m._patch(event.d)
+				manageMessage(m, true)
+			}
 		}
-	} else if (event.t === "THREAD_CREATE" || event.t === "THREAD_UDATE" || event.t === "THREAD_DELETE" || event.t === "THREAD_LIST_SYNC") {
-		console.log(event)
-	}
+	})
 })
 
 

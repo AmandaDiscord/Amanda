@@ -4,10 +4,12 @@ const crypto = require("crypto")
 
 const passthrough = require("../passthrough")
 
-const { commands, reloader } = passthrough
+const { commands, sync } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 commands.assign([
 	{

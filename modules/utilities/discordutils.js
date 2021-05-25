@@ -2,16 +2,23 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const path = require("path")
 const c = require("centra")
 const Jimp = require("jimp")
 
-const { db } = require("./orm")
-const { shortTime } = require("./time")
-const { addTemporaryListener } = require("./eventutils")
-
 const passthrough = require("../../passthrough")
-const { client, internalEvents } = passthrough
+const { client, internalEvents, sync } = passthrough
+
+/**
+ * @type {import("./orm")}
+ */
+const orm = sync.require("./orm")
+const db = orm.db
+
+/**
+ * @type {import("./time")}
+ */
+const time = sync.require("./time")
+const shortTime = time.shortTime
 
 /** @type {Array<(message: Discord.Message) => any>} */
 const filters = []
@@ -23,8 +30,10 @@ if (client.readyAt != null) starting = false
 let prefixes = []
 let statusPrefix = "&"
 
-if (!starting) onReady()
-else addTemporaryListener(client, "ready", path.basename(__filename), onReady)
+setImmediate(() => {
+	if (!starting) onReady()
+	else sync.addTemporaryListener(client, "ready", onReady)
+})
 
 function onReady() {
 	const firstStart = starting
@@ -38,7 +47,7 @@ function onReady() {
 	})
 }
 
-addTemporaryListener(client, "message", path.basename(__filename), (message) => {
+sync.addTemporaryListener(client, "message", (message) => {
 	filters.forEach(cb => cb(message))
 })
 

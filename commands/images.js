@@ -4,13 +4,15 @@ const c = require("centra")
 const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
-const { constants, config, commands, reloader } = passthrough
+const { constants, config, commands, sync } = passthrough
 
 const key = config.chewey_api_key
 const poweredbychewey = `Powered by ${constants.chewey_api}`.replace("https://", "")
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 /**
  * @param {string} host

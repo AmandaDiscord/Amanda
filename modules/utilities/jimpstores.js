@@ -1,8 +1,10 @@
 // @ts-check
 
-const Jimp = require("jimp")
+const passthrough = require("../../passthrough")
+const { sync } = passthrough
 
-const [ImageCache, FontCache] = [require("./classes/ImageCache"), require("./classes/FontCache")]
+/** @type {[typeof import("./classes/ImageCache"), typeof import("./classes/FontCache")]} */
+const [ImageCache, FontCache] = [sync.require("./classes/ImageCache"), sync.require("./classes/FontCache")]
 
 const imageStore = new ImageCache()
 const fontStore = new FontCache()

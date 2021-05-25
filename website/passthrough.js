@@ -11,7 +11,7 @@
  * @property {Map<string, string>} sassCache
  * @property {import("ws").Server} wss
  * @property {import("./modules/ipcserver")} ipc
- * @property {import("@amanda/reloader")} reloader
+ * @property {import("heatsync")} sync
  * @property {import("discord-bot-analytics")} analytics
  * @property {string} clientID
  */

@@ -7,8 +7,7 @@ const Snow = require("snowtransfer")
 const Postgres = require("pg")
 const config = require("../config")
 const dba = require("discord-bot-analytics")
-const Reloader = require("@amanda/reloader")
-const path = require("path")
+const Sync = require("heatsync")
 require("dnscache")({ enable: true })
 
 // Passthrough
@@ -17,9 +16,8 @@ const passthrough = require("./passthrough")
 passthrough.config = config
 
 // Reloader
-
-const reloader = new Reloader(true, path.join(__dirname, "../"))
-passthrough.reloader = reloader
+const sync = new Sync()
+passthrough.sync = sync
 
 // Snow
 
@@ -52,17 +50,12 @@ Object.assign(passthrough, server.getExports())
 	const db = await pool.connect()
 	passthrough.db = db
 
-	// Utils
-
-	reloader.watch(["./website/modules/utilities.js"])
-
 	// IPC (which requires utils)
 
 	const IPC = require("./modules/ipcserver.js")
 	const ipc = new IPC("website", config.website_ipc_bind, 6544)
 	passthrough.ipc = ipc
-	reloader.watch(["./modules/ipc/ipcreplier.js"])
-	reloader.watchAndLoad(["./website/modules/ipcserverreplier.js"])
+	sync.require(["./modules/ipcserverreplier.js"])
 
 	passthrough.clientID = "405208699313848330"
 
@@ -80,7 +73,7 @@ Object.assign(passthrough, server.getExports())
 	server.addAPIDir("api")
 
 	const files = await fs.promises.readdir("modules/services")
-	reloader.watchAndLoad(files.map(f => `./website/modules/services/${f}`))
+	sync.require(files.map(f => `./modules/services/${f}`))
 
 	require("./modules/stdin.js")
 })()

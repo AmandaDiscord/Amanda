@@ -6,13 +6,15 @@ const Discord = require("thunderstorm")
 const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
-const { constants, client, commands, reloader } = passthrough
+const { constants, commands, sync } = passthrough
 
 const dailyCooldownHours = 20
 const dailyCooldownTime = dailyCooldownHours * 60 * 60 * 1000
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 commands.assign([
 	{

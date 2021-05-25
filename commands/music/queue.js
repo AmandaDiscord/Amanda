@@ -7,23 +7,30 @@ const ReactionMenu = require("@amanda/reactionmenu")
 const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, ipc, internalEvents } = passthrough
+const { config, constants, client, sync, ipc, internalEvents } = passthrough
 
 /** @type {import("../../modules/managers/QueueManager")} */
 let queues = passthrough.queues ? passthrough.queues : undefined
 
 const voiceEmptyDuration = 20000
 
-const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../../modules/utilities")}
+ */
+const utils = sync.require("../../modules/utilities")
 
-const common = require("./common.js")
-reloader.sync("./commands/music/common.js", common)
+/**
+ * @type {import("./common")}
+ */
+const common = sync.require("./common.js")
 
-utils.addTemporaryListener(internalEvents, "QueueManager", path.basename(__filename), (mngr) => {
-	queues = mngr
-	passthrough.queues = mngr
-}, "once")
+setImmediate(() => {
+	sync.addTemporaryListener(internalEvents, "QueueManager", (mngr) => {
+		queues = mngr
+		passthrough.queues = mngr
+	}, "once")
+})
+
 
 class FrequencyUpdater {
 	/**
@@ -890,14 +897,14 @@ class QueueWrapper {
 		}
 	}
 
-	async getState() {
+	getState() {
 		return {
 			guildID: this.queue.guild.id,
 			playing: !this.queue.isPaused,
 			songStartTime: this.queue.songStartTime,
 			pausedAt: this.queue.pausedAt,
 			songs: this.queue.songs.map(s => s.getState()),
-			members: await this.getMembers(),
+			members: this.getMembers(),
 			voiceChannel: {
 				id: this.queue.voiceChannel.id,
 				name: this.queue.voiceChannel.name

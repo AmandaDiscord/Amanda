@@ -5,13 +5,17 @@ const c = require("centra")
 const entities = require("entities")
 
 const passthrough = require("../../passthrough")
-const { constants, reloader, frisky, config, ipc } = passthrough
+const { constants, sync, frisky, config, ipc } = passthrough
 
-const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../../modules/utilities")}
+ */
+const utils = sync.require("../../modules/utilities")
 
-const common = require("./common.js")
-reloader.sync("./commands/music/common.js", common)
+/**
+ * @type {import("./common")}
+ */
+const common = sync.require("./common.js")
 
 const stationData = new Map([
 	["original", {
@@ -70,7 +74,7 @@ class Song {
 
 		this.validated = false
 		setTimeout(() => {
-			if (this.validated == false) this.validationError("must call validate() in constructor")
+			if (!this.validated) this.validationError("must call validate() in constructor")
 		})
 	}
 	/**

@@ -7,19 +7,22 @@ const mixinDeep = require("mixin-deep")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { config, client, reloader, commands, queues, frisky, constants } = passthrough
+const { config, sync, commands, queues, frisky, constants } = passthrough
 
-const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../../modules/utilities")}
+ */
+const utils = sync.require("../../modules/utilities")
 
-const songTypes = require("./songtypes.js")
-reloader.sync("./commands/music/songtypes.js", songTypes)
+/**
+ * @type {import("./songtypes")}
+ */
+const songTypes = sync.require("./songtypes.js")
 
-const queueFile = require("./queue.js")
-reloader.sync("./commands/music/queue.js", queueFile)
-
-const common = require("./common.js")
-reloader.sync("./commands/music/common.js", common)
+/**
+ * @type {import("./common")}
+ */
+const common = sync.require("./common.js")
 
 /**
  * @type {Map<string, {voiceChannel?: "ask" | "required" | "provide", queue?: "required", code: (msg: Discord.Message, args: Array<string>, _: ({voiceChannel: Discord.VoiceChannel, queue: import("./queue").Queue, lang: import("@amanda/lang").Lang})) => any}>}

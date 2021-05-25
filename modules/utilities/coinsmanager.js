@@ -1,6 +1,13 @@
 // @ts-check
 
-const { db } = require("./orm")
+const passthrough = require("../../passthrough")
+const { sync } = passthrough
+
+/**
+ * @type {import("./orm")}
+ */
+const orm = sync.require("./orm")
+const db = orm.db
 
 const startingCoins = 5000
 

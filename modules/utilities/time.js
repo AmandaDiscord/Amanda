@@ -1,6 +1,10 @@
 // @ts-check
 
-const { parseNumber } = require("./text")
+const passthrough = require("../../passthrough")
+const { sync } = passthrough
+
+/** @type {import("./text")} */
+const text = sync.require("./text")
 
 /** @param {Date} date */
 function upcomingDate(date) {
@@ -62,7 +66,7 @@ function parseDuration(input) {
 		if (!test[1]) return null
 		/** @type [string, string] */
 		const [duration, identifier] = [test[1], test[2]]
-		const num = parseNumber(duration)
+		const num = text.parseNumber(duration)
 		if (isNaN(num)) return null
 		let multiply = 1
 		if (identifier) {

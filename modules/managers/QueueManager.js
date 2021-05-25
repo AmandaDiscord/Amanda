@@ -4,13 +4,13 @@ const Discord = require("thunderstorm")
 const { EventEmitter } = require("events")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, ipc, config } = passthrough
+const { client, sync, ipc, config } = passthrough
 
-const QueueFile = require("../../commands/music/queue")
-reloader.sync("./commands/music/queue.js", QueueFile)
+/** @type {import("../../commands/music/queue")} */
+const QueueFile = sync.require("../../commands/music/queue")
 
-const utils = require("../utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/** @type {import("../utilities")} */
+const utils = sync.require("../utilities")
 
 const auditDestroyTimeout = 1000 * 60 * 5
 
@@ -36,18 +36,18 @@ class QueueManager {
 	 * @param {Discord.PartialChannel} textChannel
 	 * @param {string} [host]
 	 */
-	async getOrCreate(voiceChannel, textChannel, host = null) {
+	getOrCreate(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
-		if (this.cache.has(guildID)) return this.cache.get(guildID)
+		if (this.cache.has(guildID)) return Promise.resolve(this.cache.get(guildID))
 		else {
-			const q = await this.create(voiceChannel, textChannel, host)
-			return q
+			return this.create(voiceChannel, textChannel, host)
 		}
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.PartialChannel} textChannel
 	 * @param {string} [host]
+	 * @returns {Promise<import("../../commands/music/queue").Queue>}
 	 */
 	async create(voiceChannel, textChannel, host = null) {
 		const guildID = voiceChannel.guild.id
@@ -60,7 +60,10 @@ class QueueManager {
 				this.enqueuedAuditDestructions.delete(guildID)
 			}
 		} else this.audits.set(guildID, [])
-		if (!guild) return console.log(`Guild no longer exists to client? gid: ${guildID}`)
+		if (!guild) {
+			console.log(`Guild no longer exists to client? gid: ${guildID}`)
+			return null
+		}
 		const instance = new QueueFile.Queue(this, voiceChannel, textChannel, guild, host)
 		this.cache.set(guildID, instance)
 		await ipc.replier.sendNewQueue(instance)

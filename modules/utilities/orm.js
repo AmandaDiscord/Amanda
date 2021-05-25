@@ -4,8 +4,13 @@
  * Optimization is top priority.
  */
 
+const passthrough = require("../../passthrough")
+const { sync } = passthrough
 
-const { all, get } = require("./sql")
+/**
+ * @type {import("./sql")}
+ */
+const sql = sync.require("./sql")
 
 /**
  * @template {string} T
@@ -51,7 +56,7 @@ class Database {
 	 * @param {Array<any>} [prepared]
 	 */
 	raw(statement, prepared) {
-		return all(statement, prepared)
+		return sql.all(statement, prepared)
 	}
 
 	/**
@@ -98,14 +103,14 @@ class Database {
 					if (!this.buffers[model.table].timeouts.insert) {
 						this.buffers[model.table].timeouts.insert = setTimeout(() => {
 							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
-							r(all(res2.statement, res2.prepared).catch(rej))
+							r(sql.all(res2.statement, res2.prepared).catch(rej))
 							this.buffers[model.table].timeouts.insert = null
 						}, model.options.bufferTimeout)
 					}
 					return
 				}
 			} else res = this._buildStatement(method, table, properties)
-			return r(all(res.statement, res.prepared).catch(rej))
+			return r(sql.all(res.statement, res.prepared).catch(rej))
 		})
 	}
 
@@ -119,7 +124,7 @@ class Database {
 		const options = {}
 		if (where) Object.assign(options, { where: where })
 		const res = this._buildStatement("update", table, set, options)
-		return all(res.statement, res.prepared)
+		return sql.all(res.statement, res.prepared)
 	}
 
 	/**
@@ -131,7 +136,7 @@ class Database {
 	 */
 	select(table, where = undefined, options = {}) {
 		const res = this._buildStatement("select", table, where, options)
-		return all(res.statement, res.prepared)
+		return sql.all(res.statement, res.prepared)
 	}
 
 	/**
@@ -144,7 +149,7 @@ class Database {
 	get(table, where = undefined, options = {}) {
 		const opts = Object.assign(options, { limit: 1 })
 		const res = this._buildStatement("select", table, where, opts)
-		return get(res.statement, res.prepared)
+		return sql.get(res.statement, res.prepared)
 	}
 
 	/**
@@ -154,7 +159,7 @@ class Database {
 	 */
 	delete(table, where = undefined) {
 		const res = this._buildStatement("delete", table, where)
-		return all(res.statement, res.prepared)
+		return sql.all(res.statement, res.prepared)
 	}
 
 	/**

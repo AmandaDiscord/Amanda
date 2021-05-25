@@ -1,6 +1,12 @@
 // @ts-check
 
-const utils = require("../utilities")
+const passthrough = require("../../passthrough")
+const { sync } = passthrough
+
+/**
+ * @type {import("../utilities")}
+ */
+const utils = sync.require("../utilities")
 
 class Queue {
 	/**

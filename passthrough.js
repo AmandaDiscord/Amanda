@@ -12,8 +12,7 @@ process._ptcreated = true
  * @property {import("./constants")} constants
  * @property {import("@amanda/commandmanager")<[import("thunderstorm").Message, string, import("@amanda/lang").Lang, { main: string, array: Array<string> }]>} commands
  * @property {import("pg").PoolClient} db
- * @property {import("@amanda/reloader")} reloader
- * @property {import("events").EventEmitter} reloadEvent
+ * @property {import("heatsync")} sync
  * @property {import("./typings").internalEvents} internalEvents
  * @property {import("./modules/managers/GameManager")} games
  * @property {import("./modules/managers/QueueManager")} queues

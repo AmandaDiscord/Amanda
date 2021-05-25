@@ -1,20 +1,25 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../../passthrough")
-const { client, config, reloader, commands, constants } = passthrough
+const { sync, commands, constants } = passthrough
 
-const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../../modules/utilities")}
+ */
+const utils = sync.require("../../modules/utilities")
 
-const common = require("./common.js")
-reloader.sync("./commands/music/common.js", common)
+/**
+ * @type {import("./common")}
+ */
+const common = sync.require("./common.js")
 
-const songTypes = require("./songtypes.js")
-reloader.sync("./commands/music/songtypes.js", songTypes)
+/**
+ * @type {import("./songtypes")}
+ */
+const songTypes = sync.require("./songtypes.js")
 
 const YouTube = require("simple-youtube-api")
 

@@ -1,4 +1,4 @@
-const { ipc, snow, reloader } = require("../../passthrough")
+const { ipc, snow } = require("../../passthrough")
 
 ipc.replier.addReceivers([
 	["REPLY_GET_GUILD_MEMBER", {

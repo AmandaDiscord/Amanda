@@ -2,10 +2,12 @@ const Discord = require("thunderstorm")
 const Jimp = require("jimp")
 
 const passthrough = require("../passthrough")
-const { constants, client, commands, reloader } = passthrough
+const { constants, client, commands, sync } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 const emojis = require("../emojis")
 

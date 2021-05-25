@@ -3,11 +3,23 @@
 const Discord = require("thunderstorm")
 
 const passthrough = require("../../passthrough")
-const { client, config, constants } = passthrough
+const { client, config, constants, sync } = passthrough
 
-const { contentify, createMessageCollector } = require("./discordutils")
-const sql = require("./sql")
-const { db } = require("./orm")
+/**
+ * @type {import("./discordutils")}
+ */
+const DiscordUtils = sync.require("./discordutils")
+const contentify = DiscordUtils.contentify
+const createMessageCollector = DiscordUtils.createMessageCollector
+/**
+ * @type {import("./sql")}
+ */
+const sql = sync.require("./sql")
+/**
+ * @type {import("./orm")}
+ */
+const orm = sync.require("./orm")
+const db = orm.db
 
 function upsertChannel(channel, guild_id) {
 	db.upsert("channels", { id: channel.id, type: channel.type, guild_id: guild_id, name: channel.name, rtc_region: channel.rtc_region || null })

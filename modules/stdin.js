@@ -7,10 +7,10 @@ const util = require("util")
 const vm = require("vm")
 
 const passthrough = require("../passthrough")
-const { config, client, commands, db, reloader, reloadEvent, internalEvents, games, queues, frisky, nedb, periodicHistory } = passthrough
+const { config, client, commands, db, sync, internalEvents, games, queues, frisky, nedb, periodicHistory } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/** @type {import("../modules/utilities")} */
+const utils = sync.require("../modules/utilities")
 
 /**
  * @param {string} input
@@ -31,7 +31,7 @@ async function customEval(input, context, filename, callback) {
 	return callback(undefined, output)
 }
 
-reloadEvent.once(path.basename(__filename), () => {
+sync.events.once(__filename, () => {
 	console.log("stdin.js does not auto-reload.")
 })
 

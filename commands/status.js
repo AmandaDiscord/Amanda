@@ -1,10 +1,12 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
-const { client, config, constants, reloader, ipc, commands, internalEvents } = passthrough
+const { client, config, sync, ipc, commands, internalEvents } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 const refreshTime = 15 * 60 * 1000
 const updateTime = 5 * 60 * 1000

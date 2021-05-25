@@ -2,22 +2,18 @@
 
 const types = require("../../typings")
 
-const path = require("path")
 const Discord = require("thunderstorm")
 const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, reloader, ipc } = passthrough
+const { config, constants, sync, ipc } = passthrough
 
-const utils = require("../utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../utilities")}
+ */
+const utils = sync.require("../utilities")
 
 const Replier = require("./ipcreplier")
-utils.addTemporaryListener(reloader.reloadEvent, "ipcreplier.js", path.basename(__filename), () => {
-	setImmediate(() => { // event is emitted synchronously before decache, so wait for next event loop
-		reloader.resync("./modules/ipc/ipcbotreplier.js")
-	})
-}, "once")
 
 /**
  * @param {Discord.Guild} guild
@@ -242,8 +238,8 @@ class ClientReplier extends Replier {
 	/**
 	 * @param {import("../../commands/music/queue").Queue} queue
 	 */
-	async sendNewQueue(queue) {
-		const state = await queue.wrapper.getState()
+	sendNewQueue(queue) {
+		const state = queue.wrapper.getState()
 		this.ipc.send({ op: "NEW_QUEUE", data: { guildID: queue.guild.id, state } })
 	}
 

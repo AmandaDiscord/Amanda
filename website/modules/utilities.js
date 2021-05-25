@@ -2,10 +2,9 @@
 
 const crypto = require("crypto")
 const util = require("util")
-const events = require("events")
 
 const passthrough = require("../passthrough")
-const { db, reloader } = passthrough
+const { db } = passthrough
 
 const utils = {
 	sql: {
@@ -49,21 +48,6 @@ const utils = {
 		get: async function(string, prepared = undefined, connection = undefined) {
 			return (await utils.sql.all(string, prepared, connection))[0]
 		}
-	},
-
-	/**
-	 * @param {events.EventEmitter} target
-	 * @param {string} name
-	 * @param {string} filename
-	 * @param {(...args: Array<any>) => any} code
-	 */
-	addTemporaryListener: function(target, name, filename, code, targetListenMethod = "on") {
-		console.log(`added event ${name}`)
-		target[targetListenMethod](name, code)
-		reloader.reloadEvent.once(filename, () => {
-			target.removeListener(name, code)
-			console.log(`removed event ${name}`)
-		})
 	},
 
 	/**

@@ -2,7 +2,7 @@
 
 const c = require("centra")
 
-const { analytics, ipc, reloader, config, clientID } = require("../../passthrough")
+const { analytics, ipc, sync, config, clientID } = require("../../passthrough")
 
 let timeout
 let cancelled = false // Cancelled on Twitter
@@ -48,7 +48,7 @@ ipc.waitForClientID().then(() => {
 	}, 1000 * 60 * 10)
 })
 
-reloader.reloadEvent.once("statreporting.js", () => {
+sync.events.once(__filename, () => {
 	cancelled = true
 	clearInterval(timeout)
 	timeout = null

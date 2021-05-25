@@ -10,7 +10,7 @@ const nedb = require("nedb-promises")
 const Frisky = require("frisky-client")
 /** @type {typeof import("./typings/Taihou")} */
 const WeebSH = require("taihou")
-const Reloader = require("@amanda/reloader")
+const Sync = require("heatsync")
 const SnowTransfer = require("snowtransfer")
 const ThunderStorm = require("thunderstorm")
 
@@ -25,14 +25,13 @@ const constants = require("./constants.js")
 const rest = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: rest, disableEveryone: true })
 const youtube = new YouTube(config.yt_api_key)
-const reloader = new Reloader(true, __dirname)
+const sync = new Sync()
+sync.events.on("any", (file) => console.log(`${file} was changed`))
 const listenMoeJP = new ListenMoe(ListenMoe.Constants.baseJPOPGatewayURL)
 const listenMoeKP = new ListenMoe(ListenMoe.Constants.baseKPOPGatewayURL)
 const weeb = new WeebSH(config.weeb_api_key, true, { userAgent: config.weeb_identifier, timeout: 20000, baseURL: "https://api.weeb.sh" })
 /** @type {import("./typings").internalEvents} */
 const internalEvents = new events.EventEmitter()
-
-reloader.reloadEvent.setMaxListeners(20)
 
 const pool = new Postgres.Pool({
 	host: config.sql_domain,
@@ -51,7 +50,7 @@ const pool = new Postgres.Pool({
 	await db.query({ text: "DELETE FROM voice_states WHERE guild_id IN (SELECT id FROM guilds WHERE added_by = $1)", values: [config.cluster_id] })
 	console.log("Deleted all voice states")
 
-	Object.assign(passthrough, { config, constants, client, db, reloader, youtube, reloadEvent: reloader.reloadEvent, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
+	Object.assign(passthrough, { config, constants, client, db, sync, youtube, internalEvents, frisky: new Frisky(), weeb, listenMoe: { jp: listenMoeJP, kp: listenMoeKP } })
 
 	// Gateway
 	const GatewayWorker = new workers.Worker(path.join(__dirname, "./workers/gateway.js"))
@@ -81,33 +80,14 @@ const pool = new Postgres.Pool({
 	listenMoeJP.on("unknown", console.log)
 	listenMoeKP.on("unknown", console.log)
 
-	// Utility files
-
-	reloader.watch([
-		...fs.readdirSync("./modules/utilities").filter(f => f.endsWith(".js")).map(f => `./modules/utilities/${f}`),
-		...fs.readdirSync("./modules/utilities/classes").filter(f => f.endsWith(".js")).map(f => `./modules/utilities/classes/${f}`)
-	])
-
 	// IPC
 
 	const IPC = require("./modules/ipc/ipcbot.js")
 	const ipc = new IPC()
 	passthrough.ipc = ipc
 
-	reloader.watchAndLoad([
+	sync.require([
 		"./modules/ipc/ipcbotreplier.js"
-	])
-	reloader.watch([
-		"./modules/ipc/ipcreplier.js"
-	])
-
-	// Music parts
-
-	reloader.watch([
-		"./commands/music/common.js",
-		"./commands/music/playlistcommand.js",
-		"./commands/music/queue.js",
-		"./commands/music/songtypes.js"
 	])
 
 	// Passthrough managers
@@ -132,13 +112,13 @@ const pool = new Postgres.Pool({
 
 	// Can't be part of reloader, and depends on IPC, so it's down here.
 
-	reloader.watchAndLoad([
+	sync.require([
 		"./modules/reloadapi.js"
 	])
 
 	// Commands
 
-	reloader.watchAndLoad([
+	sync.require([
 		"./commands/music/music.js",
 		"./commands/music/playlistcommand.js",
 		"./commands/admin.js",

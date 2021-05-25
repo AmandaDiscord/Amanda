@@ -4,20 +4,19 @@ const centra = require("centra")
 const fs = require("fs")
 const Discord = require("thunderstorm")
 const Jimp = require("jimp")
-const path = require("path")
 /** @type {import("simple-git")["default"]} */
 // @ts-ignore
 const sG = require("simple-git")
 const simpleGit = sG(__dirname)
 const ReactionMenu = require("@amanda/reactionmenu")
+const path = require("path")
 
 const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
-const { client, constants, config, commands, reloadEvent, reloader, games, queues, periodicHistory, ipc } = passthrough
+const { client, constants, config, commands, sync, games, queues, periodicHistory, ipc } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+const utils = sync.require("../modules/utilities")
 
 let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000 * 60 * 60 - (Date.now() % (1000 * 60 * 60)))
 console.log("added timeout sendStatsTimeout")
@@ -90,7 +89,7 @@ function cacheUpdateTimeoutFunction() {
 	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
 }
 
-reloadEvent.once(path.basename(__filename), () => {
+sync.events.once(__filename, () => {
 	clearTimeout(sendStatsTimeout)
 	clearTimeout(cacheUpdateTimeout)
 	console.log("removed timeout sendStatsTimeout")
@@ -742,7 +741,7 @@ commands.assign([
 			if (value === "null") {
 				if (settingName == "profilebackground") {
 					try {
-						await fs.promises.unlink(`./images/backgrounds/cache/${msg.author.id}.png`)
+						await fs.promises.unlink(path.join(__dirname, "../", `./images/backgrounds/cache/${msg.author.id}.png`))
 						ipc.replier.sendBackgroundUpdateRequired()
 					} catch (e) {
 						return msg.channel.send(lang.configuration.settings.prompts.noBackground)
@@ -790,7 +789,7 @@ commands.assign([
 				const image = await Jimp.read(data)
 				image.cover(800, 500)
 				const buffer = await image.getBufferAsync(Jimp.MIME_PNG)
-				await fs.promises.writeFile(`./images/backgrounds/cache/${msg.author.id}.png`, buffer)
+				await fs.promises.writeFile(path.join(__dirname, "../", `./images/backgrounds/cache/${msg.author.id}.png`), buffer)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value })
 				utils.orm.db.upsert("background_sync", { machine_id: config.machine_id, user_id: keyID, url: value })
 				ipc.replier.sendBackgroundUpdateRequired()

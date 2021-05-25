@@ -10,10 +10,12 @@ const entities = require("entities")
 const vul = require("video-url-link")
 
 const passthrough = require("../../passthrough")
-const { client, reloader, config, constants } = passthrough
+const { client, sync, config, constants } = passthrough
 
-const utils = require("../../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../../modules/utilities")}
+ */
+const utils = sync.require("../../modules/utilities")
 
 const fakeAgent = `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) Neko/1.0 (KHTML, like Gecko) Amanda/1.0`
 
@@ -601,9 +603,13 @@ const common = {
 				console.error(e)
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
-			const tracks = common.spotify.getTrackInfo(data)
-			const songs = tracks.map(track => songtypes.makeSpotifySong(track))
-			return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
+			if (data) {
+				const tracks = common.spotify.getTrackInfo(data)
+				const songs = tracks.map(track => songtypes.makeSpotifySong(track))
+				return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
+			} else {
+				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+			}
 		},
 		fromExternalLink:
 		/**
@@ -761,6 +767,7 @@ const common = {
 				console.log(body)
 				throw new Error("Cannot extract Spotify track info")
 			}
+			if (!parsed) throw new Error("Cannot extract Spotify track info")
 			return parsed
 		},
 		/**
@@ -1010,6 +1017,6 @@ const common = {
 	}
 }
 
-utils.addTemporaryListener(client, "voiceStateUpdate", path.basename(__filename), common.voiceStateUpdate)
+setImmediate(() => sync.addTemporaryListener(client, "voiceStateUpdate", common.voiceStateUpdate))
 
 module.exports = common

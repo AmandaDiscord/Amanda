@@ -10,7 +10,7 @@ const ReactionMenu = require("@amanda/reactionmenu")
 const emojis = require("../emojis")
 
 const passthrough = require("../passthrough")
-const { constants, client, commands, reloader, games, streaks } = passthrough
+const { constants, client, commands, sync, games, streaks } = passthrough
 
 const numbers = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:", ":seven:", ":eight:", ":nine:"]
 const streakStep = 10
@@ -21,8 +21,10 @@ const absoluteMax = 1000
 
 streaks.setDestroyDuration("trivia", 1000 * 60 * 15)
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 class Game {
 	/**
@@ -247,7 +249,7 @@ async function startGame(channel, options) {
 	// Set up new game
 	new TriviaGame(channel, data, category, options.lang).init()
 }
-utils.addTemporaryListener(client, "message", path.basename(__filename), answerDetector)
+setImmediate(() => sync.addTemporaryListener(client, "message", answerDetector))
 function answerDetector(msg) {
 	/** @type {TriviaGame} */
 	// @ts-ignore

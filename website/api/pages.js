@@ -1,10 +1,9 @@
 // @ts-check
 
 const types = require("../../typings")
-const fetch = require("centra")
 
 const passthrough = require("../passthrough")
-const { snow, config, ipc } = passthrough
+const { config, ipc } = passthrough
 
 const {render} = require("pinski/plugins")
 

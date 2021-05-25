@@ -6,12 +6,14 @@ const c = require("centra")
 const Discord = require("thunderstorm")
 
 const passthrough = require("../passthrough")
-const { constants, client, commands, reloader, weeb } = passthrough
+const { constants, client, commands, sync, weeb } = passthrough
 
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
 const cmds = [
 	{

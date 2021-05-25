@@ -8,13 +8,17 @@ const path = require("path")
 const ReactionMenu = require("@amanda/reactionmenu")
 
 const passthrough = require("../passthrough")
-const { config, constants, client, commands, db, reloader, reloadEvent, games, queues, streaks, frisky, weeb } = passthrough
+const { config, constants, client, commands, db, sync, games, queues, streaks, frisky, weeb } = passthrough
 
-const utils = require("../modules/utilities")
-reloader.sync("./modules/utilities/index.js", utils)
+/**
+ * @type {import("../modules/utilities")}
+ */
+const utils = sync.require("../modules/utilities")
 
-const common = require("./music/common.js")
-reloader.sync("./commands/music/common.js", common)
+/**
+ * @type {import("./music/common")}
+ */
+const common = sync.require("./music/common.js")
 
 const replaceBlackList = [
 	client.token,
