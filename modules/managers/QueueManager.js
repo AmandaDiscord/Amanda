@@ -24,6 +24,7 @@ class QueueManager {
 		this.audits = new Map()
 		/** @type {Map<string, NodeJS.Timeout>} */
 		this.enqueuedAuditDestructions = new Map()
+		passthrough.queues = this
 	}
 	toObject() {
 		return {

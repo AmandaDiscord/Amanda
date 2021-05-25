@@ -7,10 +7,7 @@ const ReactionMenu = require("@amanda/reactionmenu")
 const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
-const { config, constants, client, sync, ipc, internalEvents } = passthrough
-
-/** @type {import("../../modules/managers/QueueManager")} */
-let queues = passthrough.queues ? passthrough.queues : undefined
+const { config, constants, client, sync, ipc } = passthrough
 
 const voiceEmptyDuration = 20000
 
@@ -23,13 +20,6 @@ const utils = sync.require("../../modules/utilities")
  * @type {import("./common")}
  */
 const common = sync.require("./common.js")
-
-setImmediate(() => {
-	sync.addTemporaryListener(internalEvents, "QueueManager", (mngr) => {
-		queues = mngr
-		passthrough.queues = mngr
-	}, "once")
-})
 
 
 class FrequencyUpdater {
@@ -65,7 +55,7 @@ class FrequencyUpdater {
 
 class Queue {
 	/**
-	 * @param {queues} manager
+	 * @param {typeof passthrough.queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
 	 * @param {Discord.PartialChannel} textChannel
 	 * @param {Discord.Guild} guild
@@ -92,7 +82,7 @@ class Queue {
 		this.shouldDisplayErrors = true
 		/** @type {import("@amanda/lang").Lang} */
 		this.langCache = undefined
-		this.audit = queues.audits.get(this.guild.id)
+		this.audit = passthrough.queues.audits.get(this.guild.id)
 		/**
 		 * @type {Discord.Collection<string, Discord.GuildMember>}
 		 */
