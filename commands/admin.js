@@ -5,7 +5,7 @@ const centra = require("centra")
 const fetch = centra // aliasing
 const util = require("util")
 const path = require("path")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const passthrough = require("../passthrough")
 const { config, constants, client, commands, db, sync, games, queues, streaks, frisky, weeb } = passthrough
@@ -72,8 +72,8 @@ commands.assign([
 				let content = output
 				if (output.length > 2000) content = new Discord.MessageAttachment(Buffer.from(output), "eval.txt")
 
-				const nmsg = await msg.channel.send(typeof content === "string" ? content : { file: content })
-				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "danger", allowedUsers: [msg.author.id], remove: "message" }])
+				const nmsg = await menu.create(typeof content === "string" ? content : { file: content })
 				return setTimeout(() => {
 					if (menu.menus.has(nmsg.id)) menu.destroy(true)
 				}, 5 * 60 * 1000)
@@ -109,8 +109,8 @@ commands.assign([
 				if (stdout) result.addFields({ name: "stdout:", value: formatOutput(stdout) })
 				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
-				const nmsg = await msg.channel.send(await utils.contentify(msg.channel, result))
-				const menu = new ReactionMenu(nmsg, [{ emoji: "🗑", allowedUsers: [msg.author.id], remove: "message" }])
+				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "danger", allowedUsers: [msg.author.id], remove: "message" }])
+				const nmsg = await menu.create(await utils.contentify(msg.channel, result))
 				return setTimeout(() => {
 					if (menu.menus.has(nmsg.id)) menu.destroy(true)
 				}, 5 * 60 * 1000)

@@ -5,7 +5,7 @@ const entities = require("entities")
 const Discord = require("thunderstorm")
 const path = require("path")
 const Lang = require("@amanda/lang")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const emojis = require("../emojis")
 
@@ -162,16 +162,13 @@ class TriviaGame extends Game {
 			.setColor(this.color)
 		if (results.length) embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: results.map(r => `<@${r.userID}> (+${r.winnings} ${emojis.discoin}) ${streaks.getStreak(r.userID, "trivia") ? `(Streak: ${streaks.getStreak(r.userID, "trivia")} +${streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: r.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax })} ${emojis.discoin})` : ""}`).join("\n") })
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
-		if (this.channel.type === "dm" || await utils.cacheManager.channels.clientHasPermission({ id: this.channel.id, guild_id: this.channel.guild.id }, "ADD_REACTIONS")) embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
-		else embed.addFields({ name: this.lang.games.trivia.prompts.nextRound, value: `${this.lang.games.trivia.prompts.permissionDenied}\n\n${this.lang.games.trivia.prompts.permissionRound}` })
-		return this.channel.send(await utils.contentify(this.channel, embed)).then(msg => {
-			new ReactionMenu(msg, [
-				{ emoji: "bn_re:362741439211503616", ignore: "total", actionType: "js", actionData: (message, emoji, user) => {
-					if (user.bot) message.channel.send(`${user} SHUT UP!!!!!!!!`)
-					else startGame(this.channel, { category: this.category, lang: this.lang })
-				} }
-			])
-		})
+		embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
+		return new InteractionMenu(this.channel, [
+			{ emoji: { id: "362741439211503616", name: "bn_re" }, ignore: "total", actionType: "js", actionData: (message, user) => {
+				if (user.bot) message.channel.send(`${user.toString()} SHUT UP!!!!!!!!`)
+				else startGame(this.channel, { category: this.category, lang: this.lang })
+			} }
+		]).create(await utils.contentify(this.channel, embed))
 	}
 }
 module.exports.TriviaGame = TriviaGame

@@ -8,7 +8,7 @@ const config = require("../config")
 const queue = []
 
 const Gateway = new Client(config.bot_token, {
-	intents: ["DIRECT_MESSAGES", "DIRECT_MESSAGE_REACTIONS", "GUILDS", "GUILD_MESSAGES", "GUILD_MESSAGE_REACTIONS", "GUILD_VOICE_STATES"],
+	intents: ["DIRECT_MESSAGES", "GUILDS", "GUILD_MESSAGES", "GUILD_VOICE_STATES"],
 	firstShardId: config.shard_list[0],
 	shardAmount: config.total_shards,
 	lastShardId: config.shard_list[config.shard_list.length - 1],

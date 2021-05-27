@@ -8,7 +8,7 @@ const Jimp = require("jimp")
 // @ts-ignore
 const sG = require("simple-git")
 const simpleGit = sG(__dirname)
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 const path = require("path")
 
 const emojis = require("../emojis")
@@ -1044,31 +1044,29 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-						if ((await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ADD_REACTIONS"))) embed.setFooter(lang.meta.help.returns.mobile)
-						msg.channel.send(await utils.contentify(msg.channel, embed)).then(message => {
-							const mobileEmbed = new Discord.MessageEmbed()
-								.setAuthor(`Command Category: ${suffix}`)
-								.setDescription(cat.map(c => {
-									const cmd = commands.cache.get(c)
-									let desc
-									if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
-									else desc = cmd.description
-									return `**${cmd.aliases[0]}**\n${desc}`
-								}).join("\n\n"))
-								.setColor(constants.standard_embed_color)
-							const menu = new ReactionMenu(message,
-								[{ emoji: "📱",
-									ignore: "total",
-									actionType: "js",
-									actionData: async () => {
-										message.edit(await utils.contentify(message.channel, mobileEmbed))
-										menu.destroy(true)
-									}
-								}])
-							setTimeout(() => {
-								if (menu.menus.has(message.id)) menu.destroy(true)
-							}, 5 * 60 * 1000)
-						})
+							.setFooter(lang.meta.help.returns.mobile)
+						const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "📱" }, style: "primary",
+							ignore: "total",
+							actionType: "js",
+							actionData: async (message) => {
+								const mobileEmbed = new Discord.MessageEmbed()
+									.setAuthor(`Command Category: ${suffix}`)
+									.setDescription(cat.map(c => {
+										const cmd = commands.cache.get(c)
+										let desc
+										if (lang[suffix] && lang[suffix][c] && !["music", "playlist"].includes(c)) desc = lang[suffix][c].help.description
+										else desc = cmd.description
+										return `**${cmd.aliases[0]}**\n${desc}`
+									}).join("\n\n"))
+									.setColor(constants.standard_embed_color)
+								message.edit("", { embed: await utils.contentify(message.channel, mobileEmbed), buttons: [] })
+								menu.destroy(false)
+							}
+						}])
+						const nmsg = await menu.create(await utils.contentify(msg.channel, embed))
+						setTimeout(() => {
+							if (menu.menus.has(nmsg.id)) menu.destroy(true)
+						}, 5 * 60 * 1000)
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(utils.replace(lang.meta.help.prompts.invalidCommand, { "tag": msg.author.tag })).setColor(0xB60000)
 						msg.channel.send(await utils.contentify(msg.channel, embed))

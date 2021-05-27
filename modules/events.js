@@ -3,7 +3,7 @@
 const Discord = require("thunderstorm")
 const { Manager } = require("lavacord")
 const centra = require("centra")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const passthrough = require("../passthrough")
 const { client, config, constants, commands, sync } = passthrough
@@ -67,12 +67,14 @@ setImmediate(() => { // wait for next event loop since heatsync could still be l
 	sync.addTemporaryListener(client, "message", manageMessage)
 	if (!starting) manageReady()
 	else sync.addTemporaryListener(client, "ready", manageReady)
-	sync.addTemporaryListener(client, "messageReactionAdd", async (reaction, u) => {
-		/** @type {Discord.User} */
-		// @ts-ignore
-		const user = await utils.cacheManager.users.get(u.id, true, true)
-		ReactionMenu.handler(reaction, user)
-	})
+	sync.addTemporaryListener(client, "interactionCreate",
+		/**
+		 * @param {Discord.InteractionMessage} interaction
+		 */
+		async (interaction) => {
+			await client._snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
+			InteractionMenu.handle(interaction)
+		})
 	sync.addTemporaryListener(process, "unhandledRejection", reason => {
 		let shouldIgnore = false
 		if (reason && reason.code) {

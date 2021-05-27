@@ -4,7 +4,7 @@
 const crypto = require("crypto")
 const Discord = require("thunderstorm")
 const mixinDeep = require("mixin-deep")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const passthrough = require("../../passthrough")
 const { config, sync, commands, queues, frisky, constants } = passthrough
@@ -96,11 +96,6 @@ const subcommandsMap = new Map([
 					// A specific video was linked and a section was not specified, user may want to choose what to play.
 					// linkedIndex is definitely specified here.
 					// Define options
-					const buttons = [
-						"bn_1:327896448232325130",
-						"bn_2:327896448505217037",
-						"bn_3:327896452363976704"
-					]
 					const options = [
 						lang.audio.playlist.prompts.playFromStart,
 						lang.audio.playlist.prompts.playFromLinked,
@@ -113,38 +108,15 @@ const subcommandsMap = new Map([
 						.setDescription(
 							utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
 						+ `\n${lang.audio.playlist.prompts.query}`
-						+ options.map((o, i) => `\n<:${buttons[i]}> ${o}`).join("")
+						+ options.map((o, i) => `\n${i + 1}: ${o}`).join("")
 						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
 						)
-					// Send the embed
-					const nmsg = await msg.channel.send(embed)
-					// Make the base reaction menu action
-					const action = { ignore: "total", remove: "all", actionType: "js", actionData: (message, emoji, user) => {
-						// User made a choice
-						/** Zero-indexed emoji choice */
-						const choice = emoji.name[3] - 1
-						// Edit the message to reflect the choice
-						embed.setDescription(`» ${options[choice]}`)
-						nmsg.edit(embed)
-						// Now obey that choice
-						if (choice == 0) {
-							// choice == 0: play full playlist
-							common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert)
-						} else if (choice == 1) {
-							// choice == 1: play from linked item
-							tracks = tracks.slice(linkedIndex)
-							common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert)
-						} else if (choice == 2) {
-							// choice == 2: play linked item only
-							common.inserters.fromData(message.channel, voiceChannel, tracks[linkedIndex], insert)
-						}
-					} }
 					// Create the reaction menu
-					// @ts-ignore
-					new ReactionMenu(nmsg, Array(3).fill(undefined).map((_, i) => {
-						const emoji = buttons[i]
-						return Object.assign({ emoji }, action)
-					}))
+					new InteractionMenu(msg.channel, [
+						{ emoji: { id: "327896448232325130", name: "bn_1" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[0]}`); message.edit(embed); common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert) } },
+						{ emoji: { id: "327896448505217037", name: "bn_2" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[1]}`); message.edit(embed); common.inserters.fromDataArray(message.channel, voiceChannel, tracks.slice(linkedIndex), insert) } },
+						{ emoji: { id: "327896452363976704", name: "bn_3" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[2]}`); message.edit(embed); common.inserters.fromData(message.channel, voiceChannel, tracks[linkedIndex], insert) } }
+					]).create(await utils.contentify(msg.channel, embed))
 				}
 			} else if (match && match.type === "soundcloud") {
 				common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)

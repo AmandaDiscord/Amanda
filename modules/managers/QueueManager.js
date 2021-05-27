@@ -148,11 +148,8 @@ class QueueManager {
 				}
 				queue.songStartTime = q.songStartTime
 				queue.pausedAt = q.pausedAt
-				const message = await client._snow.channel.getChannelMessage(q.textChannelID, q.npID).then(m => new Discord.Message(m, client))
-				// eslint-disable-next-line require-atomic-updates
-				queue.np = message
+				queue.sendNewNP()
 				queue._startNPUpdates()
-				queue._makeReactionMenu()
 				await ipc.replier.sendNewQueue(queue)
 			}
 		})

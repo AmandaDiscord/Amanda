@@ -1,9 +1,8 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const path = require("path")
 const Lang = require("@amanda/lang")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 const mixinDeep = require("mixin-deep")
 
 const passthrough = require("../../passthrough")
@@ -110,7 +109,7 @@ class Queue {
 		this.addPlayerListeners()
 		/** @type {Discord.Message} */
 		this.np = null
-		/** @type {import("@amanda/reactionmenu")} */
+		/** @type {import("@amanda/interactionmenu")} */
 		this.npMenu = null
 		this.npEditable = true
 		this.npUpdater = new FrequencyUpdater(async () => {
@@ -641,34 +640,32 @@ class Queue {
 		if (this.np && !force) return Promise.resolve()
 		else {
 			const result = await this._buildNPEmbed()
-			return this.textChannel.send(result ? result : `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯`).then(x => {
-				this.np = x
-				this.npEditable = true
-				this._makeReactionMenu()
-			}).catch(() => {
-				this.npEditable = false
-			})
+			if (this.npMenu) this.npMenu.destroy()
+			this.npMenu = new InteractionMenu(this.textChannel, [
+				{ emoji: { id: null, name: "⏯️" }, style: "secondary", actionType: "js", actionData: (msg, user) => {
+					if (!this.listeners.has(user.id)) return
+					this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
+					this.wrapper.togglePlaying("reaction")
+				} },
+				{ emoji: { id: null, name: "⏭️" }, style: "secondary", actionType: "js", actionData: (msg, user) => {
+					if (!this.listeners.has(user.id)) return
+					this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
+					this.wrapper.skip()
+				} },
+				{ emoji: { id: null, name: "⏹️" }, style: "danger", actionType: "js", actionData: (msg, user) => {
+					if (!this.listeners.has(user.id)) return
+					this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
+					this.wrapper.stop()
+				} }
+			])
+			return this.npMenu.create(result ? result : `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯`)
+				.then(x => {
+					this.np = x
+					this.npEditable = true
+				}).catch(() => {
+					this.npEditable = false
+				})
 		}
-	}
-	_makeReactionMenu() {
-		if (this.npMenu) this.npMenu.destroy(true)
-		this.npMenu = new ReactionMenu(this.np, [
-			{ emoji: "⏯️", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.listeners.has(user.id)) return
-				this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
-				this.wrapper.togglePlaying("reaction")
-			} },
-			{ emoji: "⏭️", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.listeners.has(user.id)) return
-				this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
-				this.wrapper.skip()
-			} },
-			{ emoji: "⏹️", remove: "user", actionType: "js", actionData: (msg, emoji, user) => {
-				if (!this.listeners.has(user.id)) return
-				this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
-				this.wrapper.stop()
-			} }
-		])
 	}
 	/**
 	 * @param {Discord.VoiceState} newState

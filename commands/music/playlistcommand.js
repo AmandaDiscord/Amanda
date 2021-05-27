@@ -1,7 +1,7 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const passthrough = require("../../passthrough")
 const { sync, commands, constants } = passthrough
@@ -293,9 +293,8 @@ commands.assign([
 			} else if (action.toLowerCase() == "delete") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor(0xdd1d1d).setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
-				const message = await msg.channel.send(await utils.contentify(msg.channel, deletePromptEmbed))
-				new ReactionMenu(message, [
-					{ emoji: "bn_del:331164186790854656", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async () => {
+				new InteractionMenu(msg.channel, [
+					{ emoji: { id: "331164186790854656", name: "bn_del" }, allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async (message) => {
 						await Promise.all([
 							utils.orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
 							utils.orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id })
@@ -303,7 +302,7 @@ commands.assign([
 						deletePromptEmbed.setDescription(lang.audio.playlist.returns.playlistDeleted)
 						message.edit(await utils.contentify(msg.channel, deletePromptEmbed))
 					} }
-				])
+				]).create(await utils.contentify(msg.channel, deletePromptEmbed))
 			} else if (action.toLowerCase() === "rename") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const newName = args[2]

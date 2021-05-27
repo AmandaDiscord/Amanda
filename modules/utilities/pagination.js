@@ -1,7 +1,7 @@
 // @ts-check
 
 const Discord = require("thunderstorm")
-const ReactionMenu = require("@amanda/reactionmenu")
+const InteractionMenu = require("@amanda/interactionmenu")
 
 const passthrough = require("../../passthrough")
 const { sync, constants } = passthrough
@@ -111,28 +111,28 @@ function createPagination(channel, title, rows, align, maxLength) {
  */
 async function paginate(channel, pageCount, callback) {
 	let page = 0
-	const msg = await channel.send(await callback(page))
 	if (pageCount > 1) {
-		let reactionMenuExpires
-		const reactionMenu = new ReactionMenu(msg, [
-			{ emoji: "bn_ba:328062456905728002", remove: "user", actionType: "js", actionData: async () => {
+		let menuExpires
+		const menu = new InteractionMenu(channel, [
+			{ emoji: { id: "328062456905728002", name: "bn_ba" }, style: "secondary", actionType: "js", actionData: async (message) => {
 				page--
 				if (page < 0) page = pageCount - 1
-				msg.edit(await callback(page))
+				message.edit(await callback(page))
 				makeTimeout()
 			} },
-			{ emoji: "bn_fo:328724374465282049", remove: "user", actionType: "js", actionData: async () => {
+			{ emoji: { id: "328724374465282049", name: "bn_fo" }, style: "secondary", actionType: "js", actionData: async (message) => {
 				page++
 				if (page >= pageCount) page = 0
-				msg.edit(await callback(page))
+				message.edit(await callback(page))
 				makeTimeout()
 			} }
 		])
+		menu.create(await callback(page))
 		// eslint-disable-next-line no-inner-declarations
 		function makeTimeout() {
-			clearTimeout(reactionMenuExpires)
-			reactionMenuExpires = setTimeout(() => {
-				reactionMenu.destroy(true)
+			clearTimeout(menuExpires)
+			menuExpires = setTimeout(() => {
+				menu.destroy(true)
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()
