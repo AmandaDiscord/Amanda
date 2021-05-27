@@ -605,7 +605,14 @@ const common = {
 			}
 			if (data) {
 				const tracks = common.spotify.getTrackInfo(data)
-				const songs = tracks.map(track => songtypes.makeSpotifySong(track))
+				let songs
+				try {
+					songs = tracks.map(track => songtypes.makeSpotifySong(track))
+				} catch {
+					console.log("Error in making Spotify Songs.")
+					console.log(tracks)
+					return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+				}
 				return common.inserters.fromSongArray(textChannel, voiceChannel, songs, insert, msg)
 			} else {
 				textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
