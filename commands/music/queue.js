@@ -377,13 +377,13 @@ class Queue {
 	 *
 	 * You probably ought to make sure songs is empty and nothing is playing before calling.
 	 */
-	_dissolve() {
+	async _dissolve() {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npEditable) this.np.edit(new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))
-		if (this.npMenu) this.npMenu.destroy(true)
-		client.lavalink.leave(this.guild.id)
+		if (this.npEditable) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)), { buttons: [] }).catch(() => void 0)
+		if (this.npMenu) await this.npMenu.destroy(false).catch(() => void 0)
+		await client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)
 	}
 	/**
