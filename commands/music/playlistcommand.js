@@ -177,7 +177,7 @@ commands.assign([
 				// eslint-disable-next-line require-await
 				const result = await (async () => {
 					if (!match || !match.id || match.type !== "video") throw NOT_AN_ID
-					return common.searchYouTube(match.id).then(tracks => {
+					return common.getTracks(match.id).then(tracks => {
 						if (tracks && tracks[0]) {
 							// If the ID worked, add the song
 							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
@@ -185,7 +185,7 @@ commands.assign([
 					})
 				})().catch(() => {
 					// Treating as ID failed, so start a search
-					return common.getTracks(`ytsearch:${search}`).then(tracks => {
+					return common.searchYouTube(search).then(tracks => {
 						if (tracks && tracks[0]) {
 							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
 						} else return null // no results
