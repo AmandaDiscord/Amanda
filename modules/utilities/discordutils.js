@@ -60,6 +60,7 @@ function userFlagEmojis(user) {
 	const arr = [] // The emojis are pushed to the array in order of which they'd appear in Discord.
 	if (user.flags.has("DISCORD_EMPLOYEE")) arr.push("<:staff:433155028895793172>") // Discord Employee
 	if (user.flags.has("PARTNERED_SERVER_OWNER")) arr.push("<:partner:421802275326001152>") // Discord partner
+	if (user.flags.has("CERTIFIED_MODERATOR")) arr.push("<:CertifiedModerator:848030728792440872>") // Certified Moderator
 	if (user.flags.has("HYPESQUAD_EVENTS")) arr.push("<:HypesquadEvents:719628242449072260>") // HypeSquad Events
 	if (user.flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>") // House Balance
 	if (user.flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>") // House Bravery
