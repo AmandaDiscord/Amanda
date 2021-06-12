@@ -1,8 +1,10 @@
 // @ts-check
 
 const passthrough = require("../passthrough")
+const { sync } = passthrough
 
-const utils = require("../modules/utilities")
+/** @type {import("../modules/utilities")} */
+const utils = sync.require("../modules/utilities")
 
 const opcodes = {
 	"IDENTIFY": 1,

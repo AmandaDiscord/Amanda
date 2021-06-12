@@ -1,17 +1,15 @@
 // @ts-check
 
-const types = require("../../typings")
-
 const passthrough = require("../passthrough")
-const { config, ipc } = passthrough
+const { config, ipc, sync } = passthrough
 
 const {render} = require("pinski/plugins")
 
-const utils = require("../modules/utilities.js")
-// reloader.useSync("./modules/utilities.js", utils)
+/** @type {import("../modules/utilities")} */
+const utils = sync.require("../modules/utilities.js")
 
-const validators = require("../modules/validator.js")()
-// reloader.useSync("./modules/validator.js", validators)
+/** @type {ReturnType<import("../modules/validator")>} */
+const validators = sync.require("../modules/validator.js")()
 
 const aboutCache = { devs: [], donors: [], translators: [], lastCache: 0 }
 const aboutCacheExpires = 1000 * 60 * 60
@@ -20,8 +18,8 @@ module.exports = [
 	{
 		route: "/about", methods: ["GET"], code: async () => {
 			if (aboutCache.lastCache <= Date.now() - aboutCacheExpires) {
-				const data = await utils.sql.all("SELECT users.tag, users.avatar, users.id, member_roles.role_id FROM users INNER JOIN member_roles ON users.id = member_roles.id WHERE member_roles.role_id = $1 OR member_roles.role_id = $2 OR member_roles.role_id = $3", ["475599471049310208", "475599593879371796", "755604509664739439"]).then(rows => rows.map(r => {
-					return { id: r.id, role_id: r.role_id, user: { id: r.id, tag: r.tag, avatar: r.avatar } }
+				const data = await utils.sql.all("SELECT users.tag, users.id, member_roles.role_id FROM users INNER JOIN member_roles ON users.id = member_roles.id WHERE member_roles.role_id = $1 OR member_roles.role_id = $2 OR member_roles.role_id = $3", ["475599471049310208", "475599593879371796", "755604509664739439"]).then(rows => rows.map(r => {
+					return { id: r.id, role_id: r.role_id, user: { id: r.id, tag: r.tag } }
 				}))
 				aboutCache.devs = data.filter(r => r.role_id === "475599471049310208")
 				aboutCache.donors = data.filter(r => r.role_id === "475599593879371796")
@@ -48,7 +46,7 @@ module.exports = [
 
 			if (session) {
 				const user = await utils.sql.get("SELECT * FROM users WHERE id = $1", session.user_id)
-				return ipc.replier.requestGetDashGuilds(session.user_id, true).then(({guilds, npguilds}) => {
+				return ipc.replier.requestGetDashGuilds(session.user_id, true).then(({ guilds, npguilds }) => {
 					const displayNoSharedServers = guilds.length === 0 && npguilds.length === 0
 					const csrfToken = utils.generateCSRF()
 					return render(200, "pug/selectserver.pug", { user, npguilds, displayNoSharedServers, guilds, csrfToken })
@@ -114,7 +112,7 @@ module.exports = [
 		}
 	},
 	{
-		route: "/formapi/updateconfig", methods: ["POST"], upload: true, code: async ({req, body}) => {
+		route: "/formapi/updateconfig", methods: ["POST"], upload: true, code: async ({ req, body }) => {
 			const cookies = utils.getCookies(req)
 			const session = await utils.getSession(cookies)
 
@@ -224,7 +222,7 @@ module.exports = [
 			.go()
 			.then(state => {
 				if (config.music_dash_enabled) {
-				/** @type {types.FilteredGuild} */
+				/** @type {import("../../typings").FilteredGuild} */
 					const guild = state.guild
 					return render(200, "pug/server.pug", { guild, timestamp: Date.now() })
 				} else {

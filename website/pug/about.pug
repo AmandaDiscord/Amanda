@@ -1,5 +1,5 @@
 mixin user(user)
-	- let avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${user.avatar.startsWith("a_") ? "gif" : "png?size=128"}`
+	- let avatar = `/api/avatar/${user.id}`
 	img(src=avatar, alt=user.tag + "'s avatar.").avatar
 
 doctype html
@@ -17,7 +17,7 @@ html
 			div.box Developers
 		div.about
 			each member in devs
-				if member.user.avatar
+				if member.user
 					+user(member.user)
 		p
 			| ​
@@ -27,7 +27,7 @@ html
 			div.box Donors
 		div.about
 			each member in donors
-				if member.user.avatar
+				if member.user
 					+user(member.user)
 		p
 			| ​
@@ -37,7 +37,7 @@ html
 			div.box Translators
 		div.about
 			each member in translators
-				if member.user.avatar
+				if member.user
 					+user(member.user)
 		p
 			| ​

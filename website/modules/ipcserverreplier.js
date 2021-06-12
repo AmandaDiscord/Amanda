@@ -2,8 +2,6 @@
 
 const types = require("../../typings")
 
-const path = require("path")
-
 const passthrough = require("../passthrough")
 const { ipc } = passthrough
 
