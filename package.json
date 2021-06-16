@@ -40,7 +40,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#d0e8f0f4f5124ac061a681dd3a954b5e25206031",
     "taihou": "^2.0.5",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#6a66764cf9a157b03c7a5bb9d8e83b9a29c7b722",
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#c5d46a77f26768a9350368b47f1645d724a75fa4",
     "video-url-link": "github:AmandaDiscord/video-url-link#f6ad0f4be37fa415a0ccd48f25ea63a003ab2a2e"
   },
   "devDependencies": {
