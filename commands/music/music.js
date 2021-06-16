@@ -112,10 +112,11 @@ const subcommandsMap = new Map([
 						+ `\n${lang.audio.playlist.prompts.selectionInfo}`
 						)
 					// Create the reaction menu
+					const content = await utils.contentify(msg.channel, embed)
 					new InteractionMenu(msg.channel, [
-						{ emoji: { id: "327896448232325130", name: "bn_1" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[0]}`); message.edit(embed); common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert) } },
-						{ emoji: { id: "327896448505217037", name: "bn_2" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[1]}`); message.edit(embed); common.inserters.fromDataArray(message.channel, voiceChannel, tracks.slice(linkedIndex), insert) } },
-						{ emoji: { id: "327896452363976704", name: "bn_3" }, ignore: "total", remove: "all", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[2]}`); message.edit(embed); common.inserters.fromData(message.channel, voiceChannel, tracks[linkedIndex], insert) } }
+						{ emoji: { id: "327896448232325130", name: "bn_1" }, style: "PRIMARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[0]}`); message.edit(content); common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert) } },
+						{ emoji: { id: "327896448505217037", name: "bn_2" }, style: "SECONDARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[1]}`); message.edit(content); common.inserters.fromDataArray(message.channel, voiceChannel, tracks.slice(linkedIndex), insert) } },
+						{ emoji: { id: "327896452363976704", name: "bn_3" }, style: "SECONDARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[2]}`); message.edit(content); common.inserters.fromData(message.channel, voiceChannel, tracks[linkedIndex], insert) } }
 					]).create(await utils.contentify(msg.channel, embed))
 				}
 			} else if (match && match.type === "soundcloud") {

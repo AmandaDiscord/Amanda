@@ -110,7 +110,7 @@ const common = {
 			if (url.hostname === "soundcloud.com") {
 				// Bam, done.
 				return { type: "soundcloud", link: url.toString() }
-			} else if (url.hostname == "open.spotify.com" && (url.pathname.startsWith("/playlist") || url.pathname.startsWith("/track"))) {
+			} else if (url.hostname == "open.spotify.com" && (url.pathname.startsWith("/playlist") || url.pathname.startsWith("/track") || url.pathname.startsWith("/album"))) {
 				return { type: "spotify", link: url.toString() }
 			} else if (url.hostname == "newgrounds.com" && url.pathname.startsWith("/audio/listen")) {
 				return { type: "newgrounds", link: url.toString() }
@@ -451,7 +451,7 @@ const common = {
 		handleSong:
 		/**
 		 * @param {import("./songtypes").Song} song
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {boolean} insert
 		 * @param {Discord.Message} [context]
@@ -467,7 +467,7 @@ const common = {
 
 		fromData:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any} data
 		 * @param {boolean} insert
@@ -481,7 +481,7 @@ const common = {
 
 		fromDataArray:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} data
 		 * @param {boolean} insert
@@ -495,7 +495,7 @@ const common = {
 
 		fromSongArray:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {any[]} songs
 		 * @param {boolean} insert
@@ -515,7 +515,7 @@ const common = {
 
 		fromSearch:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -536,7 +536,7 @@ const common = {
 
 		fromSoundCloudSearch:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -563,7 +563,7 @@ const common = {
 
 		fromSoundCloudLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -587,7 +587,7 @@ const common = {
 		},
 		fromSpotifyLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -604,7 +604,14 @@ const common = {
 				return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
 			}
 			if (data) {
-				const tracks = common.spotify.getTrackInfo(data)
+				let tracks
+				try {
+					tracks = common.spotify.getTrackInfo(data)
+				} catch {
+					console.log("Error in converting Spotify JSON.")
+					console.log(data)
+					return textChannel.send(utils.replace(lang.audio.music.prompts.invalidLink, { username: msg.author.username }))
+				}
 				let songs
 				try {
 					songs = tracks.map(track => songtypes.makeSpotifySong(track))
@@ -620,7 +627,7 @@ const common = {
 		},
 		fromExternalLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -642,7 +649,7 @@ const common = {
 		},
 		fromNewgroundsSearch:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.User} author
 		 * @param {boolean} insert
@@ -670,7 +677,7 @@ const common = {
 		},
 		fromNewgroundsLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -691,7 +698,7 @@ const common = {
 		},
 		fromTwitterLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -711,7 +718,7 @@ const common = {
 		},
 		fromiTunesLink:
 		/**
-		 * @param {Discord.PartialChannel} textChannel
+		 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 		 * @param {Discord.VoiceChannel} voiceChannel
 		 * @param {Discord.Message} msg
 		 * @param {boolean} insert
@@ -778,14 +785,17 @@ const common = {
 			return parsed
 		},
 		/**
-		 * @param {import("../../typings").SpotifyTrack | import("../../typings").SpotifyPlaylist} data
+		 * @param {import("../../typings").SpotifyTrack | import("../../typings").SpotifyPlaylist | import("../../typings").SpotifyAlbum} data
 		 */
 		getTrackInfo(data) {
 			if (data.type == "track") {
 				return [data]
 			} else if (data.type == "playlist") {
 				return data.tracks.items.map(d => d.track)
-			}
+			} else if (data.type === "album") {
+				if (!data.tracks) throw new Error("NO_SPOTIFY_TRACKS_IN_ALBUM")
+				return data.tracks.items
+			} else throw new Error("INVALID_SPOTIFY_ENTITY")
 		}
 	},
 
@@ -962,7 +972,7 @@ const common = {
 				prompt.delete()
 				return voiceChannel
 			} else {
-				prompt.edit(utils.replace(lang.audio.music.prompts.voiceChannelRequired, { "username": msg.author.username }))
+				prompt.edit({ content: utils.replace(lang.audio.music.prompts.voiceChannelRequired, { "username": msg.author.username }) })
 				return null
 			}
 		})

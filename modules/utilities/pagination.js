@@ -52,8 +52,8 @@ function tableifyRows(rows, align, surround = () => "", spacer = " ") { // SC:
 	const maxLength = []
 	for (let i = 0; i < rows[0].length; i++) {
 		let thisLength = 0
-		for (let j = 0; j < rows.length; j++) {
-			if (thisLength < rows[j][i].length) thisLength = rows[j][i].length
+		for (const row of rows) {
+			if (thisLength < row[i].length) thisLength = row[i].length
 		}
 		maxLength.push(thisLength)
 	}
@@ -83,7 +83,7 @@ function tableifyRows(rows, align, surround = () => "", spacer = " ") { // SC:
 }
 
 /**
- * @param {Discord.PartialChannel} channel
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
  * @param {string[]} title
  * @param {string[][]} rows
  */
@@ -105,22 +105,22 @@ function createPagination(channel, title, rows, align, maxLength) {
 }
 
 /**
- * @param {Discord.PartialChannel} channel
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
  * @param {number} pageCount
- * @param {(page: number) => any} callback
+ * @param {(page?: number) => Discord.MessageEditOptions | Promise<Discord.MessageEditOptions>} callback
  */
 async function paginate(channel, pageCount, callback) {
 	let page = 0
 	if (pageCount > 1) {
 		let menuExpires
 		const menu = new InteractionMenu(channel, [
-			{ emoji: { id: "328062456905728002", name: "bn_ba" }, style: "secondary", actionType: "js", actionData: async (message) => {
+			{ emoji: { id: "328062456905728002", name: "bn_ba" }, style: "SECONDARY", actionType: "js", actionData: async (message) => {
 				page--
 				if (page < 0) page = pageCount - 1
 				message.edit(await callback(page))
 				makeTimeout()
 			} },
-			{ emoji: { id: "328724374465282049", name: "bn_fo" }, style: "secondary", actionType: "js", actionData: async (message) => {
+			{ emoji: { id: "328724374465282049", name: "bn_fo" }, style: "SECONDARY", actionType: "js", actionData: async (message) => {
 				page++
 				if (page >= pageCount) page = 0
 				message.edit(await callback(page))
@@ -219,7 +219,7 @@ function playlistSection(items, startString, endString, shuffle) {
 }
 
 /**
- * @param {Discord.PartialChannel} channel
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
  * @param {string} authorID
  * @param {string} title
  * @param {string} failedTitle

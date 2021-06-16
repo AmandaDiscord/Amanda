@@ -155,7 +155,7 @@ commands.assign([
 						if (msgg.content !== "stop") commands.cache.get("playlist").process(msgg, `${playlistName} add ${msgg.content}`, lang, pres)
 					}
 					msg.channel.send(lang.audio.playlist.returns.bulkDone)
-					confirmation.edit(lang.audio.playlist.returns.bulkMenuGone, { embed: null })
+					confirmation.edit({ content: lang.audio.playlist.returns.bulkMenuGone, embeds: [] })
 					bulkAddCollectionChannels.delete(msg.channel.id)
 				})
 			} else if (action.toLowerCase() == "add") {
@@ -186,9 +186,13 @@ commands.assign([
 				})().catch(() => {
 					// Treating as ID failed, so start a search
 					return common.searchYouTube(search).then(tracks => {
-						if (tracks && tracks[0]) {
-							return { id: tracks[0].info.identifier, title: tracks[0].info.title, lengthSeconds: Math.floor(tracks[0].info.length / 1000) }
-						} else return null // no results
+						if (!tracks || !tracks.length) return null
+						const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
+						return utils.makeSelection(msg.channel, msg.author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
+							if (typeof index != "number") return null
+							const track = tracks[index]
+							return { id: track.info.identifier, title: track.info.title, lengthSeconds: Math.floor(track.info.length / 1000) }
+						})
 					})
 				}) // errors that reach here are actual errors, not failed requests
 
@@ -268,8 +272,8 @@ commands.assign([
 						else if (videos.slice(0, i).some(v => v.videoId == video.videoId)) return false
 						else return true
 					})
-					if (!videos.length) return editmsg.edit(utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }))
-					await editmsg.edit(lang.audio.playlist.prompts.playlistImportingDatabase)
+					if (!videos.length) return editmsg.edit({ content: utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }) })
+					await editmsg.edit({ content: lang.audio.playlist.prompts.playlistImportingDatabase })
 					for (let i = 0; i < videos.length; i++) {
 						const video = videos[i]
 						promises.push(utils.sql.all(
@@ -288,13 +292,13 @@ commands.assign([
 						[videos[0].videoId, playlistRow.playlist_id, videos.slice(-1)[0].videoId]
 					))
 					await Promise.all(promises)
-					editmsg.edit(utils.replace(lang.audio.playlist.returns.playlistImportDone, { "username": msg.author.username, "playlist": playlistName }))
+					editmsg.edit({ content: utils.replace(lang.audio.playlist.returns.playlistImportDone, { "username": msg.author.username, "playlist": playlistName }) })
 				} else return msg.channel.send(utils.replace(lang.audio.music.prompts.youtubeRequired, { "username": msg.author.username }))
 			} else if (action.toLowerCase() == "delete") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const deletePromptEmbed = new Discord.MessageEmbed().setColor(0xdd1d1d).setDescription(utils.replace(lang.audio.playlist.prompts.playlistDeleteConfirm, { "playlist": playlistRow.name }))
 				new InteractionMenu(msg.channel, [
-					{ emoji: { id: "331164186790854656", name: "bn_del" }, allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async (message) => {
+					{ emoji: { id: "331164186790854656", name: "bn_del" }, style: "DANGER", allowedUsers: [msg.author.id], remove: "all", ignore: "total", actionType: "js", actionData: async (message) => {
 						await Promise.all([
 							utils.orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
 							utils.orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id })

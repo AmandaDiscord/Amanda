@@ -1,3 +1,5 @@
+// @ts-check
+
 const c = require("centra")
 const util = require("util")
 

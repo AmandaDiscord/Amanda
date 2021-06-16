@@ -42,7 +42,7 @@ commands.assign([
 								msg.channel.send("Alias created. The webhook can now act as you.")
 							}
 						}, () => {
-							checkMessage.edit("Timed out.")
+							checkMessage.edit({ content: "Timed out." })
 						})
 					}
 				}).catch(() => {

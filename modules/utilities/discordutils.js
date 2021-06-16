@@ -65,7 +65,7 @@ function userFlagEmojis(user) {
 	if (user.flags.has("HOUSE_BALANCE")) arr.push("<:balance:479939338696654849>") // House Balance
 	if (user.flags.has("HOUSE_BRAVERY")) arr.push("<:bravery:479939311593324557>") // House Bravery
 	if (user.flags.has("HOUSE_BRILLIANCE")) arr.push("<:brilliance:479939329104412672>") // House Brilliance
-	if (user.flags.has("EARLY_VERIFIED_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>") // Verified Bot Developer
+	if (user.flags.has("EARLY_VERIFIED_BOT_DEVELOPER")) arr.push("<:VerifiedDeveloper:699408396591300618>") // Verified Bot Developer
 	if (user.flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcherlvl2:678721839488434203>") // Bug Hunter Level 2
 	if (user.flags.has("BUGHUNTER_LEVEL_1") && !user.flags.has("BUGHUNTER_LEVEL_2")) arr.push("<:BugCatcher:434087337488678921>") // Bug Hunter Level 1
 	if (user.flags.has("EARLY_SUPPORTER")) arr.push("<:EarlySupporter:585638218255564800>")
@@ -160,32 +160,33 @@ async function resolveWebhookMessageAuthor(msg) {
 			discriminator: row.user_discriminator,
 			avatar: null
 		}
-		newAuthor = new Discord.User(newUserData, client)
+		newAuthor = new Discord.User(client, newUserData)
 	})
 	msg.author = newAuthor
 	return msg
 }
 
 /**
- * @param {Discord.PartialChannel} channel
- * @param {string|Discord.MessageEmbed} content
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
+ * @param {string | Discord.MessageEmbed | Array<Discord.MessageEmbed>} content
  */
 async function contentify(channel, content) {
 	const { cacheManager } = require("./cachemanager") // lazy require
 	let value = ""
 	/** @type {number} */
 	// @ts-ignore
-	if (content instanceof Discord.MessageEmbed) {
+	if (content instanceof Discord.MessageEmbed || (Array.isArray(content) && content.every(i => i instanceof Discord.MessageEmbed))) {
+		// @ts-ignore
 		if (!(await cacheManager.channels.clientHasPermission({ id: channel.id, guild_id: channel.guild ? channel.guild.id : undefined }, "EMBED_LINKS"))) {
-			value = `${content.author ? `${content.author.name}\n` : ""}${content.title ? `${content.title}${content.url ? ` - ${content.url}` : ""}\n` : ""}${content.description ? `${content.description}\n` : ""}${content.fields.length > 0 ? `${content.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${content.image ? `${content.image.url}\n` : ""}${content.footer ? content.footer.text : ""}`
+			value = (Array.isArray(content) ? content : [content]).map(embed => `${embed.author ? `${embed.author.name}\n` : ""}${embed.title ? `${embed.title}${embed.url ? ` - ${embed.url}` : ""}\n` : ""}${embed.description ? `${embed.description}\n` : ""}${embed.fields.length > 0 ? `${embed.fields.map(f => `${f.name}\n${f.value}`).join("\n")}\n` : ""}${embed.image ? `${embed.image.url}\n` : ""}${embed.footer ? embed.footer.text : ""}`).join("\n\n")
 			if (value.length > 2000) value = `${value.slice(0, 1960)}…`
 			value += "\nPlease allow me to embed content"
-		} else return content
+		} else return { embeds: Array.isArray(content) ? content : [content] }
 	} else if (typeof (content) == "string") {
 		value = content
 		if (value.length > 2000) value = `${value.slice(0, 1998)}…`
 	}
-	return value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2")
+	return { content: value.replace(/\[(.+?)\]\((https?:\/\/.+?)\)/gs, "$1: $2") }
 }
 
 /**

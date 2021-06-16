@@ -64,7 +64,7 @@ const pool = new Postgres.Pool({
 
 		if (op === "DISCORD") {
 			utils.cacheManager.process(data)
-			return ThunderStorm.handle(message.data, client)
+			return require("thunderstorm/src/handle")(message.data, client)
 		} else {
 			if (op === "ERROR_RESPONSE") return console.error(data)
 			if (gateway.outgoing.has(threadID)) {
@@ -109,12 +109,6 @@ const pool = new Postgres.Pool({
 		queue: nedb.create({ filename: `saves/queue-${config.cluster_id}.db`, autoload: true })
 	}
 	internalEvents.emit("QueueManager", passthrough.queues)
-
-	// Can't be part of reloader, and depends on IPC, so it's down here.
-
-	sync.require([
-		"./modules/reloadapi.js"
-	])
 
 	// Commands
 

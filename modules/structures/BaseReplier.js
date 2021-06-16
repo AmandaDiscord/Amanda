@@ -1,3 +1,5 @@
+// @ts-check
+
 const SingleUseMap = require("../structures/SingleUseMap")
 
 class BaseReplier {

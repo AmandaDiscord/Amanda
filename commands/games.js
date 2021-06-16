@@ -3,7 +3,6 @@
 const centra = require("centra")
 const entities = require("entities")
 const Discord = require("thunderstorm")
-const path = require("path")
 const Lang = require("@amanda/lang")
 const InteractionMenu = require("@amanda/interactionmenu")
 
@@ -28,7 +27,7 @@ const utils = sync.require("../modules/utilities")
 
 class Game {
 	/**
-	 * @param {Discord.PartialChannel} channel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
 	 * @param {string} type
 	 */
 	constructor(channel, type) {
@@ -53,7 +52,7 @@ module.exports.Game = Game
 
 class TriviaGame extends Game {
 	/**
-	 * @param {Discord.PartialChannel} channel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
 	 * @param {{response_code: number, results: Array<TriviaResponse>}} data
 	 * @param {number} category
 	 * @param {Lang.Lang} lang
@@ -164,9 +163,10 @@ class TriviaGame extends Game {
 		else embed.addFields({ name: this.lang.games.trivia.prompts.winners, value: this.lang.games.trivia.prompts.noWinners })
 		embed.setFooter(this.lang.games.trivia.prompts.reactionRound)
 		return new InteractionMenu(this.channel, [
-			{ emoji: { id: "362741439211503616", name: "bn_re" }, ignore: "total", actionType: "js", actionData: (message, user) => {
+			{ emoji: { id: "362741439211503616", name: "bn_re" }, style: "PRIMARY", ignore: "total", actionType: "js", actionData: (message, user) => {
 				if (user.bot) message.channel.send(`${user.toString()} SHUT UP!!!!!!!!`)
 				else startGame(this.channel, { category: this.category, lang: this.lang })
+				message.edit({ embeds: message.embeds, components: [] })
 			} }
 		]).create(await utils.contentify(this.channel, embed))
 	}
@@ -175,7 +175,7 @@ module.exports.TriviaGame = TriviaGame
 
 /**
  * @param {string} body
- * @param {Discord.PartialChannel} channel
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
  * @param {Lang.Lang} lang
  * @returns {Promise<[boolean, any]>}
  */
@@ -199,7 +199,7 @@ async function JSONHelper(body, channel, lang) {
 	}
 }
 /**
- * @param {Discord.PartialChannel} channel
+ * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
  * @param {{ suffix?: string, msg?: Discord.Message, category?: number, lang: Lang.Lang }} options
  */
 async function startGame(channel, options) {
@@ -214,11 +214,10 @@ async function startGame(channel, options) {
 		] = await JSONHelper("https://opentdb.com/api_category.php", channel, options.lang)
 		if (!success) return
 		if (options.suffix.includes("categor")) {
-			options.msg.author.send(
-				new Discord.MessageEmbed()
-					.setTitle(options.lang.games.trivia.prompts.categories)
-					.setDescription(`${d.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
-			).then(() => {
+			const embed = new Discord.MessageEmbed()
+				.setTitle(options.lang.games.trivia.prompts.categories)
+				.setDescription(`${d.trivia_categories.map(c => c.name).join("\n")}\n\n${options.lang.games.trivia.prompts.categorySelect}`)
+			options.msg.author.send({ embeds: [embed] }).then(() => {
 				channel.send(utils.replace(options.lang.games.trivia.prompts.dm, { "username": options.msg.author.username }))
 			}).catch(() => {
 				channel.send(options.lang.games.trivia.prompts.dmError)
@@ -391,11 +390,6 @@ commands.assign([
 		aliases: ["trivia", "t"],
 		category: "games",
 		examples: ["t Science: Computers"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		process(msg, suffix, lang) {
 			startGame(msg.channel, { suffix, msg, lang })
 		}
@@ -406,11 +400,6 @@ commands.assign([
 		aliases: ["minesweeper", "ms"],
 		category: "games",
 		examples: ["ms hard --raw --size:10"],
-		/**
-		 * @param {import("thunderstorm").Message} msg
-		 * @param {string} suffix
-		 * @param {import("@amanda/lang").Lang} lang
-		 */
 		async process(msg, suffix, lang) {
 			let size = 8, difficulty = "easy"
 			let title

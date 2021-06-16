@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * This is a bare bones version of an ORM which is modeled to cover most or all of Amanda's database structure.
  * Very complex statements will be impossible with this.

@@ -1,3 +1,5 @@
+// @ts-check
+
 const Discord = require("thunderstorm")
 
 class StreakManager {

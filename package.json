@@ -15,12 +15,12 @@
     "npm": "7.9.0"
   },
   "dependencies": {
-    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#b32eedcf19f130d74ca2319096366ad42c0d28b5",
-    "@amanda/interactionmenu": "github:AmandaDiscord/InteractionMenu#e1401033cccbe0d00474db32840f5ca5df527fbd",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#4381fc46fd9abd8f7478e81f9c4b13211b590e84",
+    "@amanda/interactionmenu": "github:AmandaDiscord/InteractionMenu#e07ba4bd72759c4c1eeb893e7bb1a1693ee740c3",
     "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@lavalink/encoding": "^0.1.1",
     "centra": "^2.4.2",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#e930d6ac223de2f3430b8d4733c7f326bd799ed4",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#507e905c45f17a7c89a614d50d91f51ecbab4721",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.2.0",
@@ -32,23 +32,23 @@
     "lavacord": "github:AmandaDiscord/Lavacord#d67354ef4f1e5020797d6ffff59bb7ad690a969f",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
-    "nedb-promises": "^4.1.5",
+    "nedb-promises": "^5.0.0",
     "node-ipc": "^9.1.4",
     "pg": "^8.6.0",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
-    "simple-git": "^2.39.0",
+    "simple-git": "^2.40.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#38175ffe4884c0c3ddd06849973fb5b6df3d85f5",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#d0e8f0f4f5124ac061a681dd3a954b5e25206031",
     "taihou": "^2.0.5",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#7632346e789860ff5f4430682fd8ac40efa3d43b",
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#6a66764cf9a157b03c7a5bb9d8e83b9a29c7b722",
     "video-url-link": "github:AmandaDiscord/video-url-link#f6ad0f4be37fa415a0ccd48f25ea63a003ab2a2e"
   },
   "devDependencies": {
-    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#e21cfdfee80715a4653493d768c4fd348a9d9e00",
+    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#bd43c3a022981d414a0aada92ddced1574c9aeab",
     "@types/centra": "^2.2.0",
     "@types/node": "^15.0.1",
-    "eslint": "^7.27.0",
+    "eslint": "^7.28.0",
     "tap": "^15.0.9",
-    "typescript": "~4.2.4"
+    "typescript": "~4.3.2"
   }
 }

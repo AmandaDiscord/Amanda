@@ -34,7 +34,7 @@ class QueueManager {
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.PartialChannel} textChannel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 	 * @param {string} [host]
 	 */
 	getOrCreate(voiceChannel, textChannel, host = null) {
@@ -46,7 +46,7 @@ class QueueManager {
 	}
 	/**
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.PartialChannel} textChannel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 	 * @param {string} [host]
 	 * @returns {Promise<import("../../commands/music/queue").Queue>}
 	 */

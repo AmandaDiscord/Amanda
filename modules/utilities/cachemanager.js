@@ -44,7 +44,7 @@ function upsertUser(user) {
 }
 
 /**
- * @param {import("thunderstorm/dist/internal").InboundDataType} data
+ * @param {import("thunderstorm/src/internal").InboundDataType} data
  */
 function processData(data) {
 	const empty = []
@@ -239,13 +239,15 @@ const channelManager = {
 	},
 	parse: function(channel) {
 		const type = channel.type
-		if (type == 0) return new Discord.TextChannel(channel, client)
-		else if (type == 1) return new Discord.DMChannel(channel, client)
-		else if (type == 2) return new Discord.VoiceChannel(channel, client)
-		else if (type == 4) return new Discord.CategoryChannel(channel, client)
-		else if (type == 5) return new Discord.NewsChannel(channel, client)
-		else if (type == 13) return new Discord.StageChannel(channel, client)
-		else return new Discord.Channel(channel, client)
+		const guild = new Discord.PartialGuild(client, { id: channel.guild_id })
+		if (type == 0 && guild.id) return new Discord.TextChannel(guild, channel)
+		else if (type == 1) return new Discord.DMChannel(client, channel)
+		else if (type == 2 && guild.id) return new Discord.VoiceChannel(guild, channel)
+		else if (type == 4 && guild.id) return new Discord.CategoryChannel(guild, channel)
+		else if (type == 5 && guild.id) return new Discord.NewsChannel(guild, channel)
+		else if (type == 6 && guild.id) return new Discord.StoreChannel(guild, channel)
+		else if (type == 13 && guild.id) return new Discord.StageChannel(guild, channel)
+		else return new Discord.Channel(client, channel)
 	},
 	/**
 	 * @param {{ id: string }} channel
@@ -269,8 +271,7 @@ const channelManager = {
 	getOverridesFor: async function(channel) {
 		const perms = await db.select("channel_overrides", { channel_id: channel.id })
 		// @ts-ignore
-		const permissions = new Discord.Collection(perms.map(i => [i.id, new Discord.PermissionOverwrites(channel, i)]))
-		return permissions
+		return new Discord.Collection(perms.map(i => [i.id, new Discord.PermissionOverwrites(channel, i)]))
 	},
 	/**
 	 * @param {{ id: string, guild_id: string }} channel
@@ -424,7 +425,7 @@ const userManager = {
 			obj.bot = !!user.bot
 			delete obj.tag
 		}
-		return new Discord.User(obj, client)
+		return new Discord.User(client, obj)
 	}
 }
 
@@ -575,7 +576,7 @@ const memberManager = {
 			delete obj.tag
 			member.user = obj
 		}
-		return new Discord.GuildMember(member, client)
+		return new Discord.GuildMember(client, member)
 	},
 	/**
 	 * @param {string} userID
@@ -636,7 +637,7 @@ const guildManager = {
 		return d || null
 	},
 	parse: function(guild) {
-		return new Discord.Guild(guild, client)
+		return new Discord.Guild(client, guild)
 	},
 	async delete(id, includeMembers = false) {
 		if (!id) {

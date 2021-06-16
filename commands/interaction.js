@@ -83,7 +83,7 @@ const cmds = [
 				const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 				percentage = Number(`0x${hash}`) % 101
 			}
-			return msg.channel.send(utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), { file: image })
+			return msg.channel.send({ content: utils.replace(lang.interaction.ship.returns.rating, { "display1": mem1.displayTag, "display2": mem2.displayTag, "percentage": percentage }), files: [image] })
 		}
 	},
 	{

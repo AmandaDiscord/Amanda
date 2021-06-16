@@ -72,8 +72,8 @@ commands.assign([
 				let content = output
 				if (output.length > 2000) content = new Discord.MessageAttachment(Buffer.from(output), "eval.txt")
 
-				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "danger", allowedUsers: [msg.author.id], remove: "message" }])
-				const nmsg = await menu.create(typeof content === "string" ? content : { file: content })
+				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "DANGER", allowedUsers: [msg.author.id], remove: "message" }])
+				const nmsg = await menu.create(typeof content === "string" ? { content } : { files: [content] })
 				return setTimeout(() => {
 					if (menu.menus.has(nmsg.id)) menu.destroy(true)
 				}, 5 * 60 * 1000)
@@ -109,7 +109,7 @@ commands.assign([
 				if (stdout) result.addFields({ name: "stdout:", value: formatOutput(stdout) })
 				if (stderr) result.addFields({ name: "stderr:", value: formatOutput(stderr) })
 				if (!stdout && !stderr) result.setDescription("No output.")
-				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "danger", allowedUsers: [msg.author.id], remove: "message" }])
+				const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "🗑" }, style: "DANGER", allowedUsers: [msg.author.id], remove: "message" }])
 				const nmsg = await menu.create(await utils.contentify(msg.channel, result))
 				return setTimeout(() => {
 					if (menu.menus.has(nmsg.id)) menu.destroy(true)

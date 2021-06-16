@@ -82,7 +82,7 @@ commands.assign([
 			if (!args[0]) {
 				buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 				image = new Discord.MessageAttachment(buffer, "slot.png")
-				return msg.channel.send({ file: image })
+				return msg.channel.send({ files: [image] })
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
@@ -118,7 +118,7 @@ commands.assign([
 			utils.coinsManager.award(msg.author.id, winning - bet)
 			buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			image = new Discord.MessageAttachment(buffer, "slot.png")
-			return msg.channel.send(result, { file: image })
+			return msg.channel.send({ content: result, files: [image] })
 		}
 	},
 	{
@@ -268,7 +268,7 @@ commands.assign([
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "profile.png")
-			return msg.channel.send({ file: image })
+			return msg.channel.send({ files: [image] })
 		}
 	},
 	{
@@ -480,7 +480,7 @@ commands.assign([
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
 			await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount))
-			return msg.channel.send(utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), { file: image })
+			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), files: [image] })
 		}
 	}
 ])

@@ -156,6 +156,7 @@ export interface SpotifyPlaylistItem {
 export interface SpotifyAlbum {
 	album_type: string;
 	artists: Array<SpotifyArtist>;
+	copyrights?: Array<string>;
 	external_urls?: {
 		spotify?: string;
 	};
@@ -166,6 +167,15 @@ export interface SpotifyAlbum {
 	release_data: string;
 	release_date_precision: string;
 	total_tracks: number;
+	tracks?: {
+		href: string;
+		items: Array<SpotifyTrack>;
+		limit: number;
+		next: any;
+		offset: number;
+		previous: any;
+		total: number;
+	}
 	type: "album";
 	uri: string;
 }

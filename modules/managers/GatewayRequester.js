@@ -1,3 +1,5 @@
+// @ts-check
+
 const BaseReplier = require("../structures/BaseReplier")
 
 class GatewayRequester extends BaseReplier {

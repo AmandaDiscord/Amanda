@@ -253,8 +253,22 @@ class Session {
 			if (!session) return
 			const guild = await ipc.replier.requestGetGuildForUser(session.user_id, data.d.guildID)
 			if (!guild) return
-			const user = await snow.user.cache.fetchUser(session.user_id)
-			if (!user) return
+			let user = await utils.sql.get("SELECT * FROM users WHERE id = $1", session.user_id)
+			if (!user) {
+				const tempfailtext = `Fake user tried to identify:\n${require("util").inspect(session)}`
+				/** @type {import("@amanda/discordtypings").UserData} */
+				const temp = await snow.user.getUser(session.user_id).catch(() => void 0)
+				if (!temp) return console.log(tempfailtext)
+				user = temp
+				await utils.sql.all("INSERT INTO users (id, tag, avatar, bot, added_by) VALUES ($1, $2, $3, $4, $5)", [temp.id, `${temp.username}#${temp.discriminator}`, temp.avatar, temp.bot ? 1 : 0, passthrough.config.cluster_id])
+			} else {
+				const arr = user.tag.split("#")
+				const username = arr.slice(0, arr.length - 1).join("#")
+				const discriminator = arr[arr.length - 1]
+				user = { username: username, discriminator: discriminator, ...user }
+				user.bot = !!user.bot
+				delete user.tag
+			}
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true

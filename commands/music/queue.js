@@ -56,7 +56,7 @@ class Queue {
 	/**
 	 * @param {typeof passthrough.queues} manager
 	 * @param {Discord.VoiceChannel} voiceChannel
-	 * @param {Discord.PartialChannel} textChannel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} textChannel
 	 * @param {Discord.Guild} guild
 	 * @param {string} [host]
 	 */
@@ -116,7 +116,8 @@ class Queue {
 			if (this.np) {
 				const embed = await this._buildNPEmbed()
 				if (embed && this.npEditable) {
-					this.np.edit(embed).catch(e => {
+					const content = await utils.contentify(this.textChannel, embed)
+					this.np.edit(Object.assign(content, { components: this.np.components })).catch(e => {
 						if (e && e.httpStatus === 404) this.npEditable = false
 					})
 				}
@@ -242,8 +243,8 @@ class Queue {
 				detailsString
 			)
 			embed.setColor(0xff2ee7)
-			const rchan = new Discord.PartialChannel({ id: reportTarget }, client)
-			rchan.send(embed).then(() => {
+			const rchan = new Discord.PartialChannel(client, { id: reportTarget })
+			rchan.send({ embeds: [embed] }).then(() => {
 				return rchan.send(contents)
 			// eslint-disable-next-line no-empty-function
 			}).catch(() => {
@@ -381,8 +382,8 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npEditable) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)), { buttons: [] }).catch(() => void 0)
-		if (this.npMenu) await this.npMenu.destroy(false).catch(() => void 0)
+		if (this.npEditable) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))).catch(() => void 0)
+		if (this.npMenu) await this.npMenu.destroy().catch(() => void 0)
 		await client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)
 	}
@@ -642,23 +643,23 @@ class Queue {
 			const result = await this._buildNPEmbed()
 			if (this.npMenu) this.npMenu.destroy()
 			this.npMenu = new InteractionMenu(this.textChannel, [
-				{ emoji: { id: null, name: "⏯️" }, style: "secondary", actionType: "js", actionData: (msg, user) => {
+				{ emoji: { id: null, name: "⏯️" }, style: "SECONDARY", actionType: "js", actionData: (msg, user) => {
 					if (!this.listeners.has(user.id)) return
 					this.audit.push({ action: this.isPaused ? "Queue Resume" : "Queue Pause", platform: "Discord", user: user.tag })
 					this.wrapper.togglePlaying("reaction")
 				} },
-				{ emoji: { id: null, name: "⏭️" }, style: "secondary", actionType: "js", actionData: (msg, user) => {
+				{ emoji: { id: null, name: "⏭️" }, style: "SECONDARY", actionType: "js", actionData: (msg, user) => {
 					if (!this.listeners.has(user.id)) return
 					this.audit.push({ action: "Queue Skip", platform: "Discord", user: user.tag })
 					this.wrapper.skip()
 				} },
-				{ emoji: { id: null, name: "⏹️" }, style: "danger", actionType: "js", actionData: (msg, user) => {
+				{ emoji: { id: null, name: "⏹️" }, style: "DANGER", actionType: "js", actionData: (msg, user) => {
 					if (!this.listeners.has(user.id)) return
 					this.audit.push({ action: "Queue Destroy", platform: "Discord", user: user.tag })
 					this.wrapper.stop()
 				} }
 			])
-			return this.npMenu.create(result ? result : `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯`)
+			return this.npMenu.create(result ? await utils.contentify(this.textChannel, result) : { content: `You found a bug. There were no songs in the queue when the now playing message was told to send. If a song is currently playing, try \`&now\` to fix it. Please report this bug here: <${constants.server}>. Or don't ¯\\\\\\_(ツ)\\_/¯` })
 				.then(x => {
 					this.np = x
 					this.npEditable = true
@@ -784,13 +785,13 @@ class QueueWrapper {
 		this.queue.stop()
 	}
 	/**
-	 * @param {Discord.PartialChannel} channel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
 	 */
 	async showRelated(channel) {
 		if (!this.queue.songs[0]) return // failsafe. how did this happen? no idea. just do nothing.
 		if (this.queue.songs[0].typeWhileGetRelated) await channel.sendTyping()
 		const content = await this.queue.songs[0].showRelated()
-		channel.send(content)
+		channel.send(typeof content === "string" ? content : await utils.contentify(channel, content))
 	}
 	/**
 	 * Permitted contexts:
@@ -844,11 +845,11 @@ class QueueWrapper {
 		}
 	}
 	/**
-	 * @param {Discord.PartialChannel} channel
+	 * @param {import("thunderstorm/src/structures/interfaces/TextBasedChannel")} channel
 	 */
 	async showInfo(channel) {
 		const content = await this.queue.songs[0].showInfo()
-		channel.send(content)
+		channel.send(typeof content === "string" ? content : await utils.contentify(channel, content))
 	}
 	/**
 	 * Permitted contexts:

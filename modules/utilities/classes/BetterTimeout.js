@@ -1,3 +1,5 @@
+// @ts-check
+
 class BetterTimeout {
 	constructor() {
 		this.callback = null

@@ -67,13 +67,15 @@ setImmediate(() => { // wait for next event loop since heatsync could still be l
 	sync.addTemporaryListener(client, "message", manageMessage)
 	if (!starting) manageReady()
 	else sync.addTemporaryListener(client, "ready", manageReady)
-	sync.addTemporaryListener(client, "interactionCreate",
+	sync.addTemporaryListener(client, "interaction",
 		/**
-		 * @param {Discord.InteractionMessage} interaction
+		 * @param {Discord.Interaction} interaction
 		 */
 		async (interaction) => {
-			await client._snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
-			InteractionMenu.handle(interaction)
+			if (interaction instanceof Discord.MessageComponentInteraction) {
+				await interaction.deferUpdate()
+				InteractionMenu.handle(interaction)
+			}
 		})
 	sync.addTemporaryListener(process, "unhandledRejection", reason => {
 		let shouldIgnore = false
@@ -97,7 +99,7 @@ setImmediate(() => { // wait for next event loop since heatsync could still be l
 			if (!event.d.voice_states) return
 			for (const state of event.d.voice_states) {
 				client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
-				const ns = new Discord.VoiceState(state, client)
+				const ns = new Discord.VoiceState(client, state)
 				common.voiceStateUpdate(ns)
 			}
 		} else if (event.t === "MESSAGE_UPDATE") {
@@ -163,7 +165,7 @@ async function manageMessage(msg, isEdit = false) {
 			const embed = new Discord.MessageEmbed()
 				.setDescription(msgTxt)
 				.setColor(0xdd2d2d)
-			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send(embed)
+			if (await utils.sql.hasPermission(msg.author, "eval")) msg.channel.send({ embeds: [embed] })
 			else msg.channel.send(`There was an error with the command ${cmdTxt} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`).catch(() => console.log("Error with sending alert that command failed. Probably a 403 resp code"))
 
 			// Report to #amanda-error-log
@@ -191,7 +193,7 @@ async function manageMessage(msg, isEdit = false) {
 				{ name: "Details", value: detailsString },
 				{ name: "Message content", value: `\`\`\`\n${msg.content.replace(/`/g, "ˋ")}\`\`\`` }
 			])
-			if (!config.is_dev_env) new Discord.PartialChannel({ id: "512869106089852949" }, client).send(embed)
+			if (!config.is_dev_env) new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] })
 		}
 	} else {
 		if (msg.content.startsWith(`<@${client.user.id}>`) || msg.content.startsWith(`<@!${client.user.id}>`)) {
@@ -277,7 +279,7 @@ async function manageReady() {
 				const channel = await utils.cacheManager.channels.get(row.channel_id, true, true)
 				if (channel) channel.send(`<@${row.mention_id}> Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`)
 				else {
-					new Discord.PartialUser({ id: row.mention_id }, client).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mention_id}`))
+					new Discord.PartialUser(client, { id: row.mention_id }).send(`Restarted! Uptime: ${utils.shortTime(process.uptime(), "sec")}`).catch(() => console.log(`Could not notify ${row.mention_id}`))
 				}
 			})
 			utils.orm.db.delete("restart_notify", { bot_id: client.user.id })

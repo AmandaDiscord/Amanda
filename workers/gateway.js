@@ -48,6 +48,7 @@ const presence = {}
 	})
 
 	Gateway.on("error", console.error)
+	Gateway.on("disconnected", console.log)
 
 	parentPort.on("message", async (message) => {
 		const { op, data, threadID } = message

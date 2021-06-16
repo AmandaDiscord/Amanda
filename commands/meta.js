@@ -16,6 +16,7 @@ const emojis = require("../emojis")
 const passthrough = require("../passthrough")
 const { client, constants, config, commands, sync, games, queues, periodicHistory, ipc } = passthrough
 
+/** @type {import("../modules/utilities")} */
 const utils = sync.require("../modules/utilities")
 
 let sendStatsTimeout = setTimeout(sendStatsTimeoutFunction, 1000 * 60 * 60 - (Date.now() % (1000 * 60 * 60)))
@@ -154,7 +155,7 @@ commands.assign([
 							inline: true
 						}
 					])
-				return msg.channel.send(embed)
+				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			} else if (suffix.toLowerCase() == "games") {
 				const gamesPlayed = periodicHistory.getSize("game_start")
 				embed.addFields([
@@ -216,7 +217,8 @@ commands.assign([
 							inline: true
 						}
 					])
-				nmsg.edit(await utils.contentify(msg.channel, embed))
+				const content = await utils.contentify(msg.channel, embed)
+				nmsg.edit(typeof content.content === "string" ? content : { content: null, ...content })
 			}
 			function bToMB(number) {
 				return `${((number / 1024) / 1024).toFixed(2)}MB`
@@ -236,7 +238,7 @@ commands.assign([
 			const gateway = await passthrough.workers.gateway.getStats()
 			const embed = new Discord.MessageEmbed().setAuthor(lang.meta.ping.returns.pong).addFields([{ name: lang.meta.ping.returns.heartbeat, value: gateway.latency.map((i, index) => `Shard ${gateway.shards[index]}: ${i}ms`).join("\n") }, { name: lang.meta.ping.returns.latency, value: `${utils.numberComma(nmsg.createdTimestamp - msg.createdTimestamp)}ms`, inline: true }]).setFooter(lang.meta.ping.returns.footer).setColor(constants.standard_embed_color)
 			const content = await utils.contentify(msg.channel, embed)
-			nmsg.edit(content)
+			nmsg.edit(typeof content.content === "string" ? content : { content: null, ...content })
 		}
 	},
 	{
@@ -340,8 +342,10 @@ commands.assign([
 			const res = await new Promise((r) => {
 				// @ts-ignore
 				simpleGit.status((err, status) => {
+					// @ts-ignore
 					simpleGit.log({ "--no-decorate": null }, (err2, log) => {
 						Promise.all(Array(limit).fill(undefined).map((_, i) => new Promise(resolve => {
+							// @ts-ignore
 							simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash], (err3, diff) => {
 								resolve(diff)
 							})
@@ -442,7 +446,7 @@ commands.assign([
 				const embed = new Discord.MessageEmbed()
 					.setImage(url)
 					.setColor(constants.standard_embed_color)
-				msg.channel.send(embed)
+				msg.channel.send({ embeds: [embed] })
 			} else msg.channel.send(url)
 		}
 	},
@@ -489,7 +493,7 @@ commands.assign([
 				.setImage(url)
 				.setColor(constants.standard_embed_color)
 			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "EMBED_LINKS"))) return msg.channel.send(url)
-			return msg.channel.send(embed)
+			return msg.channel.send({ embeds: [embed] })
 		}
 	},
 	{
@@ -631,7 +635,7 @@ commands.assign([
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "profile.png")
-			return msg.channel.send({ file: image })
+			return msg.channel.send({ files: [image] })
 		}
 	},
 	{
@@ -1045,7 +1049,7 @@ commands.assign([
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
 							.setFooter(lang.meta.help.returns.mobile)
-						const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "📱" }, style: "primary",
+						const menu = new InteractionMenu(msg.channel, [{ emoji: { id: null, name: "📱" }, style: "PRIMARY",
 							ignore: "total",
 							actionType: "js",
 							actionData: async (message) => {
@@ -1059,7 +1063,7 @@ commands.assign([
 										return `**${cmd.aliases[0]}**\n${desc}`
 									}).join("\n\n"))
 									.setColor(constants.standard_embed_color)
-								message.edit("", { embed: await utils.contentify(message.channel, mobileEmbed), buttons: [] })
+								message.edit(await utils.contentify(msg.channel, mobileEmbed))
 								menu.destroy(false)
 							}
 						}])
