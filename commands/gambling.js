@@ -100,16 +100,16 @@ commands.assign([
 			}
 			let result, winning
 			if (slots.every(s => s == "heart")) {
-				winning = bet * 20
+				winning = bet * (["all", "half"].includes(args[0]) ? 25 : 20)
 				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 2) {
-				winning = bet * 4
+				winning = bet * (["all", "half"].includes(args[0]) ? 6 : 4)
 				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 1) {
-				winning = Math.floor(bet * 1.25)
+				winning = Math.floor(bet * (["all", "half"].includes(args[0]) ? 1.5 : 1.25))
 				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": utils.numberComma(winning) })
 			} else if (slots.slice(1).every(s => s == slots[0])) {
-				winning = bet * 5
+				winning = bet * (["all", "half"].includes(args[0]) ? 7 : 5)
 				result = utils.replace(lang.gambling.slot.returns.triple, { "number": utils.numberComma(winning) })
 			} else {
 				winning = 0
@@ -198,8 +198,8 @@ commands.assign([
 				t: ["tails", "<:coinT:402219471693021196>"]
 			}
 			if (Math.random() < winChance / 100) {
-				const winnings = Math.floor(bet * 1.25)
-				const explanation = "(+25%)"
+				const winnings = Math.floor(bet * (["all", "half"].includes(args[0]) ? 1.5 : 1.25))
+				const explanation = `(+${["all", "half"].includes(args[0]) ? 50 : 25}%)`
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` }) +
@@ -455,14 +455,14 @@ commands.assign([
 			const choices = ["0.1", "0.2", "0.3", "0.5", "1.2", "1.5", "1.7", "2.4"]
 			const choice = utils.arrayRandom(choices)
 			let coords
-			if (choice == "0.1") coords = [-125, 185, 230]
-			else if (choice == "0.2") coords = [-50, 185, 200]
-			else if (choice == "0.3") coords = [-80, 210, 250]
-			else if (choice == "0.5") coords = [80, 230, 250]
-			else if (choice == "1.2") coords = [8, 253, 233]
-			else if (choice == "1.5") coords = [14, 208, 187]
-			else if (choice == "1.7") coords = [-18, 230, 187]
-			else if (choice == "2.4") coords = [50, 245, 200]
+			if (choice == choices[0]) coords = [-125, 185, 230]
+			else if (choice == choices[1]) coords = [-50, 185, 200]
+			else if (choice == choices[2]) coords = [-80, 210, 250]
+			else if (choice == choices[3]) coords = [80, 230, 250]
+			else if (choice == choices[4]) coords = [8, 253, 233]
+			else if (choice == choices[5]) coords = [14, 208, 187]
+			else if (choice == choices[6]) coords = [-18, 230, 187]
+			else if (choice == choices[7]) coords = [50, 245, 200]
 
 			const canvas = canv.clone()
 			const arrow = triangle.clone().resize(50, 50, Jimp.RESIZE_NEAREST_NEIGHBOR)
@@ -479,7 +479,7 @@ commands.assign([
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
-			await utils.coinsManager.award(msg.author.id, Math.round((amount * Number(choice)) - amount))
+			await utils.coinsManager.award(msg.author.id, Math.round((Number(choice) > 1.0 && ["all", "half"].includes(suffix)) ? amount * (Number(choice) + 0.2) : (amount * Number(choice)) - amount))
 			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), files: [image] })
 		}
 	}

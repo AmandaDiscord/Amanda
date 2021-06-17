@@ -56,8 +56,9 @@ class TriviaGame extends Game {
 	 * @param {{response_code: number, results: Array<TriviaResponse>}} data
 	 * @param {number} category
 	 * @param {Lang.Lang} lang
+	 * @param {boolean} defaultCategory
 	 */
-	constructor(channel, data, category, lang) {
+	constructor(channel, data, category, lang, defaultCategory) {
 		super(channel, "trivia")
 		this.data = data.results[0]
 		this.category = category
@@ -70,6 +71,7 @@ class TriviaGame extends Game {
 		 * @type {Map<string, number>}
 		 */
 		this.receivedAnswers = new Map()
+		this.defaultCategory = defaultCategory
 	}
 	async start() {
 		const correctAnswer = this.data.correct_answer.trim()
@@ -146,7 +148,7 @@ class TriviaGame extends Game {
 			result.userID = w[0]
 			const cooldownValue = await utils.coinsManager.updateCooldown(w[0], "trivia", cooldownInfo)
 			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax }, true)
-			result.winnings = Math.floor(coins * 0.8 ** (10 - cooldownValue))
+			result.winnings = Math.floor((coins + (this.defaultCategory ? 50 : 0)) * 0.8 ** (10 - cooldownValue))
 			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
 			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings + streakGains)
 			return result
@@ -243,7 +245,7 @@ async function startGame(channel, options) {
 	// Error check new game data
 	if (data.response_code != 0) return channel.send(options.lang.games.trivia.prompts.APIError)
 	// Set up new game
-	new TriviaGame(channel, data, category, options.lang).init()
+	new TriviaGame(channel, data, category, options.lang, !category).init()
 }
 setImmediate(() => sync.addTemporaryListener(client, "message", answerDetector))
 function answerDetector(msg) {
