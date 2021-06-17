@@ -28,8 +28,6 @@ class Model {
 	constructor(table, definition, primaryKey = [], options = {}) {
 		this.table = table
 		this.definition = definition
-		/** @type {Partial<D>} */
-		this.partial = definition
 		this.primaryKey = primaryKey || []
 		/** @type {{ useBuffer: boolean, bufferSize: number, bufferTimeout: number }} */
 		this.options = Object.assign({ useBuffer: false, bufferSize: 50, bufferTimeout: 5000 }, options)
@@ -64,7 +62,7 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"]} properties
+	 * @param {Partial<M[T]["definition"]>} properties
 	 * @param {{ useBuffer?: boolean }} [options]
 	 */
 	upsert(table, properties, options = {}) {
@@ -75,7 +73,7 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"]} properties
+	 * @param {Partial<M[T]["definition"]>} properties
 	 * @param {{ useBuffer?: boolean }} [options]
 	 */
 	insert(table, properties, options = {}) {
@@ -86,7 +84,7 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"]} properties
+	 * @param {Partial<M[T]["definition"]>} properties
 	 * @param {{ useBuffer?: boolean }} options
 	 * @param {"insert" | "upsert"} method
 	 */
@@ -119,8 +117,8 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"]} set
-	 * @param {M[T]["partial"]} [where]
+	 * @param {Partial<M[T]["definition"]>} set
+	 * @param {Partial<M[T]["definition"]>} [where]
 	 */
 	update(table, set, where = undefined) {
 		const options = {}
@@ -132,8 +130,8 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"] | undefined} [where]
-	 * @param {{ select?: Array<(keyof M[T]["partial"])>, limit?: number }} [options]
+	 * @param {Partial<M[T]["definition"]> | undefined} [where]
+	 * @param {{ select?: Array<(keyof M[T]["definition"])>, limit?: number }} [options]
 	 * @returns {Promise<Array<M[T]["definition"]>>}
 	 */
 	select(table, where = undefined, options = {}) {
@@ -144,8 +142,8 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"] | undefined} [where]
-	 * @param {{ select?: Array<(keyof M[T]["partial"])> }} [options]
+	 * @param {Partial<M[T]["definition"]> | undefined} [where]
+	 * @param {{ select?: Array<(keyof M[T]["definition"])> }} [options]
 	 * @returns {Promise<M[T]["definition"]>}
 	 */
 	get(table, where = undefined, options = {}) {
@@ -157,7 +155,7 @@ class Database {
 	/**
 	 * @template {keyof M} T
 	 * @param {T} table
-	 * @param {M[T]["partial"] | undefined} [where]
+	 * @param {Partial<M[T]["definition"]> | undefined} [where]
 	 */
 	delete(table, where = undefined) {
 		const res = this._buildStatement("delete", table, where)
@@ -168,8 +166,8 @@ class Database {
 	 * @template {keyof M} T
 	 * @param {"select" | "upsert" | "insert" | "update" | "delete"} method
 	 * @param {T} table
-	 * @param {M[T]["partial"] | undefined} [properties]
-	 * @param {{ select?: Array<(keyof M[T]["partial"]) | "*">, limit?: number, useBuffer?: boolean, where?: M[T]["partial"] }} [options]
+	 * @param {Partial<M[T]["definition"]> | undefined} [properties]
+	 * @param {{ select?: Array<(keyof Partial<M[T]["definition"]>) | "*">, limit?: number, useBuffer?: boolean, where?: Partial<M[T]["definition"]> }} [options]
 	 */
 	_buildStatement(method, table, properties = undefined, options = {}) {
 		options = Object.assign({ select: ["*"], limit: 0, useBuffer: false, where: {} }, options)

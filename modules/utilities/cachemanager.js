@@ -95,7 +95,7 @@ function processData(data) {
 		break
 	}
 	case "GUILD_MEMBER_DELETE": {
-		const pl = { guild_id: data.d.guild_id, id: data.d.user.id }
+		const pl = { id: data.d.user.id, guild_id: data.d.guild_id }
 		db.delete("members", pl)
 		db.delete("member_roles", pl)
 		db.delete("channel_overrides", pl)
