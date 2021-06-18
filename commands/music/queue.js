@@ -214,6 +214,9 @@ class Queue {
 	}
 	async _reportError() {
 		const lang = await this.getLang()
+		/**
+		 * @param {string | Discord.APIMessage | Discord.MessageOptions} contents
+		 */
 		const sendReport = (contents) => {
 			// Report to original channel
 			this.textChannel.send(contents)
@@ -262,13 +265,13 @@ class Queue {
 					+ `\n${song.error}`
 					)
 					.setColor(0xdd2d2d)
-				sendReport(embed)
+				sendReport({ embeds: [embed] })
 			} else {
 				const embed = new Discord.MessageEmbed()
 					.setTitle(lang.audio.music.prompts.errorOccured)
 					.setDescription(utils.replace(lang.audio.music.prompts.songErrorNotObject, { "song": song }))
 					.setColor(0xdd2d2d)
-				sendReport(embed)
+				sendReport({ embeds: [embed] })
 			}
 			if (this.errorChain >= 3) {
 				this.shouldDisplayErrors = false
