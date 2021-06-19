@@ -116,7 +116,7 @@ commands.assign([
 				utils.sql.all("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [msg.author.id, user.id]),
 				utils.sql.all("INSERT INTO couples (user1, user2) VALUES ($1, $2)", [msg.author.id, user.id])
 			])
-			const bank = await utils.sql.get("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [0])
+			const bank = await utils.sql.get("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [1])
 			if (!bank || !bank.id) throw new Error("USER_MARRIED_NO_BANK_CREATED_FUCK_FUCK_FUCK")
 			await utils.sql.all("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, msg.author.id, user.id])
 			return msg.channel.send(`${msg.author.username} is now married to ${user.tag}.`)
