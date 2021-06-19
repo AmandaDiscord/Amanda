@@ -131,7 +131,7 @@ class Database {
 	 * @template {keyof M} T
 	 * @param {T} table
 	 * @param {Partial<M[T]["definition"]> | undefined} [where]
-	 * @param {{ select?: Array<(keyof M[T]["definition"])>, limit?: number }} [options]
+	 * @param {{ select?: Array<(keyof M[T]["definition"])>, limit?: number, order?: keyof M[T]["definition"], orderDescending?: boolean }} [options]
 	 * @returns {Promise<Array<M[T]["definition"]>>}
 	 */
 	select(table, where = undefined, options = {}) {
@@ -143,7 +143,7 @@ class Database {
 	 * @template {keyof M} T
 	 * @param {T} table
 	 * @param {Partial<M[T]["definition"]> | undefined} [where]
-	 * @param {{ select?: Array<(keyof M[T]["definition"])> }} [options]
+	 * @param {{ select?: Array<(keyof M[T]["definition"])>, order?: keyof M[T]["definition"], arderDescending?: boolean }} [options]
 	 * @returns {Promise<M[T]["definition"]>}
 	 */
 	get(table, where = undefined, options = {}) {
@@ -167,7 +167,7 @@ class Database {
 	 * @param {"select" | "upsert" | "insert" | "update" | "delete"} method
 	 * @param {T} table
 	 * @param {Partial<M[T]["definition"]> | undefined} [properties]
-	 * @param {{ select?: Array<(keyof Partial<M[T]["definition"]>) | "*">, limit?: number, useBuffer?: boolean, where?: Partial<M[T]["definition"]> }} [options]
+	 * @param {{ select?: Array<(keyof Partial<M[T]["definition"]>) | "*">, limit?: number, useBuffer?: boolean, where?: Partial<M[T]["definition"]>, order?: keyof M[T]["definition"], orderDescending?: boolean }} [options]
 	 */
 	_buildStatement(method, table, properties = undefined, options = {}) {
 		options = Object.assign({ select: ["*"], limit: 0, useBuffer: false, where: {} }, options)
@@ -193,6 +193,9 @@ class Database {
 				statement += " WHERE "
 				statement += mapped.join(" AND ")
 			}
+
+			if (options.order !== undefined) statement += ` ORDER BY ${options.order}`
+			if (options.orderDescending) statement += " DESC"
 			if (options.limit !== undefined && options.limit !== 0) statement += ` LIMIT ${options.limit}`
 
 		} else if (method === "update") {
@@ -287,10 +290,12 @@ const num = 1
 
 const AccountPrefixes = new Model("account_prefixes", { user_id: str, prefix: str, status: num }, ["user_id", "prefix"])
 const BackgroundSync = new Model("background_sync", { machine_id: str, user_id: str, url: str }, ["machine_id", "user_id"], { useBuffer: true, bufferTimeout: 2000 })
+const BankAccess = new Model("bank_access", { id: str, user_id: str })
+const BankAccounts = new Model("bank_accounts", { id: str, amount: str, type: num }, ["id"])
 const Bans = new Model("bans", { user_id: str, temporary: num, expires: num }, ["user_id"])
 const ChannelOverrides = new Model("channel_overrides", { id: str, type: num, allow: str, deny: str, guild_id: str, channel_id: str }, ["channel_id", "id"], { useBuffer: true, bufferSize: 1000 })
 const Channels = new Model("channels", { id: str, type: num, guild_id: str, name: str, rtc_region: str }, ["id"], { useBuffer: true, bufferSize: 1000 })
-const Couples = new Model("couples", { user1: str, user2: str, balance: num, married_at: str })
+const Couples = new Model("couples", { user1: str, user2: str, married_at: str, balance: num })
 const CSRFTokens = new Model("csrf_tokens", { token: str, login_token: str, expires: num }, ["token"])
 const DailyCooldown = new Model("daily_cooldown", { user_id: str, last_claim: num }, ["user_id"])
 const Guilds = new Model("guilds", { id: str, name: str, icon: str, member_count: num, owner_id: str, added_by: str }, ["id"], { useBuffer: true, bufferSize: 1000 })
@@ -299,7 +304,7 @@ const LavalinkNodeRegions = new Model("lavalink_node_regions", { host: str, regi
 const LavalinkNodes = new Model("lavalink_nodes", { host: str, port: num, invidious_origin: str, enabled: num, search_with_invidious: num, name: str }, ["host"])
 const MemberRoles = new Model("member_roles", { id: str, guild_id: str, role_id: str }, ["guild_id", "id", "role_id"], { useBuffer: true })
 const Members = new Model("members", { id: str, guild_id: str, nick: str, joined_at: str }, ["id", "guild_id"])
-const Money = new Model("money", { user_id: str, coins: num, won_coins: num, lost_coins: num, given_coins: num }, ["user_id"])
+const Money = new Model("money", { user_id: str, coins: num }, ["user_id"])
 const MoneyCooldown = new Model("money_cooldown", { user_id: str, command: str, date: num, value: num })
 const PendingRelations = new Model("pending_relations", { user1: str, user2: str })
 const PeriodicHistory = new Model("periodic_history", { field: str, timestamp: num })
@@ -316,6 +321,7 @@ const StatusMessages = new Model("status_messages", { id: num, dates: str, users
 const StatusRanges = new Model("status_ranges", { label: str, start_month: num, start_day: num, end_month: num, end_day: num }, ["label"])
 const StatusUsers = new Model("status_users", { label: str, user_id: str }, ["label", "user_id"])
 const Timeouts = new Model("timeouts", { user_id: str, expires: num, amount: num }, ["user_id"])
+const Transactions = new Model("transactions", { id: str, user_id: str, amount: str, mode: num, description: str, target: str, date: str }, ["id"])
 const UserPermissions = new Model("user_permissions", { user_id: str, eval: num, owner: num }, ["user_id"])
 const Users = new Model("users", { id: str, tag: str, avatar: str, bot: num, added_by: str }, ["id"], { useBuffer: true })
 const VoiceStates = new Model("voice_states", { guild_id: str, channel_id: str, user_id: str }, ["user_id"], { useBuffer: true })
@@ -325,6 +331,8 @@ const WebhookAliases = new Model("webhook_aliases", { webhook_id: str, webhook_u
 const db = new Database({
 	account_prefixes: AccountPrefixes,
 	background_sync: BackgroundSync,
+	bank_access: BankAccess,
+	bank_accounts: BankAccounts,
 	bans: Bans,
 	channel_overrides: ChannelOverrides,
 	channels: Channels,
@@ -354,6 +362,7 @@ const db = new Database({
 	status_ranges: StatusRanges,
 	status_users: StatusUsers,
 	timeouts: Timeouts,
+	transactions: Transactions,
 	user_permissions: UserPermissions,
 	users: Users,
 	voice_states: VoiceStates,

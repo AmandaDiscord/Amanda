@@ -79,9 +79,10 @@ const utils = {
 	/** @type {import("../../typings").Merge<orm, {}>} */
 	orm: orm,
 	numberComma: text.numberComma,
-	parseNumber: text.parseNumber,
+	parseBigInt: text.parseBigInt,
 	progressBar: text.progressBar,
 	stringify: text.stringify,
+	numberPosition: text.numberPosition,
 	getSixTime: time.getSixTime,
 	parseDuration: time.parseDuration,
 	shortTime: time.shortTime,

@@ -1,7 +1,7 @@
 // @ts-check
 
 const passthrough = require("../../passthrough")
-const { sync } = passthrough
+const { sync, client } = passthrough
 
 /**
  * @type {import("./orm")}
@@ -13,72 +13,68 @@ const startingCoins = 5000
 
 /**
  * @param {string} userID
- * @param {number} [extra=0]
- */
-async function create(userID, extra = 0) {
-	await db.upsert("money", { user_id: userID, coins: startingCoins + extra })
-	return startingCoins + extra
-}
-
-/**
- * @param {string} userID
- * @returns {Promise<number>}
+ * @returns {Promise<bigint>}
  */
 async function get(userID) {
-	const row = await db.get("money", { user_id: userID })
-	if (row) return Number(row.coins)
-	else return create(userID)
+	const row = await getPersonalRow(userID)
+	return BigInt(row.amount)
 }
 
 /**
  * @param {string} userID
+ * @returns {Promise<{ id: string, amount: string }>}
  */
-async function getRow(userID) {
-	const row = await db.get("money", { user_id: userID })
-	if (row) return { user_id: row.user_id, coins: Number(row.coins), won_coins: Number(row.coins), lost_coins: Number(row.lost_coins), given_coins: Number(row.given_coins) }
+async function getPersonalRow(userID) {
+	const row = await db.raw("SELECT bank_accounts.id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_access.user_id = $1 AND bank_accounts.type = 0", [userID])
+	if (row && Array.isArray(row) && row[0]) return row[0]
 	else {
-		await create(userID)
-		return { user_id: userID, coins: startingCoins, won_coins: 0, lost_coins: 0, given_coins: 0 }
+		const newRow = await db.raw("INSERT INTO bank_accounts (amount) VALUES ($1) RETURNING id", [startingCoins]) // default type is 0 which is personal acc. No need to specify
+		if (!newRow || Array.isArray(newRow) && !newRow[0]) throw new Error("NO_CREATE_BANK_ACCOUNT_ID")
+		const accID = newRow[0].id
+		await db.insert("bank_access", { id: accID, user_id: userID })
+		return { id: accID, amount: String(startingCoins) }
 	}
 }
 
 /**
  * @param {string} userID
- * @param {number} value
  */
-async function set(userID, value) {
-	const row = await db.get("money", { user_id: userID })
-	if (row) await db.update("money", { coins: value }, { user_id: userID })
-	else db.insert("money", { user_id: userID, coins: value })
+async function getCoupleRow(userID) {
+	const row = await db.raw("SELECT bank_accounts.id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_access.user_id = $1 AND bank_accounts.type = 1", [userID])
+	if (!row || Array.isArray(row) && !row[0]) return null
+	/** @type {{ id: string, amount: string }} */
+	const bank = row[0]
+	const inCoupleBank = await db.select("bank_access", { id: bank.id }, { select: ["user_id"] }).then(rs => rs.map(r => r.user_id))
+	return { id: bank.id, amount: bank.amount, users: inCoupleBank }
 }
 
 /**
  * @param {string} userID
- * @param {number} value
+ * @param {bigint} value
+ * @param {string} reason
  */
-async function award(userID, value) {
-	const row = await getRow(userID)
-	if (row) {
-		const earned = value > 0
-		const coinfield = earned ? "won_coins" : "lost_coins"
-		await db.raw(`UPDATE money SET coins = $1, ${coinfield} = ${coinfield} + $2 WHERE user_id = $3`, [row.coins + value, earned ? value : (value * -1), userID])
-	} else {
-		await create(userID, value)
-	}
+async function award(userID, value, reason) {
+	const row = await getPersonalRow(userID)
+	await Promise.all([
+		db.update("bank_accounts", { amount: (BigInt(row.amount) + value).toString() }, { id: row.id }),
+		db.insert("transactions", { user_id: client.user.id, amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(), mode: value < BigInt(0) ? 1 : 0, description: reason, target: row.id })
+	])
 }
 
 /**
- * @param {string} user1
- * @param {string} user2
- * @param {number} amount
+ * @param {string} from
+ * @param {string} to
+ * @param {bigint} amount
  */
-async function transact(user1, user2, amount) {
-	const u1row = await getRow(user1)
-	const u2coins = await get(user2)
+async function transact(from, to, amount) {
+	const fromRow = await getPersonalRow(from)
+	const toRow = await getPersonalRow(to)
 
 	await Promise.all([
-		db.update("money", { coins: u2coins + amount }, { user_id: user2 }),
-		db.update("money", { coins: u1row.coins - amount, given_coins: u1row.given_coins + amount }, { user_id: user1 })
+		db.update("bank_accounts", { amount: (BigInt(toRow.amount) + amount).toString() }, { id: toRow.id }),
+		db.update("bank_accounts", { amount: (BigInt(fromRow.amount) - amount).toString() }, { id: fromRow.id }),
+		db.insert("transactions", { user_id: from, amount: amount.toString(), mode: 0, description: `transfer to ${to}`, target: toRow.id }), // Mode 0 is send. 1 is receive.
+		db.insert("transactions", { user_id: to, amount: amount.toString(), mode: 1, description: `transfer from ${from}`, target: fromRow.id })
 	])
 }
 
@@ -100,8 +96,8 @@ async function updateCooldown(userID, command, info) {
 }
 
 module.exports.get = get
-module.exports.getRow = getRow
-module.exports.set = set
+module.exports.getPersonalRow = getPersonalRow
+module.exports.getCoupleRow = getCoupleRow
 module.exports.award = award
 module.exports.transact = transact
 module.exports.updateCooldown = updateCooldown

@@ -173,7 +173,7 @@ const subcommandsMap = new Map([
 			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			let amount
 			if (args[1]) {
-				amount = Math.floor(utils.parseNumber(args[1]))
+				amount = Math.floor(Number(utils.parseBigInt(args[1])))
 				if (isNaN(amount)) return msg.channel.send(lang.audio.music.prompts.invalidSkips)
 				if (amount < 1) return msg.channel.send(lang.audio.music.prompts.invalidSkipsAmount)
 				if (queue.songs.length < amount) return msg.channel.send(lang.audio.music.prompts.tooManySkips)

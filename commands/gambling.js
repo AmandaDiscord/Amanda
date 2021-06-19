@@ -86,36 +86,33 @@ commands.assign([
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
-				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, { "username": msg.author.username }))
-				if (args[0] === "all") {
-					bet = money
-				} else {
-					bet = Math.floor(money / 2)
-				}
+				if (money <= BigInt(0)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, { "username": msg.author.username }))
+				if (args[0] === "all") bet = money
+				else bet = money / BigInt(2)
 			} else {
-				bet = Math.floor(utils.parseNumber(args[0]))
-				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.invalidBet, { "username": msg.author.username }))
-				if (bet < 2) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.betSmall, { "username": msg.author.username }))
+				bet = utils.parseBigInt(args[0])
+				if (!bet) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.invalidBet, { "username": msg.author.username }))
+				if (bet < BigInt(2)) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.betSmall, { "username": msg.author.username }))
 				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.slot.prompts.moneyInsufficient, { "username": msg.author.username }))
 			}
 			let result, winning
 			if (slots.every(s => s == "heart")) {
-				winning = bet * (["all", "half"].includes(args[0]) ? 25 : 20)
+				winning = bet * (["all", "half"].includes(args[0]) ? BigInt(25) : BigInt(20))
 				result = utils.replace(lang.gambling.slot.returns.heart3, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 2) {
-				winning = bet * (["all", "half"].includes(args[0]) ? 6 : 4)
+				winning = bet * (["all", "half"].includes(args[0]) ? BigInt(6) : BigInt(4))
 				result = utils.replace(lang.gambling.slot.returns.heart2, { "number": utils.numberComma(winning) })
 			} else if (slots.filter(s => s == "heart").length == 1) {
-				winning = Math.floor(bet * (["all", "half"].includes(args[0]) ? 1.5 : 1.25))
+				winning = bet + (["all", "half"].includes(args[0]) ? bet / BigInt(2) : bet / BigInt(3))
 				result = utils.replace(lang.gambling.slot.returns.heart1, { "number": utils.numberComma(winning) })
 			} else if (slots.slice(1).every(s => s == slots[0])) {
-				winning = bet * (["all", "half"].includes(args[0]) ? 7 : 5)
+				winning = bet * (["all", "half"].includes(args[0]) ? BigInt(7) : BigInt(5))
 				result = utils.replace(lang.gambling.slot.returns.triple, { "number": utils.numberComma(winning) })
 			} else {
-				winning = 0
+				winning = BigInt(0)
 				result = utils.replace(lang.gambling.slot.returns.lost, { "number": utils.numberComma(bet) })
 			}
-			utils.coinsManager.award(msg.author.id, winning - bet)
+			utils.coinsManager.award(msg.author.id, winning - bet, "NEKO Casino slot machine")
 			buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			image = new Discord.MessageAttachment(buffer, "slot.png")
 			return msg.channel.send({ content: result, files: [image] })
@@ -150,15 +147,15 @@ commands.assign([
 			}
 			let bet
 			if (args[0] == "all" || args[0] == "half") {
-				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, { "username": msg.author.username }))
+				if (money <= BigInt(0)) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, { "username": msg.author.username }))
 				if (args[0] == "all") {
 					bet = money
 				} else {
-					bet = Math.floor(money / 2)
+					bet = money / BigInt(2)
 				}
 			} else {
-				bet = Math.floor(utils.parseNumber(args[0]))
-				if (isNaN(bet)) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBet, { "username": msg.author.username }))
+				bet = utils.parseBigInt(args[0])
+				if (!bet) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.invalidBet, { "username": msg.author.username }))
 				if (bet < 1) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.betSmall, { "username": msg.author.username }))
 				if (bet > money) return msg.channel.send(utils.replace(lang.gambling.betflip.prompts.moneyInsufficient, { "username": msg.author.username }))
 			}
@@ -198,14 +195,14 @@ commands.assign([
 				t: ["tails", "<:coinT:402219471693021196>"]
 			}
 			if (Math.random() < winChance / 100) {
-				const winnings = Math.floor(bet * (["all", "half"].includes(args[0]) ? 1.5 : 1.25))
-				const explanation = `(+${["all", "half"].includes(args[0]) ? 50 : 25}%)`
+				const winnings = bet + (["all", "half"].includes(args[0]) ? bet / BigInt(2) : bet / BigInt(3))
+				const explanation = `(+${["all", "half"].includes(args[0]) ? 50 : 33}%)`
 				msg.channel.send(
 					(!selfChosenSide ? "" : `${lang.gambling.betflip.returns.autoChoose} ${strings[args[1]][0]}\n`) +
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[args[1]][1]}`, "string2": `${strings[args[1]][0]}` }) +
 					`.\n${utils.replace(lang.gambling.betflip.returns.win, { "number": utils.numberComma(winnings), "explanation": explanation })}`
 				)
-				utils.coinsManager.award(msg.author.id, winnings)
+				utils.coinsManager.award(msg.author.id, winnings, "NEKO Casino coin flip")
 			} else {
 				const pick = args[1] == "h" ? "t" : "h"
 				msg.channel.send(
@@ -213,61 +210,193 @@ commands.assign([
 					utils.replace(lang.gambling.betflip.returns.guess, { "string1": `${strings[args[1]][0]}.\n${strings[pick][1]}`, "string2": `${strings[pick][0]}` }) +
 					`.\n${utils.replace(lang.gambling.betflip.returns.lost, { "number": utils.numberComma(bet) })}`
 				)
-				return utils.coinsManager.award(msg.author.id, -bet)
+				return utils.coinsManager.award(msg.author.id, -bet, "NEKO Casino coin flip")
 			}
 		}
 	},
 	{
-		usage: "[user]",
+		usage: "[user] [couple]",
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
 		examples: ["coins PapiOphidian"],
 		async process(msg, suffix, lang) {
-			let user, member
+			let user, member, showCouple = false
+			if (suffix.match(/couple$/)) {
+				showCouple = true
+				suffix = suffix.replace(/couple$/, "")
+			}
 			if (msg.channel.type == "text") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
 				if (member) user = member.user
 			} else user = await utils.cacheManager.users.find(msg, suffix, true)
 			if (!user) return msg.channel.send(utils.replace(lang.gambling.coins.prompts.invalidUser, { "username": msg.author.username }))
-			const money = await utils.coinsManager.getRow(user.id)
+			const money = await utils.coinsManager.getPersonalRow(user.id)
+			const couple = await utils.coinsManager.getCoupleRow(user.id)
 
 			if (!(await utils.cacheManager.channels.clientHasPermission({ id: msg.channel.id, guild_id: msg.guild ? msg.guild.id : undefined }, "ATTACH_FILES"))) {
 				const embed = new Discord.MessageEmbed()
 					.setAuthor(utils.replace(lang.gambling.coins.returns.coins, { "display": member ? `${user.tag}${member.nickname ? `(${member.nickname})` : ""}` : user.tag }))
-					.setDescription(`${utils.numberComma(money.coins)} ${emojis.discoin}`)
-					.addFields([
-						{
-							name: "Lifetime received amandollars",
-							value: utils.numberComma(money.won_coins)
-						},
-						{
-							name: "Lifetime lost amandollars",
-							value: utils.numberComma(money.lost_coins)
-						},
-						{
-							name: "Lifetime given amandollars",
-							value: utils.numberComma(money.given_coins)
-						}
-					])
+					.setDescription(`${utils.numberComma(money.amount)} ${emojis.discoin}`)
 					.setColor(constants.money_embed_color)
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
 			}
 
 			await msg.channel.sendTyping()
 
-			const [font, font2, canvas] = await Promise.all([
-				utils.jimpStores.fonts.get("unispace-36"),
-				utils.jimpStores.fonts.get("unispace-20"),
-				utils.jimpStores.images.get("money")
+			const [fonts, images, avatar] = await Promise.all([
+				utils.jimpStores.fonts.getAll(["arial-16", "arial-24", "bahnschrift-22", "bahnschrift-22-red", "bahnschrift-22-green"]),
+				utils.jimpStores.images.getAll(["bank", "card1", "card2", "card-overlap-mask", "circle-mask", "circle-overlap-mask", "add-circle", "neko"]),
+				utils.getAvatarJimp(user.id)
 			])
 
-			canvas.print(font, 50, 233, user.id.replace(/\B(?=(\d{4})+(?!\d))/g, " "))
-			canvas.print(font2, 50, 323, user.tag)
-			canvas.print(font2, 50, 360, `${utils.numberComma(money.coins)} amandollars`)
+			const font = fonts.get("arial-16")
+			const font2 = fonts.get("bahnschrift-22")
+			const font3 = fonts.get("arial-24")
+			const redsus = fonts.get("bahnschrift-22-red")
+			const greensus = fonts.get("bahnschrift-22-green")
 
-			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
-			const image = new Discord.MessageAttachment(buffer, "profile.png")
+			const canvas = images.get("bank")
+			const card1 = images.get("card1")
+			const card2 = images.get("card2")
+			const overlap = images.get("card-overlap-mask")
+			const circleMask = images.get("circle-mask")
+			const addCircle = images.get("add-circle")
+			const circleOverlap = images.get("circle-overlap-mask")
+			const neko = images.get("neko")
+
+			canvas.print(font3, 40, 70, { text: user.tag, alignmentX: Jimp.HORIZONTAL_ALIGN_CENTER, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 400, 50)
+
+			const avatarSize = 30
+			const avatarStartX = 21
+			const avatarStartY = 138
+			const cardSizes = [400, 225]
+			const cardOffset = 95
+
+			avatar.resize(avatarSize, avatarSize)
+			circleMask.resize(avatarSize, avatarSize)
+			circleOverlap.resize(avatarSize, avatarSize)
+			addCircle.resize(avatarSize, avatarSize)
+			addCircle.mask(circleOverlap, 0, 0)
+			avatar.mask(circleMask, 0, 0)
+
+			/**
+			 * @param {boolean} personal
+			 */
+			const makefakeCardEnding = (personal) => `**** ${(!personal && !!couple ? couple.users.slice(0, 2) : [user.id]).reduce((acc, cur) => acc + BigInt(cur), BigInt(0)).toString().slice(-4)}`
+			const fakePersonal = makefakeCardEnding(true)
+			const fakeCouple = makefakeCardEnding(false)
+
+			/**
+			 * @param {Jimp} card
+			 * @param {boolean} [personal]
+			 * @param {number} [page]
+			 */
+			async function buildCard(card, personal = true, page = 1) {
+				let mask = false
+				if ((personal && page === 2) || (!personal && page === 1)) {
+					mask = true
+					card.mask(overlap, 0, 0)
+				}
+				card.print(font, 25, 25, personal ? "Private card" : "Family card")
+				card.print(font2, 170, 5, { text: utils.numberComma(personal ? money.amount : couple.amount), alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 150, 50)
+				card.print(font, 25, 45, personal ? fakePersonal : fakeCouple)
+
+				if (!mask) {
+					let avatars
+					if (!personal) avatars = await Promise.all(couple.users.map(u => utils.getAvatarJimp(u))).then(pfps => pfps.map(a => a.resize(avatarSize, avatarSize).mask(circleMask, 0, 0)))
+					else avatars = [avatar]
+					const offset = 24
+
+					card.composite(avatars[0], avatarStartX, avatarStartY)
+					avatars.slice(1).map((pfp, index) => card.composite(pfp.mask(circleOverlap, 0, 0), avatarStartX + ((index + 1) * offset), avatarStartY))
+					card.composite(addCircle, avatarStartX + (avatars.length * offset), avatarStartY)
+					card.composite(neko, 227, 140)
+				}
+
+				card.resize(cardSizes[0], cardSizes[1])
+
+				return card
+			}
+
+			const datemap = {
+				0: "January",
+				1: "February",
+				2: "March",
+				3: "April",
+				4: "May",
+				5: "June",
+				6: "July",
+				7: "August",
+				8: "September",
+				9: "October",
+				10: "November",
+				11: "December"
+			}
+
+			const transactionOffset = 70
+
+			/**
+			 * @param {Jimp} page
+			 * @param {string} id
+			 * @param {string} fakeID
+			 */
+			async function printTransactions(page, id, fakeID) {
+				const transactions = await utils.orm.db.select("transactions", { target: id }, { order: "date", orderDescending: true, limit: 7 })
+
+				transactions.forEach((transaction, index) => {
+					const indexoffset = 570 + (index * transactionOffset)
+					page.print(font2, 30, indexoffset, transaction.description)
+					page.print(transaction.mode === 0 ? greensus : redsus, 360, indexoffset - 10, { text: `${transaction.mode === 0 ? "+" : "-"}${utils.numberComma(transaction.amount)}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
+					page.print(font, 30, indexoffset + 30, fakeID)
+					const date = new Date(transaction.date)
+					page.print(font, 360, indexoffset + 20, { text: `${utils.numberPosition(date.getDay())} ${datemap[date.getMonth()]}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
+				})
+			}
+
+			async function buildPage1() {
+				const dupe = canvas.clone()
+				const c2dupe = card2.clone()
+				const c1dupe = card1.clone()
+
+				const promises = []
+				promises.push(buildCard(c1dupe, true, 1))
+				if (couple) promises.push(buildCard(c2dupe, false, 1))
+				const cards = await Promise.all(promises)
+
+				let offset = 0
+
+				if (couple) {
+					offset = cardOffset
+					dupe.composite(cards[1], 42, 150)
+				}
+
+				dupe.composite(cards[0], 42, 150 + offset)
+
+				dupe.print(font3, 170, 525, "Transactions:")
+				await printTransactions(dupe, money.id, fakePersonal)
+
+				return dupe
+			}
+
+			async function buildPage2() {
+				const dupe = canvas.clone()
+				const c2dupe = card2.clone()
+				const c1dupe = card1.clone()
+
+				const promises = [buildCard(c2dupe, false, 2), buildCard(c1dupe, true, 2)]
+				const cards = await Promise.all(promises)
+
+				dupe.composite(cards[1], 42, 150)
+				dupe.composite(cards[0], 42, 150 + cardOffset)
+				dupe.print(font3, 170, 525, "Transactions:")
+				await printTransactions(dupe, couple.id, fakeCouple)
+
+				return dupe
+			}
+
+			const buffer = await (couple && showCouple ? buildPage2() : buildPage1()).then(c => c.getBufferAsync(Jimp.MIME_PNG))
+			const image = new Discord.MessageAttachment(buffer, "money.png")
 			return msg.channel.send({ files: [image] })
 		}
 	},
@@ -285,13 +414,13 @@ commands.assign([
 			])
 			if (!row || Number(row.last_claim) + dailyCooldownTime < Date.now()) {
 				let amount
-				if (donor) amount = Math.floor(Math.random() * (750 - 500) + 500) + 1
-				else amount = Math.floor(Math.random() * (500 - 100) + 100) + 1
+				if (donor) amount = BigInt(Math.floor(Math.random() * (750 - 500) + 500) + 1)
+				else amount = BigInt(Math.floor(Math.random() * (500 - 100) + 100) + 1)
 				const embed = new Discord.MessageEmbed()
-					.setDescription(utils.replace(lang.gambling.daily.returns.claimed, { "username": msg.author.username, "number": amount }))
+					.setDescription(utils.replace(lang.gambling.daily.returns.claimed, { "username": msg.author.username, "number": amount.toString() }))
 					.setColor(constants.money_embed_color)
 				msg.channel.send(await utils.contentify(msg.channel, embed))
-				utils.coinsManager.award(msg.author.id, amount)
+				utils.coinsManager.award(msg.author.id, amount, "NEKOIRS TREAS 310 TAX REF")
 				utils.orm.db.upsert("daily_cooldown", { user_id: msg.author.id, last_claim: Date.now() })
 			} else {
 				const timeRemaining = utils.shortTime(Number(row.last_claim) - Date.now() + dailyCooldownTime, "ms")
@@ -305,7 +434,7 @@ commands.assign([
 		aliases: ["leaderboard", "lb"],
 		category: "gambling",
 		examples: ["lb 2"],
-		async process(msg, suffix, lang) {
+		async process(msg, suffix, lang, prefixes) {
 			const maxPages = 20
 			const itemsPerPage = 10
 
@@ -336,30 +465,30 @@ commands.assign([
 			let availableRowCount = null
 			const offset = (pageNumber - 1) * itemsPerPage
 			if (isLocal) {
-				rows = await utils.sql.all(`SELECT user_id, coins FROM money INNER JOIN members ON members.id = money.user_id WHERE members.guild_id = $1 ORDER BY COINS DESC LIMIT ${maxPages * itemsPerPage}`, msg.guild.id)
+				rows = await utils.sql.all(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id INNER JOIN members ON bank_access.id = members.id WHERE members.guild_id = $1 AND bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${maxPages * itemsPerPage}`, msg.guild.id)
 				availableRowCount = rows.length
 				rows = rows.slice(itemsPerPage * (pageNumber - 1), itemsPerPage * pageNumber)
 			} else {
 				// using global:
 				// request exact page from database and do no filtering
-				rows = await utils.sql.all(`SELECT user_id, coins FROM money ORDER BY coins DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
-				availableRowCount = (await utils.sql.get("SELECT count(*) AS count FROM money")).count
+				rows = await utils.sql.all(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
+				availableRowCount = (await utils.sql.get("SELECT COUNT(*) AS count FROM bank_accounts WHERE type = 0")).count
 			}
 
 			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
 			const title = isLocal ? "Local Leaderboard" : "Leaderboard"
-			const footerHelp = `&leaderboard ${lang.gambling.leaderboard.help.usage}`
+			const footerHelp = `${prefixes.main}leaderboard ${lang.gambling.leaderboard.help.usage}`
 
 			if (rows.length) {
 				// Load usernames
-				const displayRows = await Promise.all(rows.map(async ({ user_id, coins }, index) => {
+				const displayRows = await Promise.all(rows.map(async ({ user_id, amount }, index) => {
 					const [tag, isBot] = await utils.cacheManager.users.get(user_id, true, true)
 						// @ts-ignore
 						.then(user => [user.tag, user.bot])
 						.catch(() => [user_id, false]) // fall back to userID if user no longer exists
 					const botTag = isBot ? emojis.bot : ""
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(Number(coins))} ${emojis.discoin}`
+					return `${ranking}. ${tag} ${botTag} :: ${utils.numberComma(amount)} ${emojis.discoin}`
 				}))
 
 				// Display results
@@ -394,15 +523,15 @@ commands.assign([
 			])
 			let gift
 			if (args[0] == "all" || args[0] == "half") {
-				if (authorCoins == 0) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
+				if (authorCoins <= BigInt(0)) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
 				if (args[0] === "all") {
 					gift = authorCoins
 				} else {
-					gift = Math.floor(authorCoins / 2)
+					gift = authorCoins / BigInt(2)
 				}
 			} else {
-				gift = Math.floor(utils.parseNumber(args[0]))
-				if (isNaN(gift)) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidGift, { "username": msg.author.username }))
+				gift = utils.parseBigInt(args[0])
+				if (!gift) return msg.channel.send(utils.replace(lang.gambling.give.prompts.invalidGift, { "username": msg.author.username }))
 				if (gift < 1) return msg.channel.send(utils.replace(lang.gambling.give.prompts.giftSmall, { "username": msg.author.username }))
 				if (gift > authorCoins) return msg.channel.send(utils.replace(lang.gambling.give.prompts.moneyInsufficient, { "username": msg.author.username }))
 			}
@@ -439,20 +568,20 @@ commands.assign([
 			if (!suffix) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmountWheel, { "username": msg.author.username }))
 			let amount
 			if (suffix == "all" || suffix == "half") {
-				if (money == 0) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, { "username": msg.author.username }))
+				if (money === BigInt(0)) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, { "username": msg.author.username }))
 				if (suffix == "all") {
 					amount = money
 				} else {
-					amount = Math.floor(money / 2)
+					amount = money / BigInt(2)
 				}
 			} else {
-				amount = Math.floor(utils.parseNumber(suffix))
-				if (isNaN(amount)) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmount, { "username": msg.author.username }))
+				amount = utils.parseBigInt(suffix)
+				if (!amount) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.invalidAmount, { "username": msg.author.username }))
 				if (amount < 2) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.betSmall, { "username": msg.author.username }))
 				if (amount > money) return msg.channel.send(utils.replace(lang.gambling.wheel.prompts.moneyInsufficient, { "username": msg.author.username }))
 			}
 
-			const choices = ["0.1", "0.2", "0.3", "0.5", "1.2", "1.5", "1.7", "2.4"]
+			const choices = ["0", "0", "0", "0", "2", "0", "0", "5"]
 			const choice = utils.arrayRandom(choices)
 			let coords
 			if (choice == choices[0]) coords = [-125, 185, 230]
@@ -479,8 +608,9 @@ commands.assign([
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
-			await utils.coinsManager.award(msg.author.id, Math.round((Number(choice) > 1.0 && ["all", "half"].includes(suffix)) ? amount * (Number(choice) + 0.2) : (amount * Number(choice)) - amount))
-			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(Math.round(amount * Number(choice))) }), files: [image] })
+			const award = (Number(choice) > 1.0 && ["all", "half"].includes(suffix)) ? amount * (BigInt(choice) + BigInt(2)) : (amount * BigInt(choice)) - amount
+			await utils.coinsManager.award(msg.author.id, award, `Wheel Of ${award === BigInt(0) ? "Misf" : "F"}ortune`)
+			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(award) }), files: [image] })
 		}
 	}
 ])

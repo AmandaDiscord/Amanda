@@ -66,8 +66,8 @@ function parseDuration(input) {
 		if (!test[1]) return null
 		/** @type [string, string] */
 		const [duration, identifier] = [test[1], test[2]]
-		const num = text.parseNumber(duration)
-		if (isNaN(num)) return null
+		const num = Number(text.parseBigInt(duration))
+		if (!num) return null
 		let multiply = 1
 		if (identifier) {
 			if (identifier.startsWith("w")) multiply = 1000 * 60 * 60 * 24 * 7

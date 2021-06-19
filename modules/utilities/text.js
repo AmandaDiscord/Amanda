@@ -56,25 +56,44 @@ function progressBar(length, value, max, text) {
 }
 
 /**
- * Converts a number to a string then adds commas where they should go. https://stackoverflow.com/a/2901298
- * @param {number} number
+ * Converts anything resolvable to a BigInt to a string with commas where they should go
+ * @param {number | string | bigint} number
  */
 function numberComma(number) {
-	return String(number).replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+	return BigInt(number).toLocaleString()
 }
 
 /**
- * Converts a string to a number. The string may include commas.
+ * Converts a string to a bigint. The string may include commas.
  * @param {string} string
  */
-function parseNumber(string) {
+function parseBigInt(string) {
 	const numstr = string.replace(/,/g, "")
-	const num = Number(numstr)
-	if (isNaN(num)) return NaN
-	else return num
+	if (!/\d+/.exec(numstr)) return null
+	return BigInt(numstr)
+}
+
+/**
+ * @param {number} pos
+ */
+function numberPosition(pos) {
+	const str = pos.toString()
+	let value = `${pos}`
+	if (str.endsWith("1")) {
+		if (str.slice(str.length - 2, str.length) == "11") value += "th"
+		else value += "st"
+	} else if (str.endsWith("2")) {
+		if (str.slice(str.length - 2, str.length) == "12") value += "th"
+		else value += "nd"
+	} else if (str.endsWith("3")) {
+		if (str.slice(str.length - 2, str.length) == "13") value += "th"
+		else value += "rd"
+	} else if (["0", "4", "5", "6", "7", "8", "9"].find(e => str.endsWith(e))) value += "th"
+	return value
 }
 
 module.exports.progressBar = progressBar
 module.exports.stringify = stringify
 module.exports.numberComma = numberComma
-module.exports.parseNumber = parseNumber
+module.exports.parseBigInt = parseBigInt
+module.exports.numberPosition = numberPosition

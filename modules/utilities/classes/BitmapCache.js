@@ -41,8 +41,9 @@ class BitmapCache {
 	}
 
 	/**
-	 * @param {Array<string>} names
-	 * @returns {Promise<Map<string, T>>}
+	 * @param {N} names
+	 * @returns {Promise<Map<N extends Array<infer P> ? P : N, T>>}
+	 * @template {Array<any>} N
 	 */
 	async getAll(names) {
 		const result = new Map()

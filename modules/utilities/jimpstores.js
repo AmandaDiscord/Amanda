@@ -12,7 +12,9 @@ const fontStore = new FontCache()
 // Backgrounds
 imageStore.save("slot-background", "./images/backgrounds/commands/slot.png")
 imageStore.save("wheel-canvas", "./images/backgrounds/commands/wheel.png")
-imageStore.save("money", "./images/backgrounds/commands/money.png")
+imageStore.save("bank", "./images/backgrounds/commands/bank.png")
+imageStore.save("card1", "./images/backgrounds/commands/card.png")
+imageStore.save("card2", "./images/backgrounds/commands/card2.png")
 imageStore.save("canvas", "./images/backgrounds/defaultbg.png")
 imageStore.save("canvas-vicinity", "./images/backgrounds/vicinity.png")
 imageStore.save("canvas-sakura", "./images/backgrounds/sakura.png")
@@ -51,17 +53,24 @@ imageStore.save("badge-giver4", "./images/badges/GivingHandTier4_50x50.png")
 // Masks
 imageStore.save("circle-mask", "./images/masks/circle_mask.png")
 imageStore.save("profile-background-mask", "./images/masks/profile_background_mask.png")
+imageStore.save("card-overlap-mask", "./images/masks/card_overlap_mask.png")
+imageStore.save("circle-overlap-mask", "./images/masks/circle_overlap_mask.png")
 
+// Icons
+imageStore.save("neko", "./images/icons/NEKO.png")
+imageStore.save("add-circle", "./images/icons/add_circle.png")
 
 // Fonts
-fontStore.save("unispace-20", ".fonts/Unispace-20.fnt")
-fontStore.save("unispace-36", ".fonts/Unispace-36.fnt")
 fontStore.save("whitney-20", ".fonts/Whitney-20.fnt")
 fontStore.save("whitney-20-2", ".fonts/profile/Whitney-20-aaa.fnt")
 fontStore.save("whitney-20-2-black", ".fonts/profile/Whitney-20-aaa-black.fnt")
 fontStore.save("whitney-25", ".fonts/Whitney-25.fnt")
 fontStore.save("whitney-25-black", ".fonts/Whitney-25-black.fnt")
-
+fontStore.save("arial-16", ".fonts/Arial-16.fnt")
+fontStore.save("arial-24", ".fonts/Arial-24.fnt")
+fontStore.save("bahnschrift-22", ".fonts/Bahnschrift-22.fnt")
+fontStore.save("bahnschrift-22-red", ".fonts/Bahnschrift-22-red.fnt")
+fontStore.save("bahnschrift-22-green", ".fonts/Bahnschrift-22-green.fnt")
 
 module.exports.images = imageStore
 module.exports.fonts = fontStore

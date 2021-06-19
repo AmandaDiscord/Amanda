@@ -117,13 +117,13 @@ async function paginate(channel, pageCount, callback) {
 			{ emoji: { id: "328062456905728002", name: "bn_ba" }, style: "SECONDARY", actionType: "js", actionData: async (message) => {
 				page--
 				if (page < 0) page = pageCount - 1
-				message.edit(await callback(page))
+				message.edit(Object.assign({}, await callback(page), { components: message.components }))
 				makeTimeout()
 			} },
 			{ emoji: { id: "328724374465282049", name: "bn_fo" }, style: "SECONDARY", actionType: "js", actionData: async (message) => {
 				page++
 				if (page >= pageCount) page = 0
-				message.edit(await callback(page))
+				message.edit(Object.assign({}, await callback(page), { components: message.components }))
 				makeTimeout()
 			} }
 		])

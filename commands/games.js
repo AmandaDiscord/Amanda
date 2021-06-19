@@ -150,7 +150,7 @@ class TriviaGame extends Game {
 			const streakGains = streaks.calculate({ max: maxStreak, step: streakStep, command: "trivia", userID: result.userID, maxMultiplier: maxMultiplier, multiplierStep: multiplierStep, absoluteMax: absoluteMax }, true)
 			result.winnings = Math.floor((coins + (this.defaultCategory ? 50 : 0)) * 0.8 ** (10 - cooldownValue))
 			// result.text = `${coins} × 0.8^${(10-cooldownValue)} = ${result.winnings}`
-			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, result.winnings + streakGains)
+			if (!this.earningsDisabled) utils.coinsManager.award(result.userID, BigInt(result.winnings + streakGains), "Academics scholarship")
 			return result
 		}))
 		for (const loser of losers) {

@@ -520,7 +520,7 @@ commands.assign([
 			const [isOwner, isPremium, money, info, avatar, images, fonts] = await Promise.all([
 				utils.sql.hasPermission(user, "owner"),
 				utils.orm.db.get("premium", { user_id: user.id }),
-				utils.coinsManager.getRow(user.id),
+				utils.coinsManager.get(user.id),
 				utils.sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", user.id),
 				utils.getAvatarJimp(user.id),
 				utils.jimpStores.images.getAll(["canvas", "canvas-vicinity", "canvas-sakura", "profile", "profile-light", "old-profile", "old-profile-light", "heart-full", "heart-broken", "badge-developer", "badge-donator", "circle-mask", "profile-background-mask", "badge-hunter", "badge-booster", "badge-giver1", "badge-giver2", "badge-giver3", "badge-giver4", "discoin"]),
@@ -546,11 +546,7 @@ commands.assign([
 			/** @type {import("jimp")} */
 			let badgeImage
 			if (badge) badgeImage = images.get(badge)
-			let giverImage
-			if (money.given_coins >= giverTier4) giverImage = images.get("badge-giver4").clone()
-			else if (money.given_coins >= giverTier3) giverImage = images.get("badge-giver3").clone()
-			else if (money.given_coins >= giverTier2) giverImage = images.get("badge-giver2").clone()
-			else if (money.given_coins >= giverTier1) giverImage = images.get("badge-giver1").clone()
+			const giverImage = null
 
 			async function getDefaultBG() {
 				const attempt = await utils.orm.db.get("settings_self", { key_id: user.id, setting: "defaultprofilebackground" })
@@ -595,7 +591,7 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font : font_black, 219, 58, user.username.length > 42 ? `${user.username.slice(0, 40)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 219, 90, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 62, 215)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, utils.numberComma(money.coins))
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 222, utils.numberComma(money))
 				canvas.composite(heart, 62, 259)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 106, 265, user.id == client.user.id ? "You <3" : other ? other.tag.length > 42 ? `${other.tag.slice(0, 40)}...` : other.tag : "Nobody, yet")
 
@@ -620,7 +616,7 @@ commands.assign([
 				canvas.print(themeoverlay == "profile" ? font : font_black, 508, 72, user.username.length > 22 ? `${user.username.slice(0, 19)}...` : user.username)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 508, 104, `#${user.discriminator}`)
 				canvas.composite(images.get("discoin"), 508, 156)
-				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, utils.numberComma(money.coins))
+				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 163, utils.numberComma(money))
 				canvas.composite(heart, 508, 207)
 				canvas.print(themeoverlay == "profile" ? font2 : font2_black, 550, 213, user.id == client.user.id ? "You <3" : other ? other.tag.length > 22 ? `${other.tag.slice(0, 19)}...` : other.tag : "Nobody, yet")
 				if (hunter) {

@@ -53,7 +53,7 @@ commands.assign([
 				depth = depth ? depth.substring(0).split(" ")[0] : undefined
 				if (!depth) depth = 0
 				else {
-					depth = Math.floor(utils.parseNumber(depth))
+					depth = Math.floor(Number(utils.parseBigInt(depth)))
 					if (isNaN(depth)) depth = 0
 					suffix = suffix.replace(`--depth:${suffix.split("--depth:")[1].substring(0).split(" ")[0]}`, "")
 				}
@@ -129,13 +129,13 @@ commands.assign([
 			if (msg.channel.type == "dm") return msg.channel.send(utils.replace(lang.admin.award.prompts.guildOnly, { "username": msg.author.username }))
 			const args = suffix.split(" ")
 			if (!args[0]) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
-			const award = Math.floor(utils.parseNumber(args[0]))
-			if (isNaN(award)) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
+			const award = utils.parseBigInt(args[0])
+			if (!award) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidAmount, { "username": msg.author.username }))
 			const usertxt = suffix.slice(args[0].length + 1)
 			if (!usertxt) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
 			const member = await utils.cacheManager.members.find(msg, usertxt)
 			if (!member) return msg.channel.send(utils.replace(lang.admin.award.prompts.invalidUser, { "username": msg.author.username }))
-			utils.coinsManager.award(member.id, award)
+			utils.coinsManager.award(member.id, award, `award from ${msg.author.id}`)
 			const memlang = await utils.getLang(member.id, "self")
 			const embed = new Discord.MessageEmbed()
 				.setDescription(utils.replace(lang.admin.award.returns.channel, { "mention1": String(msg.author), "number": utils.numberComma(award), "mention2": String(member) }))

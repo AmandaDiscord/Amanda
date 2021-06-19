@@ -211,7 +211,7 @@ commands.assign([
 				})
 			} else if (action.toLowerCase() == "remove") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
-				let index = args[2] === "last" ? orderedSongs.length : utils.parseNumber(args[2])
+				let index = args[2] === "last" ? orderedSongs.length : Number(utils.parseBigInt(args[2]))
 				if (!index) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.indexRequired, { "username": msg.author.username }))
 				index = index - 1
 				if (!orderedSongs[index]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
@@ -223,8 +223,8 @@ commands.assign([
 				return msg.channel.send(utils.replace(lang.audio.playlist.returns.playlistRemoved, { "username": msg.author.username, "song": toRemove.name, "playlist": playlistName }))
 			} else if (action.toLowerCase() == "move") {
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
-				let from = utils.parseNumber(args[2])
-				let to = utils.parseNumber(args[3])
+				let from = Number(utils.parseBigInt(args[2]))
+				let to = Number(utils.parseBigInt(args[3]))
 				if (!from || !to) return msg.channel.send(lang.audio.playlist.prompts.indexMoveRequired)
 				from--; to--
 				if (!orderedSongs[from]) return msg.channel.send(lang.audio.playlist.prompts.outOfRange)
