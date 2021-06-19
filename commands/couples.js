@@ -179,6 +179,8 @@ commands.assign([
 			const face = utils.arrayRandom(faces)
 			await Promise.all([
 				utils.sql.all("DELETE FROM couples WHERE user1 = $1 OR user2 = $1", msg.author.id),
+				utils.orm.db.delete("bank_accounts", { id: married.id }),
+				utils.orm.db.delete("bank_access", { id: married.id }),
 				Number(married.amount || 0) ? utils.coinsManager.award(otherid, BigInt(married.amount), "Divorce inheritance") : Promise.resolve(null)
 			])
 			msg.channel.send(utils.replace(lang.couples.divorce.returns.divorced, { "tag1": msg.author.tag, "tag2": partner.tag, "reason": suffix ? `reason: ${suffix}` : "no reason specified" }))
