@@ -69,7 +69,7 @@ function numberComma(number) {
  */
 function parseBigInt(string) {
 	const numstr = string.replace(/,/g, "")
-	if (!/\d+/.exec(numstr)) return null
+	if (!/^\d+$/.exec(numstr)) return null
 	return BigInt(numstr)
 }
 
