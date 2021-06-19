@@ -30,7 +30,7 @@ commands.assign([
 			// @ts-ignore
 			const users = await Promise.all(info.users.map(u => utils.cacheManager.users.get(u, true, true)))
 			const embed = new Discord.MessageEmbed()
-				.setAuthor(`Couple info for ${users.slice(0, -2).map(u => u.tag).join(", ")} & ${users.slice(-1)[0].tag}`)
+				.setAuthor(`Couple info for ${users.slice(0, -1).map(u => u.tag).join(", ")} & ${users.slice(-1)[0].tag}`)
 				.addFields([
 					{
 						name: "Users",
@@ -342,7 +342,7 @@ commands.assign([
 				const displayRows = rows.map((row, index) => {
 					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
 					const users = usersMap.get(row.id)
-					return `${ranking}. ${users.slice(0, -2).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.slice(-1)[0])} :: ${utils.numberComma(row.amount)} ${emojis.discoin}`
+					return `${ranking}. ${users.slice(0, -1).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.slice(-1)[0])} :: ${utils.numberComma(row.amount)} ${emojis.discoin}`
 				})
 				const embed = new Discord.MessageEmbed()
 					.setTitle(title)
