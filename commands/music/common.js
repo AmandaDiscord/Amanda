@@ -1034,6 +1034,6 @@ const common = {
 	}
 }
 
-setImmediate(() => sync.addTemporaryListener(client, "voiceStateUpdate", common.voiceStateUpdate))
+sync.addTemporaryListener(client, "voiceStateUpdate", common.voiceStateUpdate)
 
 module.exports = common

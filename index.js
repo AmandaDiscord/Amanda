@@ -64,7 +64,7 @@ const pool = new Postgres.Pool({
 
 		if (op === "DISCORD") {
 			utils.cacheManager.process(data)
-			return require("thunderstorm/src/handle")(message.data, client)
+			return ThunderStorm.handle(message.data, client)
 		} else {
 			if (op === "ERROR_RESPONSE") return console.error(data)
 			if (gateway.outgoing.has(threadID)) {

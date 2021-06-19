@@ -49,7 +49,7 @@ async function autoPayTimeoutFunction() {
 	/** @type {Array<string>} */
 	const donors = await utils.orm.db.select("premium").then(rows => rows.map(r => r.user_id))
 	for (const ID of donors) {
-		await utils.coinsManager.award(ID, 10000)
+		await utils.coinsManager.award(ID, BigInt(10000), "Beneficiary deposit")
 	}
 	const time = getTimeoutDuration()
 	console.log(`Donor payments completed. Set a timeout for ${utils.shortTime(time, "ms")}`)
@@ -63,54 +63,53 @@ sync.events.once(__filename, () => {
 	}
 })
 
-setImmediate(() => { // wait for next event loop since heatsync could still be looping over events to remove
-	sync.addTemporaryListener(client, "message", manageMessage)
-	if (!starting) manageReady()
-	else sync.addTemporaryListener(client, "ready", manageReady)
-	sync.addTemporaryListener(client, "interaction",
-		/**
-		 * @param {Discord.Interaction} interaction
-		 */
-		async (interaction) => {
-			if (interaction instanceof Discord.MessageComponentInteraction) {
-				await interaction.deferUpdate()
-				InteractionMenu.handle(interaction)
-			}
-		})
-	sync.addTemporaryListener(process, "unhandledRejection", reason => {
-		let shouldIgnore = false
-		if (reason && reason.code) {
-			if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) shouldIgnore = true
-			if (reason.code == 500 && reason.name != "AbortError") shouldIgnore = false
-		}
-		if (shouldIgnore) return
-		if (reason) console.error(reason)
-		else console.log("There was an error but no reason")
-	})
-	sync.addTemporaryListener(client, "raw", event => {
-		if (event.t === "VOICE_STATE_UPDATE") {
-			if (!client.lavalink) return
-			client.lavalink.voiceStateUpdate(event.d)
-		} else if (event.t === "VOICE_SERVER_UPDATE") {
-			if (!client.lavalink) return
-			client.lavalink.voiceServerUpdate(event.d)
-		} else if (event.t === "GUILD_CREATE") {
-			if (!client.lavalink) return
-			if (!event.d.voice_states) return
-			for (const state of event.d.voice_states) {
-				client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
-				const ns = new Discord.VoiceState(client, state)
-				common.voiceStateUpdate(ns)
-			}
-		} else if (event.t === "MESSAGE_UPDATE") {
-			if (!event.d.edited_timestamp) return
-			const m = messagesReceived.get(event.d.id)
-			if (m) {
-				m._patch(event.d)
-				manageMessage(m, true)
-			}
+
+sync.addTemporaryListener(client, "message", manageMessage)
+if (!starting) manageReady()
+else sync.addTemporaryListener(client, "ready", manageReady)
+sync.addTemporaryListener(client, "interaction",
+	/**
+	 * @param {Discord.Interaction} interaction
+	 */
+	async (interaction) => {
+		if (interaction instanceof Discord.MessageComponentInteraction) {
+			await interaction.deferUpdate()
+			InteractionMenu.handle(interaction)
 		}
 	})
+sync.addTemporaryListener(process, "unhandledRejection", reason => {
+	let shouldIgnore = false
+	if (reason && reason.code) {
+		if ([500, 10003, 10008, 50001, 50013].includes(reason.code)) shouldIgnore = true
+		if (reason.code == 500 && reason.name != "AbortError") shouldIgnore = false
+	}
+	if (shouldIgnore) return
+	if (reason) console.error(reason)
+	else console.log("There was an error but no reason")
+})
+sync.addTemporaryListener(client, "raw", event => {
+	if (event.t === "VOICE_STATE_UPDATE") {
+		if (!client.lavalink) return
+		client.lavalink.voiceStateUpdate(event.d)
+	} else if (event.t === "VOICE_SERVER_UPDATE") {
+		if (!client.lavalink) return
+		client.lavalink.voiceServerUpdate(event.d)
+	} else if (event.t === "GUILD_CREATE") {
+		if (!client.lavalink) return
+		if (!event.d.voice_states) return
+		for (const state of event.d.voice_states) {
+			client.lavalink.voiceStateUpdate({ ...state, guild_id: event.d.id })
+			const ns = new Discord.VoiceState(client, state)
+			common.voiceStateUpdate(ns)
+		}
+	} else if (event.t === "MESSAGE_UPDATE") {
+		if (!event.d.edited_timestamp) return
+		const m = messagesReceived.get(event.d.id)
+		if (m) {
+			m._patch(event.d)
+			manageMessage(m, true)
+		}
+	}
 })
 
 

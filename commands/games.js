@@ -247,7 +247,7 @@ async function startGame(channel, options) {
 	// Set up new game
 	new TriviaGame(channel, data, category, options.lang, !category).init()
 }
-setImmediate(() => sync.addTemporaryListener(client, "message", answerDetector))
+sync.addTemporaryListener(client, "message", answerDetector)
 function answerDetector(msg) {
 	/** @type {TriviaGame} */
 	// @ts-ignore

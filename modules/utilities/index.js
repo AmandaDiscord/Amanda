@@ -1,5 +1,7 @@
 // @ts-check
 
+const path = require("path")
+
 const passthrough = require("../../passthrough")
 const { sync } = passthrough
 
@@ -41,6 +43,19 @@ const text = sync.require("./text")
 /** @type {import("./time")} */
 const time = sync.require("./time")
 
+sync.addTemporaryListener(sync.events, "any", (filename) => {
+	const unsyncable = ["./arrayutils.js", "./cachemanager.js", "./text.js", "./time.js", "./discordutils.js", "./langutils.js", "./clusterinfo.js", "./pagination.js"]
+	const found = unsyncable.find(file => {
+		const joined = path.join(__dirname, file)
+		return filename === joined
+	})
+	if (found) {
+		console.log("Resyncing utils")
+		sync.resync(__filename)
+	}
+}, "on")
+
+
 const utils = {
 	arrayRandom: array.random,
 	arrayShuffle: array.shuffle,
@@ -51,43 +66,17 @@ const utils = {
 	FontCache: FontCache,
 	/** @type {import("../../typings").Merge<jimpStores, {}>} */
 	jimpStores: jimpStores,
-	cacheManager: cacheManager.cacheManager,
 	/** @type {import("../../typings").Merge<coinsManager, {}>} */
 	coinsManager: coinsManager,
-	contentify: discordUtils.contentify,
-	createMessageCollector: discordUtils.createMessageCollector,
-	emojiURL: discordUtils.emojiURL,
-	getAvatarJimp: discordUtils.getAvatarJimp,
-	getPrefixes: discordUtils.getPrefixes,
-	rateLimiter: discordUtils.rateLimiter,
-	resolveWebhookMessageAuthor: discordUtils.resolveWebhookMessageAuthor,
-	userFlagEmojis: discordUtils.userFlagEmojis,
-	getLang: langUtils.getLang,
-	replace: langUtils.replace,
-	compactRows: pagination.compactRows,
-	createPages: pagination.createPages,
-	createPagination: pagination.createPagination,
-	makeSelection: pagination.makeSelection,
-	paginate: pagination.paginate,
-	playlistSection: pagination.playlistSection,
-	tableifyRows: pagination.tableifyRows,
-	getOwnStats: clusterInfo.getOwnStats,
 	/** @type {import("../../typings").Merge<editLavalinkNodes, {}>} */
 	editLavalinkNodes: editLavalinkNodes,
 	/** @type {import("../../typings").Merge<sql, {}>} */
 	sql: sql,
 	/** @type {import("../../typings").Merge<orm, {}>} */
-	orm: orm,
-	numberComma: text.numberComma,
-	parseBigInt: text.parseBigInt,
-	progressBar: text.progressBar,
-	stringify: text.stringify,
-	numberPosition: text.numberPosition,
-	abbreviateNumber: text.abbreviateNumber,
-	getSixTime: time.getSixTime,
-	parseDuration: time.parseDuration,
-	shortTime: time.shortTime,
-	upcomingDate: time.upcomingDate
+	orm: orm
 }
 
-module.exports = utils
+/**
+ * @type {import("../../typings").Merge<utils, cacheManager> & text & time & discordUtils & langUtils & clusterInfo & pagination}
+ */
+module.exports = Object.assign(utils, cacheManager, text, time, discordUtils, langUtils, clusterInfo, pagination)

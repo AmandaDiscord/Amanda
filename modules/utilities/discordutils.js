@@ -30,10 +30,10 @@ if (client.readyAt != null) starting = false
 let prefixes = []
 let statusPrefix = "&"
 
-setImmediate(() => {
-	if (!starting) onReady()
-	else sync.addTemporaryListener(client, "ready", onReady)
-})
+
+if (!starting) onReady()
+else sync.addTemporaryListener(client, "ready", onReady)
+
 
 function onReady() {
 	const firstStart = starting
