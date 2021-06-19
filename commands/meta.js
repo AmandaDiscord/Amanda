@@ -875,7 +875,7 @@ commands.assign([
 
 	{
 		usage: "<url>",
-		description: "Set the background displayed on &profile",
+		description: "Set the background displayed on profile",
 		aliases: ["background", "profilebackground"],
 		category: "configuration",
 		examples: ["background https://cdn.discordapp.com/attachments/586533548035538954/586533639509114880/vicinity.jpg"],
@@ -935,10 +935,10 @@ commands.assign([
 					msg.channel.send(await utils.contentify(msg.channel, embed))
 				} else if (suffix.includes("playlist") || suffix == "pl") {
 					embed = new Discord.MessageEmbed()
-						.setAuthor("&music playlist: command help (aliases: playlist, playlists, pl)")
-						.setDescription("All playlist commands begin with `&music playlist` followed by the name of a playlist. \
+						.setAuthor(`${prefixes.main}music playlist: command help (aliases: playlist, playlists, pl)`)
+						.setDescription(`All playlist commands begin with \`${prefixes.main}music playlist\` followed by the name of a playlist. \
 														If the playlist name does not exist, you will be asked if you would like to create a new playlist with that name.\
-														\nNote that using `add`, `remove`, `move`, `import`, `delete` and `rename` require you to be the owner (creator) of a playlist.")
+														\nNote that using \`add\`, \`remove\`, \`move\`, \`import\`, \`delete\` and \`rename\` require you to be the owner (creator) of a playlist.`)
 						.addFields([
 							{
 								name: "show",

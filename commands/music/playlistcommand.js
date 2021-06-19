@@ -98,7 +98,7 @@ commands.assign([
 			}
 			if (!playlistName) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameRequired, { "username": msg.author.username }))
 			if (playlistName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) {
-				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": "`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`" }))
+				return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": `\`${prefixes.main}music play https://youtube.com/playlist?list=PLAAAABBBBCC\`` }))
 			}
 			if (playlistName.length > 24) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameLimit, { "username": msg.author.username }))
 			const playlistRow = await utils.orm.db.get("playlists", { name: playlistName })
@@ -311,7 +311,7 @@ commands.assign([
 				if (playlistRow.author != msg.author.id) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNotOwned, { "username": msg.author.username }))
 				const newName = args[2]
 				if (newName === playlistRow.name) return msg.channel.send(`${msg.author.username}, that playlist is already named that. No need to rename.`)
-				if (newName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": "`&music play https://youtube.com/playlist?list=PLAAAABBBBCC`" }))
+				if (newName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.directPlaylist, { "info": `\`${prefixes.main}music play https://youtube.com/playlist?list=PLAAAABBBBCC\`` }))
 				if (newName.length > 24) return msg.channel.send(utils.replace(lang.audio.playlist.prompts.playlistNameLimit, { "username": msg.author.username }))
 				await utils.orm.db.update("playlists", { name: newName }, { playlist_id: playlistRow.playlist_id })
 				return msg.channel.send("Playlist renamed.")

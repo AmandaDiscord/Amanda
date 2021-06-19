@@ -299,7 +299,7 @@ commands.assign([
 					card.mask(overlap, 0, 0)
 				}
 				card.print(font, 25, 25, personal ? "Private card" : "Family card")
-				card.print(font2, 170, 5, { text: utils.numberComma(personal ? money.amount : couple.amount), alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 150, 50)
+				card.print(font2, 170, 5, { text: utils.abbreviateNumber(personal ? money.amount : couple.amount), alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 150, 50)
 				card.print(font, 25, 45, personal ? fakePersonal : fakeCouple)
 
 				if (!mask) {
@@ -347,7 +347,7 @@ commands.assign([
 				transactions.forEach((transaction, index) => {
 					const indexoffset = 570 + (index * transactionOffset)
 					page.print(font2, 30, indexoffset, transaction.description)
-					page.print(transaction.mode === 0 ? greensus : redsus, 360, indexoffset - 10, { text: `${transaction.mode === 0 ? "+" : "-"}${utils.numberComma(transaction.amount)}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
+					page.print(transaction.mode === 0 ? greensus : redsus, 360, indexoffset - 10, { text: `${transaction.mode === 0 ? "+" : "-"}${utils.abbreviateNumber(transaction.amount)}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
 					page.print(font, 30, indexoffset + 30, fakeID)
 					const date = new Date(transaction.date)
 					page.print(font, 360, indexoffset + 20, { text: `${utils.numberPosition(date.getDay())} ${datemap[date.getMonth()]}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)

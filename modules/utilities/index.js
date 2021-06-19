@@ -83,6 +83,7 @@ const utils = {
 	progressBar: text.progressBar,
 	stringify: text.stringify,
 	numberPosition: text.numberPosition,
+	abbreviateNumber: text.abbreviateNumber,
 	getSixTime: time.getSixTime,
 	parseDuration: time.parseDuration,
 	shortTime: time.shortTime,

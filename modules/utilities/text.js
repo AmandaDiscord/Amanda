@@ -92,8 +92,25 @@ function numberPosition(pos) {
 	return value
 }
 
+/**
+ * @param {number | string | bigint} value
+ */
+function abbreviateNumber(value, precision = 2) {
+	const converted = BigInt(value)
+	if (converted >= BigInt(10000)) { // values less than 10,000 don't have to be shortened for us. If you're implementing this elsewhere, feel free to remove this.
+		const identifiers = ["", "k", "m", "b", "t", "qua", "qui", "sex", "sep"]
+		const split = converted.toLocaleString().split(",")
+		const index = split.length - 1
+
+		if (index > identifiers.length - 1) return `${(BigInt(split[0]) * (BigInt(1000) * BigInt(index - identifiers.length - 1))).toLocaleString()} ${identifiers.slice(-1)[0]}` // Because BigInts can be HUGE
+		else return `${Number(split[0])}${split[1] && Number(split[1]) !== 0 ? "." : ""}${split[1] && Number(split[1]) !== 0 ? split[1].slice(0, precision) : ""}${identifiers[index]}`
+	}
+	return converted.toLocaleString()
+}
+
 module.exports.progressBar = progressBar
 module.exports.stringify = stringify
 module.exports.numberComma = numberComma
 module.exports.parseBigInt = parseBigInt
 module.exports.numberPosition = numberPosition
+module.exports.abbreviateNumber = abbreviateNumber
