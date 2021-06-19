@@ -1,5 +1,7 @@
 const util = require("util")
 const Postgres = require("pg")
+const Sync = require("heatsync")
+const sync = new Sync()
 
 const config = require("../config.js")
 
@@ -17,6 +19,7 @@ const pool = new Postgres.Pool({
 	const pgpool = await pool.connect()
 
 	passthrough.db = pgpool
+	passthrough.sync = sync
 	const orm = require("../modules/utilities/orm")
 	const sql = require("../modules/utilities/sql")
 
