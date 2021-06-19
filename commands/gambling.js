@@ -609,8 +609,8 @@ commands.assign([
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
 			const image = new Discord.MessageAttachment(buffer, "wheel.png")
 			const award = (Number(choice) > 1.0 && ["all", "half"].includes(suffix)) ? amount * (BigInt(choice) + BigInt(2)) : (amount * BigInt(choice)) - amount
-			await utils.coinsManager.award(msg.author.id, award, `Wheel Of ${award === BigInt(0) ? "Misf" : "F"}ortune`)
-			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": utils.numberComma(award) }), files: [image] })
+			await utils.coinsManager.award(msg.author.id, award, `Wheel Of ${award <= BigInt(0) ? "Misf" : "F"}ortune`)
+			return msg.channel.send({ content: utils.replace(lang.gambling.wheel.returns.winnings, { "tag": msg.author.tag, "number1": utils.numberComma(amount), "number2": award <= BigInt(0) ? 0 : utils.numberComma(award - amount) }), files: [image] })
 		}
 	}
 ])
