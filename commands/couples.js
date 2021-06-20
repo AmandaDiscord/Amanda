@@ -203,7 +203,7 @@ commands.assign([
 		category: "couples",
 		examples: ["cbal PapiOphidian"],
 		process(msg, suffix, lang, prefixes) {
-			return commands.cache.get("coins").process(msg, suffix + " couple", lang, prefixes)
+			return commands.cache.get("coins").process(msg, suffix + " --couple", lang, prefixes)
 		}
 	},
 	{

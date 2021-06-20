@@ -215,16 +215,16 @@ commands.assign([
 		}
 	},
 	{
-		usage: "[user] [couple]",
+		usage: "[user] [--couple]",
 		description: "Returns the amount of Discoins you or another user has",
 		aliases: ["coins", "$", "balance", "bal", "discoins", "amandollars"],
 		category: "gambling",
 		examples: ["coins PapiOphidian"],
 		async process(msg, suffix, lang) {
 			let user, member, showCouple = false
-			if (suffix.match(/couple$/)) {
+			if (suffix.match(/ --couple$/)) {
 				showCouple = true
-				suffix = suffix.replace(/couple$/, "")
+				suffix = suffix.replace(/ --couple$/, "")
 			}
 			if (msg.channel.type == "text") {
 				member = await utils.cacheManager.members.find(msg, suffix, true)
