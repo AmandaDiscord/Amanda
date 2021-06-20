@@ -350,7 +350,7 @@ commands.assign([
 					page.print(transaction.mode === 0 ? greensus : redsus, 360, indexoffset - 10, { text: `${transaction.mode === 0 ? "+" : "-"}${utils.abbreviateNumber(transaction.amount)}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
 					page.print(font, 30, indexoffset + 30, fakeID)
 					const date = new Date(transaction.date)
-					page.print(font, 360, indexoffset + 20, { text: `${utils.numberPosition(date.getDay())} ${datemap[date.getMonth()]}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
+					page.print(font, 360, indexoffset + 20, { text: `${utils.numberPosition(date.getDate())} ${datemap[date.getMonth()]}`, alignmentX: Jimp.HORIZONTAL_ALIGN_RIGHT, alignmentY: Jimp.VERTICAL_ALIGN_MIDDLE }, 100, 50)
 				})
 			}
 
