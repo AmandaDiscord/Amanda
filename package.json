@@ -33,7 +33,7 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "nedb-promises": "^5.0.0",
-    "node-ipc": "^10.0.1",
+    "node-ipc": "^9.2.1",
     "pg": "^8.6.0",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "simple-git": "^2.40.0",
