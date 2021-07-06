@@ -85,8 +85,8 @@ function addProcessors(processors) {
 							`=====\
 							\nUh oh! How did we get here?\
 							\nop: ${processor.op}\
-							\ndata, ${clientData}\
-							\nQueue cache: ${cache}`
+							\ndata, ${require("util").inspect(clientData, true, 3, false)}\
+							\nQueue cache is NULL`
 						)
 					} else {
 						cache = processor.updateCallback(cache, clientData)

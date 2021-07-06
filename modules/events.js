@@ -243,7 +243,10 @@ async function manageReady() {
 			return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name })
 		})
 
-		constants.lavalinkNodes = lavalinkNodes
+		for (const node of lavalinkNodes) {
+			constants.lavalinkNodes.push(node)
+		}
+
 		client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
 			user: client.user.id,
 			shards: config.total_shards,
@@ -268,7 +271,7 @@ async function manageReady() {
 		try {
 			await client.lavalink.connect()
 		} catch (e) {
-			console.log("There was a lavalink connect error. One of the nodes may be offline or unreachable")
+			console.log("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await utils.stringify(e, 3))
 		}
 
 		utils.orm.db.select("restart_notify", { bot_id: client.user.id }).then(result => {

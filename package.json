@@ -11,8 +11,8 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "node": "14.17.0",
-    "npm": "7.9.0"
+    "node": ">=14.17.0",
+    "npm": ">=7.9.0"
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#4381fc46fd9abd8f7478e81f9c4b13211b590e84",
@@ -20,7 +20,7 @@
     "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@lavalink/encoding": "^0.1.1",
     "centra": "^2.4.2",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#507e905c45f17a7c89a614d50d91f51ecbab4721",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#1c661cf0fefa0ec7baa89d5bcb112d342f1c150d",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^2.2.0",
@@ -29,11 +29,11 @@
     "heapdump": "^0.3.15",
     "heatsync": "^2.1.1",
     "jimp": "^0.16.1",
-    "lavacord": "github:AmandaDiscord/Lavacord#d67354ef4f1e5020797d6ffff59bb7ad690a969f",
+    "lavacord": "github:AmandaDiscord/Lavacord#07b739ae19f415ccc29c42c111fd270c0e148780",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "nedb-promises": "^5.0.0",
-    "node-ipc": "^9.1.4",
+    "node-ipc": "^10.0.1",
     "pg": "^8.6.0",
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "simple-git": "^2.40.0",
@@ -46,7 +46,7 @@
   "devDependencies": {
     "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#bd43c3a022981d414a0aada92ddced1574c9aeab",
     "@types/centra": "^2.2.0",
-    "@types/node": "^15.0.1",
+    "@types/node": "^16.0.0",
     "eslint": "^7.29.0",
     "tap": "^15.0.9",
     "typescript": "~4.3.4"

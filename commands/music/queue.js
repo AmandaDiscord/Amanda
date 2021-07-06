@@ -117,9 +117,7 @@ class Queue {
 				const embed = await this._buildNPEmbed()
 				if (embed && this.npEditable) {
 					const content = await utils.contentify(this.textChannel, embed)
-					this.np.edit(Object.assign(content, { components: this.np.components })).catch(e => {
-						if (e && e.httpStatus === 404) this.npEditable = false
-					})
+					this.np.edit(Object.assign(content, { components: this.np.components })).catch(() => { this.npEditable = false })
 				}
 			}
 		})
@@ -385,7 +383,7 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npEditable) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))).catch(() => void 0)
+		if (this.npEditable && this.np) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))).catch(() => void 0)
 		if (this.npMenu) await this.npMenu.destroy().catch(() => void 0)
 		await client.lavalink.leave(this.guild.id)
 		this.manager.delete(this.guild.id)

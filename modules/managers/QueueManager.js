@@ -146,10 +146,13 @@ class QueueManager {
 				if (queue.songs[0]) {
 					queue.songs[0].resume()
 				}
+				await queue.sendNewNP()
+				queue._startNPUpdates()
 				queue.songStartTime = q.songStartTime
 				queue.pausedAt = q.pausedAt
-				queue.sendNewNP()
-				queue._startNPUpdates()
+				await queue.play()
+				const result = await queue.seek(Date.now() - queue.songStartTime)
+				if (result === 3) await queue.skip()
 				await ipc.replier.sendNewQueue(queue)
 			}
 		})
