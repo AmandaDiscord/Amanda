@@ -23,6 +23,6 @@ module.exports = {
 	standard_embed_color: 0x2f3136,
 	discord_background_color: 0x36393f,
 	fake_token: "(token)",
-	/** @type {{ id: string, name: string, host: string, port: number, password: string, invidious_origin: string, regions: string[], enabled: boolean, search_with_invidious: boolean}[]} */
+	/** @type {{ id: string, name: string, host: string, port: number, password: string, invidious_origin: string, regions: string[], enabled: boolean, search_with_invidious: boolean, resumeKey?: string, resumeTimeout?: number }[]} */
 	lavalinkNodes: []
 }

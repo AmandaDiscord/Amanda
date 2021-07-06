@@ -127,14 +127,14 @@ async function manageMessage(msg, isEdit = false) {
 			}
 		}
 	}
-	if (!isEdit) {
-		messagesReceived.set(msg.id, msg)
-		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
-	}
 	const prefixes = await utils.getPrefixes(msg)
 	if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user.id}>`.replace(" ", "")) return msg.channel.send(`Hey there! My prefix is \`${prefixes.main}\` or \`@${client.user.tag}\`. Try using \`${prefixes.main}help\` for a complete list of my commands.`)
 	const prefix = prefixes.array.find(p => msg.content.startsWith(p))
 	if (!prefix) return
+	if (!isEdit) {
+		messagesReceived.set(msg.id, msg)
+		setTimeout(() => { messagesReceived.delete(msg.id) }, 1000 * 60)
+	}
 	const cmdTxt = msg.content.substring(prefix.length).split(" ")[0]
 	const suffix = msg.content.substring(cmdTxt.length + prefix.length + 1)
 	const cmd = commands.cache.find(c => c.aliases.includes(cmdTxt))
@@ -237,14 +237,16 @@ async function manageReady() {
 				password: config.lavalink_password,
 				enabled: !!node.enabled,
 				id: node.name.toLowerCase(),
-				search_with_invidious: !!node.search_with_invidious,
-				resumeKey: `${client.user.id}/${config.cluster_id}`
+				search_with_invidious: !!node.search_with_invidious
 			}
 			return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name })
 		})
 
-		for (const node of lavalinkNodes) {
-			constants.lavalinkNodes.push(node)
+		constants.lavalinkNodes.push(...lavalinkNodes)
+
+		for (const node of constants.lavalinkNodes) {
+			node.resumeKey = `${client.user.id}/${config.cluster_id}`
+			node.resumeTimeout = 75
 		}
 
 		client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
@@ -255,12 +257,14 @@ async function manageReady() {
 			}
 		})
 
-		client.lavalink.once("ready", async () => {
+		client.lavalink.once("ready", () => {
 			console.log("Lavalink ready")
-			/** @type {{ queues: Array<any> }} */
-			const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${config.cluster_id}` })
-			if (!data) return
-			if (data.queues.length > 0) passthrough.queues.restore()
+			setTimeout(async () => {
+				/** @type {{ queues: Array<any> }} */
+				const data = await passthrough.nedb.queue.findOne({ _id: `QueueStore_${config.cluster_id}` })
+				if (!data) return
+				if (data.queues.length > 0) passthrough.queues.restore()
+			}, utils.orm.db.tables.voice_states.options.bufferTimeout)
 		})
 
 		client.lavalink.on("error", (error, node) => {
