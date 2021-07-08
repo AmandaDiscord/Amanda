@@ -1,6 +1,6 @@
 // @ts-check
 
-const STEndpoints = require("snowtransfer/dist/src/Endpoints")
+const STEndpoints = require("snowtransfer/dist/Endpoints")
 const centra = require("centra")
 
 const { ipc, sync, snow } = require("../passthrough")

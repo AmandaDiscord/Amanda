@@ -38,17 +38,17 @@
     "pinski": "github:cloudrac3r/pinski#237daf4cc542be91c7eca5a20c9f35d4082fc78d",
     "simple-git": "^2.40.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "github:AmandaDiscord/SnowTransfer#d0e8f0f4f5124ac061a681dd3a954b5e25206031",
+    "snowtransfer": "github:AmandaDiscord/SnowTransfer#2b2d8e6a0330831d697e4214414b880bb0e4ab6f",
     "taihou": "^2.0.5",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#bf1ec3b3726ba5735417a7b7409b0f4a3ecf3b4e",
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#ae342f96a9200002d1b3c6c5fd6bb175f1d3d70e",
     "video-url-link": "github:AmandaDiscord/video-url-link#f6ad0f4be37fa415a0ccd48f25ea63a003ab2a2e"
   },
   "devDependencies": {
-    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#bd43c3a022981d414a0aada92ddced1574c9aeab",
+    "@amanda/discordtypings": "github:AmandaDiscord/DiscordTypings#78fd19db679557d4d47506294a3ae41d8b36f5a0",
     "@types/centra": "^2.2.0",
-    "@types/node": "^16.0.0",
-    "eslint": "^7.29.0",
+    "@types/node": "^16.0.1",
+    "eslint": "^7.30.0",
     "tap": "^15.0.9",
-    "typescript": "~4.3.4"
+    "typescript": "^4.3.5"
   }
 }
