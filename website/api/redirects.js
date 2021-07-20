@@ -10,7 +10,6 @@ function redirect(statusCode, location) {
 }
 
 module.exports = [
-	["/stats", "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393"], // legacy, feel free to replace in future
 	["/to/stats", "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393"],
 	["/to/patreon", "https://www.patreon.com/papiophidian"],
 	["/to/paypal", "https://paypal.me/papiophidian"],
@@ -19,7 +18,8 @@ module.exports = [
 	["/to/todo", "https://github.com/AmandaDiscord/Amanda/projects"],
 	["/to/twitter", "https://twitter.com/AmandaDiscord"],
 	["/to/github", "https://github.com/AmandaDiscord"],
-	["/to/privacy", "https://github.com/AmandaDiscord/Amanda/blob/rained-in/PRIVACYPOLICY"]
+	["/to/privacy", "https://github.com/AmandaDiscord/Amanda/blob/rained-in/PRIVACYPOLICY"],
+	["/to/tsukiko", "https://discord.com/oauth2/authorize?client_id=709907646387322932&permissions=268714048&scope=bot"]
 ].map(entry => ({
 	route: entry[0],
 	methods: ["GET"],
