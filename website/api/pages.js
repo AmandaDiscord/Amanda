@@ -40,6 +40,16 @@ module.exports = [
 		}
 	},
 	{
+		route: "/oss", methods: ["GET"], code: async () => {
+			return render(200, "pug/oss.pug")
+		}
+	},
+	{
+		route: "/others", methods: ["GET"], code: async () => {
+			return render(200, "pug/others.pug")
+		}
+	},
+	{
 		route: "/dash", methods: ["GET"], code: async ({ req }) => {
 			const cookies = utils.getCookies(req)
 			const session = await utils.getSession(cookies)

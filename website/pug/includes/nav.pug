@@ -4,6 +4,8 @@ mixin nav(highlight, url)
 		a(href="/about" class=highlight=="about" ? "active" : "").navitem About
 		a(href="/dream" class=highlight=="dream" ? "active" : "").navitem Dream
 		a(href="/donate" class=highlight=="donate" ? "active" : "").navitem Donate
+		a(href="/oss" class=highlight=="oss" ? "active" : "").navitem OSS
+		a(href="/others" class=highlight=="others" ? "active" : "").navitem Others
 		a(href="/dash" class=highlight=="dash" ? "active" : "").navitem Dashboard
 		if block
 			a(href=url).navitem.active
