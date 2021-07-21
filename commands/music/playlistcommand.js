@@ -264,12 +264,12 @@ commands.assign([
 					const playlistURL = args[2]
 					const playlistID = YouTube.Playlist.extractID(playlistURL)
 					const editmsg = await msg.channel.send(lang.audio.playlist.prompts.playlistImporting)
-					let videos = await common.invidious.getPlaylist(playlistID)
+					let videos = await common.getTracks(playlistID)
 					// console.log(videos.map(v => typeof v === "object" ? v.videoId : v).join("\n"))
 					const promises = []
 					videos = videos.filter((video, i) => {
-						if (orderedSongs.some(row => row.video_id == video.videoId)) return false
-						else if (videos.slice(0, i).some(v => v.videoId == video.videoId)) return false
+						if (orderedSongs.some(row => row.video_id == video.info.identifier)) return false
+						else if (videos.slice(0, i).some(v => v.info.identifier == video.info.identifier)) return false
 						else return true
 					})
 					if (!videos.length) return editmsg.edit({ content: utils.replace(lang.audio.playlist.prompts.playlistImportAllExisting, { "username": msg.author.username }) })
@@ -278,18 +278,18 @@ commands.assign([
 						const video = videos[i]
 						promises.push(utils.sql.all(
 							"INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)",
-							[video.videoId, video.title, video.lengthSeconds]
+							[video.info.identifier, video.info.title, Math.round(video.info.length / 1000)]
 						))
 						if (i != videos.length - 1) {
 							const nextVideo = videos[i + 1]
-							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: nextVideo.videoId })))
+							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.info.identifier, next: nextVideo.info.identifier })))
 						} else {
-							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.videoId, next: null })))
+							promises.push(Promise.resolve(utils.orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: video.info.identifier, next: null })))
 						}
 					}
 					promises.push(utils.sql.all(
 						"UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $3",
-						[videos[0].videoId, playlistRow.playlist_id, videos.slice(-1)[0].videoId]
+						[videos[0].info.identifier, playlistRow.playlist_id, videos.slice(-1)[0].info.identifier]
 					))
 					await Promise.all(promises)
 					editmsg.edit({ content: utils.replace(lang.audio.playlist.returns.playlistImportDone, { "username": msg.author.username, "playlist": playlistName }) })
