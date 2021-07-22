@@ -193,6 +193,29 @@ commands.assign([
 						}
 					])
 				return msg.channel.send(await utils.contentify(msg.channel, embed))
+			} else if (suffix.toLowerCase() === "lavalink" || suffix.toLowerCase() === "ll") {
+				const nodeIDs = [...client.lavalink.nodes.keys()]
+				return utils.paginate(msg.channel, nodeIDs.length, (page) => {
+					const key = nodeIDs[page]
+					const node = client.lavalink.nodes.get(key)
+					if (!node) return utils.contentify(msg.channel, new Discord.MessageEmbed().addFields([{ name: "Deleted Node", value: "This LavaLink node no longer exists" }]))
+					const stat = node.stats
+					return utils.contentify(msg.channel, new Discord.MessageEmbed().addFields([
+						{
+							name: key,
+							value: `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stat.uptime, "ms")}\n`
+							+ `**❯ ${lang.meta.statistics.returns.ramUsage}:**\n${bToMB(stat.memory.allocated - stat.memory.free)}\n`
+							+ `**❯ CPU %:**\n${stat.cpu.lavalinkLoad}\n`,
+							inline: true
+						},
+						{
+							name: emojis.bl,
+							value: `**❯ Players:**\n${stat.players}\n`
+							+ `**❯ Playing Players:**\n${stat.playingPlayers}`,
+							inline: true
+						}
+					]))
+				})
 			} else {
 				const stats = await utils.getOwnStats()
 				const gateway = await passthrough.workers.gateway.getStats()
@@ -355,9 +378,9 @@ commands.assign([
 								const date = new Date(line.date)
 								const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
 								const diff =
-									`${diffs[index].files.length} files changed, ` +
-									`${diffs[index].insertions} insertions, ` +
-									`${diffs[index].deletions} deletions.`
+									`${diffs[index].files.length} file${diffs[index].files.length > 1 ? "s" : ""} changed, ` +
+									`${diffs[index].insertions} insertion${diffs[index].insertions > 1 ? "s" : ""}, ` +
+									`${diffs[index].deletions} deletion${diffs[index].deletions > 1 ? "s" : ""}.`
 								return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
 												`\`» ${diff}\`\n${line.message}`
 							}).join("\n\n") }
