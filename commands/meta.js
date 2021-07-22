@@ -196,11 +196,11 @@ commands.assign([
 			} else if (suffix.toLowerCase() === "lavalink" || suffix.toLowerCase() === "ll") {
 				const nodeIDs = [...client.lavalink.nodes.keys()]
 				return utils.paginate(msg.channel, nodeIDs.length, (page) => {
-					const key = nodeIDs[page]
+					const key = nodeIDs[page - 1]
 					const node = client.lavalink.nodes.get(key)
-					if (!node) return utils.contentify(msg.channel, new Discord.MessageEmbed().addFields([{ name: "Deleted Node", value: "This LavaLink node no longer exists" }]))
+					if (!node) return utils.contentify(msg.channel, new Discord.MessageEmbed().setColor(constants.standard_embed_color).addFields([{ name: "Deleted Node", value: "This LavaLink node no longer exists" }]))
 					const stat = node.stats
-					return utils.contentify(msg.channel, new Discord.MessageEmbed().addFields([
+					return utils.contentify(msg.channel, new Discord.MessageEmbed().setColor(constants.standard_embed_color).addFields([
 						{
 							name: key,
 							value: `**❯ ${lang.meta.statistics.returns.uptime}:**\n${utils.shortTime(stat.uptime, "ms")}\n`
