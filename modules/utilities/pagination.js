@@ -136,7 +136,7 @@ async function paginate(channel, pageCount, callback) {
 			}, 10 * 60 * 1000)
 		}
 		makeTimeout()
-	} else channel.send(await callback())
+	} else channel.send(await callback(1))
 }
 
 /**
