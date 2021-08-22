@@ -20,7 +20,7 @@
     "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@lavalink/encoding": "^0.1.2",
     "centra": "^2.5.0",
-    "cloudstorm": "github:AmandaDiscord/CloudStorm#e5df49cff777664698d0a5ce1c625ea873229a71",
+    "cloudstorm": "github:AmandaDiscord/CloudStorm#8c4ad7a919d1f93e1a2ca78738d302936bd2aadf",
     "discord-bot-analytics": "^1.0.14",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
     "entities": "^3.0.1",
