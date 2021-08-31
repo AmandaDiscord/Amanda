@@ -26,7 +26,7 @@
     "entities": "^3.0.1",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "genius-lyrics-api": "^3.0.6",
-    "heatsync": "^2.1.1",
+    "heatsync": "^2.2.0",
     "jimp": "^0.16.1",
     "lavacord": "github:AmandaDiscord/Lavacord#07b739ae19f415ccc29c42c111fd270c0e148780",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
@@ -35,7 +35,7 @@
     "node-ipc": "^9.2.1",
     "pg": "^8.7.1",
     "pinski": "github:cloudrac3r/pinski#e22095172a061a8271e28272e2e481d541ea6725",
-    "simple-git": "^2.44.0",
+    "simple-git": "^2.45.0",
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "github:AmandaDiscord/SnowTransfer#2b2d8e6a0330831d697e4214414b880bb0e4ab6f",
     "taihou": "^2.0.5",
@@ -48,6 +48,6 @@
     "@types/node": "^16.7.1",
     "eslint": "^7.32.0",
     "tap": "^15.0.9",
-    "typescript": "^4.3.5"
+    "typescript": "^4.4.2"
   }
 }

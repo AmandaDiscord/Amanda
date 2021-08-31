@@ -5,6 +5,7 @@ const crypto = require("crypto")
 const Discord = require("thunderstorm")
 const mixinDeep = require("mixin-deep")
 const InteractionMenu = require("@amanda/interactionmenu")
+const encoding = require("@lavalink/encoding")
 
 const passthrough = require("../../passthrough")
 const { config, sync, commands, queues, frisky, constants } = passthrough
@@ -51,17 +52,28 @@ const subcommandsMap = new Map([
 				const queue = queues.cache.get(msg.guild.id)
 				const node = (queue ? common.nodes.getByID(queue.nodeID) : null) || common.nodes.getByRegion(voiceChannel.rtcRegion)
 				if (node.search_with_invidious) { // Resolve tracks with Invidious
-					common.invidious.getData(match.id, node.host).then(async data => {
+					common.invidious.getData(match.id, node.host).then(data => {
 						// Now get the URL.
 						// This can throw an error if there's no formats (i.e. video is unavailable?)
 						// If it does, we'll end up in the catch block to search instead.
 						const url = common.invidious.dataToURL(data)
 						// The ID worked. Add the song
-						const track = await common.invidious.urlToTrack(url, voiceChannel.rtcRegion)
+						const track = encoding.encode({
+							flags: 1,
+							version: 2,
+							title: data.title,
+							author: data.author,
+							length: BigInt(data.lengthSeconds) * BigInt(1000),
+							identifier: data.videoId,
+							isStream: data.liveNow, // this is a guess
+							uri: url,
+							source: "http",
+							position: BigInt(0)
+						})
 						if (track) {
 							const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
 							common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
-						}
+						} else throw new Error("NO_TRACK")
 					}).catch(() => {
 						// Otherwise, start a search
 						common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
