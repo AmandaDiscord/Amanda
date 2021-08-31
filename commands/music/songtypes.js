@@ -3,6 +3,7 @@
 const Discord = require("thunderstorm")
 const c = require("centra")
 const entities = require("entities")
+const encoding = require("@lavalink/encoding")
 
 const passthrough = require("../../passthrough")
 const { constants, sync, frisky, config, ipc } = passthrough
@@ -324,7 +325,22 @@ class FriskySong extends Song {
 		}
 		this.title = this.stationData.title
 		this.queueLine = `**${this.stationData.queue}** (LIVE)`
-		this.track = data.track || "!"
+		if (data.track) this.track = data.track
+		else {
+			const url = this.station === "chill" ? this.stationData.url : this.stationData.beta_url
+			this.track = encoding.encode({
+				flags: 1,
+				version: 2,
+				title: "Frisky Radio",
+				author: "Feeling Frisky?",
+				length: BigInt(0),
+				identifier: url,
+				isStream: true,
+				uri: url,
+				source: "http",
+				position: BigInt(0)
+			})
+		}
 		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
 		this.typeWhileGetRelated = false
@@ -450,19 +466,7 @@ class FriskySong extends Song {
 			this.friskyStation.events.addListener("changed", this.bound)
 			await this.stationUpdate()
 		}
-		if (this.track == "!") {
-			let mp3URL = this.stationData.beta_url
-			if (this.station === "chill") mp3URL = this.stationData.url
-			return common.getTracks(mp3URL, this.queue.voiceChannel.rtcRegion).then(tracks => {
-				if (tracks[0] && tracks[0].track) this.track = tracks[0].track
-				else {
-					console.error(tracks)
-					this.error = `No tracks available for station ${this.station}`
-				}
-			}).catch(message => {
-				this.error = message
-			})
-		} else return Promise.resolve()
+		return Promise.resolve()
 	}
 	stationUpdate() {
 		this.stationInfoGetter.clear()
@@ -749,8 +753,19 @@ class ListenMoeSong extends Song {
 			width: 64,
 			height: 64
 		}
-		this.uri = this.stationData.Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].vorbis
-		this.track = "!"
+		this.uri = this.stationData.Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
+		this.track = encoding.encode({
+			flags: 1,
+			version: 2,
+			title: "Listen.moe",
+			author: "Delivering the best JPOP and KPOP music around!",
+			length: BigInt(0),
+			identifier: this.uri,
+			isStream: true,
+			uri: this.uri,
+			source: "http",
+			position: BigInt(0)
+		})
 		this.npUpdateFrequency = 15000
 		this.typeWhileGetRelated = false
 		this.noPauseReason = "You can't pause live audio."
@@ -761,22 +776,12 @@ class ListenMoeSong extends Song {
 	get _id() {
 		return String((this.stationData.nowPlaying.albums && this.stationData.nowPlaying.albums[0] ? (this.stationData.nowPlaying.albums[0].id || this.stationData.nowPlaying.id) : this.stationData.nowPlaying.id))
 	}
-	async prepare() {
+	prepare() {
 		if (!this.bound) {
 			this.bound = this.stationUpdate.bind(this)
 			this.stationData.on("trackUpdate", this.bound)
 		}
-		if (this.track === "!") {
-			let info
-			try {
-				info = await common.getTracks(this.uri, this.queue.voiceChannel.rtcRegion)
-			} catch {
-				this.error = `Missing track for ${this.title}`
-				return
-			}
-			if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
-			this.track = info[0].track
-		} else return Promise.resolve()
+		return Promise.resolve()
 	}
 	toObject() {
 		return {
