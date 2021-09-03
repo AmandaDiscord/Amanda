@@ -524,7 +524,8 @@ const common = {
 		 */
 		async function(textChannel, voiceChannel, author, insert, search, lang) {
 			let tracks = await common.searchYouTube(search, voiceChannel.rtcRegion)
-			if (tracks.length == 0) return textChannel.send(lang.audio.music.prompts.noResults)
+			if (tracks.length === 0) return textChannel.send(lang.audio.music.prompts.noResults)
+			if (tracks.length === 1) return common.inserters.fromData(textChannel, voiceChannel, tracks[0], insert)
 			tracks = tracks.slice(0, 10)
 			const results = tracks.map((track, index) => `${index + 1}. **${Discord.Util.escapeMarkdown(track.info.title)}** (${common.prettySeconds(track.info.length / 1000)})`)
 			utils.makeSelection(textChannel, author.id, lang.audio.music.prompts.songSelection, lang.audio.music.prompts.songSelectionCanceled, results).then(index => {
