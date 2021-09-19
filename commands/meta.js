@@ -667,7 +667,7 @@ commands.assign([
 			const args = suffix.split(" ")
 			if (msg.channel.type === "dm") if (args[0].toLowerCase() == "server") return msg.channel.send(lang.configuration.settings.prompts.cantModifyInDM)
 
-			/** @type {Object.<string, { type: "boolean" | "string", default: string, scope: Array<"self" | "server"> | "self" | "server" }>} */
+			/** @type {Object.<string, { type: "boolean" | "string" | "array", default: string, scope: Array<"self" | "server"> | "self" | "server" }>} */
 			const settings = {
 				"waifualert": {
 					type: "boolean",
@@ -702,6 +702,11 @@ commands.assign([
 				"prefix": {
 					type: "string",
 					default: Discord.Util.escapeMarkdown(passthrough.statusPrefix),
+					scope: ["self", "server"]
+				},
+				"disabledcmds": {
+					type: "array",
+					default: "cmds-separated,by-commas",
 					scope: ["self", "server"]
 				}
 			}
@@ -751,14 +756,14 @@ commands.assign([
 					]
 					// @ts-ignore
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
-					const finalValue = values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
+					const finalValue = setting.type === "array" && values[1] != null && values[2] != null ? values[2].replace(/ /g, "").split(",").concat(values[1].replace(/ /g, "").split(",")).filter((v, ind, arr) => arr.indexOf(v) === ind).join(", ") : values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
 					return msg.channel.send(
 						`Default value: ${values[0]}\n\
 						${setting.scope.includes("server") ? `Server value: ${values[1] != null ? values[1] : "[unset]"}\n` : ""}\
 						${setting.scope.includes("self") ? `Your value: ${values[2] != null ? values[2] : "[unset]"}\n` : ""}\
 						Computed value: ${finalValue}`
 					)
-				}
+				} else throw new Error("wtf did you do lol")
 			}
 
 			if (value === "null") {
@@ -844,7 +849,6 @@ commands.assign([
 			}
 
 			if (settingName === "prefix") {
-				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				if (value === "\"\"" || value === "''" || value === "``") return msg.channel.send("Invalid prefix")
 				let val = value
 				const match = value.match(/^(["'`])([\w\d ]{1,48})(["'`])$/)
@@ -853,6 +857,7 @@ commands.assign([
 						val = match[2]
 					}
 				}
+				if (val.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: val })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
@@ -864,7 +869,7 @@ commands.assign([
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value_result })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
-			} else if (setting.type === "string") {
+			} else if (setting.type === "string" || setting.type === "array") {
 				value = args[2].toLowerCase()
 				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
 				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value })

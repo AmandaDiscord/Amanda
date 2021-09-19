@@ -152,6 +152,14 @@ async function manageMessage(msg, isEdit = false) {
 	else lang = await utils.getLang(msg.author.id, "self")
 
 	if (cmd) {
+		const selfdisabled = await utils.orm.db.get("settings_self", { key_id: msg.author.id, setting: "disabledcmds" })
+		if (selfdisabled && selfdisabled.value && selfdisabled.value.replace(/ /g, "").split(",").find(c => cmd.aliases.includes(c))) return
+
+		if (msg.guild) {
+			const guilddisabled = await utils.orm.db.get("settings_guild", { key_id: msg.guild.id, setting: "disabledcmds" })
+			if (guilddisabled && guilddisabled.value && guilddisabled.value.replace(/ /g, "").split(",").find(c => cmd.aliases.includes(c))) return
+		}
+
 		try {
 			await cmd.process(msg, suffix, lang, prefixes)
 		} catch (e) {
