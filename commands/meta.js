@@ -869,7 +869,7 @@ commands.assign([
 
 				const array = value.replace(/ /g, "").split(",")
 				const errored = array.filter(c => cannotDisable.includes(c) || !commands.cache.find(cm => cm.aliases.includes(c)))
-				if (errored.length) return msg.channel.send(`Not all commands you provided can be disabled. Please remove the commands that cannot be disabled from your input.\nCannot disabled: [${errored.join(", ")}]`)
+				if (errored.length) return msg.channel.send(`Not all commands you provided can be disabled. Please remove the commands that cannot be disabled from your input.\nCannot disable: [${errored.join(", ")}]`)
 				await utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: array.join(",") })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
