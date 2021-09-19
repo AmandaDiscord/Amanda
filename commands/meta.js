@@ -744,6 +744,7 @@ commands.assign([
 				if (scope == "server") {
 					value = row ? row.value : setting.default
 					if (setting.type == "boolean") value = `${(!!+value)}`
+					if (setting.type == "array") value = `[${value.split(",").join(", ")}]`
 					if (row) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueServer, { "setting": settingName, "value": value }))
 					else return msg.channel.send(utils.replace(lang.configuration.settings.prompts.currentValueInherited, { "setting": settingName, "value": value }))
 				} else if (scope == "self") {
@@ -756,7 +757,7 @@ commands.assign([
 					]
 					// @ts-ignore
 					if (setting.type == "boolean") values = values.map(v => v != null ? !!+v : v)
-					const finalValue = setting.type === "array" && values[1] != null && values[2] != null ? values[2].replace(/ /g, "").split(",").concat(values[1].replace(/ /g, "").split(",")).filter((v, ind, arr) => arr.indexOf(v) === ind).join(", ") : values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
+					const finalValue = setting.type === "array" && values[1] != null && values[2] != null ? values[2].split(",").concat(values[1].split(",")).filter((v, ind, arr) => arr.indexOf(v) === ind).join(", ") : values.reduce((acc, cur) => (cur != null ? cur : acc), "[no default]")
 					return msg.channel.send(
 						`Default value: ${values[0]}\n\
 						${setting.scope.includes("server") ? `Server value: ${values[1] != null ? values[1] : "[unset]"}\n` : ""}\
@@ -862,11 +863,22 @@ commands.assign([
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 			}
 
+			if (settingName === "disabledcmds") {
+				if (value.length > 50) return msg.channel.send(lang.configuration.settings.prompts.tooLong)
+				const cannotDisable = ["help", "settings"]
+
+				const array = value.replace(/ /g, "").split(",")
+				const errored = array.filter(c => cannotDisable.includes(c) || !commands.cache.find(cm => cm.aliases.includes(c)))
+				if (errored.length) return msg.channel.send(`Not all commands you provided can be disabled. Please remove the commands that cannot be disabled from your input.\nCannot disabled: [${errored.join(", ")}]`)
+				await utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: array.join(",") })
+				return msg.channel.send(lang.configuration.settings.returns.updated)
+			}
+
 			if (setting.type === "boolean") {
 				value = args[2].toLowerCase()
 				if (!["true", "false"].includes(value)) return msg.channel.send(utils.replace(lang.configuration.settings.prompts.invalidSyntaxBoolean, { "setting": settingName, "value": value }))
 				const value_result = args[2] == "true" ? "1" : "0"
-				utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value_result })
+				await utils.orm.db.upsert(tableName, { key_id: keyID, setting: settingName, value: value_result })
 				return msg.channel.send(lang.configuration.settings.returns.updated)
 
 			} else if (setting.type === "string" || setting.type === "array") {
