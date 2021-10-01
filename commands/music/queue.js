@@ -213,7 +213,7 @@ class Queue {
 	async _reportError() {
 		const lang = await this.getLang()
 		/**
-		 * @param {string | Discord.APIMessage | Discord.MessageOptions} contents
+		 * @param {string | Discord.MessageOptions} contents
 		 */
 		const sendReport = (contents) => {
 			// Report to original channel
@@ -383,9 +383,9 @@ class Queue {
 		if (this.dissolved) return
 		this.dissolved = true
 		this.npUpdater.stop(false)
-		if (this.npEditable && this.np) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color))).catch(() => void 0)
+		if (this.npEditable && this.np) await this.np.edit(await utils.contentify(this.textChannel, new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)).catch(() => ({ content: "It looks like this queue has ended" }))).catch(() => void 0)
 		if (this.npMenu) await this.npMenu.destroy().catch(() => void 0)
-		await client.lavalink.leave(this.guild.id)
+		await client.lavalink.leave(this.guild.id).catch(() => void 0)
 		this.manager.delete(this.guild.id)
 	}
 	/**

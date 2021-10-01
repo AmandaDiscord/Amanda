@@ -119,7 +119,8 @@ const interactionSources = [
 	{
 		name: "nom",
 		description: "Noms someone",
-		shortcut: "weeb.sh"
+		shortcut: "weeb.sh",
+		aliases: ["bite"]
 	},
 	{
 		name: "kiss",
@@ -158,10 +159,11 @@ const interactionSources = [
 ]
 
 for (const source of interactionSources) {
+	const name = [source.name]
 	const newCommand = {
 		usage: "<user>",
 		description: source.description,
-		aliases: [source.name],
+		aliases: source.aliases ? name.concat(source.aliases) : name,
 		category: "interaction",
 		examples: [`${source.name} Amanda`],
 		/**

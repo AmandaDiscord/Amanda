@@ -42,6 +42,11 @@ const pool = new Postgres.Pool({
 	max: 2
 })
 
+listenMoeJP.on("error", console.error)
+listenMoeKP.on("error", console.error)
+listenMoeJP.on("unknown", console.log)
+listenMoeKP.on("unknown", console.log)
+
 ;(async () => {
 	// DB
 
@@ -74,12 +79,9 @@ const pool = new Postgres.Pool({
 		}
 	})
 
-	client._snow.requestHandler.on("requestError", console.error)
+	GatewayWorker.on("error", console.error)
 
-	listenMoeJP.on("error", console.error)
-	listenMoeKP.on("error", console.error)
-	listenMoeJP.on("unknown", console.log)
-	listenMoeKP.on("unknown", console.log)
+	client._snow.requestHandler.on("requestError", console.error)
 
 	// IPC
 
