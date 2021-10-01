@@ -26,7 +26,7 @@
     "entities": "^3.0.1",
     "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
     "genius-lyrics-api": "^3.2.0",
-    "heatsync": "2.2.1",
+    "heatsync": "^2.2.1",
     "jimp": "^0.16.1",
     "lavacord": "github:AmandaDiscord/Lavacord#2e38e5d7bce3c6d07eb6ab8bd731c331334a8bfe",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
