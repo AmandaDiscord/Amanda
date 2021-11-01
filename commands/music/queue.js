@@ -456,7 +456,6 @@ class Queue {
 	 * @returns {Promise<0 | 1 | 2 | 3 | 4>} Returns 0 on success. 1 if no song. 2 if the song is live. 3 if the position is > song length. 4 if error
 	 */
 	async seek(position) {
-		return 4
 		const song = this.songs[0]
 		if (!song) return 1
 		if (song.live) return 2
@@ -557,7 +556,6 @@ class Queue {
 	 * @param {number} num A float defaulting to 1.0
 	 */
 	async volume(num = 1.0) {
-		return 2
 		if (!this.songs[0]) return 1
 		const player = await this.player
 		const result = await player.volume(num)
@@ -573,7 +571,6 @@ class Queue {
 	 * @param {boolean} apply Whether or not the method should assign the number to the queue attributes
 	 */
 	async pitch(num = 1.0, apply = true) {
-		return 2
 		if (!this.songs[0]) return 1
 		const player = await this.player
 		const oldFilters = Discord.Util.cloneObject(player.state.filters) // Object.assign is mutative
@@ -594,7 +591,6 @@ class Queue {
 	 * @param {boolean} apply Whether or not the method should assign the number to the queue attributes
 	 */
 	async speed(num = 1.0, apply = true) {
-		return 3
 		if (!this.songs[0]) return 1
 		if (this.songs[0].live) return 2
 		const player = await this.player
