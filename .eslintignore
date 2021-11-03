@@ -1,2 +1,4 @@
 scripts
 website
+dist
+node_modules
