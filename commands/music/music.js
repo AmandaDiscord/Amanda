@@ -394,7 +394,6 @@ const subcommandsMap = new Map([
 			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			if (!queue.songs[0]) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
 			if (queue.songs[0].live) return msg.channel.send(`${msg.author.username}, you can't toggle nightcore mode on live audio!`)
-			return msg.channel.send(`${msg.author.username}, there was an error when applying the nightcore filter to the current playing song`)
 			const player = await queue.player
 			const oldFilters = player.state.filters
 			const newFilters = mixinDeep(oldFilters, { timescale: { pitch: queue.nightcore ? queue.pitchAmount : 1.3, speed: queue.nightcore ? queue.speedAmount : 1.3 } })
@@ -414,7 +413,6 @@ const subcommandsMap = new Map([
 			if (voiceChannel.id !== queue.voiceChannel.id) return msg.channel.send(utils.replace(lang.audio.music.returns.queueIn, { "channel": queue.voiceChannel.name }))
 			if (!queue.songs[0]) return msg.channel.send(lang.audio.music.prompts.nothingPlaying)
 			if (queue.songs[0].live) return msg.channel.send(`${msg.author.username}, you can't toggle anti-nightcore mode on live audio!`)
-			return msg.channel.send(`${msg.author.username}, there was an error when applying the anti-nightcore filter to the current playing song`)
 			const player = await queue.player
 			const oldFilters = player.state.filters
 			const newFilters = mixinDeep(oldFilters, { timescale: { pitch: queue.antiNightcore ? queue.pitchAmount : 0.7, speed: queue.antiNightcore ? queue.speedAmount : 0.7 } })
