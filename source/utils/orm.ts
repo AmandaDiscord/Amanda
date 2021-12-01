@@ -18,34 +18,32 @@ type StatementBuffer = {
 	}
 }
 
-type InferModelDef<M extends Model<string, Record<string, unknown>>> = M extends Model<string, infer D> ? D : unknown
+type InferModelDef<M extends Model<Record<string, unknown>>> = M extends Model<infer D> ? D : unknown
 
-class Model<T extends string | number | symbol, D extends Record<string, unknown>> {
-	public table: T
+export class Model<D extends Record<string, unknown>> {
 	public primaryKey: Array<keyof D>
 	public options: { useBuffer: boolean; bufferSize: number; bufferTimeout: number }
 
-	public constructor(table: T, primaryKey: Array<keyof D> = [], options: { useBuffer?: boolean; bufferSize?: number; bufferTimeout?: number } = {}) {
-		this.table = table
+	public constructor(primaryKey: Array<keyof D> = [], options: { useBuffer?: boolean; bufferSize?: number; bufferTimeout?: number } = {}) {
 		this.primaryKey = primaryKey || []
 		this.options = Object.assign({ useBuffer: false, bufferSize: 50, bufferTimeout: 5000 }, options)
 	}
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-class Database<M extends Record<string, Model<any, any>>> {
+export class Database<M extends Record<string, Model<any>>> {
 	public tables: M
 	public buffers: Record<string, StatementBuffer> = {}
 
 	public constructor(models: M) {
 		this.tables = models
 
-		for (const model of Object.values(this.tables)) {
-			this.buffers[model.table] = { bufferValues: { insert: [] }, timeouts: { insert: null } }
+		for (const table of Object.keys(this.tables)) {
+			this.buffers[table] = { bufferValues: { insert: [] }, timeouts: { insert: null } }
 		}
 	}
 
-	public raw(statement: string, prepared: Array<unknown>) {
+	public raw(statement: string, prepared?: Array<unknown>) {
 		return sql.all(statement, prepared)
 	}
 
@@ -64,18 +62,18 @@ class Database<M extends Record<string, Model<any, any>>> {
 			let res: ReturnType<typeof Database["prototype"]["_buildStatement"]>
 			if (options.useBuffer) {
 				const model = this.tables[table]
-				if (this.buffers[model.table].bufferValues.insert.length === model.options.bufferSize) {
-					const timeout = this.buffers[model.table].timeouts.insert
+				if (this.buffers[table as string].bufferValues.insert.length === model.options.bufferSize) {
+					const timeout = this.buffers[table as string].timeouts.insert
 					if (timeout) clearTimeout(timeout)
-					this.buffers[model.table].timeouts.insert = null
+					this.buffers[table as string].timeouts.insert = null
 					res = this._buildStatement(method, table, properties, { useBuffer: true })
 				} else {
-					this.buffers[model.table].bufferValues.insert.push(properties)
-					if (!this.buffers[model.table].timeouts.insert) {
-						this.buffers[model.table].timeouts.insert = setTimeout(() => {
+					this.buffers[table as string].bufferValues.insert.push(properties)
+					if (!this.buffers[table as string].timeouts.insert) {
+						this.buffers[table as string].timeouts.insert = setTimeout(() => {
 							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
 							r(sql.all(res2.statement, res2.prepared).catch(rej))
-							this.buffers[model.table].timeouts.insert = null
+							this.buffers[table as string].timeouts.insert = null
 						}, model.options.bufferTimeout)
 					}
 					return
@@ -110,7 +108,7 @@ class Database<M extends Record<string, Model<any, any>>> {
 
 	private _buildStatement<T extends keyof M>(method: "select" | "upsert" | "insert" | "update" | "delete", table: T, properties: Partial<InferModelDef<M[T]>> | undefined = undefined, options: { select?: Array<keyof Partial<InferModelDef<M[T]>> | "*">; limit?: number; useBuffer?: boolean; where?: Partial<InferModelDef<M[T]>>; order?: keyof InferModelDef<M[T]>; orderDescending?: boolean; } = {}) {
 		options = Object.assign({ select: ["*"], limit: 0, useBuffer: false, where: {} }, options)
-		const model = this.tables[table] as unknown as Model<T, InferModelDef<M[T]>>
+		const model = this.tables[table] as unknown as Model<InferModelDef<M[T]>>
 		let statement = ""
 		let preparedAmount = 1
 		const prepared = [] as Array<unknown>
@@ -212,47 +210,47 @@ class Database<M extends Record<string, Model<any, any>>> {
 	}
 }
 
-const AccountPrefixes = new Model<"account_prefixes", { user_id: string; prefix: string; status: number; }>("account_prefixes", ["user_id", "prefix"])
-const BackgroundSync = new Model<"background_sync", { machine_id: string, user_id: string, url: string }>("background_sync", ["machine_id", "user_id"], { useBuffer: true, bufferTimeout: 2000 })
-const BankAccess = new Model<"bank_access", { id: string, user_id: string }>("bank_access")
-const BankAccounts = new Model<"bank_accounts", { id: string, amount: string, type: number }>("bank_accounts", ["id"])
-const Bans = new Model<"bans", { user_id: string, temporary: number, expires: number }>("bans", ["user_id"])
-const ChannelOverrides = new Model<"channel_overrides", { id: string, type: number, allow: string, deny: string, guild_id: string, channel_id: string }>("channel_overrides", ["channel_id", "id"], { useBuffer: true, bufferSize: 5000 })
-const Channels = new Model<"channels", { id: string, type: number, guild_id: string, name: string, rtc_region: string }>("channels", ["id"], { useBuffer: true, bufferSize: 5000 })
-const Couples = new Model<"couples", { user1: string, user2: string, married_at: string, balance: number }>("couples")
-const CSRFTokens = new Model<"csrf_tokens", { token: string, login_token: string, expires: number }>("csrf_tokens", ["token"])
-const DailyCooldown = new Model<"daily_cooldown", { user_id: string, last_claim: number }>("daily_cooldown", ["user_id"])
-const Guilds = new Model<"guilds", { id: string, name: string, icon: string, member_count: number, owner_id: string, added_by: string }>("guilds", ["id"], { useBuffer: true, bufferSize: 1000 })
-const InteractionGifs = new Model<"interaction_gifs", { type: string, url: string }>("interaction_gifs")
-const LavalinkNodeRegions = new Model<"lavalink_node_regions", { host: string, region: string }>("lavalink_node_regions", ["host", "region"])
-const LavalinkNodes = new Model<"lavalink_nodes", { host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>("lavalink_nodes", ["host"])
-const MemberRoles = new Model<"member_roles", { id: string, guild_id: string, role_id: string }>("member_roles", ["guild_id", "id", "role_id"], { useBuffer: true })
-const Members = new Model<"members", { id: string, guild_id: string, nick: string, joined_at: string }>("members", ["id", "guild_id"])
-const Money = new Model<"money", { user_id: string, coins: number }>("money", ["user_id"])
-const MoneyCooldown = new Model<"money_cooldown", { user_id: string, command: string, date: number, value: number }>("money_cooldown")
-const PendingRelations = new Model<"pending_relations", { user1: string, user2: string }>("pending_relations")
-const PeriodicHistory = new Model<"periodic_history", { field: string, timestamp: number }>("periodic_history")
-const PlaylistSongs = new Model<"playlist_songs", { playlist_id: number, video_id: string, next: string }>("playlist_songs", ["playlist_id", "video_id"])
-const Playlists = new Model<"playlists", { playlist_id: number, author: string, name: string, play_count: number }>("playlists", ["playlist_id"])
-const Premium = new Model<"premium", { user_id: string, state: number }>("premium", ["user_id"])
-const RestartNotify = new Model<"restart_notify", { bot_id: string, mention_id: string, channel_id: string }>("restart_notify", ["bot_id", "mention_id"])
-const Roles = new Model<"roles", { id: string, permissions: string, guild_id: string }>("roles", ["id"], { useBuffer: true, bufferSize: 5000 })
-const SettingsGuild = new Model<"settings_guild", { key_id: string, setting: string, value: string }>("settings_guild", ["key_id", "setting"])
-const SettingsSelf = new Model<"settings_self", { key_id: string, setting: string, value: string }>("settings_self", ["key_id", "setting"])
-const Songs = new Model<"songs", { video_id: string, name: string, length: number }>("songs", ["video_id"])
-const StatLogs = new Model<"stat_logs", { time: number, id: string, ram_usage_kb: number, users: number, guilds: number, channels: number, voice_connections: number, uptime: number, shard: number }>("stat_logs", ["time", "id", "shard"])
-const StatusMessages = new Model<"status_messages", { id: number, dates: string, users: string, message: string, type: number, demote: number }>("status_messages", ["id"])
-const StatusRanges = new Model<"status_ranges", { label: string, start_month: number, start_day: number, end_month: number, end_day: number }>("status_ranges", ["label"])
-const StatusUsers = new Model<"status_users", { label: string, user_id: string }>("status_users", ["label", "user_id"])
-const Timeouts = new Model<"timeouts", { user_id: string, expires: number, amount: number }>("timeouts", ["user_id"])
-const Transactions = new Model<"transactions", { id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>("transactions", ["id"])
-const UserPermissions = new Model<"user_permissions", { user_id: string, eval: number, owner: number }>("user_permissions", ["user_id"])
-const Users = new Model<"users", { id: string, tag: string, avatar: string, bot: number, added_by: string }>("users", ["id"], { useBuffer: true })
-const VoiceStates = new Model<"voice_states", { guild_id: string, channel_id: string, user_id: string }>("voice_states", ["user_id"], { useBuffer: true, bufferSize: 300 })
-const WebTokens = new Model<"web_tokens", { user_id: string, token: string, staging: number }>("web_tokens", ["user_id"])
-const WebhookAliases = new Model<"webhook_aliases", { webhook_id: string, webhook_username: string, user_id: string, user_username: string, user_discriminator: string }>("webhook_aliases", ["webhook_id", "webhook_username"])
+const AccountPrefixes = new Model<{ user_id: string; prefix: string; status: number; }>(["user_id", "prefix"])
+const BackgroundSync = new Model<{ machine_id: string, user_id: string, url: string }>(["machine_id", "user_id"], { useBuffer: true, bufferTimeout: 2000 })
+const BankAccess = new Model<{ id: string, user_id: string }>()
+const BankAccounts = new Model<{ id: string, amount: string, type: number }>(["id"])
+const Bans = new Model<{ user_id: string, temporary: number, expires: number }>(["user_id"])
+const ChannelOverrides = new Model<{ id: string, type: number, allow: string, deny: string, guild_id: string, channel_id: string }>(["channel_id", "id"], { useBuffer: true, bufferSize: 5000 })
+const Channels = new Model<{ id: string, type: number, guild_id: string, name: string, rtc_region: string }>(["id"], { useBuffer: true, bufferSize: 5000 })
+const Couples = new Model<{ user1: string, user2: string, married_at: string, balance: number }>()
+const CSRFTokens = new Model<{ token: string, login_token: string, expires: number }>(["token"])
+const DailyCooldown = new Model<{ user_id: string, last_claim: number }>(["user_id"])
+const Guilds = new Model<{ id: string, name: string, icon: string, member_count: number, owner_id: string, added_by: string }>(["id"], { useBuffer: true, bufferSize: 1000 })
+const InteractionGifs = new Model<{ type: string, url: string }>()
+const LavalinkNodeRegions = new Model<{ host: string, region: string }>(["host", "region"])
+const LavalinkNodes = new Model<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>(["host"])
+const MemberRoles = new Model<{ id: string, guild_id: string, role_id: string }>(["guild_id", "id", "role_id"], { useBuffer: true })
+const Members = new Model<{ id: string, guild_id: string, nick: string, joined_at: string }>(["id", "guild_id"])
+const Money = new Model<{ user_id: string, coins: number }>(["user_id"])
+const MoneyCooldown = new Model<{ user_id: string, command: string, date: number, value: number }>()
+const PendingRelations = new Model<{ user1: string, user2: string }>()
+const PeriodicHistory = new Model<{ field: string, timestamp: number }>()
+const PlaylistSongs = new Model<{ playlist_id: number, video_id: string, next: string }>(["playlist_id", "video_id"])
+const Playlists = new Model<{ playlist_id: number, author: string, name: string, play_count: number }>(["playlist_id"])
+const Premium = new Model<{ user_id: string, state: number }>(["user_id"])
+const RestartNotify = new Model<{ bot_id: string, mention_id: string, channel_id: string }>(["bot_id", "mention_id"])
+const Roles = new Model<{ id: string, permissions: string, guild_id: string }>(["id"], { useBuffer: true, bufferSize: 5000 })
+const SettingsGuild = new Model<{ key_id: string, setting: string, value: string }>(["key_id", "setting"])
+const SettingsSelf = new Model<{ key_id: string, setting: string, value: string }>(["key_id", "setting"])
+const Songs = new Model<{ video_id: string, name: string, length: number }>(["video_id"])
+const StatLogs = new Model<{ time: number, id: string, ram_usage_kb: number, users: number, guilds: number, channels: number, voice_connections: number, uptime: number, shard: number }>(["time", "id", "shard"])
+const StatusMessages = new Model<{ id: number, dates: string, users: string, message: string, type: number, demote: number }>(["id"])
+const StatusRanges = new Model<{ label: string, start_month: number, start_day: number, end_month: number, end_day: number }>(["label"])
+const StatusUsers = new Model<{ label: string, user_id: string }>(["label", "user_id"])
+const Timeouts = new Model<{ user_id: string, expires: number, amount: number }>(["user_id"])
+const Transactions = new Model<{ id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>(["id"])
+const UserPermissions = new Model<{ user_id: string, eval: number, owner: number }>(["user_id"])
+const Users = new Model<{ id: string, tag: string, avatar: string, bot: number, added_by: string }>(["id"], { useBuffer: true })
+const VoiceStates = new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id"], { useBuffer: true, bufferSize: 300 })
+const WebTokens = new Model<{ user_id: string, token: string, staging: number }>(["user_id"])
+const WebhookAliases = new Model<{ webhook_id: string, webhook_username: string, user_id: string, user_username: string, user_discriminator: string }>(["webhook_id", "webhook_username"])
 
-const db = new Database({
+export const db = new Database({
 	account_prefixes: AccountPrefixes,
 	background_sync: BackgroundSync,
 	bank_access: BankAccess,
@@ -294,8 +292,4 @@ const db = new Database({
 	webhook_aliases: WebhookAliases
 })
 
-export = {
-	db,
-	Model,
-	Database
-}
+export default exports as typeof import("./orm")

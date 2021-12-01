@@ -22,13 +22,13 @@
     "@types/centra": "^2.2.0",
     "@types/node": "^16.7.1",
     "@types/pg": "^8.6.1",
-    "@types/ws": "^8.2.0",
+    "@types/ws": "^8.2.1",
     "centra": "^2.5.0",
-    "cloudstorm": "0.3.1",
+    "cloudstorm": "0.3.2",
     "discord-bot-analytics": "^1.0.14",
-    "discord-typings": "9.0.3",
+    "discord-typings": "9.0.4",
     "entities": "^3.0.1",
-    "frisky-client": "github:cloudrac3r/frisky-client#42129ee3c0d76d5f1ea064c6c76e555105190cfc",
+    "frisky-client": "github:cloudrac3r/frisky-client",
     "genius-lyrics-api": "^3.2.0",
     "heatsync": "^2.2.1",
     "jimp": "^0.16.1",
@@ -36,19 +36,19 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "pg": "^8.7.1",
-    "simple-git": "^2.47.0",
+    "simple-git": "^2.47.1",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "0.3.1",
-    "taihou": "^2.0.6",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#ae342f96a9200002d1b3c6c5fd6bb175f1d3d70e",
-    "typescript": "^4.4.4",
+    "snowtransfer": "0.3.2",
+    "taihou": "github:PapiOphidian/Taihou#declaration",
+    "thunderstorm": "file:../ThunderStorm",
+    "typescript": "^4.5.2",
     "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53",
-    "ws": "^8.2.3"
+    "ws": "^8.3.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.3.0",
-    "@typescript-eslint/parser": "^5.3.0",
-    "eslint": "^8.1.0",
-    "tap": "^15.0.10"
+    "@typescript-eslint/eslint-plugin": "^5.5.0",
+    "@typescript-eslint/parser": "^5.5.0",
+    "eslint": "^8.3.0",
+    "tap": "^15.1.5"
   }
 }

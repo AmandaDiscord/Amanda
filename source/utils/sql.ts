@@ -1,9 +1,9 @@
 import util from "util"
 
-import logger from "./logger"
-
 import passthrough from "../passthrough"
-const { db } = passthrough
+const { db, sync } = passthrough
+
+const logger = sync.require("./logger") as typeof import("./logger")
 
 export function all(string: string, prepared?: unknown | Array<unknown>, connection?: import("pg").PoolClient, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
 	if (!connection) connection = db
@@ -34,7 +34,9 @@ export async function get(string: string, prepared?: unknown | Array<unknown>, c
 
 export async function hasPermission(user: import("thunderstorm").User, permission: "eval" | "owner") {
 	const result = await get(`SELECT ${permission} FROM user_permissions WHERE user_id = $1`, user.id)
-	let r
-	if (result) r = Object.values(result)[0]
+	let r: number | undefined = undefined
+	if (result) r = Object.values(result)[0] as number
 	return !!r
 }
+
+export default exports as typeof import("./sql")

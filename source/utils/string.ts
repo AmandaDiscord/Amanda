@@ -10,13 +10,11 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 	else if (data instanceof Promise) return stringify(await data, depth, returnRaw)
 	else if (data instanceof Error) {
 		const errorObject = {}
-		Object.entries(data).forEach(e => {
-			errorObject[e[0]] = e[1]
-		})
+		Object.entries(data).forEach(e => errorObject[e[0]] = e[1])
 		result = `\`\`\`\n${data.stack}\`\`\` ${await stringify(errorObject)}`
 	} else {
 		const pre = util.inspect(data, { depth: depth })
-		result = `${pre.length < 2000 ? "```js\n" : ""}${pre}${pre.length < 2000 ? "```" : ""}`
+		result = returnRaw ? pre : `${pre.length < 2000 ? "```js\n" : ""}${pre}${pre.length < 2000 ? "```" : ""}`
 	}
 	if (result.length >= 2000 && !returnRaw) {
 		if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
@@ -83,3 +81,5 @@ export function abbreviateNumber(value: number | string | bigint, precision = 2)
 	}
 	return converted.toLocaleString()
 }
+
+export default exports as typeof import("./string")

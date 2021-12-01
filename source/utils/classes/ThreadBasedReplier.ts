@@ -1,9 +1,12 @@
-import SingleUseMap from "./SingleUseMap"
+import passthrough from "../../passthrough"
+const { sync } = passthrough
+
+const SingleUseMap = sync.require("./SingleUseMap") as typeof import("./SingleUseMap")
 
 class ThreadBasedReplier<OPS extends { [op: string]: number }> {
-	private outgoing = new SingleUseMap<string, (value: unknown) => void>()
-	private outgoingPersist = new SingleUseMap<string, { list: Array<unknown>, amount: number }>()
-	private lastThreadID = 0n
+	public outgoing = new SingleUseMap<string, (value: unknown) => void>()
+	public outgoingPersist = new SingleUseMap<string, { list: Array<unknown>, amount: number }>()
+	public lastThreadID = 0n
 
 	private get nextThreadID() {
 		return `${process.pid}_${(++this.lastThreadID)}`
@@ -14,7 +17,7 @@ class ThreadBasedReplier<OPS extends { [op: string]: number }> {
 	}
 
 	public request<O extends OPS[keyof OPS], D>(op: O, data: D, sendFN: (raw: { t: string; o: O; d: D }) => unknown): Promise<unknown>
-	public request<O extends OPS[keyof OPS], D>(op: O, data: D, sendFn: (raw: { t: string; o: O; d: D }) => unknown, amount?: number, timeout?: number): Promise<Array<unknown>>
+	public request<O extends OPS[keyof OPS], D>(op: O, data: D, sendFn: (raw: { t: string; o: O; d: D }) => unknown, amount: number, timeout?: number): Promise<Array<unknown>>
 	public request<O extends OPS[keyof OPS], D>(op: O, data: D, sendFn: (raw: { t: string; o: O; d: D }) => unknown, amount?: number, timeout?: number): Promise<unknown | Array<unknown>> {
 		// 3. request to a client
 		const raw = this.buildRequest(op, data)
@@ -26,8 +29,7 @@ class ThreadBasedReplier<OPS extends { [op: string]: number }> {
 				if (timeout) {
 					setTimeout(() => {
 						const persist = this.outgoingPersist.get(raw.t)
-						if (persist) this.outgoing.use(raw.t)?.(persist.list) // don't call resolve directly because the Promise could already be fulfilled.
-						// Don't reject either because the user could still trigger it themself. If they don't, then the Promise will hang. No big deal and they can debug it.
+						if (persist) this.outgoing.use(raw.t)?.(persist.list) // don't call resolve directly because the Promise could already be fulfilled and consumed.
 						this.outgoing.delete(raw.t)
 						this.outgoingPersist.delete(raw.t)
 					}, timeout)

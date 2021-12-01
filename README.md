@@ -1,11 +1,10 @@
 ![Amanda's avatar, a red-haired catgirl, in front of an out-of-focus background of code.](https://cdn.discordapp.com/attachments/608456955660468224/636334218510729237/banner_no_ads.png)
 
 # A qt music bot made for qts like you
-
-Amanda is a 100% free Discord music bot written in JavaScript (CommonJS).
+Amanda is a 100% free Discord music bot written in Typescript transpiled down to CommonJS.
 
 # Legal
-PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amanda/blob/rained-in/LICENSE).
+PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amanda/blob/main/LICENSE).
 We will take offenses against this license very seriously.
 
 # Features
