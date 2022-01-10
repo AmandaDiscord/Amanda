@@ -772,7 +772,7 @@ const common = {
 			const start = text.indexOf(ss)
 			const afterStart = text.substring(start)
 			const end = afterStart.indexOf("</script>")
-			const body = text.slice(start + ss.length + 3, start + end).trim()
+			const body = text.slice(start + ss.length + 2, start + end).trim()
 			if (!body) throw new Error("Cannot extract Spotify track info")
 			let parsed
 			// eslint-disable-next-line no-useless-catch
