@@ -768,11 +768,11 @@ const common = {
 				console.error(e)
 				throw e
 			}
-			const ss = "Spotify.Entity"
+			const ss = "<script type=\"application/ld+json\">"
 			const start = text.indexOf(ss)
 			const afterStart = text.substring(start)
-			const end = afterStart.indexOf(";\n")
-			const body = text.slice(start + ss.length + 3, start + end)
+			const end = afterStart.indexOf("</script>")
+			const body = text.slice(start + ss.length + 3, start + end).trim()
 			if (!body) throw new Error("Cannot extract Spotify track info")
 			let parsed
 			// eslint-disable-next-line no-useless-catch
