@@ -43,5 +43,8 @@ export type Config = {
 
 	"music_dash_enabled": boolean,
 	"total_shards": number,
-	"is_dev_env": boolean
+	"is_dev_env": boolean,
+	"post_commands": boolean
 }
+
+export type UnpackArray<T> = T extends Array<infer R> ? R : never;

@@ -21,6 +21,7 @@
 		"BigInt": true
 	},
 	"rules": {
+		"@typescript-eslint/no-non-null-assertion": "off",
 		"brace-style": ["error", "1tbs", { "allowSingleLine": true }],
 		"comma-dangle": ["error", "never"],
 		"comma-spacing": "error",

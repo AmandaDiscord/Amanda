@@ -4,12 +4,22 @@ import repl from "repl"
 import util from "util"
 
 import passthrough from "../passthrough"
+const { client, config, constants, commands, requester } = passthrough
 
 import logger from "../utils/logger"
 
+function refreshcommands() {
+	if (!client.readyAt) return logger.error("Client isn't ready yet")
+	client.application!.commands.set(commands.cache.map(c => ({
+		name: c.name,
+		description: c.description,
+		options: c.options
+	})))
+}
+
 async function customEval(input: string, context: import("vm").Context, filename: string, callback: (err: Error | null, result: unknown) => unknown) {
 	let depth = 0
-	if (input == "exit\n") return process.exit()
+	if (input === "exit\n") return process.exit()
 	if (input.startsWith(":")) {
 		const depthOverwrite = input.split(" ")[0]
 		depth = +depthOverwrite.slice(1)

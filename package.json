@@ -2,7 +2,7 @@
   "name": "amanda",
   "version": "1.0.0",
   "description": "A cutie-pie music bot",
-  "main": "index.js",
+  "main": "dist/index.js",
   "author": "PapiOphidian",
   "scripts": {
     "start": "node --optimize_for_size dist/index.js",
@@ -12,21 +12,21 @@
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
     "node": ">=16.7.0",
-    "npm": ">=7.9.0"
+    "npm": ">=8.0.0"
   },
   "dependencies": {
-    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#4381fc46fd9abd8f7478e81f9c4b13211b590e84",
+    "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#a8bb4fbfad3d16f418c41a3b807127d790f2a601",
     "@amanda/interactionmenu": "github:AmandaDiscord/InteractionMenu#e07ba4bd72759c4c1eeb893e7bb1a1693ee740c3",
     "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@lavalink/encoding": "^0.1.2",
     "@types/centra": "^2.2.0",
     "@types/node": "^16.7.1",
-    "@types/pg": "^8.6.1",
-    "@types/ws": "^8.2.1",
+    "@types/pg": "^8.6.3",
+    "@types/ws": "^8.2.2",
     "centra": "^2.5.0",
     "cloudstorm": "0.3.2",
     "discord-bot-analytics": "^1.0.14",
-    "discord-typings": "9.0.4",
+    "discord-typings": "9.0.6",
     "entities": "^3.0.1",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "genius-lyrics-api": "^3.2.0",
@@ -36,19 +36,19 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "pg": "^8.7.1",
-    "simple-git": "^2.47.1",
+    "simple-git": "^3.0.3",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "0.3.2",
-    "taihou": "github:PapiOphidian/Taihou#declaration",
+    "snowtransfer": "0.3.3",
+    "taihou": "2.0.7",
     "thunderstorm": "file:../ThunderStorm",
-    "typescript": "^4.5.2",
+    "typescript": "^4.5.4",
     "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53",
-    "ws": "^8.3.0"
+    "ws": "^8.4.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.5.0",
-    "@typescript-eslint/parser": "^5.5.0",
-    "eslint": "^8.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.8.1",
+    "@typescript-eslint/parser": "^5.8.1",
+    "eslint": "^8.6.0",
     "tap": "^15.1.5"
   }
 }

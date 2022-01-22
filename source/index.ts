@@ -2,13 +2,14 @@ import { EventEmitter } from "events"
 import path from "path"
 import { Worker } from "worker_threads"
 
+import CommandManager from "@amanda/commandmanager"
 import Frisky from "frisky-client"
+import { handle } from "thunderstorm"
 import HeatSync from "heatsync"
 import ListenSomeMoe from "listensomemoe"
 import { Pool } from "pg"
 import { SnowTransfer } from "snowtransfer"
 import Taihou from "taihou"
-import { handle } from "thunderstorm"
 
 import Amanda from "./modules/Amanda"
 
@@ -19,14 +20,15 @@ import passthrough from "./passthrough"
 
 const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: snow, disableEveryone: true })
-const sync = new HeatSync()
+const commands = new CommandManager<[import("thunderstorm").CommandInteraction, import("@amanda/lang").Lang]>()
+const frisky = new Frisky()
+const internalEvents = new EventEmitter() as import("./types").internalEvents
 const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
+const sync = new HeatSync()
 const weebsh = new Taihou(config.weeb_api_key, true, { userAgent: config.weeb_identifier })
-const internalEvents = new EventEmitter() as import("./types").internalEvents
-const frisky = new Frisky()
 
-Object.assign(passthrough, { client, sync, config, constants, jp, kp, weebsh, internalEvents, frisky })
+Object.assign(passthrough, { client, sync, config, constants, jp, kp, weebsh, internalEvents, frisky, commands })
 import("./modules/stdin")
 const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
@@ -44,8 +46,7 @@ const pool = new Pool({
 const GatewayWorker = new Worker(path.join(__dirname, "./discord-gateway.js"))
 
 GatewayWorker.on("message", message => {
-	logger.info(message.d)
-	if (message.o === "DISCORD") return handle(message.d, client)
+	if (message.o === constants.GATEWAY_WORKER_CODES.DISCORD) return handle(message.d, client)
 	else return requester.consume(message)
 })
 
@@ -57,14 +58,20 @@ jp.on("unknown", logger.info)
 kp.on("unknown", logger.info)
 GatewayWorker.on("error", logger.error)
 client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
-client.on("raw", logger.info)
 
 ;(async () => {
 	const db = await pool.connect()
 	logger.info("Connected to database")
 
-	await db.query({ text: "DELETE FROM voice_states WHERE guild_id IN (SELECT id FROM guilds WHERE added_by = $1)", values: [config.cluster_id] })
-	logger.info("Deleted all voice states in cluster")
+	Object.assign(passthrough, { db, requester, gateway: GatewayWorker })
 
-	Object.assign(passthrough, { db, requester })
+	sync.require([
+		"./modules/EventManager",
+		"./commands/hidden",
+		"./commands/images",
+		"./commands/meta"
+	])
 })()
+
+process.on("unhandledRejection", (e) => logger.error(e))
+process.on("uncaughtException", (e) => logger.error(e))

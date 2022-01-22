@@ -1,5 +1,8 @@
 // Receive/Send annotations will be in relation to main thread
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const config = require("../config") as import("./types").Config // TypeScript WILL include files that use import in any way (type annotations or otherwise)
+
 export const GATEWAY_WORKER_CODES = {
 	/**
 	 * Receive
@@ -26,5 +29,16 @@ export const GATEWAY_WORKER_CODES = {
 	 */
 	ERROR_RESPONSE: 5 as const
 }
+export const baseURL = `${config.website_protocol}://${config.website_domain}`
+export const patreon = `${baseURL}/to/patreon`
+export const paypal = `${baseURL}/to/paypal`
+export const twitch = "https://www.twitch.tv/papiophidian"
+export const add = `${baseURL}/to/add`
+export const server = `${baseURL}/to/server`
+export const invite_link_for_help = "https://discord.gg/X5naRFu"
+export const stats = `${baseURL}/to/stats`
+export const standard_embed_color = 0x2f3136
+export const discord_background_color = 0x36393f
+export const chewey_api = "https://api.chewey-bot.top"
 
 export default exports as typeof import("./constants")
