@@ -43,7 +43,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "0.3.5",
     "taihou": "2.0.7",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#1fedfbb7df9c884178dfe981ddb8d762f12c5b31",
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#c9e375703a011c37d02588d14d267c07d92e4242",
     "typescript": "^4.5.4",
     "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53",
     "ws": "^8.4.0"
