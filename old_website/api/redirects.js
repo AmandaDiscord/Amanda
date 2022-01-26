@@ -14,7 +14,7 @@ module.exports = [
 	["/to/patreon", "https://www.patreon.com/papiophidian"],
 	["/to/paypal", "https://paypal.me/papiophidian"],
 	["/to/server", "https://discord.gg/zhthQjH"],
-	["/to/add", "https://discordapp.com/oauth2/authorize?client_id=405208699313848330&permissions=57344&scope=bot"],
+	["/to/add", "https://discord.com/api/oauth2/authorize?client_id=405208699313848330&permissions=36700160&scope=bot%20applications.commands"],
 	["/to/todo", "https://github.com/AmandaDiscord/Amanda/projects"],
 	["/to/twitter", "https://twitter.com/AmandaDiscord"],
 	["/to/github", "https://github.com/AmandaDiscord"],
