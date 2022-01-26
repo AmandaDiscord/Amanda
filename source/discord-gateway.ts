@@ -14,7 +14,6 @@ Object.assign(passthrough, { sync })
 
 import logger from "./utils/logger"
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const config = require("../config") as import("./types").Config
 import constants from "./constants"
 
@@ -36,7 +35,7 @@ const queue = [] as Array<{ s_id: number, data: { op: number, d: unknown } }>
 const presence = {} as import("cloudstorm").IPresence
 
 client.connect().catch((e) => logger.error(e, worker_id))
-logger.info("gateway started.", worker_id)
+logger.info("gateway started", worker_id)
 
 client.on("event", d => parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.DISCORD, d }))
 

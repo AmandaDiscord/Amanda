@@ -1,16 +1,3 @@
-import { EventEmitter } from "events"
-
-export interface InternalEventsMap {
-	prefixes: [Array<string>, string];
-	QueueManager: []
-}
-
-export interface internalEvents extends EventEmitter {
-	on<K extends keyof InternalEventsMap>(event: K, listener: (...args: InternalEventsMap[K]) => void): this;
-	once<K extends keyof InternalEventsMap>(event: K, listener: (...args: InternalEventsMap[K]) => void): this;
-	emit<K extends keyof InternalEventsMap>(event: K, ...args: InternalEventsMap[K]): boolean;
-}
-
 export type Config = {
 	"live_bot_token": string,
 	"test_bot_token": string,
@@ -48,3 +35,94 @@ export type Config = {
 }
 
 export type UnpackArray<T> = T extends Array<infer R> ? R : never;
+export type Merge<A, B> = ({ [K in keyof A]: K extends keyof B ? B[K] : A[K] } & B) extends infer O ? { [K in keyof O]: O[K] } : never;
+
+export type InferModelDef<M extends import("./utils/orm").Model<any>> = M extends import("./utils/orm").Model<infer D> ? D : unknown
+
+export type LavalinkInfo = {
+	identifier: string;
+	isSeekable: boolean;
+	author: string;
+	length: number;
+	isStream: boolean;
+	position: number;
+	title: string;
+	uri: string;
+}
+
+export type InvidiousPlaylistAuthorThumbnail = {
+	url: string,
+	width: number,
+	height: number
+}
+
+export type InvidiousPlaylistVideoThumbnail = {
+	quality: string,
+	url: string,
+	width: number,
+	height: number
+}
+
+export type InvidiousPlaylistVideo = {
+	title: string,
+	videoId: string,
+	author: string,
+	authorId: string,
+	authorUrl: string,
+	videoThumbnails: InvidiousPlaylistVideoThumbnail[],
+	index: number,
+	lengthSeconds: number
+}
+
+export type InvidiousPlaylist = {
+	type: "playlist",
+	title: string,
+	playlistid: string,
+	playlistThumbnail: string,
+	author: string,
+	authorId: string,
+	authorUrl: string,
+	authorThumbnails: InvidiousPlaylistAuthorThumbnail[],
+	description: string,
+	descriptionHtml: string,
+	videoCount: number,
+	viewCount: number,
+	updated: number,
+	isListed: boolean,
+	videos: InvidiousPlaylistVideo[]
+}
+
+export type iTunesSearchResult = {
+	wrapperType: string,
+	kind: string,
+	artistId: number,
+	collectionId: number,
+	trackId: number,
+	artistName: string,
+	collectionName: string,
+	trackName: string,
+	collectionCensoredName: string,
+	trackCensoredName: string,
+	artistViewUrl: string,
+	collectionViewUrl: string,
+	trackViewUrl: string,
+	previewUrl: string,
+	artworkUrl30: string,
+	artworkUrl60: string,
+	artworkUrl100: string,
+	collectionPrice: number,
+	trackPrice: number,
+	releaseDate: string,
+	collectionExplicitness: string,
+	trackExplicitness: string,
+	discCount: number,
+	discNumber: number,
+	trackCount: number,
+	trackNumber: number,
+	trackTimeMillis: number,
+	country: string;
+	currency: string;
+	primaryGenreName: string;
+	contentAdvisoryRating: string;
+	isStreamable: boolean;
+}

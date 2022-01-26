@@ -1,12 +1,10 @@
 // @ts-check
 
-const types = require("../../typings")
-
 const passthrough = require("../passthrough")
 const { ipc } = passthrough
 
 
-const Replier = require("../../modules/ipc/ipcreplier")
+const Replier = require("../ipc/ipcreplier")
 
 class ServerReplier extends Replier {
 	/**

@@ -39,7 +39,7 @@ class ThreadBasedReplier<OPS extends { [op: string]: number }> {
 		})
 	}
 
-	public consume(data: { t: string, d: unknown }) {
+	public consume(data: { t: string; d: unknown; }) {
 		if (!this.outgoing.has(data.t) && !this.outgoingPersist.has(data.t)) return
 		const persist = this.outgoingPersist.get(data.t)
 		if (persist) {

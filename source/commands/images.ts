@@ -30,7 +30,7 @@ commands.assign([
 		options: [
 			{
 				name: "type",
-				type: 3,
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
 				description: "The type of image",
 				choices: [
 					{
@@ -62,7 +62,6 @@ commands.assign([
 		],
 		async process(cmd, lang) {
 			await cmd.defer()
-
 			const type = cmd.options.getString("type") as string
 			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey)
 			else if (type === "dog") return sendImage("chewey", "dog", cmd, poweredbychewey)

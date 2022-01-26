@@ -4,7 +4,7 @@
  * @typedef {Object} Passthrough
  * @property {import("../config")} config
  * @property {import("pg").PoolClient} db
- * @property {import("snowtransfer")} snow
+ * @property {import("snowtransfer").SnowTransfer} snow
  * @property {() => {}} loadAPI
  * @property {(page: any) => Promise<any>} resolveTemplates
  * @property {Map<string, (locals?: any) => string>} pugCache

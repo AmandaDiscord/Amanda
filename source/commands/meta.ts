@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Discord from "thunderstorm"
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const simpleGit = require("simple-git") as typeof import("simple-git")
 
 import passthrough from "../passthrough"
@@ -20,7 +19,7 @@ commands.assign([
 		options: [
 			{
 				name: "window",
-				type: 3,
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
 				description: "The type of stats to show",
 				choices: [
 					{
@@ -137,14 +136,14 @@ commands.assign([
 		options: [
 			{
 				name: "category",
-				type: 3,
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
 				description: "The category to get help with",
 				choices: ["meta", ...commands.categories.keys()].map(i => ({ name: i, value: i })),
 				required: false
 			},
 			{
 				name: "command",
-				type: 3,
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
 				description: "The command to get help with",
 				required: false
 			}

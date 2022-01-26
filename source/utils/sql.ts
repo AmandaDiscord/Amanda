@@ -5,8 +5,7 @@ const { db, sync } = passthrough
 
 const logger = sync.require("./logger") as typeof import("./logger")
 
-export function all(string: string, prepared?: unknown | Array<unknown>, connection?: import("pg").PoolClient, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
-	if (!connection) connection = db
+export function all(string: string, prepared?: unknown | Array<unknown>, connection: import("pg").PoolClient = db, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
 	let prep: Array<unknown>
 	if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
 	else if (prepared !== undefined && Array.isArray(prepared)) prep = prepared

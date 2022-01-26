@@ -21,7 +21,7 @@ passthrough.sync = sync
 
 // Snow
 
-const snow = new Snow(config.bot_token, { disableEveryone: true })
+const snow = new Snow.SnowTransfer(config.bot_token, { disableEveryone: true })
 passthrough.snow = snow
 
 // DB

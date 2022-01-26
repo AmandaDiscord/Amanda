@@ -4,9 +4,11 @@ import repl from "repl"
 import util from "util"
 
 import passthrough from "../passthrough"
-const { client, config, constants, commands, requester } = passthrough
+const { client, config, constants, commands, requester, sync } = passthrough
 
 import logger from "../utils/logger"
+
+const startannouncement = sync.require("../commands/status") as typeof import("../commands/status")
 
 function refreshcommands() {
 	if (!client.readyAt) return logger.error("Client isn't ready yet")

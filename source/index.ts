@@ -13,7 +13,6 @@ import Taihou from "taihou"
 
 import Amanda from "./modules/Amanda"
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const config = require("../config") as import("./types").Config // TypeScript WILL include files that use import in any way (type annotations or otherwise)
 import constants from "./constants"
 import passthrough from "./passthrough"
@@ -22,14 +21,12 @@ const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda({ snowtransfer: snow, disableEveryone: true })
 const commands = new CommandManager<[import("thunderstorm").CommandInteraction, import("@amanda/lang").Lang]>()
 const frisky = new Frisky()
-const internalEvents = new EventEmitter() as import("./types").internalEvents
 const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 const sync = new HeatSync()
 const weebsh = new Taihou(config.weeb_api_key, true, { userAgent: config.weeb_identifier })
 
-Object.assign(passthrough, { client, sync, config, constants, jp, kp, weebsh, internalEvents, frisky, commands })
-import("./modules/stdin")
+Object.assign(passthrough, { client, sync, config, constants, jp, kp, weebsh, frisky, commands })
 const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
 import ThreadBasedReplier from "./utils/classes/ThreadBasedReplier"
@@ -61,7 +58,9 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 
 ;(async () => {
 	const db = await pool.connect()
+	await db.query({ text: "SELECT * FROM premium LIMIT 1" })
 	logger.info("Connected to database")
+	import("./modules/stdin")
 
 	Object.assign(passthrough, { db, requester, gateway: GatewayWorker })
 
@@ -69,7 +68,9 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 		"./modules/EventManager",
 		"./commands/hidden",
 		"./commands/images",
-		"./commands/meta"
+		"./commands/meta",
+		"./commands/status",
+		"./commands/music/music"
 	])
 })()
 

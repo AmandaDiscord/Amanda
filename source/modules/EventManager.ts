@@ -1,9 +1,13 @@
+import Discord from "thunderstorm"
+import { Manager } from "lavacord"
+
 import passthrough from "../passthrough"
-const { client, sync, commands } = passthrough
+const { client, sync, commands, config, constants, queues, voiceStateTriggers } = passthrough
 let starting = true
 if (client.readyAt) starting = false
 
 const time = sync.require("../utils/time") as typeof import("../utils/time")
+const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
 const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
@@ -41,13 +45,9 @@ async function autoPayTimeoutFunction() {
 
 sync.addTemporaryListener(client, "raw", async p => {
 	if (p.t === "READY") {
-		if (starting) {
-			starting = false
-			logger.info(`Successfully logged in as ${p.d.user.username}`)
-			process.title = p.d.user.username
-		}
+		// this code needs to run before anything
 		let firstStart = true
-		if (passthrough.clusterData.guild_ids[p.shard_id]) {
+		if (passthrough.clusterData.connected_shards.includes(p.shard_id)) {
 			firstStart = false
 			passthrough.clusterData.guild_ids[p.shard_id].length = 0
 		} else {
@@ -59,26 +59,85 @@ sync.addTemporaryListener(client, "raw", async p => {
 		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart) {
 			const arr = [...passthrough.clusterData.guild_ids[p.shard_id]]
 			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map((_, index) => `$${index + 1}`).join(", ")})`, arr)
-			logger.info(`Deleted ${passthrough.clusterData.guild_ids[p.shard_id].length} voice states for shard ${p.shard_id}`)
+			logger.info(`Deleted voice states in ${passthrough.clusterData.guild_ids[p.shard_id].length} guilds for shard ${p.shard_id}`)
+		}
+
+		if (starting) {
+			starting = false
+			logger.info(`Successfully logged in as ${client.user!.username}`)
+			process.title = client.user!.username
+
+			const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
+				orm.db.select("lavalink_nodes"),
+				orm.db.select("lavalink_node_regions")
+			])
+			const lavalinkNodes = lavalinkNodeData.map(node => {
+				const newData = {
+					regions: lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region),
+					password: config.lavalink_password,
+					id: node.name.toLowerCase()
+				}
+				return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name, search_with_invidious: node.search_with_invidious, enabled: node.enabled })
+			})
+
+			constants.lavalinkNodes.push(...lavalinkNodes)
+
+			for (const node of constants.lavalinkNodes) {
+				node.resumeKey = `${client.user!.id}/${config.cluster_id}`
+				node.resumeTimeout = 75
+			}
+
+			client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
+				user: client.user!.id,
+				shards: config.total_shards,
+				send: (packet) => {
+					passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
+				}
+			})
+
+			client.lavalink.once("ready", () => {
+				logger.info("Lavalink ready")
+			})
+
+			client.lavalink.on("error", error => logger.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
+
+			try {
+				await client.lavalink.connect()
+			} catch (e) {
+				logger.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
+			}
 		}
 	} else if (p.t === "GUILD_CREATE") {
+		orm.db.upsert("guilds", { id: p.d.id, name: p.d.name, icon: p.d.icon, member_count: p.d.member_count, owner_id: p.d.owner_id, added_by: config.cluster_id })
 		if (passthrough.clusterData.guild_ids[p.shard_id].includes(p.d.id)) return
 		else passthrough.clusterData.guild_ids[p.shard_id].push(p.d.id)
+		for (const state of p.d.voice_states as Array<import("discord-typings").VoiceStateData>) {
+			orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
+		}
 	} else if (p.t === "GUILD_DELETE") {
+		if (!p.d.unavailable) orm.db.delete("guilds", { id: p.d.id })
+		if (!passthrough.clusterData.guild_ids[p.shard_id]) passthrough.clusterData.guild_ids[p.shard_id] = []
 		const previous = passthrough.clusterData.guild_ids[p.shard_id].indexOf(p.d.id)
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)
-	} else if (p.t === "VOICE_STATE_UPDATE") return
-	else if (p.t === "VOICE_SERVER_UPDATE") return
+	} else if (p.t === "VOICE_STATE_UPDATE") {
+		const trigger = voiceStateTriggers.get(`${p.d.guild_id}.${p.d.channel_id}`)
+		if (trigger && p.d.user_id === client.user?.id) trigger(true)
+		if (p.d.channel_id === null) orm.db.delete("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id })
+		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: p.d.channel_id })
+		client.lavalink?.voiceStateUpdate(p.d)
+		queues.get(p.d.guild_id)?.voiceStateUpdate(p.d)
+	} else if (p.t === "VOICE_SERVER_UPDATE") {
+		client.lavalink?.voiceServerUpdate(p.d)
+		queues.get(p.d.guild_id)?.voiceServerUpdate(p.d)
+	}
 })
 
 sync.addTemporaryListener(client, "interactionCreate", async (interaction: import("thunderstorm").Interaction) => {
 
 	if (interaction.isCommand()) {
-		let langToUse: import("@amanda/lang").Lang
-		const selflang = await orm.db.get("settings_self", { key_id: interaction.user.id, setting: "language" })
-		if (selflang) langToUse = await lang.getLang(interaction.user.id, "self")
-		else if (interaction.guild && interaction.guild.id) langToUse = await lang.getLang(interaction.guild.id, "guild")
-		else langToUse = await lang.getLang(interaction.user.id, "self")
+		const selfLang = lang.getLang(interaction.locale!)
+		const guildLang = interaction.guildLocale ? lang.getLang(interaction.guildLocale) : null
+		const langToUse = interaction.guildLocale && interaction.guildLocale != interaction.locale ? guildLang! : selfLang
 
 		try {
 			await commands.cache.get((interaction as import("thunderstorm").CommandInteraction).commandName)?.process(interaction as import("thunderstorm").CommandInteraction, langToUse)

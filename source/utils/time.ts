@@ -67,4 +67,20 @@ export function parseDuration(input: string) {
 	return totalTime
 }
 
+export function prettySeconds(seconds: number) {
+	let minutes = Math.floor(seconds / 60)
+	seconds = seconds % 60
+	const hours = Math.floor(minutes / 60)
+	minutes = minutes % 60
+	const output = [] as Array<number | string>
+	if (hours) {
+		output.push(hours)
+		output.push(minutes.toString().padStart(2, "0"))
+	} else {
+		output.push(minutes)
+	}
+	output.push(seconds.toString().padStart(2, "0"))
+	return output.join(":")
+}
+
 export default exports as typeof import("./time")
