@@ -65,6 +65,7 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 
 	sync.require([
 		"./modules/EventManager",
+		"./commands/couples",
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",

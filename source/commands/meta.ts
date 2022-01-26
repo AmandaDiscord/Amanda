@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import Discord from "thunderstorm"
-const simpleGit = require("simple-git") as typeof import("simple-git")
+import sG from "simple-git"
+const simpleGit = sG(__dirname)
 
 import passthrough from "../passthrough"
 const { client, constants, config, commands, sync, requester } = passthrough
@@ -125,8 +126,33 @@ commands.assign([
 		name: "git",
 		description: "Gets the latest git commits to Amanda",
 		category: "meta",
-		process(cmd) {
-			return cmd.reply("fixing")
+		async process(cmd) {
+			await cmd.defer()
+			const limit = 5
+			const authorNameMap = {
+				"Cadence Ember": "Cadence",
+				"Papa": "PapiOphidian"
+			}
+			const status = await simpleGit.status()
+			const log = await simpleGit.log({ "--no-decorate": null })
+			const diffs = await Promise.all(Array(limit).fill(undefined).map((_, i) => simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash])))
+			const res = { branch: status.current!, latestCommitHash: log.latest!.hash.slice(0, 7), logString:
+				log.all.slice(0, limit).map((line, index) => {
+					const date = new Date(line.date)
+					const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
+					const diff =
+						`${diffs[index].files.length} file${diffs[index].files.length > 1 ? "s" : ""} changed, ` +
+						`${diffs[index].insertions} insertion${diffs[index].insertions > 1 ? "s" : ""}, ` +
+						`${diffs[index].deletions} deletion${diffs[index].deletions > 1 ? "s" : ""}.`
+					return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
+									`\`» ${diff}\`\n${line.message}`
+				}).join("\n\n") }
+
+			const embed = new Discord.MessageEmbed()
+				.setTitle("Git info")
+				.addFields([{ name: "Status", value:`On branch ${res.branch}, latest commit ${res.latestCommitHash}` }, { name: `Commits (latest ${limit} entries)`, value: res.logString }])
+				.setColor(constants.standard_embed_color)
+			return cmd.editReply({ embeds: [embed] })
 		}
 	},
 	{

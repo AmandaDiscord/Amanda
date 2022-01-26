@@ -57,7 +57,8 @@ commands.assign([
 						name: "neko",
 						value: "neko"
 					}
-				]
+				],
+				required: true
 			}
 		],
 		async process(cmd, lang) {

@@ -22,7 +22,8 @@ const cmds = [
 			{
 				name: "user2",
 				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-				description: "The second user to ship"
+				description: "The second user to ship",
+				required: true
 			},
 			{
 				name: "user1",
@@ -87,7 +88,8 @@ const cmds = [
 			{
 				name: "user",
 				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-				description: "The user to bean"
+				description: "The user to bean",
+				required: true
 			}
 		],
 		process(cmd, lang) {
@@ -158,7 +160,8 @@ for (const source of interactionSources) {
 			{
 				name: "user",
 				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
-				description: `The user to ${source.name}`
+				description: `The user to ${source.name}`,
+				required: true
 			}
 		],
 		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Exclude<keyof import("@amanda/lang").Lang["interaction"], "ship" | "bean">, source.shortcut, source.url)

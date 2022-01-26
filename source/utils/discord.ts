@@ -17,8 +17,8 @@ export async function getUser(id: string) {
 }
 
 export function convertCachedUser(user: import("../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
-	const split = user.tag.split(/#\d{4}$/)
-	Object.assign(user, { username: split[0], discriminator: split[1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
+	const split = user.tag.split("#")
+	Object.assign(user, { username: split.slice(0, split.length - 1).join("#"), discriminator: split[split.length - 1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
 	return new Discord.User(client, user as typeof user & { username: string; discriminator: string; bot: boolean; })
 }
 

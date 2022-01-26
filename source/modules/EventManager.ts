@@ -6,6 +6,8 @@ const { client, sync, commands, config, constants, queues, voiceStateTriggers } 
 let starting = true
 if (client.readyAt) starting = false
 
+const clusterIDForDonorPayments = "maple"
+
 const time = sync.require("../utils/time") as typeof import("../utils/time")
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
@@ -35,13 +37,23 @@ let autoPayTimeout: NodeJS.Timeout | null
 async function autoPayTimeoutFunction() {
 	const donors = await orm.db.select("premium", undefined, { select: ["user_id"] }).then(rows => rows.map(r => r.user_id))
 	for (const ID of donors) {
-		logger.warn("Commented out code")
 		// await utils.coinsManager.award(ID, BigInt(10000), "Beneficiary deposit")
 	}
 	const timeout = getTimeoutDuration()
 	logger.info(`Donor payments completed. Set a timeout for ${time.shortTime(timeout, "ms")}`)
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, timeout)
 }
+
+if (config.cluster_id === clusterIDForDonorPayments) {
+	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+	logger.info("Donor auto payment enabled on this cluster")
+}
+
+sync.events.once(__filename, () => {
+	if (config.cluster_id === clusterIDForDonorPayments) {
+		if (autoPayTimeout) clearTimeout(autoPayTimeout)
+	}
+})
 
 sync.addTemporaryListener(client, "raw", async p => {
 	if (p.t === "READY") {
@@ -142,7 +154,48 @@ sync.addTemporaryListener(client, "interactionCreate", async (interaction: impor
 		try {
 			await commands.cache.get((interaction as import("thunderstorm").CommandInteraction).commandName)?.process(interaction as import("thunderstorm").CommandInteraction, langToUse)
 		} catch (e) {
-			logger.error(e)
+			const cmd = (interaction as import("thunderstorm").CommandInteraction)
+			if (e && e.code) {
+				if (e.code == 10008) return
+				if (e.code == 50013) return
+			}
+			// Report to original channel
+			const msgTxt = `command ${cmd.commandName} failed <:rip:401656884525793291>\n` + (await text.stringify(e))
+			const embed = new Discord.MessageEmbed()
+				.setDescription(msgTxt)
+				.setColor(0xdd2d2d)
+
+			const str = `There was an error with the command ${cmd.commandName} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`
+
+			if (cmd.deferred || cmd.replied) cmd.editReply({ content: str, embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
+			cmd.followUp({ content: str, embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
+
+			// Report to #amanda-error-log
+			embed.setTitle("Command error occurred.")
+			let details = [
+				["User", cmd.user.tag],
+				["User ID", cmd.user.id],
+				["Bot", cmd.user.bot ? "Yes" : "No"]
+			]
+			if (cmd.guild) {
+				details = details.concat([
+					["Guild ID", cmd.guild.id],
+					["Channel ID", cmd.channel?.id || "NONE"]
+				])
+			} else {
+				details = details.concat([
+					["DM", "Yes"]
+				])
+			}
+			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
+			const detailsString = details.map(row =>
+				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+			).join("\n")
+			embed.addFields([
+				{ name: "Details", value: detailsString },
+				{ name: "Message content", value: `\`\`\`\n${cmd.toString().replace(/`/g, "ˋ")}\`\`\`` }
+			])
+			if (!config.is_dev_env) new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] })
 		}
 	}
 })
