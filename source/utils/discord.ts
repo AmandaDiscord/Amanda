@@ -1,4 +1,6 @@
 import Discord from "thunderstorm"
+import Jimp from "jimp"
+import c from "centra"
 
 import passthrough from "../passthrough"
 const { client, sync } = passthrough
@@ -18,6 +20,22 @@ export function convertCachedUser(user: import("../types").InferModelDef<typeof 
 	const split = user.tag.split(/#\d{4}$/)
 	Object.assign(user, { username: split[0], discriminator: split[1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
 	return new Discord.User(client, user as typeof user & { username: string; discriminator: string; bot: boolean; })
+}
+
+export async function getAvatarJimp(userID: string) {
+	const user = await getUser(userID)
+	if (!user) return null
+	const url = user.displayAvatarURL({ dynamic: true })
+	if (!url) return null
+	const validation = await c(url, "head").send()
+	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
+
+	const data = await client.fetchUser(userID)
+	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar || "", bot: data.bot ? 1 : 0 })
+	const newuser = new Discord.User(client, data)
+	const newURL = newuser.displayAvatarURL({ dynamic: true })
+	if (!newURL) return null
+	return Jimp.read(newURL)
 }
 
 export default exports as typeof import("./discord")

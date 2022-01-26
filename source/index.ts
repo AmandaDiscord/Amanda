@@ -67,9 +67,10 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 		"./modules/EventManager",
 		"./commands/hidden",
 		"./commands/images",
-		"./commands/meta",
-		"./commands/status",
-		"./commands/music/music"
+		"./commands/interaction",
+		"./commands/music/music",
+		"./commands/meta", // meta should load last always for command docs reasons
+		"./commands/status"
 	])
 })()
 

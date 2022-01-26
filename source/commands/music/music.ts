@@ -24,37 +24,8 @@ commands.assign([
 		options: [
 			{
 				name: "play",
-				type: Discord.Constants.ApplicationCommandOptionTypes.SUB_COMMAND,
-				description: "Play music from multiple sources",
-				options: [
-					{
-						name: "content",
-						type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
-						description: "The content to play"
-					},
-					{
-						name: "source",
-						type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
-						description: "The source the content should be played from if searching",
-						choices: [
-							{
-								name: "YouTube",
-								value: "yt"
-							},
-							{
-								name: "SoundCloud",
-								value: "sc"
-							}
-						],
-						required: false
-					},
-					{
-						name: "insert",
-						type: Discord.Constants.ApplicationCommandOptionTypes.BOOLEAN,
-						description: "If the song should be inserted as the next song in the queue",
-						required: false
-					}
-				],
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+				description: "Play music. You can prepend ids to choose the site to search. e.g: yt:despacito or sc:despacito",
 				required: false
 			},
 			{
