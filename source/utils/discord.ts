@@ -3,7 +3,7 @@ import Jimp from "jimp"
 import c from "centra"
 
 import passthrough from "../passthrough"
-const { client, sync } = passthrough
+const { client, sync, config } = passthrough
 
 const orm = sync.require("./orm") as typeof import("./orm")
 
@@ -12,7 +12,7 @@ export async function getUser(id: string) {
 	const cached = await orm.db.get("users", { id: id })
 	if (cached) return convertCachedUser(cached)
 	const fetched = await client.fetchUser(id).catch(() => null)
-	if (fetched) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar || "", bot: fetched.bot ? 1 : 0 })
+	if (fetched) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar || "", bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
 	return fetched
 }
 

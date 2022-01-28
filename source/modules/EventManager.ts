@@ -26,8 +26,8 @@ sync.addTemporaryListener(client, "raw", async p => {
 
 		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart) {
 			const arr = passthrough.clusterData.guild_ids[p.shard_id]
-			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map((_, index) => `$${index + 1}`).join(", ")})`, arr)
-			logger.info(`Deleted voice states in ${passthrough.clusterData.guild_ids[p.shard_id].length} guilds for shard ${p.shard_id}`)
+			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map(i => `'${i}'`).join(", ")})`)
+			logger.info(`Deleted voice states in ${arr.length} guilds for shard ${p.shard_id}`)
 		}
 
 		if (starting) {
