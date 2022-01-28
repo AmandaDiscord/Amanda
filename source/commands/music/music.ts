@@ -1,20 +1,20 @@
 import Discord from "thunderstorm"
-import encoding from "@lavalink/encoding"
 
 import passthrough from "../../passthrough"
-const { commands, constants, sync, queues, voiceStateTriggers } = passthrough
+const { client, commands, constants, sync, queues } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
-const songTypes = sync.require("./songtypes") as typeof import("./songtypes")
 const queueFile = sync.require("./queue") as typeof import("./queue")
+const songTypes = sync.require("./songtypes") as typeof import("./songtypes")
 
 const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
+const time = sync.require("../../utils/time") as typeof import("../../utils/time")
 
 const waitForClientVCJoinTimeout = 5000
 
-const musicDisabled = true as boolean
+const musicDisabled = false as boolean
 
 commands.assign([
 	{
@@ -25,7 +25,7 @@ commands.assign([
 			{
 				name: "play",
 				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
-				description: "Play music. You can prepend ids to choose the site to search. e.g: yt:despacito or sc:despacito",
+				description: "Play music. You can do specific site searching like: yt:despacito, sc:despacito or ng:despacito.",
 				required: false
 			},
 			{
@@ -136,13 +136,53 @@ commands.assign([
 					}
 				],
 				required: false
+			},
+			{
+				name: "frisky",
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+				description: "Play music from frisky.fm stations",
+				choices: [
+					{
+						name: "original",
+						value: "original"
+					},
+					{
+						name: "deep",
+						value: "deep"
+					},
+					{
+						name: "chill",
+						value: "chill"
+					},
+					{
+						name: "classics",
+						value: "classics"
+					}
+				],
+				required: false
+			},
+			{
+				name: "listenmoe",
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+				description: "Play music from listen.moe stations",
+				choices: [
+					{
+						name: "jpop",
+						value: "jp"
+					},
+					{
+						name: "kpop",
+						value: "kp"
+					}
+				],
+				required: false
 			}
 		],
 		async process(cmd, lang) {
-			if (musicDisabled) return cmd.reply("Working on fixing currently. This is a lot harder to port than people think")
+			if (musicDisabled) return cmd.reply("Working on fixing currently. This is a lot harder than people think")
 			if (!cmd.guildId || !cmd.guild) return cmd.reply(lang.audio.music.prompts.guildOnly)
 
-			const optionPlay = cmd.options.getSubcommand(false) === "play" ? cmd.options : null
+			const optionPlay = cmd.options.getString("play", false)
 			const optionStop = cmd.options.getBoolean("stop", false)
 			const optionSkip = cmd.options.getInteger("skip", false)
 			const optionVolume = cmd.options.getInteger("volume", false)
@@ -158,6 +198,8 @@ commands.assign([
 			const optionPitch = cmd.options.getInteger("pitch", false)
 			const optionSpeed = cmd.options.getInteger("speed", false)
 			const optionFilters = cmd.options.getString("filters", false)
+			const optionFrisky = cmd.options.getString("frisky", false)
+			const optionListenmoe = cmd.options.getString("listenmoe", false)
 
 			const array = [
 				optionPlay,
@@ -175,7 +217,9 @@ commands.assign([
 				optionSeek,
 				optionPitch,
 				optionSpeed,
-				optionFilters
+				optionFilters,
+				optionFrisky,
+				optionListenmoe
 			]
 
 			const notNull = array.filter(i => i !== null)
@@ -191,149 +235,134 @@ commands.assign([
 			if (!userVoiceState) return cmd.editReply(language.replace(lang.audio.music.prompts.voiceChannelRequired, { username: cmd.user.username }))
 			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
 
+			async function createQueue() {
+				queue = new queueFile(cmd.guildId!)
+				queue.lang = cmd.guildLocale ? language.getLang(cmd.guildLocale) : lang
+				queue.interaction = cmd
+				cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(language.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `[**LOADING**](https://amanda.moe)\n\n\`[${text.progressBar(18, 60, 60, "[LOADING]")}]\`` }))] }).catch(() => void 0)
+				try {
+					let reject: (error?: unknown) => unknown
+					const timer = setTimeout(() => reject?.("Timed out"), waitForClientVCJoinTimeout)
+					const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
+						reject = rej
+						client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id }).then(p => {
+							resolve(p)
+							clearTimeout(timer)
+						})
+					})
+					queue!.player = player
+					queue!.addPlayerListeners()
+					return true
+				} catch (e) {
+					queue!.destroy()
+					queue = undefined
+					cmd.editReply(`${language.replace(lang.audio.music.prompts.voiceCantJoin, { username: cmd.user.username })}\n${await text.stringify(e)}`).catch(() => void 0)
+					return false
+				}
+			}
+
 			if (optionPlay !== null) {
-				const search = optionPlay.getString("content", true)
-				const source = (optionPlay.getString("source", false) || "yt") as string
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.random() : common.nodes.random())
 				let queueDidntExist = false
 
 				if (!queue) {
 					queueDidntExist = true
-					queue = new queueFile(cmd.guildId)
-					queue.lang = cmd.guildLocale ? language.getLang(cmd.guildLocale) : lang
-					queue.interaction = cmd
-					await cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(language.replace(lang.audio.music.prompts.queueNowPlaying, { "song": `[**LOADING**](https://amanda.moe)\n\n\`[${text.progressBar(18, 60, 60, "[LOADING]")}]\`` }))] })
-					const key = `${cmd.guildId}.${userVoiceState.channel_id}`
-					try {
-						await passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, { op: 4, d: { guild_id: cmd.guildId, channel_id: userVoiceState.channel_id } }, d => passthrough.gateway.postMessage(d))
-					} catch {
-						return cmd.editReply(language.replace(lang.audio.music.prompts.voiceCantJoin, { username: cmd.user.username }))
-					}
-					const promise = new Promise<boolean>(resolve => voiceStateTriggers.set(key, resolve))
-					const timer = setTimeout(() => voiceStateTriggers.get(key)?.(false), waitForClientVCJoinTimeout)
-					const result = await promise
-					if (!result) {
-						voiceStateTriggers.delete(key)
-						queue.destroy()
-						return cmd.editReply(language.replace(lang.audio.music.prompts.voiceCantJoin, { username: cmd.user.username }))
-					} else {
-						clearTimeout(timer)
-						voiceStateTriggers.delete(key)
-					}
+					await createQueue().catch(() => void 0)
+					if (!queue) return
 				}
 
-				const matches = await common.loadtracks(`${source}search:${search}`, node.id)
-				if (!matches || !matches[0] || (matches && matches[0] && !matches[0].track)) {
+				const id = common.inputToID(optionPlay)
+				const song = await common.idToSong(id, node.id)
+				if (!song) {
 					if (queue.songs.length === 0) queue.destroy()
 					return cmd.editReply(lang.audio.music.prompts.noResults)
 				}
 
-				queue.songs.push(new songTypes.YouTubeSong(matches[0].info.identifier, matches[0].info.title, Math.round(matches[0].info.length / 1000), matches[0].track, matches[0].info.author))
+				queue.songs.push(song)
 				if (queueDidntExist) queue.play()
-				/* if (match && match.type == "youtube" && match.id) {
-					if (node.search_with_invidious) { // Resolve tracks with Invidious
-						common.invidious.getData(match.id, node.host).then(data => {
-							// Now get the URL.
-							// This can throw an error if there's no formats (i.e. video is unavailable?)
-							// If it does, we'll end up in the catch block to search instead.
-							const url = common.invidious.dataToURL(data)
-							// The ID worked. Add the song
-							const track = encoding.encode({
-								flags: 1,
-								version: 2,
-								title: data.title,
-								author: data.author,
-								length: BigInt(data.lengthSeconds) * BigInt(1000),
-								identifier: data.videoId,
-								isStream: data.liveNow, // this is a guess
-								uri: url,
-								source: "http",
-								position: BigInt(0)
-							})
-							if (track) {
-								const song = new songTypes.YouTubeSong(data.videoId, data.title, data.lengthSeconds, track, data.uploader)
-								common.inserters.handleSong(song, msg.channel, voiceChannel, insert, msg)
-							} else throw new Error("NO_TRACK")
-						}).catch(() => {
-							// Otherwise, start a search
-							common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
-						})
-					} else { // Resolve tracks with Lavalink
-						common.getTracks(match.id, voiceChannel.rtcRegion).then(tracks => {
-							if (tracks[0]) {
-								// If the ID worked, add the song
-								common.inserters.fromData(msg.channel, voiceChannel, tracks[0], insert, msg)
-							} else throw new Error("No tracks available")
-						}).catch(() => {
-							// Otherwise, start a search
-							common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
-						})
-					}
-				} else if (match && match.type == "playlist" && match.list) { // Linked to a playlist. `list` is set, `id` may or may not be.
-					// Get the tracks
-					let tracks = await common.getTracks(match.list, voiceChannel.rtcRegion)
-					// Figure out what index was linked to, if any
-					let linkedIndex = null
-					if (match.id) {
-						const found = tracks.findIndex(t => t.info.identifier == match.id)
-						if (found != -1) linkedIndex = found
-					}
-					// We have linkedIndex. Now what to do with it?
-					if (linkedIndex == null || args[2]) {
-						// User knows they linked a playlist.
-						tracks = utils.playlistSection(tracks, args[2], args[3], false)
-						common.inserters.fromDataArray(msg.channel, voiceChannel, tracks, insert, msg)
-					} else {
-						// A specific video was linked and a section was not specified, user may want to choose what to play.
-						// linkedIndex is definitely specified here.
-						// Define options
-						const options = [
-							lang.audio.playlist.prompts.playFromStart,
-							lang.audio.playlist.prompts.playFromLinked,
-							lang.audio.playlist.prompts.playOnlyLinked
-						]
-						// Make an embed
-						const embed = new Discord.MessageEmbed()
-							.setTitle(lang.audio.playlist.prompts.playlistSection)
-							.setColor(constants.standard_embed_color)
-							.setDescription(
-								utils.replace(lang.audio.playlist.prompts.userLinked, { "title": `**${Discord.Util.escapeMarkdown(tracks[linkedIndex].info.title)}**` })
-							+ `\n${lang.audio.playlist.prompts.query}`
-							+ options.map((o, i) => `\n${i + 1}: ${o}`).join("")
-							+ `\n${lang.audio.playlist.prompts.selectionInfo}`
-							)
-						// Create the reaction menu
-						const content = await utils.contentify(msg.channel, embed)
-						new InteractionMenu(msg.channel, [
-							{ emoji: { id: "327896448232325130", name: "bn_1" }, style: "PRIMARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[0]}`); message.edit(content); common.inserters.fromDataArray(message.channel, voiceChannel, tracks, insert) } },
-							{ emoji: { id: "327896448505217037", name: "bn_2" }, style: "SECONDARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[1]}`); message.edit(content); common.inserters.fromDataArray(message.channel, voiceChannel, tracks.slice(linkedIndex), insert) } },
-							{ emoji: { id: "327896452363976704", name: "bn_3" }, style: "SECONDARY", ignore: "total", actionType: "js", actionData: (message) => { embed.setDescription(`» ${options[2]}`); message.edit(content); common.inserters.fromData(message.channel, voiceChannel, tracks[linkedIndex], insert) } }
-						]).create(await utils.contentify(msg.channel, embed))
-					}
-				} else if (match && match.type === "soundcloud") {
-					common.inserters.fromSoundCloudLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else if (match && match.type === "spotify") {
-					common.inserters.fromSpotifyLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else if (match && match.type === "newgrounds") {
-					common.inserters.fromNewgroundsLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else if (match && match.type === "twitter") {
-					common.inserters.fromTwitterLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else if (match && match.type === "itunes") {
-					common.inserters.fromiTunesLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else if (match && match.type === "external") {
-					common.inserters.fromExternalLink(msg.channel, voiceChannel, msg, insert, match.link, lang)
-				} else {
-					// User input wasn't a playlist and wasn't a video. Start a search.
-					common.inserters.fromSearch(msg.channel, voiceChannel, msg.author, insert, search, lang)
-				}*/
+				else queue.interaction = cmd
+				return
+			} else if (optionFrisky !== null) {
+				let queueDidntExist = false
+
+				if (!queue) {
+					queueDidntExist = true
+					await createQueue().catch(() => void 0)
+					if (!queue) return
+				}
+
+				const song = new songTypes.FriskySong(optionFrisky as ConstructorParameters<typeof songTypes.FriskySong>["0"])
+				queue.songs.push(song)
+				if (queueDidntExist) queue.play()
+				else queue.interaction = cmd
+				return
+			} else if (optionListenmoe !== null) {
+				let queueDidntExist = false
+
+				if (!queue) {
+					queueDidntExist = true
+					await createQueue().catch(() => void 0)
+					if (!queue) return
+				}
+
+				const song = new songTypes.ListenMoeSong(optionListenmoe as ConstructorParameters<typeof songTypes.ListenMoeSong>["0"])
+				queue.songs.push(song)
+				if (queueDidntExist) queue.play()
+				else queue.interaction = cmd
+				return
 			}
 
-			if (!queue) return cmd.reply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
+			if (!queue || !queue.songs[0]) return cmd.editReply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
 
 			if (optionStop !== null) {
 				queue.destroy()
-				return cmd.reply({ content: `queue stopped by ${cmd.user.tag}`, ephemeral: !optionStop })
-			}
+				return cmd.editReply({ content: `queue stopped by ${cmd.user.tag}` })
+			} else if (optionAuto !== null) {
+				queue.auto = optionAuto
+				return cmd.editReply(lang.audio.music.prompts[queue.auto ? "autoOn" : "autoOff"])
+			} else if (optionInfo !== null) {
+				const info = await queue.songs[0].showInfo()
+				return cmd.editReply(typeof info === "string" ? info : { embeds: [info] })
+			} else if (optionLoop !== null) {
+				queue.loop = optionLoop
+				return cmd.editReply(lang.audio.music.prompts[queue.loop ? "loopOn" : "loopOff"])
+			} else if (optionLyrics !== null) {
+				const lyrics = await queue.songs[0].getLyrics()
+				if (!lyrics) return cmd.editReply("Could not get song lyrics or there were no song lyrics")
+				return cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(`${lyrics.slice(0, 1996)}...`)] })
+			} else if (optionNow !== null) queue.interaction = cmd
+			else if (optionPause !== null) {
+				queue.paused = optionPause
+				return cmd.editReply("Pause toggled")
+			} else if (optionPitch !== null) {
+				const pitch = (2 ** (optionPitch / 12))
+				queue.pitch = pitch
+				return cmd.editReply(`Queue pitch is now ${pitch} semitones`)
+			} else if (optionQueue !== null) {
+				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
+				const totalLength = `\n${language.replace(lang.audio.music.prompts.totalLength, { "number": time.prettySeconds(queue.totalDuration) })}`
+				const body = `${text.removeMiddleRows(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
+				return cmd.editReply({ embeds: [new Discord.MessageEmbed().setTitle(language.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(cmd.guild.name) })).setDescription(body).setColor(constants.standard_embed_color)] })
+			} else if (optionRelated !== null) {
+				const related = await queue.songs[0].showRelated()
+				return cmd.editReply(typeof related === "string" ? related : { embeds: [related] })
+			} else if (optionSkip !== null) {
+				const amount = optionSkip
+				if (queue.songs.length < amount) return cmd.editReply(lang.audio.music.prompts.tooManySkips)
+				if (queue.songs.length == amount) {
+					queue.destroy()
+					return cmd.editReply("Skipped all songs in queue. Queue destroyed")
+				}
+				queue.songs.splice(1, amount - 1)
+				queue._nextSong()
+				return cmd.editReply(`Skipped ${amount} songs`)
+			} else if (optionSpeed !== null) {
+				queue.speed = optionSpeed / 100
+				return cmd.editReply(`Queue speed set to ${optionSpeed}%`)
+			} else if (optionVolume !== null) {
+				queue.volume = optionVolume / 100
+				return cmd.editReply(`Queue volume set to ${optionVolume}%`)
+			} else return cmd.editReply("Working on re-adding. Please give me time")
 		}
 	}
 ])

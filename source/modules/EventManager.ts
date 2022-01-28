@@ -2,58 +2,14 @@ import Discord from "thunderstorm"
 import { Manager } from "lavacord"
 
 import passthrough from "../passthrough"
-const { client, sync, commands, config, constants, queues, voiceStateTriggers } = passthrough
+const { client, sync, commands, config, constants, queues } = passthrough
 let starting = true
 if (client.readyAt) starting = false
 
-const clusterIDForDonorPayments = "maple"
-
-const time = sync.require("../utils/time") as typeof import("../utils/time")
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
 const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
-
-// Auto donor payment
-function getTimeoutDuration() {
-	const dayInMS = 1000 * 60 * 60 * 24
-	const currently = new Date()
-	const day = currently.getDay()
-	const remainingToday = 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24))
-	if (day == 0) return dayInMS + remainingToday // Sunday
-	else if (day == 1) return remainingToday // Monday
-	else if (day == 2) return dayInMS * 6 + remainingToday // Tuesday
-	else if (day == 3) return dayInMS * 5 + remainingToday // Wednesday
-	else if (day == 4) return dayInMS * 4 + remainingToday // Thursday
-	else if (day == 5) return dayInMS * 3 + remainingToday // Friday
-	else if (day == 6) return dayInMS * 2 + remainingToday // Saturday
-	else {
-		logger.warn("Uh oh. Date.getDay did a fucky wucky")
-		return remainingToday
-	}
-}
-
-let autoPayTimeout: NodeJS.Timeout | null
-async function autoPayTimeoutFunction() {
-	const donors = await orm.db.select("premium", undefined, { select: ["user_id"] }).then(rows => rows.map(r => r.user_id))
-	for (const ID of donors) {
-		// await utils.coinsManager.award(ID, BigInt(10000), "Beneficiary deposit")
-	}
-	const timeout = getTimeoutDuration()
-	logger.info(`Donor payments completed. Set a timeout for ${time.shortTime(timeout, "ms")}`)
-	autoPayTimeout = setTimeout(autoPayTimeoutFunction, timeout)
-}
-
-if (config.cluster_id === clusterIDForDonorPayments) {
-	autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
-	logger.info("Donor auto payment enabled on this cluster")
-}
-
-sync.events.once(__filename, () => {
-	if (config.cluster_id === clusterIDForDonorPayments) {
-		if (autoPayTimeout) clearTimeout(autoPayTimeout)
-	}
-})
 
 sync.addTemporaryListener(client, "raw", async p => {
 	if (p.t === "READY") {
@@ -69,7 +25,7 @@ sync.addTemporaryListener(client, "raw", async p => {
 		passthrough.clusterData.guild_ids[p.shard_id].push(...p.d.guilds.map(g => g.id))
 
 		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart) {
-			const arr = [...passthrough.clusterData.guild_ids[p.shard_id]]
+			const arr = passthrough.clusterData.guild_ids[p.shard_id]
 			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map((_, index) => `$${index + 1}`).join(", ")})`, arr)
 			logger.info(`Deleted voice states in ${passthrough.clusterData.guild_ids[p.shard_id].length} guilds for shard ${p.shard_id}`)
 		}
@@ -132,16 +88,11 @@ sync.addTemporaryListener(client, "raw", async p => {
 		const previous = passthrough.clusterData.guild_ids[p.shard_id].indexOf(p.d.id)
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)
 	} else if (p.t === "VOICE_STATE_UPDATE") {
-		const trigger = voiceStateTriggers.get(`${p.d.guild_id}.${p.d.channel_id}`)
-		if (trigger && p.d.user_id === client.user?.id) trigger(true)
 		if (p.d.channel_id === null) orm.db.delete("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id })
 		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: p.d.channel_id })
 		client.lavalink?.voiceStateUpdate(p.d)
 		queues.get(p.d.guild_id)?.voiceStateUpdate(p.d)
-	} else if (p.t === "VOICE_SERVER_UPDATE") {
-		client.lavalink?.voiceServerUpdate(p.d)
-		queues.get(p.d.guild_id)?.voiceServerUpdate(p.d)
-	}
+	} else if (p.t === "VOICE_SERVER_UPDATE") client.lavalink?.voiceServerUpdate(p.d)
 })
 
 sync.addTemporaryListener(client, "interactionCreate", async (interaction: import("thunderstorm").Interaction) => {

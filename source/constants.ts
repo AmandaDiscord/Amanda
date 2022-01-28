@@ -41,4 +41,12 @@ export const discord_background_color = 0x36393f
 export const chewey_api = "https://api.chewey-bot.top"
 export const lavalinkNodes = [] as Array<import("./types").InferModelDef<typeof import("./utils/orm")["db"]["tables"]["lavalink_nodes"]> & { regions: Array<string>; id: string; resumeKey?: string; resumeTimeout?: number; password: string }>
 
+export const frisky_placeholder = `${baseURL}/images/frisky-small.png`
+export const soundcloud_placeholder = `${baseURL}/images/soundcloud-logo-rectangle.jpg`
+export const spotify_placeholder = `${baseURL}/images/spotify-logo.png`
+export const local_placeholder = `${baseURL}/images/local.png`
+export const listen_moe_placeholder = `${baseURL}/images/listen-moe-logo.png`
+export const newgrounds_placeholder = `${baseURL}/images/ng-logo.png`
+export const twitter_placeholder = `${baseURL}/images/twitter-logo.png`
+
 export default exports as typeof import("./constants")

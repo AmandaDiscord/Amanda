@@ -25,7 +25,7 @@ const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 const sync = new HeatSync()
 const weebsh = new Taihou(config.weeb_api_key, true, { userAgent: config.weeb_identifier })
 
-Object.assign(passthrough, { client, sync, config, constants, jp, kp, weebsh, frisky, commands })
+Object.assign(passthrough, { client, sync, config, constants, listenMoe: { jp, kp }, weebsh, frisky, commands })
 const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
 import ThreadBasedReplier from "./utils/classes/ThreadBasedReplier"

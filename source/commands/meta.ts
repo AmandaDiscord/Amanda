@@ -4,7 +4,7 @@ import sG from "simple-git"
 const simpleGit = sG(__dirname)
 
 import passthrough from "../passthrough"
-const { client, constants, config, commands, sync, requester } = passthrough
+const { client, constants, config, commands, sync, requester, queues } = passthrough
 
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const emojis = sync.require("../emojis") as typeof import("../emojis")
@@ -26,6 +26,10 @@ commands.assign([
 					{
 						name: "gateway",
 						value: "gw"
+					},
+					{
+						name: "music",
+						value: "m"
 					}
 				],
 				required: false
@@ -39,7 +43,7 @@ commands.assign([
 			const leadingSpace = `${emojis.bl}\n​`
 
 			const category = cmd.options.getString("window", false)
-			if (category == "gw") {
+			if (category === "gw") {
 				const before = Date.now()
 				const stats = await requester.request(constants.GATEWAY_WORKER_CODES.STATS, undefined, (p) => passthrough.gateway.postMessage(p)) as { ram: { rss: number; heapTotal: number; heapUsed: number; }; latency: Array<number>; shards: Array<number>; uptime: number; }
 				const ram = stats.ram.rss - (stats.ram.heapTotal - stats.ram.heapUsed)
@@ -60,6 +64,29 @@ commands.assign([
 						}
 					])
 				return cmd.followUp({ embeds: [embed] })
+			} else if (category === "m") {
+				const listeningcount = queues.reduce((acc, cur) => acc + cur.listeners.filter(u => !u.bot).size, 0)
+				const nodes = constants.lavalinkNodes.map(n => n.id)
+				let nodeStr = ""
+				for (const node of nodes) {
+					nodeStr += `${node}: ${queues.filter(q => q.node === node).size}\n`
+				}
+				embed
+					.addFields([
+						{
+							name: leadingIdentity,
+							value: `${language.replace(lang.meta.statistics.returns.songsQueued, { "number": text.numberComma(Array.from(queues.values()).reduce((acc, cur) => acc + cur.songs.length, 0)) })}`,
+							inline: true
+						},
+						{
+							name: leadingSpace,
+							value: `${language.replace(lang.meta.statistics.returns.voiceConnections, { "number": text.numberComma(client.lavalink!.players.size) })}\n` +
+								`${language.replace(lang.meta.statistics.returns.usersListening, { "number": text.numberComma(listeningcount) })}\n` +
+								`**❯ Node usage:**\n${nodeStr || "No nodes"}`,
+							inline: true
+						}
+					])
+				return cmd.editReply({ embeds: [embed] })
 			} else {
 				const stats = await cluster.getOwnStats()
 				const gateway = await requester.request(constants.GATEWAY_WORKER_CODES.STATS, undefined, (p) => passthrough.gateway.postMessage(p)) as { ram: { rss: number; heapTotal: number; heapUsed: number; }; latency: Array<number>; shards: Array<number>; uptime: number; }
@@ -112,10 +139,6 @@ commands.assign([
 						name: "Links",
 						value: language.replace(lang.meta.info.returns.links, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal }) +
 						`\n${language.replace(lang.meta.invite.returns.link, { "link": constants.add })}\nPrivacy Policy: <${constants.baseURL}/to/privacy>\nTodo board: ${config.website_protocol}://${config.website_domain}/to/todo`
-					},
-					{
-						name: "Donating",
-						value: language.replace(lang.meta.donate.returns.description, { "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal })
 					}
 				])
 				.setColor(constants.standard_embed_color)

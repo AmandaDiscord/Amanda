@@ -82,4 +82,72 @@ export function abbreviateNumber(value: number | string | bigint, precision = 2)
 	return converted.toLocaleString()
 }
 
+export function tableifyRows(rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, surround: (currentLine: number) => string = () => "", spacer = " ") { // SC: en space
+	const output = [] as Array<string>
+	const maxLength = [] as Array<number>
+	for (let i = 0; i < rows[0].length; i++) {
+		let thisLength = 0
+		for (const row of rows) {
+			if (thisLength < row[i].length) thisLength = row[i].length
+		}
+		maxLength.push(thisLength)
+	}
+	for (let i = 0; i < rows.length; i++) {
+		let line = ""
+		for (let j = 0; j < rows[0].length; j++) {
+			if (align[j] == "left" || align[j] == "right") {
+				line += surround(i)
+				if (align[j] == "left") {
+					const pad = " ​"
+					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
+					line += rows[i][j] + padding
+				} else if (align[j] == "right") {
+					const pad = "​ "
+					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
+					line += padding + rows[i][j]
+				}
+				line += surround(i)
+			} else {
+				line += rows[i][j]
+			}
+			if (j < rows[0].length - 1) line += spacer
+		}
+		output.push(line)
+	}
+	return output
+}
+
+export function removeMiddleRows(rows: Array<string>, maxLength = 2000, joinLength = 1, middleString = "…") {
+	let currentLength = 0
+	let currentItems = 0
+	const maxItems = 20
+	/**
+	 * Holds items for the left and right sides.
+	 * Items should flow into the left faster than the right.
+	 * At the end, the sides will be combined into the final list.
+	 */
+	const reconstruction = new Map<"left" | "right", Array<string>>([
+		["left", []],
+		["right", []]
+	])
+	let leftOffset = 0
+	let rightOffset = 0
+	function getNextDirection() {
+		return rightOffset * 3 > leftOffset ? "left" : "right"
+	}
+	while (currentItems < rows.length) {
+		const direction = getNextDirection()
+		let row: string
+		if (direction == "left") row = rows[leftOffset++]
+		else row = rows[rows.length - 1 - rightOffset++]
+		if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
+			return reconstruction.get("left")!.concat([middleString], reconstruction.get("right")!.reverse())
+		}
+		reconstruction.get(direction)!.push(row)
+		currentLength += row.length + joinLength
+		currentItems++
+	}
+	return reconstruction.get("left")!.concat(reconstruction.get("right")!.reverse())
+}
+
 export default exports as typeof import("./string")

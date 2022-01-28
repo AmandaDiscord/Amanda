@@ -38,7 +38,10 @@ class Queue {
 	public errorChain = 0
 
 	public listeners = new Discord.Collection<string, import("thunderstorm").User>()
-	public leaveTimeout = new BetterTimeout().setCallback(() => this.destroy()).setDelay(queueDestroyAfter)
+	public leaveTimeout = new BetterTimeout().setCallback(() => {
+		if (!this._interactionExpired && this.interaction) this.interaction.followUp(this.lang.audio.music.prompts.everyoneLeft).catch(() => void 0)
+		this.destroy()
+	}).setDelay(queueDestroyAfter)
 	public messageUpdater: import("../../utils/classes/FrequencyUpdater") = new FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
@@ -47,6 +50,7 @@ class Queue {
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 
 	public constructor(guildID: string) {
+		this.guildID = guildID
 		queues.set(guildID, this)
 	}
 
@@ -55,6 +59,7 @@ class Queue {
 	}
 
 	public set interaction(value) {
+		if (!this._interactionExpired && this._interaction) this._interaction.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription("There's a newer now playing message")] }).catch(() => void 0)
 		this._interactionExpired = false
 		if (value != undefined) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
@@ -156,13 +161,13 @@ class Queue {
 		this.songs.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired) this.interaction?.editReply({ embeds: [new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)] })
+		if (!this._interactionExpired) this.interaction?.editReply({ embeds: [new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)] }).catch(() => void 0)
 		this.player?.destroy().catch(() => void 0)
 		client.lavalink!.leave(this.guildID).catch(() => void 0)
 		queues.delete(this.guildID)
 	}
 
-	private async _nextSong() {
+	public async _nextSong() {
 		if (this.songs[1] && this.songs[1].live && (this.nightcore || this.antiNightcore || this.speed != 1)) {
 			this.nightcore = false
 			this.antiNightcore = false
@@ -262,10 +267,12 @@ class Queue {
 		if (song) {
 			const embed = new Discord.MessageEmbed()
 			const progress = song.getProgress(this.timeSeconds, this.paused)
-			const link = await song.showLink()
+			const link = await song.showLink().catch(() => "https://amanda.moe")
 			embed.setDescription(language.replace(this.lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Discord.Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
 			embed.setColor(constants.standard_embed_color)
-			this.interaction?.editReply({ embeds: [embed] })
+			this.interaction?.editReply({ embeds: [embed] }).catch(() => {
+				this._interactionExpired = true
+			})
 		}
 	}
 
@@ -364,24 +371,6 @@ class Queue {
 			this.leavingSoonID = undefined
 			this.listeners.set(user.id, user)
 		}
-	}
-
-	public voiceServerUpdate(packet: import("lavacord").VoiceServerUpdate) {
-		const region = packet.endpoint.match(/^([\w-]+)\d+\./)?.[1] || "us-east"
-		if (this.node && common.nodes.byID(this.node)?.regions.includes(region)) return // If the region is the same as current node, no need to move nodes
-		const regionNode = common.nodes.byRegion(region)
-		if (regionNode) this.node = regionNode.id
-		const newNode = common.nodes.random()
-		if (this.node && this.node != newNode.id) {
-			const llNode = client.lavalink!.nodes.get(newNode.id)
-			if (this.player && llNode) client.lavalink!.switch(this.player, llNode)
-		} else {
-			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-			// @ts-ignore This is what join calls to forward events
-			this.player = client.lavalink!.spawnPlayer({ guild: this.guildID, channel: this.voiceChannelID!, node: newNode.id })
-			this.addPlayerListeners()
-		}
-		this.node = newNode.id
 	}
 }
 

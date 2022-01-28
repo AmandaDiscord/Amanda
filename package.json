@@ -33,7 +33,7 @@
     "genius-lyrics-api": "^3.2.0",
     "heatsync": "^2.2.1",
     "jimp": "^0.16.1",
-    "lavacord": "github:AmandaDiscord/Lavacord#2e38e5d7bce3c6d07eb6ab8bd731c331334a8bfe",
+    "lavacord": "github:AmandaDiscord/Lavacord#bd631f4e1d68c9b4d4b413f7e4b6ec82cdab121c",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mixin-deep": "^2.0.1",
     "node-ipc": "^9.2.1",
