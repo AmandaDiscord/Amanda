@@ -11,6 +11,7 @@ const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
 const time = sync.require("../../utils/time") as typeof import("../../utils/time")
+const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 
 const waitForClientVCJoinTimeout = 5000
 
@@ -254,6 +255,7 @@ commands.assign([
 					queue!.addPlayerListeners()
 					return true
 				} catch (e) {
+					logger.error(e)
 					queue!.destroy()
 					queue = undefined
 					cmd.editReply(`${language.replace(lang.audio.music.prompts.voiceCantJoin, { username: cmd.user.username })}\n${await text.stringify(e)}`).catch(() => void 0)
