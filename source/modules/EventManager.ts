@@ -111,18 +111,16 @@ sync.addTemporaryListener(client, "interactionCreate", async (interaction: impor
 				if (e.code == 50013) return
 			}
 			// Report to original channel
-			const msgTxt = `command ${cmd.commandName} failed <:rip:401656884525793291>\n` + (await text.stringify(e))
 			const embed = new Discord.MessageEmbed()
-				.setDescription(msgTxt)
+				.setDescription(`There was an error with the command ${cmd.commandName} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
 				.setColor(0xdd2d2d)
 
-			const str = `There was an error with the command ${cmd.commandName} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`
-
-			if (cmd.deferred || cmd.replied) cmd.editReply({ content: str, embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
-			cmd.followUp({ content: str, embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
+			if (cmd.deferred || cmd.replied) cmd.editReply({ embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
+			cmd.followUp({ embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
 
 			// Report to #amanda-error-log
 			embed.setTitle("Command error occurred.")
+			embed.setDescription(await text.stringify(e))
 			let details = [
 				["User", cmd.user.tag],
 				["User ID", cmd.user.id],
