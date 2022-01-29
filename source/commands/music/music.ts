@@ -349,15 +349,13 @@ commands.assign([
 				const related = await queue.songs[0].showRelated()
 				return cmd.editReply(typeof related === "string" ? related : { embeds: [related] })
 			} else if (optionSkip !== null) {
-				const amount = optionSkip
-				if (queue.songs.length < amount) return cmd.editReply(lang.audio.music.prompts.tooManySkips)
-				if (queue.songs.length == amount) {
+				if (queue.songs.length < optionSkip) return cmd.editReply(lang.audio.music.prompts.tooManySkips)
+				if (queue.songs.length == optionSkip) {
 					queue.destroy()
 					return cmd.editReply("Skipped all songs in queue. Queue destroyed")
 				}
-				queue.songs.splice(1, amount - 1)
-				queue._nextSong()
-				return cmd.editReply(`Skipped ${amount} songs`)
+				queue.skip(optionSkip)
+				return cmd.editReply(`Skipped ${optionSkip} songs`)
 			} else if (optionSpeed !== null) {
 				queue.speed = optionSpeed / 100
 				return cmd.editReply(`Queue speed set to ${optionSpeed}%`)

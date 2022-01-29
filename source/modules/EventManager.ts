@@ -1,5 +1,6 @@
 import Discord from "thunderstorm"
 import { Manager } from "lavacord"
+import { BetterComponent } from "callback-components"
 
 import passthrough from "../passthrough"
 const { client, sync, commands, config, constants, queues } = passthrough
@@ -144,7 +145,7 @@ sync.addTemporaryListener(client, "interactionCreate", async (interaction: impor
 				{ name: "Details", value: detailsString },
 				{ name: "Message content", value: `\`\`\`\n${cmd.toString().replace(/`/g, "ˋ")}\`\`\`` }
 			])
-			if (!config.is_dev_env) new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] })
+			new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] }).catch(() => void 0)
 		}
-	}
+	} else if (interaction.isMessageComponent()) return BetterComponent.handle(interaction as import("thunderstorm").MessageComponentInteraction)
 })

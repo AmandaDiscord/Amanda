@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#a8bb4fbfad3d16f418c41a3b807127d790f2a601",
-    "@amanda/interactionmenu": "github:AmandaDiscord/InteractionMenu#e07ba4bd72759c4c1eeb893e7bb1a1693ee740c3",
     "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
     "@lavalink/encoding": "^0.1.2",
     "@types/centra": "^2.2.0",
     "@types/node": "^16.7.1",
     "@types/pg": "^8.6.3",
     "@types/ws": "^8.2.2",
+    "callback-components": "github:AmandaDiscord/CallbackComponents#38063d266e71ef1ab1bd6326ec0b44b92cc097f8",
     "centra": "^2.5.0",
     "cloudstorm": "0.3.2",
     "discord-bot-analytics": "^1.0.14",
@@ -43,7 +43,7 @@
     "simple-youtube-api": "^5.2.1",
     "snowtransfer": "0.3.5",
     "taihou": "2.0.7",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#c9e375703a011c37d02588d14d267c07d92e4242",
+    "thunderstorm": "github:AmandaDiscord/ThunderStorm#dccca3433784cfd279bae477b7cc1aad776e74e0",
     "typescript": "^4.5.4",
     "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53",
     "ws": "^8.4.0"

@@ -3,7 +3,7 @@ import { Worker } from "worker_threads"
 
 import CommandManager from "@amanda/commandmanager"
 import Frisky from "frisky-client"
-import { handle } from "thunderstorm"
+import { handle, MessageEmbed, PartialChannel } from "thunderstorm"
 import HeatSync from "heatsync"
 import ListenSomeMoe from "listensomemoe"
 import { Pool } from "pg"
@@ -74,5 +74,14 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 	])
 })()
 
-process.on("unhandledRejection", (e) => logger.error(e))
-process.on("uncaughtException", (e) => logger.error(e))
+async function globalErrorHandler(e: Error | undefined) {
+	const text = require("./utils/string") as typeof import("./utils/string")
+	logger.error(e)
+	const embed = new MessageEmbed().setColor(0xdd2d2d)
+	embed.setTitle("Global error occurred.")
+	embed.setDescription(await text.stringify(e))
+	new PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] }).catch(() => void 0)
+}
+
+process.on("unhandledRejection", globalErrorHandler)
+process.on("uncaughtException", globalErrorHandler)

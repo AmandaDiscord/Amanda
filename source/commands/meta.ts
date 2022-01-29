@@ -252,7 +252,6 @@ commands.assign([
 								}).join("\n") +
 							`\n\n${lang.meta.help.returns.footer}`)
 							.setColor(constants.standard_embed_color)
-							.setFooter(lang.meta.help.returns.mobile)
 						cmd.reply({ embeds: [embed], ephemeral: true })
 					} else {
 						embed = new Discord.MessageEmbed().setDescription(language.replace(lang.meta.help.prompts.invalidCommand, { "tag": cmd.user.tag })).setColor(0xB60000)

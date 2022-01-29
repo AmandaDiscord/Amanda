@@ -1,5 +1,6 @@
 import Discord from "thunderstorm"
 import mixin from "mixin-deep"
+import { BetterComponent } from "callback-components"
 
 import passthrough from "../../passthrough"
 const { sync, queues, client, config, constants } = passthrough
@@ -27,6 +28,7 @@ class Queue {
 	public lang: import("@amanda/lang").Lang
 	public leavingSoonID: string | undefined
 	public player: import("lavacord").Player | undefined
+	public menu: Array<BetterComponent> = this.createNPMenu(false)
 
 	public nightcore = false
 	public antiNightcore = false
@@ -64,6 +66,7 @@ class Queue {
 		if (value != undefined) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
+			this.createNPMenu()
 			this._interactionExpireTimeout = setTimeout(() => {
 				this.messageUpdater.stop()
 				this._interactionExpired = true
@@ -74,6 +77,7 @@ class Queue {
 			this.messageUpdater.stop()
 		}
 		this._interaction = value
+		this.menu.forEach(bn => bn.destroy())
 	}
 
 	public get speed() {
@@ -151,17 +155,18 @@ class Queue {
 	}
 
 	public destroy() {
+		this.menu.forEach(bn => bn.destroy())
 		for (const song of this.songs) {
 			try {
 				song.destroy()
-			} catch {
-				logger.error("Song destroy error")
+			} catch (e) {
+				logger.error(`Song destroy error:\n${e}`)
 			}
 		}
 		this.songs.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired) this.interaction?.editReply({ embeds: [new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)] }).catch(() => void 0)
+		if (!this._interactionExpired) this.interaction?.editReply({ embeds: [new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)], components: [] }).catch(() => void 0)
 		this.player?.destroy().catch(() => void 0)
 		client.lavalink!.leave(this.guildID).catch(() => void 0)
 		queues.delete(this.guildID)
@@ -211,6 +216,52 @@ class Queue {
 			}
 			this.play()
 		}
+	}
+
+	public createNPMenu(assign = true) {
+		const newMenu = [
+			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: "SECONDARY", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
+				interaction.deferUpdate()
+				if (!this.listeners.get(interaction.user.id)) return
+				this.paused = !this.paused
+			}),
+			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: "SECONDARY", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
+				interaction.deferUpdate()
+				if (!this.listeners.get(interaction.user.id)) return
+				this.skip()
+			}),
+			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: "DANGER", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
+				interaction.deferUpdate()
+				if (!this.listeners.get(interaction.user.id)) return
+				this.destroy()
+			})
+		]
+		if (assign) this.menu = newMenu
+		return newMenu
+	}
+
+	public skip(amount = 1) {
+		if (amount) {
+			for (let i = 1; i <= amount - 1; i++) { // count from 1 to amount-1, inclusive
+				this.removeSong(1)
+			}
+		}
+		this.player?.stop().catch(() => void 0)
+	}
+
+	public removeSong(index: number) {
+		// Validate index
+		if (index == 0) return 1
+		if (!this.songs[index]) return 1
+		// Actually remove
+		const removed = this.songs.splice(index, 1)[0]
+		if (!removed) return 2
+		try {
+			removed.destroy()
+		} catch (e) {
+			logger.error(`Song destroy error:\n${e}`)
+		}
+		return 0
 	}
 
 	private _onEnd(event: import("lavacord").LavalinkEvent) {
@@ -270,7 +321,7 @@ class Queue {
 			const link = await song.showLink().catch(() => "https://amanda.moe")
 			embed.setDescription(language.replace(this.lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Discord.Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
 			embed.setColor(constants.standard_embed_color)
-			this.interaction?.editReply({ embeds: [embed] }).catch(() => {
+			this.interaction?.editReply({ embeds: [embed], components: [new Discord.MessageActionRow({ components: this.menu.map(bn => bn.toComponent()), type: Discord.Constants.MessageComponentTypes.ACTION_ROW })] }).catch(() => {
 				this._interactionExpired = true
 			})
 		}
