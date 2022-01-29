@@ -31,7 +31,7 @@ export async function getAvatarJimp(userID: string) {
 	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
 
 	const data = await client.fetchUser(userID)
-	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar || "", bot: data.bot ? 1 : 0 })
+	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar || "", bot: data.bot ? 1 : 0, added_by: config.cluster_id })
 	const newuser = new Discord.User(client, data)
 	const newURL = newuser.displayAvatarURL({ dynamic: true })
 	if (!newURL) return null
