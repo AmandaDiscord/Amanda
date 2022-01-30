@@ -201,9 +201,9 @@ const common = {
 	inputToID(input: string): inputToIDReturnValue {
 		input = input.replace(/(^<|>$)/g, "")
 		if (input.match(/^\w{2}:/)) {
-			if (input.startsWith("yt")) return { type: "youtube", id: input, search: true }
-			else if (input.startsWith("sc")) return { type: "soundcloud", id: input, search: true }
-			else if (input.startsWith("ng")) return { type: "newgrounds", id: input, search: true }
+			if (input.startsWith("yt")) return { type: "youtube", id: input.substring(3), search: true }
+			else if (input.startsWith("sc")) return { type: "soundcloud", id: input.substring(3), search: true }
+			else if (input.startsWith("ng")) return { type: "newgrounds", id: input.substring(3), search: true }
 		} else if (!input.startsWith("http") && !input.includes(".com/")) return { type: "youtube", id: input, search: true }
 
 		try {

@@ -246,7 +246,7 @@ export const db = new Database({
 	timeouts: new Model<{ user_id: string, expires: number, amount: number }>(["user_id"]),
 	transactions: new Model<{ id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>(["id"]),
 	user_permissions: new Model<{ user_id: string, eval: number, owner: number }>(["user_id"]),
-	users: new Model<{ id: string, tag: string, avatar: string, bot: number, added_by: string }>(["id"], { useBuffer: true }),
+	users: new Model<{ id: string, tag: string, avatar: string | null, bot: number, added_by: string }>(["id"], { useBuffer: true }),
 	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id"], { useBuffer: true, bufferSize: 300 }),
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"]),
 	webhook_aliases: new Model<{ webhook_id: string, webhook_username: string, user_id: string, user_username: string, user_discriminator: string }>(["webhook_id", "webhook_username"])

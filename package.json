@@ -22,7 +22,7 @@
     "@types/node": "^16.7.1",
     "@types/pg": "^8.6.3",
     "@types/ws": "^8.2.2",
-    "callback-components": "github:AmandaDiscord/CallbackComponents#38063d266e71ef1ab1bd6326ec0b44b92cc097f8",
+    "callback-components": "github:AmandaDiscord/CallbackComponents#7c84306ae9e3e8d11aca9865abaf50524c7de8bc",
     "centra": "^2.5.0",
     "cloudstorm": "0.3.2",
     "discord-bot-analytics": "^1.0.14",

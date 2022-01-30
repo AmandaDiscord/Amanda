@@ -12,7 +12,7 @@ export async function getUser(id: string) {
 	const cached = await orm.db.get("users", { id: id })
 	if (cached) return convertCachedUser(cached)
 	const fetched = await client.fetchUser(id).catch(() => null)
-	if (fetched) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar || "", bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
+	if (fetched) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar, bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
 	return fetched
 }
 
@@ -31,7 +31,7 @@ export async function getAvatarJimp(userID: string) {
 	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
 
 	const data = await client.fetchUser(userID)
-	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar || "", bot: data.bot ? 1 : 0, added_by: config.cluster_id })
+	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar, bot: data.bot ? 1 : 0, added_by: config.cluster_id })
 	const newuser = new Discord.User(client, data)
 	const newURL = newuser.displayAvatarURL({ dynamic: true })
 	if (!newURL) return null

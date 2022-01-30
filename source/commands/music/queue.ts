@@ -28,7 +28,7 @@ class Queue {
 	public lang: import("@amanda/lang").Lang
 	public leavingSoonID: string | undefined
 	public player: import("lavacord").Player | undefined
-	public menu: Array<BetterComponent> = this.createNPMenu(false)
+	public menu: Array<BetterComponent> = []
 
 	public nightcore = false
 	public antiNightcore = false
@@ -63,6 +63,8 @@ class Queue {
 	public set interaction(value) {
 		if (!this._interactionExpired && this._interaction) this._interaction.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription("There's a newer now playing message")] }).catch(() => void 0)
 		this._interactionExpired = false
+		this.menu.forEach(bn => bn.destroy())
+		this.menu.length = 0
 		if (value != undefined) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
@@ -77,7 +79,6 @@ class Queue {
 			this.messageUpdater.stop()
 		}
 		this._interaction = value
-		this.menu.forEach(bn => bn.destroy())
 	}
 
 	public get speed() {
@@ -329,7 +330,7 @@ class Queue {
 
 	private _onAllUsersLeave() {
 		this.leaveTimeout.run()
-		if (!this._interactionExpired) this.interaction?.followUp(language.replace(this.lang.audio.music.prompts.noUsersLeft, { time: time.shortTime(queueDestroyAfter, "ms") })).then(msg => this.leavingSoonID = msg.id)
+		if (!this._interactionExpired) this.interaction?.followUp(language.replace(this.lang.audio.music.prompts.noUsersLeft, { time: time.shortTime(queueDestroyAfter, "ms") })).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
 	}
 
 	private _reportError() {

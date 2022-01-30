@@ -273,6 +273,8 @@ commands.assign([
 					if (!queue) return
 				}
 
+				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
+
 				const id = common.inputToID(optionPlay)
 				const song = await common.idToSong(id, node.id)
 				if (!song) {
@@ -293,6 +295,8 @@ commands.assign([
 					if (!queue) return
 				}
 
+				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
+
 				const song = new songTypes.FriskySong(optionFrisky as ConstructorParameters<typeof songTypes.FriskySong>["0"])
 				queue.songs.push(song)
 				if (queueDidntExist) queue.play()
@@ -307,6 +311,8 @@ commands.assign([
 					if (!queue) return
 				}
 
+				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
+
 				const song = new songTypes.ListenMoeSong(optionListenmoe as ConstructorParameters<typeof songTypes.ListenMoeSong>["0"])
 				queue.songs.push(song)
 				if (queueDidntExist) queue.play()
@@ -315,6 +321,7 @@ commands.assign([
 			}
 
 			if (!queue || !queue.songs[0]) return cmd.editReply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
+			if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id && optionQueue === null) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
 
 			if (optionStop !== null) {
 				queue.destroy()
