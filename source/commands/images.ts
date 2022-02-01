@@ -19,7 +19,7 @@ async function sendImage(host: string, path: string, cmd: import("thunderstorm")
 		.setImage(img)
 		.setColor(constants.standard_embed_color)
 		.setFooter(footer)
-	return cmd.followUp({ embeds: [embed] })
+	return cmd.editReply({ embeds: [embed] })
 }
 
 commands.assign([
@@ -64,11 +64,12 @@ commands.assign([
 		async process(cmd, lang) {
 			await cmd.defer()
 			const type = cmd.options.getString("type") as string
-			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey)
-			else if (type === "dog") return sendImage("chewey", "dog", cmd, poweredbychewey)
-			else if (type === "space") return sendImage("chewey", "space", cmd, poweredbychewey)
-			else if (type === "snake") return sendImage("chewey", "snake", cmd, poweredbychewey)
-			else if (type === "bird") return sendImage("chewey", "birb", cmd, poweredbychewey)
+			const onFail = () => cmd.editReply("There was an error fetching the image")
+			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey).catch(onFail)
+			else if (type === "dog") return sendImage("chewey", "dog", cmd, poweredbychewey).catch(onFail)
+			else if (type === "space") return sendImage("chewey", "space", cmd, poweredbychewey).catch(onFail)
+			else if (type === "snake") return sendImage("chewey", "snake", cmd, poweredbychewey).catch(onFail)
+			else if (type === "bird") return sendImage("chewey", "birb", cmd, poweredbychewey).catch(onFail)
 			else if (type === "neko") {
 				return sendImage("nekos", "neko", cmd, "Powered by nekos.life").catch(() => {
 					const embed = new Discord.MessageEmbed()
@@ -76,7 +77,7 @@ commands.assign([
 						.setDescription(lang.images.catgirl.returns.offline)
 						.setImage("https://cdn.discordapp.com/attachments/413088092556361728/632513720593022997/6439473d9cea838eae9161dad09927ae.png")
 						.setColor(constants.standard_embed_color)
-					cmd.followUp({ embeds: [embed] })
+					cmd.editReply({ embeds: [embed] })
 				})
 			}
 		}
