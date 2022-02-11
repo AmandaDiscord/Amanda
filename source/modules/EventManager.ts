@@ -96,6 +96,17 @@ sync.addTemporaryListener(client, "raw", async p => {
 	} else if (p.t === "VOICE_SERVER_UPDATE") client.lavalink?.voiceServerUpdate(p.d)
 })
 
+const missingCommands = ["couple", "marry", "accept", "decline", "divorce", "bank", "cbal", "withdraw", "deposit", "coupleleaderboard", "couplelb", "slot", "slots", "flip", "betflip", "bf", "coins", "$", "bal", "balance", "discoins", "amandollars", "daily", "leaderboard", "lb", "give", "wheel", "trivia", "ms", "minesweeper", "profile", "settings", "ping", "h", "wumbo", "todo", "trello", "tasks"]
+
+sync.addTemporaryListener(client, "messageCreate", (msg: import("thunderstorm").Message) => {
+	if (msg.content == `<@${client.user!.id}>`.replace(" ", "") || msg.content == `<@!${client.user!.id}>`.replace(" ", "")) return msg.channel.send("Hey there! My prefix is `/`. If you're trying to use my previous prefix (&) or a custom prefix of yours, they won't work. If my / commands don't show up in a server, try telling staff to reinvite me. <https://amanda.moe/to/add>")
+	if (!msg.content || !msg.content.startsWith("&")) return
+	const cmdTxt = msg.content.substring(1).split(" ")[0]
+	const cmd = (!!commands.cache.find(c => c.name === cmdTxt) || missingCommands.includes(cmdTxt))
+
+	if (cmd) return msg.channel.send("I have moved to / commands. As such, how you're trying to use me will no longer work.\nWhy? read [this](https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots).\nTLDR; Discord will no longer allow me to be able to see your messages which means I cannot handle your requests the same way as before. / commands do not depend on messages which is why I, along with a lot of other bots, have already moved or will be forced to move. If my / commands don't show up in a server, try telling staff to reinvite me with this invite link which has been updated: <https://amanda.moe/to/add>")
+})
+
 sync.addTemporaryListener(client, "interactionCreate", async (interaction: import("thunderstorm").Interaction) => {
 
 	if (interaction.isCommand()) {
