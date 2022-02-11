@@ -1,6 +1,6 @@
 import Discord from "thunderstorm"
 import c from "centra"
-import entities from "entities"
+const entities = require("entities") as typeof import("entities")
 import encoding from "@lavalink/encoding"
 
 import passthrough from "../../passthrough"
