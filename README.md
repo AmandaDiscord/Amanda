@@ -1,4 +1,4 @@
-![Amanda's avatar, a red-haired catgirl, in front of an out-of-focus background of code.](https://cdn.discordapp.com/attachments/608456955660468224/636334218510729237/banner_no_ads.png)
+![Amanda's avatar, a red-haired catgirl, at a desk in front of a computer.](https://b.catgirlsare.sexy/rD4aNJB1X4KE.png)
 
 # A qt music bot made for qts like you
 Amanda is a 100% free Discord music bot written in Typescript transpiled down to CommonJS.
@@ -8,8 +8,7 @@ PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amand
 We will take offenses against this license very seriously.
 
 # Features
-- Play music from YouTube, SoundCloud, Spotify, Newgrounds [Frisky Radio](https://www.friskyradio.com/), [listen.moe](https://listen.moe/), and your own audio files.
-- Economy.
+- Play music from YouTube, Soundcloud, Spotify, Newgrounds, Apple Music, Twitter videos, [Frisky Radio](https://www.friskyradio.com/), [listen.moe](https://listen.moe/), and your own audio files.
 - Social Interaction.
 - Web Dashboard.
 - Reliable and smooth playback.
