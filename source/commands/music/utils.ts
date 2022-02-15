@@ -323,7 +323,7 @@ const common = {
 				placeholder: lang.audio.music.prompts.songSelection,
 				minValues: 1,
 				maxValues: 1,
-				options: songs.map((s, index) => ({ label: label(s), value: String(index), description: `Song ${index + 1}`, default: false, emoji: null }))
+				options: songs.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Song ${index + 1}`, default: false, emoji: null }))
 			})
 			return new Promise(res => {
 				const timer = setTimeout(() => {
