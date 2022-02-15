@@ -1,12 +1,14 @@
 import Discord from "thunderstorm"
+import crypto from "crypto"
 
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues } = passthrough
+const { client, commands, constants, sync, queues, config } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
 const songTypes = sync.require("./songtypes") as typeof import("./songtypes")
 
+const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
@@ -177,6 +179,12 @@ commands.assign([
 					}
 				],
 				required: false
+			},
+			{
+				name: "shuffle",
+				type: Discord.Constants.ApplicationCommandOptionTypes.BOOLEAN,
+				description: "Shuffle the queue in place. True to only show yourself",
+				required: false
 			}
 		],
 		async process(cmd, lang) {
@@ -201,6 +209,7 @@ commands.assign([
 			const optionFilters = cmd.options.getString("filters", false)
 			const optionFrisky = cmd.options.getString("frisky", false)
 			const optionListenmoe = cmd.options.getString("listenmoe", false)
+			const optionShuffle = cmd.options.getBoolean("shuffle", false)
 
 			const array = [
 				optionPlay,
@@ -220,7 +229,8 @@ commands.assign([
 				optionSpeed,
 				optionFilters,
 				optionFrisky,
-				optionListenmoe
+				optionListenmoe,
+				optionShuffle
 			]
 
 			const notNull = array.filter(i => i !== null)
@@ -231,7 +241,11 @@ commands.assign([
 			let queue = queues.get(cmd.guildId)
 			if (!queue && optionPlay === null) return cmd.reply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
 
-			await cmd.defer()
+			let ephemeral = false
+			const shouldBeEphemeral = [optionStop, optionNow, optionInfo, optionRelated, optionLyrics, optionShuffle]
+			if (shouldBeEphemeral.includes(true)) ephemeral = true
+
+			await cmd.defer({ ephemeral })
 			const userVoiceState = await orm.db.get("voice_states", { guild_id: cmd.guildId, user_id: cmd.user.id })
 			if (!userVoiceState) return cmd.editReply(language.replace(lang.audio.music.prompts.voiceChannelRequired, { username: cmd.user.username }))
 			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
@@ -276,13 +290,13 @@ commands.assign([
 				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return cmd.editReply(language.replace(lang.audio.music.returns.queueIn, { channel: `<#${queue.voiceChannelID}>` }))
 
 				const id = common.inputToID(optionPlay)
-				const song = await common.idToSong(id, node.id)
-				if (!song) {
+				const songs = await common.idToSong(id, cmd, lang, node.id)
+				if (!songs || !songs.length) {
 					if (queue.songs.length === 0) queue.destroy()
 					return cmd.editReply(lang.audio.music.prompts.noResults)
 				}
 
-				queue.songs.push(song)
+				queue.songs.push(...songs)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 				return
@@ -350,7 +364,7 @@ commands.assign([
 			} else if (optionQueue !== null) {
 				const rows = queue.songs.map((song, index) => `${index + 1}. ${song.queueLine}`)
 				const totalLength = `\n${language.replace(lang.audio.music.prompts.totalLength, { "number": time.prettySeconds(queue.totalDuration) })}`
-				const body = `${text.removeMiddleRows(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
+				const body = `${arr.removeMiddleRows(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
 				return cmd.editReply({ embeds: [new Discord.MessageEmbed().setTitle(language.replace(lang.audio.music.prompts.queueFor, { "server": Discord.Util.escapeMarkdown(cmd.guild.name) })).setDescription(body).setColor(constants.standard_embed_color)] })
 			} else if (optionRelated !== null) {
 				const related = await queue.songs[0].showRelated()
@@ -369,7 +383,55 @@ commands.assign([
 			} else if (optionVolume !== null) {
 				queue.volume = optionVolume / 100
 				return cmd.editReply(`Queue volume set to ${optionVolume}%`)
+			} else if (optionShuffle !== null) {
+				const toShuffle = queue.songs.slice(1) // Do not shuffle the first song since it's already playing
+				queue.songs.length = 1
+				const shuffled = arr.shuffle(toShuffle)
+				queue.songs.push(...shuffled)
+				return cmd.editReply("Queue shuffled")
 			} else return cmd.editReply("Working on re-adding. Please give me time")
+		}
+	},
+	{
+		name: "musictoken",
+		description: "Obtain a web dashboard login token",
+		category: "audio",
+		options: [
+			{
+				name: "action",
+				description: "What to do",
+				type: Discord.Constants.ApplicationCommandOptionTypes.STRING,
+				choices: [
+					{
+						name: "new",
+						value: "n"
+					},
+					{
+						name: "delete",
+						value: "d"
+					}
+				],
+				required: false
+			}
+		],
+		async process(cmd, lang) {
+			await cmd.defer({ ephemeral: true })
+			const action = cmd.options.getString("action", false)
+			if (action === "d") {
+				await orm.db.delete("web_tokens", { user_id: cmd.user.id })
+				return cmd.editReply(lang.audio.token.returns.deleted)
+			} else if (action === "n") {
+				await orm.db.delete("web_tokens", { user_id: cmd.user.id })
+				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
+				await orm.db.insert("web_tokens", { user_id: cmd.user.id, token: hash, staging: 1 })
+				return cmd.editReply(language.replace(lang.audio.token.returns.new, { "website": `${config.website_protocol}://${config.website_domain}/dash` }))
+			} else {
+				const existing = await orm.db.get("web_tokens", { user_id: cmd.user.id })
+				if (existing) {
+					await cmd.editReply(lang.audio.token.returns.generated)
+					return cmd.followUp({ content: existing.token, ephemeral: true })
+				} else return cmd.editReply(lang.audio.token.prompts.none)
+			}
 		}
 	}
 ])

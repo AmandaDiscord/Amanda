@@ -11,6 +11,7 @@ const common = sync.require("./utils") as typeof import("./utils")
 const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
+const arrUtils = sync.require("../../utils/array") as typeof import("../../utils/array")
 
 const AsyncValueCache = sync.require("../../utils/classes/AsyncValueCache") as typeof import("../../utils/classes/AsyncValueCache")
 
@@ -345,7 +346,7 @@ export class FriskySong extends Song {
 			.addFields([
 				{
 					name: "Details",
-					value: text.tableifyRows(
+					value: arrUtils.tableifyRows(
 						[
 							["Episode", `${mix.data!.title} / [view](https://beta.frisky.fm/mix/${mix.id})`],
 							["Show", `${mix.data!.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix!.data!.show_id.id})`],

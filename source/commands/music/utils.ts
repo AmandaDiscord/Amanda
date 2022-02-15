@@ -1,3 +1,5 @@
+import Discord from "thunderstorm"
+import { BetterComponent } from "callback-components"
 import genius from "genius-lyrics-api"
 import c from "centra"
 import entities from "entities"
@@ -8,10 +10,12 @@ const { constants, config, sync } = passthrough
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
+const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
 
 const fakeHTTPAgent = `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) Neko/1.0 (KHTML, like Gecko) Amanda/1.0`
+const selectTimeout = 1000 * 60
 
-type inputToIDReturnValue = { type: "soundcloud" | "spotify" | "newgrounds" | "youtube" | "playlist" | "twitter" | "itunes" | "external"; link?: string | null, id?: string | null; search?: true }
+type inputToIDReturnValue = { type: "soundcloud" | "spotify" | "newgrounds" | "youtube" | "playlist" | "twitter" | "itunes" | "external"; link?: string | null, id?: string | null; search?: true; list?: string | null; }
 
 const common = {
 	nodes: {
@@ -257,49 +261,88 @@ const common = {
 		}
 	},
 
-	async idToSong(info: inputToIDReturnValue, node?: string): Promise<import("./songtypes").Song | null> {
+	async idToSong(info: inputToIDReturnValue, cmd: import("thunderstorm").CommandInteraction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./songtypes").Song> | null> {
 		const songTypes = require("./songtypes") as typeof import("./songtypes")
 		if (info.search) {
 			if (info.type === "youtube" || info.type === "soundcloud") {
 				const data = await common.loadtracks(`${info.type === "youtube" ? "yt" : "sc"}search:${info.id}`, node).catch(() => void 0)
 				if (!data || data.length === 0) return null
-				const selected = data[0]
-				return (info.type === "youtube" ?
-					new songTypes.YouTubeSong(selected.info.identifier, selected.info.title, Math.round(selected.info.length / 1000), selected.track, selected.info.author) :
-					new songTypes.SoundCloudSong(selected.info, selected.track))
+				const songs = (info.type === "youtube" ?
+					data.map(cur => new songTypes.YouTubeSong(cur.info.identifier, cur.info.title, Math.round(cur.info.length / 1000), cur.track, cur.info.author)) :
+					data.map(cur => new songTypes.SoundCloudSong(cur.info, cur.track))) as Array<import("./songtypes").YouTubeSong | import("./songtypes").SoundCloudSong>
+				if (songs.length === 0) return null
+				if (songs.length === 1) return songs
+				const selection = await songSelection(songs, (s) => `${s.title} - ${timeUtils.prettySeconds(s.lengthSeconds)}`)
+				if (!selection) return null
+				return [selection]
 			} else {
 				// The only other search option is newgrounds
 				const data = await common.newgrounds.search(info.id!).catch(() => void 0)
 				if (!data || data.length === 0) return null
-				const fetched = await common.newgrounds.getData(data[0].href).catch(() => void 0)
+				const selected = await songSelection(data, (s) => `${s.author} - ${s.title}`)
+				if (!selected) return null
+				const fetched = await common.newgrounds.getData(selected.href).catch(() => void 0)
 				if (!fetched) return null
-				return new songTypes.NewgroundsSong(fetched)
+				return [new songTypes.NewgroundsSong(fetched)]
 			}
 		} else {
 			// searching by urls. Do incompatible searching with LavaLink first
 			if (info.type === "newgrounds") {
 				const data = await common.newgrounds.getData(info.link!).catch(() => void 0)
 				if (!data) return null
-				return new songTypes.NewgroundsSong(data)
+				return [new songTypes.NewgroundsSong(data)]
 			} else if (info.type === "itunes") {
 				const data = await common.itunes.getData(info.link!).catch(() => void 0)
 				if (!data || data.length === 0) return null
-				return new songTypes.iTunesSong(data[0])
+				return [new songTypes.iTunesSong(data[0])]
 			} else if (info.type === "twitter") {
 				const data = await common.twitter.getData(info.link!).catch(() => void 0)
 				if (!data) return null
-				return new songTypes.TwitterSong(Object.assign(data, { uri: data.url, displayURI: info.link! }))
+				return [new songTypes.TwitterSong(Object.assign(data, { uri: data.url, displayURI: info.link! }))]
 			} else if (info.type === "spotify") return null
 			else {
-				if (info.type === "external") return new songTypes.ExternalSong(info.link!)
-				if (info.type == "playlist") return null
+				if (info.type === "external") return [new songTypes.ExternalSong(info.link!)]
+				if (info.type == "playlist" && !info.id) {
+					if (!info.list) return null
+					const d = await common.loadtracks(info.list, node)
+					if (!d || d.length === 0) return null
+					return d.map(s => new songTypes.YouTubeSong(s.info.identifier, s.info.title, Math.round(s.info.length / 1000), s.track, s.info.author))
+				}
 				const data = await common.loadtracks(info.link || info.id!, node).catch(() => void 0)
 				if (!data || data.length === 0) return null
 				const selected = data[0]
-				return (info.type === "youtube" ?
+				return [(info.type === "youtube" ?
 					new songTypes.YouTubeSong(selected.info.identifier, selected.info.title, Math.round(selected.info.length / 1000), selected.track, selected.info.author) :
-					new songTypes.SoundCloudSong(selected.info, selected.track))
+					new songTypes.SoundCloudSong(selected.info, selected.track))]
 			}
+		}
+
+		function songSelection<T>(songs: Array<T>, label: (item: T) => string): Promise<T | null> {
+			const component = new BetterComponent({
+				type: Discord.Constants.MessageComponentTypes.SELECT_MENU,
+				placeholder: lang.audio.music.prompts.songSelection,
+				minValues: 1,
+				maxValues: 1,
+				options: songs.map((s, index) => ({ label: label(s), value: String(index), description: `Song ${index + 1}`, default: false, emoji: null }))
+			})
+			return new Promise(res => {
+				const timer = setTimeout(() => {
+					component.destroy()
+					cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(lang.audio.music.prompts.songSelectionCanceled)], components: [] })
+					return res(null)
+				}, selectTimeout)
+				component.setCallback(async (interaction) => {
+					await interaction.deferUpdate()
+					if (interaction.user.id != cmd.user.id) return
+					component.destroy()
+					clearTimeout(timer)
+					const selected = songs[Number((interaction as import("thunderstorm").SelectMenuInteraction).values[0])]
+					await cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(label(selected))], components: [] })
+					return res(selected)
+				})
+
+				cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(`Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`).setFooter(`1-${songs.length}`)], components: [new Discord.MessageActionRow().addComponents([component.toComponent()])] })
+			})
 		}
 	},
 

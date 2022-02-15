@@ -1,11 +1,13 @@
-import Discord from "thunderstorm"
+import Discord, { Interaction } from "thunderstorm"
 import Jimp from "jimp"
 import c from "centra"
+import { BetterComponent } from "callback-components"
 
 import passthrough from "../passthrough"
-const { client, sync, config } = passthrough
+const { client, sync, config, constants } = passthrough
 
 const orm = sync.require("./orm") as typeof import("./orm")
+const arr = sync.require("./array") as typeof import("./array")
 
 export async function getUser(id: string) {
 	if (id === client.user?.id) return client.user
@@ -36,6 +38,56 @@ export async function getAvatarJimp(userID: string) {
 	const newURL = newuser.displayAvatarURL({ dynamic: true })
 	if (!newURL) return null
 	return Jimp.read(newURL)
+}
+
+export function createPagination(cmd: import("thunderstorm").CommandInteraction, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
+	let alignedRows = arr.tableifyRows([title].concat(rows), align, () => "`")
+	const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => `__**\`${sub}\`**__`)
+	alignedRows = alignedRows.slice(1)
+	const pages = arr.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
+	paginate(pages.length, (page, component) => {
+		return cmd.editReply({
+			embeds: [
+				new Discord.MessageEmbed()
+					.setColor(constants.standard_embed_color)
+					.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
+					.setFooter(`Page ${page + 1} of ${pages.length}`)
+			],
+			components: component ? [new Discord.MessageActionRow().addComponents([component.toComponent()])] : undefined
+		})
+	})
+}
+
+export function paginate(pageCount: number, callback: (page: number, component: BetterComponent | null) => unknown) {
+	let page = 0
+	if (pageCount > 1) {
+		let menuExpires: NodeJS.Timeout
+		const options = Array(pageCount).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), description: null, emoji: null, default: false }))
+		const component = new BetterComponent({
+			type: Discord.Constants.MessageComponentTypes.SELECT_MENU,
+			placeholder: "Select page",
+			maxValues: 1,
+			minValues: 1,
+			options
+		})
+
+		component.setCallback(interaction => {
+			interaction.deferUpdate()
+			page = Number((interaction as import("thunderstorm").SelectMenuInteraction).values[0])
+			callback(page, component)
+		})
+
+		// eslint-disable-next-line no-inner-declarations
+		function makeTimeout() {
+			clearTimeout(menuExpires)
+			menuExpires = setTimeout(() => {
+				component.destroy()
+			}, 10 * 60 * 1000)
+		}
+		makeTimeout()
+		callback(page, component)
+	} else callback(page, null)
+	return null
 }
 
 export default exports as typeof import("./discord")

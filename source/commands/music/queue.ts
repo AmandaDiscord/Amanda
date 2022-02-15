@@ -322,7 +322,7 @@ class Queue {
 			const link = await song.showLink().catch(() => "https://amanda.moe")
 			embed.setDescription(language.replace(this.lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Discord.Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
 			embed.setColor(constants.standard_embed_color)
-			this.interaction?.editReply({ embeds: [embed], components: [new Discord.MessageActionRow({ components: this.menu.map(bn => bn.toComponent()), type: Discord.Constants.MessageComponentTypes.ACTION_ROW })] }).catch(() => {
+			this.interaction?.editReply({ embeds: [embed], components: [new Discord.MessageActionRow().addComponents(this.menu.map(bn => bn.toComponent()))] }).catch(() => {
 				this._interactionExpired = true
 			})
 		}
