@@ -205,7 +205,7 @@ export class YouTubeSong extends Song {
 	}
 
 	public getInvidiousOrigin() {
-		return this.queue.node ? common.nodes.byID(this.queue.node)?.invidious_origin || common.nodes.random().invidious_origin : common.nodes.random().invidious_origin
+		return this.queue && this.queue.node ? common.nodes.byID(this.queue.node)?.invidious_origin || common.nodes.random().invidious_origin : common.nodes.random().invidious_origin
 	}
 
 	public showLink() {
@@ -431,7 +431,7 @@ export class SoundCloudSong extends Song {
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
 		this.error = ""
-		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)![1]
+		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)?.[1] || "unknown"
 		this.id = `sc/${this.trackNumber}`
 		this.live = data.isStream || false
 		this.thumbnail = {
