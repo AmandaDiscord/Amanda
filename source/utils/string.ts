@@ -11,15 +11,9 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 	else if (data instanceof Error) {
 		const errorObject = {}
 		Object.entries(data).forEach(e => errorObject[e[0]] = e[1])
-		result = `\`\`\`\n${data.stack}\`\`\` ${await stringify(errorObject)}`
-	} else {
-		const pre = util.inspect(data, { depth: depth })
-		result = returnRaw ? pre : `${pre.length < 2000 ? "```js\n" : ""}${pre}${pre.length < 2000 ? "```" : ""}`
-	}
-	if (result.length >= 2000 && !returnRaw) {
-		if (result.startsWith("```")) result = `${result.slice(0, 1995).replace(/`+$/, "").replace(/\n\s+/ms, "")}…\`\`\``
-		else result = `${result.slice(0, 1998)}…`
-	}
+		result = `${data.stack}${returnRaw ? "```\n```" : "\n"}${await stringify(errorObject, depth, returnRaw)}`
+	} else result = util.inspect(data, { depth: depth })
+	if (result.length >= 2000 && !returnRaw) result = `\`\`\`js\n${result.slice(0, 1995)}…\`\`\``
 	return result
 }
 

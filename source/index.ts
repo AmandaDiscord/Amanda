@@ -17,6 +17,8 @@ import constants from "./constants"
 import passthrough from "./passthrough"
 
 const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 const client = new Amanda({ snowtransfer: snow, disableEveryone: true })
 const commands = new CommandManager<[import("thunderstorm").CommandInteraction, import("@amanda/lang").Lang]>()
 const frisky = new Frisky()

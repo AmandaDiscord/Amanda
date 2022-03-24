@@ -269,7 +269,7 @@ commands.assign([
 					queue!.addPlayerListeners()
 					return true
 				} catch (e) {
-					logger.error(e)
+					if (e !== "Timed out") logger.error(e)
 					queue!.destroy()
 					queue = undefined
 					cmd.editReply(`${language.replace(lang.audio.music.prompts.voiceCantJoin, { username: cmd.user.username })}\n${await text.stringify(e)}`).catch(() => void 0)

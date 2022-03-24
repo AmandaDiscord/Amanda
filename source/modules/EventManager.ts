@@ -80,7 +80,7 @@ sync.addTemporaryListener(client, "raw", async p => {
 		orm.db.upsert("guilds", { id: p.d.id, name: p.d.name, icon: p.d.icon, member_count: p.d.member_count, owner_id: p.d.owner_id, added_by: config.cluster_id })
 		if (passthrough.clusterData.guild_ids[p.shard_id].includes(p.d.id)) return
 		else passthrough.clusterData.guild_ids[p.shard_id].push(p.d.id)
-		for (const state of p.d.voice_states as Array<import("discord-typings").VoiceStateData>) {
+		for (const state of p.d.voice_states as Array<import("discord-typings").VoiceState>) {
 			orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
 		}
 	} else if (p.t === "GUILD_DELETE") {

@@ -32,7 +32,7 @@ const client = new CloudStorm.Client(config.bot_token, {
 
 const queue = [] as Array<{ s_id: number, data: { op: number, d: unknown } }>
 
-const presence = {} as import("cloudstorm").IPresence
+const presence = {} as import("discord-typings").GatewayPresenceUpdate
 
 client.connect().catch((e) => logger.error(e, worker_id))
 logger.info("gateway started", worker_id)
@@ -47,7 +47,7 @@ client.on("shardReady", async (d) => {
 		const shard = shards.find(s => s.id === d.id)
 		if (shard) {
 			try {
-				await shard.connector.betterWs?.sendMessage(q.data)
+				await shard.connector.betterWs?.sendMessage(q.data as import("cloudstorm").IWSMessage)
 				queue.splice(queue.indexOf(q), 1)
 			} catch {
 				return logger.error(`Unable to send message:\n${JSON.stringify(q)}`, worker_id)
@@ -69,7 +69,7 @@ parentPort.on("message", async (message: { o: number, d: unknown, t: string }) =
 
 
 	} else if (message.o === constants.GATEWAY_WORKER_CODES.STATUS_UPDATE) {
-		const packet = message.d as { status?: string; activities?: Array<import("discord-typings").ActivityData> }
+		const packet = message.d as { status?: string; activities?: Array<import("discord-typings").Activity> }
 
 		if (!packet.status && !packet.activities) return parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.RESPONSE, d: presence, t: message.t })
 
@@ -78,6 +78,8 @@ parentPort.on("message", async (message: { o: number, d: unknown, t: string }) =
 		parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.RESPONSE, d: presence, t: message.t })
 
 		for (const shard of Object.values(client.shardManager.shards)) {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+			// @ts-ignore
 			if (shard.ready) shard.presenceUpdate(presence)
 			else queue.push({ s_id: shard.id, data: { op: CloudStorm.Constants.GATEWAY_OP_CODES.PRESENCE_UPDATE, d: presence } })
 		}
@@ -89,7 +91,7 @@ parentPort.on("message", async (message: { o: number, d: unknown, t: string }) =
 		const shard = Object.values(client.shardManager.shards).find(s => s.id === sid)
 		if (shard) {
 			try {
-				if (shard.ready) await shard.connector.betterWs?.sendMessage(message.d)
+				if (shard.ready) await shard.connector.betterWs?.sendMessage(message.d as import("cloudstorm").IWSMessage)
 				else queue.push({ s_id: shard.id, data: packet })
 			} catch {
 				return parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.ERROR_RESPONSE, d: `Unable to send message:\n${JSON.stringify(message.d)}`, t: message.t })
