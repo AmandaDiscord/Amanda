@@ -6,7 +6,7 @@ const { sync } = passthrough
 const text = sync.require("./string") as typeof import("./string")
 
 const workerNameMaxLogLength = 10
-const scopeNameMaxLogLength = 15
+const scopeNameMaxLogLength = 25
 
 export function post(err: boolean, value: string) {
 	err ? console.error(value) : console.log(value)
