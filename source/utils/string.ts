@@ -7,6 +7,7 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 	else if (typeof (data) === "function") result = "(function)"
 	else if (typeof (data) === "string") result = `"${data}"`
 	else if (typeof (data) === "number") result = data.toString()
+	else if (typeof (data) === "bigint") result = `${data.toString()}n`
 	else if (data instanceof Promise) return stringify(await data, depth, returnRaw)
 	else if (data instanceof Error) {
 		const errorObject = {}
