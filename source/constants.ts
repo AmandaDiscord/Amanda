@@ -40,9 +40,8 @@ export const standard_embed_color = 0x2f3136
 export const discord_background_color = 0x36393f
 export const chewey_api = "https://api.chewey-bot.top"
 export const lavalinkNodes = [] as Array<import("./types").InferModelDef<typeof import("./utils/orm")["db"]["tables"]["lavalink_nodes"]> & { regions: Array<string>; id: string; resumeKey?: string; resumeTimeout?: number; password: string }>
-const devNode = { host: "localhost", port: 10402, invidious_origin: "http://amanda.moe:3000", enabled: 1, search_with_invidious: 0, name: "DEV", regions: ["us-west"], password: config.lavalink_password, id: "dev", resumeKey: "415969262688010241/dev-0", resumeTimeout: 75 }
-const shouldAdd = true as boolean
-if (shouldAdd) lavalinkNodes.push(devNode)
+const devNode = { host: "localhost", port: 10402, invidious_origin: "http://amanda.moe:3000", enabled: 1, search_with_invidious: 0, name: "DEV", regions: ["us-west"], password: config.lavalink_password, id: "dev", resumeKey: `${Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")}/dev`, resumeTimeout: 75 }
+if (config.is_dev_env) lavalinkNodes.push(devNode)
 
 
 export const frisky_placeholder = `${baseURL}/images/frisky-small.png`
