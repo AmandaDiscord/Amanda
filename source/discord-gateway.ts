@@ -27,11 +27,7 @@ const client = new CloudStorm.Client(config.bot_token, {
 	firstShardId: config.shard_list[0],
 	shardAmount: config.total_shards,
 	lastShardId: config.shard_list[config.shard_list.length - 1],
-	reconnect: true,
-	ws: {
-		compress: true,
-		encoding: "json"
-	}
+	reconnect: true
 })
 
 const queue = [] as Array<{ s_id: number, data: { op: number, d: unknown } }>
