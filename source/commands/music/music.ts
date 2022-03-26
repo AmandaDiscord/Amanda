@@ -239,7 +239,7 @@ commands.assign([
 			if (notNull.length > 1) return cmd.reply("You can only do 1 action at a time")
 
 			let queue = queues.get(cmd.guildId)
-			if (!queue && optionPlay === null) return cmd.reply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
+			if (!queue && [optionPlay, optionFrisky, optionListenmoe].every(i => i === null)) return cmd.reply(language.replace(lang.audio.music.prompts.nothingPlaying, { username: cmd.user.username }))
 
 			let ephemeral = false
 			const shouldBeEphemeral = [optionStop, optionNow, optionInfo, optionRelated, optionLyrics, optionShuffle]
