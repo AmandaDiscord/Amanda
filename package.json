@@ -24,11 +24,11 @@
     "@types/ws": "^8.5.3",
     "callback-components": "github:AmandaDiscord/CallbackComponents#20a3a008f69f032b58141e02347229ca5ff9846b",
     "centra": "^2.5.0",
-    "cloudstorm": "0.4.1",
+    "cloudstorm": "0.5.1",
     "discord-bot-analytics": "^1.0.14",
     "discord-typings": "10.0.x",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
-    "entities": "^3.0.1",
+    "entities": "^4.1.1",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "genius-lyrics-api": "^3.2.0",
     "heatsync": "^2.2.1",
@@ -39,9 +39,9 @@
     "node-ipc": "^9.2.1",
     "pg": "^8.7.3",
     "pinski": "github:cloudrac3r/pinski#e22095172a061a8271e28272e2e481d541ea6725",
-    "simple-git": "^3.4.0",
+    "simple-git": "^3.5.0",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "^0.4.0",
+    "snowtransfer": "0.4.3",
     "taihou": "2.0.7",
     "thunderstorm": "github:AmandaDiscord/ThunderStorm#af51b0ebd84cfb476aa42521e13720d0fc2c56ee",
     "typescript": "^4.6.2",
@@ -49,9 +49,9 @@
     "ws": "^8.5.0"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.16.0",
-    "@typescript-eslint/parser": "^5.16.0",
-    "eslint": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^5.18.0",
+    "@typescript-eslint/parser": "^5.18.0",
+    "eslint": "^8.12.0",
     "tap": "^16.0.1"
   }
 }

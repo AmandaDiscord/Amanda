@@ -158,5 +158,5 @@ sync.addTemporaryListener(client, "interactionCreate", async (interaction: impor
 			])
 			new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] }).catch(() => void 0)
 		}
-	} else if (interaction.isMessageComponent()) return BetterComponent.handle(interaction as import("thunderstorm").MessageComponentInteraction)
+	} else if (interaction.isMessageComponent()) return BetterComponent.handle(interaction as any)
 })

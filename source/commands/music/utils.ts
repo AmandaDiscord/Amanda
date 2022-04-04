@@ -336,7 +336,7 @@ const common = {
 					if (interaction.user.id != cmd.user.id) return
 					component.destroy()
 					clearTimeout(timer)
-					const selected = songs[Number((interaction as import("thunderstorm").SelectMenuInteraction).values[0])]
+					const selected = songs[Number((interaction as unknown as import("thunderstorm").SelectMenuInteraction).values[0])]
 					await cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(label(selected))], components: [] })
 					return res(selected)
 				})

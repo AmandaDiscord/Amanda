@@ -73,7 +73,7 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 
 		component.setCallback(interaction => {
 			interaction.deferUpdate()
-			page = Number((interaction as import("thunderstorm").SelectMenuInteraction).values[0])
+			page = Number((interaction as unknown as import("thunderstorm").SelectMenuInteraction).values[0])
 			callback(page, component)
 		})
 
