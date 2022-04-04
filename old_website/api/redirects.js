@@ -18,7 +18,8 @@ module.exports = [
 	["/to/todo", "https://github.com/AmandaDiscord/Amanda/projects"],
 	["/to/twitter", "https://twitter.com/AmandaDiscord"],
 	["/to/github", "https://github.com/AmandaDiscord"],
-	["/to/privacy", "https://github.com/AmandaDiscord/Amanda/blob/rained-in/PRIVACYPOLICY"],
+	["/to/privacy", "https://github.com/AmandaDiscord/Amanda/blob/rewrite/PRIVACYPOLICY"],
+	["/to/tos", "https://github.com/AmandaDiscord/Amanda/blob/rewrite/TERMSOFSERVICE"],
 	["/to/tsukiko", "https://discord.com/oauth2/authorize?client_id=709907646387322932&permissions=268714048&scope=bot"]
 ].map(entry => ({
 	route: entry[0],
