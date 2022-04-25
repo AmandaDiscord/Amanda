@@ -26,7 +26,11 @@ const client = new CloudStorm.Client(config.bot_token, {
 	intents: ["GUILDS", "GUILD_VOICE_STATES", "DIRECT_MESSAGES", "GUILD_MESSAGES"],
 	shards: config.shard_list,
 	totalShards: config.total_shards,
-	reconnect: true
+	reconnect: true,
+	ws: {
+		compress: false,
+		encoding: "json"
+	}
 })
 
 const queue = [] as Array<{ s_id: number, data: { op: number, d: unknown } }>

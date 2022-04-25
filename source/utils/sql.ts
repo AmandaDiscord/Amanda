@@ -31,7 +31,7 @@ export async function get(string: string, prepared?: unknown | Array<unknown>, c
 	return rows[0] || null
 }
 
-export async function hasPermission(user: import("thunderstorm").User, permission: "eval" | "owner") {
+export async function hasPermission(user: import("discord-typings").User, permission: "eval" | "owner") {
 	const result = await get(`SELECT ${permission} FROM user_permissions WHERE user_id = $1`, user.id)
 	let r: number | undefined = undefined
 	if (result) r = Object.values(result)[0] as number

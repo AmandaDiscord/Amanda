@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import mixin from "mixin-deep"
 import { BetterComponent } from "callback-components"
 
@@ -39,15 +38,15 @@ class Queue {
 	public pausedAt: number | null = null
 	public errorChain = 0
 
-	public listeners = new Discord.Collection<string, import("thunderstorm").User>()
+	public listeners = new Map<string, import("discord-typings").User>()
 	public leaveTimeout = new BetterTimeout().setCallback(() => {
-		if (!this._interactionExpired && this.interaction) this.interaction.followUp(this.lang.audio.music.prompts.everyoneLeft).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
 	public messageUpdater: import("../../utils/classes/FrequencyUpdater") = new FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
-	private _interaction: import("thunderstorm").CommandInteraction | undefined
+	private _interaction: import("discord-typings").Interaction | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 
@@ -61,7 +60,7 @@ class Queue {
 	}
 
 	public set interaction(value) {
-		if (!this._interactionExpired && this._interaction) this._interaction.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription("There's a newer now playing message")] }).catch(() => void 0)
+		if (!this._interactionExpired && this._interaction) client.snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "There's a newer now playing message" }] }).catch(() => void 0)
 		this._interactionExpired = false
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
@@ -140,8 +139,8 @@ class Queue {
 		if (this.songs[1]) this.songs[1].prepare()
 		await song.prepare()
 		if (!song.error) {
-			if (song.track == "!") song.error = this.lang.audio.music.prompts.songErrorExclaimation
-			else if (song.track == null) song.error = this.lang.audio.music.prompts.songErrorNull
+			if (song.track == "!") song.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
+			else if (song.track == null) song.error = this.lang.GLOBAL.SONG_ERROR_NULL
 		}
 		if (song.error) {
 			logger.error(`Song error call C: { id: ${song.id}, error: ${song.error} }`)
@@ -167,7 +166,7 @@ class Queue {
 		this.songs.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired) this.interaction?.editReply({ embeds: [new Discord.MessageEmbed().setDescription("It looks like this queue has ended").setColor(constants.standard_embed_color)], components: [] }).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "It looks like this queue has ended" }], components: [] }).catch(() => void 0)
 		this.player?.destroy().catch(() => void 0)
 		client.lavalink!.leave(this.guildID).catch(() => void 0)
 		queues.delete(this.guildID)
@@ -200,7 +199,7 @@ class Queue {
 					this.songs.shift()
 					this.songs.push(related[0])
 				} else { // No related songs. Destroy.
-					if (!this._interactionExpired) this.interaction?.followUp(this.lang.audio.music.prompts.autoRanOut)
+					if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.AUTO_NONE_LEFT })
 					this.auto = false
 					// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 					this.destroy()
@@ -221,19 +220,22 @@ class Queue {
 
 	public createNPMenu(assign = true) {
 		const newMenu = [
-			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: "SECONDARY", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
-				interaction.deferUpdate()
-				if (!this.listeners.get(interaction.user.id)) return
+			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				const user = interaction.user ? interaction.user : interaction.member!.user
+				if (!this.listeners.get(user.id)) return
 				this.paused = !this.paused
 			}),
-			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: "SECONDARY", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
-				interaction.deferUpdate()
-				if (!this.listeners.get(interaction.user.id)) return
+			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				const user = interaction.user ? interaction.user : interaction.member!.user
+				if (!this.listeners.get(user.id)) return
 				this.skip()
 			}),
-			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: "DANGER", type: Discord.Constants.MessageComponentTypes.BUTTON }).setCallback(interaction => {
-				interaction.deferUpdate()
-				if (!this.listeners.get(interaction.user.id)) return
+			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				const user = interaction.user ? interaction.user : interaction.member!.user
+				if (!this.listeners.get(user.id)) return
 				this.destroy()
 			})
 		]
@@ -317,12 +319,22 @@ class Queue {
 		if (!this.interaction) return
 		const song = this.songs[0]
 		if (song) {
-			const embed = new Discord.MessageEmbed()
 			const progress = song.getProgress(this.timeSeconds, this.paused)
 			const link = await song.showLink().catch(() => "https://amanda.moe")
-			embed.setDescription(language.replace(this.lang.audio.music.prompts.queueNowPlaying, { "song": `[**${Discord.Util.escapeMarkdown(song.title)}**](${link})\n\n${progress}` }))
-			embed.setColor(constants.standard_embed_color)
-			this.interaction?.editReply({ embeds: [embed], components: [new Discord.MessageActionRow().addComponents(this.menu.map(bn => bn.toComponent()))] }).catch(() => {
+			client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
+				embeds: [
+					{
+						color: constants.standard_embed_color,
+						description: language.replace(this.lang.GLOBAL.NOW_PLAYING, { "song": `[**${song.title}**](${link})\n\n${progress}` })
+					}
+				],
+				components: [
+					{
+						type: 1,
+						components: this.menu.map(bn => bn.toComponent())
+					}
+				]
+			}).catch(() => {
 				this._interactionExpired = true
 			})
 		}
@@ -330,24 +342,21 @@ class Queue {
 
 	private _onAllUsersLeave() {
 		this.leaveTimeout.run()
-		if (!this._interactionExpired) this.interaction?.followUp(language.replace(this.lang.audio.music.prompts.noUsersLeft, { time: time.shortTime(queueDestroyAfter, "ms") })).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: language.replace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: time.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
 	}
 
 	private _reportError() {
-		const sendReport = (contents: import("thunderstorm").MessageEmbed) => {
+		const sendReport = (contents: import("discord-typings").Embed) => {
 			// Report to original channel
-			if (!this._interactionExpired) this.interaction?.followUp({ embeds: [contents] })
+			if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = "512869106089852949"
-			const embed = new Discord.MessageEmbed()
-			embed.setTitle("Music error occurred.")
-			embed.setDescription("The next message is the message that was sent to the user.")
 			const node = this.node ? common.nodes.byID(this.node) : undefined
 			const undef = "undefined"
 			const details = [
 				["Cluster", config.cluster_id],
-				["Guild ID", this.interaction?.guild!.id || undef],
-				["Text channel", this.interaction?.channel?.id || undef],
+				["Guild ID", this.interaction?.guild_id || undef],
+				["Text channel", this.interaction?.channel_id || undef],
 				["Voice channel", this.voiceChannelID || undef],
 				["Using Invidious", String(node && node.search_with_invidious ? true : false)],
 				["Invidious origin", `\`${node?.invidious_origin || "NONE"}\``],
@@ -357,41 +366,44 @@ class Queue {
 			const detailsString = details.map(row =>
 				`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
-			embed.addField(
-				"Details",
-				detailsString
-			)
-			embed.setColor(0xff2ee7)
-			const rchan = new Discord.PartialChannel(client, { id: reportTarget })
-			rchan.send({ embeds: [embed, contents] }).catch(() => void 0)
+			client.snow.channel.createMessage(reportTarget, {
+				embeds: [
+					{
+						color: 0xff2ee7,
+						title: "Music error occurred.",
+						description: "The next message is the message that was sent to the user.",
+						fields: [{ name: "Details", value: detailsString }]
+					},
+					contents
+				]
+			}).catch(() => void 0)
 		}
 		this.errorChain++
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
 			const song = this.songs[0]
 			if (song) {
-				const embed = new Discord.MessageEmbed()
-					.setTitle(this.lang.audio.music.prompts.songNotPlayable)
-					.setDescription(
-						`**${Discord.Util.escapeMarkdown(song.title)}** (ID: ${song.id})`
-					+ `\n${song.error}`
-					)
-					.setColor(0xdd2d2d)
-				sendReport(embed)
+				sendReport({
+					title: this.lang.GLOBAL.SONG_NOT_PLAYABLE,
+					description: `**${song.title}** (ID: ${song.id})\n${song.error}`,
+					color: 0xdd2d2d
+				})
 			} else {
-				const embed = new Discord.MessageEmbed()
-					.setTitle(this.lang.audio.music.prompts.errorOccured)
-					.setDescription(language.replace(this.lang.audio.music.prompts.songErrorNotObject, { "song": song }))
-					.setColor(0xdd2d2d)
-				sendReport(embed)
+				sendReport({
+					title: this.lang.GLOBAL.ERROR_OCCURRED,
+					description: language.replace(this.lang.GLOBAL.SONG_NOT_OBJECT, { "song": song }),
+					color: 0xdd2d2d
+				})
 			}
 			if (this.errorChain === 3) {
-				if (!this._interactionExpired) {
-					this.interaction?.followUp({ embeds: [
-						new Discord.MessageEmbed()
-							.setTitle(this.lang.audio.music.prompts.tooManyErrors)
-							.setDescription(this.lang.audio.music.prompts.errorsSuppressed)
-							.setColor(0xff2ee7)
-					]
+				if (!this._interactionExpired && this.interaction) {
+					client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
+						embeds: [
+							{
+								title: this.lang.GLOBAL.TOO_MANY_ERRORS,
+								description: this.lang.GLOBAL.ERRORS_SUPPRESSED,
+								color: 0xff2ee7
+							}
+						]
 					})
 				}
 			}
@@ -419,7 +431,7 @@ class Queue {
 			const user = await discordUtils.getUser(packet.user_id)
 			if (!user || (user && user.bot)) return
 			this.leaveTimeout.clear()
-			if (this.leavingSoonID && this.interaction) client._snow.interaction.deleteFollowupMessage(this.interaction.applicationId, this.interaction.token, this.leavingSoonID)
+			if (this.leavingSoonID && this.interaction) client.snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
 			this.leavingSoonID = undefined
 			this.listeners.set(user.id, user)
 		}

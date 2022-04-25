@@ -1,10 +1,8 @@
-import Discord from "thunderstorm"
-
 interface Passthrough {
-	queues: import("thunderstorm").Collection<string, import("./commands/music/queue")>
+	queues: Map<string, import("./commands/music/queue")>
 	client: import("./modules/Amanda")
 	clusterData: { connected_shards: Array<number>; guild_ids: { [sid: number]: Array<string> } }
-	commands: import("@amanda/commandmanager")<[import("thunderstorm").CommandInteraction, import("@amanda/lang").Lang]>
+	commands: import("@amanda/commandmanager")<[import("discord-typings").Interaction, import("@amanda/lang").Lang]>
 	config: import("./types").Config
 	constants: typeof import("./constants")
 	db: import("pg").PoolClient
@@ -16,4 +14,4 @@ interface Passthrough {
 	listenMoe: { jp: import("listensomemoe"); kp: import("listensomemoe") }
 }
 
-export = { clusterData: { connected_shards: [] as Array<number>, guild_ids: {} }, queues: new Discord.Collection() } as Passthrough
+export = { clusterData: { connected_shards: [] as Array<number>, guild_ids: {} }, queues: new Map() } as Passthrough

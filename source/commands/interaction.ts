@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import Jimp from "jimp"
 import crypto from "crypto"
 import c from "centra"
@@ -21,28 +20,28 @@ const cmds = [
 		options: [
 			{
 				name: "user2",
-				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
+				type: 6,
 				description: "The second user to ship",
 				required: true
 			},
 			{
 				name: "user1",
-				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
+				type: 6,
 				description: "The user to ship user2 with other than yourself",
 				required: false
 			}
 		],
 		async process(cmd, lang) {
-			const user1 = cmd.options.getUser("user1", false) || cmd.user
-			const user2 = cmd.options.getUser("user2", true)!
-
-			if (user1.id == user2.id) return cmd.reply(language.replace(lang.interaction.ship.prompts.selfShip, { "username": cmd.user.username }))
-			await cmd.defer()
+			const user1 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user1") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+			const user2 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user2") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+			const author = cmd.user ? cmd.user : cmd.member!.user
+			if (user1.id == user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": author.username }) })
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
 			if (crow) {
 				const otherID = user1.id === crow.user1 ? crow.user2 : crow.user1
-				const you = user1.id === cmd.user.id
-				if (otherID === user2.id) return cmd.editReply(`I don't think I have to rate ${you ? "you" : user1.tag} and ${user2.tag} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>`)
+				const you = user1.id === author.id
+				if (otherID === user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `I don't think I have to rate ${you ? "you" : user1.username} and ${user2.username} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>` })
 			}
 
 			const canvas = new Jimp(300, 100)
@@ -50,9 +49,9 @@ const cmds = [
 				discordUtils.getAvatarJimp(user1.id),
 				discordUtils.getAvatarJimp(user2.id),
 				Jimp.read("./images/emojis/heart.png")
-			])
+			]).catch(() => [undefined, undefined, undefined])
 
-			if (!pfp1 || !pfp2) return cmd.editReply("There was an error getting either user's avatar")
+			if (!pfp1 || !pfp2 || !heart) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "There was an error getting either user's avatar" })
 
 			pfp1.resize(100, 100)
 			pfp2.resize(100, 100)
@@ -63,7 +62,6 @@ const cmds = [
 			canvas.composite(pfp2, 200, 0)
 
 			const buffer = await canvas.getBufferAsync(Jimp.MIME_PNG)
-			const image = new Discord.MessageAttachment(buffer, `${`ship_${user1.username}_${user2.username}`.replace(/[^a-zA-Z0-9_-]+/g, "")}.png`)
 			const strings = [user1.id, user2.id].sort((a, b) => Number(a) - Number(b)).join(" ")
 			let percentage: number | undefined = undefined
 
@@ -77,7 +75,15 @@ const cmds = [
 				const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 				percentage = Number(`0x${hash}`) % 101
 			}
-			return cmd.editReply({ content: language.replace(lang.interaction.ship.returns.rating, { "display1": user1.tag, "display2": user2.tag, "percentage": percentage }), files: [image] })
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: language.replace(lang.GLOBAL.SHIP_RATING, { "display1": `${user1.username}#${user1.discriminator}`, "display2": `${user2.username}#${user2.discriminator}`, "percentage": percentage }),
+				files: [
+					{
+						name: `ship_${user1.username}_${user2.username}`.replace(/[^a-zA-Z0-9_-]+/g, "") + ".png",
+						file: buffer
+					}
+				]
+			})
 		}
 	},
 	{
@@ -87,17 +93,18 @@ const cmds = [
 		options: [
 			{
 				name: "user",
-				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
+				type: 6,
 				description: "The user to bean",
 				required: true
 			}
 		],
 		process(cmd, lang) {
-			if (!cmd.guildId) return cmd.reply(language.replace(lang.interaction.bean.prompts.guildOnly, { "username": cmd.user.username }))
-			const user = cmd.options.getUser("user", true)!
-			if (user.id == client.user!.id) return cmd.reply("No u")
-			if (user.id == cmd.user.id) return cmd.reply(language.replace(lang.interaction.bean.prompts.selfBean, { "username": cmd.user.username }))
-			return cmd.reply(language.replace(lang.interaction.bean.returns.beaned, { "tag": `**${user.tag}**` }))
+			const author = cmd.user ? cmd.user : cmd.member!.user
+			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": author.username }) } })
+			const user = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+			if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "No u" } })
+			if (user.id == author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": author.username }) } })
+			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) } })
 		}
 	}
 ] as Parameters<typeof commands.assign>["0"]
@@ -106,7 +113,7 @@ const interactionSources = [
 	{
 		name: "hug", // Command object key and text filler
 		description: "Hugs someone", // Command description
-		shortcut: "weeb.sh", // nekos.life: use the command name as the endpoint
+		shortcut: "weeb.sh", // Where the image should be fetched from
 		traaOverride: true // don't set this true for newly added types
 	},
 	{
@@ -159,33 +166,27 @@ for (const source of interactionSources) {
 		options: [
 			{
 				name: "user",
-				type: Discord.Constants.ApplicationCommandOptionTypes.USER,
+				type: 6,
 				description: `The user to ${source.name}`,
 				required: true
 			}
 		],
-		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Exclude<keyof import("@amanda/lang").Lang["interaction"], "ship" | "bean">, source.shortcut, source.url)
+		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Parameters<typeof doInteraction>["2"], source.shortcut, source.url)
 	} as import("../types").UnpackArray<Parameters<typeof commands.assign>["0"]>
 	cmds.push(newCommand)
 }
 
-async function doInteraction(cmd: import("thunderstorm").CommandInteraction, lang: import("@amanda/lang").Lang, source: Exclude<keyof import("@amanda/lang").Lang["interaction"], "ship" | "bean">, shortcut: string, url?: () => Promise<string>) {
-	const user = cmd.options.getUser("user", true)!
-	if (user.id == cmd.user.id) return cmd.reply(arrayUtils.random(responses))
-	if (user.id == client.user!.id) return cmd.reply(language.replace(lang.interaction[source].returns.amanda, { "username": cmd.user.username }))
-	await cmd.defer()
+async function doInteraction(cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
+	const author = cmd.user ? cmd.user : cmd.member!.user
+	const user = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
+	if (user.id == author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
+	if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL[keyAmanda], { "username": author.username }) } })
+	await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 	let fetched: Promise<string> | undefined = undefined
 	let footer: string
 	if (!fetched) {
-		if (shortcut == "nekos.life") {
-			footer = "Powered by nekos.life"
-			fetched = new Promise((resolve, reject) => {
-				c(`https://nekos.life/api/v2/img/${source}`).send().then(async body => {
-					const data = await body.json()
-					resolve(data.url)
-				}).catch(reject)
-			})
-		} else if (shortcut == "weeb.sh") {
+		if (shortcut == "weeb.sh") {
 			footer = "Powered by weeb.sh"
 			fetched = new Promise(resolve => {
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -198,13 +199,17 @@ async function doInteraction(cmd: import("thunderstorm").CommandInteraction, lan
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
 	fetched!.then(u => {
-		const embed = new Discord.MessageEmbed()
-			.setDescription(language.replace(lang.interaction[source].returns.action, { "username": cmd.user.username, "action": source, "mention": `<@${user.id}>` }))
-			.setImage(u)
-			.setColor(constants.standard_embed_color)
-		if (footer) embed.setFooter(footer)
-		return cmd.editReply({ content: null, embeds: [embed] })
-	}).catch(error => { return cmd.editReply(`There was an error: \`\`\`\n${error}\`\`\``) })
+		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
+		const embed: import("discord-typings").Embed = {
+			description: language.replace(lang.GLOBAL[keyOther], { "username": author.username, "action": source, "mention": `<@${user.id}>` }),
+			image: { url: u },
+			color: constants.standard_embed_color
+		}
+		if (footer) embed.footer = { text: footer }
+		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: null, embeds: [embed] })
+	}).catch(error => {
+		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `There was an error: \`\`\`\n${error}\`\`\`` })
+	})
 }
 
 async function getGif(type: string): Promise<string> {

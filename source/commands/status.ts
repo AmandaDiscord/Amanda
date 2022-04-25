@@ -12,7 +12,7 @@ let messages: Array<{ id: number; dates: string; users: string; message: string;
 let enqueued: NodeJS.Timeout
 
 let started = false
-if (client.readyAt) started = true
+if (client.ready) started = true
 
 sync.addTemporaryListener(sync.events, __filename, () => {
 	clearTimeout(enqueued)

@@ -2,7 +2,6 @@
 
 const ipc = require("node-ipc")
 const Server = require("node-ipc/dao/socketServer")
-const Discord = require("thunderstorm")
 
 /**
  * original ipc server doesn't have complete typings
@@ -31,8 +30,8 @@ class IPC {
 		ipc.config.silent = true
 		/** @type {boolean} */
 		this.initialized = false
-		/** @type {Discord.Collection<string, { clientID: string, shards: Array<number> }>} */
-		this.clusterShards = new Discord.Collection()
+		/** @type {Map<string, { clientID: string, shards: Array<number> }>} */
+		this.clusterShards = new Map()
 
 		ipc.serveNet(() => {
 			// @ts-ignore
@@ -66,9 +65,9 @@ class IPC {
 
 		/**
 		 * Map cluster IDs to their IPC sockets.
-		 * @type {Discord.Collection<string, any>}
+		 * @type {Map<string, any>}
 		 */
-		this.clusters = new Discord.Collection()
+		this.clusters = new Map()
 
 		this.replier = null
 	}

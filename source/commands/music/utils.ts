@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import { BetterComponent } from "callback-components"
 import genius from "genius-lyrics-api"
 import c from "centra"
@@ -6,7 +5,7 @@ import entities from "entities"
 import vul from "video-url-link"
 
 import passthrough from "../../passthrough"
-const { constants, config, sync } = passthrough
+const { constants, config, sync, client } = passthrough
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
@@ -261,7 +260,7 @@ const common = {
 		}
 	},
 
-	async idToSong(info: inputToIDReturnValue, cmd: import("thunderstorm").CommandInteraction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./songtypes").Song> | null> {
+	async idToSong(info: inputToIDReturnValue, cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./songtypes").Song> | null> {
 		const songTypes = require("./songtypes") as typeof import("./songtypes")
 		if (info.search) {
 			if (info.type === "youtube" || info.type === "soundcloud") {
@@ -319,29 +318,59 @@ const common = {
 
 		function songSelection<T>(songs: Array<T>, label: (item: T) => string): Promise<T | null> {
 			const component = new BetterComponent({
-				type: Discord.Constants.MessageComponentTypes.SELECT_MENU,
-				placeholder: lang.audio.music.prompts.songSelection,
-				minValues: 1,
-				maxValues: 1,
-				options: songs.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Song ${index + 1}`, default: false, emoji: null }))
-			})
+				type: 3,
+				placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
+				min_values: 1,
+				max_values: 1,
+				options: songs.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Song ${index + 1}`, default: false }))
+			} as Omit<import("discord-typings").SelectMenu, "custom_id">)
 			return new Promise(res => {
 				const timer = setTimeout(() => {
 					component.destroy()
-					cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(lang.audio.music.prompts.songSelectionCanceled)], components: [] })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						embeds: [
+							{
+								color: constants.standard_embed_color,
+								description: "Cancelled on Twitter"
+							}
+						],
+						components: []
+					}).catch(() => void 0)
 					return res(null)
 				}, selectTimeout)
 				component.setCallback(async (interaction) => {
-					await interaction.deferUpdate()
-					if (interaction.user.id != cmd.user.id) return
+					await client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
+					if ((interaction.user ? interaction.user : interaction.member!.user).id != (cmd.user ? cmd.user : cmd.member!.user).id) return
 					component.destroy()
 					clearTimeout(timer)
-					const selected = songs[Number((interaction as unknown as import("thunderstorm").SelectMenuInteraction).values[0])]
-					await cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(label(selected))], components: [] })
+					const selected = songs[Number(interaction.data!.values![0])]
+					await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						embeds: [
+							{
+								color: constants.standard_embed_color,
+								description: label(selected)
+							}
+						],
+						components: []
+					}).catch(() => void 0)
 					return res(selected)
 				})
 
-				cmd.editReply({ embeds: [new Discord.MessageEmbed().setColor(constants.standard_embed_color).setDescription(`Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`).setFooter(`1-${songs.length}`)], components: [new Discord.MessageActionRow().addComponents([component.toComponent()])] })
+				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					embeds: [
+						{
+							color: constants.standard_embed_color,
+							description: `Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`,
+							footer: { text: `1-${songs.length}` }
+						}
+					],
+					components: [
+						{
+							type: 1,
+							components: [component.toComponent()]
+						}
+					]
+				}).catch(() => void 0)
 			})
 		}
 	},

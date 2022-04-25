@@ -16,7 +16,7 @@ class ServerReplier extends Replier {
 	}
 
 	async onMessage(socket, raw) {
-		this.baseOnMessage(raw, reply => this.ipc.send(socket, reply))
+		await this.baseOnMessage(raw, reply => this.ipc.send(socket, reply))
 	}
 
 	requestFromCluster(clusterID, op, data) {
@@ -36,7 +36,7 @@ class ServerReplier extends Replier {
 	}
 
 	getIdealClient() {
-		return this.ipc.clusterShards.find(item => item.clientID === passthrough.clientID) ? passthrough.clientID : (this.ipc.clusterShards.first() ? this.ipc.clusterShards.first().clientID : passthrough.clientID)
+		return [...this.ipc.clusterShards.values()].find(item => item.clientID === passthrough.clientID) ? passthrough.clientID : ([...this.ipc.clusterShards.values()][0] ? [...this.ipc.clusterShards.values()][0].clientID : passthrough.clientID)
 	}
 
 	getShardsForClient(id) {
@@ -80,7 +80,7 @@ class ServerReplier extends Replier {
 		let expecting = connectedClientCount
 		if (["GET_STATS"].includes(op)) {
 			const preferred = this.getIdealClient()
-			const total = this.ipc.clusterShards.filter(item => item.clientID === preferred).size
+			const total = [...this.ipc.clusterShards.values()].filter(item => item.clientID === preferred).length
 			if (total === 0) return Promise.reject(new Error("No preferred clients connected, requestAll would never resolve."))
 			expecting = total
 			for (const [key, value] of this.ipc.clusterShards) {
@@ -98,13 +98,11 @@ class ServerReplier extends Replier {
 					} else if (combineMethod === "concat") {
 						resolve([].concat(...parts))
 					} else if (combineMethod === "concatProps") {
-						//console.log(parts)
 						let result = {}
 						let keys = Object.keys(parts[0])
 						keys.forEach(k => {
 							result[k] = [].concat(...parts.map(p => p[k]))
 						})
-						//console.log(result)
 						resolve(result)
 					} else if (combineMethod === "add") {
 						resolve(parts.reduce((acc, cur) => (acc + cur), 0))
@@ -133,9 +131,7 @@ class ServerReplier extends Replier {
 	}
 
 
-
 	// === * === * === * === * === * === * === * === * === * === * === * === * === * === * === * ===
-
 
 
 	REPLY_PING() {
@@ -162,7 +158,6 @@ class ServerReplier extends Replier {
 
 	/**
 	 * @param {string} guildID
-	 * @returns {Promise<types.FilteredGuild>}
 	 */
 	requestGetGuild(guildID) {
 		return this.requestFromGuild(guildID, "GET_GUILD", guildID)
@@ -171,7 +166,7 @@ class ServerReplier extends Replier {
 	/**
 	 * @param {string} userID
 	 * @param {boolean} np
-	 * @returns {Promise<{guilds: types.FilteredGuild[], npguilds: types.FilteredGuild[]}>}
+	 * @returns {Promise<{guilds: any[], npguilds: any[]}>}
 	 */
 	requestGetDashGuilds(userID, np) {
 		return this.requestAll("GET_DASH_GUILDS", { userID, np }, "concatProps")
@@ -181,7 +176,7 @@ class ServerReplier extends Replier {
 	 * Request a guild, but only if the user is in that guild.
 	 * @param {string} userID
 	 * @param {string} guildID
-	 * @returns {Promise<types.FilteredGuild>}
+	 * @returns {Promise<any>}
 	 */
 	requestGetGuildForUser(userID, guildID) {
 		return this.requestFromGuild(guildID, "GET_GUILD_FOR_USER", { userID, guildID })
@@ -252,7 +247,7 @@ class ServerReplier extends Replier {
 
 	/**
 	 * Request and combine stats from all clusters.
-	 * @returns {Promise<types.CombinedClusterStats>}
+	 * @returns {Promise<any>}
 	 */
 	async requestGetStats() {
 		const stats = await this.requestAll("GET_STATS", undefined, null)
@@ -269,9 +264,7 @@ class ServerReplier extends Replier {
 		Object.keys(combined).forEach(key => {
 			stats.forEach(s => {
 				// Special properties (key name is different)
-				if (key === "combinedRam") {
-					combined[key] += s.ram
-				}
+				if (key === "combinedRam") combined[key] += s.ram
 				// Other properties (key name is the same)
 				else {
 					if (combined[key] instanceof Array) combined[key].push(s[key])

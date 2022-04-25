@@ -1,19 +1,25 @@
-import Discord from "thunderstorm"
 import { Manager } from "lavacord"
 import { BetterComponent } from "callback-components"
 
 import passthrough from "../passthrough"
 const { client, sync, commands, config, constants, queues } = passthrough
 let starting = true
-if (client.readyAt) starting = false
+if (client.ready) starting = false
 
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
 const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
 
-sync.addTemporaryListener(client, "raw", async p => {
+const missingCommands = ["couple", "marry", "accept", "decline", "divorce", "bank", "cbal", "withdraw", "deposit", "coupleleaderboard", "couplelb", "slot", "slots", "flip", "betflip", "bf", "coins", "$", "bal", "balance", "discoins", "amandollars", "daily", "leaderboard", "lb", "give", "wheel", "trivia", "ms", "minesweeper", "profile", "settings", "ping", "h", "wumbo", "todo", "trello", "tasks"]
+
+sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings").GatewayPayload & { shard_id: number }) => {
 	if (p.t === "READY") {
+		const data = p.d as import("discord-typings").ReadyPayload
+		client.ready = true
+		client.user = data.user
+		client.application = data.application
+		client.emit("ready")
 		// this code needs to run before anything
 		let firstStart = true
 		if (passthrough.clusterData.connected_shards.includes(p.shard_id)) {
@@ -23,7 +29,7 @@ sync.addTemporaryListener(client, "raw", async p => {
 			passthrough.clusterData.guild_ids[p.shard_id] = []
 			passthrough.clusterData.connected_shards.push(p.shard_id)
 		}
-		passthrough.clusterData.guild_ids[p.shard_id].push(...p.d.guilds.map(g => g.id))
+		passthrough.clusterData.guild_ids[p.shard_id].push(...data.guilds.map(g => g.id))
 
 		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart) {
 			const arr = passthrough.clusterData.guild_ids[p.shard_id]
@@ -33,8 +39,8 @@ sync.addTemporaryListener(client, "raw", async p => {
 
 		if (starting) {
 			starting = false
-			logger.info(`Successfully logged in as ${client.user!.username}`)
-			process.title = client.user!.username
+			logger.info(`Successfully logged in as ${client.user.username}`)
+			process.title = client.user.username
 
 			const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
 				orm.db.select("lavalink_nodes"),
@@ -52,21 +58,17 @@ sync.addTemporaryListener(client, "raw", async p => {
 			constants.lavalinkNodes.push(...lavalinkNodes)
 
 			for (const node of constants.lavalinkNodes) {
-				node.resumeKey = `${client.user!.id}/${config.cluster_id}`
+				node.resumeKey = `${client.user.id}/${config.cluster_id}`
 				node.resumeTimeout = 75
 			}
 
 			client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
-				user: client.user!.id,
+				user: client.user.id,
 				shards: config.total_shards,
-				send: (packet) => {
-					passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
-				}
+				send: (packet) => passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
 			})
 
-			client.lavalink.once("ready", () => {
-				logger.info("Lavalink ready")
-			})
+			client.lavalink.once("ready", () => logger.info("Lavalink ready"))
 
 			client.lavalink.on("error", error => logger.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
 
@@ -76,11 +78,16 @@ sync.addTemporaryListener(client, "raw", async p => {
 				logger.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
 			}
 		}
-	} else if (p.t === "GUILD_CREATE") {
-		orm.db.upsert("guilds", { id: p.d.id, name: p.d.name, icon: p.d.icon, member_count: p.d.member_count, owner_id: p.d.owner_id, added_by: config.cluster_id })
-		if (passthrough.clusterData.guild_ids[p.shard_id].includes(p.d.id)) return
-		else passthrough.clusterData.guild_ids[p.shard_id].push(p.d.id)
-		for (const state of p.d.voice_states as Array<import("discord-typings").VoiceState>) {
+	}
+
+	if (!client.ready) return logger.warn(`packet was dropped as client wasn't ready:\n${await text.stringify(p)}`)
+
+	if (p.t === "GUILD_CREATE") {
+		const data = p.d as import("discord-typings").Guild
+		orm.db.upsert("guilds", { id: data.id, name: data.name, icon: data.icon!, member_count: data.member_count, owner_id: data.owner_id, added_by: config.cluster_id })
+		if (passthrough.clusterData.guild_ids[p.shard_id].includes(data.id)) return
+		else passthrough.clusterData.guild_ids[p.shard_id].push(data.id)
+		for (const state of data.voice_states || []) {
 			orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
 		}
 	} else if (p.t === "GUILD_DELETE") {
@@ -89,74 +96,78 @@ sync.addTemporaryListener(client, "raw", async p => {
 		const previous = passthrough.clusterData.guild_ids[p.shard_id].indexOf(p.d.id)
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)
 	} else if (p.t === "VOICE_STATE_UPDATE") {
-		if (p.d.channel_id === null) orm.db.delete("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id })
-		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: p.d.channel_id })
-		client.lavalink?.voiceStateUpdate(p.d)
+		const data = p.d as import("discord-typings").VoiceState
+		if (data.channel_id === null) orm.db.delete("voice_states", { guild_id: data.guild_id, user_id: data.user_id })
+		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id })
+		client.lavalink?.voiceStateUpdate(data as import("lavacord").VoiceStateUpdate)
 		queues.get(p.d.guild_id)?.voiceStateUpdate(p.d)
 	} else if (p.t === "VOICE_SERVER_UPDATE") client.lavalink?.voiceServerUpdate(p.d)
-})
+	else if (p.t === "MESSAGE_CREATE") {
+		const msg = p.d as import("discord-typings").Message
+		if (msg.content == `<@${client.user.id}>`.replace(" ", "") || msg.content == `<@!${client.user!.id}>`.replace(" ", "")) return client.snow.channel.createMessage(msg.channel_id, "Hey there! My prefix is `/`. If you're trying to use my previous prefix (&) or a custom prefix of yours, they won't work. If my / commands don't show up in a server, try telling staff to reinvite me. <https://amanda.moe/to/add>")
+		if (!msg.content || !msg.content.startsWith("&")) return
+		const cmdTxt = msg.content.substring(1).split(" ")[0]
+		const cmd = (!!commands.cache.find(c => c.name === cmdTxt) || missingCommands.includes(cmdTxt))
 
-const missingCommands = ["couple", "marry", "accept", "decline", "divorce", "bank", "cbal", "withdraw", "deposit", "coupleleaderboard", "couplelb", "slot", "slots", "flip", "betflip", "bf", "coins", "$", "bal", "balance", "discoins", "amandollars", "daily", "leaderboard", "lb", "give", "wheel", "trivia", "ms", "minesweeper", "profile", "settings", "ping", "h", "wumbo", "todo", "trello", "tasks"]
+		if (cmd) return client.snow.channel.createMessage(msg.channel_id, "I have moved to / commands. As such, how you're trying to use me will no longer work.\nWhy? read this: https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots.\nTLDR; Discord will no longer allow me to be able to see your messages which means I cannot handle your requests the same way as before. / commands do not depend on messages which is why I, along with a lot of other bots, have already moved or will be forced to move. If my / commands don't show up in a server, try telling staff to reinvite me with this invite link which has been updated: <https://amanda.moe/to/add>")
+	} else if (p.t === "INTERACTION_CREATE") {
+		const interaction = p.d as import("discord-typings").Interaction
+		if (interaction.type === 2) {
+			const selfLang = lang.getLang(interaction.locale!)
+			const guildLang = interaction.guild_locale ? lang.getLang(interaction.guild_locale) : null
+			const langToUse = guildLang && interaction.guild_locale != interaction.locale ? guildLang : selfLang
 
-sync.addTemporaryListener(client, "messageCreate", (msg: import("thunderstorm").Message) => {
-	if (msg.content == `<@${client.user!.id}>`.replace(" ", "") || msg.content == `<@!${client.user!.id}>`.replace(" ", "")) return msg.channel.send("Hey there! My prefix is `/`. If you're trying to use my previous prefix (&) or a custom prefix of yours, they won't work. If my / commands don't show up in a server, try telling staff to reinvite me. <https://amanda.moe/to/add>")
-	if (!msg.content || !msg.content.startsWith("&")) return
-	const cmdTxt = msg.content.substring(1).split(" ")[0]
-	const cmd = (!!commands.cache.find(c => c.name === cmdTxt) || missingCommands.includes(cmdTxt))
+			try {
+				await commands.cache.get(interaction.data!.name)?.process(interaction, langToUse)
+			} catch (e) {
+				if (e && e.code) {
+					if (e.code == 10008) return
+					if (e.code == 50013) return
+				}
 
-	if (cmd) return msg.channel.send("I have moved to / commands. As such, how you're trying to use me will no longer work.\nWhy? read this: https://support-dev.discord.com/hc/en-us/articles/4404772028055-Message-Content-Privileged-Intent-for-Verified-Bots.\nTLDR; Discord will no longer allow me to be able to see your messages which means I cannot handle your requests the same way as before. / commands do not depend on messages which is why I, along with a lot of other bots, have already moved or will be forced to move. If my / commands don't show up in a server, try telling staff to reinvite me with this invite link which has been updated: <https://amanda.moe/to/add>")
-})
+				const embed: import("discord-typings").Embed = {
+					description: `There was an error with the command ${interaction.data!.name} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`,
+					color: 0xdd2d2d
+				}
 
-sync.addTemporaryListener(client, "interactionCreate", async (interaction: import("thunderstorm").Interaction) => {
+				// Report to original channel
+				client.snow.interaction.createFollowupMessage(interaction.application_id, interaction.token, { embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
 
-	if (interaction.isCommand()) {
-		const selfLang = lang.getLang(interaction.locale!)
-		const guildLang = interaction.guildLocale ? lang.getLang(interaction.guildLocale) : null
-		const langToUse = interaction.guildLocale && interaction.guildLocale != interaction.locale ? guildLang! : selfLang
+				// Report to #amanda-error-log
+				embed.title = "Command error occured."
+				embed.description = await text.stringify(e)
+				const user = interaction.user ? interaction.user : interaction.member!.user
+				let details = [
+					["User", `${user.username}#${user.discriminator}`],
+					["User ID", user.id],
+					["Bot", user.bot ? "Yes" : "No"]
+				]
+				if (interaction.guild_id) {
+					details = details.concat([
+						["Guild ID", interaction.guild_id],
+						["Channel ID", interaction.channel_id || "NONE"]
+					])
+				} else {
+					details = details.concat([
+						["DM", "Yes"]
+					])
+				}
+				const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
+				const detailsString = details.map(row =>
+					`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+				).join("\n")
+				type notSub = Exclude<import("discord-typings").ApplicationCommandInteractionDataOption, import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub | import("discord-typings").ApplicationCommandInteractionDataOptionNotTypeNarrowed>
+				const properties = [
+					interaction.data!.name,
+					interaction.data!.options?.map((o) => `${o.name}:${(o as notSub).value}`)
+				]
+				embed.fields = [
+					{ name: "Details", value: detailsString },
+					{ name: "Message content", value: `\`\`\`\n/${properties.filter(Boolean).join(" ").replace(/`/g, "ˋ")}\`\`\`` }
+				]
 
-		try {
-			await commands.cache.get((interaction as import("thunderstorm").CommandInteraction).commandName)?.process(interaction as import("thunderstorm").CommandInteraction, langToUse)
-		} catch (e) {
-			const cmd = (interaction as import("thunderstorm").CommandInteraction)
-			if (e && e.code) {
-				if (e.code == 10008) return
-				if (e.code == 50013) return
+				client.snow.channel.createMessage("512869106089852949", { embeds: [embed] })
 			}
-			// Report to original channel
-			const embed = new Discord.MessageEmbed()
-				.setDescription(`There was an error with the command ${cmd.commandName} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`)
-				.setColor(0xdd2d2d)
-
-			if (cmd.deferred || cmd.replied) cmd.editReply({ embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
-			cmd.followUp({ embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
-
-			// Report to #amanda-error-log
-			embed.setTitle("Command error occurred.")
-			embed.setDescription(await text.stringify(e))
-			let details = [
-				["User", cmd.user.tag],
-				["User ID", cmd.user.id],
-				["Bot", cmd.user.bot ? "Yes" : "No"]
-			]
-			if (cmd.guild) {
-				details = details.concat([
-					["Guild ID", cmd.guild.id],
-					["Channel ID", cmd.channel?.id || "NONE"]
-				])
-			} else {
-				details = details.concat([
-					["DM", "Yes"]
-				])
-			}
-			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
-			const detailsString = details.map(row =>
-				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
-			).join("\n")
-			embed.addFields([
-				{ name: "Details", value: detailsString },
-				{ name: "Message content", value: `\`\`\`\n${cmd.toString().replace(/`/g, "ˋ")}\`\`\`` }
-			])
-			new Discord.PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] }).catch(() => void 0)
-		}
-	} else if (interaction.isMessageComponent()) return BetterComponent.handle(interaction as any)
+		} else if (interaction.type === 3) return BetterComponent.handle(interaction)
+	}
 })

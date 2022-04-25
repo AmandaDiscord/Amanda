@@ -55,7 +55,7 @@ export type LavalinkInfo = {
 export type InvidiousPlaylistAuthorThumbnail = {
 	url: string;
 	width: number;
-	height: numbe;
+	height: number;
 }
 
 export type InvidiousPlaylistVideoThumbnail = {

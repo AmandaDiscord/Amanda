@@ -3,7 +3,6 @@ import { Worker } from "worker_threads"
 
 import CommandManager from "@amanda/commandmanager"
 import Frisky from "frisky-client"
-import { handle, MessageEmbed, PartialChannel } from "thunderstorm"
 import HeatSync from "heatsync"
 import ListenSomeMoe from "listensomemoe"
 import { Pool } from "pg"
@@ -17,10 +16,8 @@ import constants from "./constants"
 import passthrough from "./passthrough"
 
 const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
-const client = new Amanda({ snowtransfer: snow, disableEveryone: true })
-const commands = new CommandManager<[import("thunderstorm").CommandInteraction, import("@amanda/lang").Lang]>()
+const client = new Amanda(snow)
+const commands = new CommandManager<[import("discord-typings").Interaction, import("@amanda/lang").Lang]>()
 const frisky = new Frisky()
 const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
@@ -44,7 +41,7 @@ const pool = new Pool({
 const GatewayWorker = new Worker(path.join(__dirname, "./discord-gateway.js"))
 
 GatewayWorker.on("message", message => {
-	if (message.o === constants.GATEWAY_WORKER_CODES.DISCORD) return handle(message.d, client)
+	if (message.o === constants.GATEWAY_WORKER_CODES.DISCORD) return client.emit("gateway", message.d)
 	else return requester.consume(message)
 })
 
@@ -55,7 +52,7 @@ kp.on("error", logger.error)
 jp.on("unknown", logger.info)
 kp.on("unknown", logger.info)
 GatewayWorker.on("error", logger.error)
-client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
+client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
 
 ;(async () => {
 	const db = await pool.connect()
@@ -80,10 +77,15 @@ client._snow.requestHandler.on("requestError", (p, e) => logger.error(`Request E
 async function globalErrorHandler(e: Error | undefined) {
 	const text = require("./utils/string") as typeof import("./utils/string")
 	logger.error(e)
-	const embed = new MessageEmbed().setColor(0xdd2d2d)
-	embed.setTitle("Global error occurred.")
-	embed.setDescription(await text.stringify(e))
-	new PartialChannel(client, { id: "512869106089852949" }).send({ embeds: [embed] }).catch(() => void 0)
+	client.snow.channel.createMessage("512869106089852949", {
+		embeds: [
+			{
+				title: "Global error occured.",
+				description: await text.stringify(e),
+				color: 0xdd2d2d
+			}
+		]
+	})
 }
 
 process.on("unhandledRejection", globalErrorHandler)

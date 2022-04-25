@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import path from "path"
 import repl from "repl"
 import util from "util"
@@ -11,15 +10,29 @@ import logger from "../utils/logger"
 const startannouncement = sync.require("../commands/status") as typeof import("../commands/status")
 
 function refreshcommands() {
-	if (!client.readyAt) return logger.error("Client isn't ready yet")
-	client.application!.commands.set(commands.cache.map(c => ({
+	if (!client.ready) return logger.error("Client isn't ready yet")
+	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, commands.cache.map(c => ({
 		name: c.name,
 		description: c.description,
 		options: c.options
 	})))
 }
 
-async function customEval(input: string, context: import("vm").Context, filename: string, callback: (err: Error | null, result: unknown) => unknown) {
+function generatedocs() {
+	const cmds = commands.cache.map(c => {
+		const value = {
+			name: c.name,
+			description: c.description
+		} as { name: string; description: string; options?: Array<{ name: string; description: string; }> }
+		if (c.options) value.options = c.options.map(o => ({ name: o.name, description: o.description }))
+		return [c.name, value] as [string, typeof value]
+	})
+	const v = {} as { [cmd: string]: import("../types").UnpackArray<typeof cmds>["1"] }
+	for (const [name, value] of cmds) v[name] = value
+	return v
+}
+
+async function customEval(input: string, _context: import("vm").Context, _filename: string, callback: (err: Error | null, result: unknown) => unknown) {
 	let depth = 0
 	if (input === "exit\n") return process.exit()
 	if (input.startsWith(":")) {
@@ -41,7 +54,7 @@ passthrough.sync.events.on(__filename, () => logger.warn("stdin does not auto-re
 
 const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
 
-Object.assign(cli.context, passthrough, { Discord, path })
+Object.assign(cli.context, passthrough, { path })
 
 cli.once("exit", () => {
 	process.exit()

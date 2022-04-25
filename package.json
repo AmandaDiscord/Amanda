@@ -11,24 +11,25 @@
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
-    "node": ">=16.7.0",
+    "node": ">=16.0.0",
     "npm": ">=8.0.0"
   },
   "dependencies": {
     "@amanda/commandmanager": "github:AmandaDiscord/CommandManager#a8bb4fbfad3d16f418c41a3b807127d790f2a601",
-    "@amanda/lang": "github:AmandaDiscord/Lang#161d834ab25bb9da94bf4b8e27d7b2597c9be211",
+    "@amanda/lang": "github:AmandaDiscord/Lang#8b502e42b1249290b657cf3f9160c3a0da7613f9",
     "@lavalink/encoding": "^0.1.2",
     "@types/centra": "^2.2.0",
     "@types/node": "^17.0.23",
     "@types/pg": "^8.6.5",
     "@types/ws": "^8.5.3",
-    "callback-components": "github:AmandaDiscord/CallbackComponents#20a3a008f69f032b58141e02347229ca5ff9846b",
+    "backtracker": "^3.1.1",
+    "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
     "centra": "^2.5.0",
-    "cloudstorm": "0.5.1",
+    "cloudstorm": "^0.5.2",
     "discord-bot-analytics": "^1.0.14",
-    "discord-typings": "10.0.x",
+    "discord-typings": "^10.1.1",
     "dnscache": "github:cloudrac3r/dnscache#9b59d34877d1c1a581684e9ee14b810e6a2b24ec",
-    "entities": "^4.1.1",
+    "entities": "^4.3.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "genius-lyrics-api": "^3.2.0",
     "heatsync": "^2.2.1",
@@ -39,19 +40,17 @@
     "node-ipc": "^9.2.1",
     "pg": "^8.7.3",
     "pinski": "github:cloudrac3r/pinski#e22095172a061a8271e28272e2e481d541ea6725",
-    "simple-git": "^3.5.0",
+    "simple-git": "^3.7.1",
     "simple-youtube-api": "^5.2.1",
-    "snowtransfer": "0.4.3",
-    "taihou": "2.0.7",
-    "thunderstorm": "github:AmandaDiscord/ThunderStorm#af51b0ebd84cfb476aa42521e13720d0fc2c56ee",
-    "typescript": "^4.6.2",
-    "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53",
-    "ws": "^8.5.0"
+    "snowtransfer": "^0.5.0",
+    "taihou": "^2.0.7",
+    "typescript": "^4.6.3",
+    "video-url-link": "github:AmandaDiscord/video-url-link#d12092225650fd57147574a7666ea767f75f6e53"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.18.0",
-    "@typescript-eslint/parser": "^5.18.0",
-    "eslint": "^8.12.0",
-    "tap": "^16.0.1"
+    "@typescript-eslint/eslint-plugin": "^5.21.0",
+    "@typescript-eslint/parser": "^5.21.0",
+    "eslint": "^8.14.0",
+    "tap": "^16.1.0"
   }
 }

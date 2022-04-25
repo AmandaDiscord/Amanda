@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import { BetterComponent } from "callback-components"
 
 import passthrough from "../../passthrough"
@@ -26,26 +25,28 @@ commands.assign([
 			{
 				name: "show",
 				description: "Shows all Amanda playlists. True to only show yourself",
-				type: Discord.Constants.ApplicationCommandOptionTypes.BOOLEAN,
+				type: 5,
 				required: false
 			}
 		],
 		async process(cmd, lang) {
-			if (musicDisabled) return cmd.reply("Working on fixing currently. This is a lot harder than people think")
-			if (!cmd.guildId || !cmd.guild) return cmd.reply(lang.audio.music.prompts.guildOnly)
-			const optionShow = cmd.options.getBoolean("show", false)
+			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
+			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
+			const optionShow = (cmd.data?.options?.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
 
 			const array = [
 				optionShow
 			]
 
+			const author = cmd.user ? cmd.user : cmd.member!.user
+
 			const notNull = array.filter(i => i !== null)
 
-			if (notNull.length === 0) return cmd.reply(language.replace(lang.audio.music.prompts.invalidAction, { username: cmd.user.username }))
-			if (notNull.length > 1) return cmd.reply("You can only do 1 action at a time")
+			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username }) } })
+			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
 
 			if (optionShow !== null) {
-				await cmd.defer()
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 				let playlists = await orm.db.raw(
 					"SELECT playlists.playlist_id, playlists.name, playlists.author, playlists.play_count, count(*) as count, sum(songs.length) as length \
 					FROM playlist_songs \
@@ -63,7 +64,7 @@ commands.assign([
 					function addRanking(r: number | string) {
 						p.ranking += `${r}.`
 					}
-					if (p.author == cmd.user.id) addRanking(1)
+					if (p.author == author.id) addRanking(1)
 					else addRanking(0)
 					if (p.count == 0) addRanking(0)
 					else addRanking(1)
@@ -75,12 +76,12 @@ commands.assign([
 					else return 0
 				})
 				// eslint-disable-next-line no-inner-declarations
-				async function getAuthor(author: string) {
-					const user = await discordUtils.getUser(author).catch(() => void 0)
+				async function getAuthor(u: string) {
+					const user = await discordUtils.getUser(u).catch(() => void 0)
 					if (user) {
 						let username = user.username || "Unknown"
 						if (username.length > 14) username = `${username.slice(0, 13)}…`
-						return `\`${Discord.Util.escapeMarkdown(username)}\``
+						return `\`${username}\``
 					} else return "(?)"
 				}
 				const users = await Promise.all(playlists.map(p => getAuthor(p.author)))

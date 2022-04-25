@@ -1,4 +1,3 @@
-import Discord from "thunderstorm"
 import c from "centra"
 const entities = require("entities") as typeof import("entities")
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
@@ -67,9 +66,9 @@ export abstract class Song {
 	}
 
 	public abstract getRelated(): Promise<Song[]>
-	public abstract showRelated(): Promise<string | import("thunderstorm").MessageEmbed>
+	public abstract showRelated(): Promise<string | import("discord-typings").Embed>
 	public abstract showLink(): Promise<string>
-	public abstract showInfo(): Promise<string | import("thunderstorm").MessageEmbed>
+	public abstract showInfo(): Promise<string | import("discord-typings").Embed>
 	public abstract prepare(): Promise<unknown>
 	public abstract resume(): unknown
 	public abstract destroy(): unknown
@@ -189,19 +188,18 @@ export class YouTubeSong extends Song {
 		}
 
 		if (related.length) {
-			return new Discord.MessageEmbed()
-				.setTitle("Related content from YouTube")
-				.setDescription(
-					related.map((v, i) =>
-						`${i + 1}. **${Discord.Util.escapeMarkdown(v.title)}** (${timeUtils.prettySeconds(v.lengthSeconds)})`
+			return {
+				title: "Related content from YouTube",
+				description: related.map((v, i) =>
+					`${i + 1}. **${v.title}** (${timeUtils.prettySeconds(v.lengthSeconds)})`
 					+ `\n — ${v.author}`
-					)
-				)
-				.setFooter("Play one of these? &music related play <number>, or &m rel p <number>")
-				.setColor(constants.standard_embed_color)
-		} else {
-			return "No related content available for the current song."
-		}
+				).join("\n"),
+				footer: {
+					text: "Play one of these? &music related play <number>, or &m rel p <number>"
+				},
+				color: constants.standard_embed_color
+			} as import("discord-typings").Embed
+		} else return "No related content available for the current song."
 	}
 
 	public getInvidiousOrigin() {
@@ -339,11 +337,11 @@ export class FriskySong extends Song {
 		let percentPassed = Math.floor(((-stream.getTimeUntil()) / (stream.data!.duration * 1000)) * 100)
 		if (percentPassed < 0) percentPassed = 0
 		if (percentPassed > 100) percentPassed = 100
-		const embed = new Discord.MessageEmbed()
-			.setColor(constants.standard_embed_color)
-			.setTitle(`FRISKY: ${mix.data!.title}`)
-			.setURL(`https://beta.frisky.fm/mix/${mix.id}`)
-			.addFields([
+		const embed: import("discord-typings").Embed = {
+			color: constants.standard_embed_color,
+			title: `FRISKY: ${mix.data!.title}`,
+			url: `https://beta.frisky.fm/mix/${mix.id}`,
+			fields: [
 				{
 					name: "Details",
 					value: arrUtils.tableifyRows(
@@ -356,12 +354,12 @@ export class FriskySong extends Song {
 						],
 						["left", "none"],
 						() => "`"
-					)
+					).join("\n")
 				}
-			])
-		if (mix.episode) {
-			embed.setThumbnail(this.thumbnail.src)
+			]
 		}
+
+		if (mix.episode) embed.thumbnail = { url: this.thumbnail.src }
 		if (mix.data!.track_list && mix.data!.track_list.length) {
 			let trackList = mix.data!.track_list
 				.slice(0, 6)
@@ -369,7 +367,7 @@ export class FriskySong extends Song {
 				.join("\n")
 			const hidden = mix.data!.track_list.length - 6
 			if (hidden > 0) trackList += `\n_and ${hidden} more..._`
-			embed.addFields({ name: "Track list", value: trackList })
+			embed.fields!.push({ name: "Track list", value: trackList })
 		}
 		return embed
 	}

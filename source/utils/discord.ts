@@ -1,4 +1,3 @@
-import Discord, { Interaction } from "thunderstorm"
 import Jimp from "jimp"
 import c from "centra"
 import { BetterComponent } from "callback-components"
@@ -13,7 +12,7 @@ export async function getUser(id: string) {
 	if (id === client.user?.id) return client.user
 	const cached = await orm.db.get("users", { id: id })
 	if (cached) return convertCachedUser(cached)
-	const fetched = await client.fetchUser(id).catch(() => null)
+	const fetched = await client.snow.user.getUser(id).catch(() => null)
 	if (fetched) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar, bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
 	return fetched
 }
@@ -21,40 +20,48 @@ export async function getUser(id: string) {
 export function convertCachedUser(user: import("../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
 	const split = user.tag.split("#")
 	Object.assign(user, { username: split.slice(0, split.length - 1).join("#"), discriminator: split[split.length - 1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
-	return new Discord.User(client, user as typeof user & { username: string; discriminator: string; bot: boolean; })
+	return user as unknown as import("discord-typings").User
 }
 
 export async function getAvatarJimp(userID: string) {
 	const user = await getUser(userID)
 	if (!user) return null
-	const url = user.displayAvatarURL({ dynamic: true })
+	const url = displayAvatarURL(user, true)
 	if (!url) return null
 	const validation = await c(url, "head").send()
 	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
 
-	const data = await client.fetchUser(userID)
+	const data = await client.snow.user.getUser(userID)
 	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar, bot: data.bot ? 1 : 0, added_by: config.cluster_id })
-	const newuser = new Discord.User(client, data)
-	const newURL = newuser.displayAvatarURL({ dynamic: true })
+	const newURL = displayAvatarURL(data, true)
 	if (!newURL) return null
 	return Jimp.read(newURL)
 }
 
-export function createPagination(cmd: import("thunderstorm").CommandInteraction, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
+export function displayAvatarURL(user: import("discord-typings").User, dynamic?: boolean) {
+	if (!user.avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(user.discriminator) % 5}.png`
+	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
+}
+
+export function createPagination(cmd: import("discord-typings").Interaction, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
 	let alignedRows = arr.tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)
 	const pages = arr.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 	paginate(pages.length, (page, component) => {
-		return cmd.editReply({
+		const data: Parameters<typeof client.snow.interaction.editOriginalInteractionResponse>["2"] = {
 			embeds: [
-				new Discord.MessageEmbed()
-					.setColor(constants.standard_embed_color)
-					.setDescription(`${formattedTitle}\n${pages[page].join("\n")}`)
-					.setFooter(`Page ${page + 1} of ${pages.length}`)
-			],
-			components: component ? [new Discord.MessageActionRow().addComponents([component.toComponent()])] : undefined
-		})
+				{
+					color: constants.standard_embed_color,
+					description: `${formattedTitle}\n${pages[page].join("\n")}`,
+					footer: {
+						text: `Page ${page + 1} of ${pages.length}`
+					}
+				}
+			]
+		}
+		if (component) data.components = [{ type: 1, components: [component.toComponent()] }]
+		return client.snow.interaction.editOriginalInteractionResponse(client.application.id, cmd.token, data)
 	})
 }
 
@@ -62,18 +69,18 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 	let page = 0
 	if (pageCount > 1) {
 		let menuExpires: NodeJS.Timeout
-		const options = Array(pageCount).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), description: null, emoji: null, default: false }))
+		const options = Array(pageCount).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
 		const component = new BetterComponent({
-			type: Discord.Constants.MessageComponentTypes.SELECT_MENU,
+			type: 3,
 			placeholder: "Select page",
-			maxValues: 1,
-			minValues: 1,
+			max_values: 1,
+			min_values: 1,
 			options
-		})
+		} as import("discord-typings").SelectMenu)
 
 		component.setCallback(interaction => {
-			interaction.deferUpdate()
-			page = Number((interaction as unknown as import("thunderstorm").SelectMenuInteraction).values[0])
+			client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
+			page = Number(interaction.data?.values?.[0].value || 0)
 			callback(page, component)
 		})
 
