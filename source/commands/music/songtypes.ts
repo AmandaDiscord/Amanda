@@ -56,7 +56,7 @@ export abstract class Song {
 	public id = ""
 	public live = false
 	public thumbnail = { src: "", width: 0, height: 0 }
-	public queue: import("./queue")
+	public queue: import("./queue") | undefined
 	public validated = false
 
 	public constructor() {
@@ -155,9 +155,10 @@ export class YouTubeSong extends Song {
 			if (this.track == "!") {
 				let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 				try {
-					tracks = await common.loadtracks(`ytsearch:${this.id}`, this.queue.node)
+					tracks = await common.loadtracks(`ytsearch:${this.id}`, this.queue?.node)
 				} catch (e) {
 					this.error = e
+					return
 				}
 				if (!tracks || !tracks[0]) this.error = `No results for ID ${this.id}`
 				else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
@@ -506,19 +507,21 @@ export class ExternalSong extends Song {
 	public async prepare() {
 		let info: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
 		try {
-			info = await common.loadtracks(this.uri, this.queue.node)
-		} catch {
-			this.error = `Missing track for ${this.title}`
+			info = await common.loadtracks(this.uri, this.queue?.node)
+		} catch (e) {
+			this.error = e
 			return
 		}
 
 		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
-		this.track = info[0].track
-		if (info[0].info.isSeekable) {
-			this.live = false
-			this.lengthSeconds = Math.round(info[0].info.length / 1000)
-			this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-			this.noPauseReason = ""
+		else {
+			this.track = info[0].track
+			if (info[0].info.isSeekable) {
+				this.live = false
+				this.lengthSeconds = Math.round(info[0].info.length / 1000)
+				this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+				this.noPauseReason = ""
+			}
 		}
 	}
 
@@ -708,13 +711,13 @@ export class NewgroundsSong extends Song {
 		if (this.track && this.track != "!") return
 		let data: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
 		try {
-			data = await common.loadtracks(this.streamURL, this.queue.node)
-		} catch {
-			this.error = `Missing track for ${this.title}`
+			data = await common.loadtracks(this.streamURL, this.queue?.node)
+		} catch (e) {
+			this.error = e
 			return
 		}
 		if (!Array.isArray(data) || !data || !data[0] || !data[0].track) this.error = `Missing track for ${this.title}`
-		this.track = data[0].track
+		else this.track = data[0].track
 	}
 
 	public showLink() {
@@ -777,15 +780,18 @@ export class TwitterSong extends Song {
 		if (this.track && this.track != "!") return
 		let data: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
 		try {
-			data = await common.loadtracks(this.uri, this.queue.node)
-		} catch {
-			this.error = `Missing track for ${this.title}`
+			data = await common.loadtracks(this.uri, this.queue?.node)
+		} catch (e) {
+			this.error = e
 			return
 		}
+
 		if (!Array.isArray(data) || !data || !data[0] || !data[0].track) this.error = `Missing track for ${this.title}`
-		this.track = data[0].track
-		this.lengthSeconds = Math.round(data[0].info.length / 1000)
-		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+		else {
+			this.track = data[0].track
+			this.lengthSeconds = Math.round(data[0].info.length / 1000)
+			this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+		}
 	}
 
 	public showLink() {
@@ -832,7 +838,7 @@ export class iTunesSong extends YouTubeSong {
 			if (this.ytID == "!" || this.track == "!") {
 				let tracks: Awaited<ReturnType<typeof common.loadtracks>>
 				try {
-					tracks = await common.loadtracks(`ytsearch:${this.artist} - ${this.title}`, this.queue.node)
+					tracks = await common.loadtracks(`ytsearch:${this.artist} - ${this.title}`, this.queue?.node)
 				} catch (e) {
 					this.error = e
 					return

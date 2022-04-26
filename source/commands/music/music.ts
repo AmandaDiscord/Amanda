@@ -304,6 +304,8 @@ commands.assign([
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
 				}
 
+				songs.forEach(s => s.queue = queue)
+
 				queue.songs.push(...songs)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd

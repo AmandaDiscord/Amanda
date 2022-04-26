@@ -540,6 +540,7 @@ commands.assign([
 
 				const sliced = orderedSongs.slice(optionStart - 1)
 				const songss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new songTypes.YouTubeSong(row.video_id, row.name, row.length))
+				songss.forEach(s => s.queue = queue)
 				queue.songs.push(...songss)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
