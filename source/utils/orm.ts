@@ -231,7 +231,7 @@ export const db = new Database({
 	money_cooldown: new Model<{ user_id: string, command: string, date: number, value: number }>(),
 	pending_relations: new Model<{ user1: string, user2: string }>(),
 	periodic_history: new Model<{ field: string, timestamp: number }>(),
-	playlist_songs: new Model<{ playlist_id: number, video_id: string, next: string }>(["playlist_id", "video_id"]),
+	playlist_songs: new Model<{ playlist_id: number, video_id: string, next: string | null }>(["playlist_id", "video_id"]),
 	playlists: new Model<{ playlist_id: number, author: string, name: string, play_count: number }>(["playlist_id"]),
 	premium: new Model<{ user_id: string, state: number }>(["user_id"]),
 	restart_notify: new Model<{ bot_id: string, mention_id: string, channel_id: string }>(["bot_id", "mention_id"]),
