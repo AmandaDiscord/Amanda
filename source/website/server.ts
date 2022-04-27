@@ -13,8 +13,6 @@ Object.assign(passthrough, { config, sync })
 
 import logger from "../utils/logger"
 
-
-const host = config.website_domain.split(":")
 const rootFolder = p.join(__dirname, "../../webroot")
 
 const paths: typeof import("./paths") = sync.require("./paths")
