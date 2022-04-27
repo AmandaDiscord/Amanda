@@ -1,5 +1,4 @@
 import http from "http"
-import https from "https"
 import p from "path"
 import fs from "fs"
 import Sync from "heatsync"
@@ -45,7 +44,7 @@ async function streamResponse(res: import("http").ServerResponse, fileDir: strin
 	stream.once("end", res.end.bind(res))
 }
 
-const server = (config.website_protocol === "https" ? https : http).createServer(async (req, res) => {
+const server = http.createServer(async (req, res) => {
 	try {
 		logger.info(req.url)
 		const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
