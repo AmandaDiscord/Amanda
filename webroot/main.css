@@ -1,0 +1,89 @@
+@font-face {
+	font-family: "Whitney";
+	src: url("/whitney.ttf") format("truetype");
+}
+
+*, input {
+	font-family: Whitney, sans-serif;
+}
+
+body {
+	background: linear-gradient(135deg, #fead7b, #c76d7f, #462371);
+	background-size: cover;
+	margin: 0px;
+	font-size: 16px;
+	color: #282828;
+	overflow-y: scroll;
+	min-height: 100vh;
+}
+
+h1 {
+	color: #222;
+	text-align: center;
+}
+
+a, a:visited {
+	color: inherit;
+}
+
+code {
+	font-family: "Noto Mono", monospace;
+	background-color: white;
+	padding: 1px 3px;
+}
+
+.main {
+	color: #111;
+	text-align: center;
+	text-decoration: none;
+	margin: 40px 0px;
+	font-size: 32px;
+}
+
+.main-image {
+	mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 88%, rgba(0,0,0,0.9) 90%, rgba(0,0,0,0.5) 95%, rgba(0,0,0,0));
+	width: 256px;
+}
+
+.pinkbutton {
+	padding: 16px 32px;
+	text-decoration: none;
+	display: inline-block;
+	margin: 4px 2px;
+	transition: 0.2s ease-out;
+	transition-property: color, background-color;
+	background-color: white;
+	color: black;
+	border: 2px solid #de56a9;
+}
+
+.pinkbutton:hover {
+	background-color: #de56a9;
+	color: white;
+}
+
+nav {
+	background-color: #333;
+	display: flex;
+	position: sticky;
+	position: -webkit-sticky;
+	top: 0;
+	z-index: 1000;
+}
+
+nav a.navitem {
+	color: #ddd;
+	display: inline-block;
+	padding: 14px;
+	text-decoration: none;
+	transition: background-color 0.2s ease-out;
+}
+
+nav a.navitem:hover {
+	background-color: #444;
+}
+
+nav a.navitem.active {
+	background: linear-gradient(to top, white 3px, #444 3px);
+	color: white;
+}

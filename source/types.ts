@@ -19,7 +19,7 @@ export type Config = {
 	"listen_moe_password": string;
 
 	"sql_domain": string;
-	"website_protocol": string;
+	"website_protocol": "http" | "https";
 	"website_domain": string;
 	"website_ipc_bind": string;
 	"machine_id": string;
