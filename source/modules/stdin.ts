@@ -11,7 +11,7 @@ const startannouncement = sync.require("../commands/status") as typeof import(".
 
 function refreshcommands() {
 	if (!client.ready) return logger.error("Client isn't ready yet")
-	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, commands.cache.map(c => ({
+	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, [...commands.cache.values()].map(c => ({
 		name: c.name,
 		description: c.description,
 		options: c.options
@@ -19,7 +19,7 @@ function refreshcommands() {
 }
 
 function generatedocs() {
-	const cmds = commands.cache.map(c => {
+	const cmds = [...commands.cache.values()].map(c => {
 		const value = {
 			name: c.name,
 			description: c.description

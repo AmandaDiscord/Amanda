@@ -236,15 +236,15 @@ commands.assign([
 						fields: []
 					}
 					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe", "newgrounds"]
-					const audio = commands.cache.filter(c => c.category === "audio" && !blacklist.includes(c.name))
-					audio.map(c => {
+					const audio = [...commands.cache.values()].filter(c => c.category === "audio" && !blacklist.includes(c.name))
+					audio.forEach(c => {
 						const info = getDocs(c)
 						if (c.name === "playlist") info.description = "See `/help category: playlist`"
 						embed.fields!.push({ name: c.name, value: `${info.description ? `${info.description}\n` : ""}*Arguments*: ${info.options?.map(i => i.required ? `<${i.name}>` : `[${i.name}]`).join(", ") || "None"}` })
 					})
 					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 				} else {
-					const c = commands.cache.find(cm => cm.name === command)
+					const c = [...commands.cache.values()].find(cm => cm.name === command)
 					if (c) {
 						const info = getDocs(c)
 						embed = {

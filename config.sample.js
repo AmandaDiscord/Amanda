@@ -8,7 +8,6 @@ module.exports = {
 	chewey_api_key: "chewey bot api key here",
 	lavalink_password: "lavalink password here",
 	weeb_api_key: "weeb.sh api key here",
-	genius_access_token: "genius api key here",
 	top_api_key: "top.gg api key here",
 	botson_api_key: "bots.ondiscord.xyz api key here",
 	boats_api_key: "discord.boats api key here",

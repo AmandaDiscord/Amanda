@@ -1,13 +1,13 @@
 import path from "path"
 import { Worker } from "worker_threads"
 
-import CommandManager from "@amanda/commandmanager"
+import CommandManager from "./modules/CommandManager"
 import Frisky from "frisky-client"
 import HeatSync from "heatsync"
 import ListenSomeMoe from "listensomemoe"
 import { Pool } from "pg"
 import { SnowTransfer } from "snowtransfer"
-import Taihou from "taihou"
+import { TwitterScraper } from "twitter-scraper"
 
 import Amanda from "./modules/Amanda"
 
@@ -22,9 +22,8 @@ const frisky = new Frisky()
 const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 const sync = new HeatSync()
-const weebsh = new Taihou(config.weeb_api_key, true, { userAgent: config.weeb_identifier })
 
-Object.assign(passthrough, { client, sync, config, constants, listenMoe: { jp, kp }, weebsh, frisky, commands })
+Object.assign(passthrough, { client, sync, config, constants, listenMoe: { jp, kp }, frisky, commands })
 const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
 import ThreadBasedReplier from "./utils/classes/ThreadBasedReplier"
@@ -60,7 +59,9 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	logger.info("Connected to database")
 	import("./modules/stdin")
 
-	Object.assign(passthrough, { db, requester, gateway: GatewayWorker })
+	const twitter = await TwitterScraper.create()
+
+	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter })
 
 	sync.require([
 		"./modules/EventManager",

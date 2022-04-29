@@ -23,7 +23,7 @@ const worker_id = "gateway"
 const sentAckString = "Message sent"
 
 const client = new CloudStorm.Client(config.bot_token, {
-	intents: ["GUILDS", "GUILD_VOICE_STATES", "DIRECT_MESSAGES", "GUILD_MESSAGES"],
+	intents: ["GUILDS", "GUILD_VOICE_STATES"],
 	shards: config.shard_list,
 	totalShards: config.total_shards,
 	reconnect: true,

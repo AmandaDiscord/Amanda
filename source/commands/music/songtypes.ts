@@ -882,4 +882,77 @@ export class iTunesSong extends YouTubeSong {
 	}
 }
 
+export class SpotifySong extends YouTubeSong {
+	public url: string
+
+	public constructor(data: { track?: string; youtubeID?: string; url: string; name?: string; artist?: string; icon?: string; duration?: number; }) {
+		super(data.youtubeID || "!", data.name || "Unknown Spotify track (pending fetch)", Math.floor((data.duration || 0) * 1000))
+		this.live = false
+		this.thumbnail = { src: data.icon || constants.spotify_placeholder, width: 386, height: 386 }
+		this.url = data.url
+		this.uploader = data.artist
+		// eslint-disable-next-line require-await
+		this.prepareCache = new AsyncValueCache(async () => {
+			const getFromYouTube = () => {
+				return common.loadtracks(`${this.uploader} - ${this.title}`, this.queue?.node).then(tracks => {
+					if (!tracks[0]) this.error = `No results for ${this.title}`
+					let decided = tracks[0]
+					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
+					if (found) decided = found
+					if (decided && decided.track) {
+						this.id = decided.info.identifier
+						this.lengthSeconds = Math.round(decided.info.length / 1000)
+						this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+						this.track = decided.track
+					} else this.error = `Missing track for ${this.title}`
+				}).catch(message => {
+					this.error = message
+				})
+			}
+			if (this.id == "!" || this.track == "!") {
+				if (this.title && this.uploader) await getFromYouTube()
+				else {
+					const d = await common.spotify.getData(this.url).catch(() => void 0)
+					if (!d) {
+						this.error = "Cannot extract Spotify info"
+						return
+					}
+					if (d.type !== "song") {
+						this.error = `Linked Spotify URL was not a track. Got ${d.type}`
+						return
+					}
+					this.title = d.title
+					this.thumbnail = { src: d.icon || constants.spotify_placeholder, width: 386, height: 386 }
+					this.uploader = d.author
+					await getFromYouTube()
+				}
+			}
+		})
+
+		this.validate()
+	}
+
+	public getRelated() {
+		return Promise.resolve([])
+	}
+
+	public showRelated() {
+		return Promise.resolve("Try finding related songs on Spotify.")
+	}
+
+	public showLink() {
+		return Promise.resolve(this.url)
+	}
+
+	public async showInfo() {
+		const SP = await this.showLink()
+		const YT = await super.showInfo()
+		return Promise.resolve(`${SP}\n${YT}`)
+	}
+
+	public prepare() {
+		return this.prepareCache.get()
+	}
+}
+
 export default exports as typeof import("./songtypes")

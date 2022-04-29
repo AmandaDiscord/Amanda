@@ -7,7 +7,6 @@ export type Config = {
 	"chewey_api_key": string;
 	"lavalink_password": string;
 	"weeb_api_key": string;
-	"genius_access_token": string;
 	"redis_password": string;
 	"top_api_key": string;
 	"botson_api_key": string;

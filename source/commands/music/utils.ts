@@ -1,11 +1,10 @@
 import { BetterComponent } from "callback-components"
-import genius from "genius-lyrics-api"
 import c from "centra"
 import entities from "entities"
-import vul from "video-url-link"
+import htmlParse from "node-html-parser"
 
 import passthrough from "../../passthrough"
-const { constants, config, sync, client } = passthrough
+const { constants, sync, client, twitter } = passthrough
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
@@ -15,6 +14,18 @@ const fakeHTTPAgent = `Mozilla/5.0 (Server; NodeJS ${process.version}; rv:1.0) N
 const selectTimeout = 1000 * 60
 
 type inputToIDReturnValue = { type: "soundcloud" | "spotify" | "newgrounds" | "youtube" | "playlist" | "twitter" | "itunes" | "external"; link?: string | null, id?: string | null; search?: true; list?: string | null; }
+
+const youtubeTrackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+const youtubeTopicTrackNameRegex = /([^-]+) - Topic/ // If the artist is officially uploaded by YouTube. Sucks to suck if they have a - in their name
+const spotifyTitleRegex = /(.+) - (song|Album|playlist) by (.+) \| Spotify/i
+const newgroundsIDRegex = /https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/
+const twitterCoRegex = /https:\/\/t.co\/[\w\d]+/
+const itunesAlbumRegex = /\/album\/([^/]+)\//
+const hiddenEmbedRegex = /(^<|>$)/g
+const sourceSelectorRegex = /^\w{2}:/
+const youtubeVideoIDRegex = /video\/([\w-]{11})$/
+const twitterStatusRegex = /\/[\w\d]+\/status\/\d+/
+const youtubeIDRegex = /^[A-Za-z0-9_-]{11}$/
 
 const common = {
 	nodes: {
@@ -36,27 +47,16 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = undefined): Promise<string | null> {
-			const options = {
-				apiKey: config.genius_access_token,
-				title: title,
-				artist: artist,
-				optimizeQuery: true
-			}
-			return genius.getLyrics(options)
+			return c(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).send().then(d => d.json()).then(j => j.lyrics || j.error || null)
 		},
 
 		pickApart(song: import("./songtypes").Song) {
 			const songTypes = require("./songtypes") as typeof import("./songtypes")
 
-			const expressions = [
-				/([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/, // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
-				/([^-]+) - Topic/ // If the artist is officially uploaded by YouTube. Sucks to suck if they have a - in their name
-			]
-
 			let title = "", artist: string | undefined
 
 			const standard = () => {
-				const match = song.title.match(expressions[0])
+				const match = song.title.match(youtubeTrackNameRegex)
 				if (match) {
 					title = match[2]
 					artist = match[1]
@@ -74,7 +74,7 @@ const common = {
 				artist = song.artist
 			} else if (song instanceof songTypes.YouTubeSong) {
 				if (song.uploader) {
-					const topic = song.uploader.match(expressions[1])
+					const topic = song.uploader.match(youtubeTopicTrackNameRegex)
 					if (topic) {
 						title = song.title
 						artist = topic[1]
@@ -83,6 +83,27 @@ const common = {
 			} else standard()
 
 			return { title, artist }
+		}
+	},
+
+	spotify: {
+		async getData(url: string) {
+			const response = await c(url, "GET").header({ "User-Agent": fakeHTTPAgent }).send()
+			const data = response.body.toString()
+			const parser = htmlParse(data)
+			const head = parser.getElementsByTagName("head")[0]
+			const titleTag = head.getElementsByTagName("title")[0]
+			const metadata = titleTag.innerText.match(spotifyTitleRegex)
+
+			if (!metadata) throw new Error("Cannot extract Spotify info")
+			const icon = head.querySelector("meta[property=\"og:image\"]")?.getAttribute("content")
+			const title = metadata[1]
+			const type = metadata[2].toLowerCase() as "song" | "album" | "playlist"
+			const author = metadata[3]
+			const duration = +(head.querySelector("meta[property=\"music:duration\"]")?.getAttribute("content") || 0)
+			const trackNumber = +(head.querySelector("meta[property=\"music:album:track\"]")?.getAttribute("content") || 0)
+			const trackList = head.querySelectorAll("meta[property=\"music:song\"]").map(i => i.getAttribute("content")!)
+			return { title, type, author, icon, duration, trackNumber, trackList }
 		}
 	},
 
@@ -149,7 +170,7 @@ const common = {
 		},
 
 		async getData(url: string) {
-			const ID = url.match(/https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/)![1]
+			const ID = url.match(newgroundsIDRegex)![1]
 			let data: { id: number; url: string; title: string; author: string; duration: number; sources: Array<{ src: string }>; }
 			try {
 				data = await c(`https://www.newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
@@ -161,23 +182,18 @@ const common = {
 	},
 
 	twitter: {
-		getData(url: string): Promise<{ title: string; url: string; }> {
-			return new Promise((res, rej) => {
-				vul.twitter.getInfo(url, {}, (err, info) => {
-					if (err) return rej(new Error("That twitter URL doesn't have a video"))
-					/** @type {Array<{ bitrate: number, content_type: string, url: string }>} */
-					const mp4s = info.variants.filter(v => v.content_type === "video/mp4")
-					if (!mp4s.length) return rej(new Error("No mp4 URLs from link"))
-					const highest = mp4s.sort((a, b) => b.bitrate - a.bitrate)[0]
-					res({ title: info.full_text.replace(/https:\/\/t.co\/[\w\d]+/, "").trim(), url: highest.url })
-				})
-			})
+		async getData(url: string): Promise<{ title: string; url: string; }> {
+			const data = await twitter.getTweetMeta(url)
+			if (!data.isVideo || !data.media_url) throw new Error("That twitter URL doesn't have a video")
+			const mp4 = data.media_url.find(i => i.content_type === "video/mp4")
+			if (!mp4) throw new Error("No mp4 URLs from link")
+			return { title: data.description?.replace(twitterCoRegex, "").trim() || "No tweet description", url: mp4.url }
 		}
 	},
 
 	itunes: {
 		async getData(url: string): Promise<Array<import("../../types").iTunesSearchResult>> {
-			const match = url.match(/\/album\/([^/]+)\//)
+			const match = url.match(itunesAlbumRegex)
 			if (!match) throw new Error("Link not an album URL")
 			const decoded = new URL(url)
 			let mode = "track" as "track" | "album"
@@ -202,8 +218,8 @@ const common = {
 	},
 
 	inputToID(input: string): inputToIDReturnValue {
-		input = input.replace(/(^<|>$)/g, "")
-		if (input.match(/^\w{2}:/)) {
+		input = input.replace(hiddenEmbedRegex, "")
+		if (input.match(sourceSelectorRegex)) {
 			if (input.startsWith("yt")) return { type: "youtube", id: input.substring(3), search: true }
 			else if (input.startsWith("sc")) return { type: "soundcloud", id: input.substring(3), search: true }
 			else if (input.startsWith("ng")) return { type: "newgrounds", id: input.substring(3), search: true }
@@ -226,7 +242,7 @@ const common = {
 			} else if (url.hostname == "cadence.moe" || url.hostname == "cadence.gq") { // Is it CloudTube?
 				try {
 					// @ts-expect-error There is a catch block for if it doesn't match the regex
-					const id = url.pathname.match(/video\/([\w-]{11})$/)[1]
+					const id = url.pathname.match(youtubeVideoIDRegex)[1]
 					// Got an ID!
 					return { type: "youtube", id: id }
 				} catch (e) {
@@ -248,14 +264,14 @@ const common = {
 					// Got an ID!
 					return { type: "youtube", id: id }
 				} else return { type: "youtube", id: input, search: true } // YouTube-compatible, but can't resolve to a video.
-			} else if (url.hostname == "twitter.com" && url.pathname.match(/\/[\w\d]+\/status\/\d+/)) {
+			} else if (url.hostname == "twitter.com" && url.pathname.match(twitterStatusRegex)) {
 				return { type: "twitter", link: url.toString() }
-			} else if (url.hostname === "music.apple.com" && url.pathname.match(/\/album\/[^/]+\//)) {
+			} else if (url.hostname === "music.apple.com" && url.pathname.match(itunesAlbumRegex)) {
 				return { type: "itunes", link: url.toString() }
 			} else return { type: "external", link: url.toString() } // Possibly a link to an audio file
 		} catch (e) {
 			// Not a URL. Might be an ID?
-			if (input.match(/^[A-Za-z0-9_-]{11}$/)) return { type: "youtube", id: input }
+			if (input.match(youtubeIDRegex)) return { type: "youtube", id: input }
 			else return { type: "youtube", id: input, search: true }
 		}
 	},
@@ -298,8 +314,13 @@ const common = {
 				const data = await common.twitter.getData(info.link!).catch(() => void 0)
 				if (!data) return null
 				return [new songTypes.TwitterSong(Object.assign(data, { uri: data.url, displayURI: info.link! }))]
-			} else if (info.type === "spotify") return null
-			else {
+			} else if (info.type === "spotify") {
+				const data = await common.spotify.getData(info.link!).catch(() => void 0)
+				if (!data) return null
+				if (data.trackList.length) return data.trackList.map(i => new songTypes.SpotifySong({ url: i }))
+				if (data.type === "song") return [new songTypes.SpotifySong({ url: info.link!, name: data.title, artist: data.author, icon: data.icon, duration: data.duration })]
+				return null
+			} else {
 				if (info.type === "external") return [new songTypes.ExternalSong(info.link!)]
 				if (info.type == "playlist" && !info.id) {
 					if (!info.list) return null

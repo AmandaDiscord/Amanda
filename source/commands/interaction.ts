@@ -1,8 +1,9 @@
 import Jimp from "jimp"
 import crypto from "crypto"
+import c from "centra"
 
 import passthrough from "../passthrough"
-const { constants, client, commands, sync, weebsh } = passthrough
+const { constants, client, commands, sync, config } = passthrough
 
 const language = sync.require("../utils/language") as typeof import("../utils/language")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
@@ -187,13 +188,7 @@ async function doInteraction(cmd: import("discord-typings").Interaction, lang: i
 	if (!fetched) {
 		if (shortcut == "weeb.sh") {
 			footer = "Powered by weeb.sh"
-			fetched = new Promise(resolve => {
-				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-				// @ts-ignore
-				weebsh.toph.getRandomImage(source, { nsfw: false, fileType: "gif" }).then(data => {
-					resolve(data.url)
-				})
-			})
+			fetched = c(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, "GET").header({ Authorization: `Wolke ${config.weeb_api_key}` }).send().then(d => d.json().then(j => j.url))
 		} else if (shortcut == "durl") fetched = url!()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
