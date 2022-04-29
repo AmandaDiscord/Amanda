@@ -57,11 +57,12 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	const db = await pool.connect()
 	await db.query({ text: "SELECT * FROM premium LIMIT 1" })
 	logger.info("Connected to database")
-	import("./modules/stdin")
 
 	const twitter = await TwitterScraper.create()
 
 	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter })
+
+	import("./modules/stdin")
 
 	sync.require([
 		"./modules/EventManager",
