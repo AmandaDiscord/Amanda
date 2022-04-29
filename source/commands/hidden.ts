@@ -7,7 +7,7 @@ commands.assign([
 		description: "mood",
 		category: "hidden",
 		process(cmd) {
-			return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, {
+			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, {
 				type: 4,
 				data: {
 					embeds: [
