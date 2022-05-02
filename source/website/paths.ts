@@ -9,7 +9,7 @@ const redirects = {
 	github: "https://github.com/AmandaDiscord",
 	privacy: "https://github.com/AmandaDiscord/Amanda/blob/rewrite/PRIVACYPOLICY",
 	tos: "https://github.com/AmandaDiscord/Amanda/blob/rewrite/TERMSOFSERVICE",
-	tsukiko: "https://discord.com/oauth2/authorize?client_id=709907646387322932&permissions=268714048&scope=bot"
+	tsukiko: "https://discord.com/api/oauth2/authorize?client_id=709907646387322932&permissions=268510208&scope=bot%20applications.commands"
 }
 
 const paths = {
