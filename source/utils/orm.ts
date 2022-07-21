@@ -124,18 +124,18 @@ export class Database<M extends Record<string, Model<any>>> {
 		}) : []
 
 		if (method === "select") {
-			statement += `SELECT ${options.select?.join(", ") || "*"} FROM ${table}`
+			statement += `SELECT ${options.select?.join(", ") || "*"} FROM ${String(table)}`
 			if (properties) {
 				statement += " WHERE "
 				statement += mapped.join(" AND ")
 			}
 
-			if (options.order !== undefined) statement += ` ORDER BY ${options.order}`
+			if (options.order !== undefined) statement += ` ORDER BY ${String(options.order)}`
 			if (options.orderDescending) statement += " DESC"
 			if (options.limit !== undefined && options.limit !== 0) statement += ` LIMIT ${options.limit}`
 
 		} else if (method === "update") {
-			statement += `UPDATE ${table} SET `
+			statement += `UPDATE ${String(table)} SET `
 			statement += mapped.join(", ")
 			if (options.where) {
 				const where = Object.keys(options.where).map(key => {
@@ -151,7 +151,7 @@ export class Database<M extends Record<string, Model<any>>> {
 			} else throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
 
 		} else if (method === "insert" || method === "upsert") {
-			statement += `INSERT INTO ${table}`
+			statement += `INSERT INTO ${String(table)}`
 			if (options.useBuffer) {
 				const name = table as string
 				const buffer = this.buffers[name].bufferValues.insert
@@ -202,7 +202,7 @@ export class Database<M extends Record<string, Model<any>>> {
 			}
 
 		} else if (method === "delete") {
-			statement += `DELETE FROM ${table}`
+			statement += `DELETE FROM ${String(table)}`
 			if (properties) statement += ` WHERE ${mapped.join(" AND ")}`
 		}
 

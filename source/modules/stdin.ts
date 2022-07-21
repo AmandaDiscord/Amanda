@@ -14,7 +14,8 @@ function refreshcommands() {
 	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, [...commands.cache.values()].map(c => ({
 		name: c.name,
 		description: c.description,
-		options: c.options
+		options: c.options,
+		default_member_permissions: null
 	})))
 }
 
