@@ -290,7 +290,7 @@ class Queue {
 		}
 	}
 
-	private _onPlayerError(details: import("lavacord").LavalinkEvent) {
+	private _onPlayerError(details: any) {
 		if (details.type === "WebSocketClosedEvent") {
 			// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 			// Simply respond by stopping the queue, since that was most likely the intention.
@@ -299,7 +299,7 @@ class Queue {
 		}
 		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${details}`)
 		if (this.songs[0]) {
-			this.songs[0].error = details.error ? details.error : "There was an exception when trying to play that track. That's all I know"
+			this.songs[0].error = details.error ? JSON.stringify(details.error) : (details.message ? details.message : JSON.stringify(details))
 			logger.error("Song error call B")
 			this._reportError()
 			this._nextSong()
