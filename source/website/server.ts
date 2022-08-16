@@ -11,13 +11,13 @@ const sync = new Sync()
 
 Object.assign(passthrough, { config, sync })
 
-import logger from "../utils/logger"
+import logger from "./logger"
 
 const rootFolder = p.join(__dirname, "../../webroot")
 
 const paths: typeof import("./paths") = sync.require("./paths")
 
-async function streamResponse(res: import("http").ServerResponse, fileDir: string): Promise<void> {
+async function streamResponse(res: import("http").ServerResponse, fileDir: string, headersOnly = false): Promise<void> {
 	let stats: import("fs").Stats
 	try {
 		stats = await fs.promises.stat(fileDir)
@@ -37,6 +37,11 @@ async function streamResponse(res: import("http").ServerResponse, fileDir: strin
 		"Content-Type": type
 	})
 
+	if (headersOnly) {
+		res.end();
+		return;
+	}
+
 	const stream = fs.createReadStream(fileDir)
 	stream.pipe(res)
 	stream.once("end", res.end.bind(res))
@@ -44,14 +49,15 @@ async function streamResponse(res: import("http").ServerResponse, fileDir: strin
 
 const server = http.createServer(async (req, res) => {
 	try {
-		logger.info(req.url)
 		const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
 		const path = paths[url.pathname]
 		if (path) {
-			if (!path.methods.includes(req.method?.toUpperCase()!)) return res.writeHead(405).end()
-			if (path.static) await streamResponse(res, p.join(rootFolder, path.static))
-			else if (path.handle) await path.handle(req, res, url)
-			else return res.writeHead(500, { "Content-Type": "text/plain" }).end()
+			if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
+			else {
+				if (path.static) await streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
+				else if (path.handle) await path.handle(req, res, url)
+				else res.writeHead(500, { "Content-Type": "text/plain" }).end()
+			}
 		} else {
 			const fileDir = p.join(rootFolder, url.pathname)
 			await streamResponse(res, fileDir)
@@ -62,6 +68,8 @@ const server = http.createServer(async (req, res) => {
 		res.write(String(e))
 		res.end()
 	}
+
+	logger.info(`${res.statusCode || "000"} ${req.method?.toLocaleUpperCase() || "UNK"} ${req.url} --- ${req.socket.remoteAddress}`);
 })
 
 server.once("listening", () => logger.info(`Server is listening on ${config.website_domain}`))

@@ -1,6 +1,7 @@
 import path from "path"
 import repl from "repl"
 import util from "util"
+import fs from "fs"
 
 import passthrough from "../passthrough"
 const { client, config, constants, commands, requester, sync } = passthrough
@@ -28,9 +29,9 @@ function generatedocs() {
 		if (c.options) value.options = c.options.map(o => ({ name: o.name, description: o.description }))
 		return [c.name, value] as [string, typeof value]
 	})
-	const v = {} as { [cmd: string]: import("../types").UnpackArray<typeof cmds>["1"] }
-	for (const [name, value] of cmds) v[name] = value
-	return v
+	const v = [] as Array<import("../types").UnpackArray<typeof cmds>["1"]>
+	for (const [_, value] of cmds) v.push(value)
+	fs.promises.writeFile(path.join(__dirname, "../../webroot/commands.json"), JSON.stringify(v))
 }
 
 async function customEval(input: string, _context: import("vm").Context, _filename: string, callback: (err: Error | null, result: unknown) => unknown) {

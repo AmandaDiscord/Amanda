@@ -14,11 +14,11 @@ const redirects = {
 
 const paths = {
 	"/": {
-		methods: ["GET"],
+		methods: ["GET", "HEAD"],
 		static: "index.html"
 	},
 	"/about": {
-		methods: ["GET"],
+		methods: ["GET", "HEAD"],
 		static: "about.html"
 	}
 } as { [path: string]: { methods: Array<string>; static?: string; handle?: (req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL) => Promise<unknown>; } }
@@ -27,10 +27,12 @@ async function redirect(res: import("http").ServerResponse, location: string) {
 	res.writeHead(302, { Location: location, "Content-Type": "text/html" }).write(`Redirecting to <a href="${location}">${location}</a>...`)
 	res.end()
 }
+
 for (const [key, value] of Object.entries(redirects)) {
 	paths[`/to/${key}`] = {
 		methods: ["GET"],
 		handle: (_req, res) => redirect(res, value)
 	}
 }
+
 export = paths
