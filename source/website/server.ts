@@ -69,7 +69,7 @@ const server = http.createServer(async (req, res) => {
 		res.end()
 	}
 
-	logger.info(`${res.statusCode || "000"} ${req.method?.toLocaleUpperCase() || "UNK"} ${req.url} --- ${req.socket.remoteAddress}`);
+	logger.info(`${res.statusCode || "000"} ${req.method?.toLocaleUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`);
 })
 
 server.once("listening", () => logger.info(`Server is listening on ${config.website_domain}`))
