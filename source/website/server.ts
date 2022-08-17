@@ -26,21 +26,12 @@ async function streamResponse(res: import("http").ServerResponse, fileDir: strin
 		return
 	}
 
-	if (stats.isDirectory() || stats.isSymbolicLink()) {
-		res.writeHead(404).end()
-		return
-	}
+	if (!stats.isFile()) return void res.writeHead(404).end()
 
 	const type = mime.lookup(fileDir) || "application/octet-stream"
-	res.writeHead(200, {
-		"Content-Length": stats.size,
-		"Content-Type": type
-	})
+	res.writeHead(200, { "Content-Length": stats.size, "Content-Type": type })
 
-	if (headersOnly) {
-		res.end();
-		return;
-	}
+	if (headersOnly) return void res.end()
 
 	const stream = fs.createReadStream(fileDir)
 	stream.pipe(res)
@@ -56,7 +47,7 @@ const server = http.createServer(async (req, res) => {
 			else {
 				if (path.static) await streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
 				else if (path.handle) await path.handle(req, res, url)
-				else res.writeHead(500, { "Content-Type": "text/plain" }).end()
+				else res.writeHead(500).end()
 			}
 		} else {
 			const fileDir = p.join(rootFolder, url.pathname)
@@ -64,9 +55,7 @@ const server = http.createServer(async (req, res) => {
 		}
 	} catch (e) {
 		if (!res.writable) return
-		res.writeHead(500, { "Content-Type": "text/plain" })
-		res.write(String(e))
-		res.end()
+		res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
 	}
 
 	logger.info(`${res.statusCode || "000"} ${req.method?.toLocaleUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`);
