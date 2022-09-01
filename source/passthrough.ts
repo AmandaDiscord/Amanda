@@ -12,6 +12,12 @@ interface Passthrough {
 	sync: import("heatsync")
 	listenMoe: { jp: import("listensomemoe"); kp: import("listensomemoe") }
 	twitter: import("twitter-scraper").TwitterScraper
+	websiteSocket: import("./modules/ReconnectingWS")
+
+	rootFolder: string
+	configuredUserID: string
+	webQueues: Map<string, import("./types").WebQueue>
+	wss: import("ws").Server<import("ws").WebSocket>
 }
 
 export = { clusterData: { connected_shards: [] as Array<number>, guild_ids: {} }, queues: new Map() } as Passthrough

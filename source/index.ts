@@ -10,6 +10,7 @@ import { SnowTransfer } from "snowtransfer"
 import { TwitterScraper } from "twitter-scraper"
 
 import Amanda from "./modules/Amanda"
+import ReconnectingWS from "./modules/ReconnectingWS"
 
 const config = require("../config") as import("./types").Config // TypeScript WILL include files that use import in any way (type annotations or otherwise)
 import constants from "./constants"
@@ -60,7 +61,21 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 
 	const twitter = await TwitterScraper.create()
 
-	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter })
+	let alreadyWarnedForThisConnect = false
+	const onOpen = () => {
+		alreadyWarnedForThisConnect = false
+		logger.info("Website socket opened. Identifying...")
+		passthrough.websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.IDENTIFY, d: { token: config.lavalink_password, timestamp: Date.now() } }))
+	}
+	const onClose = (code: number, reason: Buffer) => {
+		if (!alreadyWarnedForThisConnect) logger.warn(`Website socket disconnected with code ${code} and reason: ${reason.toString()}`)
+		alreadyWarnedForThisConnect = true
+	}
+	const websiteSocket = new ReconnectingWS(`${config.website_protocol === "http" ? "ws://" : "wss://"}${config.website_domain}`, 5000)
+	websiteSocket.on("open", onOpen)
+	websiteSocket.on("close", onClose)
+
+	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter, websiteSocket })
 
 	import("./modules/stdin")
 

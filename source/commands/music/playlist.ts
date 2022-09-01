@@ -1,5 +1,5 @@
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues } = passthrough
+const { client, commands, constants, sync, queues, websiteSocket } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
@@ -496,7 +496,7 @@ commands.assign([
 				let queue = queues.get(cmd.guild_id)
 				const queueDidntExist = !queue
 
-				const userVoiceState = await orm.db.get("voice_states", { guild_id: cmd.guild_id, user_id: author.id })
+				const userVoiceState = await orm.db.get("voice_states", { user_id: author.id, guild_id: cmd.guild_id })
 				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: author.username }) })
 				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
@@ -540,8 +540,9 @@ commands.assign([
 
 				const sliced = orderedSongs.slice(optionStart - 1)
 				const songss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new songTypes.YouTubeSong(row.video_id, row.name, row.length))
-				songss.forEach(s => s.queue = queue)
-				queue.songs.push(...songss)
+				for (const song of songss) {
+					await queue.addSong(song)
+				}
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 			}

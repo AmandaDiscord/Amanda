@@ -1,66 +1,68 @@
 import http from "http"
 import p from "path"
-import fs from "fs"
+
+import * as ws from "ws"
 import Sync from "heatsync"
-import mime from "mime-types"
+import { Pool } from "pg"
 
 import passthrough from "../passthrough"
 const config: import("../types").Config = require("../../config")
 
+
 const sync = new Sync()
-
-Object.assign(passthrough, { config, sync })
-
-import logger from "./logger"
-
 const rootFolder = p.join(__dirname, "../../webroot")
+const configuredUserID = Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")
 
-const paths: typeof import("./paths") = sync.require("./paths")
+const wss = new ws.Server({ noServer: true })
+const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 
-async function streamResponse(res: import("http").ServerResponse, fileDir: string, headersOnly = false): Promise<void> {
-	let stats: import("fs").Stats
-	try {
-		stats = await fs.promises.stat(fileDir)
-	} catch {
-		res.writeHead(404).end()
-		return
-	}
+;(async () => {
+	const pool = new Pool({
+		host: config.sql_domain,
+		user: "amanda",
+		password: config.sql_password,
+		database: "main",
+		max: 2
+	})
 
-	if (!stats.isFile()) return void res.writeHead(404).end()
+	const db = await pool.connect()
+	await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
 
-	const type = mime.lookup(fileDir) || "application/octet-stream"
-	res.writeHead(200, { "Content-Length": stats.size, "Content-Type": type })
+	Object.assign(passthrough, { config, sync, db, rootFolder, configuredUserID, wss, webQueues })
 
-	if (headersOnly) return void res.end()
+	const paths: typeof import("./paths") = sync.require("./paths")
+	const util: typeof import("./util") = sync.require("./util")
 
-	const stream = fs.createReadStream(fileDir)
-	stream.pipe(res)
-	stream.once("end", res.end.bind(res))
-}
-
-const server = http.createServer(async (req, res) => {
-	try {
-		const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
-		const path = paths[url.pathname]
-		if (path) {
-			if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
-			else {
-				if (path.static) await streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
-				else if (path.handle) await path.handle(req, res, url)
-				else res.writeHead(500).end()
-			}
-		} else {
-			const fileDir = p.join(rootFolder, url.pathname)
-			await streamResponse(res, fileDir)
+	const server = http.createServer(async (req, res) => {
+		try {
+			const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
+			const path = paths[url.pathname]
+			if (path) {
+				if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
+				else if (req.headers["range"]) res.writeHead(416).end()
+				else if (req.headers["expect"]) res.writeHead(417).end()
+				else {
+					if (path.static) await util.streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
+					else if (path.handle) await path.handle(req, res, url)
+					else res.writeHead(500).end()
+				}
+			} else await util.streamResponse(res, p.join(rootFolder, url.pathname))
+		} catch (e) {
+			util.error(e)
+			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
 		}
-	} catch (e) {
-		if (!res.writable) return
-		res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
-	}
 
-	logger.info(`${res.statusCode || "000"} ${req.method?.toLocaleUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`);
-})
+		util.info(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`)
+	})
 
-server.once("listening", () => logger.info(`Server is listening on ${config.website_domain}`))
+	server.on("upgrade", async (req, socket, head) => {
+		wss.handleUpgrade(req, socket, head, s => wss.emit("connection", s, req))
+	})
 
-server.listen(10400)
+	server.once("listening", () => util.info(`Server is listening on ${config.website_domain}`))
+
+	server.listen(10400)
+
+	wss.once("close", () => util.info("Socket server has closed."));
+	require("./music")
+})()

@@ -2,7 +2,7 @@ import mixin from "mixin-deep"
 import { BetterComponent } from "callback-components"
 
 import passthrough from "../../passthrough"
-const { sync, queues, client, config, constants } = passthrough
+const { sync, queues, client, config, constants, websiteSocket } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -55,12 +55,31 @@ class Queue {
 		queues.set(guildID, this)
 	}
 
+	public toJSON(): import("../../types").WebQueue | null {
+		if (!this.voiceChannelID) return null
+		return {
+			members: [client.user, ...this.listeners.values()].map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === client.user.id })),
+			songs: this.songs.map(s => s.toObject()),
+			playing: !this.paused,
+			voiceChannel: {
+				id: this.voiceChannelID,
+				name: "Amanda-Music"
+			},
+			pausedAt: this.pausedAt,
+			songStartTime: this.songStartTime,
+			attributes: {
+				loop: this.loop,
+				auto: this.auto
+			}
+		}
+	}
+
 	public get interaction() {
 		return this._interaction
 	}
 
 	public set interaction(value) {
-		if (!this._interactionExpired && this._interaction) client.snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "There's a newer now playing message" }] }).catch(() => void 0)
+		if (!this._interactionExpired && this._interaction) client.snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "There's a newer now playing message" }], components: [] }).catch(() => void 0)
 		this._interactionExpired = false
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
@@ -96,6 +115,7 @@ class Queue {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
 		this.player?.pause(newState)
+		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { songStartTime: this.songStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
 	}
 
 	public get volume() {
@@ -169,6 +189,7 @@ class Queue {
 		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "It looks like this queue has ended" }], components: [] }).catch(() => void 0)
 		this.player?.destroy().catch(() => void 0)
 		client.lavalink!.leave(this.guildID).catch(() => void 0)
+		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
 		queues.delete(this.guildID)
 	}
 
@@ -197,7 +218,7 @@ class Queue {
 				// Can we play a related song?
 				if (related.length) {
 					this.songs.shift()
-					this.songs.push(related[0])
+					await this.addSong(related[0])
 				} else { // No related songs. Destroy.
 					if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.AUTO_NONE_LEFT })
 					this.auto = false
@@ -209,11 +230,10 @@ class Queue {
 				this.destroy()
 			}
 		} else { // We have more songs. Move on.
+			await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
 			const removed = this.songs.shift()
 			// In loop mode, add the just played song back to the end of the queue.
-			if (removed && this.loop && !removed.error) {
-				this.songs.push(removed)
-			}
+			if (removed && this.loop && !removed.error) await this.addSong(removed)
 			this.play()
 		}
 	}
@@ -243,16 +263,17 @@ class Queue {
 		return newMenu
 	}
 
-	public skip(amount = 1) {
-		if (amount) {
-			for (let i = 1; i <= amount - 1; i++) { // count from 1 to amount-1, inclusive
-				this.removeSong(1)
-			}
-		}
+	public skip() {
 		this.player?.stop().catch(() => void 0)
 	}
 
-	public removeSong(index: number) {
+	public async addSong(song: import("./songtypes").Song, position = this.songs.length) {
+		if (position === -1) this.songs.push(song)
+		else this.songs.splice(position, 0, song)
+		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { song: song.toObject(), position } } }), res))
+	}
+
+	public async removeSong(index: number) {
 		// Validate index
 		if (index == 0) return 1
 		if (!this.songs[index]) return 1
@@ -264,6 +285,7 @@ class Queue {
 		} catch (e) {
 			logger.error(`Song destroy error:\n${e}`)
 		}
+		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
 	}
 
@@ -288,6 +310,7 @@ class Queue {
 			const newSongStartTime = (data.state.time || 0) - (data.state.position || 0)
 			this.songStartTime = newSongStartTime
 		}
+		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { songStartTime: this.songStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
 	}
 
 	private _onPlayerError(details: any) {
@@ -411,7 +434,7 @@ class Queue {
 	}
 
 	public async voiceStateUpdate(packet: import("lavacord").VoiceStateUpdate) {
-		if (packet.channel_id && packet.user_id === client.user!.id) {
+		if (packet.channel_id && packet.user_id === client.user.id) {
 			this.voiceChannelID = packet.channel_id
 
 			const states = await orm.db.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
@@ -420,6 +443,7 @@ class Queue {
 				const user = await discordUtils.getUser(state.user_id)
 				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
+			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() }))
 		}
 		// moving voice channels does not set the channel_id as null and then update
 		if (!packet.channel_id && this.voiceChannelID && packet.user_id === client.user!.id) return this.destroy()
@@ -435,7 +459,52 @@ class Queue {
 			this.leavingSoonID = undefined
 			this.listeners.set(user.id, user)
 		}
+		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } }))
 	}
 }
+
+sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").RawData) => {
+	const message = Array.isArray(data) ? Buffer.concat(data).toString() : data.toString()
+	let packet: { op: number; d?: any }
+	try {
+		packet = JSON.parse(message)
+	} catch (e) {
+		return logger.error(`Error parsing message from website\n${e}`)
+	}
+
+	const qs = [...queues.values()]
+	const queue = qs.find(q => q.voiceChannelID === packet.d?.channel_id)
+
+
+	if (packet.op === constants.WebsiteOPCodes.ACKNOWLEDGE) {
+		logger.info(`Received ACK from website socket. Time difference: ${packet.d.serverTimeDiff}`)
+		for (const q of qs) {
+			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: q.toJSON() }))
+		}
+
+
+	} else if (packet.op === constants.WebsiteOPCodes.CLEAR_QUEUE) {
+		if (queue) {
+			queue.songs.splice(1)
+			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }))
+		}
+
+
+	} else if (packet.op === constants.WebsiteOPCodes.ATTRIBUTES_CHANGE) {
+		if (queue && packet.d) {
+			if (packet.d.auto !== undefined) queue.auto = packet.d.auto
+			if (packet.d.loop !== undefined) queue.loop = packet.d.loop
+			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop, auto: queue.auto } } }))
+		}
+
+
+	} else if (packet.op === constants.WebsiteOPCodes.SKIP && queue) queue.skip()
+	else if (packet.op === constants.WebsiteOPCodes.STOP && queue) queue.destroy()
+	else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
+	else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {
+		const result = await queue.removeSong(packet.d.index)
+		if (result === 0) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } }))
+	}
+})
 
 export = Queue

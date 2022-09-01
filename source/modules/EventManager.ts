@@ -95,8 +95,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)
 	} else if (p.t === "VOICE_STATE_UPDATE") {
 		const data = p.d as import("discord-typings").VoiceState
-		if (data.channel_id === null) orm.db.delete("voice_states", { guild_id: data.guild_id, user_id: data.user_id })
-		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id })
+		if (data.channel_id === null) orm.db.delete("voice_states", { user_id: data.user_id, guild_id: data.guild_id })
+		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id }, { useBuffer: false })
 		client.lavalink?.voiceStateUpdate(data as import("lavacord").VoiceStateUpdate)
 		queues.get(p.d.guild_id)?.voiceStateUpdate(p.d)
 	} else if (p.t === "VOICE_SERVER_UPDATE") client.lavalink?.voiceServerUpdate(p.d)
@@ -107,6 +107,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 			const guildLang = interaction.guild_locale ? lang.getLang(interaction.guild_locale) : null
 			const langToUse = guildLang && interaction.guild_locale != interaction.locale ? guildLang : selfLang
 
+			const user = interaction.user ? interaction.user : interaction.member!.user
+			orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 			try {
 				await commands.cache.get(interaction.data!.name)?.process(interaction, langToUse)
 			} catch (e) {
@@ -126,7 +128,6 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				// Report to #amanda-error-log
 				embed.title = "Command error occured."
 				embed.description = await text.stringify(e)
-				const user = interaction.user ? interaction.user : interaction.member!.user
 				let details = [
 					["User", `${user.username}#${user.discriminator}`],
 					["User ID", user.id],

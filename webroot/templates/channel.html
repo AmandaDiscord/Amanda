@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Home | Amanda</title>
+		<title>Dash | Amanda</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content ="A qt Discord music bot made for qts like you">
@@ -19,25 +19,41 @@
 		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
 		<meta name="theme-color" content="#fef0d7">
 		<link rel="stylesheet" type="text/css" href="/main.css">
+		<script type="module" src="/scripts/player.js"></script>
+		<script defer src="/scripts/external/soundcloud.js"></script>
+		<script>
+			var _channelID = "$channelID"
+			var _serverTimeDiff = Date.now()-$timestamp
+		</script>
 	</head>
 	<body>
+		<noscript>
+			Please enable JavaScript. This website won't work without it. We promise there's no trackers, ads, or other evil things.
+		</noscript>
 		<nav id="topnav">
-			<a class="active navitem" href="/">Home</a>
+			<a class="navitem" href="/">Home</a>
 			<a class="navitem" href="/about">About</a>
-			<a class="navitem" href="/dash">Dash</a>
+			<a class="active navitem" href="/dash">Dash</a>
 		</nav>
-		<div class="landing">
-			<img class="landing-image" alt="Amanda, a red-haired cat girl with headphones and a white shirt smiling at the viewer" src="/images/amanda.webp" />
-			<p>Amanda#8293</p>
-			<p>A qt music bot made for qts:
-					<br>Amanda can play music, games, manage an economy, and so much more.
-					<br>But most importantly: cat pictures.
-					<br>Let there be cats! ༼ つ ◕ヮ◕ ༽つ
-			</p>
-			<div>
-				<a class="pinkbutton" href="https://amanda.moe/to/add">Add Amanda</a>
-				<a class="pinkbutton" href="https://amanda.moe/to/server">Join our server</a>
+		<main>
+			<div class="player-grid">
+				<div class="player-controls" id="player-container">
+					<div class="song-title nothing-playing">Connecting...</div>
+				</div>
+				<div class="channel-info">
+					<div class="channel-words">
+						<div class="channel-name" id="voice-channel-name">Connecting...</div>
+					</div>
+				</div>
+				<div class="queue-container" id="queue-container"></div>
+				<div class="right-panels">
+					<div class="side-controls" id="side-controls"></div>
+					<div class="voice-info" id="voice-info"></div>
+				</div>
 			</div>
+		</main>
+		<div class="frames">
+			<iframe id="f-soundcloud"></iframe>
 		</div>
 	</body>
 </html>

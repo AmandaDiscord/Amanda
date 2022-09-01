@@ -1,7 +1,7 @@
 import crypto from "crypto"
 
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues, config } = passthrough
+const { client, commands, constants, sync, queues, config, websiteSocket } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
@@ -38,9 +38,8 @@ commands.assign([
 			},
 			{
 				name: "skip",
-				type: 4,
-				description: "Skip a number of songs in the queue",
-				min_value: 1,
+				type: 5,
+				description: "If the queue should skip the current track. True to reveal you initiated the skip",
 				required: false
 			},
 			{
@@ -192,7 +191,7 @@ commands.assign([
 
 			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
 			const optionStop = (cmd.data?.options?.find(o => o.name === "stop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionSkip = (cmd.data?.options?.find(o => o.name === "skip") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
+			const optionSkip = (cmd.data?.options?.find(o => o.name === "skip") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
 			const optionVolume = (cmd.data?.options?.find(o => o.name === "volume") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
 			const optionQueue = (cmd.data?.options?.find(o => o.name === "queue") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
 			const optionAuto = (cmd.data?.options?.find(o => o.name === "auto") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
@@ -243,11 +242,11 @@ commands.assign([
 			if (!queue && [optionPlay, optionFrisky, optionListenmoe].every(i => i === null)) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: author.username }) } })
 
 			let ephemeral = false
-			const shouldBeEphemeral = [optionStop, optionNow, optionInfo, optionRelated, optionLyrics, optionShuffle]
+			const shouldBeEphemeral = [optionStop, optionSkip, optionNow, optionInfo, optionRelated, optionLyrics, optionShuffle]
 			if (shouldBeEphemeral.includes(true)) ephemeral = true
 
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: ephemeral ? (1 << 6) : 0 } })
-			const userVoiceState = await orm.db.get("voice_states", { guild_id: cmd.guild_id, user_id: author.id })
+			const userVoiceState = await orm.db.get("voice_states", { user_id: author.id, guild_id: cmd.guild_id })
 			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: author.username }) })
 			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
@@ -304,9 +303,11 @@ commands.assign([
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
 				}
 
-				songs.forEach(s => s.queue = queue)
+				for (const song of songs) {
+					song.queue = queue
+					await queue.addSong(song)
+				}
 
-				queue.songs.push(...songs)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 				return
@@ -322,7 +323,7 @@ commands.assign([
 				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 				const song = new songTypes.FriskySong(optionFrisky as ConstructorParameters<typeof songTypes.FriskySong>["0"])
-				queue.songs.push(song)
+				queue.addSong(song)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 				return
@@ -338,7 +339,7 @@ commands.assign([
 				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content:language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 				const song = new songTypes.ListenMoeSong(optionListenmoe as ConstructorParameters<typeof songTypes.ListenMoeSong>["0"])
-				queue.songs.push(song)
+				queue.addSong(song)
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 				return
@@ -352,12 +353,16 @@ commands.assign([
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue stopped by ${author.username}#${author.discriminator}` })
 			} else if (optionAuto !== null) {
 				queue.auto = optionAuto
+				const state = queue.toJSON()
+				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.auto ? "AUTO_ON" : "AUTO_OFF"] })
 			} else if (optionInfo !== null) {
 				const info = await queue.songs[0].showInfo()
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof info === "string" ? { content: info } : { embeds: [info] })
 			} else if (optionLoop !== null) {
 				queue.loop = optionLoop
+				const state = queue.toJSON()
+				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			} else if (optionLyrics !== null) {
 				const lyrics = await queue.songs[0].getLyrics()
@@ -395,13 +400,8 @@ commands.assign([
 				const related = await queue.songs[0].showRelated()
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof related === "string" ? { content: related } : { embeds: [related] })
 			} else if (optionSkip !== null) {
-				if (queue.songs.length < optionSkip) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOO_MANY_SKIPS })
-				if (queue.songs.length == optionSkip) {
-					queue.destroy()
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Skipped all songs in queue. Queue destroyed" })
-				}
-				queue.skip(optionSkip)
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Skipped ${optionSkip} songs` })
+				queue.skip()
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Skipped that song" })
 			} else if (optionSpeed !== null) {
 				queue.speed = optionSpeed / 100
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue speed set to ${optionSpeed}%` })
@@ -411,8 +411,11 @@ commands.assign([
 			} else if (optionShuffle !== null) {
 				const toShuffle = queue.songs.slice(1) // Do not shuffle the first song since it's already playing
 				queue.songs.length = 1
+				if (queue.voiceChannelID) await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }), res))
 				const shuffled = arr.shuffle(toShuffle)
-				queue.songs.push(...shuffled)
+				for (const song of shuffled) {
+					await queue.addSong(song)
+				}
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Queue shuffled" })
 			} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Working on re-adding. Please give me time" })
 		}
@@ -450,13 +453,11 @@ commands.assign([
 				await orm.db.delete("web_tokens", { user_id: author.id })
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
 				await orm.db.insert("web_tokens", { user_id: author.id, token: hash, staging: 1 })
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_NEW, { "website": `${config.website_protocol}://${config.website_domain}/dash` }) })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.TOKENS_NEW, { "website": `${config.website_protocol}://${config.website_domain}/dash`, "prefix": "/" })}\n${hash}` })
 			} else {
 				const existing = await orm.db.get("web_tokens", { user_id: author.id })
-				if (existing) {
-					await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOKENS_PREVIOUS })
-					return client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: existing.token, flags: 1 << 6 })
-				} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOKENS_NONE })
+				if (existing) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.TOKENS_PREVIOUS, { "prefix": "/" })}\n${existing.token}` })
+				else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_NONE, { "prefix": "/" }) })
 			}
 		}
 	}

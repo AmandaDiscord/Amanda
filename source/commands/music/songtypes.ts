@@ -78,7 +78,7 @@ export abstract class Song {
 			class: this.constructor.name,
 			id: this.id,
 			title: this.title,
-			length: this.lengthSeconds * 1000,
+			length: this.lengthSeconds,
 			thumbnail: this.thumbnail,
 			live: this.live
 		}
