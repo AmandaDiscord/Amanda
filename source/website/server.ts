@@ -65,4 +65,7 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 
 	wss.once("close", () => util.info("Socket server has closed."));
 	require("./music")
+
+	process.on("uncaughtException", (e) => util.error(String(e)))
+	process.on("unhandledRejection", (e) => util.error(String(e)))
 })()
