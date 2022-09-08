@@ -35,7 +35,7 @@ const cmds = [
 			const author = cmd.user ? cmd.user : cmd.member!.user
 			const user1 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user1") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value] || author
 			const user2 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user2") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
-			if (user1.id == user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": author.username }) })
+			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": author.username }) } })
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
 			if (crow) {
@@ -195,7 +195,7 @@ async function doInteraction(cmd: import("discord-typings").Interaction, lang: i
 	fetched!.then(u => {
 		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
 		const embed: import("discord-typings").Embed = {
-			description: language.replace(lang.GLOBAL[keyOther], { "username": author.username, "action": source, "mention": `<@${user.id}>` }),
+			description: language.replace(lang.GLOBAL[keyOther], { "user": author.username, "action": source, "mention": `<@${user.id}>` }),
 			image: { url: u },
 			color: constants.standard_embed_color
 		}

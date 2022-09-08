@@ -61,19 +61,14 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 
 	const twitter = await TwitterScraper.create()
 
-	let alreadyWarnedForThisConnect = false
+	let firstConnect = true
 	const onOpen = () => {
-		alreadyWarnedForThisConnect = false
-		logger.info("Website socket opened. Identifying...")
+		if (firstConnect) logger.info("Website socket ready")
+		firstConnect = false
 		passthrough.websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.IDENTIFY, d: { token: config.lavalink_password, timestamp: Date.now() } }))
-	}
-	const onClose = (code: number, reason: Buffer) => {
-		if (!alreadyWarnedForThisConnect) logger.warn(`Website socket disconnected with code ${code} and reason: ${reason.toString()}`)
-		alreadyWarnedForThisConnect = true
 	}
 	const websiteSocket = new ReconnectingWS(`${config.website_protocol === "http" ? "ws://" : "wss://"}${config.website_domain}`, 5000)
 	websiteSocket.on("open", onOpen)
-	websiteSocket.on("close", onClose)
 
 	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter, websiteSocket })
 

@@ -477,7 +477,6 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 
 
 	if (packet.op === constants.WebsiteOPCodes.ACKNOWLEDGE) {
-		logger.info(`Received ACK from website socket. Time difference: ${packet.d.serverTimeDiff}`)
 		for (const q of qs) {
 			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: q.toJSON() }))
 		}
