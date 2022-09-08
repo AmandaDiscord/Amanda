@@ -36,16 +36,16 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mime-types": "2.1.35",
     "mixin-deep": "2.0.1",
-    "node-html-parser": "5.4.2",
+    "node-html-parser": "6.0.0",
     "pg": "8.8.0",
-    "simple-git": "3.13.0",
+    "simple-git": "3.14.0",
     "snowtransfer": "0.5.5",
     "twitter-scraper": "github:AmandaDiscord/twitter-scraper#20e7d58f05bf62a523fc4a6b4d898ea7b515a212",
     "typescript": "4.8.2"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "5.36.1",
-    "@typescript-eslint/parser": "5.36.1",
+    "@typescript-eslint/eslint-plugin": "5.36.2",
+    "@typescript-eslint/parser": "5.36.2",
     "eslint": "8.23.0"
   }
 }
