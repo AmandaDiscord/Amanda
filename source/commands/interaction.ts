@@ -1,6 +1,5 @@
 import Jimp from "jimp"
 import crypto from "crypto"
-import c from "centra"
 
 import passthrough from "../passthrough"
 const { constants, client, commands, sync, config } = passthrough
@@ -188,7 +187,7 @@ async function doInteraction(cmd: import("discord-typings").Interaction, lang: i
 	if (!fetched) {
 		if (shortcut == "weeb.sh") {
 			footer = "Powered by weeb.sh"
-			fetched = c(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, "GET").header({ Authorization: `Wolke ${config.weeb_api_key}` }).send().then(d => d.json().then(j => j.url))
+			fetched = fetch(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, { headers: { Authorization: `Wolke ${config.weeb_api_key}` } }).then(d => d.json().then(j => j.url))
 		} else if (shortcut == "durl") fetched = url!()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}

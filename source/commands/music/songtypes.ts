@@ -1,4 +1,3 @@
-import c from "centra"
 const entities = require("entities") as typeof import("entities")
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
@@ -145,7 +144,7 @@ export class YouTubeSong extends Song {
 
 		this.related = new AsyncValueCache(
 			() => {
-				return c(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).send().then(async data => {
+				return fetch(`${this.getInvidiousOrigin()}/api/v1/videos/${this.id}`).then(async data => {
 					const json = await data.json()
 					return json.recommendedVideos.filter(v => v.lengthSeconds > 0).slice(0, 10)
 				})
@@ -891,7 +890,6 @@ export class SpotifySong extends YouTubeSong {
 		this.thumbnail = { src: data.icon || constants.spotify_placeholder, width: 386, height: 386 }
 		this.url = data.url
 		this.uploader = data.artist
-		// eslint-disable-next-line require-await
 		this.prepareCache = new AsyncValueCache(async () => {
 			const getFromYouTube = () => {
 				return common.loadtracks(`${this.uploader} - ${this.title}`, this.queue?.node).then(tracks => {
@@ -912,18 +910,14 @@ export class SpotifySong extends YouTubeSong {
 			if (this.id == "!" || this.track == "!") {
 				if (this.title && this.uploader) await getFromYouTube()
 				else {
-					const d = await common.spotify.getData(this.url).catch(() => void 0)
-					if (!d) {
+					const d = await common.loadtracks(this.url).catch(() => void 0)
+					if (!d || !d.length) {
 						this.error = "Cannot extract Spotify info"
 						return
 					}
-					if (d.type !== "song") {
-						this.error = `Linked Spotify URL was not a track. Got ${d.type}`
-						return
-					}
-					this.title = d.title
-					this.thumbnail = { src: d.icon || constants.spotify_placeholder, width: 386, height: 386 }
-					this.uploader = d.author
+					const track = d[0]
+					this.title = track.info.title
+					this.uploader = track.info.author
 					await getFromYouTube()
 				}
 			}

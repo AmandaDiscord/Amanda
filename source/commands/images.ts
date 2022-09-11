@@ -1,5 +1,3 @@
-import c from "centra"
-
 import passthrough from "../passthrough"
 const { constants, config, commands, client } = passthrough
 
@@ -9,7 +7,7 @@ async function sendImage(host: string, path: string, cmd: import("discord-typing
 	let url: string
 	if (host == "chewey") url = `${constants.chewey_api}/${path}?auth=${config.chewey_api_key}`
 	else return Promise.reject(new Error("Host provided not supported"))
-	const data = await c(url).timeout(2000).send().then(d => d.json())
+	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 		embeds: [
 			{

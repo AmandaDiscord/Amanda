@@ -17,14 +17,12 @@
   "dependencies": {
     "@amanda/lang": "github:AmandaDiscord/Lang#8b502e42b1249290b657cf3f9160c3a0da7613f9",
     "@lavalink/encoding": "0.1.2",
-    "@types/centra": "2.2.0",
     "@types/mime-types": "2.1.1",
-    "@types/node": "18.7.14",
+    "@types/node": "18.7.16",
     "@types/pg": "8.6.5",
     "@types/ws": "8.5.3",
     "backtracker": "3.3.1",
     "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
-    "centra": "2.5.0",
     "cloudstorm": "0.5.5",
     "discord-bot-analytics": "1.0.14",
     "discord-typings": "10.3.0",
@@ -36,12 +34,11 @@
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mime-types": "2.1.35",
     "mixin-deep": "2.0.1",
-    "node-html-parser": "6.0.0",
     "pg": "8.8.0",
     "simple-git": "3.14.0",
     "snowtransfer": "0.5.5",
     "twitter-scraper": "github:AmandaDiscord/twitter-scraper#20e7d58f05bf62a523fc4a6b4d898ea7b515a212",
-    "typescript": "4.8.2"
+    "typescript": "4.8.3"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "5.36.2",

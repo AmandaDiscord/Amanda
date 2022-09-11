@@ -1,5 +1,4 @@
 import Jimp from "jimp"
-import c from "centra"
 import { BetterComponent } from "callback-components"
 
 import passthrough from "../passthrough"
@@ -28,7 +27,7 @@ export async function getAvatarJimp(userID: string) {
 	if (!user) return null
 	const url = displayAvatarURL(user, true)
 	if (!url) return null
-	const validation = await c(url, "head").send()
+	const validation = await fetch(url, { method: "HEAD" })
 	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
 
 	const data = await client.snow.user.getUser(userID)

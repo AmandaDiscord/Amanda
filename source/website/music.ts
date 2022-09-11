@@ -170,7 +170,7 @@ export class Session {
 	}
 
 	public onClose(): void {
-		utils.info(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
+		if (this.user !== configuredUserID) utils.info(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
 		utils.info(`${sessions.length} sessions in memory`)
@@ -183,8 +183,6 @@ export class Session {
 			const serverTimeDiff = Date.now() - data.d.timestamp
 			this.loggedin = true
 			this.user = configuredUserID
-			utils.info("WebSocket identified: Amanda/Amanda-Like")
-			utils.info(`${sessions.length} sessions in memory`)
 			this.send({ op: constants.WebsiteOPCodes.ACKNOWLEDGE, nonce: data.nonce || null, d: { serverTimeDiff } })
 		} else if (data && data.d && typeof data.d.cookie === "string" && typeof data.d.channel_id === "string" && typeof data.d.timestamp === "number") {
 			const serverTimeDiff = Date.now() - data.d.timestamp

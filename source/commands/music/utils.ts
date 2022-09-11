@@ -1,7 +1,5 @@
 import { BetterComponent } from "callback-components"
-import c from "centra"
 import entities from "entities"
-import htmlParse from "node-html-parser"
 
 import passthrough from "../../passthrough"
 const { constants, sync, client, twitter } = passthrough
@@ -17,7 +15,6 @@ type inputToIDReturnValue = { type: "soundcloud" | "spotify" | "newgrounds" | "y
 
 const youtubeTrackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const youtubeTopicTrackNameRegex = /([^-]+) - Topic/ // If the artist is officially uploaded by YouTube. Sucks to suck if they have a - in their name
-const spotifyTitleRegex = /(.+) - (song|Album|playlist) by (.+) \| Spotify/i
 const newgroundsIDRegex = /https:\/\/(?:www\.)?newgrounds\.com\/audio\/listen\/([\d\w]+)/
 const twitterCoRegex = /https:\/\/t.co\/[\w\d]+/
 const itunesAlbumRegex = /\/album\/([^/]+)\//
@@ -47,7 +44,7 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = undefined): Promise<string | null> {
-			return c(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).send().then(d => d.json()).then(j => j.lyrics || j.error || null)
+			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).then(d => d.json()).then(j => j.lyrics || j.error || null)
 		},
 
 		pickApart(song: import("./songtypes").Song) {
@@ -86,32 +83,11 @@ const common = {
 		}
 	},
 
-	spotify: {
-		async getData(url: string) {
-			const response = await c(url, "GET").header({ "User-Agent": fakeHTTPAgent }).send()
-			const data = response.body.toString()
-			const parser = htmlParse(data)
-			const head = parser.getElementsByTagName("head")[0]
-			const titleTag = head.getElementsByTagName("title")[0]
-			const metadata = titleTag.innerText.match(spotifyTitleRegex)
-
-			if (!metadata) throw new Error("Cannot extract Spotify info")
-			const icon = head.querySelector("meta[property=\"og:image\"]")?.getAttribute("content")
-			const title = metadata[1]
-			const type = metadata[2].toLowerCase() as "song" | "album" | "playlist"
-			const author = metadata[3]
-			const duration = +(head.querySelector("meta[property=\"music:duration\"]")?.getAttribute("content") || 0)
-			const trackNumber = +(head.querySelector("meta[property=\"music:album:track\"]")?.getAttribute("content") || 0)
-			const trackList = head.querySelectorAll("meta[property=\"music:song\"]").map(i => i.getAttribute("content")!)
-			return { title, type, author, icon, duration, trackNumber, trackList }
-		}
-	},
-
 	newgrounds: {
 		async search(text: string) {
 			let html: string
 			try {
-				html = await c(`https://www.newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).send().then(res => res.text())
+				html = await fetch(`https://www.newgrounds.com/search/conduct/audio?suitables=etm&c=3&terms=${encodeURIComponent(text)}`).then(res => res.text())
 			} catch(e) {
 				logger.error(e)
 				throw e
@@ -173,7 +149,7 @@ const common = {
 			const ID = url.match(newgroundsIDRegex)![1]
 			let data: { id: number; url: string; title: string; author: string; duration: number; sources: Array<{ src: string }>; }
 			try {
-				data = await c(`https://www.newgrounds.com/audio/load/${ID}/3`, "get").header("x-requested-with", "XMLHttpRequest").send().then(d => d.json())
+				data = await fetch(`https://www.newgrounds.com/audio/load/${ID}/3`, { headers: { "X-Requested-With": "XMLHttpRequest" } }).then(d => d.json())
 			} catch {
 				throw new Error("Cannot extract NewGrounds track info")
 			}
@@ -200,13 +176,7 @@ const common = {
 			if (!decoded.searchParams.has("i")) mode = "album"
 			let data
 			try {
-				data = await c("https://itunes.apple.com/search", "get")
-					.header({ Accept: "application/json", "User-Agent": fakeHTTPAgent })
-					.query("term", encodeURIComponent(match[1]))
-					.query("country", "US")
-					.query("entity", "song")
-					.send()
-					.then(d => d.json())
+				data = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(match[1])}&country=US&entity=song`).then(d => d.json())
 			} catch {
 				throw new Error("Cannot get iTunes data")
 			}
@@ -315,10 +285,9 @@ const common = {
 				if (!data) return null
 				return [new songTypes.TwitterSong(Object.assign(data, { uri: data.url, displayURI: info.link! }))]
 			} else if (info.type === "spotify") {
-				const data = await common.spotify.getData(info.link!).catch(() => void 0)
+				const data = await common.loadtracks(info.link!, node).catch(() => void 0)
 				if (!data) return null
-				if (data.trackList.length) return data.trackList.map(i => new songTypes.SpotifySong({ url: i }))
-				if (data.type === "song") return [new songTypes.SpotifySong({ url: info.link!, name: data.title, artist: data.author, icon: data.icon, duration: data.duration })]
+				if (data.length) return data.map(i => new songTypes.SpotifySong({ url: i.info.uri, name: i.info.title, artist: i.info.author, duration: Math.round(i.info.length / 1000) }))
 				return null
 			} else {
 				if (info.type === "external") return [new songTypes.ExternalSong(info.link!)]
@@ -402,7 +371,7 @@ const common = {
 		const params = new URLSearchParams()
 		params.append("identifier", input)
 
-		const data = await c(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`).header("Authorization", node.password).send()
+		const data = await fetch(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`, { headers: { Authorization: node.password } })
 		const json = await data.json()
 		if (json.exception) throw json.exception.message
 		return json.tracks
