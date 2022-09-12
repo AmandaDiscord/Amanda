@@ -148,7 +148,8 @@ export class Session {
 				const data = JSON.parse(message.toString()) as Packet<any>
 				const method = opcodeMethodMap.get(data.op!)
 				if (method) this[method](data)
-			} catch {
+			} catch (e) {
+				utils.info(`${this.user || "Unauthenticated"} sent an invalid JSON:\n${message.toString()}`)
 				this.cleanClose()
 			}
 		})
