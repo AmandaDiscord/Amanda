@@ -287,7 +287,7 @@ const common = {
 			} else if (info.type === "spotify") {
 				const data = await common.loadtracks(info.link!, node).catch(() => void 0)
 				if (!data) return null
-				if (data.length) return data.map(i => new songTypes.SpotifySong({ url: i.info.uri, name: i.info.title, artist: i.info.author, duration: Math.round(i.info.length / 1000) }))
+				if (data.length) return data.map(i => new songTypes.SpotifySong({ url: i.info.identifier, name: i.info.title, artist: i.info.author, duration: Math.round(i.info.length / 1000) }))
 				return null
 			} else {
 				if (info.type === "external") return [new songTypes.ExternalSong(info.link!)]
