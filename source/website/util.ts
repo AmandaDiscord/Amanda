@@ -35,11 +35,10 @@ export async function streamResponse(res: import("http").ServerResponse, fileDir
 	try {
 		stats = await fs.promises.stat(fileDir)
 	} catch {
-		streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
-		return
+		return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
 	}
 
-	if (!stats.isFile()) return void streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
+	if (!stats.isFile()) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
 
 	const type = mime.lookup(fileDir) || "application/octet-stream"
 	res.writeHead(statusCode, { "Content-Length": stats.size, "Content-Type": type })
