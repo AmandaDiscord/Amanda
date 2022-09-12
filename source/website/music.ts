@@ -173,7 +173,7 @@ export class Session {
 		if (this.user !== configuredUserID) utils.info(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
-		utils.info(`${sessions.length} sessions in memory`)
+		if (this.user !== configuredUserID) utils.info(`${sessions.length} sessions in memory`)
 	}
 
 	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
