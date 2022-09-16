@@ -6,7 +6,6 @@ const { constants, sync, frisky } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
-const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
 const arrUtils = sync.require("../../utils/array") as typeof import("../../utils/array")
@@ -45,23 +44,30 @@ const stationData = new Map<"original" | "deep" | "chill" | "classics", { title:
 ])
 
 export abstract class Song {
-	public title = ""
-	public track = ""
-	public lengthSeconds = -1
+	public title: string
+	public author: string
+	public track: string
+	public lengthSeconds: number
 	public queueLine = ""
 	public npUpdateFrequency = 0
 	public noPauseReason = ""
 	public error = ""
-	public id = ""
-	public live = false
+	public id: string
+	public live: boolean
 	public thumbnail = { src: "", width: 0, height: 0 }
 	public queue: import("./queue") | undefined
-	public validated = false
+	public source: string
+	public uri: string | null
 
-	public constructor() {
-		setImmediate(() => {
-			if (!this.validated) this.validationError("must call validate() in constructor")
-		})
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+		this.track = track
+		this.title = info.title || "Unknown song"
+		this.author = info.author || "Unknown author"
+		this.lengthSeconds = Math.round(Number(info.length || 0) / 1000)
+		this.id = info.identifier || "!"
+		this.live = info.isStream || false
+		this.source = info.source || "unknown"
+		this.uri = info.uri || null
 	}
 
 	public abstract getRelated(): Promise<Song[]>
@@ -79,7 +85,10 @@ export abstract class Song {
 			title: this.title,
 			length: this.lengthSeconds,
 			thumbnail: this.thumbnail,
-			live: this.live
+			live: this.live,
+			uri: this.uri,
+			source: this.source,
+			author: this.author
 		}
 	}
 
@@ -103,44 +112,22 @@ export abstract class Song {
 		}
 		return lyrics
 	}
-
-	private validationError(message: string) {
-		logger.error(`Song validation error: ${this.constructor.name} ${message}`)
-	}
-
-	public validate() {
-		["id", "track", "title", "queueLine", "npUpdateFrequency", "getRelated", "showRelated", "showInfo"].forEach(key => {
-			if (!this[key]) this.validationError(`unset ${key}`)
-		})
-
-		if (typeof (this.lengthSeconds) != "number" || this.lengthSeconds < 0) this.validationError("unset lengthSeconds")
-		if (!this.thumbnail.src) this.validationError("unset thumbnail src")
-		if (this.live === null) this.validationError("unset live")
-		this.validated = true
-	}
 }
 
 export class YouTubeSong extends Song {
-	public uploader: string | undefined
 	public related: import("../../utils/classes/AsyncValueCache")<Array<{ title: string; videoId: string; lengthSeconds: number; author: string; }>>
 	public prepareCache: import("../../utils/classes/AsyncValueCache")<void>
 
-	public constructor(id: string, title: string, lengthSeconds: number, track: string | null = null, uploader: string | undefined = undefined) {
-		super()
+	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track || "!", info)
 
-		this.id = id
 		this.thumbnail = {
-			src: `https://i.ytimg.com/vi/${id}/mqdefault.jpg`,
+			src: `https://i.ytimg.com/vi/${info.identifier || "dQw4w9WgXcQ"}/mqdefault.jpg`,
 			width: 320,
 			height: 180
 		}
-		this.title = title
-		this.uploader = uploader
-		this.lengthSeconds = lengthSeconds
-		this.track = track || "!"
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
-		this.live = false
 
 		this.related = new AsyncValueCache(
 			() => {
@@ -163,17 +150,15 @@ export class YouTubeSong extends Song {
 				else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ID ${this.id}`
 				else {
 					this.track = tracks[0].track
-					if (tracks[0].info) this.uploader = tracks[0].info.author
+					if (tracks[0].info) this.author = tracks[0].info.author
 				}
 			}
 		})
-
-		this.validate()
 	}
 
 	public async getRelated() {
 		const related = await this.related.get().catch(() => [] as Awaited<ReturnType<typeof this.related.get>>)
-		return related.map(v => new YouTubeSong(v.videoId, v.title, v.lengthSeconds))
+		return related.map(v => new YouTubeSong(null, { title: v.title, author: v.author, length: BigInt(Math.round(v.lengthSeconds * 1000)), identifier: v.videoId }))
 	}
 
 	public async showRelated() {
@@ -237,14 +222,13 @@ export class FriskySong extends Song {
 	private _filledBarOffset: number
 
 	public constructor(station: import("../../types").InferMapK<typeof stationData>, track?: string) {
-		super()
+		super(track || "!", { identifier: `frisky/${station}` })
 
 		this.station = station
 
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 		this.stationData = stationData.get(this.station)!
 
-		this.id = `frisky/${this.station}` // designed for error reporting
 		this.thumbnail = {
 			src: constants.frisky_placeholder,
 			width: 320,
@@ -252,8 +236,7 @@ export class FriskySong extends Song {
 		}
 		this.title = this.stationData.title
 		this.queueLine = `**${this.stationData.queue}** (LIVE)`
-		if (track) this.track = track
-		else {
+		if (!track) {
 			const url = this.station === "chill" ? this.stationData.url : this.stationData.beta_url
 			this.track = encoding.encode({
 				flags: 1,
@@ -268,7 +251,6 @@ export class FriskySong extends Song {
 				position: BigInt(0)
 			})
 		}
-		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
 		this.noPauseReason = "You can't pause live radio."
 		this.live = true
@@ -304,8 +286,6 @@ export class FriskySong extends Song {
 		}))
 
 		this._filledBarOffset = 0
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -420,26 +400,18 @@ export class SoundCloudSong extends Song {
 	public trackNumber: string
 	public uri: string
 
-	public constructor(data: import("../../types").LavalinkInfo, track: string) {
-		super()
-		this.title = data.title
-		this.track = track
-		this.artist = data.author
-		this.lengthSeconds = Math.floor(data.length / 1000)
+	public constructor(track: string, data: import("@lavalink/encoding").TrackInfo) {
+		super(track, data)
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
 		this.error = ""
 		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)?.[1] || "unknown"
 		this.id = `sc/${this.trackNumber}`
-		this.live = data.isStream || false
 		this.thumbnail = {
 			src: constants.soundcloud_placeholder,
 			width: 616,
 			height: 440
 		}
-		this.uri = data.uri
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -476,37 +448,36 @@ export class ExternalSong extends Song {
 
 	private _filledBarOffset: number
 
-	public constructor(link: string) {
-		super()
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track, info)
 
-		const to = new URL(link)
+		const to = new URL(info.uri!)
 		let name: string
-		const pathnamereg = /\/?(\w+)\.\w+/
-		if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
-		else name = to.pathname.match(pathnamereg)![1]
-		this.title = entities.decodeHTML(name.replace(/_/g, " "))
+		if (!info.title) {
+			const pathnamereg = /\/?(\w+)\.\w+/
+			if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
+			else name = to.pathname.match(pathnamereg)![1]
+			this.title = entities.decodeHTML(name.replace(/_/g, " "))
+		}
 		this.live = true
 		this.thumbnail = {
 			src: constants.local_placeholder,
 			width: 512,
 			height: 512
 		}
-		this.uri = link
-		this.track = "!"
-		this.lengthSeconds = 0
 		this.npUpdateFrequency = 15000
 		this.queueLine = `**${this.title}** (LIVE)`
 		this.noPauseReason = "You can't pause external audio."
 		this.id = String(Date.now())
 		this._filledBarOffset = 0
-
-		this.validate()
 	}
 
 	public async prepare() {
-		let info: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
+		if (this.track !== "!") return
+		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]
 		try {
-			info = await common.loadtracks(this.uri, this.queue?.node)
+			const data = await common.loadtracks(this.uri, this.queue?.node)
+			info = data.tracks
 		} catch (e) {
 			this.error = e
 			return
@@ -575,37 +546,34 @@ export class ListenMoeSong extends Song {
 	private _filledBarOffset = 0
 
 	public constructor(station: "jp" | "kp") {
-		super()
+		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
+		const info = {
+			flags: 1,
+			version: 2,
+			title: passthrough.listenMoe[station].nowPlaying.title,
+			author: "Delivering the best JPOP and KPOP music around!",
+			length: BigInt(passthrough.listenMoe[station].nowPlaying.duration),
+			identifier: uri,
+			isStream: true,
+			uri: uri,
+			source: "http",
+			position: BigInt(0)
+		}
+		const track = encoding.encode(info)
+
+		super(track, info)
 
 		this.station = station
 		this.stationData = passthrough.listenMoe[station]
-		this.live = true
-		this.lengthSeconds = this.stationData.nowPlaying.duration
 		this.id = this._id
-		this.title = this.stationData.nowPlaying.title
 		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : "LIVE"})`
 		this.thumbnail = {
 			src: constants.listen_moe_placeholder,
 			width: 64,
 			height: 64
 		}
-		this.uri = this.stationData.Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
-		this.track = encoding.encode({
-			flags: 1,
-			version: 2,
-			title: "Listen.moe",
-			author: "Delivering the best JPOP and KPOP music around!",
-			length: BigInt(0),
-			identifier: this.uri,
-			isStream: true,
-			uri: this.uri,
-			source: "http",
-			position: BigInt(0)
-		})
 		this.npUpdateFrequency = 15000
 		this.noPauseReason = "You can't pause live audio."
-
-		this.validate()
 	}
 
 	private get _id() {
@@ -671,31 +639,15 @@ export class ListenMoeSong extends Song {
 }
 
 export class NewgroundsSong extends Song {
-	public author: string
-	public uri: string
-	public streamURL: string
-
-	public constructor(data: { href: string; author: string; title: string; id: number; mp3URL: string; duration: number; track?: string; }) {
-		super()
-
-		this.title = data.title
-		this.author = data.author
-		this.uri = data.href
-		this.streamURL = data.mp3URL
-		this.id = String(data.id)
-		this.live = false
-		this.lengthSeconds = data.duration
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track, info)
 		this.thumbnail = {
 			src: constants.newgrounds_placeholder,
 			width: 1200,
 			height: 1200
 		}
-		this.track = data.track || "!"
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 		this.npUpdateFrequency = 5000
-		this.error = ""
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -708,9 +660,10 @@ export class NewgroundsSong extends Song {
 
 	public async prepare() {
 		if (this.track && this.track != "!") return
-		let data: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
+		let data: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]
 		try {
-			data = await common.loadtracks(this.streamURL, this.queue?.node)
+			const tracks = await common.loadtracks(this.uri!, this.queue?.node)
+			data = tracks.tracks
 		} catch (e) {
 			this.error = e
 			return
@@ -720,7 +673,7 @@ export class NewgroundsSong extends Song {
 	}
 
 	public showLink() {
-		return Promise.resolve(this.uri)
+		return Promise.resolve(this.uri!)
 	}
 
 	public showInfo() {
@@ -738,22 +691,12 @@ export class NewgroundsSong extends Song {
 
 // Just for name parity
 export class TwitterSong extends Song {
-	public uri: string
-	public displayURI: string
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track, info)
 
-	public constructor(data: { title: string; uri: string; displayURI: string; }) {
-		super()
-
-		this.track = "!"
-		this.title = data.title
-		this.uri = data.uri
-		this.displayURI = data.displayURI
-		this.live = false
-		this.lengthSeconds = 0
-
-		const match = this.displayURI.match(/\/status\/(\d+)/)
+		const match = this.id.match(/\/status\/(\d+)/)
 		if (match && match[1]) this.id = `tw/${match[1]}`
-		else this.id = `tw/${this.displayURI}`
+		else this.id = `tw/${this.id}`
 
 		this.thumbnail = {
 			src: constants.twitter_placeholder,
@@ -762,9 +705,6 @@ export class TwitterSong extends Song {
 		}
 		this.queueLine = `**${this.title}** (LOADING)`
 		this.npUpdateFrequency = 5000
-		this.error = ""
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -776,25 +716,12 @@ export class TwitterSong extends Song {
 	}
 
 	public async prepare() {
-		if (this.track && this.track != "!") return
-		let data: Array<{ track: string; info: import("../../types").LavalinkInfo; }>
-		try {
-			data = await common.loadtracks(this.uri, this.queue?.node)
-		} catch (e) {
-			this.error = e
-			return
-		}
-
-		if (!Array.isArray(data) || !data || !data[0] || !data[0].track) this.error = `Missing track for ${this.title}`
-		else {
-			this.track = data[0].track
-			this.lengthSeconds = Math.round(data[0].info.length / 1000)
-			this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		}
+		// eslint-disable-next-line no-return-await
+		return await void 0
 	}
 
 	public showLink() {
-		return Promise.resolve(this.displayURI)
+		return Promise.resolve(this.id)
 	}
 
 	public showInfo() {
@@ -810,22 +737,19 @@ export class TwitterSong extends Song {
 	}
 }
 
-export class iTunesSong extends YouTubeSong {
+export class AppleMusicSong extends YouTubeSong {
 	public ytID: string
-	public artist: string
 	public trackViewURL: string
 
-	public constructor(data: import("../../types").iTunesSearchResult) {
-		super("!", data.trackName, Math.floor(data.trackTimeMillis / 1000))
+	public constructor(track: string, data: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track, data)
 
 		this.live = false
-		this.id = `appl/${data.trackId}`
+		this.id = `appl/${data.identifier}`
 		this.ytID = "!"
-		this.artist = data.artistName
-		this.trackViewURL = data.trackViewUrl
 
 		this.thumbnail = {
-			src: data.artworkUrl100,
+			src: "",
 			width: 100,
 			height: 100
 		}
@@ -834,10 +758,11 @@ export class iTunesSong extends YouTubeSong {
 		this.error = ""
 
 		this.prepareCache = new AsyncValueCache(async () => {
-			if (this.ytID == "!" || this.track == "!") {
-				let tracks: Awaited<ReturnType<typeof common.loadtracks>>
+			if (this.ytID == "!") {
+				let tracks: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]
 				try {
-					tracks = await common.loadtracks(`ytsearch:${this.artist} - ${this.title}`, this.queue?.node)
+					const info = await common.loadtracks(`ytmsearch:${this.author} - ${this.title}`, this.queue?.node)
+					tracks = info.tracks
 				} catch (e) {
 					this.error = e
 					return
@@ -854,8 +779,6 @@ export class iTunesSong extends YouTubeSong {
 				} else this.error = `Missing track for ${this.title}`
 			}
 		})
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -882,48 +805,35 @@ export class iTunesSong extends YouTubeSong {
 }
 
 export class SpotifySong extends YouTubeSong {
-	public url: string
+	public alreadyFetched = false
 
-	public constructor(data: { track?: string; youtubeID?: string; url: string; name?: string; artist?: string; icon?: string; duration?: number; }) {
-		super(data.youtubeID || "!", data.name || "Unknown Spotify track (pending fetch)", Math.floor((data.duration || 0) * 1000))
+	public constructor(track: string, data: Partial<import("@lavalink/encoding").TrackInfo>) {
+		super(track, data)
 		this.live = false
-		this.thumbnail = { src: data.icon || constants.spotify_placeholder, width: 386, height: 386 }
-		this.url = data.url
-		this.uploader = data.artist
-		this.prepareCache = new AsyncValueCache(async () => {
-			const getFromYouTube = () => {
-				return common.loadtracks(`${this.uploader} - ${this.title}`, this.queue?.node).then(tracks => {
-					if (!tracks[0]) this.error = `No results for ${this.title}`
-					let decided = tracks[0]
-					const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
-					if (found) decided = found
-					if (decided && decided.track) {
-						this.id = decided.info.identifier
-						this.lengthSeconds = Math.round(decided.info.length / 1000)
-						this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-						this.track = decided.track
-					} else this.error = `Missing track for ${this.title}`
-				}).catch(message => {
-					this.error = message
-				})
-			}
-			if (this.id == "!" || this.track == "!") {
-				if (this.title && this.uploader) await getFromYouTube()
-				else {
-					const d = await common.loadtracks(this.url).catch(() => void 0)
-					if (!d || !d.length) {
-						this.error = "Cannot extract Spotify info"
-						return
-					}
-					const track = d[0]
-					this.title = track.info.title
-					this.uploader = track.info.author
-					await getFromYouTube()
-				}
-			}
+		this.thumbnail = {
+			src: constants.spotify_placeholder,
+			width: 386,
+			height: 386
+		}
+		this.prepareCache = new AsyncValueCache(() => {
+			if (this.alreadyFetched) return Promise.resolve(void 0)
+			return common.loadtracks(`ytmsearch:${this.author} - ${this.title}`, this.queue?.node).then(info => {
+				const tracks = info.tracks
+				if (!tracks[0]) this.error = `No results for ${this.title}`
+				let decided = tracks[0]
+				const found = tracks.find(item => item.info && item.info.author.includes("- Topic"))
+				if (found) decided = found
+				if (decided && decided.track) {
+					this.id = decided.info.identifier
+					this.lengthSeconds = Math.round(decided.info.length / 1000)
+					this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+					this.track = decided.track
+					this.alreadyFetched = true
+				} else this.error = `Missing track for ${this.title}`
+			}).catch(message => {
+				this.error = message
+			})
 		})
-
-		this.validate()
 	}
 
 	public getRelated() {
@@ -935,7 +845,7 @@ export class SpotifySong extends YouTubeSong {
 	}
 
 	public showLink() {
-		return Promise.resolve(this.url)
+		return Promise.resolve(this.uri!)
 	}
 
 	public async showInfo() {

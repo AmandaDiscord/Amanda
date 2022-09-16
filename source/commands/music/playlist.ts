@@ -1,5 +1,5 @@
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues, websiteSocket } = passthrough
+const { client, commands, constants, sync, queues } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
@@ -539,7 +539,7 @@ commands.assign([
 				}
 
 				const sliced = orderedSongs.slice(optionStart - 1)
-				const songss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new songTypes.YouTubeSong(row.video_id, row.name, row.length))
+				const songss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new songTypes.YouTubeSong("!", { title: row.name, length: BigInt(row.length), identifier: row.video_id }))
 				for (const song of songss) {
 					await queue.addSong(song)
 				}

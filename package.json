@@ -29,7 +29,7 @@
     "entities": "4.4.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "heatsync": "2.3.2",
-    "jimp": "^0.16.1",
+    "jimp": "^0.16.2",
     "lavacord": "github:AmandaDiscord/Lavacord#c8f9e482e15d4dfd29857beb9f7aa153cf7a3bba",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mime-types": "2.1.35",
@@ -37,12 +37,11 @@
     "pg": "8.8.0",
     "simple-git": "3.14.0",
     "snowtransfer": "0.5.5",
-    "twitter-scraper": "github:AmandaDiscord/twitter-scraper#20e7d58f05bf62a523fc4a6b4d898ea7b515a212",
     "typescript": "4.8.3"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "5.36.2",
-    "@typescript-eslint/parser": "5.36.2",
-    "eslint": "8.23.0"
+    "@typescript-eslint/eslint-plugin": "5.37.0",
+    "@typescript-eslint/parser": "5.37.0",
+    "eslint": "8.23.1"
   }
 }

@@ -27,7 +27,7 @@ commands.assign([
 			{
 				name: "play",
 				type: 3,
-				description: "Play music. You can do specific site searching like: yt:despacito, sc:despacito or ng:despacito.",
+				description: "Play music. You can do specific site searching like: ytmsearch:despacito, scsearch:despacito or ngsearch:despacito.",
 				required: false
 			},
 			{
@@ -296,8 +296,7 @@ commands.assign([
 
 				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
-				const id = common.inputToID(optionPlay)
-				const songs = await common.idToSong(id, cmd, lang, node.id)
+				const songs = await common.inputToSong(optionPlay, cmd, lang, node.id)
 				if (!songs || !songs.length) {
 					if (queue.songs.length === 0) queue.destroy()
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })

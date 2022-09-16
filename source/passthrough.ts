@@ -11,7 +11,6 @@ interface Passthrough {
 	requester: import("./utils/classes/ThreadBasedReplier")<Record<string, number>>
 	sync: import("heatsync")
 	listenMoe: { jp: import("listensomemoe"); kp: import("listensomemoe") }
-	twitter: import("twitter-scraper").TwitterScraper
 	websiteSocket: import("./modules/ReconnectingWS")
 
 	rootFolder: string

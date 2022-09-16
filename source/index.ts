@@ -7,7 +7,6 @@ import HeatSync from "heatsync"
 import ListenSomeMoe from "listensomemoe"
 import { Pool } from "pg"
 import { SnowTransfer } from "snowtransfer"
-import { TwitterScraper } from "twitter-scraper"
 
 import Amanda from "./modules/Amanda"
 import ReconnectingWS from "./modules/ReconnectingWS"
@@ -59,8 +58,6 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	await db.query({ text: "SELECT * FROM premium LIMIT 1" })
 	logger.info("Connected to database")
 
-	const twitter = await TwitterScraper.create()
-
 	let firstConnect = true
 	const onOpen = () => {
 		if (firstConnect) logger.info("Website socket ready")
@@ -70,7 +67,7 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	const websiteSocket = new ReconnectingWS(`${config.website_protocol === "http" ? "ws://" : "wss://"}${config.website_domain}`, 5000)
 	websiteSocket.on("open", onOpen)
 
-	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, twitter, websiteSocket })
+	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, websiteSocket })
 
 	import("./modules/stdin")
 

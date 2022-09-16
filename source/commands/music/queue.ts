@@ -1,3 +1,5 @@
+import util from "util"
+
 import mixin from "mixin-deep"
 import { BetterComponent } from "callback-components"
 
@@ -180,7 +182,7 @@ class Queue {
 			try {
 				song.destroy()
 			} catch (e) {
-				logger.error(`Song destroy error:\n${e}`)
+				logger.error(`Song destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 			}
 		}
 		this.songs.length = 0
@@ -283,7 +285,7 @@ class Queue {
 		try {
 			removed.destroy()
 		} catch (e) {
-			logger.error(`Song destroy error:\n${e}`)
+			logger.error(`Song destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
@@ -320,7 +322,7 @@ class Queue {
 			// this.audit.push({ action: "Queue Destroy (Socket Closed. Was the channel deleted?)", platform: "System", user: "Amanda" })
 			return this.destroy()
 		}
-		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${details}`)
+		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
 		if (this.songs[0]) {
 			this.songs[0].error = details.error ? JSON.stringify(details.error) : (details.message ? details.message : JSON.stringify(details))
 			logger.error("Song error call B")
@@ -469,7 +471,7 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 	try {
 		packet = JSON.parse(message)
 	} catch (e) {
-		return logger.error(`Error parsing message from website\n${e}`)
+		return logger.error(`Error parsing message from website\n${util.inspect(e, true, Infinity, true)}`)
 	}
 
 	const qs = [...queues.values()]
