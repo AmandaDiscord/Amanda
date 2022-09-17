@@ -27,7 +27,7 @@ commands.assign([
 			{
 				name: "play",
 				type: 3,
-				description: "Play music. You can do specific site searching like: ytmsearch:despacito, scsearch:despacito or ngsearch:despacito.",
+				description: "Play music. Search sites with ytmsearch: or ngsearch: or amsearch: with whatever after the :",
 				required: false
 			},
 			{
