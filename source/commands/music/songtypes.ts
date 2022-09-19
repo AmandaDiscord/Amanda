@@ -299,9 +299,9 @@ export class FriskySong extends Song {
 	public async showLink() {
 		try {
 			const stream = await this.stationInfoGetter.get()
-			return `https://beta.frisky.fm/mix/${stream.mix!.id}`
+			return `https://frisky.fm/mix/${stream.mix!.id}`
 		} catch {
-			return "https://beta.frisy.fm"
+			return "https://frisy.fm"
 		}
 	}
 
@@ -320,14 +320,14 @@ export class FriskySong extends Song {
 		const embed: import("discord-typings").Embed = {
 			color: constants.standard_embed_color,
 			title: `FRISKY: ${mix.data!.title}`,
-			url: `https://beta.frisky.fm/mix/${mix.id}`,
+			url: `https://frisky.fm/mix/${mix.id}`,
 			fields: [
 				{
 					name: "Details",
 					value: arrUtils.tableifyRows(
 						[
-							["Episode", `${mix.data!.title} / [view](https://beta.frisky.fm/mix/${mix.id})`],
-							["Show", `${mix.data!.title.split(" - ")[0]} / [view](https://beta.frisky.fm/shows/${mix!.data!.show_id.id})`],
+							["Episode", `${mix.data!.title} / [view](https://frisky.fm/mix/${mix.id})`],
+							["Show", `${mix.data!.title.split(" - ")[0]} / [view](https://frisky.fm/shows/${mix!.data!.show_id.id})`],
 							["Genre", mix.data!.genre.join(", ")],
 							["Station", stationCase],
 							["Schedule", `started ${timeUtils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"])} ago, ${timeUtils.shortTime(stream.getTimeUntil() + stream.data!.duration * 1000, "ms", ["d", "h", "m"])} remaining (${percentPassed}%)`]

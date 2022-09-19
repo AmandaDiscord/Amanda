@@ -102,7 +102,7 @@ class Queue {
 	}
 
 	public get speed() {
-		return this.player?.state.filters.timescale?.speed || 1
+		return this.player?.state.filters.timescale?.speed ?? 1
 	}
 
 	public set speed(amount) {
@@ -110,7 +110,7 @@ class Queue {
 	}
 
 	public get paused() {
-		return this.player?.paused || false
+		return this.player?.paused ?? false
 	}
 
 	public set paused(newState) {
@@ -130,7 +130,7 @@ class Queue {
 	}
 
 	public get pitch() {
-		return this.player?.state.filters.timescale?.pitch || 1
+		return this.player?.state.filters.timescale?.pitch ?? 1
 	}
 
 	public set pitch(amount) {
@@ -309,7 +309,7 @@ class Queue {
 
 	private _onPlayerUpdate(data: { state: import("lavacord").LavalinkPlayerState }) {
 		if (this.player && !this.paused) {
-			const newSongStartTime = (data.state.time || 0) - (data.state.position || 0)
+			const newSongStartTime = (data.state.time ?? 0) - (data.state.position ?? 0)
 			this.songStartTime = newSongStartTime
 		}
 		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { songStartTime: this.songStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
@@ -385,7 +385,7 @@ class Queue {
 				["Voice channel", this.voiceChannelID || undef],
 				["Using Invidious", String(node && node.search_with_invidious ? true : false)],
 				["Invidious origin", `\`${node?.invidious_origin || "NONE"}\``],
-				["Queue node", node ? node.name : "Unnamed"]
+				["Queue node", this.node || "UNNAMED"]
 			]
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>

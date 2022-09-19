@@ -171,12 +171,12 @@ commands.assign([
 		async process(cmd, lang) {
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
-			const optionMeta = (cmd.data?.options?.find(o => o.name === "meta") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
-			const optionAdd = (cmd.data?.options?.find(o => o.name === "add") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
-			const optionRemove = (cmd.data?.options?.find(o => o.name === "remove") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
-			const optionMove = (cmd.data?.options?.find(o => o.name === "move") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
-			const optionSearch = (cmd.data?.options?.find(o => o.name === "search") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
-			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) || null
+			const optionMeta = (cmd.data?.options?.find(o => o.name === "meta") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionAdd = (cmd.data?.options?.find(o => o.name === "add") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionRemove = (cmd.data?.options?.find(o => o.name === "remove") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionMove = (cmd.data?.options?.find(o => o.name === "move") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionSearch = (cmd.data?.options?.find(o => o.name === "search") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
 
 			const array = [
 				optionMeta,
@@ -209,7 +209,7 @@ commands.assign([
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "lang.audio.playlist.prompts.databaseFixed" })
 				}
 				if (songs.length === 0) {
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "lang.audio.playlist.prompts.playlistEmpty" })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist is empty" })
 					return []
 				}
 				const orderedSongs = [] as typeof songs
@@ -230,9 +230,9 @@ commands.assign([
 
 
 				const optionShow = (optionMeta.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-				const optionInfo = (optionMeta.options.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-				const optionCreate = (optionMeta.options.find(o => o.name === "create") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-				const optionDelete = (optionMeta.options.find(o => o.name === "delete") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
+				const optionInfo = (optionMeta.options.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+				const optionCreate = (optionMeta.options.find(o => o.name === "create") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+				const optionDelete = (optionMeta.options.find(o => o.name === "delete") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
 
 				const array2 = [
 					optionShow,
@@ -484,8 +484,8 @@ commands.assign([
 
 
 				const optionPlaylist = (optionPlay.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionShuffle = (optionPlay.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || false
-				const optionStart = (optionPlay.options.find(o => o.name === "start") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || 1
+				const optionShuffle = (optionPlay.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? false
+				const optionStart = (optionPlay.options.find(o => o.name === "start") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? 1
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })

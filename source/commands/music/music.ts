@@ -189,25 +189,25 @@ commands.assign([
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 
-			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const optionStop = (cmd.data?.options?.find(o => o.name === "stop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionSkip = (cmd.data?.options?.find(o => o.name === "skip") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionVolume = (cmd.data?.options?.find(o => o.name === "volume") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
-			const optionQueue = (cmd.data?.options?.find(o => o.name === "queue") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
-			const optionAuto = (cmd.data?.options?.find(o => o.name === "auto") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionLoop = (cmd.data?.options?.find(o => o.name === "loop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionNow = (cmd.data?.options?.find(o => o.name === "now") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionInfo = (cmd.data?.options?.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionPause = (cmd.data?.options?.find(o => o.name === "pause") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionRelated = (cmd.data?.options?.find(o => o.name === "related") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionLyrics = (cmd.data?.options?.find(o => o.name === "lyrics") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
-			const optionSeek = (cmd.data?.options?.find(o => o.name === "seek") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
-			const optionPitch = (cmd.data?.options?.find(o => o.name === "pitch") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
-			const optionSpeed = (cmd.data?.options?.find(o => o.name === "speed") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value || null
-			const optionFilters = (cmd.data?.options?.find(o => o.name === "filters") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const optionFrisky = (cmd.data?.options?.find(o => o.name === "frisky") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const optionListenmoe = (cmd.data?.options?.find(o => o.name === "listenmoe") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const optionShuffle = (cmd.data?.options?.find(o => o.name === "shuffle") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value || null
+			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+			const optionStop = (cmd.data?.options?.find(o => o.name === "stop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionSkip = (cmd.data?.options?.find(o => o.name === "skip") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionVolume = (cmd.data?.options?.find(o => o.name === "volume") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
+			const optionQueue = (cmd.data?.options?.find(o => o.name === "queue") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
+			const optionAuto = (cmd.data?.options?.find(o => o.name === "auto") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionLoop = (cmd.data?.options?.find(o => o.name === "loop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionNow = (cmd.data?.options?.find(o => o.name === "now") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionInfo = (cmd.data?.options?.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionPause = (cmd.data?.options?.find(o => o.name === "pause") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionRelated = (cmd.data?.options?.find(o => o.name === "related") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionLyrics = (cmd.data?.options?.find(o => o.name === "lyrics") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionSeek = (cmd.data?.options?.find(o => o.name === "seek") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
+			const optionPitch = (cmd.data?.options?.find(o => o.name === "pitch") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
+			const optionSpeed = (cmd.data?.options?.find(o => o.name === "speed") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
+			const optionFilters = (cmd.data?.options?.find(o => o.name === "filters") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+			const optionFrisky = (cmd.data?.options?.find(o => o.name === "frisky") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+			const optionListenmoe = (cmd.data?.options?.find(o => o.name === "listenmoe") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+			const optionShuffle = (cmd.data?.options?.find(o => o.name === "shuffle") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
 
 			const array = [
 				optionPlay,
@@ -235,7 +235,7 @@ commands.assign([
 
 			const author = cmd.user ? cmd.user : cmd.member!.user
 
-			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username }) } })
+			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username, prefix: "/" }) } })
 			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
 
 			let queue = queues.get(cmd.guild_id)
@@ -389,7 +389,7 @@ commands.assign([
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					embeds: [
 						{
-							title: lang.GLOBAL.QUEUE_FOR,
+							title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
 							description: body,
 							color: constants.standard_embed_color
 						}
@@ -443,11 +443,11 @@ commands.assign([
 		],
 		async process(cmd, lang) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: 1 << 6 } })
-			const action = (cmd.data?.options?.find(o => o.name === "action") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
+			const action = (cmd.data?.options?.find(o => o.name === "action") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
 			const author = cmd.user ? cmd.user : cmd.member!.user
 			if (action === "d") {
 				await orm.db.delete("web_tokens", { user_id: author.id })
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOKENS_DELETED })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" }) })
 			} else if (action === "n") {
 				await orm.db.delete("web_tokens", { user_id: author.id })
 				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")

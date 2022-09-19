@@ -8,7 +8,7 @@ PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amand
 We will take offenses against this license very seriously.
 
 # Features
-- Play music from YouTube, Soundcloud, Spotify, Newgrounds, Apple Music, Twitter videos, [Frisky Radio](https://www.friskyradio.com/), [listen.moe](https://listen.moe/), and your own audio files.
+- Play music from YouTube, Soundcloud, Spotify, Newgrounds, Apple Music, Twitter videos, [Frisky Radio](https://frisky.fm/), [listen.moe](https://listen.moe/), and your own audio files.
 - Social Interaction.
 - Web Dashboard.
 - Reliable and smooth playback.
