@@ -355,7 +355,7 @@ export class FriskySong extends Song {
 
 	public getProgress(time: number) {
 		const part = "= ⋄ ==== ⋄ ==="
-		const fragment = part.substring(7 - this._filledBarOffset, 7)
+		const fragment = part.substr(7 - this._filledBarOffset, 7)
 		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 		this._filledBarOffset++
 		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
@@ -517,7 +517,7 @@ export class ExternalSong extends Song {
 		const rightTime = this.live ? "LIVE" : timeUtils.prettySeconds(this.lengthSeconds)
 		if (this.live) {
 			const part = "= ⋄ ==== ⋄ ==="
-			const fragment = part.substring(7 - this._filledBarOffset, 7)
+			const fragment = part.substr(7 - this._filledBarOffset, 7)
 			bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 			this._filledBarOffset++
 			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
@@ -610,7 +610,7 @@ export class ListenMoeSong extends Song {
 		if (this.stationData.lastTrackStartedAt) time = Math.floor((Date.now() - this.stationData.lastTrackStartedAt) / 1000)
 		else time = fallback
 		const part = "= ⋄ ==== ⋄ ==="
-		const fragment = part.substring(7 - this._filledBarOffset, 7)
+		const fragment = part.substr(7 - this._filledBarOffset, 7)
 		let bar: string
 		if (!this.lengthSeconds) bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 		else {
