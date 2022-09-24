@@ -216,7 +216,7 @@ class Queue {
 				// Store the current song
 				const lastPlayed = this.songs[0]
 				// Get related
-				const related = await lastPlayed.getRelated()
+				const related = (await lastPlayed?.getRelated()) || []
 				// Can we play a related song?
 				if (related.length) {
 					this.songs.shift()
