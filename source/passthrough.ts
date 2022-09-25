@@ -15,8 +15,11 @@ interface Passthrough {
 
 	rootFolder: string
 	configuredUserID: string
+	liveUserID: string
 	webQueues: Map<string, import("./types").WebQueue>
 	wss: import("ws").Server<import("ws").WebSocket>
 }
 
-export = { clusterData: { connected_shards: [] as Array<number>, guild_ids: {} }, queues: new Map() } as Passthrough
+const pt = { clusterData: { connected_shards: [] as Array<number>, guild_ids: {} }, queues: new Map() } as unknown as Passthrough
+
+export = pt

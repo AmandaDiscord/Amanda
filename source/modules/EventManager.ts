@@ -10,6 +10,39 @@ const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
 const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
+const cluster = sync.require("../utils/cluster") as typeof import("../utils/cluster")
+
+function getTimeoutForStatsPosting() {
+	const mins10inms = 1000 * 60 * 10
+	const currently = Date.now()
+	return { now: currently, remaining: mins10inms - (currently % mins10inms) }
+}
+
+let statsTimeout: NodeJS.Timeout
+
+function setTimeoutForStats() {
+	const dateExpected = getTimeoutForStatsPosting()
+	statsTimeout = setTimeout(() => onStatsPosting(dateExpected.now + dateExpected.remaining), dateExpected.remaining)
+}
+
+async function onStatsPosting(time: number) {
+	const stats = await cluster.getOwnStats()
+	await orm.db.insert("stat_logs", {
+		time,
+		id: client.user.id,
+		ram_usage_kb: stats.ram,
+		users: stats.users,
+		guilds: stats.guilds,
+		channels: stats.channels,
+		voice_connections: stats.connections,
+		uptime: stats.uptime,
+		shard: config.shard_list[0]
+	})
+
+	setTimeoutForStats()
+}
+
+setTimeoutForStats()
 
 sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings").GatewayPayload & { shard_id: number }) => {
 	if (p.t === "READY") {

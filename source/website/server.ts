@@ -12,6 +12,7 @@ const config: import("../types").Config = require("../../config")
 const sync = new Sync()
 const rootFolder = p.join(__dirname, "../../webroot")
 const configuredUserID = Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")
+const liveUserID = config.is_dev_env ? Buffer.from(config.live_bot_token.split(".")[0], "base64").toString("utf8") : configuredUserID
 
 const wss = new ws.Server({ noServer: true })
 const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
@@ -28,7 +29,7 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 	const db = await pool.connect()
 	await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
 
-	Object.assign(passthrough, { config, sync, db, rootFolder, configuredUserID, wss, webQueues })
+	Object.assign(passthrough, { config, sync, db, rootFolder, configuredUserID, liveUserID, wss, webQueues })
 
 	const paths: typeof import("./paths") = sync.require("./paths")
 	const util: typeof import("./util") = sync.require("./util")

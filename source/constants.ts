@@ -73,7 +73,8 @@ export enum WebsiteOPCodes {
 	LISTENERS_UPDATE,
 
 	ACCEPT,
-	CREATE
+	CREATE,
+	STATS
 }
 
 export default exports as typeof import("./constants")

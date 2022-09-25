@@ -19,7 +19,8 @@ class ReconnectingWS extends EventEmitter {
 	}
 
 	public send(data: any, callback?: (err?: Error) => void) {
-		this.ws.send(data, callback)
+		if (this.ws.readyState === ws.OPEN) this.ws.send(data, callback)
+		else callback?.(new Error("WS is not connected"))
 	}
 
 	private addEvents() {

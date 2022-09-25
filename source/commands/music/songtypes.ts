@@ -49,7 +49,7 @@ export abstract class Song {
 	public track: string
 	public lengthSeconds: number
 	public queueLine = ""
-	public npUpdateFrequency = 0
+	public npUpdateFrequency = 15000
 	public noPauseReason = ""
 	public error = ""
 	public id: string
@@ -58,6 +58,8 @@ export abstract class Song {
 	public queue: import("./queue") | undefined
 	public source: string
 	public uri: string | null
+
+	private _filledBarOffset = 0
 
 	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
 		this.track = track
@@ -93,12 +95,21 @@ export abstract class Song {
 	}
 
 	public getProgress(time: number, paused: boolean) {
-		const max = this.lengthSeconds
-		const rightTime = timeUtils.prettySeconds(max)
-		if (time > max) time = max
-		const leftTime = timeUtils.prettySeconds(time)
-		const bar = text.progressBar(18, time, max, paused ? " [PAUSED] " : "")
-		return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+		if (this.live) {
+			const max = this.lengthSeconds
+			const rightTime = timeUtils.prettySeconds(max)
+			if (time > max) time = max
+			const leftTime = timeUtils.prettySeconds(time)
+			const bar = text.progressBar(18, time, max, paused ? " [PAUSED] " : "")
+			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
+		} else {
+			const part = "= ⋄ ==== ⋄ ==="
+			const fragment = part.substr(7 - this._filledBarOffset, 7)
+			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
+			this._filledBarOffset++
+			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+			return `\`[ ${timeUtils.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+		}
 	}
 
 	public async getLyrics(): Promise<string | null> {
@@ -127,7 +138,6 @@ export class YouTubeSong extends Song {
 			height: 180
 		}
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		this.npUpdateFrequency = 5000
 
 		this.related = new AsyncValueCache(
 			() => {
@@ -218,8 +228,9 @@ export class FriskySong extends Song {
 	public friskyStation: import("frisky-client/lib/Station")
 	public stationInfoGetter: import("../../utils/classes/AsyncValueCache")<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
-
-	private _filledBarOffset: number
+	public noPauseReason = "You can't pause live radio."
+	public live = true
+	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
 
 	public constructor(station: import("../../types").InferMapK<typeof stationData>, track?: string) {
 		super(track || "!", { identifier: `frisky/${station}` })
@@ -229,11 +240,6 @@ export class FriskySong extends Song {
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 		this.stationData = stationData.get(this.station)!
 
-		this.thumbnail = {
-			src: constants.frisky_placeholder,
-			width: 320,
-			height: 180
-		}
 		this.title = this.stationData.title
 		this.queueLine = `**${this.stationData.queue}** (LIVE)`
 		if (!track) {
@@ -251,9 +257,6 @@ export class FriskySong extends Song {
 				position: BigInt(0)
 			})
 		}
-		this.npUpdateFrequency = 15000
-		this.noPauseReason = "You can't pause live radio."
-		this.live = true
 
 		this.friskyStation = frisky.managers.stream.stations.get(this.stationData.client_name)!
 		this.stationInfoGetter = new AsyncValueCache(() => new Promise((resolve, reject) => {
@@ -284,8 +287,6 @@ export class FriskySong extends Song {
 			}
 			attempt()
 		}))
-
-		this._filledBarOffset = 0
 	}
 
 	public getRelated() {
@@ -352,23 +353,13 @@ export class FriskySong extends Song {
 		return embed
 	}
 
-
-	public getProgress(time: number) {
-		const part = "= ⋄ ==== ⋄ ==="
-		const fragment = part.substr(7 - this._filledBarOffset, 7)
-		const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
-		this._filledBarOffset++
-		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		return `\`[ ${timeUtils.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
-	}
-
 	public async prepare() {
 		if (!this.bound) {
 			this.bound = this.stationUpdate.bind(this)
 			this.friskyStation.events.addListener("changed", this.bound)
 			await this.stationUpdate()
 		}
-		return Promise.resolve()
+		return Promise.resolve(void 0)
 	}
 
 	public async stationUpdate() {
@@ -396,22 +387,15 @@ export class FriskySong extends Song {
 }
 
 export class SoundCloudSong extends Song {
-	public artist: string
 	public trackNumber: string
 	public uri: string
+	public thumbnail = { src: constants.soundcloud_placeholder, width: 616, height: 440 }
 
 	public constructor(track: string, data: import("@lavalink/encoding").TrackInfo) {
 		super(track, data)
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		this.npUpdateFrequency = 5000
-		this.error = ""
 		this.trackNumber = data.identifier.match(/soundcloud:tracks:(\d+)/)?.[1] || "unknown"
 		this.id = `sc/${this.trackNumber}`
-		this.thumbnail = {
-			src: constants.soundcloud_placeholder,
-			width: 616,
-			height: 440
-		}
 	}
 
 	public getRelated() {
@@ -442,11 +426,11 @@ export class SoundCloudSong extends Song {
 		void 0
 	}
 }
+const pathnamereg = /\/?(\w+)\.\w+$/
 
 export class ExternalSong extends Song {
-	public uri: string
-
-	private _filledBarOffset: number
+	public id = String(Date.now())
+	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
 
 	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
 		super(track, info)
@@ -454,29 +438,21 @@ export class ExternalSong extends Song {
 		const to = new URL(info.uri!)
 		let name: string
 		if (!info.title) {
-			const pathnamereg = /\/?(\w+)\.\w+/
-			if (!to.pathname.match(pathnamereg)) name = "Unknown Track"
-			else name = to.pathname.match(pathnamereg)![1]
+			const match = to.pathname.match(pathnamereg)
+			if (!match) name = "Unknown Track"
+			else name = match[1]
 			this.title = entities.decodeHTML(name.replace(/_/g, " "))
 		}
-		this.live = true
-		this.thumbnail = {
-			src: constants.local_placeholder,
-			width: 512,
-			height: 512
-		}
-		this.npUpdateFrequency = 15000
-		this.queueLine = `**${this.title}** (LIVE)`
-		this.noPauseReason = "You can't pause external audio."
-		this.id = String(Date.now())
-		this._filledBarOffset = 0
+		this.live = info.isStream || true
+		this.queueLine = this.live ? `**${this.title}** (LIVE)` : `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+		this.noPauseReason = this.live ? "You can't pause external audio." : this.noPauseReason
 	}
 
 	public async prepare() {
 		if (this.track !== "!") return
 		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]
 		try {
-			const data = await common.loadtracks(this.uri, this.queue?.node)
+			const data = await common.loadtracks(this.uri!, this.queue?.node)
 			info = data.tracks
 		} catch (e) {
 			this.error = e
@@ -504,28 +480,11 @@ export class ExternalSong extends Song {
 	}
 
 	public showLink() {
-		return Promise.resolve(this.uri)
+		return Promise.resolve(this.uri!)
 	}
 
 	public showInfo() {
 		return this.showLink()
-	}
-
-	public getProgress(time: number, paused: boolean) {
-		let bar: string
-		const leftTime = timeUtils.prettySeconds(time)
-		const rightTime = this.live ? "LIVE" : timeUtils.prettySeconds(this.lengthSeconds)
-		if (this.live) {
-			const part = "= ⋄ ==== ⋄ ==="
-			const fragment = part.substr(7 - this._filledBarOffset, 7)
-			bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
-			this._filledBarOffset++
-			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		} else {
-			if (time > this.lengthSeconds) time = this.lengthSeconds
-			bar = text.progressBar(18, time, this.lengthSeconds, paused ? " [PAUSED] " : "")
-		}
-		return `\`[ ${leftTime} ​${bar}​ ${rightTime} ]\`` // SC: ZWSP x 2
 	}
 
 	public resume() {
@@ -538,12 +497,10 @@ export class ExternalSong extends Song {
 }
 
 export class ListenMoeSong extends Song {
-	public station: "jp" | "kp"
 	public stationData: import("listensomemoe")
-	public uri: string
 	public bound: ((track: import("listensomemoe/dist/Types").Track) => unknown) | undefined
-
-	private _filledBarOffset = 0
+	public thumbnail = { src: constants.listen_moe_placeholder, width: 64, height: 64 }
+	public noPauseReason = "You can't pause live audio."
 
 	public constructor(station: "jp" | "kp") {
 		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
@@ -563,17 +520,9 @@ export class ListenMoeSong extends Song {
 
 		super(track, info)
 
-		this.station = station
 		this.stationData = passthrough.listenMoe[station]
 		this.id = this._id
 		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : "LIVE"})`
-		this.thumbnail = {
-			src: constants.listen_moe_placeholder,
-			width: 64,
-			height: 64
-		}
-		this.npUpdateFrequency = 15000
-		this.noPauseReason = "You can't pause live audio."
 	}
 
 	private get _id() {
@@ -585,7 +534,7 @@ export class ListenMoeSong extends Song {
 			this.bound = this.stationUpdate.bind(this)
 			this.stationData.on("trackUpdate", this.bound)
 		}
-		return Promise.resolve()
+		return Promise.resolve(void 0)
 	}
 
 	public getRelated() {
@@ -605,23 +554,6 @@ export class ListenMoeSong extends Song {
 		return `https://listen.moe\n${link}`
 	}
 
-	public getProgress(fallback: number) {
-		let time: number
-		if (this.stationData.lastTrackStartedAt) time = Math.floor((Date.now() - this.stationData.lastTrackStartedAt) / 1000)
-		else time = fallback
-		const part = "= ⋄ ==== ⋄ ==="
-		const fragment = part.substr(7 - this._filledBarOffset, 7)
-		let bar: string
-		if (!this.lengthSeconds) bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
-		else {
-			if (time > this.lengthSeconds) time = this.lengthSeconds
-			bar = text.progressBar(18, time, this.lengthSeconds)
-		}
-		this._filledBarOffset++
-		if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-		return `\`[ ${timeUtils.prettySeconds(time)} ​${bar}​ ${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : "LIVE"} ]\`` // SC: ZWSP x 2
-	}
-
 	public resume() {
 		return this.prepare()
 	}
@@ -639,15 +571,12 @@ export class ListenMoeSong extends Song {
 }
 
 export class NewgroundsSong extends Song {
+	public thumbnail = { src: constants.newgrounds_placeholder, width: 1200, height: 1200 }
+	public npUpdateFrequency = 5000
+
 	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
 		super(track, info)
-		this.thumbnail = {
-			src: constants.newgrounds_placeholder,
-			width: 1200,
-			height: 1200
-		}
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		this.npUpdateFrequency = 5000
 	}
 
 	public getRelated() {
@@ -691,6 +620,9 @@ export class NewgroundsSong extends Song {
 
 // Just for name parity
 export class TwitterSong extends Song {
+	public thumbnail = { src: constants.twitter_placeholder, width: 1066, height: 877 }
+	public npUpdateFrequency = 5000
+
 	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
 		super(track, info)
 
@@ -698,13 +630,7 @@ export class TwitterSong extends Song {
 		if (match && match[1]) this.id = `tw/${match[1]}`
 		else this.id = `tw/${this.id}`
 
-		this.thumbnail = {
-			src: constants.twitter_placeholder,
-			width: 1066,
-			height: 877
-		}
 		this.queueLine = `**${this.title}** (LOADING)`
-		this.npUpdateFrequency = 5000
 	}
 
 	public getRelated() {
@@ -738,24 +664,18 @@ export class TwitterSong extends Song {
 }
 
 export class AppleMusicSong extends YouTubeSong {
-	public ytID: string
+	public ytID = "!"
 	public trackViewURL: string
+	public live = false
+	public thumbnail = { src: "", width: 100, height: 100 }
+	public npUpdateFrequency = 5000
 
 	public constructor(track: string, data: Partial<import("@lavalink/encoding").TrackInfo>) {
 		super(track, data)
 
-		this.live = false
 		this.id = `appl/${data.identifier}`
-		this.ytID = "!"
 
-		this.thumbnail = {
-			src: "",
-			width: 100,
-			height: 100
-		}
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		this.npUpdateFrequency = 5000
-		this.error = ""
 
 		this.prepareCache = new AsyncValueCache(async () => {
 			if (this.ytID == "!") {

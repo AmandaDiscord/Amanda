@@ -302,7 +302,7 @@ export class Session {
 
 
 	public acceptData(data: Packet<Packet<any> & { channel_id: string }>) {
-		if (this.user !== configuredUserID) return // Not closing connection as beta clients could connect to the wss
+		if (this.user !== configuredUserID) return
 		const queue = webQueues.get(data.d?.channel_id!)
 		if (queue) queue.session = this
 		if (!queue) utils.warn(`No queue for acceptData! ${JSON.stringify(data.d)}`)
