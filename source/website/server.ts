@@ -33,6 +33,7 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 
 	const paths: typeof import("./paths") = sync.require("./paths")
 	const util: typeof import("./util") = sync.require("./util")
+	import("./api")
 
 	const server = http.createServer(async (req, res) => {
 		try {

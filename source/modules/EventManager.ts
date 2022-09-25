@@ -44,6 +44,10 @@ async function onStatsPosting(time: number) {
 
 setTimeoutForStats()
 
+sync.addTemporaryListener(sync.events, __filename, () => {
+	clearTimeout(statsTimeout)
+})
+
 sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings").GatewayPayload & { shard_id: number }) => {
 	if (p.t === "READY") {
 		const data = p.d as import("discord-typings").ReadyPayload
