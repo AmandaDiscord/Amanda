@@ -35,7 +35,7 @@ async function onStatsPosting(time: number) {
 		guilds: stats.guilds,
 		channels: stats.channels,
 		voice_connections: stats.connections,
-		uptime: stats.uptime,
+		uptime: Math.floor(stats.uptime),
 		shard: config.shard_list[0]
 	})
 
