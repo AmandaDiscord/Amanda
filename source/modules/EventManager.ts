@@ -30,7 +30,7 @@ async function onStatsPosting(time: number) {
 	await orm.db.insert("stat_logs", {
 		time,
 		id: client.user.id,
-		ram_usage_kb: stats.ram,
+		ram_usage_kb: Math.floor(stats.ram / 1000), // stats.ram is in bytes
 		users: stats.users,
 		guilds: stats.guilds,
 		channels: stats.channels,

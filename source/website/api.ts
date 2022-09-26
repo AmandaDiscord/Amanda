@@ -77,6 +77,25 @@ async function onStatsPosting(time: number) {
 		body: JSON.stringify({ shardCount: config.total_shards, guildCount: totalStats.guilds })
 	}).catch(e => utils.error(`discord extreme list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
+	const cheweyBody = JSON.stringify({
+		servers: totalStats.guilds,
+		users: totalStats.users,
+		channels: totalStats.channels,
+		ram_used: totalStats.ram_usage_kb * 1024, // chewey API expects bytes
+		received_messages: 0,
+		sent_messages: 0
+	})
+
+	fetch(`https://api.chewey-bot.top/analytics/post`, {
+		method: "POST",
+		headers: {
+			Authorization: config.chewey_api_key,
+			"Content-Type": "application/json",
+			"Content-Length": Buffer.byteLength(cheweyBody).toString()
+		},
+		body: cheweyBody
+	}).catch(e => utils.error(`chewey api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+
 	setTimeoutForStats()
 }
 
