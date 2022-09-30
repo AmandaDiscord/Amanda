@@ -24,7 +24,7 @@ const stopDisplayingErrorsAfter = 3
 class Queue {
 	public guildID: string
 	public voiceChannelID: string | undefined
-	public songs: Array<import("./songtypes").Song> = []
+	public tracks: Array<import("./tracktypes").Track> = []
 	public node: string | undefined
 	public lang: import("@amanda/lang").Lang
 	public leavingSoonID: string | undefined
@@ -36,7 +36,7 @@ class Queue {
 	public loop = false
 	public auto = false
 
-	public songStartTime = 0
+	public trackStartTime = 0
 	public pausedAt: number | null = null
 	public errorChain = 0
 
@@ -61,14 +61,14 @@ class Queue {
 		if (!this.voiceChannelID) return null
 		return {
 			members: [client.user, ...this.listeners.values()].map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === client.user.id })),
-			songs: this.songs.map(s => s.toObject()),
+			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
 				id: this.voiceChannelID,
 				name: "Amanda-Music"
 			},
 			pausedAt: this.pausedAt,
-			songStartTime: this.songStartTime,
+			trackStartTime: this.trackStartTime,
 			attributes: {
 				loop: this.loop,
 				auto: this.auto
@@ -117,7 +117,7 @@ class Queue {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
 		this.player?.pause(newState)
-		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { songStartTime: this.songStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
+		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
 	}
 
 	public get volume() {
@@ -138,8 +138,8 @@ class Queue {
 	}
 
 	public get time() {
-		if (this.paused) return this.pausedAt! - this.songStartTime
-		else return Date.now() - this.songStartTime
+		if (this.paused) return this.pausedAt! - this.trackStartTime
+		else return Date.now() - this.trackStartTime
 	}
 
 	public get timeSeconds() {
@@ -147,7 +147,7 @@ class Queue {
 	}
 
 	public get totalDuration() {
-		return this.songs.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)
+		return this.tracks.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)
 	}
 
 	public addPlayerListeners() {
@@ -157,35 +157,35 @@ class Queue {
 	}
 
 	public async play() {
-		const song = this.songs[0]
-		if (this.songs[1]) this.songs[1].prepare()
-		await song.prepare()
-		if (!song.error) {
-			if (song.track == "!") song.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
-			else if (song.track == null) song.error = this.lang.GLOBAL.SONG_ERROR_NULL
+		const track = this.tracks[0]
+		if (this.tracks[1]) this.tracks[1].prepare()
+		await track.prepare()
+		if (!track.error) {
+			if (track.track == "!") track.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
+			else if (track.track == null) track.error = this.lang.GLOBAL.SONG_ERROR_NULL
 		}
-		if (song.error) {
-			logger.error(`Song error call C: { id: ${song.id}, error: ${song.error} }`)
+		if (track.error) {
+			logger.error(`Track error call C: { id: ${track.id}, error: ${track.error} }`)
 			this._reportError()
-			this._nextSong()
+			this._nextTrack()
 		} else {
-			await this.player!.play(song.track)
-			this.songStartTime = Date.now()
+			await this.player!.play(track.track)
+			this.trackStartTime = Date.now()
 			this.pausedAt = null
 			this._startNPUpdates()
 		}
 	}
 
-	public destroy() {
+	public async destroy() {
 		this.menu.forEach(bn => bn.destroy())
-		for (const song of this.songs) {
+		for (const track of this.tracks) {
 			try {
-				song.destroy()
+				await track.destroy()
 			} catch (e) {
-				logger.error(`Song destroy error:\n${util.inspect(e, true, Infinity, true)}`)
+				logger.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 			}
 		}
-		this.songs.length = 0
+		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
 		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "It looks like this queue has ended" }], components: [] }).catch(() => void 0)
@@ -195,33 +195,33 @@ class Queue {
 		queues.delete(this.guildID)
 	}
 
-	public async _nextSong() {
-		if (this.songs[1] && this.songs[1].live && (this.nightcore || this.antiNightcore || this.speed != 1)) {
+	public async _nextTrack() {
+		if (this.tracks[1] && this.tracks[1].live && (this.nightcore || this.antiNightcore || this.speed != 1)) {
 			this.nightcore = false
 			this.antiNightcore = false
 			this.speed = 1.0
 		}
 		// Special case for loop 1
-		if (this.songs.length === 1 && this.loop && !this.songs[0].error) {
+		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
 			this.play()
 			return
 		}
 
-		// Destroy current song (if loop is disabled)
-		if (this.songs[0] && (!this.loop || this.songs[0].error)) this.songs[0].destroy()
-		// Out of songs? (This should only pass if loop mode is also disabled.)
-		if (this.songs.length <= 1) {
+		// Destroy current track (if loop is disabled)
+		if (this.tracks[0] && (!this.loop || this.tracks[0].error)) this.tracks[0].destroy()
+		// Out of tracks? (This should only pass if loop mode is also disabled.)
+		if (this.tracks.length <= 1) {
 			// Is auto mode on?
 			if (this.auto) {
-				// Store the current song
-				const lastPlayed = this.songs[0]
+				// Store the current track
+				const lastPlayed = this.tracks[0]
 				// Get related
 				const related = (await lastPlayed?.getRelated()) || []
-				// Can we play a related song?
+				// Can we play a related track?
 				if (related.length) {
-					this.songs.shift()
-					await this.addSong(related[0])
-				} else { // No related songs. Destroy.
+					this.tracks.shift()
+					await this.addTrack(related[0])
+				} else { // No related tracks. Destroy.
 					if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.AUTO_NONE_LEFT })
 					this.auto = false
 					// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
@@ -231,11 +231,11 @@ class Queue {
 				// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 				this.destroy()
 			}
-		} else { // We have more songs. Move on.
+		} else { // We have more tracks. Move on.
 			await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
-			const removed = this.songs.shift()
-			// In loop mode, add the just played song back to the end of the queue.
-			if (removed && this.loop && !removed.error) await this.addSong(removed)
+			const removed = this.tracks.shift()
+			// In loop mode, add the just played track back to the end of the queue.
+			if (removed && this.loop && !removed.error) await this.addTrack(removed)
 			this.play()
 		}
 	}
@@ -269,23 +269,23 @@ class Queue {
 		this.player?.stop().catch(() => void 0)
 	}
 
-	public async addSong(song: import("./songtypes").Song, position = this.songs.length) {
-		if (position === -1) this.songs.push(song)
-		else this.songs.splice(position, 0, song)
-		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { song: song.toObject(), position } } }), res))
+	public async addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
+		if (position === -1) this.tracks.push(track)
+		else this.tracks.splice(position, 0, track)
+		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } }), res))
 	}
 
-	public async removeSong(index: number) {
+	public async removeTrack(index: number) {
 		// Validate index
 		if (index == 0) return 1
-		if (!this.songs[index]) return 1
+		if (!this.tracks[index]) return 1
 		// Actually remove
-		const removed = this.songs.splice(index, 1)[0]
+		const removed = this.tracks.splice(index, 1)[0]
 		if (!removed) return 2
 		try {
 			removed.destroy()
 		} catch (e) {
-			logger.error(`Song destroy error:\n${util.inspect(e, true, Infinity, true)}`)
+			logger.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
@@ -294,25 +294,25 @@ class Queue {
 	private _onEnd(event: import("lavacord").LavalinkEvent) {
 		if (event.reason == "REPLACED") return
 		if (event.type === "TrackStuckEvent") {
-			// this.audit.push({ action: "Queue Skip (Song got stuck)", platform: "System", user: "Amanda" })
-			if (this.songs[0]) {
+			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
+			if (this.tracks[0]) {
 				let reason = ""
 				if (event.error) reason += `${event.error}\n`
 				if (event.reason) reason += event.reason
-				this.songs[0].error = reason.length ? reason.trim() : "Song got stuck"
-				logger.error("Song error call D")
+				this.tracks[0].error = reason.length ? reason.trim() : "Track got stuck"
+				logger.error("Track error call D")
 				this._reportError()
 			}
 		}
-		this._nextSong()
+		this._nextTrack()
 	}
 
 	private _onPlayerUpdate(data: { state: import("lavacord").LavalinkPlayerState }) {
 		if (this.player && !this.paused) {
-			const newSongStartTime = (data.state.time ?? 0) - (data.state.position ?? 0)
-			this.songStartTime = newSongStartTime
+			const newTrackStartTime = (data.state.time ?? 0) - (data.state.position ?? 0)
+			this.trackStartTime = newTrackStartTime
 		}
-		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { songStartTime: this.songStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
+		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
 	}
 
 	private _onPlayerError(details: any) {
@@ -323,18 +323,18 @@ class Queue {
 			return this.destroy()
 		}
 		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
-		if (this.songs[0]) {
-			this.songs[0].error = details.error ? JSON.stringify(details.error) : (details.message ? details.message : JSON.stringify(details))
-			logger.error("Song error call B")
+		if (this.tracks[0]) {
+			this.tracks[0].error = details.error ? JSON.stringify(details.error) : (details.message ? details.message : JSON.stringify(details))
+			logger.error("Track error call B")
 			this._reportError()
-			this._nextSong()
+			this._nextTrack()
 		} else this.destroy()
 	}
 
 	private _startNPUpdates() {
-		if (!this.songs[0]) return logger.error("Tried to call Queue._startNPUpdates but no songs")
-		const frequency = this.songs[0].npUpdateFrequency
-		const timeUntilNext5 = frequency - ((Date.now() - this.songStartTime) % frequency)
+		if (!this.tracks[0]) return logger.error("Tried to call Queue._startNPUpdates but no tracks")
+		const frequency = this.tracks[0].npUpdateFrequency
+		const timeUntilNext5 = frequency - ((Date.now() - this.trackStartTime) % frequency)
 		const triggerNow = timeUntilNext5 > 1500
 		this.messageUpdater.start(frequency, triggerNow, timeUntilNext5)
 	}
@@ -342,15 +342,15 @@ class Queue {
 	private async _updateMessage() {
 		if (this._interactionExpired) this.interaction = undefined
 		if (!this.interaction) return
-		const song = this.songs[0]
-		if (song) {
-			const progress = song.getProgress(this.timeSeconds, this.paused)
-			const link = await song.showLink().catch(() => "https://amanda.moe")
+		const track = this.tracks[0]
+		if (track) {
+			const progress = track.getProgress(this.timeSeconds, this.paused)
+			const link = await track.showLink().catch(() => "https://amanda.moe")
 			client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
 				embeds: [
 					{
 						color: constants.standard_embed_color,
-						description: language.replace(this.lang.GLOBAL.NOW_PLAYING, { "song": `[**${song.title}**](${link})\n\n${progress}` })
+						description: language.replace(this.lang.GLOBAL.NOW_PLAYING, { "song": `[**${track.title}**](${link})\n\n${progress}` })
 					}
 				],
 				components: [
@@ -405,17 +405,17 @@ class Queue {
 		}
 		this.errorChain++
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
-			const song = this.songs[0]
-			if (song) {
+			const track = this.tracks[0]
+			if (track) {
 				sendReport({
 					title: this.lang.GLOBAL.SONG_NOT_PLAYABLE,
-					description: `**${song.title}** (ID: ${song.id})\n${song.error}`,
+					description: `**${track.title}** (ID: ${track.id})\n${track.error}`,
 					color: 0xdd2d2d
 				})
 			} else {
 				sendReport({
 					title: this.lang.GLOBAL.ERROR_OCCURRED,
-					description: language.replace(this.lang.GLOBAL.SONG_NOT_OBJECT, { "song": song }),
+					description: language.replace(this.lang.GLOBAL.SONG_NOT_OBJECT, { "song": track }),
 					color: 0xdd2d2d
 				})
 			}
@@ -486,7 +486,7 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 
 	} else if (packet.op === constants.WebsiteOPCodes.CLEAR_QUEUE) {
 		if (queue) {
-			queue.songs.splice(1)
+			queue.tracks.splice(1)
 			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }))
 		}
 
@@ -503,7 +503,7 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 	else if (packet.op === constants.WebsiteOPCodes.STOP && queue) queue.destroy()
 	else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
 	else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {
-		const result = await queue.removeSong(packet.d.index)
+		const result = await queue.removeTrack(packet.d.index)
 		if (result === 0) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } }))
 	}
 })

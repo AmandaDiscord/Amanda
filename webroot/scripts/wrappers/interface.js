@@ -2,12 +2,12 @@
 
 class Wrapper {
 	constructor() {}
-	async load(song) {}
+	async load(track) {}
 	/**
 	 * @param {() => number} timeGetter
-	 * @param {number} songLength
+	 * @param {number} trackLength
 	 */
-	async seekAndPlay(timeGetter, songLength) {}
+	async seekAndPlay(timeGetter, trackLength) {}
 	async resume() {}
 	async pause() {}
 	async stop() {}

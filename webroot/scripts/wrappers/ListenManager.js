@@ -13,35 +13,35 @@ class ListenManager {
 	}
 
 	/**
-	 * When the button is clicked and we need to connect to a still playing song.
+	 * When the button is clicked and we need to connect to a still playing track.
 	 * @param {() => number} timeGetter Function which gets the play time in ms.
 	 */
-	boot(song, timeGetter) {
+	boot(track, timeGetter) {
 		this.enabled = true
-		this._selectWrapper(song)
-		this.currentWrapper.load(song)
-		this.currentWrapper.seekAndPlay(timeGetter, song.length * 1000)
+		this._selectWrapper(track)
+		this.currentWrapper.load(track)
+		this.currentWrapper.seekAndPlay(timeGetter, track.length * 1000)
 	}
 
 	/**
-	 * Load a new song, but don't play it yet. For when a session is started and the queue state is reset.
+	 * Load a new track, but don't play it yet. For when a session is started and the queue state is reset.
 	 */
-	load(song) {
+	load(track) {
 		if (!this.enabled) return
 		this.stop()
-		this._selectWrapper(song)
-		this.currentWrapper.load(song)
+		this._selectWrapper(track)
+		this.currentWrapper.load(track)
 	}
 
-	async next(song) {
+	async next(track) {
 		if (!this.enabled) return
 		console.log("next: calling stop")
 		if (this.currentWrapper) await this.currentWrapper.stop()
 		console.log("next: selecting wrapper")
-		this._selectWrapper(song)
+		this._selectWrapper(track)
 		if (this.currentWrapper) {
 			console.log("next: loading")
-			await this.currentWrapper.load(song)
+			await this.currentWrapper.load(track)
 			console.log("next: resuming")
 			await this.currentWrapper.resume()
 		}
@@ -63,8 +63,8 @@ class ListenManager {
 		this.currentWrapper = null
 	}
 
-	_selectWrapper(song) {
-		if (song.class === "SoundCloudSong") {
+	_selectWrapper(track) {
+		if (track.source === "soundcloud") {
 			this.currentWrapper = this.wrappers.soundCloudWrapper
 		} else {
 			this.currentWrapper = null

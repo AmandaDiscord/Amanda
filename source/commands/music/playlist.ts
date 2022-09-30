@@ -3,7 +3,7 @@ const { client, commands, constants, sync, queues } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
-const songTypes = sync.require("./songtypes") as typeof import("./songtypes")
+const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const discordUtils = sync.require("../../utils/discord") as typeof import("../../utils/discord")
@@ -56,7 +56,7 @@ commands.assign([
 			},
 			{
 				name: "add",
-				description: "Adds a song to a playlist",
+				description: "Adds a track to a playlist",
 				type: 1,
 				required: false,
 				options: [
@@ -67,8 +67,8 @@ commands.assign([
 						required: true
 					},
 					{
-						name: "song",
-						description: "A resolveable song (link, name, id)",
+						name: "track",
+						description: "A resolveable track (link, name, id)",
 						type: 3,
 						required: true
 					}
@@ -76,7 +76,7 @@ commands.assign([
 			},
 			{
 				name: "remove",
-				description: "Removes a song from a playlist",
+				description: "Removes a track from a playlist",
 				type: 1,
 				required: false,
 				options: [
@@ -88,7 +88,7 @@ commands.assign([
 					},
 					{
 						name: "index",
-						description: "The 1 based index of the song to remove",
+						description: "The 1 based index of the track to remove",
 						type: 4,
 						required: true
 					}
@@ -96,7 +96,7 @@ commands.assign([
 			},
 			{
 				name: "move",
-				description: "Moves a song in a playlist from one index to another",
+				description: "Moves a track in a playlist from one index to another",
 				type: 1,
 				required: false,
 				options: [
@@ -108,13 +108,13 @@ commands.assign([
 					},
 					{
 						name: "from",
-						description: "The 1 based index of the song to move",
+						description: "The 1 based index of the track to move",
 						type: 4,
 						required: true
 					},
 					{
 						name: "to",
-						description: "The 1 based index the song should appear at",
+						description: "The 1 based index the track should appear at",
 						type: 4,
 						required: true
 					}
@@ -122,7 +122,7 @@ commands.assign([
 			},
 			{
 				name: "search",
-				description: "Filters songs in a playlist",
+				description: "Filters tracks in a playlist",
 				type: 1,
 				required: false,
 				options: [
@@ -196,32 +196,32 @@ commands.assign([
 
 			const checkPlaylistName = (playlistName: string) => {
 				let value = true
-				if (playlistName.includes("http") || playlistName.includes("youtube.com") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) value = false
+				if (playlistName.includes("http") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) value = false
 				if (playlistName.length > 24) value = false
 				if (!value) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Invalid playlist name. Playlist names must not contain a link or be longer than 24 characters" })
 				return value
 			}
-			const getSongs = async (playlistRow: import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlists"]>) => {
-				const songs = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
+			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlists"]>) => {
+				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
 				const unbreakDatabase = async () => {
 					logger.warn("unbreakDatabase was called!")
-					await Promise.all(songs.map((row, index) => orm.db.update("playlist_songs", { next: (songs[index + 1] ? songs[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
+					await Promise.all(tracks.map((row, index) => orm.db.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "lang.audio.playlist.prompts.databaseFixed" })
 				}
-				if (songs.length === 0) {
+				if (tracks.length === 0) {
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist is empty" })
 					return []
 				}
-				const orderedSongs = [] as typeof songs
-				let song = songs.find(row => !songs.some(r => r.next == row.video_id))
-				while (song) {
-					orderedSongs.push(song!)
-					if (song.next) song = songs.find(row => row.video_id == song!.next)
-					else song = undefined
-					if (orderedSongs.includes(song!)) await unbreakDatabase()
+				const orderedTracks = [] as typeof tracks
+				let track = tracks.find(row => !tracks.some(r => r.next == row.video_id))
+				while (track) {
+					orderedTracks.push(track!)
+					if (track.next) track = tracks.find(row => row.video_id == track!.next)
+					else track = undefined
+					if (orderedTracks.includes(track!)) await unbreakDatabase()
 				}
-				if (orderedSongs.length != songs.length) await unbreakDatabase()
-				return orderedSongs
+				if (orderedTracks.length != tracks.length) await unbreakDatabase()
+				return orderedTracks
 			}
 
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
@@ -288,7 +288,7 @@ commands.assign([
 					const users = await Promise.all(playlists.map(p => getAuthor(p.author)))
 					return discordUtils.createPagination(
 						cmd
-						, ["Playlist", "Songs", "Length", "Plays", "`Author`"]
+						, ["Playlist", "Tracks", "Length", "Plays", "`Author`"]
 						, playlists.map((p, index) => [
 							p.name
 							, String(p.count)
@@ -315,10 +315,10 @@ commands.assign([
 					const a: import("discord-typings").EmbedAuthor = { name: authorDetails[0] }
 					if (authorDetails[1]) a.url = authorDetails[1]
 
-					const orderedSongs = await getSongs(playlistRow)
+					const orderedTracks = await getTracks(playlistRow)
 
-					const rows = orderedSongs.map((s, index) => `${index + 1}. **${s.name}** (${time.prettySeconds(s.length)})`)
-					const totalLength = `\n${time.prettySeconds(orderedSongs.reduce((acc, cur) => (acc + cur.length), 0))}`
+					const rows = orderedTracks.map((s, index) => `${index + 1}. **${s.name}** (${time.prettySeconds(s.length)})`)
+					const totalLength = `\n${time.prettySeconds(orderedTracks.reduce((acc, cur) => (acc + cur.length), 0))}`
 					if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 						return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 							embeds: [
@@ -389,7 +389,7 @@ commands.assign([
 
 
 				const optionPlaylist = (optionAdd.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionSong = (optionAdd.options.find(o => o.name === "song") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
+				const optionTrack = (optionAdd.options.find(o => o.name === "track") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 
 				if (!checkPlaylistName(optionPlaylist)) return
 
@@ -397,12 +397,12 @@ commands.assign([
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
-				const result = await common.loadtracks(`ytsearch:${optionSong}`).then(d => d[0]?.info)
+				const result = await common.loadtracks(`${optionTrack}`).then(d => d[0]?.info)
 
 				if (!result) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "No results" })
 
-				const orderedSongs = await getSongs(playlistRow)
-				if (orderedSongs.some(row => row.video_id == result.identifier)) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You tried to add a duplicate song to your playlist" })
+				const orderedTracks = await getTracks(playlistRow)
+				if (orderedTracks.some(row => row.video_id == result.identifier)) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You tried to add a duplicate track to your playlist" })
 
 				await Promise.all([
 					orm.db.raw("INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)", [result.identifier, result.title, Math.floor(result.length / 1000)]),
@@ -422,8 +422,8 @@ commands.assign([
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
-				const orderedSongs = await getSongs(playlistRow)
-				const toRemove = orderedSongs[optionIndex - 1]
+				const orderedTracks = await getTracks(playlistRow)
+				const toRemove = orderedTracks[optionIndex - 1]
 				if (!toRemove) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
 				await Promise.all([
 					orm.db.update("playlist_songs", { next: toRemove.next }, { playlist_id: toRemove.playlist_id, next: toRemove.video_id }),
@@ -443,9 +443,9 @@ commands.assign([
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
-				const orderedSongs = await getSongs(playlistRow)
-				if (!orderedSongs[optionFrom] || !orderedSongs[optionTo]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
-				const fromRow = orderedSongs[optionFrom], toRow = orderedSongs[optionTo]
+				const orderedTracks = await getTracks(playlistRow)
+				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
+				const fromRow = orderedTracks[optionFrom], toRow = orderedTracks[optionTo]
 				if (optionFrom < optionTo) {
 					await orm.db.update("playlist_songs", { next: fromRow.next }, { playlist_id: fromRow.playlist_id, next: fromRow.video_id }) // update row before item
 					await orm.db.update("playlist_songs", { next: toRow.next }, { playlist_id: fromRow.playlist_id, video_id: fromRow.video_id }) // update moved item
@@ -455,7 +455,7 @@ commands.assign([
 					await orm.db.update("playlist_songs", { next: fromRow.video_id }, { playlist_id: fromRow.playlist_id, next: toRow.video_id }) // update row before moved item
 					await orm.db.update("playlist_songs", { next: toRow.video_id }, { playlist_id: fromRow.playlist_id, video_id: fromRow.video_id }) // update moved item
 				} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The from and to indexes cannot be equal" })
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Song moved" })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Track moved" })
 			} else if (optionSearch !== null) {
 
 
@@ -465,10 +465,10 @@ commands.assign([
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 
-				const orderedSongs = await getSongs(playlistRow)
+				const orderedTracks = await getTracks(playlistRow)
 
-				let body = orderedSongs
-					.map((songss, index) => `${index + 1}. **${songss.name}** (${time.prettySeconds(songss.length)})`)
+				let body = orderedTracks
+					.map((trackss, index) => `${index + 1}. **${trackss.name}** (${time.prettySeconds(trackss.length)})`)
 					.filter(s => s.toLowerCase().includes(optionQuery.toLowerCase()))
 					.join("\n")
 				if (body.length > 2000) body = `${body.slice(0, 1998).split("\n").slice(0, -1).join("\n")}\n…`
@@ -490,8 +490,8 @@ commands.assign([
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 
-				const orderedSongs = await getSongs(playlistRow)
-				if (orderedSongs.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist doesn't have any songs to play" })
+				const orderedTracks = await getTracks(playlistRow)
+				if (orderedTracks.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist doesn't have any tracks to play" })
 
 				let queue = queues.get(cmd.guild_id)
 				const queueDidntExist = !queue
@@ -538,10 +538,10 @@ commands.assign([
 					if (!queue) return
 				}
 
-				const sliced = orderedSongs.slice(optionStart - 1)
-				const songss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new songTypes.YouTubeSong("!", { title: row.name, length: BigInt(row.length), identifier: row.video_id }))
-				for (const song of songss) {
-					await queue.addSong(song)
+				const sliced = orderedTracks.slice(optionStart - 1)
+				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length), identifier: row.video_id }))
+				for (const track of trackss) {
+					await queue.addTrack(track)
 				}
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd

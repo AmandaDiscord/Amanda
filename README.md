@@ -8,14 +8,16 @@ PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amand
 We will take offenses against this license very seriously.
 
 # Features
-- Play music from YouTube, Soundcloud, Spotify, Newgrounds, Apple Music, Twitter videos, [Frisky Radio](https://frisky.fm/), [listen.moe](https://listen.moe/), and your own audio files.
+- Play music from a wide array of main stream and not-so-main-stream sites, [Frisky Radio](https://frisky.fm/), [listen.moe](https://listen.moe/), and your own audio files*.
 - Social Interaction.
 - Web Dashboard.
 - Reliable and smooth playback.
 - Simple and clean navigation.
 - Multilingual. See [her translations](https://github.com/AmandaDiscord/Lang).
-- YouTube and local playlist support.
+- Creating and playing local playlists of tracks.
 - Audio filter control such as pitch and speed.
+
+* Some audio files cannot be played due to technical limitations which includes but is not limited to midi.
 
 # Self Hosting
 Please read through her [documentation repo](https://github.com/AmandaDiscord/Docs). (It may not always be up to date).

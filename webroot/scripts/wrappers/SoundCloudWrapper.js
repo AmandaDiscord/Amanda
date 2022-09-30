@@ -30,10 +30,10 @@ class SoundCloudWrapper {
 		})
 	}
 
-	async load(song) {
+	async load(track) {
 		this.seekers.clear()
 		console.log("scload: reloading controller")
-		const link = `https://api.soundcloud.com/tracks/${song.trackNumber}`
+		const link = `https://api.soundcloud.com/tracks/${track.trackNumber}`
 		const props = {auto_play: false, show_artwork: false, visual: false, callback: true}
 		if (this.controller) {
 			this.controller.unbind(SC.Widget.Events.READY)
@@ -51,9 +51,9 @@ class SoundCloudWrapper {
 
 	/**
 	 * @param {() => number} timeGetter Function which gets the play time in ms.
-	 * @param {number} songLength Length of the song in ms.
+	 * @param {number} trackLength Length of the track in ms.
 	 */
-	async seekAndPlay(timeGetter, songLength) {
+	async seekAndPlay(timeGetter, trackLength) {
 		console.log("scseekandplay: waiting")
 		await this.waitForReady()
 		this.seekers.clear() // cancel an ongoing seek
@@ -67,8 +67,8 @@ class SoundCloudWrapper {
 		this.controller.bind(SC.Widget.Events.PLAY_PROGRESS, ({loadedProgress}) => { // generate a bunch of events telling us the loaded progress
 			if (!this.seekers.has(me)) return
 			const currentTime = timeGetter()
-			const loadedTime = loadedProgress * songLength
-			console.log(`scseekandplay: loading... c: ${currentTime}, l: ${loadedTime} (${loadedProgress}, ${songLength})`)
+			const loadedTime = loadedProgress * trackLength
+			console.log(`scseekandplay: loading... c: ${currentTime}, l: ${loadedTime} (${loadedProgress}, ${trackLength})`)
 			if (loadedTime > currentTime) {
 				console.log("scseekandplay: loaded enough")
 				this.seekers.delete(me)

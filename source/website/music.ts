@@ -27,8 +27,8 @@ const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayba
 
 type PacketData = {
 	position: number
-	song: import("../types").PartialSong
-	songStartTime: number
+	track: import("../types").PartialTrack
+	trackStartTime: number
 	pausedAt: number
 	playing: boolean
 	index: number
@@ -48,17 +48,17 @@ export const receivers: {
 	[op: number]: Receiver
 } = {
 	[constants.WebsiteOPCodes.TRACK_ADD]: {
-		updateCallback(cache, { position, song }) {
-			cache.songs.splice(position, 0, song)
+		updateCallback(cache, { position, track }) {
+			cache.tracks.splice(position, 0, track)
 			return cache
 		},
-		sessionCallback(session, _, { position, song }) {
-			session.onTrackAdd(song, position)
+		sessionCallback(session, _, { position, track }) {
+			session.onTrackAdd(track, position)
 		}
 	},
 	[constants.WebsiteOPCodes.TRACK_REMOVE]: {
 		updateCallback(cache, { index }) {
-			cache.songs.splice(index, 1)
+			cache.tracks.splice(index, 1)
 			return cache
 		},
 		sessionCallback(session, _, { index }) {
@@ -66,17 +66,17 @@ export const receivers: {
 		}
 	},
 	[constants.WebsiteOPCodes.TRACK_UPDATE]: {
-		updateCallback(cache, { song, index }) {
-			cache.songs[index] = song
+		updateCallback(cache, { track, index }) {
+			cache.tracks[index] = track
 			return cache
 		},
-		sessionCallback(session, _, { song, index }) {
-			session.onTrackUpdate(song, index)
+		sessionCallback(session, _, { track, index }) {
+			session.onTrackUpdate(track, index)
 		}
 	},
 	[constants.WebsiteOPCodes.NEXT]: {
 		updateCallback(cache) {
-			cache.songs.shift()
+			cache.tracks.shift()
 			return cache
 		},
 		sessionCallback(session) {
@@ -84,19 +84,19 @@ export const receivers: {
 		}
 	},
 	[constants.WebsiteOPCodes.TIME_UPDATE]: {
-		updateCallback(cache, { songStartTime, pausedAt, playing }) {
-			cache.songStartTime = songStartTime
+		updateCallback(cache, { trackStartTime, pausedAt, playing }) {
+			cache.trackStartTime = trackStartTime
 			cache.pausedAt = pausedAt
 			cache.playing = playing
 			return cache
 		},
-		sessionCallback(session, _, { songStartTime, pausedAt, playing }) {
-			session.onTimeUpdate({ songStartTime, pausedAt, playing })
+		sessionCallback(session, _, { trackStartTime, pausedAt, playing }) {
+			session.onTimeUpdate({ trackStartTime, pausedAt, playing })
 		}
 	},
 	[constants.WebsiteOPCodes.CLEAR_QUEUE]: {
 		updateCallback(cache) {
-			cache.songs.splice(1)
+			cache.tracks.splice(1)
 			return cache
 		},
 		sessionCallback(session) {
@@ -220,16 +220,16 @@ export class Session {
 	}
 
 
-	public onTrackAdd(song: import("../types").PartialSong, position: number): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { song, position } })
+	public onTrackAdd(track: import("../types").PartialTrack, position: number): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { track, position } })
 	}
 
 	public onTrackRemove(index: number): void {
 		this.send({ op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } })
 	}
 
-	public onTrackUpdate(song: import("../types").PartialSong, index: number ): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { song, index } })
+	public onTrackUpdate(track: import("../types").PartialTrack, index: number ): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { track, index } })
 	}
 
 	public onClearQueue(): void {
@@ -248,7 +248,7 @@ export class Session {
 		this.send({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: attributes })
 	}
 
-	public onTimeUpdate(info: { songStartTime: number, pausedAt: number, playing: boolean }): void {
+	public onTimeUpdate(info: { trackStartTime: number, pausedAt: number, playing: boolean }): void {
 		this.send({ op: constants.WebsiteOPCodes.TIME_UPDATE, d: info })
 	}
 

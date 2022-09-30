@@ -128,7 +128,7 @@ export type iTunesSearchResult = {
 	isStreamable: boolean
 }
 
-export type PartialSong = {
+export type PartialTrack = {
 	title: string
 	class: string
 	id: string
@@ -139,12 +139,12 @@ export type PartialSong = {
 
 export type WebQueue = {
 	members: Array<{ id: string; tag: string; avatar: string | null; isAmanda: boolean }>
-	songs: Array<PartialSong>
+	tracks: Array<PartialTrack>
 	session?: import("./website/music").Session
 	playing: boolean
 	voiceChannel: { name: string; id: string }
 	pausedAt: number | null
-	songStartTime: number
+	trackStartTime: number
 	attributes: {
 		loop: boolean
 		auto: boolean

@@ -133,7 +133,7 @@ class Queue extends ElemJS {
 		let removed = this.children.splice(index, 1)[0]
 		if (removed) removed.animateRemove()
 	}
-	removeAllSongs() {
+	removeAllTracks() {
 		// queue does not include now playing, so clear the queue by removing all
 		if (this.children.length <= this.animateMax) {
 			for (const item of this.children) {
@@ -343,10 +343,10 @@ class Player extends ElemJS {
 		/** @type {import("./player").Session} */
 		this.session = session
 
-		this.song = null
+		this.track = null
 		this.thumbnailDisplayHeight = 94
 		this.attributes = {}
-		this.songSet = false
+		this.trackSet = false
 		this.parts = {
 			controls: ejs`div.controls`,
 			time: new PlayerTime()
@@ -358,14 +358,14 @@ class Player extends ElemJS {
 		this.parts.controls.child(this.parts.autoButton = new AttributeButton(this, "auto"))
 		this.render()
 	}
-	setSong(song) {
-		this.songSet = true
-		this.song = song
+	setTrack(track) {
+		this.trackSet = true
+		this.track = track
 		this.render()
 	}
 	updateData(data) {
-		this.songSet = true
-		Object.assign(this.song, data)
+		this.trackSet = true
+		Object.assign(this.track, data)
 		this.render()
 	}
 	updateTime(data) {
@@ -378,11 +378,11 @@ class Player extends ElemJS {
 	}
 	render() {
 		this.clearChildren()
-		if (this.song) {
-			let thumbnail = new ElemJS(imageStore.get(this.song.thumbnail.src))
-			thumbnail.element.width = this.song.thumbnail.width
-			thumbnail.element.height = this.song.thumbnail.height
-			thumbnail.element.style.width = this.song.thumbnail.width/this.song.thumbnail.height*this.thumbnailDisplayHeight+"px"
+		if (this.track) {
+			let thumbnail = new ElemJS(imageStore.get(this.track.thumbnail.src))
+			thumbnail.element.width = this.track.thumbnail.width
+			thumbnail.element.height = this.track.thumbnail.height
+			thumbnail.element.style.width = this.track.thumbnail.width/this.track.thumbnail.height*this.thumbnailDisplayHeight+"px"
 			this.child(
 				ejs`div`.child(
 					ejs`div.thumbnail`.child(
@@ -391,7 +391,7 @@ class Player extends ElemJS {
 				)
 			).child(
 				ejs`div.player-status`.child(
-					ejs`div.song-title.one-line`.text(this.song.title)
+					ejs`div.song-title.one-line`.text(this.track.title)
 				).child(
 					this.parts.time
 				).child(
@@ -399,7 +399,7 @@ class Player extends ElemJS {
 				)
 			)
 		} else {
-			if (this.songSet) {
+			if (this.trackSet) {
 				this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Nothing playing"))
 			} else {
 				this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Connecting..."))
@@ -414,7 +414,7 @@ class PlayerTime extends ElemJS {
 		this.class("progress")
 		this.animation = null
 		this.interval = null
-		this.state = {playing: false, songStartTime: 0, pausedAt: 0, maxTime: 0, live: false}
+		this.state = {playing: false, trackStartTime: 0, pausedAt: 0, maxTime: 0, live: false}
 		this.child(new ElemJS("div").class("progressbar"))
 		this.child(new ElemJS("div"))
 		this.child(new ElemJS("div"))
@@ -429,9 +429,9 @@ class PlayerTime extends ElemJS {
 	 */
 	getTime() {
 		if (!this.state.playing && this.state.pausedAt) {
-			return this.state.pausedAt - this.state.songStartTime
+			return this.state.pausedAt - this.state.trackStartTime
 		} else {
-			return Date.now() - this.state.songStartTime + serverTimeDiff
+			return Date.now() - this.state.trackStartTime + serverTimeDiff
 		}
 	}
 	getMSRemaining() {
@@ -452,7 +452,7 @@ class PlayerTime extends ElemJS {
 		this.renderCurrentTime()
 		this.children[2].text(this.state.live ? "LIVE" : prettySeconds(this.state.maxTime))
 		this.children[0].element.style.transform = this.getTransform()
-		if (this.state.songStartTime == 0) {
+		if (this.state.trackStartTime == 0) {
 			this.children[0].element.style.transform = "scaleX(0)"
 		} else if (this.state.playing) {
 			if (this.getMSRemaining()) {
@@ -473,7 +473,7 @@ class PlayerTime extends ElemJS {
 	}
 	renderCurrentTime() {
 		let time
-		if (this.state.songStartTime == 0) time = 0
+		if (this.state.trackStartTime == 0) time = 0
 		else time = this.getTime()
 		if (time < 0) time = 0
 		if (!this.state.live && time > this.state.maxTime*1000) time = this.state.maxTime*1000
@@ -501,9 +501,9 @@ class SideControl extends ElemJS {
 	}
 }
 
-class AddSongControl extends SideControl {
+class AddTrackControl extends SideControl {
 	constructor(sideControls) {
-		super(sideControls, "Add song", "add-shaped")
+		super(sideControls, "Add track", "add-shaped")
 		this.disabled = true
 		// this.element.addEventListener("click", event => this.onClick(event))
 	}
@@ -513,9 +513,9 @@ class AddSongControl extends SideControl {
 	}
 }
 
-class SongInfoControl extends SideControl {
+class TrackInfoControl extends SideControl {
 	constructor(sideControls) {
-		super(sideControls, "Song information", "information-shaped")
+		super(sideControls, "Track information", "information-shaped")
 	}
 
 	render() {
@@ -555,8 +555,8 @@ class ListenInBrowserControl extends SideControl {
 
 	onClick() {
 		if (!this.sideControls.session.state) return
-		const song = this.sideControls.session.state.songs[0]
-		this.sideControls.session.listenManager.boot(song, () => this.sideControls.session.player.parts.time.getTime())
+		const track = this.sideControls.session.state.tracks[0]
+		this.sideControls.session.listenManager.boot(track, () => this.sideControls.session.player.parts.time.getTime())
 		this.started = true
 		this.render()
 	}
@@ -578,8 +578,8 @@ class SideControls extends ElemJS {
 		/** @type {{[x: string]: SideControl}} */
 		this.parts = {}
 		this.child(this.parts.listen = new ListenInBrowserControl(this))
-		this.child(this.parts.add = new AddSongControl(this))
-		this.child(this.parts.info = new SongInfoControl(this))
+		this.child(this.parts.add = new AddTrackControl(this))
+		this.child(this.parts.info = new TrackInfoControl(this))
 		this.child(this.parts.clear = new ClearQueueControl(this))
 		this.partsList = Object.values(this.parts)
 		this.render()

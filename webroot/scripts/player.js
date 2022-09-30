@@ -90,20 +90,20 @@ class Session {
 		this.state = data.d || null
 		if (this.state === null) {
 			q("#voice-channel-name").textContent = "Nothing playing"
-			this.player.setSong(null)
+			this.player.setTrack(null)
 			this.player.updateAttributes({})
 			this.resetTime()
 			this.queue.replaceItems([])
 			this.listenManager.stop()
 		} else {
 			q("#voice-channel-name").textContent = this.state.voiceChannel.name
-			this.player.setSong(this.state.songs[0])
+			this.player.setTrack(this.state.tracks[0])
 			this.player.updateAttributes(this.state.attributes)
-			this.queue.replaceItems(this.state.songs.slice(1))
+			this.queue.replaceItems(this.state.tracks.slice(1))
 			this.queue.isFirstAdd = false
 			this.updatePlayerTime()
-			if (oldState === null && this.state.songs[0]) {
-				this.listenManager.next(this.state.songs[0])
+			if (oldState === null && this.state.tracks[0]) {
+				this.listenManager.next(this.state.tracks[0])
 			}
 		}
 		this.sideControls.render()
@@ -121,43 +121,43 @@ class Session {
 
 	trackAdd(data) {
 		if (!this.state) return
-		this.state.songs.splice(data.d.position, 0, data.d.song)
-		if (this.state.songs.length == 1) {
-			this.player.setSong(data.d.song)
+		this.state.tracks.splice(data.d.position, 0, data.d.track)
+		if (this.state.tracks.length == 1) {
+			this.player.setTrack(data.d.track)
 			this.updatePlayerTime()
-			this.listenManager.next(data.d.song)
-		} else this.queue.addItem(data.d.song, data.d.position)
+			this.listenManager.next(data.d.track)
+		} else this.queue.addItem(data.d.track, data.d.position)
 	}
 
 	trackRemove(data) {
 		if (!this.state) return
 		let index = data.d.index
-		this.queue.removeIndex(index-1) // -1 because frontend does not hold current song but backend does
-		this.state.songs.splice(index, 1) // same reason
+		this.queue.removeIndex(index-1) // -1 because frontend does not hold current track but backend does
+		this.state.tracks.splice(index, 1) // same reason
 	}
 
 	clearQueue() {
 		if (!this.state) return
-		this.queue.removeAllSongs()
-		this.state.songs.splice(1)
+		this.queue.removeAllTracks()
+		this.state.tracks.splice(1)
 	}
 
 	next() {
 		if (!this.state) return
-		this.state.songs.shift()
+		this.state.tracks.shift()
 		this.queue.shift()
 		this.resetTime()
-		this.player.setSong(this.state.songs[0] || null)
-		this.listenManager.next(this.state.songs[0])
+		this.player.setTrack(this.state.tracks[0] || null)
+		this.listenManager.next(this.state.tracks[0])
 	}
 
 	trackUpdate(data) {
 		if (!this.state) return
-		let song = data.d.song
+		let track = data.d.track
 		let index = data.d.index
-		Object.assign(this.state.songs[index], song)
+		Object.assign(this.state.tracks[index], track)
 		if (index == 0) this.player.updateData(data)
-		else this.queue.children[index-1].updateData(song)
+		else this.queue.children[index-1].updateData(track)
 	}
 
 	timeUpdate(data) {
@@ -170,7 +170,7 @@ class Session {
 
 	resetTime() {
 		if (this.state) {
-			Object.assign(this.state, {songStartTime: 0, maxTime: 0, playing: false})
+			Object.assign(this.state, {trackStartTime: 0, maxTime: 0, playing: false})
 			this.updatePlayerTime()
 		}
 	}
@@ -179,10 +179,10 @@ class Session {
 		if (!this.state) return
 		this.player.updateTime({
 			playing: this.state.playing,
-			songStartTime: this.state.songStartTime,
+			trackStartTime: this.state.trackStartTime,
 			pausedAt: this.state.pausedAt,
-			maxTime: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].length : 0,
-			live: (this.state.songs && this.state.songs[0]) ? this.state.songs[0].live : false
+			maxTime: (this.state.tracks && this.state.tracks[0]) ? this.state.tracks[0].length : 0,
+			live: (this.state.tracks && this.state.tracks[0]) ? this.state.tracks[0].live : false
 		})
 	}
 

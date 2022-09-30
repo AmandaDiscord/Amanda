@@ -9,19 +9,18 @@ const timeUtils = sync.require("../../utils/time") as typeof import("../../utils
 
 const selectTimeout = 1000 * 60
 
-const youtubeTrackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+const trackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const hiddenEmbedRegex = /(^<|>$)/g
 
-type Key = Exclude<keyof typeof import("./songtypes"), "Song" | "FriskySong" | "ListenMoeSong" | "default">
+type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
 const sourceMap = new Map<string, Key>([
-	["youtube", "YouTubeSong"],
-	["soundcloud", "SoundCloudSong"],
-	["newgrounds", "NewgroundsSong"],
-	["twitter", "TwitterSong"],
-	["itunes", "AppleMusicSong"],
-	["spotify", "SpotifySong"],
-	["http", "ExternalSong"]
+	["soundcloud", "Track"],
+	["newgrounds", "Track"],
+	["twitter", "Track"],
+	["itunes", "RequiresSearchTrack"],
+	["spotify", "RequiresSearchTrack"],
+	["http", "ExternalTrack"]
 ])
 
 const common = {
@@ -47,44 +46,44 @@ const common = {
 			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).then(d => d.json()).then(j => j.lyrics || j.error || null)
 		},
 
-		pickApart(song: import("./songtypes").Song) {
+		pickApart(track: import("./tracktypes").Track) {
 			let title = "", artist: string | undefined
 
-			const match = song.title.match(youtubeTrackNameRegex)
+			const match = track.title.match(trackNameRegex)
 			if (match) {
 				title = match[2]
 				artist = match[1]
 			}
 			if (!title || !artist) {
-				title = song.title
-				artist = song.author
+				title = track.title
+				artist = track.author
 			}
 
 			return { title, artist }
 		}
 	},
 
-	async inputToSong(resource: string, cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./songtypes").Song> | null> {
+	async inputToTrack(resource: string, cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const tracks = await common.loadtracks(resource, node).catch(() => void 0)
 		if (!tracks || !tracks.tracks.length) return null
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.track))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToSong(tracks.tracks[0].track, decoded[0])]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToSong(tracks.tracks[ind].track, i))
+		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0])]
+		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i))
 
-		const chosen = await songSelection(decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
+		const chosen = await trackSelection(decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) return null
-		return [decodedToSong(tracks.tracks[decoded.indexOf(chosen)].track, chosen)]
+		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen)]
 
-		function songSelection<T>(songs: Array<T>, label: (item: T) => string): Promise<T | null> {
+		function trackSelection<T>(trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
 			const component = new BetterComponent({
 				type: 3,
 				placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
 				min_values: 1,
 				max_values: 1,
-				options: songs.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Song ${index + 1}`, default: false }))
+				options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
 			} as Omit<import("discord-typings").SelectMenu, "custom_id">)
 			return new Promise(res => {
 				const timer = setTimeout(() => {
@@ -105,7 +104,7 @@ const common = {
 					if ((interaction.user ? interaction.user : interaction.member!.user).id != (cmd.user ? cmd.user : cmd.member!.user).id) return
 					component.destroy()
 					clearTimeout(timer)
-					const selected = songs[Number(interaction.data!.values![0])]
+					const selected = trackss[Number(interaction.data!.values![0])]
 					await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						embeds: [
 							{
@@ -123,7 +122,7 @@ const common = {
 						{
 							color: constants.standard_embed_color,
 							description: `Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`,
-							footer: { text: `1-${songs.length}` }
+							footer: { text: `1-${trackss.length}` }
 						}
 					],
 					components: [
@@ -150,11 +149,10 @@ const common = {
 	}
 }
 
-function decodedToSong(track: string, info: import("@lavalink/encoding").TrackInfo): import("./songtypes").Song {
-	const songTypes = require("./songtypes") as typeof import("./songtypes")
+function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo): import("./tracktypes").Track {
+	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
 	const type = sourceMap.get(info.source)
-	if (!type) throw new Error("UNEXPECTED_SOURCE")
-	return new songTypes[type](track, info)
+	return new (type ? trackTypes[type] : trackTypes["RequiresSearchTrack"])(track, info)
 }
 
 export = common

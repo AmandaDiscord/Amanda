@@ -4,7 +4,6 @@ module.exports = {
 	// Keys
 	bot_token: "discord bot token here",
 	sql_password: "mysql password here",
-	yt_api_key: "youtube api key here",
 	chewey_api_key: "chewey bot api key here",
 	lavalink_password: "lavalink password here",
 	weeb_api_key: "weeb.sh api key here",

@@ -82,7 +82,7 @@ commands.assign([
 							fields: [
 								{
 									name: leadingIdentity,
-									value: `**❯ ${lang.GLOBAL.HEADER_SONGS_QUEUED}:**\n${text.numberComma(Array.from(queues.values()).reduce((acc, cur) => acc + cur.songs.length, 0))}`,
+									value: `**❯ ${lang.GLOBAL.HEADER_SONGS_QUEUED}:**\n${text.numberComma(Array.from(queues.values()).reduce((acc, cur) => acc + cur.tracks.length, 0))}`,
 									inline: true
 								},
 								{
