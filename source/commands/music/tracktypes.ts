@@ -156,22 +156,23 @@ export class RequiresSearchTrack extends Track {
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new AsyncValueCache(async () => {
-			if (this.track == "!") {
-				let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
-				try {
-					tracks = await common.loadtracks(this.searchString, this.queue?.node)
-				} catch (e) {
-					this.error = e
-					return
-				}
-				if (!tracks || !tracks[0]) this.error = `No results for track: ${this.searchString}`
-				else if (tracks[0] && !tracks[0].track) this.error = `Missing track for ${this.searchString}`
-				else {
-					this.track = tracks[0].track
-					if (tracks[0].info) this.author = tracks[0].info.author
-				}
+			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
+			try {
+				tracks = await common.loadtracks(this.searchString, this.queue?.node)
+			} catch (e) {
+				this.error = e
+				return
 			}
+			if (tracks && tracks.tracks[0] && tracks.tracks[0].track) {
+				this.track = tracks.tracks[0].track
+				if (tracks.tracks[0].info) this.author = tracks.tracks[0].info.author
+			} else if (tracks.tracks[0] && !tracks.tracks[0].track) this.error = `Missing track for ${this.searchString}`
+			else this.error = `No results for track: ${this.searchString}`
 		})
+	}
+
+	public prepare() {
+		return this.prepareCache.get()
 	}
 }
 
