@@ -54,10 +54,8 @@ async function customEval(input: string, _context: import("vm").Context, _filena
 
 passthrough.sync.events.on(__filename, () => logger.warn("stdin does not auto-reload."))
 
-const cli = repl.start({ prompt: "> ", eval: customEval, writer: s => s })
+const cli = repl.start({ prompt: "", eval: customEval, writer: s => s })
 
 Object.assign(cli.context, passthrough, { path })
 
-cli.once("exit", () => {
-	process.exit()
-})
+cli.once("exit", () => process.exit())

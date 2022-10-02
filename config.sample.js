@@ -13,6 +13,7 @@ module.exports = {
 	dbl_api_key: "discordbotlist.com api key here",
 	botsgg_api_key: "discord.bots.gg api key here",
 	del_api_key: "discordextremelist.xyz api key here",
+	discords_api_key: "discords.com api key here",
 
 	// Environment
 	machine_id: "lmao_dev_compname",

@@ -66,6 +66,7 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	}
 	const websiteSocket = new ReconnectingWS(`${config.website_protocol === "http" ? "ws://" : "wss://"}${config.website_domain}`, 5000)
 	websiteSocket.on("open", onOpen)
+	websiteSocket.on("close", (code: number, reason: Buffer) => logger.warn(`Website socket disconnect: { code: ${code}, reason: ${reason.toString("utf8")} }`))
 
 	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, websiteSocket })
 

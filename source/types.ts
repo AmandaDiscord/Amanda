@@ -14,6 +14,7 @@ export type Config = {
 	"dbl_api_key": string
 	"botsgg_api_key": string
 	"del_api_key": string
+	"discords_api_key": string
 	"listen_moe_username": string
 	"listen_moe_password": string
 

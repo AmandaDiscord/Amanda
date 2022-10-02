@@ -79,7 +79,7 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 
 		component.setCallback(interaction => {
 			client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
-			page = Number(interaction.data?.values?.[0].value || 0)
+			page = Number(interaction.data?.values?.[0] || 0)
 			callback(page, component)
 		})
 

@@ -353,7 +353,7 @@ commands.assign([
 			} else if (optionAuto !== null) {
 				queue.auto = optionAuto
 				const state = queue.toJSON()
-				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
+				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.auto ? "AUTO_ON" : "AUTO_OFF"] })
 			} else if (optionInfo !== null) {
 				const info = await queue.tracks[0].showInfo()
@@ -361,7 +361,7 @@ commands.assign([
 			} else if (optionLoop !== null) {
 				queue.loop = optionLoop
 				const state = queue.toJSON()
-				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
+				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			} else if (optionLyrics !== null) {
 				const lyrics = await queue.tracks[0].getLyrics()

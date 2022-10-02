@@ -139,6 +139,7 @@ export class Session {
 	public loggedin = false
 	public channel: string | null = null
 	public user: string | null = null
+	public shards: Array<number> = []
 
 	public constructor(ws: import("ws").WebSocket) {
 		this.ws = ws
@@ -215,6 +216,7 @@ export class Session {
 	}
 
 	public cleanClose(): void {
+		if (this.user === configuredUserID) utils.warn("cleanClose was called")
 		this.send({ op: constants.WebsiteOPCodes.STATE, d: null })
 		this.ws.close()
 	}
@@ -305,7 +307,6 @@ export class Session {
 		if (this.user !== configuredUserID) return
 		const queue = webQueues.get(data.d?.channel_id!)
 		if (queue) queue.session = this
-		if (!queue) utils.warn(`No queue for acceptData! ${JSON.stringify(data.d)}`)
 		if (data.d && data.d.op && queue) {
 			receivers[data.d.op]?.updateCallback(queue, data.d.d)
 			const subscribers = sessions.filter(s => s.channel === data.d!.channel_id && s.user !== configuredUserID)
