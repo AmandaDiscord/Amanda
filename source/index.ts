@@ -64,7 +64,7 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 		firstConnect = false
 		passthrough.websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.IDENTIFY, d: { token: config.lavalink_password, timestamp: Date.now() } }))
 	}
-	const websiteSocket = new ReconnectingWS(`ws${config.website_ipc_bind !== "localhost" ? "s" : ""}://${config.website_ipc_bind}:${config.website_domain.split(":")[1]}`, 5000)
+	const websiteSocket = new ReconnectingWS(`ws${config.website_ipc_bind !== "localhost" ? "s" : ""}://${config.website_ipc_bind}:${config.website_domain.split(":")[1] || "10400"}`, 5000)
 	websiteSocket.on("open", onOpen)
 	websiteSocket.on("close", (code: number, reason: Buffer) => logger.warn(`Website socket disconnect: { code: ${code}, reason: ${reason.toString("utf8")} }`))
 
