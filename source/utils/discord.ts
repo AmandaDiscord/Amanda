@@ -42,9 +42,11 @@ export function displayAvatarURL(user: import("discord-typings").User, dynamic?:
 	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
 }
 
+const reg = /`.+?`/g
+
 export function createPagination(cmd: import("discord-typings").Interaction, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
 	let alignedRows = arr.tableifyRows([title].concat(rows), align, () => "`")
-	const formattedTitle = alignedRows[0].replace(/`.+?`/g, sub => `__**\`${sub}\`**__`)
+	const formattedTitle = alignedRows[0].replace(reg, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)
 	const pages = arr.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 	paginate(pages.length, (page, component) => {

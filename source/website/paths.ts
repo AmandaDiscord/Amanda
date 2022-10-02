@@ -194,12 +194,14 @@ for (const key of Object.keys(routes)) {
 	compiledRegexes[key] = new RegExp(key)
 }
 
+const routeKeyRegex = /\/(\d+)(\/)?/g
+
 const prox = new Proxy(paths, {
 	get(target, property, receiver) {
 		const existing = Reflect.get(target, property, receiver)
 		if (existing) return existing
 		const prop = property.toString()
-		const routeKey = prop.replace(/\/(\d+)(\/)?/g, "/(\\d+)$2")
+		const routeKey = prop.replace(routeKeyRegex, "/(\\d+)$2")
 		if (routes[routeKey]) {
 			const match = prop.match(compiledRegexes[routeKey])
 			if (!match) throw new Error("PANIC_COMPILED_REGEX_NO_MATCHES")

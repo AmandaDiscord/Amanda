@@ -78,14 +78,16 @@ class AnonImage extends ElemJS {
 	}
 }
 
+let r = /[.#]?[\w-]+/g
+const spaceRegex = /^\s*/
+
 /** @param {TemplateStringsArray} string */
 function ejs(string) {
 	let indentHistory = new Map()
 	let lines = string[0].split("\n")
 	lines.forEach(line => {
-		let indent = line.match(/^\s*/)[0].length
-		line = line.replace(/^\s*/, "")
-		let r = /[.#]?[\w-]+/g
+		let indent = line.match(spaceRegex)[0].length
+		line = line.replace(spaceRegex, "")
 		let element
 		let next
 		do {

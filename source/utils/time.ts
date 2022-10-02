@@ -41,12 +41,14 @@ export function shortTime(number: number, scale: "ms" | "sec", precision: Readon
 	return timestr
 }
 
+const reg = /(\d+) ?(\w+)?/
+const inputSplitter = /(?! [^\d]+) /g
+
 export function parseDuration(input: string) {
 	if (!input) return null
-	const individual = input.split(/(?! [^\d]+) /g)
+	const individual = input.split(inputSplitter)
 	let totalTime = 0
 	for (const frame of individual) {
-		const reg = /([\d]+) ?([\w]+)?/
 		const test = frame.match(reg)
 		if (test == null) return null
 		if (!test[1]) return null

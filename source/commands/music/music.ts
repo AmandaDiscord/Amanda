@@ -18,6 +18,8 @@ const waitForClientVCJoinTimeout = 5000
 
 const musicDisabled = false as boolean
 
+const notWordRegex = /\W/g
+
 commands.assign([
 	{
 		name: "music",
@@ -450,7 +452,7 @@ commands.assign([
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" }) })
 			} else if (action === "n") {
 				await orm.db.delete("web_tokens", { user_id: author.id })
-				const hash = crypto.randomBytes(24).toString("base64").replace(/\W/g, "_")
+				const hash = crypto.randomBytes(24).toString("base64").replace(notWordRegex, "_")
 				await orm.db.insert("web_tokens", { user_id: author.id, token: hash, staging: 1 })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.TOKENS_NEW, { "website": `${config.website_protocol}://${config.website_domain}/dash`, "prefix": "/" })}\n${hash}` })
 			} else {

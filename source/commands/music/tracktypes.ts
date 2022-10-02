@@ -177,6 +177,7 @@ export class RequiresSearchTrack extends Track {
 }
 
 const pathnamereg = /\/?(\w+)\.\w+$/
+const underscoreRegex = /_/g
 
 export class ExternalTrack extends Track {
 	public id = String(Date.now())
@@ -191,7 +192,7 @@ export class ExternalTrack extends Track {
 			const match = to.pathname.match(pathnamereg)
 			if (!match) name = "Unknown Track"
 			else name = match[1]
-			this.title = entities.decodeHTML(name.replace(/_/g, " "))
+			this.title = entities.decodeHTML(name.replace(underscoreRegex, " "))
 		}
 		this.live = info.isStream || true
 		this.queueLine = this.live ? `**${this.title}** (LIVE)` : `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`

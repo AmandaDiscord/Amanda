@@ -9,9 +9,13 @@ const { rootFolder, db, sync } = passthrough
 
 const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
 
+const dotDigit = /\.\d+/
+const T = /T/
+const Z = /Z/
+
 function getPrefix(type: "warn" | "info" | "error") {
 	const color = type === "warn" ? "\x1b[93m" : type === "error" ? "\x1b[91m" : "\x1b[92m"
-	return `\x1b[90m${new Date().toISOString().replace("T", " ").replace("Z", "").replace(/\.\d+/, "")} ${color}${type !== "error" ? `${type} ` : type} \x1b[35m${process.pid} \x1b[0m ---`
+	return `\x1b[90m${new Date().toISOString().replace(T, " ").replace(Z, "").replace(dotDigit, "")} ${color}${type !== "error" ? `${type} ` : type} \x1b[35m${process.pid} \x1b[0m ---`
 }
 
 function post(err: boolean, value: string) {

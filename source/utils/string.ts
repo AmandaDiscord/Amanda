@@ -40,11 +40,13 @@ export function numberComma(value: number | string | bigint) {
 	return BigInt(value).toLocaleString()
 }
 
+const commaRegex = /,/g
+
 /**
  * Converts a string to a bigint. The string may include commas.
  */
 export function parseBigInt(value: string) {
-	const numstr = value.replace(/,/g, "")
+	const numstr = value.replace(commaRegex, "")
 	if (!/^\d+$/.exec(numstr)) return null
 	return BigInt(numstr)
 }

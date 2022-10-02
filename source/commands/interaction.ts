@@ -11,6 +11,8 @@ const arrayUtils = sync.require("../utils/array") as typeof import("../utils/arr
 
 const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
 
+const nameRegex = /[^a-zA-Z0-9_-]+/g
+
 const cmds = [
 	{
 		name: "ship",
@@ -78,7 +80,7 @@ const cmds = [
 				content: language.replace(lang.GLOBAL.SHIP_RATING, { "display1": `${user1.username}#${user1.discriminator}`, "display2": `${user2.username}#${user2.discriminator}`, "percentage": percentage }),
 				files: [
 					{
-						name: `ship_${user1.username}_${user2.username}`.replace(/[^a-zA-Z0-9_-]+/g, "") + ".png",
+						name: `ship_${user1.username}_${user2.username}`.replace(nameRegex, "") + ".png",
 						file: buffer
 					}
 				]

@@ -15,6 +15,7 @@ const time = sync.require("../../utils/time") as typeof import("../../utils/time
 
 const musicDisabled = false as boolean
 const waitForClientVCJoinTimeout = 5000
+const plRegex = /PL[A-Za-z0-9_-]{16,}/
 
 commands.assign([
 	{
@@ -196,7 +197,7 @@ commands.assign([
 
 			const checkPlaylistName = (playlistName: string) => {
 				let value = true
-				if (playlistName.includes("http") || playlistName.includes("www.") || playlistName.match(/PL[A-Za-z0-9_-]{16,}/)) value = false
+				if (playlistName.includes("http") || playlistName.includes("www.") || playlistName.match(plRegex)) value = false
 				if (playlistName.length > 24) value = false
 				if (!value) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Invalid playlist name. Playlist names must not contain a link or be longer than 24 characters" })
 				return value

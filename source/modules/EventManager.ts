@@ -48,6 +48,8 @@ sync.addTemporaryListener(sync.events, __filename, () => {
 	clearTimeout(statsTimeout)
 })
 
+const backtickRegex = /`/g
+
 sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings").GatewayPayload & { shard_id: number }) => {
 	if (p.t === "READY") {
 		const data = p.d as import("discord-typings").ReadyPayload
@@ -191,7 +193,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				]
 				embed.fields = [
 					{ name: "Details", value: detailsString },
-					{ name: "Message content", value: `\`\`\`\n/${properties.filter(Boolean).join(" ").replace(/`/g, "ˋ")}\`\`\`` }
+					{ name: "Message content", value: `\`\`\`\n/${properties.filter(Boolean).join(" ").replace(backtickRegex, "ˋ")}\`\`\`` }
 				]
 
 				client.snow.channel.createMessage("512869106089852949", { embeds: [embed] })
