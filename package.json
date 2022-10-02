@@ -6,8 +6,7 @@
   "author": "PapiOphidian",
   "scripts": {
     "start": "node --enable-source-maps --optimize_for_size dist/index.js",
-    "website": "node --enable-source-maps dist/website/server.js",
-    "test": "tap"
+    "website": "node --enable-source-maps dist/website/server.js"
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
