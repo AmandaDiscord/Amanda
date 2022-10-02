@@ -225,8 +225,6 @@ commands.assign([
 				return orderedTracks
 			}
 
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
-
 			if (optionMeta !== null) {
 
 
@@ -241,6 +239,10 @@ commands.assign([
 					optionCreate,
 					optionDelete
 				]
+
+				const ephemeral = optionShow === true
+
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: ephemeral ? (1 << 6) : 0 } })
 
 				const notNull2 = array2.filter(i => i !== null)
 				if (notNull2.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username }) })
@@ -392,6 +394,8 @@ commands.assign([
 				const optionPlaylist = (optionAdd.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 				const optionTrack = (optionAdd.options.find(o => o.name === "track") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
 				if (!checkPlaylistName(optionPlaylist)) return
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
@@ -417,6 +421,8 @@ commands.assign([
 				const optionPlaylist = (optionRemove.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 				const optionIndex = (optionRemove.options.find(o => o.name === "index") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
 
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
 				if (!checkPlaylistName(optionPlaylist)) return
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
@@ -437,6 +443,8 @@ commands.assign([
 				const optionPlaylist = (optionMove.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 				const optionFrom = (optionMove.options.find(o => o.name === "from") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
 				const optionTo = (optionMove.options.find(o => o.name === "to") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
+
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 				if (!checkPlaylistName(optionPlaylist)) return
 
@@ -463,6 +471,8 @@ commands.assign([
 				const optionPlaylist = (optionSearch.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 				const optionQuery = (optionSearch.options.find(o => o.name === "query") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
 
@@ -487,6 +497,8 @@ commands.assign([
 				const optionPlaylist = (optionPlay.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
 				const optionShuffle = (optionPlay.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? false
 				const optionStart = (optionPlay.options.find(o => o.name === "start") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? 1
+
+				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
