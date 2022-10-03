@@ -3,18 +3,71 @@
 	src: url("/whitney.ttf") format("truetype");
 }
 
+:root {
+	--main-gradient: linear-gradient(135deg, #fead7b, #c76d7f, #462371);
+	--inverted-main-gradient: linear-gradient(135deg, #462371, #c76d7f, #fead7b);
+	--grey: #444;
+	--pink: #de56a9;
+	--button-background: white;
+	--button-color: black;
+	--button-color-hover: white;
+}
+
 *, input {
 	font-family: Whitney, sans-serif;
 }
 
 body {
-	background: linear-gradient(135deg, #462371, #c76d7f, #fead7b);
-	background-size: cover;
+	height: 100vh;
 	margin: 0px;
 	font-size: 16px;
 	color: #282828;
 	overflow-y: scroll;
 	min-height: 100vh;
+}
+
+@keyframes bgLight {
+	0% {
+		background-size: 200% 200%;
+		background-position: 100% 100%;
+	}
+	100% {
+		background-size: 100% 100%;
+		background-position: 0 0;
+	}
+}
+
+@keyframes bgDark {
+	0% {
+		background-size: 100% 100%;
+		background-position: 0 0;
+	}
+	100% {
+		background-size: 200% 200%;
+		background-position: 100% 100%;
+	}
+}
+
+.container {
+	background: var(--main-gradient);
+	height: 100%;
+	animation: bgLight 1s ease 0s 1 normal forwards;
+}
+
+.toggle {
+	position: absolute;
+}
+
+.modeToggle {
+	cursor: pointer;
+}
+
+.toggle:checked + div.container {
+	--button-background: black;
+	--button-color: white;
+	--button-color-hover: black;
+
+	animation: bgDark 1s ease 0s 1 normal forwards;
 }
 
 noscript {
@@ -58,11 +111,11 @@ nav a.navitem {
 }
 
 nav a.navitem:hover {
-	background-color: #444;
+	background-color: var(--grey);
 }
 
 nav a.navitem.active {
-	background: linear-gradient(to top, white 3px, #444 3px);
+	background: linear-gradient(to top, white 3px, var(--grey) 3px);
 	color: white;
 }
 
@@ -108,14 +161,14 @@ button[type="submit"] {
 	margin: 4px 2px;
 	transition: 0.2s ease-out;
 	transition-property: color, background-color;
-	background-color: white;
-	color: black;
-	border: 2px solid #de56a9;
+	background-color: var(--button-background);
+	color: var(--button-color) !important;
+	border: 2px solid var(--pink);
 }
 
 .pinkbutton:hover {
-	background-color: #de56a9;
-	color: white;
+	background-color: var(--pink);
+	color: var(--button-color-hover) !important;
 }
 
 .box {
@@ -502,7 +555,7 @@ button[type="submit"] {
 }
 
 .form-with-rows .normal-text-input {
-	border: 1px solid #444;
+	border: 1px solid var(--grey);
 	background: #fff;
 	border-radius: 0px;
 	margin: 0px;
@@ -514,7 +567,7 @@ button[type="submit"] {
 	padding: 4px;
 	line-height: 1;
 	font-size: 18px;
-	border: 2px solid #de56a9;
+	border: 2px solid var(--pink);
 	background-color: white;
 	color: black;
 	outline: none;
@@ -536,7 +589,7 @@ button[type="submit"] {
 }
 
 .apply-config:not(:disabled):hover {
-	background-color: #de56a9;
+	background-color: var(--pink);
 	color: white;
 }
 

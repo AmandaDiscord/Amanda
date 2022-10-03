@@ -21,24 +21,32 @@
 		<link rel="stylesheet" type="text/css" href="/main.css">
 	</head>
 	<body>
-		<nav id="topnav">
-			<a class="navitem" href="/">Home</a>
-			<a class="navitem" href="/about">About</a>
-			<a class="active navitem" href="/dash">Dash</a>
-			<a class="right navitem">
-				<form action="/logout" method="post">
-					<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
-					<button type="submit">Logout</button>
-				</form>
-			</a>
-		</nav>
-		<main>
-			<div class="about">
-				<div class="fatbox">
-					Welcome back
+		<input type="checkbox" class="toggle" id="mode">
+		<div class="container">
+			<nav id="topnav">
+				<a class="navitem" href="/">Home</a>
+				<a class="navitem" href="/about">About</a>
+				<a class="active navitem" href="/dash">Dash</a>
+				<div class="right">
+					<a class="navitem">
+						<label for="mode" class="modeToggle">Mode</label>
+					</a>
+					<a class="navitem">
+						<form action="/logout" method="post">
+							<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
+							<button type="submit">Logout</button>
+						</form>
+					</a>
+				</a>
+			</nav>
+			<main>
+				<div class="about">
+					<div class="fatbox">
+						Welcome back
+					</div>
+					$body
 				</div>
-				$body
-			</div>
-		</main>
+			</main>
+		</div>
 	</body>
 </html>
