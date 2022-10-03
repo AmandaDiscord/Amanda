@@ -21,20 +21,26 @@
 		<link rel="stylesheet" type="text/css" href="/main.css">
 	</head>
 	<body>
-		<nav id="topnav">
-			<a class="navitem" href="/">Home</a>
-			<a class="navitem" href="/about">About</a>
-			<a class="navitem" href="/dash">Dash</a>
-		</nav>
-		<main>
-			<div class="about">
-				<form action="/dash" method="post">
-					<label for="token">Token</label><br>
-					<input type="text" id="token" name="token">
-					<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
-					<button type="submit">Submit</button>
-				</form>
-			</div>
-		</main>
+		<input type="checkbox" class="toggle" id="mode">
+		<div class="container">
+			<nav id="topnav">
+				<a class="navitem" href="/">Home</a>
+				<a class="navitem" href="/about">About</a>
+				<a class="navitem" href="/dash">Dash</a>
+				<a class="right navitem">
+					<label for="mode" class="modeToggle">Mode</label>
+				</a>
+			</nav>
+			<main>
+				<div class="about">
+					<form action="/dash" method="post">
+						<label for="token">Token</label><br>
+						<input type="text" id="token" name="token">
+						<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
+						<button type="submit">Submit</button>
+					</form>
+				</div>
+			</main>
+		</div>
 	</body>
 </html>
