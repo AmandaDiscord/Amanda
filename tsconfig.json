@@ -7,7 +7,7 @@
 		"declaration": false,
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,
-		"incremental": false,
+		"incremental": true,
 		"lib": ["esnext", "dom"],
 		"module": "commonjs",
 		"moduleResolution": "node",
