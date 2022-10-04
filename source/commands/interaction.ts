@@ -33,15 +33,14 @@ const cmds = [
 			}
 		],
 		async process(cmd, lang) {
-			const author = cmd.user ? cmd.user : cmd.member!.user
-			const user1 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user1") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value] || author
-			const user2 = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user2") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
-			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": author.username }) } })
+			const user1 = cmd.data.users.get(cmd.data.options.get("user1")?.asString() || "") || cmd.author
+			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
+			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) } })
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
 			if (crow) {
 				const otherID = user1.id === crow.user1 ? crow.user2 : crow.user1
-				const you = user1.id === author.id
+				const you = user1.id === cmd.author.id
 				if (otherID === user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `I don't think I have to rate ${you ? "you" : user1.username} and ${user2.username} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>` })
 			}
 
@@ -100,11 +99,10 @@ const cmds = [
 			}
 		],
 		process(cmd, lang) {
-			const author = cmd.user ? cmd.user : cmd.member!.user
-			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": author.username }) } })
-			const user = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) } })
+			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 			if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "No u" } })
-			if (user.id == author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": author.username }) } })
+			if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) } })
 			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) } })
 		}
 	}
@@ -177,12 +175,11 @@ for (const source of interactionSources) {
 	cmds.push(newCommand)
 }
 
-async function doInteraction(cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
-	const author = cmd.user ? cmd.user : cmd.member!.user
-	const user = cmd.data!.resolved!.users![(cmd.data!.options!.find(o => o.name === "user") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString).value]
+async function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
+	const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
-	if (user.id == author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
-	if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL[keyAmanda], { "username": author.username }) } })
+	if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
+	if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) } })
 	await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 	let fetched: Promise<string> | undefined = undefined
 	let footer: string
@@ -196,7 +193,7 @@ async function doInteraction(cmd: import("discord-typings").Interaction, lang: i
 	fetched!.then(u => {
 		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
 		const embed: import("discord-typings").Embed = {
-			description: language.replace(lang.GLOBAL[keyOther], { "user": author.username, "action": source, "mention": `<@${user.id}>` }),
+			description: language.replace(lang.GLOBAL[keyOther], { "user": cmd.author.username, "action": source, "mention": `<@${user.id}>` }),
 			image: { url: u },
 			color: constants.standard_embed_color
 		}

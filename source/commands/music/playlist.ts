@@ -172,12 +172,12 @@ commands.assign([
 		async process(cmd, lang) {
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
-			const optionMeta = (cmd.data?.options?.find(o => o.name === "meta") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
-			const optionAdd = (cmd.data?.options?.find(o => o.name === "add") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
-			const optionRemove = (cmd.data?.options?.find(o => o.name === "remove") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
-			const optionMove = (cmd.data?.options?.find(o => o.name === "move") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
-			const optionSearch = (cmd.data?.options?.find(o => o.name === "search") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
-			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub) ?? null
+			const optionMeta = cmd.data.options.get("meta") ?? null
+			const optionAdd = cmd.data.options.get("add") ?? null
+			const optionRemove = cmd.data.options.get("remove") ?? null
+			const optionMove = cmd.data.options.get("move") ?? null
+			const optionSearch = cmd.data.options.get("search") ?? null
+			const optionPlay = cmd.data.options.get("play") ?? null
 
 			const array = [
 				optionMeta,
@@ -188,11 +188,9 @@ commands.assign([
 				optionPlay
 			]
 
-			const author = cmd.user ? cmd.user : cmd.member!.user
-
 			const notNull = array.filter(i => i !== null)
 
-			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username }) } })
+			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username }) } })
 			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
 
 			const checkPlaylistName = (playlistName: string) => {
@@ -228,10 +226,10 @@ commands.assign([
 			if (optionMeta !== null) {
 
 
-				const optionShow = (optionMeta.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-				const optionInfo = (optionMeta.options.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-				const optionCreate = (optionMeta.options.find(o => o.name === "create") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-				const optionDelete = (optionMeta.options.find(o => o.name === "delete") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
+				const optionShow = optionMeta.options.get("show")?.asBoolean() ?? null
+				const optionInfo = optionMeta.options.get("info")?.asString() ?? null
+				const optionCreate = optionMeta.options.get("create")?.asString() ?? null
+				const optionDelete = optionMeta.options.get("delete")?.asString() ?? null
 
 				const array2 = [
 					optionShow,
@@ -245,7 +243,7 @@ commands.assign([
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: ephemeral ? (1 << 6) : 0 } })
 
 				const notNull2 = array2.filter(i => i !== null)
-				if (notNull2.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username }) })
+				if (notNull2.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username }) })
 				if (notNull2.length > 1) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You can only do 1 action at a time" })
 
 				if (optionShow !== null) {
@@ -268,7 +266,7 @@ commands.assign([
 						function addRanking(r: number | string) {
 							p.ranking += `${r}.`
 						}
-						if (p.author == author.id) addRanking(1)
+						if (p.author == cmd.author.id) addRanking(1)
 						else addRanking(0)
 						if (p.count == 0) addRanking(0)
 						else addRanking(1)
@@ -372,7 +370,7 @@ commands.assign([
 					const playlistRow = await orm.db.get("playlists", { name: optionCreate })
 					if (playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist already exists" })
 
-					await orm.db.insert("playlists", { name: optionCreate, author: author.id })
+					await orm.db.insert("playlists", { name: optionCreate, author: cmd.author.id })
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Playlist created" })
 				} else if (optionDelete !== null) {
 
@@ -381,7 +379,7 @@ commands.assign([
 
 					const playlistRow = await orm.db.get("playlists", { name: optionDelete })
 					if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-					if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+					if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 					await Promise.all([
 						orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
 						orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id })
@@ -391,8 +389,8 @@ commands.assign([
 			} else if (optionAdd !== null) {
 
 
-				const optionPlaylist = (optionAdd.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionTrack = (optionAdd.options.find(o => o.name === "track") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
+				const optionPlaylist = optionAdd.options.get("playlist")!.asString()!
+				const optionTrack = optionAdd.options.get("track")!.asString()!
 
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
@@ -400,7 +398,7 @@ commands.assign([
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
 				const result = await common.loadtracks(`${optionTrack}`).then(d => d[0]?.info)
 
@@ -418,8 +416,8 @@ commands.assign([
 			} else if (optionRemove !== null) {
 
 
-				const optionPlaylist = (optionRemove.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionIndex = (optionRemove.options.find(o => o.name === "index") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
+				const optionPlaylist = optionRemove.options.get("playlist")!.asString()!
+				const optionIndex = optionRemove.options.get("index")!.asNumber()!
 
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
@@ -427,7 +425,7 @@ commands.assign([
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
 				const orderedTracks = await getTracks(playlistRow)
 				const toRemove = orderedTracks[optionIndex - 1]
@@ -440,9 +438,9 @@ commands.assign([
 			} else if (optionMove !== null) {
 
 
-				const optionPlaylist = (optionMove.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionFrom = (optionMove.options.find(o => o.name === "from") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
-				const optionTo = (optionMove.options.find(o => o.name === "to") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)!.value
+				const optionPlaylist = optionMove.options.get("playlist")!.asString()!
+				const optionFrom = optionMove.options.get("from")!.asNumber()!
+				const optionTo = optionMove.options.get("to")!.asNumber()!
 
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
@@ -450,7 +448,7 @@ commands.assign([
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
 
 				const orderedTracks = await getTracks(playlistRow)
 				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
@@ -468,8 +466,8 @@ commands.assign([
 			} else if (optionSearch !== null) {
 
 
-				const optionPlaylist = (optionSearch.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionQuery = (optionSearch.options.find(o => o.name === "query") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
+				const optionPlaylist = optionSearch.options.get("playlist")!.asString()!
+				const optionQuery = optionSearch.options.get("query")!.asString()!
 
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
@@ -494,9 +492,9 @@ commands.assign([
 			} else if (optionPlay !== null) {
 
 
-				const optionPlaylist = (optionPlay.options.find(o => o.name === "playlist") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
-				const optionShuffle = (optionPlay.options.find(o => o.name === "show") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? false
-				const optionStart = (optionPlay.options.find(o => o.name === "start") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? 1
+				const optionPlaylist = optionPlay.options.get("playlist")!.asString()!
+				const optionShuffle = optionPlay.options.get("shuffle")?.asBoolean() ?? false
+				const optionStart = optionPlay.options.get("start")?.asNumber() ?? 1
 
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
@@ -509,8 +507,8 @@ commands.assign([
 				let queue = queues.get(cmd.guild_id)
 				const queueDidntExist = !queue
 
-				const userVoiceState = await orm.db.get("voice_states", { user_id: author.id, guild_id: cmd.guild_id })
-				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: author.username }) })
+				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
 				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 				const createQueue = async () => {
@@ -542,7 +540,7 @@ commands.assign([
 						if (e !== "Timed out") logger.error(e)
 						queue!.destroy()
 						queue = undefined
-						client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
+						client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
 						return false
 					}
 				}

@@ -11,6 +11,8 @@
 	--button-background: white;
 	--button-color: black;
 	--button-color-hover: white;
+	--fat-box-background: rgba(255, 255, 255, 0.6);
+	--text-color: #282828;
 }
 
 *, input {
@@ -21,14 +23,14 @@ body {
 	height: 100vh;
 	margin: 0px;
 	font-size: 16px;
-	color: #282828;
+	color: var(--text-color);
 	overflow-y: scroll;
 	min-height: 100vh;
 }
 
-@keyframes bgLight {
+@keyframes bg-light {
 	0% {
-		background-size: 200% 200%;
+		background-size: 300% 300%;
 		background-position: 100% 100%;
 	}
 	100% {
@@ -37,13 +39,13 @@ body {
 	}
 }
 
-@keyframes bgDark {
+@keyframes bg-dark {
 	0% {
 		background-size: 100% 100%;
 		background-position: 0 0;
 	}
 	100% {
-		background-size: 200% 200%;
+		background-size: 300% 300%;
 		background-position: 100% 100%;
 	}
 }
@@ -51,14 +53,14 @@ body {
 .container {
 	background: var(--main-gradient);
 	height: 100%;
-	animation: bgLight 1s ease 0s 1 normal forwards;
+	animation: bg-light 1s ease 0s 1 normal forwards;
 }
 
 .toggle {
 	position: absolute;
 }
 
-.modeToggle {
+.mode-toggle {
 	cursor: pointer;
 }
 
@@ -66,8 +68,10 @@ body {
 	--button-background: black;
 	--button-color: white;
 	--button-color-hover: black;
+	--fat-box-background: rgba(0, 0, 0, 0.6);
+	--text-color: #d6d6d6;
 
-	animation: bgDark 1s ease 0s 1 normal forwards;
+	animation: bg-dark 1s ease 0s 1 normal forwards;
 }
 
 noscript {
@@ -89,7 +93,7 @@ code {
 }
 
 h1 {
-	color: #222;
+	color: var(--text-color);
 	text-align: center;
 }
 
@@ -138,7 +142,7 @@ button[type="submit"] {
 }
 
 .landing {
-	color: #111;
+	color: var(--text-color);
 	text-align: center;
 	text-decoration: none;
 	margin: 40px 0px;
@@ -174,14 +178,16 @@ button[type="submit"] {
 .box {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
+	color: var(--text-color);
 }
 
 .fatbox {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	margin: 16px;
+	color: var(--text-color);
 }
 
 .title {
@@ -189,7 +195,7 @@ button[type="submit"] {
 	justify-content: center;
 	align-items: center;
 	font-size: 32px;
-	color: #111;
+	color: var(--text-color);
 	margin: 16px;
 }
 
@@ -204,7 +210,7 @@ button[type="submit"] {
 	grid-template-columns: 1fr auto 1fr;
 	justify-content: space-between;
 	align-items: center;
-	color: #111;
+	color: var(--text-color);
 	margin: 16px;
 }
 
@@ -229,6 +235,7 @@ button[type="submit"] {
 	margin-right: auto;
 	font-size: 34px;
 	text-align: center;
+	color: var(--text-color);
 }
 
 .missing-servers-message {
@@ -256,7 +263,7 @@ button[type="submit"] {
 	position: relative;
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	margin: 16px;
 	display: flex;
 	width: 250px;
@@ -292,7 +299,7 @@ button[type="submit"] {
 	justify-content: center;
 	align-items: center;
 	color: #ccc;
-	background-color: #2f3136;
+	background-color: var(--fat-box-background);
 	font-size: 32px;
 	width: 90px;
 	height: 90px;
@@ -311,11 +318,12 @@ button[type="submit"] {
 .player-grid .player-controls {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	padding: 12px;
 	display: flex;
 	position: relative;
 	z-index: 1;
+	color: var(--text-color);
 }
 
 .player-grid .player-controls .player-status {
@@ -363,7 +371,7 @@ button[type="submit"] {
 	padding: 0px 5px;
 	height: 28px;
 	border: 2px solid #222;
-	background: white;
+	background: var(--fat-box-background);
 	margin-bottom: 6px;
 }
 
@@ -403,7 +411,7 @@ button[type="submit"] {
 .player-grid .queue-container .queue-item {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	padding: 12px;
 	margin-bottom: 20px;
 	display: grid;
@@ -412,9 +420,17 @@ button[type="submit"] {
 	overflow: hidden;
 }
 
+.player-grid .queue-container .queue-item .song-title {
+	color: var(--text-color);
+}
+
+.player-grid .queue-container .queue-item .song-length {
+	color: var(--text-color);
+}
+
 .player-grid .queue-container .queue-item.disabled {
 	color: #555;
-	background: rgba(255, 255, 255, 0.4);
+	background: var(--fat-box-background);
 }
 
 .player-grid .queue-container .queue-item.disabled .song-management {
@@ -437,10 +453,11 @@ button[type="submit"] {
 .player-grid .channel-info {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	padding: 12px;
 	display: flex;
 	align-items: center;
+	color: var(--text-color);
 }
 
 .player-grid .channel-info .channel-icon {
@@ -478,7 +495,7 @@ button[type="submit"] {
 .player-grid .side-controls {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	padding: 12px;
 	margin-bottom: 20px;
 	visibility: hidden;
@@ -491,8 +508,9 @@ button[type="submit"] {
 	display: flex;
 	align-items: center;
 	border: 2px solid #222;
-	background: linear-gradient(to right, #3b88c3 15px, white 15px);
+	background: linear-gradient(to right, #3b88c3 15px, var(--button-background) 15px);
 	cursor: pointer;
+	color: var(--text-color);
 }
 
 .player-grid .side-controls .control .icon {
@@ -513,13 +531,14 @@ button[type="submit"] {
 .player-grid .voice-info {
 	border: 5px solid #222;
 	padding: 16px;
-	background-color: rgba(255, 255, 255, 0.6);
+	background-color: var(--fat-box-background);
 	padding: 12px;
 	display: grid;
 	grid-template-columns: auto 1fr;
 	align-items: center;
 	grid-gap: 6px;
 	visibility: hidden;
+	color: var(--text-color);
 }
 
 .player-grid .voice-info .avatar {
@@ -595,4 +614,8 @@ button[type="submit"] {
 
 .frames {
 	display: none;
+}
+
+div.about form button[type="submit"] {
+	color: var(--text-color);
 }

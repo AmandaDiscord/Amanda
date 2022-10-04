@@ -63,7 +63,7 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: import("discord-typings").Interaction, lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
+	async inputToTrack(resource: string, cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const tracks = await common.loadtracks(resource, node).catch(() => void 0)
@@ -101,7 +101,7 @@ const common = {
 				}, selectTimeout)
 				component.setCallback(async (interaction) => {
 					await client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
-					if ((interaction.user ? interaction.user : interaction.member!.user).id != (cmd.user ? cmd.user : cmd.member!.user).id) return
+					if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
 					component.destroy()
 					clearTimeout(timer)
 					const selected = trackss[Number(interaction.data!.values![0])]

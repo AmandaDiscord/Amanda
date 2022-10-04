@@ -41,7 +41,7 @@ commands.assign([
 			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} cluster, shard ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
 
-			const category = (cmd.data?.options?.find(o => o.name === "window") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
+			const category = cmd.data.options.get("window")?.asString()
 			if (category === "gw") {
 				const before = Date.now()
 				const stats = await requester.request(constants.GATEWAY_WORKER_CODES.STATS, undefined, (p) => passthrough.gateway.postMessage(p)) as { ram: { rss: number; heapTotal: number; heapUsed: number; }; latency: Array<number>; shards: Array<number>; uptime: number; }
@@ -224,9 +224,8 @@ commands.assign([
 		],
 		process(cmd, lang) {
 			let embed: import("discord-typings").Embed
-			const category = (cmd.data?.options?.find(o => o.name === "category") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const command = (cmd.data?.options?.find(o => o.name === "command") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value || null
-			const author = cmd.user ? cmd.user : cmd.member!.user
+			const category = cmd.data.options.get("category")?.asString()
+			const command = cmd.data.options.get("command")?.asString()
 			if (category || command) {
 				if (category === "music") {
 					embed = {
@@ -283,7 +282,7 @@ commands.assign([
 						client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 					} else {
 						embed = {
-							description: language.replace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${author.username}#${author.discriminator}` }),
+							description: language.replace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${cmd.author.username}#${cmd.author.discriminator}` }),
 							color: 0xB60000
 						}
 						client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })

@@ -2,7 +2,7 @@ interface Passthrough {
 	queues: Map<string, import("./commands/music/queue")>
 	client: import("./modules/Amanda")
 	clusterData: { connected_shards: Array<number>; guild_ids: { [sid: number]: Array<string> } }
-	commands: import("./modules/CommandManager")<[import("discord-typings").Interaction, import("@amanda/lang").Lang]>
+	commands: import("./modules/CommandManager")<[import("./modules/Command"), import("@amanda/lang").Lang]>
 	config: import("./types").Config
 	constants: typeof import("./constants")
 	db: import("pg").PoolClient

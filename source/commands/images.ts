@@ -3,7 +3,7 @@ const { constants, config, commands, client } = passthrough
 
 const poweredbychewey = `Powered by ${constants.chewey_api}`.replace(/https?:\/\//, "")
 
-async function sendImage(host: string, path: string, cmd: import("discord-typings").Interaction, footer: string) {
+async function sendImage(host: string, path: string, cmd: import("../modules/Command"), footer: string) {
 	let url: string
 	if (host == "chewey") url = `${constants.chewey_api}/${path}?auth=${config.chewey_api_key}`
 	else return Promise.reject(new Error("Host provided not supported"))
@@ -60,7 +60,7 @@ commands.assign([
 		],
 		async process(cmd) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
-			const type = (cmd.data!.options!.find(o => o.name === "type") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)!.value
+			const type = cmd.data.options.get("type")!.asString()
 			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "There was an error fetching the image" })
 			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey).catch(onFail)
 			else if (type === "dog") return sendImage("chewey", "dog", cmd, poweredbychewey).catch(onFail)

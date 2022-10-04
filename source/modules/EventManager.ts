@@ -6,6 +6,8 @@ const { client, sync, commands, config, constants, queues } = passthrough
 let starting = true
 if (client.ready) starting = false
 
+import Command from "./Command"
+
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
 const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
@@ -149,7 +151,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 			const user = interaction.user ? interaction.user : interaction.member!.user
 			orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 			try {
-				await commands.cache.get(interaction.data!.name)?.process(interaction, langToUse)
+				const cmd = new Command(interaction)
+				await commands.cache.get(interaction.data!.name)?.process(cmd, langToUse)
 			} catch (e) {
 				if (e && e.code) {
 					if (e.code == 10008) return

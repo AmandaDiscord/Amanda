@@ -44,7 +44,7 @@ export function displayAvatarURL(user: import("discord-typings").User, dynamic?:
 
 const reg = /`.+?`/g
 
-export function createPagination(cmd: import("discord-typings").Interaction, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
+export function createPagination(cmd: import("../modules/Command"), title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
 	let alignedRows = arr.tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(reg, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)

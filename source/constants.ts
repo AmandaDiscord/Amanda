@@ -46,14 +46,9 @@ export const lavalinkNodes = [] as Array<import("./types").InferModelDef<typeof 
 const devNode = { host: "localhost", port: 10402, invidious_origin: "http://amanda.moe:3000", enabled: 1, search_with_invidious: 0, name: "DEV", regions: ["us-west"], password: config.lavalink_password, id: "dev", resumeKey: `${Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")}/dev`, resumeTimeout: 75 }
 if (config.is_dev_env) lavalinkNodes.push(devNode)
 
-export const frisky_placeholder = `${baseURL}/images/frisky-small.webp`
-export const soundcloud_placeholder = `${baseURL}/images/soundcloud-logo-rectangle.webp`
-export const spotify_placeholder = `${baseURL}/images/spotify-logo.webp`
+export const frisky_placeholder = `${baseURL}/images/frisky-new.webp`
 export const local_placeholder = `${baseURL}/images/local.webp`
 export const listen_moe_placeholder = `${baseURL}/images/listen-moe-logo.webp`
-export const newgrounds_placeholder = `${baseURL}/images/ng-logo.webp`
-export const twitter_placeholder = `${baseURL}/images/twitter-logo.webp`
-
 
 // eslint-disable-next-line no-shadow
 export enum WebsiteOPCodes {

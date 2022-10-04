@@ -48,7 +48,7 @@ class Queue {
 	public messageUpdater: import("../../utils/classes/FrequencyUpdater") = new FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
-	private _interaction: import("discord-typings").Interaction | undefined
+	private _interaction: import("../../modules/Command") | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 

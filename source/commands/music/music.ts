@@ -191,25 +191,25 @@ commands.assign([
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 
-			const optionPlay = (cmd.data?.options?.find(o => o.name === "play") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-			const optionStop = (cmd.data?.options?.find(o => o.name === "stop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionSkip = (cmd.data?.options?.find(o => o.name === "skip") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionVolume = (cmd.data?.options?.find(o => o.name === "volume") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
-			const optionQueue = (cmd.data?.options?.find(o => o.name === "queue") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
-			const optionAuto = (cmd.data?.options?.find(o => o.name === "auto") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionLoop = (cmd.data?.options?.find(o => o.name === "loop") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionNow = (cmd.data?.options?.find(o => o.name === "now") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionInfo = (cmd.data?.options?.find(o => o.name === "info") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionPause = (cmd.data?.options?.find(o => o.name === "pause") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionRelated = (cmd.data?.options?.find(o => o.name === "related") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionLyrics = (cmd.data?.options?.find(o => o.name === "lyrics") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
-			const optionSeek = (cmd.data?.options?.find(o => o.name === "seek") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
-			const optionPitch = (cmd.data?.options?.find(o => o.name === "pitch") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
-			const optionSpeed = (cmd.data?.options?.find(o => o.name === "speed") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeNumber)?.value ?? null
-			const optionFilters = (cmd.data?.options?.find(o => o.name === "filters") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-			const optionFrisky = (cmd.data?.options?.find(o => o.name === "frisky") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-			const optionListenmoe = (cmd.data?.options?.find(o => o.name === "listenmoe") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-			const optionShuffle = (cmd.data?.options?.find(o => o.name === "shuffle") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeBoolean)?.value ?? null
+			const optionPlay = cmd.data.options.get("play")?.asString() ?? null
+			const optionStop = cmd.data.options.get("stop")?.asBoolean() ?? null
+			const optionSkip = cmd.data.options.get("skip")?.asBoolean() ?? null
+			const optionVolume = cmd.data.options.get("volume")?.asNumber() ?? null
+			const optionQueue = cmd.data.options.get("queue")?.asNumber() ?? null
+			const optionAuto = cmd.data.options.get("auto")?.asBoolean() ?? null
+			const optionLoop = cmd.data.options.get("loop")?.asBoolean() ?? null
+			const optionNow = cmd.data.options.get("now")?.asBoolean() ?? null
+			const optionInfo = cmd.data.options.get("info")?.asBoolean() ?? null
+			const optionPause = cmd.data.options.get("pause")?.asBoolean() ?? null
+			const optionRelated = cmd.data.options.get("related")?.asBoolean() ?? null
+			const optionLyrics = cmd.data.options.get("lyrics")?.asBoolean() ?? null
+			const optionSeek = cmd.data.options.get("seek")?.asNumber() ?? null
+			const optionPitch = cmd.data.options.get("pitch")?.asNumber() ?? null
+			const optionSpeed = cmd.data.options.get("speed")?.asNumber() ?? null
+			const optionFilters = cmd.data.options.get("filters")?.asString() ?? null
+			const optionFrisky = cmd.data.options.get("frisky")?.asString() ?? null
+			const optionListenmoe = cmd.data.options.get("listenmoe")?.asString() ?? null
+			const optionShuffle = cmd.data.options.get("shuffle")?.asBoolean() ?? null
 
 			const array = [
 				optionPlay,
@@ -235,21 +235,19 @@ commands.assign([
 
 			const notNull = array.filter(i => i !== null)
 
-			const author = cmd.user ? cmd.user : cmd.member!.user
-
-			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: author.username, prefix: "/" }) } })
+			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username, prefix: "/" }) } })
 			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
 
 			let queue = queues.get(cmd.guild_id)
-			if (!queue && [optionPlay, optionFrisky, optionListenmoe].every(i => i === null)) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: author.username }) } })
+			if (!queue && [optionPlay, optionFrisky, optionListenmoe].every(i => i === null)) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
 
 			let ephemeral = false
 			const shouldBeEphemeral = [optionStop, optionSkip, optionNow, optionInfo, optionRelated, optionLyrics, optionShuffle]
 			if (shouldBeEphemeral.includes(true)) ephemeral = true
 
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: ephemeral ? (1 << 6) : 0 } })
-			const userVoiceState = await orm.db.get("voice_states", { user_id: author.id, guild_id: cmd.guild_id })
-			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: author.username }) })
+			const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
 			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 			async function createQueue() {
@@ -281,7 +279,7 @@ commands.assign([
 					if (e !== "Timed out") logger.error(e)
 					queue!.destroy()
 					queue = undefined
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
 					return false
 				}
 			}
@@ -346,12 +344,12 @@ commands.assign([
 				return
 			}
 
-			if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: author.username }) })
+			if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 			if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id && optionQueue === null) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content:language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 			if (optionStop !== null) {
 				queue.destroy()
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue stopped by ${author.username}#${author.discriminator}` })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue stopped by ${cmd.author.username}#${cmd.author.discriminator}` })
 			} else if (optionAuto !== null) {
 				queue.auto = optionAuto
 				const state = queue.toJSON()
@@ -445,18 +443,17 @@ commands.assign([
 		],
 		async process(cmd, lang) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: 1 << 6 } })
-			const action = (cmd.data?.options?.find(o => o.name === "action") as import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeString)?.value ?? null
-			const author = cmd.user ? cmd.user : cmd.member!.user
+			const action = cmd.data.options.get("action")?.asString() ?? null
 			if (action === "d") {
-				await orm.db.delete("web_tokens", { user_id: author.id })
+				await orm.db.delete("web_tokens", { user_id: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" }) })
 			} else if (action === "n") {
-				await orm.db.delete("web_tokens", { user_id: author.id })
+				await orm.db.delete("web_tokens", { user_id: cmd.author.id })
 				const hash = crypto.randomBytes(24).toString("base64").replace(notWordRegex, "_")
-				await orm.db.insert("web_tokens", { user_id: author.id, token: hash, staging: 1 })
+				await orm.db.insert("web_tokens", { user_id: cmd.author.id, token: hash, staging: 1 })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.TOKENS_NEW, { "website": `${config.website_protocol}://${config.website_domain}/dash`, "prefix": "/" })}\n${hash}` })
 			} else {
-				const existing = await orm.db.get("web_tokens", { user_id: author.id })
+				const existing = await orm.db.get("web_tokens", { user_id: cmd.author.id })
 				if (existing) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.TOKENS_PREVIOUS, { "prefix": "/" })}\n${existing.token}` })
 				else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.TOKENS_NONE, { "prefix": "/" }) })
 			}
