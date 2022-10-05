@@ -13,6 +13,10 @@
 	--button-color-hover: white;
 	--fat-box-background: rgba(255, 255, 255, 0.6);
 	--text-color: #282828;
+	--light-visibility: visible;
+	--dark-visibility: hidden;
+	--light-display: unset;
+	--dark-display: none;
 }
 
 *, input {
@@ -51,6 +55,7 @@ body {
 }
 
 .container {
+	position: relative;
 	background: var(--main-gradient);
 	height: 100%;
 	animation: bg-light 1s ease 0s 1 normal forwards;
@@ -70,6 +75,10 @@ body {
 	--button-color-hover: black;
 	--fat-box-background: rgba(0, 0, 0, 0.6);
 	--text-color: #d6d6d6;
+	--light-visibility: hidden;
+	--dark-visibility: visible;
+	--light-display: none;
+	--dark-display: inline;
 
 	animation: bg-dark 1s ease 0s 1 normal forwards;
 }
@@ -152,7 +161,21 @@ button[type="submit"] {
 	font-size: 32px;
 }
 
-.landing img.landing-image {
+.dark {
+	visibility: var(--dark-visibility);
+	display: var(--dark-display);
+}
+
+.light {
+	visibility: var(--light-visibility);
+	display: var(--light-display);
+}
+
+.landing .landing-image {
+	position: relative;
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
 	mask-image: linear-gradient(to bottom, rgb(0, 0, 0) 88%, rgba(0, 0, 0, 0.9) 90%, rgba(0, 0, 0, 0.5) 95%, rgba(0, 0, 0, 0));
 	-webkit-mask-image: linear-gradient(to bottom, rgb(0, 0, 0) 88%, rgba(0, 0, 0, 0.9) 90%, rgba(0, 0, 0, 0.5) 95%, rgba(0, 0, 0, 0));
 	width: 256px;
@@ -618,4 +641,31 @@ button[type="submit"] {
 
 div.about form button[type="submit"] {
 	color: var(--text-color);
+}
+
+img.flame1 {
+	height: 100px;
+	width: auto;
+	position: absolute;
+	left: -30px;
+	bottom: 20px;
+	z-index: 50;
+}
+
+img.flame2 {
+	height: 75px;
+	width: auto;
+	position: absolute;
+	left: 20px;
+	top: 40px;
+	z-index: 50;
+}
+
+img.flame3 {
+	height: 40px;
+	width: auto;
+	position: absolute;
+	right: 20px;
+	bottom: 40px;
+	z-index: 50;
 }
