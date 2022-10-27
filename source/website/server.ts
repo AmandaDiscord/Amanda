@@ -18,18 +18,21 @@ const wss = new ws.Server({ noServer: true })
 const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 
 ;(async () => {
-	const pool = new Pool({
-		host: config.sql_domain,
-		user: "amanda",
-		password: config.sql_password,
-		database: "main",
-		max: 2
-	})
+	if (config.db_enabled) {
+		const pool = new Pool({
+			host: config.sql_domain,
+			user: "amanda",
+			password: config.sql_password,
+			database: "main",
+			max: 2
+		})
 
-	const db = await pool.connect()
-	await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
+		const db = await pool.connect()
+		await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
+		passthrough.db = db
+	}
 
-	Object.assign(passthrough, { config, sync, db, rootFolder, configuredUserID, liveUserID, wss, webQueues })
+	Object.assign(passthrough, { config, sync, rootFolder, configuredUserID, liveUserID, wss, webQueues })
 
 	const paths: typeof import("./paths") = sync.require("./paths")
 	const util: typeof import("./util") = sync.require("./util")

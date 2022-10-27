@@ -28,18 +28,20 @@ function setTimeoutForStats() {
 }
 
 async function onStatsPosting(time: number) {
-	const stats = await cluster.getOwnStats()
-	await orm.db.insert("stat_logs", {
-		time,
-		id: client.user.id,
-		ram_usage_kb: Math.floor(stats.ram / 1000), // stats.ram is in bytes
-		users: stats.users,
-		guilds: stats.guilds,
-		channels: stats.channels,
-		voice_connections: stats.connections,
-		uptime: Math.floor(stats.uptime),
-		shard: config.shard_list[0]
-	})
+	if (config.db_enabled) {
+		const stats = await cluster.getOwnStats()
+		await orm.db.insert("stat_logs", {
+			time,
+			id: client.user.id,
+			ram_usage_kb: Math.floor(stats.ram / 1000), // stats.ram is in bytes
+			users: stats.users,
+			guilds: stats.guilds,
+			channels: stats.channels,
+			voice_connections: stats.connections,
+			uptime: Math.floor(stats.uptime),
+			shard: config.shard_list[0]
+		})
+	}
 
 	setTimeoutForStats()
 }
@@ -70,7 +72,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		}
 		passthrough.clusterData.guild_ids[p.shard_id].push(...data.guilds.map(g => g.id))
 
-		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart) {
+		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart && config.db_enabled) {
 			const arr = passthrough.clusterData.guild_ids[p.shard_id]
 			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map(i => `'${i}'`).join(", ")})`)
 			logger.info(`Deleted voice states in ${arr.length} guilds for shard ${p.shard_id}`)
@@ -81,40 +83,42 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 			logger.info(`Successfully logged in as ${client.user.username}`)
 			process.title = client.user.username
 
-			const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
-				orm.db.select("lavalink_nodes"),
-				orm.db.select("lavalink_node_regions")
-			])
-			const lavalinkNodes = lavalinkNodeData.map(node => {
-				const newData = {
-					regions: lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region),
-					password: config.lavalink_password,
-					id: node.name.toLowerCase()
+			if (config.db_enabled) {
+				const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
+					orm.db.select("lavalink_nodes"),
+					orm.db.select("lavalink_node_regions")
+				])
+				const lavalinkNodes = lavalinkNodeData.map(node => {
+					const newData = {
+						regions: lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region),
+						password: config.lavalink_password,
+						id: node.name.toLowerCase()
+					}
+					return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name, search_with_invidious: node.search_with_invidious, enabled: node.enabled })
+				})
+
+				constants.lavalinkNodes.push(...lavalinkNodes)
+
+				for (const node of constants.lavalinkNodes) {
+					node.resumeKey = `${client.user.id}/${config.cluster_id}`
+					node.resumeTimeout = 75
 				}
-				return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name, search_with_invidious: node.search_with_invidious, enabled: node.enabled })
-			})
 
-			constants.lavalinkNodes.push(...lavalinkNodes)
+				client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
+					user: client.user.id,
+					shards: config.total_shards,
+					send: (packet) => passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
+				})
 
-			for (const node of constants.lavalinkNodes) {
-				node.resumeKey = `${client.user.id}/${config.cluster_id}`
-				node.resumeTimeout = 75
-			}
+				client.lavalink.once("ready", () => logger.info("Lavalink ready"))
 
-			client.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
-				user: client.user.id,
-				shards: config.total_shards,
-				send: (packet) => passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
-			})
+				client.lavalink.on("error", error => logger.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
 
-			client.lavalink.once("ready", () => logger.info("Lavalink ready"))
-
-			client.lavalink.on("error", error => logger.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
-
-			try {
-				await client.lavalink.connect()
-			} catch (e) {
-				logger.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
+				try {
+					await client.lavalink.connect()
+				} catch (e) {
+					logger.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
+				}
 			}
 		}
 	}
@@ -123,11 +127,11 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 
 	if (p.t === "GUILD_CREATE") {
 		const data = p.d as import("discord-typings").Guild
-		orm.db.upsert("guilds", { id: data.id, name: data.name, icon: data.icon!, member_count: data.member_count, owner_id: data.owner_id, added_by: config.cluster_id })
+		if (config.db_enabled) orm.db.upsert("guilds", { id: data.id, name: data.name, icon: data.icon!, member_count: data.member_count, owner_id: data.owner_id, added_by: config.cluster_id })
 		if (passthrough.clusterData.guild_ids[p.shard_id].includes(data.id)) return
 		else passthrough.clusterData.guild_ids[p.shard_id].push(data.id)
 		for (const state of data.voice_states || []) {
-			orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
+			if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
 		}
 	} else if (p.t === "GUILD_DELETE") {
 		if (!p.d.unavailable) orm.db.delete("guilds", { id: p.d.id })
@@ -136,8 +140,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)
 	} else if (p.t === "VOICE_STATE_UPDATE") {
 		const data = p.d as import("discord-typings").VoiceState
-		if (data.channel_id === null) orm.db.delete("voice_states", { user_id: data.user_id, guild_id: data.guild_id })
-		else orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id }, { useBuffer: false })
+		if (data.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: data.user_id, guild_id: data.guild_id })
+		else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id || undefined }, { useBuffer: false })
 		client.lavalink?.voiceStateUpdate(data as import("lavacord").VoiceStateUpdate)
 		queues.get(p.d.guild_id)?.voiceStateUpdate(p.d)
 	} else if (p.t === "VOICE_SERVER_UPDATE") client.lavalink?.voiceServerUpdate(p.d)
@@ -149,7 +153,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 			const langToUse = guildLang && interaction.guild_locale != interaction.locale ? guildLang : selfLang
 
 			const user = interaction.user ? interaction.user : interaction.member!.user
-			orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
+			if (config.db_enabled) orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 			try {
 				const cmd = new Command(interaction)
 				await commands.cache.get(interaction.data!.name)?.process(cmd, langToUse)

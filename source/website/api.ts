@@ -22,7 +22,7 @@ function setTimeoutForStats() {
 const okStatusCodes = [200, 204]
 
 async function onStatsPosting(time: number) {
-	if (config.is_dev_env) return
+	if (config.is_dev_env || !config.db_enabled) return
 	const stats = await orm.db.select("stat_logs", { time, id: liveUserID })
 	if (!stats.length) return
 

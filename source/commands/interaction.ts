@@ -37,11 +37,13 @@ const cmds = [
 			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
 			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) } })
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
-			const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
-			if (crow) {
-				const otherID = user1.id === crow.user1 ? crow.user2 : crow.user1
-				const you = user1.id === cmd.author.id
-				if (otherID === user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `I don't think I have to rate ${you ? "you" : user1.username} and ${user2.username} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>` })
+			if (config.db_enabled) {
+				const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
+				if (crow) {
+					const otherID = user1.id === crow.user1 ? crow.user2 : crow.user1
+					const you = user1.id === cmd.author.id
+					if (otherID === user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `I don't think I have to rate ${you ? "you" : user1.username} and ${user2.username} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>` })
+				}
 			}
 
 			const canvas = new Jimp(300, 100)
@@ -205,6 +207,7 @@ async function doInteraction(cmd: import("../modules/Command"), lang: import("@a
 }
 
 async function getGif(type: string): Promise<string> {
+	if (!config.db_enabled) throw new Error("DATABASE_NOT_ENABLED")
 	const gif = await orm.db.raw("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RANDOM() LIMIT 1", [type])
 	return gif[0].url as string
 }

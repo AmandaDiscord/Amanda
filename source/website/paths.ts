@@ -50,7 +50,7 @@ const paths: {
 				const cookies = util.getCookies(req)
 				const session = await util.getSession(cookies)
 
-				if (session) {
+				if (session && config.db_enabled) {
 					const user = await orm.db.get("voice_states", { user_id: session.user_id })
 					let html = await fs.promises.readFile(p.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 					const csrftoken = util.generateCSRF()
@@ -75,7 +75,7 @@ const paths: {
 					.ensureParams(["token", "csrftoken"])
 					.useCSRF()
 					.do({
-						code: (state) => orm.db.get("web_tokens", { token: state.params.get("token") })
+						code: (state) => config.db_enabled ? orm.db.get("web_tokens", { token: state.params.get("token") }) : undefined
 						, assign: "row"
 						, expected: v => v !== undefined
 						, errorValue: [400, "Invalid token"]
@@ -165,7 +165,7 @@ const routes: {
 				, expected: false
 				, errorValue: "NO_SESSION"
 			}).do({
-				code: () => orm.db.get("voice_states", { user_id: session!.user_id, channel_id: channelID })
+				code: () => config.db_enabled ? orm.db.get("voice_states", { user_id: session!.user_id, channel_id: channelID }) : undefined
 				, expected: v => v != null
 				, errorValue: "USER_NOT_IN_CHANNEL"
 			})

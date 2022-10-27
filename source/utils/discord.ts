@@ -9,6 +9,7 @@ const arr = sync.require("./array") as typeof import("./array")
 
 export async function getUser(id: string) {
 	if (id === client.user?.id) return client.user
+	if (!config.db_enabled) return null
 	const cached = await orm.db.get("users", { id: id })
 	if (cached) return convertCachedUser(cached)
 	const fetched = await client.snow.user.getUser(id).catch(() => null)
@@ -31,7 +32,7 @@ export async function getAvatarJimp(userID: string) {
 	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
 
 	const data = await client.snow.user.getUser(userID)
-	if (data) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar, bot: data.bot ? 1 : 0, added_by: config.cluster_id })
+	if (data && config.db_enabled) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar, bot: data.bot ? 1 : 0, added_by: config.cluster_id })
 	const newURL = displayAvatarURL(data, true)
 	if (!newURL) return null
 	return Jimp.read(newURL)

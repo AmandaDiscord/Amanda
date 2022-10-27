@@ -192,6 +192,7 @@ export class Session {
 			const cookies = utils.getCookies({ headers: { cookie: data.d.cookie } } as unknown as import("http").IncomingMessage)
 			const session = await utils.getSession(cookies)
 			if (!session) return
+			if (!config.db_enabled) return
 			const state = await orm.db.get("voice_states", { user_id: session.user_id })
 			if (!state) return utils.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
 			// User and guild are legit

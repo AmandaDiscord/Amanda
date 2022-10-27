@@ -188,8 +188,9 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
-			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.application_id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
+			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database that allows me to track what voice channel you're in is currently not connected. This is known and a fix is being worked on" } })
+			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
+			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 
 			const optionPlay = cmd.data.options.get("play")?.asString() ?? null
 			const optionStop = cmd.data.options.get("stop")?.asBoolean() ?? null
@@ -442,6 +443,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
+			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database is currently offline and your music token cannot be fetched. Please wait for the database to come back online" } })
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: 1 << 6 } })
 			const action = cmd.data.options.get("action")?.asString() ?? null
 			if (action === "d") {

@@ -54,9 +54,12 @@ GatewayWorker.on("error", logger.error)
 client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
 
 ;(async () => {
-	const db = await pool.connect()
-	await db.query({ text: "SELECT * FROM premium LIMIT 1" })
-	logger.info("Connected to database")
+	if (config.db_enabled) {
+		const db = await pool.connect()
+		await db.query({ text: "SELECT * FROM premium LIMIT 1" })
+		logger.info("Connected to database")
+		passthrough.db = db
+	} else logger.warn("Database disabled")
 
 	let firstConnect = true
 	const onOpen = () => {
@@ -68,7 +71,7 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 	websiteSocket.on("open", onOpen)
 	websiteSocket.on("close", (code: number, reason: Buffer) => logger.warn(`Website socket disconnect: { code: ${code}, reason: ${reason.toString("utf8")} }`))
 
-	Object.assign(passthrough, { db, requester, gateway: GatewayWorker, websiteSocket })
+	Object.assign(passthrough, { requester, gateway: GatewayWorker, websiteSocket })
 
 	import("./modules/stdin")
 

@@ -1,5 +1,5 @@
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues } = passthrough
+const { client, commands, constants, sync, queues, config } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
@@ -170,6 +170,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
+			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database that stores playlist info is currently offline. This is known and a fix is being worked on" } })
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 			const optionMeta = cmd.data.options.get("meta") ?? null

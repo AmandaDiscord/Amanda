@@ -58,6 +58,7 @@ function startAnnouncement(duration: number, message: string) {
 }
 
 async function refresh() {
+	if (!config.db_enabled) return
 	const [_messages, _ranges, _users] = await Promise.all([
 		orm.db.select("status_messages", undefined, { select: ["id", "dates", "users", "message", "type", "demote"] }),
 		orm.db.select("status_ranges", undefined, { select: ["label", "start_month", "start_day", "end_month", "end_day"] }),
@@ -124,6 +125,7 @@ function getMatchingMessages() {
 }
 
 function update() {
+	if (!config.db_enabled) return
 	const choices = getMatchingMessages()
 	const choice = arr.random(choices)
 	if (choice) {
