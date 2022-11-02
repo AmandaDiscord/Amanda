@@ -33,6 +33,19 @@ commands.assign([
 				required: false
 			},
 			{
+				name: "insert",
+				type: 3,
+				description: "Play music from multiple sites and insert that track first",
+				required: false
+			},
+			{
+				name: "remove",
+				type: 4,
+				description: "Remove a track from the queue. 1 based index",
+				required: false,
+				min_value: 2
+			},
+			{
 				name: "stop",
 				type: 5,
 				description: "If the queue should stop. True to reveal you initiated the stop",
@@ -193,6 +206,7 @@ commands.assign([
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 
 			const optionPlay = cmd.data.options.get("play")?.asString() ?? null
+			const optionInsert = cmd.data.options.get("insert")?.asString() ?? null
 			const optionStop = cmd.data.options.get("stop")?.asBoolean() ?? null
 			const optionSkip = cmd.data.options.get("skip")?.asBoolean() ?? null
 			const optionVolume = cmd.data.options.get("volume")?.asNumber() ?? null
@@ -211,9 +225,11 @@ commands.assign([
 			const optionFrisky = cmd.data.options.get("frisky")?.asString() ?? null
 			const optionListenmoe = cmd.data.options.get("listenmoe")?.asString() ?? null
 			const optionShuffle = cmd.data.options.get("shuffle")?.asBoolean() ?? null
+			const optionRemove = cmd.data.options.get("remove")?.asNumber() ?? null
 
 			const array = [
 				optionPlay,
+				optionInsert,
 				optionStop,
 				optionSkip,
 				optionVolume,
@@ -231,7 +247,8 @@ commands.assign([
 				optionFilters,
 				optionFrisky,
 				optionListenmoe,
-				optionShuffle
+				optionShuffle,
+				optionRemove
 			]
 
 			const notNull = array.filter(i => i !== null)
@@ -285,7 +302,7 @@ commands.assign([
 				}
 			}
 
-			if (optionPlay !== null) {
+			if (optionPlay !== null || optionInsert !== null) {
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.random() : common.nodes.random())
 				let queueDidntExist = false
 
@@ -297,7 +314,7 @@ commands.assign([
 
 				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
-				const tracks = await common.inputToTrack(optionPlay, cmd, lang, node.id)
+				const tracks = await common.inputToTrack(optionPlay || optionInsert!, cmd, lang, node.id)
 				if (!tracks || !tracks.length) {
 					if (queue.tracks.length === 0) queue.destroy()
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
@@ -305,7 +322,7 @@ commands.assign([
 
 				for (const track of tracks) {
 					track.queue = queue
-					await queue.addTrack(track)
+					await queue.addTrack(track, optionInsert !== null && !queueDidntExist ? 1 : undefined)
 				}
 
 				if (queueDidntExist) queue.play()
@@ -417,6 +434,10 @@ commands.assign([
 					await queue.addTrack(track)
 				}
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Queue shuffled" })
+			} else if (optionRemove !== null) {
+				const result = await queue.removeTrack(optionRemove - 1)
+				if (result !== 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That track could not be removed" })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Successfully removed track ${optionRemove}` })
 			} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Working on re-adding. Please give me time" })
 		}
 	},

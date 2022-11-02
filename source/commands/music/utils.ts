@@ -136,7 +136,7 @@ const common = {
 		}
 	},
 
-	async loadtracks(input: string, nodeID?: string): Promise<{ loadType: "PLAYLIST_LOADED" | "SEARCH_RESULTS" | "TRACK_LOADED" | "NO_RESULTS", plInfo?: { name: string; selectedTrack?: number; }, tracks: Array<{ track: string; info: import("../../types").LavalinkInfo }> }> {
+	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
 		const node = nodeID ? common.nodes.byID(nodeID) || common.nodes.random() : common.nodes.random()
 
 		const params = new URLSearchParams()

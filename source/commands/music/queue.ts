@@ -153,7 +153,7 @@ class Queue {
 	public addPlayerListeners() {
 		this.player!.on("end", event => this._onEnd(event))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
-		this.player!.on("error", event => this._onPlayerError(event))
+		this.player!.on("error", event => this._onPlayerError(event as import("lavalink-types").TrackExceptionEvent))
 	}
 
 	public async play() {
@@ -315,7 +315,7 @@ class Queue {
 		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
 	}
 
-	private _onPlayerError(details: any) {
+	private _onPlayerError(details: import("lavalink-types").TrackExceptionEvent | import("lavalink-types").WebSocketClosedEvent) {
 		if (details.type === "WebSocketClosedEvent") {
 			// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 			// Simply respond by stopping the queue, since that was most likely the intention.
@@ -324,7 +324,7 @@ class Queue {
 		}
 		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
 		if (this.tracks[0]) {
-			this.tracks[0].error = details.error ? JSON.stringify(details.error) : (details.message ? details.message : JSON.stringify(details))
+			this.tracks[0].error = details.exception.message
 			logger.error("Track error call B")
 			this._reportError()
 			this._nextTrack()
