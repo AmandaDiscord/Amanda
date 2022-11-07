@@ -8,6 +8,7 @@
     "start": "node --enable-source-maps --optimize_for_size dist/index.js",
     "website": "node --enable-source-maps dist/website/server.js",
     "test": "node --enable-source-maps dist/test.index.js",
+    "compile": "tsc -p .",
     "lint": "eslint . --ext .ts"
   },
   "license": "SEE LICENSE IN LICENSE",
