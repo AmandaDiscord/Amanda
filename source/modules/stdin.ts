@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import path from "path"
 import repl from "repl"
 import util from "util"

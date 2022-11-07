@@ -467,7 +467,7 @@ class Queue {
 
 sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").RawData) => {
 	const message = Array.isArray(data) ? Buffer.concat(data).toString() : data.toString()
-	let packet: { op: number; d?: any }
+	let packet: { op: number; d?: { [property: string]: unknown } }
 	try {
 		packet = JSON.parse(message)
 	} catch (e) {
@@ -493,8 +493,8 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 
 	} else if (packet.op === constants.WebsiteOPCodes.ATTRIBUTES_CHANGE) {
 		if (queue && packet.d) {
-			if (packet.d.auto !== undefined) queue.auto = packet.d.auto
-			if (packet.d.loop !== undefined) queue.loop = packet.d.loop
+			if (packet.d.auto !== undefined) queue.auto = packet.d.auto as boolean
+			if (packet.d.loop !== undefined) queue.loop = packet.d.loop as boolean
 			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop, auto: queue.auto } } }))
 		}
 
@@ -503,7 +503,7 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 	else if (packet.op === constants.WebsiteOPCodes.STOP && queue) queue.destroy()
 	else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
 	else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {
-		const result = await queue.removeTrack(packet.d.index)
+		const result = await queue.removeTrack(packet.d.index as number)
 		if (result === 0) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } }))
 	}
 })

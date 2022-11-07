@@ -8,7 +8,7 @@ const logger = sync.require("../utils/logger") as typeof import("../utils/logger
 const refreshTime = 15 * 60 * 1000
 const updateTime = 5 * 60 * 1000
 
-let messages: Array<{ id: number; dates: string; users: string; message: string; type: number; demote: number }>, ranges: Array<{ label: string; start_month: number; start_day: number; end_month: number; end_day: number; }>, users: Array<{ label: string; user_id: string; }>, prefix: string, updateInterval: NodeJS.Timeout
+let messages: Array<{ id: number; dates: string; users: string; message: string; type: number; demote: number }>, ranges: Array<{ label: string; start_month: number; start_day: number; end_month: number; end_day: number; }>, users: Array<{ label: string; user_id: string; }>, updateInterval: NodeJS.Timeout
 let enqueued: NodeJS.Timeout
 
 let started = false

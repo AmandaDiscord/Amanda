@@ -1,0 +1,21 @@
+name: Build
+on:
+  push:
+    branches: [ "rewrite" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Node
+        uses: actions/setup-node@v1
+        with:
+          node-version: '18.x'
+
+      - name: Install, lint, Compile, and test
+        run: |
+          npm install
+          npm run lint
+          npm run compile
+          npm run test

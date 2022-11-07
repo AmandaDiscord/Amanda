@@ -6,7 +6,9 @@
   "author": "PapiOphidian",
   "scripts": {
     "start": "node --enable-source-maps --optimize_for_size dist/index.js",
-    "website": "node --enable-source-maps dist/website/server.js"
+    "website": "node --enable-source-maps dist/website/server.js",
+    "test": "node --enable-source-maps dist/test.index.js",
+    "lint": "eslint . --ext .ts"
   },
   "license": "SEE LICENSE IN LICENSE",
   "engines": {
@@ -18,7 +20,7 @@
     "@lavalink/encoding": "0.1.2",
     "backtracker": "3.3.1",
     "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
-    "cloudstorm": "0.5.6",
+    "cloudstorm": "0.5.7",
     "discord-bot-analytics": "1.0.14",
     "discord-typings": "10.4.1",
     "entities": "4.4.0",
@@ -37,11 +39,13 @@
     "@types/mime-types": "2.1.1",
     "@types/node": "18.11.9",
     "@types/pg": "8.6.5",
+    "@types/tap": "^15.0.7",
     "@types/ws": "8.5.3",
     "@typescript-eslint/eslint-plugin": "5.42.0",
     "@typescript-eslint/parser": "5.42.0",
-    "eslint": "8.26.0",
+    "eslint": "8.27.0",
     "lavalink-types": "github:AmandaDiscord/LavaLinkTypes#1cadb97f9b52ec93f4023cd1275000c31db81901",
+    "tap": "^16.3.0",
     "typescript": "4.8.4"
   }
 }

@@ -84,6 +84,64 @@ export function requestBody(req: import("http").IncomingMessage, timeout = 10000
 	})
 }
 
+const boundaryReg = /^-+[^\n]+$/
+const headerRegex = /([^:]+): *([^\r\n]+)/
+const dispositionRegex = /^(\w+)="(.+)"$/
+const semi = /; */g
+const newLine = /\n/g
+
+export function parseMultipartBody(body: string) {
+	const split = body.split(newLine)
+	let expectingBoundary = true
+	let workingOnHeaders = false
+	let contentBody = ""
+	let headers: { [header: string]: string } = {}
+	let disp: { [disposition: string]: string } = {}
+	let param = 0
+	let ret: { [param: number]: { headers: { [header: string]: string }; disposition: { [disposition: string]: string }; body: string; } } = {}
+	for (const line of split) {
+		let match: RegExpMatchArray | null = null
+		if (expectingBoundary) match = line.match(boundaryReg)
+		if (match) {
+			if (contentBody.length || Object.keys(headers).length) {
+				if (headers["content-disposition"]) {
+					let split = headers["content-disposition"].split(semi)
+					if (split[0] === "form-data") split = split.slice(1)
+					for (const dp of split) {
+						const dpMatch = dp.match(dispositionRegex)
+						if (dpMatch) disp[dpMatch[1]] = dpMatch[2]
+					}
+				}
+				ret[param++] = {
+					headers,
+					body: contentBody,
+					disposition: disp
+				}
+				contentBody = ""
+				headers = {}
+				disp = {}
+			}
+			expectingBoundary = false
+			workingOnHeaders = true
+		} else {
+			if (workingOnHeaders) {
+				if (line.trim() === "") {
+					workingOnHeaders = false
+					expectingBoundary = true
+				} else {
+					const match = line.match(headerRegex)
+					if (!match) console.log(`Line didn't match header regex and was expecting a header`)
+					else headers[match[1].toLowerCase()] = match[2]
+				}
+			} else {
+				contentBody += line
+				contentBody += "\n"
+			}
+		}
+	}
+	return ret
+}
+
 export function generateCSRF(loginToken = null) {
 	const token = crypto.randomBytes(32).toString("hex")
 	const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
