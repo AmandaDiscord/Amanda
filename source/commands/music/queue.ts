@@ -151,7 +151,7 @@ class Queue {
 	}
 
 	public addPlayerListeners() {
-		this.player!.on("end", event => this._onEnd(event))
+		this.player!.on("end", event => this._onEnd(event as import("lavalink-types").TrackEndEvent))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
 		this.player!.on("error", event => this._onPlayerError(event as import("lavalink-types").TrackExceptionEvent))
 	}
@@ -291,15 +291,12 @@ class Queue {
 		return 0
 	}
 
-	private _onEnd(event: import("lavacord").LavalinkEvent) {
-		if (event.reason == "REPLACED") return
+	private _onEnd(event: import("lavalink-types").TrackEndEvent | import("lavalink-types").TrackStuckEvent) {
+		if (event.type === "TrackEndEvent" && event.reason == "REPLACED") return
 		if (event.type === "TrackStuckEvent") {
 			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
 			if (this.tracks[0]) {
-				let reason = ""
-				if (event.error) reason += `${event.error}\n`
-				if (event.reason) reason += event.reason
-				this.tracks[0].error = reason.length ? reason.trim() : "Track got stuck"
+				this.tracks[0].error = `Track got stuck. Waited for ${event.thresholdMs}ms`
 				logger.error("Track error call D")
 				this._reportError()
 			}

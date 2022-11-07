@@ -152,7 +152,7 @@ const common = {
 function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo): import("./tracktypes").Track {
 	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
 	const type = sourceMap.get(info.source)
-	return new (type ? trackTypes[type] : trackTypes["RequiresSearchTrack"])(track, info)
+	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info)
 }
 
 export = common
