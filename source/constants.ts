@@ -1,6 +1,11 @@
 // Receive/Send annotations will be in relation to main thread
 
-const config = require("../config") as import("./types").Config // TypeScript WILL include files that use import in any way (type annotations or otherwise)
+let config: import("./types").Config
+try {
+	config = require("../config")
+} catch {
+	config = {} as import("./types").Config
+}
 
 export const GATEWAY_WORKER_CODES = {
 	/**
