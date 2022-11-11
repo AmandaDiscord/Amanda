@@ -43,7 +43,7 @@ const pts: {
 		methods: ["GET"],
 		handle(req, res) {
 			if (!checkAuth(req)) return void res.writeHead(401).end()
-			res.writeHead(200, undefined, { "Content-Type": "application/json" }).end(JSON.stringify({ url: "wss://localhost:10430/", shards: 1, session_start_limit: { total: 1000, remaining: 999, reset_after: 14400000, max_concurrency: 1 } }))
+			res.writeHead(200, undefined, { "Content-Type": "application/json" }).end(JSON.stringify({ url: "ws://localhost:10430/", shards: 1, session_start_limit: { total: 1000, remaining: 999, reset_after: 14400000, max_concurrency: 1 } }))
 		}
 	}
 }
@@ -392,7 +392,7 @@ function onClientMessage(socket: import("ws").WebSocket, data: import("ws").RawD
 					verify_key: "idkwhattoputherelol",
 					team: null
 				},
-				resume_gateway_url: "wss://localhost:10430/"
+				resume_gateway_url: "ws://localhost:10430/"
 			} as import("discord-typings").ReadyPayload,
 			s: sequence++,
 			t: "READY"
