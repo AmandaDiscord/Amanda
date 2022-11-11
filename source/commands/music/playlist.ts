@@ -513,7 +513,7 @@ commands.assign([
 				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 				const createQueue = async () => {
-					queue = new queueFile(cmd.guild_id!)
+					queue = new queueFile.Queue(cmd.guild_id!)
 					queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 					queue.interaction = cmd
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

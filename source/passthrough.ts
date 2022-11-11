@@ -1,5 +1,5 @@
 interface Passthrough {
-	queues: Map<string, import("./commands/music/queue")>
+	queues: Map<string, import("./commands/music/queue").Queue>
 	client: import("./modules/Amanda")
 	clusterData: { connected_shards: Array<number>; guild_ids: { [sid: number]: Array<string> } }
 	commands: import("./modules/CommandManager")<[import("./modules/Command"), import("@amanda/lang").Lang]>

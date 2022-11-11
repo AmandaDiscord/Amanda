@@ -264,12 +264,11 @@ commands.assign([
 			if (shouldBeEphemeral.includes(true)) ephemeral = true
 
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: ephemeral ? (1 << 6) : 0 } })
-			const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
-			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
-			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+
+			let userVoiceState
 
 			async function createQueue() {
-				queue = new queueFile(cmd.guild_id!)
+				queue = new queueFile.Queue(cmd.guild_id!)
 				queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 				queue.interaction = cmd
 				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -306,6 +305,10 @@ commands.assign([
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.random() : common.nodes.random())
 				let queueDidntExist = false
 
+				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
+				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+
 				if (!queue) {
 					queueDidntExist = true
 					await createQueue().catch(() => void 0)
@@ -331,6 +334,10 @@ commands.assign([
 			} else if (optionFrisky !== null) {
 				let queueDidntExist = false
 
+				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
+				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+
 				if (!queue) {
 					queueDidntExist = true
 					await createQueue().catch(() => void 0)
@@ -347,6 +354,10 @@ commands.assign([
 			} else if (optionListenmoe !== null) {
 				let queueDidntExist = false
 
+				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
+				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+
 				if (!queue) {
 					queueDidntExist = true
 					await createQueue().catch(() => void 0)
@@ -360,7 +371,25 @@ commands.assign([
 				if (queueDidntExist) queue.play()
 				else queue.interaction = cmd
 				return
+			} else if (optionQueue !== null) {
+				if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
+				const rows = queue.tracks.map((track, index) => `${index + 1}. ${track.queueLine}`)
+				const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
+				const body = `${arr.removeMiddleRows(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					embeds: [
+						{
+							title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
+							description: body,
+							color: constants.standard_embed_color
+						}
+					]
+				})
 			}
+
+			userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
+			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
+			if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
 			if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 			if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id && optionQueue === null) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content:language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
@@ -400,19 +429,6 @@ commands.assign([
 				const pitch = (2 ** (optionPitch / 12))
 				queue.pitch = pitch
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue pitch is now ${pitch} semitones` })
-			} else if (optionQueue !== null) {
-				const rows = queue.tracks.map((track, index) => `${index + 1}. ${track.queueLine}`)
-				const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
-				const body = `${arr.removeMiddleRows(rows, 2000 - totalLength.length).join("\n")}${totalLength}`
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
-						{
-							title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
-							description: body,
-							color: constants.standard_embed_color
-						}
-					]
-				})
 			} else if (optionRelated !== null) {
 				const related = await queue.tracks[0].showRelated()
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof related === "string" ? { content: related } : { embeds: [related] })

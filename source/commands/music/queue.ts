@@ -99,6 +99,7 @@ class Queue {
 			this.messageUpdater.stop()
 		}
 		this._interaction = value
+		if (this._interaction) this._updateMessage().catch(() => void 0)
 	}
 
 	public get speed() {
@@ -505,4 +506,4 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 	}
 })
 
-export = Queue
+export { Queue }
