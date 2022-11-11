@@ -41,11 +41,11 @@ class Queue {
 	public errorChain = 0
 
 	public listeners = new Map<string, import("discord-typings").User>()
-	public leaveTimeout = new BetterTimeout().setCallback(() => {
+	public leaveTimeout = new BetterTimeout.BetterTimeout().setCallback(() => {
 		if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
-	public messageUpdater: import("../../utils/classes/FrequencyUpdater") = new FrequencyUpdater(() => this._updateMessage())
+	public messageUpdater: import("../../utils/classes/FrequencyUpdater").FrequencyUpdater = new FrequencyUpdater.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
 	private _interaction: import("../../modules/Command") | undefined

@@ -6,4 +6,4 @@ class SingleUseMap<K, V> extends Map<K, V> {
 	}
 }
 
-export = SingleUseMap
+export { SingleUseMap }

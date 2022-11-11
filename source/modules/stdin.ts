@@ -10,7 +10,7 @@ const { client, config, constants, commands, requester, sync } = passthrough
 
 import logger from "../utils/logger"
 
-const startannouncement = sync.require("../commands/status") as typeof import("../commands/status")
+const announcement = sync.require("../commands/status") as typeof import("../commands/status")
 
 function refreshcommands() {
 	if (!client.ready) return logger.error("Client isn't ready yet")

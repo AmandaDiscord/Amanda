@@ -26,7 +26,7 @@ const sync = new HeatSync()
 Object.assign(passthrough, { client, sync, config, constants, listenMoe: { jp, kp }, frisky, commands })
 const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
-import ThreadBasedReplier from "./utils/classes/ThreadBasedReplier"
+import { ThreadBasedReplier } from "./utils/classes/ThreadBasedReplier"
 const requester = new ThreadBasedReplier()
 
 const pool = new Pool({

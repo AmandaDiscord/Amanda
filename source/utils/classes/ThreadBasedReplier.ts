@@ -4,8 +4,8 @@ const { sync } = passthrough
 const SingleUseMap = sync.require("./SingleUseMap") as typeof import("./SingleUseMap")
 
 class ThreadBasedReplier<OPS extends { [op: string]: number }> {
-	public outgoing = new SingleUseMap<string, (value: unknown) => void>()
-	public outgoingPersist = new SingleUseMap<string, { list: Array<unknown>, amount: number }>()
+	public outgoing = new SingleUseMap.SingleUseMap<string, (value: unknown) => void>()
+	public outgoingPersist = new SingleUseMap.SingleUseMap<string, { list: Array<unknown>, amount: number }>()
 	public lastThreadID = 0n
 
 	private get nextThreadID() {
@@ -62,4 +62,4 @@ class ThreadBasedReplier<OPS extends { [op: string]: number }> {
 	}
 }
 
-export = ThreadBasedReplier
+export { ThreadBasedReplier }

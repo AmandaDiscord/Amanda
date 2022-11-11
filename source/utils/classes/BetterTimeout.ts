@@ -35,4 +35,4 @@ class BetterTimeout {
 	}
 }
 
-export = BetterTimeout
+export { BetterTimeout }

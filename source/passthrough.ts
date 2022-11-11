@@ -8,7 +8,7 @@ interface Passthrough {
 	db: import("pg").PoolClient
 	frisky: import("frisky-client")
 	gateway: import("worker_threads").Worker
-	requester: import("./utils/classes/ThreadBasedReplier")<Record<string, number>>
+	requester: import("./utils/classes/ThreadBasedReplier").ThreadBasedReplier<Record<string, number>>
 	sync: import("heatsync")
 	listenMoe: { jp: import("listensomemoe"); kp: import("listensomemoe") }
 	websiteSocket: import("./modules/ReconnectingWS")

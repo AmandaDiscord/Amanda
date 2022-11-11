@@ -30,4 +30,4 @@ class FrequencyUpdater {
 	}
 }
 
-export = FrequencyUpdater
+export { FrequencyUpdater }

@@ -148,4 +148,4 @@ function update() {
 	}
 }
 
-export = startAnnouncement
+export { startAnnouncement as start }

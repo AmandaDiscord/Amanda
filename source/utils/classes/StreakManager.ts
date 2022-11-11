@@ -62,4 +62,4 @@ class StreakManager {
 	}
 }
 
-export = StreakManager
+export { StreakManager }

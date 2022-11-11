@@ -32,4 +32,4 @@ class AsyncValueCache<T> {
 	}
 }
 
-export = AsyncValueCache
+export { AsyncValueCache }

@@ -148,7 +148,7 @@ export class Track {
 }
 
 export class RequiresSearchTrack extends Track {
-	public prepareCache: import("../../utils/classes/AsyncValueCache")<void>
+	public prepareCache: import("../../utils/classes/AsyncValueCache").AsyncValueCache<void>
 	private searchString: string
 
 	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>) {
@@ -156,7 +156,7 @@ export class RequiresSearchTrack extends Track {
 		this.searchString = info.author && info.title ? `${info.author} - ${info.title}` : info.title || ""
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
-		this.prepareCache = new AsyncValueCache(async () => {
+		this.prepareCache = new AsyncValueCache.AsyncValueCache(async () => {
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 			try {
 				tracks = await common.loadtracks(this.searchString, this.queue?.node)
@@ -228,7 +228,7 @@ export class FriskyTrack extends Track {
 	public station: import("../../types").InferMapK<typeof stationData>
 	public stationData: import("../../types").InferMapV<typeof stationData>
 	public friskyStation: import("frisky-client/lib/Station")
-	public stationInfoGetter: import("../../utils/classes/AsyncValueCache")<import("frisky-client/lib/Stream")>
+	public stationInfoGetter: import("../../utils/classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
 	public noPauseReason = "You can't pause live radio."
 	public live = true
@@ -261,7 +261,7 @@ export class FriskyTrack extends Track {
 		}
 
 		this.friskyStation = frisky.managers.stream.stations.get(this.stationData.client_name)!
-		this.stationInfoGetter = new AsyncValueCache(() => new Promise((resolve, reject) => {
+		this.stationInfoGetter = new AsyncValueCache.AsyncValueCache(() => new Promise((resolve, reject) => {
 			let attempts = 0
 
 			const attempt = () => {
