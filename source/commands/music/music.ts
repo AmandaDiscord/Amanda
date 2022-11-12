@@ -267,7 +267,7 @@ commands.assign([
 
 			let userVoiceState
 
-			async function createQueue() {
+			async function createQueue(node: string) {
 				queue = new queueFile.Queue(cmd.guild_id!)
 				queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 				queue.interaction = cmd
@@ -284,11 +284,12 @@ commands.assign([
 					const timer = setTimeout(() => reject?.("Timed out"), waitForClientVCJoinTimeout)
 					const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 						reject = rej
-						client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id }).then(p => {
+						client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id, node }).then(p => {
 							resolve(p)
 							clearTimeout(timer)
 						})
 					})
+					queue!.node = node
 					queue!.player = player
 					queue!.addPlayerListeners()
 					return true
@@ -302,7 +303,7 @@ commands.assign([
 			}
 
 			if (optionPlay !== null || optionInsert !== null) {
-				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.random() : common.nodes.random())
+				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				let queueDidntExist = false
 
 				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
@@ -311,7 +312,7 @@ commands.assign([
 
 				if (!queue) {
 					queueDidntExist = true
-					await createQueue().catch(() => void 0)
+					await createQueue(node.id).catch(() => void 0)
 					if (!queue) return
 				}
 
@@ -332,6 +333,7 @@ commands.assign([
 				else queue.interaction = cmd
 				return
 			} else if (optionFrisky !== null) {
+				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				let queueDidntExist = false
 
 				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
@@ -340,7 +342,7 @@ commands.assign([
 
 				if (!queue) {
 					queueDidntExist = true
-					await createQueue().catch(() => void 0)
+					await createQueue(node.id).catch(() => void 0)
 					if (!queue) return
 				}
 
@@ -352,6 +354,7 @@ commands.assign([
 				else queue.interaction = cmd
 				return
 			} else if (optionListenmoe !== null) {
+				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				let queueDidntExist = false
 
 				userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
@@ -360,7 +363,7 @@ commands.assign([
 
 				if (!queue) {
 					queueDidntExist = true
-					await createQueue().catch(() => void 0)
+					await createQueue(node.id).catch(() => void 0)
 					if (!queue) return
 				}
 

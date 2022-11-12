@@ -34,10 +34,9 @@ const common = {
 			return constants.lavalinkNodes.find(n => n.id === id && n.enabled) || null
 		},
 
-		byRegion(region: string) {
-			const satisfied = constants.lavalinkNodes.filter(n => n.enabled && n.regions.includes(region))
-			if (satisfied.length === 0) return null
-			return arr.random(satisfied)
+		byIdeal() {
+			const node = client.lavalink!.idealNodes[0]
+			return common.nodes.byID(node.id)
 		}
 	},
 
@@ -137,7 +136,7 @@ const common = {
 	},
 
 	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
-		const node = nodeID ? common.nodes.byID(nodeID) || common.nodes.random() : common.nodes.random()
+		const node = nodeID ? common.nodes.byID(nodeID) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random()
 
 		const params = new URLSearchParams()
 		params.append("identifier", input)

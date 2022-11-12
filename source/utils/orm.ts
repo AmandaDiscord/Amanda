@@ -223,7 +223,6 @@ export const db = new Database({
 	daily_cooldown: new Model<{ user_id: string, last_claim: number }>(["user_id"]),
 	guilds: new Model<{ id: string, name: string, icon: string, member_count: number, owner_id: string, added_by: string }>(["id"], { useBuffer: true, bufferSize: 1000 }),
 	interaction_gifs: new Model<{ type: string, url: string }>(),
-	lavalink_node_regions: new Model<{ host: string, region: string }>(["host", "region"]),
 	lavalink_nodes: new Model<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>(["host"]),
 	member_roles: new Model<{ id: string, guild_id: string, role_id: string }>(["guild_id", "id", "role_id"], { useBuffer: true }),
 	members: new Model<{ id: string, guild_id: string, nick: string, joined_at: string }>(["id", "guild_id"]),

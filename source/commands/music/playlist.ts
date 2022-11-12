@@ -512,7 +512,7 @@ commands.assign([
 				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
 				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
-				const createQueue = async () => {
+				const createQueue = async (node: string) => {
 					queue = new queueFile.Queue(cmd.guild_id!)
 					queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 					queue.interaction = cmd
@@ -529,11 +529,12 @@ commands.assign([
 						const timer = setTimeout(() => reject?.("Timed out"), waitForClientVCJoinTimeout)
 						const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 							reject = rej
-							client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id }).then(p => {
+							client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id, node }).then(p => {
 								resolve(p)
 								clearTimeout(timer)
 							})
 						})
+						queue!.node = node
 						queue!.player = player
 						queue!.addPlayerListeners()
 						return true
@@ -545,8 +546,9 @@ commands.assign([
 						return false
 					}
 				}
+				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				if (!queue) {
-					await createQueue().catch(() => void 0)
+					await createQueue(node.id).catch(() => void 0)
 					if (!queue) return
 				}
 

@@ -152,9 +152,9 @@ class Queue {
 	}
 
 	public addPlayerListeners() {
-		this.player!.on("end", event => this._onEnd(event as import("lavalink-types").TrackEndEvent))
+		this.player!.on("end", event => this._onEnd(event))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
-		this.player!.on("error", event => this._onPlayerError(event as import("lavalink-types").TrackExceptionEvent))
+		this.player!.on("error", event => this._onPlayerError(event))
 	}
 
 	public async play() {
@@ -305,9 +305,9 @@ class Queue {
 		this._nextTrack()
 	}
 
-	private _onPlayerUpdate(data: { state: import("lavacord").LavalinkPlayerState }) {
+	private _onPlayerUpdate(data: { state: import("lavalink-types").PlayerState }) {
 		if (this.player && !this.paused) {
-			const newTrackStartTime = (data.state.time ?? 0) - (data.state.position ?? 0)
+			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
 		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))

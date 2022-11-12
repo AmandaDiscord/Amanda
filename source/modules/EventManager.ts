@@ -84,13 +84,9 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 			process.title = client.user.username
 
 			if (config.db_enabled) {
-				const [lavalinkNodeData, lavalinkNodeRegions] = await Promise.all([
-					orm.db.select("lavalink_nodes"),
-					orm.db.select("lavalink_node_regions")
-				])
+				const lavalinkNodeData = await orm.db.select("lavalink_nodes")
 				const lavalinkNodes = lavalinkNodeData.map(node => {
 					const newData = {
-						regions: lavalinkNodeRegions.filter(row => row.host === node.host).map(row => row.region),
 						password: config.lavalink_password,
 						id: node.name.toLowerCase()
 					}
