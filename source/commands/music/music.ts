@@ -404,6 +404,7 @@ commands.assign([
 					queue.paused = pause
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Pause toggled" })
 				}
+				return
 
 
 			}
