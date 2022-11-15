@@ -402,7 +402,7 @@ commands.assign([
 
 				if (pause !== null) {
 					queue.paused = pause
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Pause toggled" })
+					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: "Pause toggled" })
 				}
 				return
 
