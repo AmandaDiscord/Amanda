@@ -31,8 +31,6 @@ class Queue {
 	public player: import("lavacord").Player | undefined
 	public menu: Array<BetterComponent> = []
 
-	public nightcore = false
-	public antiNightcore = false
 	public loop = false
 	public auto = false
 
@@ -197,11 +195,7 @@ class Queue {
 	}
 
 	public async _nextTrack() {
-		if (this.tracks[1] && this.tracks[1].live && (this.nightcore || this.antiNightcore || this.speed != 1)) {
-			this.nightcore = false
-			this.antiNightcore = false
-			this.speed = 1.0
-		}
+		if (this.tracks[1] && this.tracks[1].live && this.speed != 1) this.speed = 1.0
 		// Special case for loop 1
 		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
 			this.play()
@@ -290,6 +284,16 @@ class Queue {
 		}
 		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
+	}
+
+	public async seek(position: number) {
+		const track = this.tracks[0]
+		if (!track) return 1
+		if (track.live) return 2
+		if (position > (track.lengthSeconds * 1000)) return 3
+		const result = await this.player?.seek(position)
+		if (result) return 0
+		else return 4
 	}
 
 	private _onEnd(event: import("lavalink-types").TrackEndEvent | import("lavalink-types").TrackStuckEvent) {

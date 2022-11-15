@@ -72,67 +72,9 @@ const common = {
 		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0])]
 		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i))
 
-		const chosen = await trackSelection(decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
+		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) return null
 		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen)]
-
-		function trackSelection<T>(trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
-			const component = new BetterComponent({
-				type: 3,
-				placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
-				min_values: 1,
-				max_values: 1,
-				options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
-			} as Omit<import("discord-typings").SelectMenu, "custom_id">)
-			return new Promise(res => {
-				const timer = setTimeout(() => {
-					component.destroy()
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						embeds: [
-							{
-								color: constants.standard_embed_color,
-								description: "Cancelled on Twitter"
-							}
-						],
-						components: []
-					}).catch(() => void 0)
-					return res(null)
-				}, selectTimeout)
-				component.setCallback(async (interaction) => {
-					await client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
-					if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
-					component.destroy()
-					clearTimeout(timer)
-					const selected = trackss[Number(interaction.data!.values![0])]
-					await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						embeds: [
-							{
-								color: constants.standard_embed_color,
-								description: label(selected)
-							}
-						],
-						components: []
-					}).catch(() => void 0)
-					return res(selected)
-				})
-
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
-						{
-							color: constants.standard_embed_color,
-							description: `Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`,
-							footer: { text: `1-${trackss.length}` }
-						}
-					],
-					components: [
-						{
-							type: 1,
-							components: [component.toComponent()]
-						}
-					]
-				}).catch(() => void 0)
-			})
-		}
 	},
 
 	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
@@ -146,6 +88,64 @@ const common = {
 		if (json.exception) throw json.exception.message
 		return json
 	}
+}
+
+function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
+	const component = new BetterComponent({
+		type: 3,
+		placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
+		min_values: 1,
+		max_values: 1,
+		options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
+	} as Omit<import("discord-typings").SelectMenu, "custom_id">)
+	return new Promise(res => {
+		const timer = setTimeout(() => {
+			component.destroy()
+			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						color: constants.standard_embed_color,
+						description: "Cancelled on Twitter"
+					}
+				],
+				components: []
+			}).catch(() => void 0)
+			return res(null)
+		}, selectTimeout)
+		component.setCallback(async (interaction) => {
+			await client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
+			if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
+			component.destroy()
+			clearTimeout(timer)
+			const selected = trackss[Number(interaction.data!.values![0])]
+			await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						color: constants.standard_embed_color,
+						description: label(selected)
+					}
+				],
+				components: []
+			}).catch(() => void 0)
+			return res(selected)
+		})
+
+		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			embeds: [
+				{
+					color: constants.standard_embed_color,
+					description: `Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`,
+					footer: { text: `1-${trackss.length}` }
+				}
+			],
+			components: [
+				{
+					type: 1,
+					components: [component.toComponent()]
+				}
+			]
+		}).catch(() => void 0)
+	})
 }
 
 function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo): import("./tracktypes").Track {
