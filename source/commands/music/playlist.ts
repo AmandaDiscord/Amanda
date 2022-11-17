@@ -505,55 +505,21 @@ commands.assign([
 				const orderedTracks = await getTracks(playlistRow)
 				if (orderedTracks.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist doesn't have any tracks to play" })
 
-				let queue = queues.get(cmd.guild_id)
+				let queue = queues.get(cmd.guild_id) ?? null
 				const queueDidntExist = !queue
 
 				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
 				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
 				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 
-				const createQueue = async (node: string) => {
-					queue = new queueFile.Queue(cmd.guild_id!)
-					queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
-					queue.interaction = cmd
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						embeds: [
-							{
-								color: constants.standard_embed_color,
-								description: language.replace(lang.GLOBAL.NOW_PLAYING, { "song": `[**${lang.GLOBAL.HEADER_LOADING}**](https://amanda.moe)\n\n\`[${text.progressBar(18, 60, 60, `[${lang.GLOBAL.HEADER_LOADING}]`)}]\`` })
-							}
-						]
-					}).catch(() => void 0)
-					try {
-						let reject: (error?: unknown) => unknown
-						const timer = setTimeout(() => reject?.("Timed out"), waitForClientVCJoinTimeout)
-						const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
-							reject = rej
-							client.lavalink!.join({ channel: userVoiceState.channel_id, guild: userVoiceState.guild_id, node }).then(p => {
-								resolve(p)
-								clearTimeout(timer)
-							})
-						})
-						queue!.node = node
-						queue!.player = player
-						queue!.addPlayerListeners()
-						return true
-					} catch (e) {
-						if (e !== "Timed out") logger.error(e)
-						queue!.destroy()
-						queue = undefined
-						client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
-						return false
-					}
-				}
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				if (!queue) {
-					await createQueue(node.id).catch(() => void 0)
+					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
 					if (!queue) return
 				}
 
 				const sliced = orderedTracks.slice(optionStart - 1)
-				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length), identifier: row.video_id }))
+				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length * 1000), identifier: row.video_id }))
 				for (const track of trackss) {
 					await queue.addTrack(track)
 				}
@@ -563,3 +529,37 @@ commands.assign([
 		}
 	}
 ])
+
+async function createQueue(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
+	const queue = new queueFile.Queue(cmd.guild_id!)
+	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
+	queue.interaction = cmd
+	client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+		embeds: [
+			{
+				color: constants.standard_embed_color,
+				description: language.replace(lang.GLOBAL.NOW_PLAYING, { "song": `[**${lang.GLOBAL.HEADER_LOADING}**](https://amanda.moe)\n\n\`[${text.progressBar(18, 60, 60, `[${lang.GLOBAL.HEADER_LOADING}]`)}]\`` })
+			}
+		]
+	}).catch(() => void 0)
+	try {
+		let reject: (error?: unknown) => unknown
+		const timer = setTimeout(() => reject("Timed out"), waitForClientVCJoinTimeout)
+		const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
+			reject = rej
+			client.lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
+				resolve(p)
+				clearTimeout(timer)
+			})
+		})
+		queue!.node = node
+		queue!.player = player
+		queue!.addPlayerListeners()
+		return queue
+	} catch (e) {
+		if (e !== "Timed out") logger.error(e)
+		queue!.destroy()
+		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
+		return null
+	}
+}

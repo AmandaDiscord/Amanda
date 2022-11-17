@@ -319,7 +319,9 @@ commands.assign([
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			if (optionPlay || optionFrisky || optionListenmoe) {
-				const position = (queue ? [optionPlay, optionFrisky, optionListenmoe].find(i => i?.options.get("position"))?.asNumber() : null) ?? queue?.tracks.length ?? 1
+				let position: number = queue?.tracks.length || 1
+				const posOpt = (optionPlay || optionFrisky || optionListenmoe)!.options.get("position")
+				if (queue && posOpt) position = posOpt.asNumber()!
 				let queueDidntExist = false
 
 				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
@@ -344,7 +346,7 @@ commands.assign([
 
 				for (let index = 0; index < tracks.length; index++) {
 					tracks[index].queue = queue
-					await queue.addTrack(tracks[index], position + index)
+					await queue.addTrack(tracks[index], position + index - 1)
 				}
 
 				if (queueDidntExist) queue.play()
@@ -361,15 +363,19 @@ commands.assign([
 				const executePage = page !== null || [volume, auto, loop, pause].every(i => i === null)
 
 				if (executePage) {
-					const rows = queue.tracks.map((track, index) => `${index + 1}. ${track.queueLine}`)
 					const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
 					const start = ((page || 1) - 1) * 10
-					const body = `${rows.slice(start, start + 10).join("\n")}${totalLength}`
+					const sliced = queue.tracks.slice(start, start + 10)
+					const strings = sliced.map((track, index) => `${index + 1}. ${track.queueLine}`)
+					const body = `${strings.join("\n")}${totalLength}\nPage length: ${time.prettySeconds(sliced.reduce((acc, cur) => (acc + cur.lengthSeconds), 0))}`
 					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
 						embeds: [
 							{
 								title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
 								description: body,
+								footer: {
+									text: `Page ${page || 1} of ${Math.floor(queue.tracks.length / 10)}`
+								},
 								color: constants.standard_embed_color
 							}
 						]
