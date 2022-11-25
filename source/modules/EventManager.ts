@@ -10,7 +10,6 @@ import Command from "./Command"
 
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const lang = sync.require("../utils/language") as typeof import("../utils/language")
-const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
 const cluster = sync.require("../utils/cluster") as typeof import("../utils/cluster")
 
@@ -75,12 +74,12 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		if (passthrough.clusterData.guild_ids[p.shard_id].length !== 0 && firstStart && config.db_enabled) {
 			const arr = passthrough.clusterData.guild_ids[p.shard_id]
 			await orm.db.raw(`DELETE FROM voice_states WHERE guild_id IN (${arr.map(i => `'${i}'`).join(", ")})`)
-			logger.info(`Deleted voice states in ${arr.length} guilds for shard ${p.shard_id}`)
+			console.log(`Deleted voice states in ${arr.length} guilds for shard ${p.shard_id}`)
 		}
 
 		if (starting) {
 			starting = false
-			logger.info(`Successfully logged in as ${client.user.username}`)
+			console.log(`Successfully logged in as ${client.user.username}`)
 			process.title = client.user.username
 
 			if (config.db_enabled) {
@@ -106,20 +105,20 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 					send: (packet) => passthrough.requester.request(constants.GATEWAY_WORKER_CODES.SEND_MESSAGE, packet, (d) => passthrough.gateway.postMessage(d))
 				})
 
-				client.lavalink.once("ready", () => logger.info("Lavalink ready"))
+				client.lavalink.once("ready", () => console.log("Lavalink ready"))
 
-				client.lavalink.on("error", error => logger.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
+				client.lavalink.on("error", error => console.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
 
 				try {
 					await client.lavalink.connect()
 				} catch (e) {
-					logger.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
+					console.error("There was a lavalink connect error. One of the nodes may be offline or unreachable\n" + await text.stringify(e, 3))
 				}
 			}
 		}
 	}
 
-	if (!client.ready) return logger.warn(`packet was dropped as client wasn't ready:\n${await text.stringify(p)}`)
+	if (!client.ready) return console.warn(`packet was dropped as client wasn't ready:\n${await text.stringify(p)}`)
 
 	if (p.t === "GUILD_CREATE") {
 		const data = p.d as import("discord-typings").Guild
@@ -165,7 +164,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				}
 
 				// Report to original channel
-				client.snow.interaction.createFollowupMessage(interaction.application_id, interaction.token, { embeds: [embed] }).catch(() => logger.error("Error with sending alert that command failed. Probably a 403 resp code"))
+				client.snow.interaction.createFollowupMessage(interaction.application_id, interaction.token, { embeds: [embed] }).catch(() => console.error("Error with sending alert that command failed. Probably a 403 resp code"))
 
 				// Report to #amanda-error-log
 				embed.title = "Command error occured."

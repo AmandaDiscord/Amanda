@@ -150,14 +150,14 @@ export class Session {
 				const method = opcodeMethodMap.get(data.op!)
 				if (method) this[method](data)
 			} catch (e) {
-				utils.info(`${this.user || "Unauthenticated"} sent an invalid JSON:\n${message.toString()}`)
+				console.log(`${this.user || "Unauthenticated"} sent an invalid JSON:\n${message.toString()}`)
 				this.cleanClose()
 			}
 		})
 
 		ws.on("close", this.onClose.bind(this))
 
-		ws.on("error", utils.error)
+		ws.on("error", console.error)
 
 		sessions.push(this)
 
@@ -172,10 +172,10 @@ export class Session {
 	}
 
 	public onClose(): void {
-		if (this.user !== configuredUserID) utils.info(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
+		if (this.user !== configuredUserID) console.log(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
-		if (this.user !== configuredUserID) utils.info(`${sessions.length} sessions in memory`)
+		if (this.user !== configuredUserID) console.log(`${sessions.length} sessions in memory`)
 	}
 
 	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
@@ -194,14 +194,14 @@ export class Session {
 			if (!session) return
 			if (!config.db_enabled) return
 			const state = await orm.db.get("voice_states", { user_id: session.user_id })
-			if (!state) return utils.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
+			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
 			this.channel = state.channel_id
 			this.user = session.user_id
-			utils.info(`WebSocket identified: ${this.user}`)
-			utils.info(`${sessions.length} sessions in memory`)
+			console.log(`WebSocket identified: ${this.user}`)
+			console.log(`${sessions.length} sessions in memory`)
 			this.send({ op: constants.WebsiteOPCodes.ACKNOWLEDGE, nonce: data.nonce || null, d: { serverTimeDiff } })
 			this.sendState({})
 		}
@@ -217,7 +217,7 @@ export class Session {
 	}
 
 	public cleanClose(): void {
-		if (this.user === configuredUserID) utils.warn("cleanClose was called")
+		if (this.user === configuredUserID) console.warn("cleanClose was called")
 		this.send({ op: constants.WebsiteOPCodes.STATE, d: null })
 		this.ws.close()
 	}
@@ -335,4 +335,4 @@ function wsConnection(ws: import("ws").WebSocket) {
 }
 wss.on("connection", wsConnection)
 
-utils.info("Websocket API loaded")
+console.log("Websocket API loaded")

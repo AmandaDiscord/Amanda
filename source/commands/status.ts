@@ -3,7 +3,6 @@ const { client, config, sync, constants } = passthrough
 
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
 const arr = sync.require("../utils/array") as typeof import("../utils/array")
-const logger = sync.require("../utils/logger") as typeof import("../utils/logger")
 
 const refreshTime = 15 * 60 * 1000
 const updateTime = 5 * 60 * 1000
@@ -144,7 +143,7 @@ function update() {
 		}
 		passthrough.requester.request(constants.GATEWAY_WORKER_CODES.STATUS_UPDATE, data, (d) => passthrough.gateway.postMessage(d))
 	} else {
-		logger.error("Warning: no status messages available!")
+		console.error("Warning: no status messages available!")
 	}
 }
 

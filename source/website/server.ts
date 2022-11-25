@@ -53,24 +53,24 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 				}
 			} else await util.streamResponse(res, p.join(rootFolder, url.pathname))
 		} catch (e) {
-			util.error(e)
+			console.error(e)
 			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
 		}
 
-		util.info(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`)
+		console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`)
 	})
 
 	server.on("upgrade", async (req, socket, head) => {
 		wss.handleUpgrade(req, socket, head, s => wss.emit("connection", s, req))
 	})
 
-	server.once("listening", () => util.info(`Server is listening on ${config.website_domain}`))
+	server.once("listening", () => console.log(`Server is listening on ${config.website_domain}`))
 
 	server.listen(10400)
 
-	wss.once("close", () => util.info("Socket server has closed."));
+	wss.once("close", () => console.log("Socket server has closed."));
 	require("./music")
 
-	process.on("uncaughtException", (e) => util.error(String(e)))
-	process.on("unhandledRejection", (e) => util.error(String(e)))
+	process.on("uncaughtException", (e) => console.error(String(e)))
+	process.on("unhandledRejection", (e) => console.error(String(e)))
 })()

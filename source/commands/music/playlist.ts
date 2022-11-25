@@ -9,7 +9,6 @@ const arr = sync.require("../../utils/array") as typeof import("../../utils/arra
 const discordUtils = sync.require("../../utils/discord") as typeof import("../../utils/discord")
 const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
-const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
 const time = sync.require("../../utils/time") as typeof import("../../utils/time")
 
@@ -204,7 +203,7 @@ commands.assign([
 			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlists"]>) => {
 				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
 				const unbreakDatabase = async () => {
-					logger.warn("unbreakDatabase was called!")
+					console.warn("unbreakDatabase was called!")
 					await Promise.all(tracks.map((row, index) => orm.db.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "lang.audio.playlist.prompts.databaseFixed" })
 				}
@@ -557,7 +556,7 @@ async function createQueue(cmd: import("../../modules/Command"), lang: import("@
 		queue!.addPlayerListeners()
 		return queue
 	} catch (e) {
-		if (e !== "Timed out") logger.error(e)
+		if (e !== "Timed out") console.error(e)
 		queue!.destroy()
 		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
 		return null

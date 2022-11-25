@@ -5,8 +5,6 @@ import crypto from "crypto"
 import passthrough from "./passthrough"
 const { config, sync } = passthrough
 
-const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
-
 const server = createServer(serverHandler)
 const wss = new ws.Server({ noServer: true })
 
@@ -177,7 +175,7 @@ async function serverHandler(req: import("http").IncomingMessage, res: import("h
 			else await path.handle(req, res, url)
 		} else res.writeHead(404).end()
 	} catch (e) {
-		logger.error(e, "webserver")
+		console.error(e, "webserver")
 		if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
 	}
 }

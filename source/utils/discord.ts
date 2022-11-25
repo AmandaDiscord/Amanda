@@ -24,17 +24,8 @@ export function convertCachedUser(user: import("../types").InferModelDef<typeof 
 	return user as unknown as import("discord-typings").User
 }
 
-export async function getAvatarJimp(userID: string) {
-	const user = await getUser(userID)
-	if (!user) return null
-	const url = displayAvatarURL(user, true)
-	if (!url) return null
-	const validation = await fetch(url, { method: "HEAD" })
-	if (validation.headers["content-type"] && validation.headers["content-type"].startsWith("image/")) return Jimp.read(url)
-
-	const data = await client.snow.user.getUser(userID)
-	if (data && config.db_enabled) orm.db.upsert("users", { id: userID, tag: `${data.username}#${data.discriminator}`, avatar: data.avatar, bot: data.bot ? 1 : 0, added_by: config.cluster_id })
-	const newURL = displayAvatarURL(data, true)
+export function getAvatarJimp(user: import("discord-typings").User) {
+	const newURL = displayAvatarURL(user, true)
 	if (!newURL) return null
 	return Jimp.read(newURL)
 }
@@ -52,7 +43,7 @@ export function createPagination(cmd: import("../modules/Command"), title: Array
 	alignedRows = alignedRows.slice(1)
 	const pages = arr.createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 	paginate(pages.length, (page, component) => {
-		const data: Parameters<typeof client.snow.interaction.editOriginalInteractionResponse>["2"] = {
+		const data: import("snowtransfer").WebhookEditMessageData = {
 			embeds: [
 				{
 					color: constants.standard_embed_color,

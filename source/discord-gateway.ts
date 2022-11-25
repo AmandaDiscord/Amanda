@@ -3,7 +3,9 @@ if (!parentport) throw new Error("NOT_A_WORKER")
 const parentPort = parentport
 import util from "util"
 
-import CloudStorm from "cloudstorm"
+import "./utils/logger"
+
+import * as CloudStorm from "cloudstorm"
 import HeatSync from "heatsync"
 
 import passthrough from "./passthrough"
@@ -12,14 +14,11 @@ const sync = new HeatSync()
 
 Object.assign(passthrough, { sync })
 
-import logger from "./utils/logger"
-
 const config = require("../config") as import("./types").Config
 import constants from "./constants"
 
 Object.assign(passthrough, { config, constants })
 
-const worker_id = "gateway"
 const sentAckString = "Message sent"
 
 const client = new CloudStorm.Client(config.bot_token, {
@@ -37,8 +36,8 @@ const queue = [] as Array<{ s_id: number, data: { op: number, d: unknown } }>
 
 const presence = {} as import("discord-typings").GatewayPresenceUpdate
 
-client.connect().catch((e) => logger.error(e, worker_id))
-logger.info("gateway started", worker_id)
+client.connect().catch(console.error)
+console.log("gateway started")
 
 client.on("event", d => parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.DISCORD, d }))
 
@@ -53,15 +52,15 @@ client.on("shardReady", async (d) => {
 				await shard.connector.betterWs?.sendMessage(q.data as import("cloudstorm").IWSMessage)
 				queue.splice(queue.indexOf(q), 1)
 			} catch {
-				return logger.error(`Unable to send message:\n${JSON.stringify(q)}`, worker_id)
+				return console.error(`Unable to send message:\n${JSON.stringify(q)}`)
 			}
-		} else logger.error(`No shard found to send WS Message:\n${util.inspect(q, true, 2, true)}`, worker_id)
+		} else console.error(`No shard found to send WS Message:\n${util.inspect(q, true, 2, true)}`)
 	}
 
-	if (shards.every(s => s.ready) && queue.length) logger.warn(`All shards are ready, but the queue still has entries in it.\n${util.inspect(queue)}`, worker_id)
+	if (shards.every(s => s.ready) && queue.length) console.warn(`All shards are ready, but the queue still has entries in it.\n${util.inspect(queue)}`)
 })
 
-client.on("error", (e) => logger.error(e, worker_id))
+client.on("error", console.error)
 
 parentPort.on("message", async (message: { o: number, d: unknown, t: string }) => {
 
@@ -101,11 +100,11 @@ parentPort.on("message", async (message: { o: number, d: unknown, t: string }) =
 			}
 			parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.RESPONSE, d: sentAckString, t: message.t })
 		} else {
-			logger.error(`No shard found to send WS Message:\n${util.inspect(message.d, true, 2, true)}`, worker_id)
+			console.error(`No shard found to send WS Message:\n${util.inspect(message.d, true, 2, true)}`)
 			parentPort.postMessage({ o: constants.GATEWAY_WORKER_CODES.ERROR_RESPONSE, d: `Unable to send message:\n${JSON.stringify(message.d)}`, t: message.t })
 		}
 	}
 })
 
-process.on("unhandledRejection", (e) => logger.error(e, worker_id))
-process.on("uncaughtException", (e) => logger.error(e, worker_id))
+process.on("unhandledRejection", console.error)
+process.on("uncaughtException", console.error)

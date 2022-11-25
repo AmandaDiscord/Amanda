@@ -1,6 +1,8 @@
 import path from "path"
 import { Worker } from "worker_threads"
 
+import "./utils/logger"
+
 import CommandManager from "./modules/CommandManager"
 import Frisky from "frisky-client"
 import HeatSync from "heatsync"
@@ -24,7 +26,6 @@ const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 const sync = new HeatSync()
 
 Object.assign(passthrough, { client, sync, config, constants, listenMoe: { jp, kp }, frisky, commands })
-const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
 import { ThreadBasedReplier } from "./utils/classes/ThreadBasedReplier"
 const requester = new ThreadBasedReplier()
@@ -44,32 +45,32 @@ GatewayWorker.on("message", message => {
 	else return requester.consume(message)
 })
 
-sync.events.on("error", logger.error)
-sync.events.on("any", file => logger.info(`${file} was changed`))
-jp.on("error", logger.error)
-kp.on("error", logger.error)
-jp.on("unknown", logger.info)
-kp.on("unknown", logger.info)
-GatewayWorker.on("error", logger.error)
-client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
+sync.events.on("error", console.error)
+sync.events.on("any", file => console.log(`${file} was changed`))
+jp.on("error", console.error)
+kp.on("error", console.error)
+jp.on("unknown", console.info)
+kp.on("unknown", console.info)
+GatewayWorker.on("error", console.error)
+client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request Error:\n${p}\n${e}`))
 
 ;(async () => {
 	if (config.db_enabled) {
 		const db = await pool.connect()
 		await db.query({ text: "SELECT * FROM premium LIMIT 1" })
-		logger.info("Connected to database")
+		console.log("Connected to database")
 		passthrough.db = db
-	} else logger.warn("Database disabled")
+	} else console.warn("Database disabled")
 
 	let firstConnect = true
 	const onOpen = () => {
-		if (firstConnect) logger.info("Website socket ready")
+		if (firstConnect) console.log("Website socket ready")
 		firstConnect = false
 		passthrough.websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.IDENTIFY, d: { token: config.lavalink_password, timestamp: Date.now() } }))
 	}
 	const websiteSocket = new ReconnectingWS(`ws${config.website_ipc_bind !== "localhost" ? "s" : ""}://${config.website_ipc_bind}:${config.website_domain.split(":")[1] || "10400"}`, 5000)
 	websiteSocket.on("open", onOpen)
-	websiteSocket.on("close", (code: number, reason: Buffer) => logger.warn(`Website socket disconnect: { code: ${code}, reason: ${reason.toString("utf8")} }`))
+	websiteSocket.on("close", (code: number, reason: Buffer) => console.warn(`Website socket disconnect: { code: ${code}, reason: ${reason.toString("utf8")} }`))
 
 	Object.assign(passthrough, { requester, gateway: GatewayWorker, websiteSocket })
 
@@ -89,7 +90,7 @@ client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Er
 
 async function globalErrorHandler(e: Error | undefined) {
 	const text = require("./utils/string") as typeof import("./utils/string")
-	logger.error(e)
+	console.error(e)
 	client.snow.channel.createMessage("512869106089852949", {
 		embeds: [
 			{

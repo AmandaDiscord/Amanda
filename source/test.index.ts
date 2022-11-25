@@ -43,16 +43,15 @@ const commands = new CommandManager<[import("discord-typings").Interaction, impo
 const sync = new HeatSync()
 
 Object.assign(passthrough, { client, sync, config, constants, commands })
-const logger = sync.require("./utils/logger") as typeof import("./utils/logger")
 
 import { ThreadBasedReplier } from "./utils/classes/ThreadBasedReplier"
 const requester = new ThreadBasedReplier()
 
 Object.assign(passthrough, { requester })
 
-sync.events.on("error", logger.error)
-sync.events.on("any", file => logger.info(`${file} was changed`))
-client.snow.requestHandler.on("requestError", (p, e) => logger.error(`Request Error:\n${p}\n${e}`))
+sync.events.on("error", console.error)
+sync.events.on("any", file => console.log(`${file} was changed`))
+client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request Error:\n${p}\n${e}`))
 
 sync.require([
 	"./modules/EventManager",
@@ -65,7 +64,7 @@ sync.require([
 
 async function globalErrorHandler(e: Error | undefined) {
 	const text = require("./utils/string") as typeof import("./utils/string")
-	logger.error(e)
+	console.error(e)
 	client.snow.channel.createMessage("512869106089852949", {
 		embeds: [
 			{
@@ -84,10 +83,10 @@ require("./test.webserver")
 
 // setup gateway
 
-cloud.connect().catch((e) => logger.error(e, "gateway"))
-logger.info("gateway started", "gateway")
+cloud.connect().catch((e) => console.error(e, "gateway"))
+console.log("gateway started", "gateway")
 
-cloud.on("error", (e) => logger.error(e, "gateway"))
+cloud.on("error", (e) => console.error(e, "gateway"))
 cloud.on("event", d => {
 	client.emit("gateway", d as import("discord-typings").GatewayPayload)
 })
@@ -132,7 +131,7 @@ const gateway = {
 				}
 				requester.consume({ d: "Message sent", t: message.t })
 			} else {
-				logger.error(`No shard found to send WS Message:\n${util.inspect(message.d, true, 2, true)}`, "gateway")
+				console.error(`No shard found to send WS Message:\n${util.inspect(message.d, true, 2, true)}`, "gateway")
 				requester.consume({ d: `Unable to send message:\n${JSON.stringify(message.d)}`, t: message.t })
 			}
 		}
@@ -152,15 +151,15 @@ cloud.on("shardReady", async (d) => {
 				await shard.connector.betterWs?.sendMessage(q.data as import("cloudstorm").IWSMessage)
 				queue.splice(queue.indexOf(q), 1)
 			} catch {
-				return logger.error(`Unable to send message:\n${JSON.stringify(q)}`, "gateway")
+				return console.error(`Unable to send message:\n${JSON.stringify(q)}`, "gateway")
 			}
-		} else logger.error(`No shard found to send WS Message:\n${util.inspect(q, true, 2, true)}`, "gateway")
+		} else console.error(`No shard found to send WS Message:\n${util.inspect(q, true, 2, true)}`, "gateway")
 	}
 
-	if (shards.every(s => s.ready) && queue.length) logger.warn(`All shards are ready, but the queue still has entries in it.\n${util.inspect(queue)}`, "gateway")
+	if (shards.every(s => s.ready) && queue.length) console.warn(`All shards are ready, but the queue still has entries in it.\n${util.inspect(queue)}`, "gateway")
 })
 
-cloud.on("error", (e) => logger.error(e, "gateway"))
+cloud.on("error", (e) => console.error(e, "gateway"))
 
 client.once("ready", () => {
 	tap.test("Main test", { autoend: false }, async test => {

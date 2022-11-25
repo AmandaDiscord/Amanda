@@ -48,8 +48,8 @@ const cmds = [
 
 			const canvas = new Jimp(300, 100)
 			const [pfp1, pfp2, heart] = await Promise.all([
-				discordUtils.getAvatarJimp(user1.id),
-				discordUtils.getAvatarJimp(user2.id),
+				discordUtils.getAvatarJimp(user1),
+				discordUtils.getAvatarJimp(user2),
 				Jimp.read("./images/emojis/heart.png")
 			]).catch(() => [undefined, undefined, undefined])
 

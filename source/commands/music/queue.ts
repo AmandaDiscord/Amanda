@@ -8,7 +8,6 @@ const { sync, queues, client, config, constants, websiteSocket } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
-const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 const time = sync.require("../../utils/time") as typeof import("../../utils/time")
 const discordUtils = sync.require("../../utils/discord") as typeof import("../../utils/discord")
@@ -164,7 +163,7 @@ class Queue {
 			else if (track.track == null) track.error = this.lang.GLOBAL.SONG_ERROR_NULL
 		}
 		if (track.error) {
-			logger.error(`Track error call C: { id: ${track.id}, error: ${track.error} }`)
+			console.error(`Track error call C: { id: ${track.id}, error: ${track.error} }`)
 			this._reportError()
 			this._nextTrack()
 		} else {
@@ -181,7 +180,7 @@ class Queue {
 			try {
 				await track.destroy()
 			} catch (e) {
-				logger.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
+				console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 			}
 		}
 		this.tracks.length = 0
@@ -280,7 +279,7 @@ class Queue {
 		try {
 			removed.destroy()
 		} catch (e) {
-			logger.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
+			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
@@ -302,7 +301,7 @@ class Queue {
 			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
 			if (this.tracks[0]) {
 				this.tracks[0].error = `Track got stuck. Waited for ${event.thresholdMs}ms`
-				logger.error("Track error call D")
+				console.error("Track error call D")
 				this._reportError()
 			}
 		}
@@ -324,17 +323,17 @@ class Queue {
 			// this.audit.push({ action: "Queue Destroy (Socket Closed. Was the channel deleted?)", platform: "System", user: "Amanda" })
 			return this.destroy()
 		}
-		logger.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
+		console.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
 		if (this.tracks[0]) {
 			this.tracks[0].error = details.exception.message
-			logger.error("Track error call B")
+			console.error("Track error call B")
 			this._reportError()
 			this._nextTrack()
 		} else this.destroy()
 	}
 
 	private _startNPUpdates() {
-		if (!this.tracks[0]) return logger.error("Tried to call Queue._startNPUpdates but no tracks")
+		if (!this.tracks[0]) return console.error("Tried to call Queue._startNPUpdates but no tracks")
 		const frequency = this.tracks[0].npUpdateFrequency
 		const timeUntilNext5 = frequency - ((Date.now() - this.trackStartTime) % frequency)
 		const triggerNow = timeUntilNext5 > 1500
@@ -473,7 +472,7 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 	try {
 		packet = JSON.parse(message)
 	} catch (e) {
-		return logger.error(`Error parsing message from website\n${util.inspect(e, true, Infinity, true)}`)
+		return console.error(`Error parsing message from website\n${util.inspect(e, true, Infinity, true)}`)
 	}
 
 	const qs = [...queues.values()]

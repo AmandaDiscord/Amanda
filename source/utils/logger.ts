@@ -1,40 +1,28 @@
 import { BackTracker } from "backtracker"
 
-import passthrough from "../passthrough"
-const { sync } = passthrough
-
-const text = sync.require("./string") as typeof import("./string")
-
 const workerNameMaxLogLength = 10
-const scopeNameMaxLogLength = 25
+const scopeNameMaxLogLength = 30
 
-export function post(err: boolean, value: string) {
-	err ? console.error(value) : console.log(value)
-}
+const oldLog = console.log
+const oldWarn = console.warn
+const oldErr = console.error
 
-const jsFileEnding = /\.js$/
-const dotDigit = /\.\d+/
 const T = /T/
 const Z = /Z/
 
-export function getPrefix(type: "warn" | "info" | "error", worker: string) {
-	const first = BackTracker.stack[1]
-	const scope = `${first.filename.replace(jsFileEnding, "")}:${first.line}:${first.column}`
+function getPrefix(type: "warn" | "info" | "error", worker: string) {
+	const stack = BackTracker.stack
+	const first = stack[1]
+	const scope = `${first.srcFilename}:${first.srcLine}:${first.srcColumn}`
 	const color = type === "warn" ? "\x1b[93m" : type === "error" ? "\x1b[91m" : "\x1b[92m"
-	// 2021-01-01 00:00:00 INFO 69420 --- [      main] index:0:0      : Logged in!
-	return `\x1b[90m${new Date().toISOString().replace(T, " ").replace(Z, "").replace(dotDigit, "")} ${color}${type !== "error" ? `${type} ` : type} \x1b[35m${process.pid} \x1b[0m--- [${" ".repeat((workerNameMaxLogLength - worker.length) < 1 ? 1 : workerNameMaxLogLength - worker.length)}${worker}] \x1b[36m${scope}${" ".repeat((scopeNameMaxLogLength - scope.length) < 1 ? 1 : scopeNameMaxLogLength - scope.length)}\x1b[0m :`
+	return `\x1b[90m${new Date().toISOString().replace(T, " ").replace(Z, "")} ${type.length === 4 ? " " : ""}${color}${type.toUpperCase()} \x1b[35m${process.pid} \x1b[0m--- [${" ".repeat((workerNameMaxLogLength - worker.length) < 1 ? 1 : workerNameMaxLogLength - worker.length)}${worker}] \x1b[36m${scope}${" ".repeat((scopeNameMaxLogLength - scope.length) < 1 ? 1 : scopeNameMaxLogLength - scope.length)}\x1b[0m :`
 }
 
-export async function warn(message: unknown, worker = "main") {
-	post(false, `${getPrefix("warn", worker)} ${await text.stringify(message, 0, true)}`)
+function post(type: "info" | "warn" | "error", ...data: Array<any>): void {
+	const fn = type === "info" ? oldLog : type === "warn" ? oldWarn : oldErr
+	fn(getPrefix(type, "main"), ...data)
 }
 
-export async function info(message: unknown, worker = "main") {
-	post(false, `${getPrefix("info", worker)} ${await text.stringify(message, 0, true)}`)
-}
-
-export async function error(message: unknown, worker = "main") {
-	post(true, `${getPrefix("error", worker)} ${await text.stringify(message, 0, true)}`)
-}
-
-export default exports as typeof import("./logger")
+console.log = post.bind(null, "info")
+console.warn = post.bind(null, "warn")
+console.error = post.bind(null, "error")

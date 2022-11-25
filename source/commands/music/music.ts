@@ -13,7 +13,6 @@ const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
 const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
 const time = sync.require("../../utils/time") as typeof import("../../utils/time")
-const logger = sync.require("../../utils/logger") as typeof import("../../utils/logger")
 
 const waitForClientVCJoinTimeout = 5000
 
@@ -48,459 +47,427 @@ async function createQueue(cmd: import("../../modules/Command"), lang: import("@
 		queue!.addPlayerListeners()
 		return queue
 	} catch (e) {
-		if (e !== "Timed out") logger.error(e)
+		if (e !== "Timed out") console.error(e)
 		queue!.destroy()
 		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
 		return null
 	}
 }
 
+async function getOrCreateQueue(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang): Promise<{ queue: import("./queue").Queue | null; existed: boolean }> {
+	let queue = queues.get(cmd.guild_id!) ?? null
+	const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id! })
+	if (!userVoiceState) {
+		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
+		return { queue: null, existed: !!queue }
+	}
+	if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
+		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+		return { queue: null, existed: true }
+	}
+	if (queue) return { queue, existed: true }
+	const node = common.nodes.byIdeal() || common.nodes.random()
+	queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
+	if (!queue) return { queue: null, existed: false }
+	return { queue, existed: false }
+}
+
+function doChecks(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang) {
+	if (!config.db_enabled) {
+		client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database that allows me to track what voice channel you're in is currently not connected. This is known and a fix is being worked on" } })
+		return false
+	}
+	if (musicDisabled) {
+		client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
+		return false
+	}
+	if (!cmd.guild_id) {
+		client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
+		return false
+	}
+	return true
+}
+
+function getQueueWithRequiredPresence(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang) {
+	const queue = queues.get(cmd.guild_id!)
+	if (!queue) {
+		client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+		return null
+	}
+	if (!queue.listeners.has(cmd.author.id)) {
+		client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) } })
+		return null
+	}
+	return queue
+}
+
 commands.assign([
 	{
-		name: "music",
-		description: "The main music interface",
+		name: "play",
+		description: "Play music from multiple sources",
 		category: "audio",
 		options: [
 			{
-				name: "play",
-				type: 1,
-				description: "Play music from multiple sources",
+				name: "track",
+				type: 3,
+				description: "The track you'd like to play",
+				required: true
+			},
+			{
+				name: "position",
+				type: 4,
+				description: "1 based index to start adding tracks from",
 				required: false,
-				options: [
-					{
-						name: "track",
-						type: 3,
-						description: "The track you'd like to play",
-						required: true
-					},
-					{
-						name: "position",
-						type: 4,
-						description: "1 based index to start adding tracks from",
-						required: false,
-						min_value: 2
-					}
+				min_value: 2
+			}
+		],
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+
+			const track = cmd.data.options.get("track")!.asString()!
+
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
+			const { queue, existed } = await getOrCreateQueue(cmd, lang)
+			if (!queue) return
+			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
+
+			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
+
+			if (!tracks.length) return queue.destroy()
+
+			for (let index = 0; index < tracks.length; index++) {
+				tracks[index].queue = queue
+				await queue.addTrack(tracks[index], position + index - 1)
+			}
+
+			if (!existed) queue.play()
+			else queue.interaction = cmd
+		}
+	},
+	{
+		name: "radio",
+		description: "Play from radio stations",
+		category: "audio",
+		options: [
+			{
+				name: "station",
+				type: 3,
+				description: "The station to play from",
+				required: true,
+				choices: [
+					{ name: "frisky original", value: "frisky/original" },
+					{ name: "frisky deep", value: "frisky/deep" },
+					{ name: "frisky chill", value: "frisky/chill" },
+					{ name: "frisky classics", value: "frisky/classics" },
+					{ name: "listen moe japanese", value: "lm/jp" },
+					{ name: "listen moe korean", value: "lm/kp" }
 				]
 			},
 			{
-				name: "skip",
-				type: 1,
-				description: "Skip tracks in the queue",
+				name: "position",
+				type: 4,
+				description: "1 based index to start adding tracks from",
 				required: false,
-				options: [
-					{
-						name: "start",
-						type: 4,
-						description: "1 based index to start skipping tracks from",
-						required: false,
-						min_value: 1
-					},
-					{
-						name: "amount",
-						type: 4,
-						description: "The amount of tracks to skip in the queue",
-						required: false,
-						min_value: 1
-					}
-				]
+				min_value: 2
+			}
+		],
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+
+			const track = cmd.data.options.get("station")!.asString()!
+
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
+			const { queue, existed } = await getOrCreateQueue(cmd, lang)
+			if (!queue) return
+			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
+
+			let toAdd: import("./tracktypes").Track
+
+			const slashIndex = track.indexOf("/")
+			if (slashIndex === -1) throw new Error("-1 index in radio")
+			const namespace = track.slice(0, slashIndex - 1)
+			const value = track.slice(slashIndex + 1)
+
+			if (namespace === "frisky") toAdd = new trackTypes.FriskyTrack(value as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"])
+			else if (namespace === "lm") toAdd = new trackTypes.ListenMoeTrack(value as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"])
+			else throw new Error("Invalid radio station namespace")
+
+			await queue.addTrack(toAdd, position)
+
+			if (!existed) queue.play()
+			else queue.interaction = cmd
+		}
+	},
+	{
+		name: "skip",
+		description: "Skip tracks in the queue",
+		category: "audio",
+		options: [
+			{
+				name: "start",
+				type: 4,
+				description: "1 based index to start skipping tracks from",
+				required: false,
+				min_value: 1
 			},
 			{
-				name: "stop",
-				type: 1,
-				description: "Stop the queue",
+				name: "amount",
+				type: 4,
+				description: "The amount of tracks to skip in the queue",
+				required: false,
+				min_value: 1
+			}
+		],
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+
+			const start = cmd.data.options.get("start")?.asNumber() ?? 1
+			const amount = cmd.data.options.get("amount")?.asNumber() ?? 1
+
+			for (let index = 0; index < amount; index++) {
+				if (start === 1) continue
+				await queue.removeTrack(start + index)
+			}
+
+			if (start === 1) queue.skip()
+
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Skipped" })
+		}
+	},
+	{
+		name: "stop",
+		description: "Stops the queue",
+		category: "audio",
+		process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+			queue.destroy()
+			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: `Queue stopped by ${cmd.author.username}#${cmd.author.discriminator}` } })
+		}
+	},
+	{
+		name: "queue",
+		description: "Show the queue and do actions",
+		category: "audio",
+		options: [
+			{
+				name: "page",
+				type: 4,
+				description: "Choose what page in the queue to show",
+				required: false,
+				min_value: 1
+			},
+			{
+				name: "volume",
+				type: 4,
+				min_value: 1,
+				max_value: 500,
+				description: "Set the volume % of the queue",
 				required: false
 			},
 			{
-				name: "queue",
-				type: 1,
-				description: "Shows the queue",
-				required: false,
-				options: [
-					{
-						name: "page",
-						type: 4,
-						description: "Choose what page in the queue to show",
-						required: false,
-						min_value: 1
-					},
-					{
-						name: "volume",
-						type: 4,
-						min_value: 1,
-						max_value: 500,
-						description: "Set the volume % of the queue",
-						required: false
-					},
-					{
-						name: "auto",
-						type: 5,
-						description: "Set the state of auto mode for the queue",
-						required: false
-					},
-					{
-						name: "loop",
-						type: 5,
-						description: "Set the state of loop mode for the queue",
-						required: false
-					},
-					{
-						name: "pause",
-						type: 5,
-						description: "Sets the paused state of the queue",
-						required: false
-					}
-				]
-			},
-			{
-				name: "now",
-				type: 1,
-				description: "Show the now playing message",
+				name: "loop",
+				type: 5,
+				description: "Set the state of loop mode for the queue",
 				required: false
 			},
 			{
-				name: "info",
-				type: 1,
-				description: "Shows the info about the current playing track",
-				required: false
-			},
-			{
-				name: "related",
-				type: 1,
-				description: "Shows the related tracks to the current playing track",
-				required: false
-			},
-			{
-				name: "lyrics",
-				type: 1,
-				description: "Shows the lyrics of the current playing track",
-				required: false
-			},
-			{
-				name: "seek",
-				type: 1,
-				description: "Seek to the current time in the current playing track",
-				required: false,
-				options: [
-					{
-						name: "time",
-						type: 4,
-						description: "The time in seconds to seek in the track",
-						required: true
-					}
-				]
-			},
-			{
-				name: "filters",
-				type: 1,
-				description: "Apply filters to the queue",
-				required: false,
-				options: [
-					{
-						name: "pitch",
-						type: 4,
-						description: "Sets the pitch of the queue in decibals",
-						min_value: -7,
-						max_value: 7,
-						required: false
-					},
-					{
-						name: "speed",
-						type: 4,
-						description: "Sets the speed % of the queue",
-						min_value: 1,
-						max_value: 500,
-						required: false
-					}
-				]
-			},
-			{
-				name: "frisky",
-				type: 1,
-				description: "Play music from frisky.fm radio stations",
-				required: false,
-				options: [
-					{
-						name: "station",
-						type: 3,
-						description: "The station to play from",
-						required: true,
-						choices: [
-							{ name: "original", value: "original" },
-							{ name: "deep", value: "deep" },
-							{ name: "chill", value: "chill" },
-							{ name: "classics", value: "classics" }
-						]
-					},
-					{
-						name: "position",
-						type: 4,
-						description: "1 based index to start adding tracks from",
-						required: false,
-						min_value: 2
-					}
-				]
-			},
-			{
-				name: "listenmoe",
-				type: 1,
-				description: "Play music from listen.moe radio stations",
-				required: false,
-				options: [
-					{
-						name: "station",
-						type: 3,
-						description: "The station to play from",
-						required: true,
-						choices: [
-							{ name: "jpop", value: "jp" },
-							{ name: "kpop", value: "kp" }
-						]
-					},
-					{
-						name: "position",
-						type: 4,
-						description: "1 based index to start adding tracks from",
-						required: false,
-						min_value: 2
-					}
-				]
-			},
-			{
-				name: "shuffle",
-				type: 1,
-				description: "Shuffle the queue",
+				name: "pause",
+				type: 5,
+				description: "Sets the paused state of the queue",
 				required: false
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database that allows me to track what voice channel you're in is currently not connected. This is known and a fix is being worked on" } })
-			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
-			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
+			if (!doChecks(cmd, lang)) return
 
-			const optionPlay = cmd.data.options.get("play") ?? null
-			const optionFrisky = cmd.data.options.get("frisky") ?? null
-			const optionListenmoe = cmd.data.options.get("listenmoe") ?? null
-			const optionSkip = cmd.data.options.get("skip") ?? null
-			const optionStop = cmd.data.options.get("stop") ?? null
-			const optionQueue = cmd.data.options.get("queue") ?? null
-			const optionNow = cmd.data.options.get("now") ?? null
-			const optionInfo = cmd.data.options.get("info") ?? null
-			const optionRelated = cmd.data.options.get("related") ?? null
-			const optionLyrics = cmd.data.options.get("lyrics") ?? null
-			const optionSeek = cmd.data.options.get("seek") ?? null
-			const optionFilters = cmd.data.options.get("filters") ?? null
-			const optionShuffle = cmd.data.options.get("shuffle") ?? null
+			const page = cmd.data.options.get("page")?.asNumber() ?? null
+			const volume = cmd.data.options.get("volume")?.asNumber() ?? null
+			const loop = cmd.data.options.get("loop")?.asBoolean() ?? null
+			const pause = cmd.data.options.get("pause")?.asBoolean() ?? null
 
-			const array = [
-				optionPlay,
-				optionFrisky,
-				optionListenmoe,
+			const queue = queues.get(cmd.guild_id!)
 
-				optionStop,
-				optionSkip,
-				optionQueue,
-				optionNow,
-				optionInfo,
-				optionRelated,
-				optionLyrics,
-				optionSeek,
-				optionFilters,
-				optionShuffle
-			]
+			if (!queue || !queue.tracks[0]) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type:4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
 
-			const notNull = array.filter(i => i !== null)
+			const userIsListening = queue.listeners.has(cmd.author.id)
 
-			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username, prefix: "/" }) } })
-			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
+			const executePage = page !== null || [volume, loop, pause].every(i => i === null)
 
-			let queue = queues.get(cmd.guild_id) ?? null
-			if (!queue && [optionPlay, optionFrisky, optionListenmoe].every(i => i === null)) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			if (!userIsListening && !executePage) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) } })
 
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
-			if (optionPlay || optionFrisky || optionListenmoe) {
-				let position: number = queue?.tracks.length || 1
-				const posOpt = (optionPlay || optionFrisky || optionListenmoe)!.options.get("position")
-				if (queue && posOpt) position = posOpt.asNumber()!
-				let queueDidntExist = false
-
-				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
-				if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
-				if (queue && queue.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
-
-				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
-
-				if (!queue) {
-					queueDidntExist = true
-					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
-					if (!queue) return
-				}
-
-				const tracks = optionPlay
-					? await common.inputToTrack(optionPlay.options.get("track")!.asString()!, cmd, lang, node.id) ?? []
-					: optionFrisky
-						? [new trackTypes.FriskyTrack(optionFrisky.options.get("station")!.asString() as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"])]
-						: [new trackTypes.ListenMoeTrack(optionListenmoe!.options.get("station")!.asString() as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"])]
-
-				if (!tracks.length) return queue.destroy()
-
-				for (let index = 0; index < tracks.length; index++) {
-					tracks[index].queue = queue
-					await queue.addTrack(tracks[index], position + index - 1)
-				}
-
-				if (queueDidntExist) queue.play()
-				else queue.interaction = cmd
-				return
-			} else if (optionQueue) {
-				if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
-				const page = optionQueue.options.get("page")?.asNumber() ?? null
-				const volume = optionQueue.options.get("volume")?.asNumber() ?? null
-				const auto = optionQueue.options.get("auto")?.asBoolean() ?? null
-				const loop = optionQueue.options.get("loop")?.asBoolean() ?? null
-				const pause = optionQueue.options.get("pause")?.asBoolean() ?? null
-
-				const executePage = page !== null || [volume, auto, loop, pause].every(i => i === null)
-
-				if (executePage) {
-					const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
-					const start = ((page || 1) - 1) * 10
-					const sliced = queue.tracks.slice(start, start + 10)
-					const strings = sliced.map((track, index) => `${index + 1}. ${track.queueLine}`)
-					const body = `${strings.join("\n")}${totalLength}\nPage length: ${time.prettySeconds(sliced.reduce((acc, cur) => (acc + cur.lengthSeconds), 0))}`
-					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
-						embeds: [
-							{
-								title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
-								description: body,
-								footer: {
-									text: `Page ${page || 1} of ${Math.floor(queue.tracks.length / 10)}`
-								},
-								color: constants.standard_embed_color
-							}
-						]
-					})
-				}
-
-				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
-				if (!userVoiceState && !executePage) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
-				if (!userVoiceState && executePage) return
-				if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id && optionQueue === null) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content:language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
-
-				if (volume !== null) {
-					queue.volume = volume / 100
-					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: `Queue volume set to ${volume}%` })
-				}
-
-				if (auto !== null) {
-					queue.auto = auto
-					const state = queue.toJSON()
-					if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
-					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.auto ? "AUTO_ON" : "AUTO_OFF"] })
-				}
-
-				if (loop !== null) {
-					queue.loop = loop
-					const state = queue.toJSON()
-					if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
-					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
-				}
-
-				if (pause !== null) {
-					queue.paused = pause
-					client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: "Pause toggled" })
-				}
-				return
-
-
-			}
-
-
-			const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
-			if (!userVoiceState) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
-
-			if (!queue || !queue.tracks[0]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
-			if (queue.voiceChannelID && queue.voiceChannelID !== userVoiceState.channel_id && optionQueue === null) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content:language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
-
-
-			if (optionStop) {
-				queue.destroy()
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Queue stopped by ${cmd.author.username}#${cmd.author.discriminator}` })
-
-
-			} else if (optionSkip) {
-				const start = optionSkip.options.get("start")?.asNumber() ?? 1
-				const amount = optionSkip.options.get("amount")?.asNumber() ?? 1
-
-				for (let index = 0; index < amount; index++) {
-					if (start === 1) continue
-					await queue.removeTrack(start + index)
-				}
-
-				if (start === 1) queue.skip()
-
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Skipped" })
-
-
-			} else if (optionNow) queue.interaction = cmd
-
-
-			else if (optionInfo) {
-				const info = await queue.tracks[0].showInfo()
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof info === "string" ? { content: info } : { embeds: [info] })
-
-
-			} else if (optionRelated) {
-				const related = await queue.tracks[0].showRelated()
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof related === "string" ? { content: related } : { embeds: [related] })
-
-
-			} else if (optionLyrics !== null) {
-				const lyrics = await queue.tracks[0].getLyrics()
-				if (!lyrics) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Could not get track lyrics or there were no track lyrics" })
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			if (executePage) {
+				const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
+				const start = ((page || 1) - 1) * 10
+				const sliced = queue.tracks.slice(start, start + 10)
+				const strings = sliced.map((track, index) => `${index + 1}. ${track.queueLine}`)
+				const body = `${strings.join("\n")}${totalLength}\nPage length: ${time.prettySeconds(sliced.reduce((acc, cur) => (acc + cur.lengthSeconds), 0))}`
+				client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
 					embeds: [
 						{
-							color: constants.standard_embed_color,
-							description: `${lyrics.slice(0, 1996)}...`
+							title: language.replace(lang.GLOBAL.QUEUE_FOR, { server: "this server" }),
+							description: body,
+							footer: {
+								text: `Page ${page || 1} of ${Math.floor(queue.tracks.length / 10)}`
+							},
+							color: constants.standard_embed_color
 						}
 					]
 				})
+			}
 
+			if (volume !== null && userIsListening) {
+				queue.volume = volume / 100
+				client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: `Queue volume set to ${volume}%` })
+			}
 
-			} else if (optionSeek) {
-				const timeOpt = optionSeek.options.get("time")!.asNumber()!
-				const result = await queue.seek(timeOpt)
-				if (result === 1) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username }) })
-				else if (result === 2) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You cannot seek live audio" })
-				else if (result === 3) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The time you provided was longer than the track's length" })
-				else if (result === 4) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `There was an error with seeking to that position. Your duration was parsed properly as ${text.numberComma(timeOpt)} milliseconds, but LavaLink did not seek. This is a bug. Please report this: <${constants.server}>` })
-				else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Seeking to ${time.shortTime(timeOpt, "ms")}. Please hold` })
+			if (loop !== null && userIsListening) {
+				queue.loop = loop
+				const state = queue.toJSON()
+				if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
+				client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
+			}
 
+			if (pause !== null && userIsListening) {
+				queue.paused = pause
+				client.snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: "Pause toggled" })
+			}
+		}
+	},
+	{
+		name: "nowplaying",
+		description: "Show the queue now playing message",
+		category: "audio",
+		process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = queues.get(cmd.guild_id!)
+			if (!queue) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			queue.interaction = cmd
+		}
+	},
+	{
+		name: "trackinfo",
+		description: "Shows info about the currently playing track",
+		category: "audio",
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = queues.get(cmd.guild_id!)
+			if (!queue) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			const info = await queue.tracks[0].showInfo()
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof info === "string" ? { content: info } : { embeds: [info] })
+		}
+	},
+	{
+		name: "lyrics",
+		description: "Shows the lyrics of the currently playing track",
+		category: "audio",
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = queues.get(cmd.guild_id!)
+			if (!queue) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
-			} else if (optionFilters) {
-				const pitch = optionFilters.options.get("pitch")?.asNumber() ?? queue.pitch
-				const speed = optionFilters.options.get("speed")?.asNumber() ?? queue.speed
+			const lyrics = await queue.tracks[0].getLyrics()
+			if (!lyrics) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Could not get track lyrics or there were no track lyrics" })
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						color: constants.standard_embed_color,
+						description: `${lyrics.slice(0, 1996)}...`
+					}
+				]
+			})
+		}
+	},
+	{
+		name: "seek",
+		description: "Seek to a time in the currently playing track",
+		category: "audio",
+		options: [
+			{
+				name: "time",
+				type: 4,
+				description: "The time in seconds to seek in the track",
+				required: true
+			}
+		],
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+			const timeOpt = cmd.data.options.get("time")!.asNumber()!
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			const result = await queue.seek(timeOpt * 1000)
+			if (result === 1) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username }) })
+			else if (result === 2) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You cannot seek live audio" })
+			else if (result === 3) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The time you provided was longer than the track's length" })
+			else if (result === 4) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `There was an error with seeking to that position. Your duration was parsed properly as ${text.numberComma(timeOpt * 1000)} milliseconds, but LavaLink did not seek. This is a bug. Please report this: <${constants.server}>` })
+			else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `Seeking to ${time.shortTime(timeOpt, "sec")}. Please hold` })
+		}
+	},
+	{
+		name: "filters",
+		description: "Apply filters to the queue",
+		category: "audio",
+		options: [
+			{
+				name: "pitch",
+				type: 4,
+				description: "Sets the pitch of the queue in decibals",
+				min_value: -7,
+				max_value: 7,
+				required: false
+			},
+			{
+				name: "speed",
+				type: 4,
+				description: "Sets the speed % of the queue",
+				min_value: 1,
+				max_value: 500,
+				required: false
+			}
+		],
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+			const pitch = cmd.data.options.get("pitch")?.asNumber() ?? queue.pitch
+			const speed = cmd.data.options.get("speed")?.asNumber() ?? queue.speed
+			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
-				const oldFilters = queue.player!.state.filters
-				const newFilters = mixin(oldFilters, { timescale: { pitch: pitch, speed: speed } })
-				const result = await queue.player!.filters(newFilters)
-				if (!result) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "There was an error applying the filters. The connection to the LavaLink node may have been dropped?" })
-				else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The filters you specified are applying now. Please hold" })
-
-
-			} else if (optionShuffle !== null) {
-				const toShuffle = queue.tracks.slice(1) // Do not shuffle the first track since it's already playing
-				queue.tracks.length = 1
-				if (queue.voiceChannelID) await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }), res))
-				const shuffled = arr.shuffle(toShuffle)
-				for (const track of shuffled) {
-					await queue.addTrack(track)
-				}
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Queue shuffled" })
-
-
-			} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Working on re-adding. Please give me time" })
+			const oldFilters = queue.player!.state.filters
+			const newFilters = mixin(oldFilters, { timescale: { pitch: pitch, speed: speed } })
+			const result = await queue.player!.filters(newFilters)
+			if (!result) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "There was an error applying the filters. The connection to the LavaLink node may have been dropped?" })
+			else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The filters you specified are applying now. Please hold" })
+		}
+	},
+	{
+		name: "shuffle",
+		description: "Shuffle the queue",
+		category: "audio",
+		async process(cmd, lang) {
+			if (!doChecks(cmd, lang)) return
+			const queue = getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+			const toShuffle = queue.tracks.slice(1) // Do not shuffle the first track since it's already playing
+			queue.tracks.length = 1
+			if (queue.voiceChannelID) await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }), res))
+			const shuffled = arr.shuffle(toShuffle)
+			for (const track of shuffled) {
+				await queue.addTrack(track)
+			}
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Queue shuffled" })
 		}
 	},
 	{

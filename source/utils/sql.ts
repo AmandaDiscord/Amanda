@@ -3,8 +3,6 @@ import util from "util"
 import passthrough from "../passthrough"
 const { db, sync } = passthrough
 
-const logger = sync.require("./logger") as typeof import("./logger")
-
 export function all(string: string, prepared?: unknown | Array<unknown>, connection: import("pg").PoolClient = db, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
 	let prep: Array<unknown>
 	if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
@@ -17,9 +15,9 @@ export function all(string: string, prepared?: unknown | Array<unknown>, connect
 			const rows = result.rows
 			resolve(rows || [])
 		}).catch(err => {
-			logger.error(err)
+			console.error(err)
 			attempts--
-			logger.warn(`${string}\n${String(prepared)}`)
+			console.warn(`${string}\n${String(prepared)}`)
 			if (attempts) all(string, prep, connection, attempts).then(resolve).catch(reject)
 			else reject(err)
 		})

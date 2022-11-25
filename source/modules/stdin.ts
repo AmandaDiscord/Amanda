@@ -8,12 +8,10 @@ import fs from "fs"
 import passthrough from "../passthrough"
 const { client, config, constants, commands, requester, sync } = passthrough
 
-import logger from "../utils/logger"
-
 const announcement = sync.require("../commands/status") as typeof import("../commands/status")
 
 function refreshcommands() {
-	if (!client.ready) return logger.error("Client isn't ready yet")
+	if (!client.ready) return console.error("Client isn't ready yet")
 	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, [...commands.cache.values()].map(c => ({
 		name: c.name,
 		description: c.description,
@@ -54,7 +52,7 @@ async function customEval(input: string, _context: import("vm").Context, _filena
 	}
 }
 
-passthrough.sync.events.on(__filename, () => logger.warn("stdin does not auto-reload."))
+passthrough.sync.events.on(__filename, () => console.warn("stdin does not auto-reload."))
 
 const cli = repl.start({ prompt: "", eval: customEval, writer: s => s })
 

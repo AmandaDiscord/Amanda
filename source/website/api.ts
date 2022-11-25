@@ -41,8 +41,8 @@ async function onStatsPosting(time: number) {
 
 	const onResponse = async (response: Response) => {
 		if (!okStatusCodes.includes(response.status)) {
-			utils.error(`Response from posting api was a non-ok status: { status: ${response.status}, url: ${response.url} }`)
-			utils.error(await response.text())
+			console.error(`Response from posting api was a non-ok status: { status: ${response.status}, url: ${response.url} }`)
+			console.error(await response.text())
 		}
 	}
 
@@ -53,7 +53,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ guildCount: totalStats.guilds })
-	}).then(onResponse).catch(e => utils.error(`Bots on discord stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`Bots on discord stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	fetch(`https://discordbotlist.com/api/v1/bots/${liveUserID}/stats`, {
 		method: "POST",
@@ -62,7 +62,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ guilds: totalStats.guilds, users: totalStats.users, voice_connections: totalStats.voice_connections })
-	}).then(onResponse).catch(e => utils.error(`discord bot list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`discord bot list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	fetch(`https://discord.bots.gg/api/v1/bots/${liveUserID}/stats`, {
 		method: "POST",
@@ -71,7 +71,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ shardCount: config.total_shards, guildCount: totalStats.guilds })
-	}).then(onResponse).catch(e => utils.error(`discord bots gg stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`discord bots gg stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	fetch(`https://top.gg/api/bots/${liveUserID}/stats`, {
 		method: "POST",
@@ -80,7 +80,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ shard_count: config.total_shards, server_count: totalStats.guilds })
-	}).then(onResponse).catch(e => utils.error(`top gg stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`top gg stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	fetch(`https://api.discordextremelist.xyz/v2/bot/${liveUserID}/stats`, {
 		method: "POST",
@@ -89,7 +89,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ shardCount: config.total_shards, guildCount: totalStats.guilds })
-	}).then(onResponse).catch(e => utils.error(`discord extreme list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`discord extreme list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	fetch(`https://discords.com/bots/api/bot/${liveUserID}`, {
 		method: "POST",
@@ -98,7 +98,7 @@ async function onStatsPosting(time: number) {
 			"Content-Type": "application/json"
 		},
 		body: JSON.stringify({ server_count: totalStats.guilds })
-	}).then(onResponse).catch(e => utils.error(`discords stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`discords stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	const cheweyBody = JSON.stringify({
 		servers: totalStats.guilds,
@@ -117,7 +117,7 @@ async function onStatsPosting(time: number) {
 			"Content-Length": Buffer.byteLength(cheweyBody).toString()
 		},
 		body: cheweyBody
-	}).then(onResponse).catch(e => utils.error(`chewey api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
+	}).then(onResponse).catch(e => console.error(`chewey api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
 	setTimeoutForStats()
 }
