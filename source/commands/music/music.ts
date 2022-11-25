@@ -187,7 +187,7 @@ commands.assign([
 
 			const slashIndex = track.indexOf("/")
 			if (slashIndex === -1) throw new Error("-1 index in radio")
-			const namespace = track.slice(0, slashIndex - 1)
+			const namespace = track.slice(0, slashIndex)
 			const value = track.slice(slashIndex + 1)
 
 			if (namespace === "frisky") toAdd = new trackTypes.FriskyTrack(value as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"])
