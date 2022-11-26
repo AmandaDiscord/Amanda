@@ -372,7 +372,10 @@ class Queue {
 	}
 
 	private _reportError() {
+		const track = this.tracks[0]
 		const sendReport = (contents: import("discord-typings").Embed) => {
+			contents.url = constants.server
+			contents.footer = { text: "Click the title to join our support server" }
 			// Report to original channel
 			if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
@@ -388,6 +391,15 @@ class Queue {
 				["Invidious origin", `\`${node?.invidious_origin || "NONE"}\``],
 				["Queue node", this.node || "UNNAMED"]
 			]
+			if (this.interaction?.guild_id) details.unshift(...[["Shard", String((BigInt(this.interaction.guild_id) >> BigInt(22)) % BigInt(config.total_shards))]])
+			if (track) {
+				details.push(...[
+					["Track", track.id],
+					["Input", track.input],
+					["Requester id", track.requester.id],
+					["Requester tag", `${track.requester.username}#${track.requester.discriminator}`]
+				])
+			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>
 				`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
@@ -406,7 +418,6 @@ class Queue {
 		}
 		this.errorChain++
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
-			const track = this.tracks[0]
 			if (track) {
 				sendReport({
 					title: this.lang.GLOBAL.SONG_NOT_PLAYABLE,
@@ -426,8 +437,10 @@ class Queue {
 						embeds: [
 							{
 								title: this.lang.GLOBAL.TOO_MANY_ERRORS,
+								url: constants.server,
 								description: this.lang.GLOBAL.ERRORS_SUPPRESSED,
-								color: 0xff2ee7
+								color: 0xff2ee7,
+								footer: { text: "Click the title to join our support server" }
 							}
 						]
 					})

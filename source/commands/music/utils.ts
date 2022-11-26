@@ -69,12 +69,12 @@ const common = {
 		if (!tracks || !tracks.tracks.length) return null
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.track))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0])]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i))
+		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0], resource, cmd.author)]
+		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i, resource, cmd.author))
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) return null
-		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen)]
+		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen, resource, cmd.author)]
 	},
 
 	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
@@ -148,10 +148,10 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 	})
 }
 
-function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo): import("./tracktypes").Track {
+function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-typings").User): import("./tracktypes").Track {
 	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
 	const type = sourceMap.get(info.source)
-	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info)
+	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester)
 }
 
 export = common

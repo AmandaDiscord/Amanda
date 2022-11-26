@@ -169,19 +169,18 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				// Report to #amanda-error-log
 				embed.title = "Command error occured."
 				embed.description = await text.stringify(e)
-				let details = [
+				const details = [
+					["Cluster", config.cluster_id],
+					["Shard", String(interaction.guild_id ? Number((BigInt(interaction.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
 					["User", `${user.username}#${user.discriminator}`],
 					["User ID", user.id],
-					["Bot", user.bot ? "Yes" : "No"]
+					["Bot", user.bot ? "Yes" : "No"],
+					["DM", interaction.guild_id ? "Yes" : "No"]
 				]
 				if (interaction.guild_id) {
-					details = details.concat([
+					details.push(...[
 						["Guild ID", interaction.guild_id],
 						["Channel ID", interaction.channel_id || "NONE"]
-					])
-				} else {
-					details = details.concat([
-						["DM", "Yes"]
 					])
 				}
 				const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)

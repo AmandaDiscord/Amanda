@@ -190,8 +190,8 @@ commands.assign([
 			const namespace = track.slice(0, slashIndex)
 			const value = track.slice(slashIndex + 1)
 
-			if (namespace === "frisky") toAdd = new trackTypes.FriskyTrack(value as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"])
-			else if (namespace === "lm") toAdd = new trackTypes.ListenMoeTrack(value as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"])
+			if (namespace === "frisky") toAdd = new trackTypes.FriskyTrack(value as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"], undefined, track, cmd.author)
+			else if (namespace === "lm") toAdd = new trackTypes.ListenMoeTrack(value as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"], track, cmd.author)
 			else throw new Error("Invalid radio station namespace")
 
 			await queue.addTrack(toAdd, position)

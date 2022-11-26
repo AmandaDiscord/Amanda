@@ -58,10 +58,12 @@ export class Track {
 	public queue: import("./queue").Queue | undefined
 	public source: string
 	public uri: string | null
+	public input: string
+	public requester: import("discord-typings").User
 
 	private _filledBarOffset = 0
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
 
 		this.track = track
 		this.title = info.title || "Unknown track"
@@ -72,6 +74,9 @@ export class Track {
 		this.source = info.source || "unknown"
 		this.uri = info.uri || null
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+
+		this.input = input
+		this.requester = requester
 	}
 
 	public getRelated(): Promise<this[]> {
@@ -151,8 +156,8 @@ export class RequiresSearchTrack extends Track {
 	public prepareCache: import("../../utils/classes/AsyncValueCache").AsyncValueCache<void>
 	private searchString: string
 
-	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>) {
-		super(track || "!", info)
+	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
+		super(track || "!", info, input, requester)
 		this.searchString = info.author && info.title ? `${info.author} - ${info.title}` : info.title || ""
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
@@ -184,8 +189,8 @@ export class ExternalTrack extends Track {
 	public id = String(Date.now())
 	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>) {
-		super(track, info)
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
+		super(track, info, input, requester)
 
 		const to = new URL(info.uri!)
 		let name: string
@@ -234,8 +239,8 @@ export class FriskyTrack extends Track {
 	public live = true
 	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
 
-	public constructor(station: import("../../types").InferMapK<typeof stationData>, track?: string) {
-		super(track || "!", { identifier: `frisky/${station}` })
+	public constructor(station: import("../../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-typings").User) {
+		super(track || "!", { identifier: `frisky/${station}` }, input, requester)
 
 		this.station = station
 
@@ -386,7 +391,7 @@ export class ListenMoeTrack extends Track {
 	public thumbnail = { src: constants.listen_moe_placeholder, width: 64, height: 64 }
 	public noPauseReason = "You can't pause live audio."
 
-	public constructor(station: "jp" | "kp") {
+	public constructor(station: "jp" | "kp", input: string, requester: import("discord-typings").User) {
 		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
 		const info = {
 			flags: 1,
@@ -402,7 +407,7 @@ export class ListenMoeTrack extends Track {
 		}
 		const track = encoding.encode(info)
 
-		super(track, info)
+		super(track, info, input, requester)
 
 		this.stationData = passthrough.listenMoe[station]
 		this.id = this._id

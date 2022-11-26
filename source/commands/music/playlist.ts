@@ -518,7 +518,7 @@ commands.assign([
 				}
 
 				const sliced = orderedTracks.slice(optionStart - 1)
-				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length * 1000), identifier: row.video_id }))
+				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length * 1000), identifier: row.video_id }, row.video_id, cmd.author))
 				for (const track of trackss) {
 					await queue.addTrack(track)
 				}
