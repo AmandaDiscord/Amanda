@@ -168,6 +168,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 
 				// Report to #amanda-error-log
 				embed.title = "Command error occured."
+				embed.url = constants.server
+				embed.footer = { text: "Click the title to join our support server" }
 				embed.description = await text.stringify(e)
 				const details = [
 					["Cluster", config.cluster_id],
@@ -175,7 +177,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 					["User", `${user.username}#${user.discriminator}`],
 					["User ID", user.id],
 					["Bot", user.bot ? "Yes" : "No"],
-					["DM", interaction.guild_id ? "Yes" : "No"]
+					["DM", interaction.guild_id ? "No" : "Yes"]
 				]
 				if (interaction.guild_id) {
 					details.push(...[
