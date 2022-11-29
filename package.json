@@ -17,7 +17,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "@amanda/lang": "github:AmandaDiscord/Lang#8b502e42b1249290b657cf3f9160c3a0da7613f9",
+    "@amanda/lang": "github:AmandaDiscord/Lang#dcf30712a97318b8aa43c28b174a7aa4fc39b759",
     "@lavalink/encoding": "0.1.2",
     "backtracker": "3.3.2",
     "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
@@ -42,8 +42,8 @@
     "@types/pg": "8.6.5",
     "@types/tap": "^15.0.7",
     "@types/ws": "8.5.3",
-    "@typescript-eslint/eslint-plugin": "5.44.0",
-    "@typescript-eslint/parser": "5.44.0",
+    "@typescript-eslint/eslint-plugin": "5.45.0",
+    "@typescript-eslint/parser": "5.45.0",
     "eslint": "8.28.0",
     "lavalink-types": "1.0.2",
     "tap": "^16.3.2",

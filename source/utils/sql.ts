@@ -1,7 +1,7 @@
 import util from "util"
 
 import passthrough from "../passthrough"
-const { db, sync } = passthrough
+const { db } = passthrough
 
 export function all(string: string, prepared?: unknown | Array<unknown>, connection: import("pg").PoolClient = db, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
 	let prep: Array<unknown>

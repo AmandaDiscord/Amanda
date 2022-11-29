@@ -144,14 +144,12 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		const interaction = p.d as import("discord-typings").Interaction
 		if (interaction.type === 2) {
 			const selfLang = lang.getLang(interaction.locale!)
-			const guildLang = interaction.guild_locale ? lang.getLang(interaction.guild_locale) : null
-			const langToUse = guildLang && interaction.guild_locale != interaction.locale ? guildLang : selfLang
 
 			const user = interaction.user ? interaction.user : interaction.member!.user
 			if (config.db_enabled) orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
 			try {
 				const cmd = new Command(interaction)
-				await commands.cache.get(interaction.data!.name)?.process(cmd, langToUse)
+				await commands.cache.get(interaction.data!.name)?.process(cmd, selfLang)
 			} catch (e) {
 				if (e && e.code) {
 					if (e.code == 10008) return
@@ -159,7 +157,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				}
 
 				const embed: import("discord-typings").Embed = {
-					description: `There was an error with the command ${interaction.data!.name} <:rip:401656884525793291>. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed`,
+					description: lang.replace(selfLang.GLOBAL.COMMAND_ERROR, { "name": interaction.data!.name, "server": constants.server }),
 					color: 0xdd2d2d
 				}
 
@@ -168,8 +166,6 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 
 				// Report to #amanda-error-log
 				embed.title = "Command error occured."
-				embed.url = constants.server
-				embed.footer = { text: "Click the title to join our support server" }
 				embed.description = await text.stringify(e)
 				const details = [
 					["Cluster", config.cluster_id],

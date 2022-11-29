@@ -3,7 +3,7 @@ import * as ws from "ws"
 import crypto from "crypto"
 
 import passthrough from "./passthrough"
-const { config, sync } = passthrough
+const { config } = passthrough
 
 const server = createServer(serverHandler)
 const wss = new ws.Server({ noServer: true })

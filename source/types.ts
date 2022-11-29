@@ -150,6 +150,5 @@ export type WebQueue = {
 	trackStartTime: number
 	attributes: {
 		loop: boolean
-		auto: boolean
 	}
 }

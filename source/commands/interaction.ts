@@ -9,8 +9,6 @@ const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
 const discordUtils = sync.require("../utils/discord") as typeof import("../utils/discord")
 const arrayUtils = sync.require("../utils/array") as typeof import("../utils/array")
 
-const responses = ["That's not strange at all...", "W-What? Why?", "I find it strange that you tried to do that...", "Ok then...", "Come on... Don't make yourself look like an idiot...", "Why even try?", "Oh...", "You are so weird...", "<:NotLikeCat:411364955493761044>"]
-
 const nameRegex = /[^a-zA-Z0-9_-]+/g
 
 const cmds = [
@@ -37,14 +35,6 @@ const cmds = [
 			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
 			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) } })
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
-			if (config.db_enabled) {
-				const crow = await orm.db.raw("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user1.id])?.[0]
-				if (crow) {
-					const otherID = user1.id === crow.user1 ? crow.user2 : crow.user1
-					const you = user1.id === cmd.author.id
-					if (otherID === user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `I don't think I have to rate ${you ? "you" : user1.username} and ${user2.username} if ${you ? "you two are" : "they're"} married already. ${you ? "You're" : "They're"} a cute couple <:amandacomfy:726132738918318260>` })
-				}
-			}
 
 			const canvas = new Jimp(300, 100)
 			const [pfp1, pfp2, heart] = await Promise.all([
@@ -53,7 +43,7 @@ const cmds = [
 				Jimp.read("./images/emojis/heart.png")
 			]).catch(() => [undefined, undefined, undefined])
 
-			if (!pfp1 || !pfp2 || !heart) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "There was an error getting either user's avatar" })
+			if (!pfp1 || !pfp2 || !heart) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.AVATAR_FETCH_FAILED })
 
 			pfp1.resize(100, 100)
 			pfp2.resize(100, 100)
@@ -103,7 +93,7 @@ const cmds = [
 		process(cmd, lang) {
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) } })
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
-			if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "No u" } })
+			if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.NO_U } })
 			if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) } })
 			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) } })
 		}
@@ -180,7 +170,23 @@ for (const source of interactionSources) {
 async function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
 	const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
-	if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
+
+	if (user.id == cmd.author.id) {
+		const responses = [
+			lang.GLOBAL.INTERACTION_RESPONSE_1,
+			lang.GLOBAL.INTERACTION_RESPONSE_2,
+			lang.GLOBAL.INTERACTION_RESPONSE_3,
+			lang.GLOBAL.INTERACTION_RESPONSE_4,
+			lang.GLOBAL.INTERACTION_RESPONSE_5,
+			lang.GLOBAL.INTERACTION_RESPONSE_6,
+			lang.GLOBAL.INTERACTION_RESPONSE_7,
+			lang.GLOBAL.INTERACTION_RESPONSE_8,
+			lang.GLOBAL.INTERACTION_RESPONSE_9,
+			"<:NotLikeCat:411364955493761044>"
+		]
+		return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
+	}
+
 	if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) } })
 	await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 	let fetched: Promise<string> | undefined = undefined
@@ -192,7 +198,7 @@ async function doInteraction(cmd: import("../modules/Command"), lang: import("@a
 		} else if (shortcut == "durl") fetched = url!()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}
-	fetched!.then(u => {
+	fetched.then(u => {
 		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
 		const embed: import("discord-typings").Embed = {
 			description: language.replace(lang.GLOBAL[keyOther], { "user": cmd.author.username, "action": source, "mention": `<@${user.id}>` }),
@@ -201,8 +207,6 @@ async function doInteraction(cmd: import("../modules/Command"), lang: import("@a
 		}
 		if (footer) embed.footer = { text: footer }
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: null, embeds: [embed] })
-	}).catch(error => {
-		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `There was an error: \`\`\`\n${error}\`\`\`` })
 	})
 }
 

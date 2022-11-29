@@ -6,6 +6,7 @@ const { constants, sync, client } = passthrough
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
+const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 
 const selectTimeout = 1000 * 60
 
@@ -69,12 +70,12 @@ const common = {
 		if (!tracks || !tracks.tracks.length) return null
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.track))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0], resource, cmd.author)]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i, resource, cmd.author))
+		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0], resource, cmd.author, language.getLang(cmd.guild_locale!))]
+		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) return null
-		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen, resource, cmd.author)]
+		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen, resource, cmd.author, language.getLang(cmd.guild_locale!))]
 	},
 
 	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
@@ -105,7 +106,7 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 				embeds: [
 					{
 						color: constants.standard_embed_color,
-						description: "Cancelled on Twitter"
+						description: lang.GLOBAL.SONG_SELECTION_CANCELLED
 					}
 				],
 				components: []
@@ -134,7 +135,7 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 			embeds: [
 				{
 					color: constants.standard_embed_color,
-					description: `Choose one of the options below in the select menu to play. Expires after ${timeUtils.shortTime(selectTimeout, "ms")}`,
+					description: language.replace(lang.GLOBAL.SONG_SELECTION_FOOTER, { "timeout": timeUtils.shortTime(selectTimeout, "ms") }),
 					footer: { text: `1-${trackss.length}` }
 				}
 			],
@@ -148,10 +149,10 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 	})
 }
 
-function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-typings").User): import("./tracktypes").Track {
+function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
 	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
 	const type = sourceMap.get(info.source)
-	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester)
+	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester, lang)
 }
 
 export = common

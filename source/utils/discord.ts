@@ -6,6 +6,7 @@ const { client, sync, config, constants } = passthrough
 
 const orm = sync.require("./orm") as typeof import("./orm")
 const arr = sync.require("./array") as typeof import("./array")
+const language = sync.require("./language") as typeof import("./language")
 
 export async function getUser(id: string) {
 	if (id === client.user?.id) return client.user
@@ -37,7 +38,7 @@ export function displayAvatarURL(user: import("discord-typings").User, dynamic?:
 
 const reg = /`.+?`/g
 
-export function createPagination(cmd: import("../modules/Command"), title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
+export function createPagination(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number) {
 	let alignedRows = arr.tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(reg, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)
@@ -49,7 +50,7 @@ export function createPagination(cmd: import("../modules/Command"), title: Array
 					color: constants.standard_embed_color,
 					description: `${formattedTitle}\n${pages[page].join("\n")}`,
 					footer: {
-						text: `Page ${page + 1} of ${pages.length}`
+						text: language.replace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": pages.length })
 					}
 				}
 			]

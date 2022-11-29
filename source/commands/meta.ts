@@ -53,7 +53,7 @@ commands.assign([
 							fields: [
 								{
 									name: leadingIdentity,
-									value: `**${lang.GLOBAL.HEADER_HEARTBEAT}:**\n${stats.latency.map((i, index) => `Shard ${stats.shards[index]}: ${i}ms`).join("\n")}\n`
+									value: `**${lang.GLOBAL.HEADER_HEARTBEAT}:**\n${stats.latency.map((i, index) => `${language.replace(lang.GLOBAL.SHARD_NUMBER, { "shard": stats.shards[index] })}: ${i}ms`).join("\n")}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_LATENCY}:**\n${text.numberComma(Date.now() - before)}ms\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(ram)}\n`,
@@ -89,7 +89,7 @@ commands.assign([
 									name: leadingSpace,
 									value: `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(client.lavalink!.players.size)}\n` +
 										`**❯ ${lang.GLOBAL.HEADER_USERS_LISTENING}:**\n${text.numberComma(listeningcount)}\n` +
-										`**❯ Node usage:**\n${nodeStr || "No nodes"}`,
+										`**❯ ${lang.GLOBAL.HEADER_NODE_USAGE}:**\n${nodeStr || lang.GLOBAL.NO_NODES}`,
 									inline: true
 								}
 							]
@@ -153,7 +153,7 @@ commands.assign([
 								{
 									name: lang.GLOBAL.HEADER_LINKS,
 									value: language.replace(lang.GLOBAL.INFO_LINKS, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal, "privacy": constants.privacy, "todo": constants.todo }) +
-									`\n${language.replace("lang.meta.invite.returns.link", { "link": constants.add })}`
+									`\n${constants.add}`
 								}
 							],
 							color: constants.standard_embed_color
@@ -167,7 +167,7 @@ commands.assign([
 		name: "git",
 		description: "Gets the latest git commits to Amanda",
 		category: "meta",
-		async process(cmd) {
+		async process(cmd, lang) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const limit = 5
 			const authorNameMap = {
@@ -182,9 +182,9 @@ commands.assign([
 					const date = new Date(line.date)
 					const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
 					const diff =
-						`${diffs[index].files.length} file${diffs[index].files.length > 1 ? "s" : ""} changed, ` +
-						`${diffs[index].insertions} insertion${diffs[index].insertions > 1 ? "s" : ""}, ` +
-						`${diffs[index].deletions} deletion${diffs[index].deletions > 1 ? "s" : ""}.`
+						`${diffs[index].files.length > 1 ? language.replace(lang.GLOBAL.GIT_FILES_CHANGED, { "amount": diffs[index].files.length }) : lang.GLOBAL.GIT_FILE_CHANGED}` +
+						`${diffs[index].insertions > 1 ? language.replace(lang.GLOBAL.GIT_INSERTIONS, { "amount": diffs[index].insertions }) : lang.GLOBAL.GIT_INSERTION}` +
+						`${diffs[index].deletions > 1 ? language.replace(lang.GLOBAL.GIT_DELETIONS, { "amount": diffs[index].deletions }) : lang.GLOBAL.GIT_DELETION }`
 					return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
 									`\`» ${diff}\`\n${line.message}`
 				}).join("\n\n") }
@@ -192,10 +192,10 @@ commands.assign([
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
-						title: "Git info",
+						title: lang.GLOBAL.HEADER_GIT_INFO,
 						fields: [
-							{ name: "Status", value:`On branch ${res.branch}, latest commit ${res.latestCommitHash}` },
-							{ name: `Commits (latest ${limit} entries)`, value: res.logString }
+							{ name: lang.GLOBAL.HEADER_STATUS, value: language.replace(lang.GLOBAL.GIT_STATUS, { "branch": res.branch, "hash": res.latestCommitHash }) },
+							{ name: language.replace(lang.GLOBAL.GIT_COMMITS, { "amount": limit }), value: res.logString }
 						],
 						color: constants.standard_embed_color
 					}
@@ -227,82 +227,65 @@ commands.assign([
 			const category = cmd.data.options.get("category")?.asString()
 			const command = cmd.data.options.get("command")?.asString()
 			if (category || command) {
-				if (category === "music") {
+				if (category && category != "hidden" && commands.categories.has(category)) {
+					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL">>
+					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 					embed = {
-						author: { name: "music: command help" },
-						footer: { text: "<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input" },
-						color: constants.standard_embed_color,
-						fields: []
+						author: { name: language.replace(lang.GLOBAL.HEADER_COMMAND_CATEGORY, { "category": category }) },
+						description: cat.sort((a, b) => {
+							const cmda = commands.cache.get(a)!
+							const cmdb = commands.cache.get(b)!
+							if (cmda.order !== undefined && cmdb.order !== undefined) { // both are numbers, sort based on that, lowest first
+								return cmda.order - cmdb.order
+							} else if (cmda.order !== undefined) { // a is defined, sort a first
+								return -1
+							} else if (cmdb.order !== undefined) { // b is defined, sort b first
+								return 1
+							} else { // we don't care
+								return 0
+							}
+						}).map(c2 => {
+							const cm = commands.cache.get(c2)!
+							let desc = cm.description
+							let name = cm.name
+							if (lang[c2]) {
+								name = lang[c2].name
+								desc = lang[c2].description
+							}
+							return `\`${name}${" ​".repeat(maxLength - name.length)}\` ${desc}`
+						}).join("\n"),
+						color: constants.standard_embed_color
 					}
-					const blacklist = ["soundcloud", "music", "frisky", "debug", "token", "listenmoe", "newgrounds"]
-					const audio = [...commands.cache.values()].filter(c => c.category === "audio" && !blacklist.includes(c.name))
-					audio.forEach(c => {
-						const info = getDocs(c)
-						if (c.name === "playlist") info.description = "See `/help category: playlist`"
-						embed.fields!.push({ name: c.name, value: `${info.description ? `${info.description}\n` : ""}*Arguments*: ${info.options?.map(i => i.required ? `<${i.name}>` : `[${i.name}]`).join(", ") || "None"}` })
-					})
+					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+				} else if (command && commands.cache.has(command)) {
+					const c = commands.cache.get(command)!
+					const info = getDocs(c)
+					embed = {
+						author: { name: c.name },
+						description: language.replace(lang.GLOBAL.HELP_COMMAND_BODY, { "description": info.description, "args": info.options?.map(o => o.name).join(", ") || lang.GLOBAL.NONE, "category": c.category }),
+						footer: { text: lang.GLOBAL.FOOTER_HELP },
+						color: constants.standard_embed_color
+					}
 					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 				} else {
-					const c = [...commands.cache.values()].find(cm => cm.name === command)
-					if (c) {
-						const info = getDocs(c)
-						embed = {
-							author: { name: `Help for ${c.name}` },
-							description: `Arguments: ${info.options?.map(i => i.required ? `<${i.name}>` : `[${i.name}]`).join(", ") || "None"}\nDescription: ${info.description}\nCategory: ${c.category}`,
-							footer: { text: "<> = Required, [] = Optional, | = Or. Do not include <>, [], or | in your input" },
-							color: constants.standard_embed_color
-						}
-						client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
-					} else if (category != "hidden" && commands.categories.get(category || "")) {
-						const cat = commands.categories.get(category!)!
-						const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
-						embed = {
-							author: { name: `Command Category: ${category}` },
-							description: cat.sort((a, b) => {
-								const cmda = commands.cache.get(a)!
-								const cmdb = commands.cache.get(b)!
-								if (cmda.order !== undefined && cmdb.order !== undefined) { // both are numbers, sort based on that, lowest first
-									return cmda.order - cmdb.order
-								} else if (cmda.order !== undefined) { // a is defined, sort a first
-									return -1
-								} else if (cmdb.order !== undefined) { // b is defined, sort b first
-									return 1
-								} else { // we don't care
-									return 0
-								}
-							}).map(c2 => {
-								const cm = commands.cache.get(c2)!
-								let desc: string
-								if (lang[category!] && lang[category!][c2] && !["music", "playlist"].includes(c2)) desc = lang[category!][c2].help.description
-								else desc = cm.description
-								return `\`${cm.name}${" ​".repeat(maxLength - cm.name.length)}\` ${desc}`
-							}).join("\n") + `\n\n${"lang.meta.help.returns.footer"}`,
-							color: constants.standard_embed_color
-						}
-						client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
-					} else {
-						embed = {
-							description: language.replace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${cmd.author.username}#${cmd.author.discriminator}` }),
-							color: 0xB60000
-						}
-						client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+					embed = {
+						description: language.replace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${cmd.author.username}#${cmd.author.discriminator}` }),
+						color: 0xB60000
 					}
+					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 				}
 			} else {
 				embed = {
-					author: { name: "Command Categories" },
-					description: `❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")}\n\n${lang.GLOBAL.HELP_SEE_ALL}\n\n${language.replace(lang.GLOBAL.HELP_INFO, { "link": constants.invite_link_for_help })}`,
+					author: { name: lang.GLOBAL.HEADER_COMMAND_CATEGORIES },
+					description: `❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")}\n\n${language.replace(lang.GLOBAL.HELP_SEE_ALL, { "prefix": "/" })}\n\n${language.replace(lang.GLOBAL.HELP_INFO, { "prefix": "/", "link": constants.invite_link_for_help })}`,
 					color: constants.standard_embed_color
 				}
 				client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 			}
 
 			function getDocs(c: import("../types").UnpackArray<Parameters<typeof commands["assign"]>["0"]>) {
-				let info = { name: c.name, description: c.description, options: c.options }
-				if (lang[c.category]) {
-					const langcommand = lang[c.category][c.name]
-					if (langcommand) info = { name: c.name, description: langcommand.help.description, options: c.options }
-				}
+				let info = { name: c.name, description: c.description, options: c.options as Array<{ name: string; description: string; options?: Array<{ name: string; description: string; }> }> }
+				if (lang[c.name]) info = { name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].name, description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].description, options: lang[c.name as "image"].options }
 				return info
 			}
 		}

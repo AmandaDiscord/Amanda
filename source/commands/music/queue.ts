@@ -31,7 +31,6 @@ class Queue {
 	public menu: Array<BetterComponent> = []
 
 	public loop = false
-	public auto = false
 
 	public trackStartTime = 0
 	public pausedAt: number | null = null
@@ -67,8 +66,7 @@ class Queue {
 			pausedAt: this.pausedAt,
 			trackStartTime: this.trackStartTime,
 			attributes: {
-				loop: this.loop,
-				auto: this.auto
+				loop: this.loop
 			}
 		}
 	}
@@ -186,7 +184,7 @@ class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "It looks like this queue has ended" }], components: [] }).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
 		this.player?.destroy().catch(() => void 0)
 		client.lavalink!.leave(this.guildID).catch(() => void 0)
 		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
@@ -205,26 +203,8 @@ class Queue {
 		if (this.tracks[0] && (!this.loop || this.tracks[0].error)) this.tracks[0].destroy()
 		// Out of tracks? (This should only pass if loop mode is also disabled.)
 		if (this.tracks.length <= 1) {
-			// Is auto mode on?
-			if (this.auto) {
-				// Store the current track
-				const lastPlayed = this.tracks[0]
-				// Get related
-				const related = (await lastPlayed?.getRelated()) || []
-				// Can we play a related track?
-				if (related.length) {
-					this.tracks.shift()
-					await this.addTrack(related[0])
-				} else { // No related tracks. Destroy.
-					if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.AUTO_NONE_LEFT })
-					this.auto = false
-					// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
-					this.destroy()
-				}
-			} else { // Auto mode is off. Dissolve.
-				// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
-				this.destroy()
-			}
+			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
+			this.destroy()
 		} else { // We have more tracks. Move on.
 			await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
 			const removed = this.tracks.shift()
@@ -271,13 +251,13 @@ class Queue {
 
 	public async removeTrack(index: number) {
 		// Validate index
-		if (index == 0) return 1
+		if (index === 0) return 1
 		if (!this.tracks[index]) return 1
 		// Actually remove
 		const removed = this.tracks.splice(index, 1)[0]
 		if (!removed) return 2
 		try {
-			removed.destroy()
+			await removed.destroy()
 		} catch (e) {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
@@ -300,7 +280,7 @@ class Queue {
 		if (event.type === "TrackStuckEvent") {
 			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
 			if (this.tracks[0]) {
-				this.tracks[0].error = `Track got stuck. Waited for ${event.thresholdMs}ms`
+				this.tracks[0].error = this.lang.GLOBAL.SONG_STUCK
 				console.error("Track error call D")
 				this._reportError()
 			}
@@ -375,7 +355,7 @@ class Queue {
 		const track = this.tracks[0]
 		const sendReport = (contents: import("discord-typings").Embed) => {
 			contents.url = constants.server
-			contents.footer = { text: "Click the title to join our support server" }
+			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 			// Report to original channel
 			if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
@@ -440,7 +420,7 @@ class Queue {
 								url: constants.server,
 								description: this.lang.GLOBAL.ERRORS_SUPPRESSED,
 								color: 0xff2ee7,
-								footer: { text: "Click the title to join our support server" }
+								footer: { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 							}
 						]
 					})
@@ -507,9 +487,8 @@ sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").Ra
 
 	} else if (packet.op === constants.WebsiteOPCodes.ATTRIBUTES_CHANGE) {
 		if (queue && packet.d) {
-			if (packet.d.auto !== undefined) queue.auto = packet.d.auto as boolean
 			if (packet.d.loop !== undefined) queue.loop = packet.d.loop as boolean
-			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop, auto: queue.auto } } }))
+			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop } } }))
 		}
 
 

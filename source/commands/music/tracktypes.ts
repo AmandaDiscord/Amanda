@@ -9,6 +9,7 @@ const common = sync.require("./utils") as typeof import("./utils")
 const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
 const text = sync.require("../../utils/string") as typeof import("../../utils/string")
 const arrUtils = sync.require("../../utils/array") as typeof import("../../utils/array")
+const language = sync.require("../../utils/language") as typeof import("../../utils/language")
 
 const AsyncValueCache = sync.require("../../utils/classes/AsyncValueCache") as typeof import("../../utils/classes/AsyncValueCache")
 
@@ -60,18 +61,19 @@ export class Track {
 	public uri: string | null
 	public input: string
 	public requester: import("discord-typings").User
+	public lang: import("@amanda/lang").Lang
 
 	private _filledBarOffset = 0
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
-
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+		this.lang = lang
 		this.track = track
-		this.title = info.title || "Unknown track"
-		this.author = info.author || "Unknown author"
+		this.title = info.title || lang.GLOBAL.UNKNOWN_TRACK
+		this.author = info.author || lang.GLOBAL.UNKNOWN_AUTHOR
 		this.lengthSeconds = Math.round(Number(info.length || 0) / 1000)
 		this.id = info.identifier || "!"
 		this.live = info.isStream || false
-		this.source = info.source || "unknown"
+		this.source = info.source || lang.GLOBAL.HEADER_UNKNOWN
 		this.uri = info.uri || null
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
@@ -79,20 +81,12 @@ export class Track {
 		this.requester = requester
 	}
 
-	public getRelated(): Promise<this[]> {
-		return Promise.resolve([])
-	}
-
-	public showRelated(): Promise<string | import("discord-typings").Embed> {
-		return Promise.resolve("Try finding related tracks on the website you found this track on")
-	}
-
 	public showLink(): Promise<string> {
 		return Promise.resolve("https://amanda.moe")
 	}
 
 	public showInfo(): Promise<string | import("discord-typings").Embed> {
-		return Promise.resolve("Try getting this track's info on the website you found it on")
+		return Promise.resolve((this.queue?.lang || this.lang).GLOBAL.SONG_INFO_GENERIC)
 	}
 
 	public prepare(): Promise<unknown> {
@@ -127,7 +121,7 @@ export class Track {
 			const rightTime = timeUtils.prettySeconds(max)
 			if (time > max) time = max
 			const leftTime = timeUtils.prettySeconds(time)
-			const bar = text.progressBar(18, time, max, paused ? " [PAUSED] " : "")
+			const bar = text.progressBar(18, time, max, paused ? ` [${(this.queue?.lang || this.lang).GLOBAL.HEADER_PAUSED}] ` : "")
 			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 		} else {
 			const part = "= ⋄ ==== ⋄ ==="
@@ -135,7 +129,7 @@ export class Track {
 			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 			this._filledBarOffset++
 			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-			return `\`[ ${timeUtils.prettySeconds(time)} ​${bar}​ LIVE ]\`` // SC: ZWSP x 2
+			return `\`[ ${timeUtils.prettySeconds(time)} ​${bar}​ ${(this.queue?.lang || this.lang).GLOBAL.HEADER_LIVE} ]\`` // SC: ZWSP x 2
 		}
 	}
 
@@ -156,8 +150,8 @@ export class RequiresSearchTrack extends Track {
 	public prepareCache: import("../../utils/classes/AsyncValueCache").AsyncValueCache<void>
 	private searchString: string
 
-	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
-		super(track || "!", info, input, requester)
+	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+		super(track || "!", info, input, requester, lang)
 		this.searchString = info.author && info.title ? `${info.author} - ${info.title}` : info.title || ""
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
@@ -172,8 +166,8 @@ export class RequiresSearchTrack extends Track {
 			if (tracks && tracks.tracks[0] && tracks.tracks[0].track) {
 				this.track = tracks.tracks[0].track
 				if (tracks.tracks[0].info) this.author = tracks.tracks[0].info.author
-			} else if (tracks.tracks[0] && !tracks.tracks[0].track) this.error = `Missing track for ${this.searchString}`
-			else this.error = `No results for track: ${this.searchString}`
+			} else if (tracks.tracks[0] && !tracks.tracks[0].track) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
+			else this.error = (this.queue?.lang || this.lang).GLOBAL.NO_RESULTS
 		})
 	}
 
@@ -189,20 +183,20 @@ export class ExternalTrack extends Track {
 	public id = String(Date.now())
 	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User) {
-		super(track, info, input, requester)
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+		super(track, info, input, requester, lang)
 
 		const to = new URL(info.uri!)
 		let name: string
 		if (!info.title) {
 			const match = to.pathname.match(pathnamereg)
-			if (!match) name = "Unknown Track"
+			if (!match) name = lang.GLOBAL.UNKNOWN_TRACK
 			else name = match[1]
 			this.title = entities.decodeHTML(name.replace(underscoreRegex, " "))
 		}
 		this.live = info.isStream || true
-		this.queueLine = this.live ? `**${this.title}** (LIVE)` : `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
-		this.noPauseReason = this.live ? "You can't pause external audio." : this.noPauseReason
+		this.queueLine = this.live ? `**${this.title}** (${this.lang.GLOBAL.HEADER_LIVE})` : `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
+		this.noPauseReason = this.live ? this.lang.GLOBAL.CANNOT_PAUSE_LIVE : this.noPauseReason
 	}
 
 	public async prepare() {
@@ -216,7 +210,7 @@ export class ExternalTrack extends Track {
 			return
 		}
 
-		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = `Missing track for ${this.title}`
+		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.title })
 		else {
 			this.track = info[0].track
 			if (info[0].info.isSeekable) {
@@ -235,20 +229,20 @@ export class FriskyTrack extends Track {
 	public friskyStation: import("frisky-client/lib/Station")
 	public stationInfoGetter: import("../../utils/classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
-	public noPauseReason = "You can't pause live radio."
 	public live = true
 	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
 
-	public constructor(station: import("../../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-typings").User) {
-		super(track || "!", { identifier: `frisky/${station}` }, input, requester)
+	public constructor(station: import("../../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+		super(track || "!", { identifier: `frisky/${station}` }, input, requester, lang)
 
 		this.station = station
+		this.noPauseReason = lang.GLOBAL.CANNOT_PAUSE_LIVE
 
 		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
 		this.stationData = stationData.get(this.station)!
 
 		this.title = this.stationData.title
-		this.queueLine = `**${this.stationData.queue}** (LIVE)`
+		this.queueLine = `**${this.stationData.queue}** (${this.lang.GLOBAL.HEADER_LIVE})`
 		if (!track) {
 			const url = this.station === "chill" ? this.stationData.url : this.stationData.beta_url
 			this.track = encoding.encode({
@@ -296,10 +290,6 @@ export class FriskyTrack extends Track {
 		}))
 	}
 
-	public showRelated() {
-		return Promise.resolve("Try the other stations on Frisky Radio! `&frisky`, `&frisky deep`, `&frisky chill`")
-	}
-
 	public async showLink() {
 		try {
 			const stream = await this.stationInfoGetter.get()
@@ -314,7 +304,7 @@ export class FriskyTrack extends Track {
 		try {
 			stream = await this.stationInfoGetter.get()
 		} catch {
-			return "Unfortunately, we failed to retrieve information about the current track."
+			return (this.queue?.lang || this.lang).GLOBAL.SONG_INFO_FETCH_FAIL
 		}
 		const mix = stream.mix!
 		const stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
@@ -327,14 +317,14 @@ export class FriskyTrack extends Track {
 			url: `https://frisky.fm/mix/${mix.id}`,
 			fields: [
 				{
-					name: "Details",
+					name: this.queue?.lang.GLOBAL.HEADER_DETAILS || this.lang.GLOBAL.HEADER_DETAILS,
 					value: arrUtils.tableifyRows(
 						[
-							["Episode", `${mix.data!.title} / [view](https://frisky.fm/mix/${mix.id})`],
-							["Show", `${mix.data!.title.split(" - ")[0]} / [view](https://frisky.fm/shows/${mix!.data!.show_id.id})`],
-							["Genre", mix.data!.genre.join(", ")],
-							["Station", stationCase],
-							["Schedule", `started ${timeUtils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"])} ago, ${timeUtils.shortTime(stream.getTimeUntil() + stream.data!.duration * 1000, "ms", ["d", "h", "m"])} remaining (${percentPassed}%)`]
+							[(this.queue?.lang || this.lang).GLOBAL.HEADER_EPISODE || this.lang.GLOBAL.HEADER_EPISODE, `${mix.data!.title} / [Frisky](https://frisky.fm/mix/${mix.id})`],
+							[(this.queue?.lang || this.lang).GLOBAL.HEADER_SHOW || this.lang.GLOBAL.HEADER_SHOW, `${mix.data!.title.split(" - ")[0]} / [Frisky](https://frisky.fm/shows/${mix!.data!.show_id.id})`],
+							[(this.queue?.lang || this.lang).GLOBAL.HEADER_GENRE, mix.data!.genre.join(", ")],
+							[(this.queue?.lang || this.lang).GLOBAL.HEADER_STATION, stationCase],
+							[(this.queue?.lang || this.lang).GLOBAL.HEADER_SCHEDULE, language.replace((this.queue?.lang || this.lang).GLOBAL.SONG_STARTED_AND_REMAINING, { "ago": timeUtils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"]), "remaining": timeUtils.shortTime(stream.getTimeUntil() + stream.data!.duration * 1000, "ms", ["d", "h", "m"]), "percent": percentPassed })]
 						],
 						["left", "none"],
 						() => "`"
@@ -345,13 +335,11 @@ export class FriskyTrack extends Track {
 
 		if (mix.episode) embed.thumbnail = { url: this.thumbnail.src }
 		if (mix.data!.track_list && mix.data!.track_list.length) {
-			let trackList = mix.data!.track_list
+			const trackList = mix.data!.track_list
 				.slice(0, 6)
 				.map(track => `${track.artist} - ${track.title}`)
 				.join("\n")
-			const hidden = mix.data!.track_list.length - 6
-			if (hidden > 0) trackList += `\n_and ${hidden} more..._`
-			embed.fields!.push({ name: "Track list", value: trackList })
+			embed.fields!.push({ name: (this.queue?.lang || this.lang).GLOBAL.HEADER_TRACK_LIST, value: trackList })
 		}
 		return embed
 	}
@@ -389,9 +377,8 @@ export class ListenMoeTrack extends Track {
 	public stationData: import("listensomemoe")
 	public bound: ((track: import("listensomemoe/dist/Types").Track) => unknown) | undefined
 	public thumbnail = { src: constants.listen_moe_placeholder, width: 64, height: 64 }
-	public noPauseReason = "You can't pause live audio."
 
-	public constructor(station: "jp" | "kp", input: string, requester: import("discord-typings").User) {
+	public constructor(station: "jp" | "kp", input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
 		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
 		const info = {
 			flags: 1,
@@ -407,11 +394,12 @@ export class ListenMoeTrack extends Track {
 		}
 		const track = encoding.encode(info)
 
-		super(track, info, input, requester)
+		super(track, info, input, requester, lang)
 
+		this.noPauseReason = lang.GLOBAL.CANNOT_PAUSE_LIVE
 		this.stationData = passthrough.listenMoe[station]
 		this.id = this._id
-		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : "LIVE"})`
+		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : this.lang.GLOBAL.HEADER_LIVE})`
 	}
 
 	private get _id() {
@@ -424,10 +412,6 @@ export class ListenMoeTrack extends Track {
 			this.stationData.on("trackUpdate", this.bound)
 		}
 		return Promise.resolve(void 0)
-	}
-
-	public showRelated() {
-		return Promise.resolve("Try the other stations on <https://listen.moe>")
 	}
 
 	public showLink() {
@@ -451,7 +435,7 @@ export class ListenMoeTrack extends Track {
 		this.title = track.title
 		this.lengthSeconds = track.duration
 		this.id = this._id
-		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : "LIVE"})`
+		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : (this.queue?.lang || this.lang).GLOBAL.HEADER_LIVE})`
 	}
 }
 

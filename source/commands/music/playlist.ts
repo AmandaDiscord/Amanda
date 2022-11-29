@@ -169,8 +169,8 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "The database that stores playlist info is currently offline. This is known and a fix is being worked on" } })
-			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "Working on fixing currently. This is a lot harder than people think" } })
+			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
+			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.MUSIC_DISABLED } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
 			const optionMeta = cmd.data.options.get("meta") ?? null
 			const optionAdd = cmd.data.options.get("add") ?? null
@@ -191,13 +191,13 @@ commands.assign([
 			const notNull = array.filter(i => i !== null)
 
 			if (notNull.length === 0) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username }) } })
-			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You can only do 1 action at a time" } })
+			if (notNull.length > 1) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.ONE_ACTION } })
 
 			const checkPlaylistName = (playlistName: string) => {
 				let value = true
 				if (playlistName.includes("http") || playlistName.includes("www.") || playlistName.match(plRegex)) value = false
 				if (playlistName.length > 24) value = false
-				if (!value) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Invalid playlist name. Playlist names must not contain a link or be longer than 24 characters" })
+				if (!value) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
 				return value
 			}
 			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlists"]>) => {
@@ -205,10 +205,9 @@ commands.assign([
 				const unbreakDatabase = async () => {
 					console.warn("unbreakDatabase was called!")
 					await Promise.all(tracks.map((row, index) => orm.db.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "lang.audio.playlist.prompts.databaseFixed" })
 				}
 				if (tracks.length === 0) {
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist is empty" })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY })
 					return []
 				}
 				const orderedTracks = [] as typeof tracks
@@ -244,7 +243,7 @@ commands.assign([
 
 				const notNull2 = array2.filter(i => i !== null)
 				if (notNull2.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username }) })
-				if (notNull2.length > 1) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You can only do 1 action at a time" })
+				if (notNull2.length > 1) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.ONE_ACTION })
 
 				if (optionShow !== null) {
 
@@ -281,15 +280,16 @@ commands.assign([
 					async function getAuthor(u: string) {
 						const user = await discordUtils.getUser(u).catch(() => void 0)
 						if (user) {
-							let username = user.username || "Unknown"
+							let username = user.username || lang.GLOBAL.HEADER_UNKNOWN
 							if (username.length > 14) username = `${username.slice(0, 13)}…`
 							return `\`${username}\``
 						} else return "(?)"
 					}
 					const users = await Promise.all(playlists.map(p => getAuthor(p.author)))
 					return discordUtils.createPagination(
-						cmd
-						, ["Playlist", "Tracks", "Length", "Plays", "`Author`"]
+						cmd,
+						lang
+						, [lang.GLOBAL.HEADER_PLAYLIST, lang.GLOBAL.HEADER_SONGS, lang.GLOBAL.HEADER_LENGTH, lang.GLOBAL.HEADER_PLAY_COUNT, lang.GLOBAL.HEADER_AUTHOR]
 						, playlists.map((p, index) => [
 							p.name
 							, String(p.count)
@@ -306,7 +306,7 @@ commands.assign([
 					if (!checkPlaylistName(optionInfo)) return
 
 					const playlistRow = await orm.db.get("playlists", { name: optionInfo })
-					if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
+					if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
 
 					const authorDetails: Array<string> = []
 					const user = await discordUtils.getUser(playlistRow.author)
@@ -368,23 +368,23 @@ commands.assign([
 					if (!checkPlaylistName(optionCreate)) return
 
 					const playlistRow = await orm.db.get("playlists", { name: optionCreate })
-					if (playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist already exists" })
+					if (playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_ALREADY_EXISTS })
 
 					await orm.db.insert("playlists", { name: optionCreate, author: cmd.author.id })
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Playlist created" })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CREATED })
 				} else if (optionDelete !== null) {
 
 
 					if (!checkPlaylistName(optionDelete)) return
 
 					const playlistRow = await orm.db.get("playlists", { name: optionDelete })
-					if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-					if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+					if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
+					if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE })
 					await Promise.all([
 						orm.db.delete("playlists", { playlist_id: playlistRow.playlist_id }),
 						orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id })
 					])
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Playlist deleted" })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_DELETED })
 				}
 			} else if (optionAdd !== null) {
 
@@ -397,22 +397,22 @@ commands.assign([
 				if (!checkPlaylistName(optionPlaylist)) return
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
-				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE })
 
 				const result = await common.loadtracks(`${optionTrack}`).then(d => d[0]?.info)
 
-				if (!result) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "No results" })
+				if (!result) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
 
 				const orderedTracks = await getTracks(playlistRow)
-				if (orderedTracks.some(row => row.video_id == result.identifier)) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You tried to add a duplicate track to your playlist" })
+				if (orderedTracks.some(row => row.video_id == result.identifier)) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG })
 
 				await Promise.all([
 					orm.db.raw("INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)", [result.identifier, result.title, Math.floor(result.length / 1000)]),
 					orm.db.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: result.identifier, next: null }),
 					orm.db.raw("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $1", [result.identifier, playlistRow.playlist_id])
 				])
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${result.title} added` })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.PLAYLIST_SONG_ADDED, { "title": result.title }) })
 			} else if (optionRemove !== null) {
 
 
@@ -424,17 +424,17 @@ commands.assign([
 				if (!checkPlaylistName(optionPlaylist)) return
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
-				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE })
 
 				const orderedTracks = await getTracks(playlistRow)
 				const toRemove = orderedTracks[optionIndex - 1]
-				if (!toRemove) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
+				if (!toRemove) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.OUT_OF_BOUNDS })
 				await Promise.all([
 					orm.db.update("playlist_songs", { next: toRemove.next }, { playlist_id: toRemove.playlist_id, next: toRemove.video_id }),
 					orm.db.delete("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: toRemove.video_id })
 				])
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${toRemove.name} removed` })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.PLAYLIST_SONG_REMOVED, { "title": toRemove.name }) })
 			} else if (optionMove !== null) {
 
 
@@ -447,11 +447,11 @@ commands.assign([
 				if (!checkPlaylistName(optionPlaylist)) return
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
-				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
-				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You are not allowed to manage this playlist" })
+				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
+				if (playlistRow.author !== cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE })
 
 				const orderedTracks = await getTracks(playlistRow)
-				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Index out of bounds" })
+				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.OUT_OF_BOUNDS })
 				const fromRow = orderedTracks[optionFrom], toRow = orderedTracks[optionTo]
 				if (optionFrom < optionTo) {
 					await orm.db.update("playlist_songs", { next: fromRow.next }, { playlist_id: fromRow.playlist_id, next: fromRow.video_id }) // update row before item
@@ -461,8 +461,8 @@ commands.assign([
 					await orm.db.update("playlist_songs", { next: fromRow.next }, { playlist_id: fromRow.playlist_id, next: fromRow.video_id }) // update row before item
 					await orm.db.update("playlist_songs", { next: fromRow.video_id }, { playlist_id: fromRow.playlist_id, next: toRow.video_id }) // update row before moved item
 					await orm.db.update("playlist_songs", { next: toRow.video_id }, { playlist_id: fromRow.playlist_id, video_id: fromRow.video_id }) // update moved item
-				} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "The from and to indexes cannot be equal" })
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "Track moved" })
+				} else return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_INDEXES_EQUAL })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_SONG_MOVED })
 			} else if (optionSearch !== null) {
 
 
@@ -472,7 +472,7 @@ commands.assign([
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
-				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
+				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
 
 				const orderedTracks = await getTracks(playlistRow)
 
@@ -499,10 +499,10 @@ commands.assign([
 				await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 				const playlistRow = await orm.db.get("playlists", { name: optionPlaylist })
-				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist does not exist" })
+				if (!playlistRow) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
 
 				const orderedTracks = await getTracks(playlistRow)
-				if (orderedTracks.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "That playlist doesn't have any tracks to play" })
+				if (orderedTracks.length === 0) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY })
 
 				let queue = queues.get(cmd.guild_id) ?? null
 				const queueDidntExist = !queue
@@ -518,7 +518,7 @@ commands.assign([
 				}
 
 				const sliced = orderedTracks.slice(optionStart - 1)
-				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length * 1000), identifier: row.video_id }, row.video_id, cmd.author))
+				const trackss = (optionShuffle ? arr.shuffle(sliced) : sliced).map(row => new trackTypes.RequiresSearchTrack("!", { title: row.name, length: BigInt(row.length * 1000), identifier: row.video_id }, row.video_id, cmd.author, language.getLang(cmd.guild_locale!)))
 				for (const track of trackss) {
 					await queue.addTrack(track)
 				}
@@ -543,7 +543,7 @@ async function createQueue(cmd: import("../../modules/Command"), lang: import("@
 	}).catch(() => void 0)
 	try {
 		let reject: (error?: unknown) => unknown
-		const timer = setTimeout(() => reject("Timed out"), waitForClientVCJoinTimeout)
+		const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
 		const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 			reject = rej
 			client.lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
@@ -556,7 +556,7 @@ async function createQueue(cmd: import("../../modules/Command"), lang: import("@
 		queue!.addPlayerListeners()
 		return queue
 	} catch (e) {
-		if (e !== "Timed out") console.error(e)
+		if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
 		queue!.destroy()
 		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: `${language.replace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await text.stringify(e)}` }).catch(() => void 0)
 		return null
