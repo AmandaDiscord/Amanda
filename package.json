@@ -17,7 +17,7 @@
     "npm": ">=8.0.0"
   },
   "dependencies": {
-    "@amanda/lang": "github:AmandaDiscord/Lang#dcf30712a97318b8aa43c28b174a7aa4fc39b759",
+    "@amanda/lang": "github:AmandaDiscord/Lang#aadb3bf4f80c774d9578afac6dd1c01666a7ff7a",
     "@lavalink/encoding": "0.1.2",
     "backtracker": "3.3.2",
     "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
