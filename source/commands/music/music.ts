@@ -322,7 +322,7 @@ commands.assign([
 							title: lang.GLOBAL.QUEUE_FOR,
 							description: body,
 							footer: {
-								text: language.replace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page || 1, "total": Math.floor(queue.tracks.length / 10) })
+								text: language.replace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page || 1, "total": Math.ceil(queue.tracks.length / 10) })
 							},
 							color: constants.standard_embed_color
 						}

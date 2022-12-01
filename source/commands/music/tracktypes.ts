@@ -371,6 +371,10 @@ export class FriskyTrack extends Track {
 	public destroy() {
 		if (this.bound) this.friskyStation.events.removeListener("changed", this.bound)
 	}
+
+	public getLyrics(): Promise<string | null> {
+		return Promise.resolve("[Intro]\nFeeling frisky?\n\n[Verse ∞]\nFrisky...\n\n")
+	}
 }
 
 export class ListenMoeTrack extends Track {
