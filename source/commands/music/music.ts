@@ -138,7 +138,7 @@ commands.assign([
 
 			for (let index = 0; index < tracks.length; index++) {
 				tracks[index].queue = queue
-				await queue.addTrack(tracks[index], position + index - 1)
+				await queue.addTrack(tracks[index], position + index)
 			}
 
 			if (!existed) queue.play()
