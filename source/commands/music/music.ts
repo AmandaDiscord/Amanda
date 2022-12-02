@@ -130,18 +130,19 @@ commands.assign([
 
 			const { queue, existed } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
-			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
 
 			if (!tracks.length) return queue.destroy()
+
+			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
 			for (let index = 0; index < tracks.length; index++) {
 				tracks[index].queue = queue
 				await queue.addTrack(tracks[index], position + index)
 			}
 
-			if (!existed) queue.play()
+			if (!existed || !queue.playHasBeenCalled) queue.play()
 			else queue.interaction = cmd
 		}
 	},
@@ -181,7 +182,6 @@ commands.assign([
 
 			const { queue, existed } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
-			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
 			let toAdd: import("./tracktypes").Track
 
@@ -194,9 +194,11 @@ commands.assign([
 			else if (namespace === "lm") toAdd = new trackTypes.ListenMoeTrack(value as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"], track, cmd.author, language.getLang(cmd.guild_locale!))
 			else throw new Error(lang.GLOBAL.INVALID_RADIO_NAMESPACE)
 
+			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
+
 			await queue.addTrack(toAdd, position)
 
-			if (!existed) queue.play()
+			if (!existed || !queue.playHasBeenCalled) queue.play()
 			else queue.interaction = cmd
 		}
 	},

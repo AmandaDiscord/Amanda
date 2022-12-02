@@ -522,7 +522,7 @@ commands.assign([
 				for (const track of trackss) {
 					await queue.addTrack(track)
 				}
-				if (queueDidntExist) queue.play()
+				if (queueDidntExist || !queue.playHasBeenCalled) queue.play()
 				else queue.interaction = cmd
 			}
 		}

@@ -29,6 +29,7 @@ class Queue {
 	public leavingSoonID: string | undefined
 	public player: import("lavacord").Player | undefined
 	public menu: Array<BetterComponent> = []
+	public playHasBeenCalled = false
 
 	public loop = false
 
@@ -153,6 +154,7 @@ class Queue {
 	}
 
 	public async play() {
+		this.playHasBeenCalled = true
 		const track = this.tracks[0]
 		if (this.tracks[1]) this.tracks[1].prepare()
 		await track.prepare()
