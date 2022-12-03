@@ -174,7 +174,7 @@ class Queue {
 		}
 	}
 
-	public async destroy() {
+	public async destroy(editInteraction = true) {
 		this.menu.forEach(bn => bn.destroy())
 		for (const track of this.tracks) {
 			try {
@@ -186,9 +186,9 @@ class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired && this.interaction) client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
-		this.player?.destroy().catch(() => void 0)
-		client.lavalink!.leave(this.guildID).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction && editInteraction) await client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
+		await this.player?.destroy().catch(() => void 0)
+		await client.lavalink!.leave(this.guildID).catch(() => void 0)
 		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
 		queues.delete(this.guildID)
 	}

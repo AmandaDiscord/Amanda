@@ -133,7 +133,10 @@ commands.assign([
 
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
 
-			if (!tracks.length) return queue.destroy()
+			if (!tracks.length) {
+				await queue.destroy(false)
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
+			}
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
