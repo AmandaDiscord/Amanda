@@ -135,7 +135,7 @@ commands.assign([
 
 			if (!tracks.length) {
 				await queue.destroy(false)
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] })
 			}
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
