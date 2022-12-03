@@ -2,7 +2,7 @@ import { BetterComponent } from "callback-components"
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
 import passthrough from "../../passthrough"
-const { constants, sync, client } = passthrough
+const { constants, sync, client, config } = passthrough
 
 const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
 const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
@@ -66,7 +66,32 @@ const common = {
 	async inputToTrack(resource: string, cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
-		const tracks = await common.loadtracks(resource, node).catch(() => void 0)
+		const tracks = await common.loadtracks(resource, node).catch(e => {
+			const reportTarget = "512869106089852949"
+			const undef = "undefined"
+			const details = [
+				["Cluster", config.cluster_id],
+				["Shard", String(cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
+				["User", `${cmd.author.username}#${cmd.author.discriminator}`],
+				["User ID", cmd.author.id],
+				["Guild ID", cmd.guild_id || undef],
+				["Text channel", cmd.channel_id],
+				["Input", resource]
+			]
+			const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
+			const detailsString = details.map(row =>
+				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+			).join("\n")
+			const embed: import("discord-typings").Embed = {
+				title: "LavaLink loadtracks exception",
+				color: 0xdd2d2d,
+				fields: [
+					{ name: "Details", value: detailsString },
+					{ name: "Exception", value: e.message || undef }
+				]
+			}
+			client.snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
+		})
 		if (!tracks || !tracks.tracks.length) return null
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.track))
@@ -85,8 +110,8 @@ const common = {
 		params.append("identifier", input)
 
 		const data = await fetch(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`, { headers: { Authorization: node.password } })
-		const json = await data.json()
-		if (json.exception) throw json.exception.message
+		const json: import("lavalink-types").TrackLoadingResult = await data.json()
+		if (json.exception) throw new Error(json.exception.message)
 		return json
 	}
 }

@@ -169,7 +169,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 				embed.description = await text.stringify(e)
 				const details = [
 					["Cluster", config.cluster_id],
-					["Shard", String(interaction.guild_id ? Number((BigInt(interaction.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
+					["Shard", String(p.shard_id)],
 					["User", `${user.username}#${user.discriminator}`],
 					["User ID", user.id],
 					["Bot", user.bot ? "Yes" : "No"],
