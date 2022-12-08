@@ -6,6 +6,7 @@
 :root {
 	--main-gradient: linear-gradient(135deg, #fead7b, #c76d7f, #462371);
 	--inverted-main-gradient: linear-gradient(135deg, #462371, #c76d7f, #fead7b);
+	--christmas-gradient: linear-gradient(135deg, #34A65F, #0F8A5F, #CC231E);
 	--grey: #444;
 	--pink: #de56a9;
 	--button-background: white;
@@ -56,7 +57,7 @@ body {
 
 .container {
 	position: relative;
-	background: var(--main-gradient);
+	background: var(--christmas-gradient);
 	height: 100%;
 	animation: bg-light 1s ease 0s 1 normal forwards;
 }
