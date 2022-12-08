@@ -15,64 +15,50 @@ const announcement = sync.require("../commands/status") as typeof import("../com
 const underscoreToEndRegex = /_\w+$/
 
 type LocaledObject = { [locale in import("discord-typings").Locale]?: string; }
+type NameAndDesc = { name: string; description: string; }
 
 function buildCommandLanguageObject(cmd: string) {
-	const rt: { name: LocaledObject; description: LocaledObject; } = { name: {}, description: {} }
-	for (const key of Object.keys(Lang)) {
-		const l = key as keyof typeof Lang
-		const discordKey = l.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`)
-		const langCommandKey = cmd as Exclude<keyof import("@amanda/lang").Lang, "GLOBAL">
+	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
-		rt.name[discordKey] = Lang[l][langCommandKey].name
-		rt.description[discordKey] = Lang[l][langCommandKey].description
+	return {
+		name_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.name; return acc }, {}),
+		description_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.description; return acc }, {})
 	}
-	return rt
 }
 
-/* function buildOptions(cmd: string) {
-	const options = commands.cache.get(cmd)!.options
-	if (!options) return void 0
-	const rebuilt: Array<import("discord-typings").ApplicationCommandOption> = []
-	for (const option of options) {
-		const rt: { description_localizations: LocaledObject; options?: Array<import("discord-typings").ApplicationCommandOption> } = { description_localizations: {} }
-		for (const key of Object.keys(Lang)) {
-			const l = key as keyof typeof Lang
-			const langCommandKey = cmd as Exclude<keyof import("@amanda/lang").Lang, "GLOBAL">
-			const langCommand = Lang[l][langCommandKey]
+function buildCommandLanguageOptions(cmd: string) {
+	const command = commands.cache.get(cmd)
+	if (!command || !command.options) return void 0
+	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
-			if (!langCommand["options"]) {
-				rebuilt.push(option) // always trust local
-				continue
-			}
-			const extracted = langCommand as Extract<typeof langCommand, { options: Array<any> }>
-			const found = extracted.options[options.indexOf(option)]
-
-			const discordKey = l.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`)
-			rt.description_localizations[discordKey] = found.description
-			rebuilt.push(Object.assign(rt, option))
-		}
-	}
-	console.log(rebuilt)
-	return rebuilt
-}*/
+	return command.options.map((cur, ind) => Object.assign({
+		name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].name; return acc }, {}) as LocaledObject,
+		description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].description; return acc }, {}) as LocaledObject,
+		options: cur.type === 1 && cur.options
+			? cur.options.map((cur2, ind2) => Object.assign({
+				name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].options![ind2].name; return acc }, {}) as LocaledObject,
+				description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].options![ind2].description; return acc }, {}) as LocaledObject
+			}, cur2))
+			: void 0
+	}, cur))
+}
 
 function refreshcommands() {
 	if (!client.ready) return console.error("Client isn't ready yet")
 	const payload = [...commands.cache.values()].map(c => {
 		const obj = buildCommandLanguageObject(c.name)
+		const options = buildCommandLanguageOptions(c.name)
 		return {
 			name: c.name,
 			description: c.description,
-			name_localizations: obj.name,
-			description_localizations: obj.description,
-			options: c.options,
+			name_localizations: obj.name_localizations,
+			description_localizations: obj.description_localizations,
+			options: options,
 			default_member_permissions: null
 		} as import("discord-typings").ApplicationCommandBase
 	})
 	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, payload)
 }
-
-type NameAndDesc = { name: string; description: string; }
 
 function generatedocs() {
 	const cmds = [...commands.cache.values()].map(c => {
