@@ -25,6 +25,7 @@ module.exports = {
 	additional_intents: [],
 	shard_list: [0],
 	cluster_id: cluster_id,
+	add_url: "your url here",
 
 	// Settings
 	allow_ai: false,

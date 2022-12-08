@@ -27,6 +27,7 @@ export type Config = {
 	"additional_intents": Array<string>
 	"shard_list": Array<number>
 	"cluster_id": string
+	"add_url": string
 
 	"music_dash_enabled": boolean
 	"total_shards": number

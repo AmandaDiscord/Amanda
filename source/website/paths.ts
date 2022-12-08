@@ -23,7 +23,7 @@ const redirects = {
 	patreon: "https://www.patreon.com/papiophidian",
 	paypal: "https://paypal.me/papiophidian",
 	server: "https://discord.gg/zhthQjH",
-	add: "https://discord.com/api/oauth2/authorize?client_id=405208699313848330&permissions=36700160&scope=bot%20applications.commands",
+	add: config.add_url,
 	todo: "https://github.com/AmandaDiscord/Amanda/projects",
 	twitter: "https://twitter.com/AmandaDiscord",
 	github: "https://github.com/AmandaDiscord",
