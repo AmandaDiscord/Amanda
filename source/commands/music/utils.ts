@@ -70,8 +70,8 @@ const common = {
 			const reportTarget = "512869106089852949"
 			const undef = "undefined"
 			const details = [
-				["Cluster", config.cluster_id],
-				["Shard", String(cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
+				["Tree", config.cluster_id],
+				["Branch", String(cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
 				["User", `${cmd.author.username}#${cmd.author.discriminator}`],
 				["User ID", cmd.author.id],
 				["Guild ID", cmd.guild_id || undef],

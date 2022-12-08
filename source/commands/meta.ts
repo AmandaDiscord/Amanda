@@ -38,7 +38,7 @@ commands.assign([
 		async process(cmd, lang) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const sid = cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0
-			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} cluster, shard ${sid}`
+			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} tree, branch ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
 
 			const category = cmd.data.options.get("window")?.asString()

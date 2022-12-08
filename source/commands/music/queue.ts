@@ -365,7 +365,7 @@ class Queue {
 			const node = this.node ? common.nodes.byID(this.node) : undefined
 			const undef = "undefined"
 			const details = [
-				["Cluster", config.cluster_id],
+				["Tree", config.cluster_id],
 				["Guild ID", this.interaction?.guild_id || undef],
 				["Text channel", this.interaction?.channel_id || undef],
 				["Voice channel", this.voiceChannelID || undef],
