@@ -35,7 +35,7 @@ async function onStatsPosting(time: number) {
 			ram_usage_kb: Math.floor(stats.ram / 1000), // stats.ram is in bytes
 			users: stats.users,
 			guilds: stats.guilds,
-			channels: stats.channels,
+			channels: stats.connections,
 			voice_connections: stats.connections,
 			uptime: Math.floor(stats.uptime),
 			shard: config.shard_list[0]
@@ -122,14 +122,12 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 
 	if (p.t === "GUILD_CREATE") {
 		const data = p.d as import("discord-typings").Guild
-		if (config.db_enabled) orm.db.upsert("guilds", { id: data.id, name: data.name, icon: data.icon!, member_count: data.member_count, owner_id: data.owner_id, added_by: config.cluster_id })
 		if (passthrough.clusterData.guild_ids[p.shard_id].includes(data.id)) return
 		else passthrough.clusterData.guild_ids[p.shard_id].push(data.id)
 		for (const state of data.voice_states || []) {
 			if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: state.guild_id, channel_id: state.channel_id!, user_id: state.user_id })
 		}
 	} else if (p.t === "GUILD_DELETE") {
-		if (!p.d.unavailable) orm.db.delete("guilds", { id: p.d.id })
 		if (!passthrough.clusterData.guild_ids[p.shard_id]) passthrough.clusterData.guild_ids[p.shard_id] = []
 		const previous = passthrough.clusterData.guild_ids[p.shard_id].indexOf(p.d.id)
 		if (previous !== -1) passthrough.clusterData.guild_ids[p.shard_id].splice(previous, 1)

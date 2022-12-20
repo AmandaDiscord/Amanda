@@ -81,6 +81,7 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",
+		"./commands/money",
 		"./commands/music/music",
 		"./commands/music/playlist",
 		"./commands/meta", // meta should load last always for command docs reasons

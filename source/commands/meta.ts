@@ -115,7 +115,6 @@ commands.assign([
 									name: leadingSpace,
 									value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${text.numberComma(stats.users)}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${text.numberComma(stats.guilds)}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_CHANNEL_COUNT}:**\n${text.numberComma(stats.channels)}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
 									inline: true
 								}

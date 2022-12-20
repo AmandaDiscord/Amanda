@@ -25,9 +25,10 @@ export function convertCachedUser(user: import("../types").InferModelDef<typeof 
 	return user as unknown as import("discord-typings").User
 }
 
-export function getAvatarJimp(user: import("discord-typings").User) {
-	const newURL = displayAvatarURL(user, true)
-	if (!newURL) return null
+export async function getAvatarJimp(user: import("discord-typings").User) {
+	let newURL = displayAvatarURL(user, true)
+	const head = await fetch(newURL, { method: "HEAD" }).catch(() => void 0)
+	if (!head || head.status !== 200) newURL = `https://cdn.discordapp.com/embed/avatars/${Number(user.discriminator) % 5}.png`
 	return Jimp.read(newURL)
 }
 

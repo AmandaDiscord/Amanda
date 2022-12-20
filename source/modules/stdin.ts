@@ -18,7 +18,7 @@ type LocaledObject = { [locale in import("discord-typings").Locale]?: string; }
 type NameAndDesc = { name: string; description: string; }
 
 function buildCommandLanguageObject(cmd: string) {
-	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
+	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 	return {
 		name_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.name; return acc }, {}),
@@ -29,11 +29,11 @@ function buildCommandLanguageObject(cmd: string) {
 function buildCommandLanguageOptions(cmd: string) {
 	const command = commands.cache.get(cmd)
 	if (!command || !command.options) return void 0
-	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
+	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 	return command.options.map((cur, ind) => Object.assign({
-		name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].name; return acc }, {}) as LocaledObject,
-		description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].description; return acc }, {}) as LocaledObject,
+		name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options?.[ind].name; return acc }, {}) as LocaledObject,
+		description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options?.[ind].description; return acc }, {}) as LocaledObject,
 		options: cur.type === 1 && cur.options
 			? cur.options.map((cur2, ind2) => Object.assign({
 				name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].options![ind2].name; return acc }, {}) as LocaledObject,
