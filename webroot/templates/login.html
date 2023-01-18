@@ -21,24 +21,24 @@
 		<link rel="stylesheet" type="text/css" href="/main.css">
 	</head>
 	<body>
-		<input type="checkbox" class="toggle" id="mode">
 		<div class="container">
-			<nav id="topnav">
-				<a class="navitem" href="/">Home</a>
-				<a class="navitem" href="/about">About</a>
-				<a class="navitem" href="/dash">Dash</a>
-				<a class="right navitem">
-					<label for="mode" class="mode-toggle">Mode</label>
-				</a>
-			</nav>
 			<main>
-				<div class="about">
+				<p class="heading-box">Navigation</p>
+				<div class="section">
+					<a href="/">Home</a>
+					<a href="/dash">Dash</a>
+				</div>
+				<p class="heading-box">Login</p>
+				<div class="section">
 					<form action="/dash" method="post">
 						<label for="token">Token</label><br>
 						<input type="text" id="token" name="token">
 						<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
 						<button type="submit">Submit</button>
 					</form>
+					Entering a token on this page links your Discord account with this web browser.
+					This lets you manage Amanda's music queues and playlists online.
+					To get a token, DM Amanda with the command /musictoken
 				</div>
 			</main>
 		</div>

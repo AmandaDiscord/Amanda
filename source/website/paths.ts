@@ -39,10 +39,6 @@ const paths: {
 		methods: ["GET", "HEAD"],
 		static: "index.html"
 	},
-	"/about": {
-		methods: ["GET", "HEAD"],
-		static: "about.html"
-	},
 	"/dash": {
 		methods: ["GET", "HEAD", "POST"],
 		async handle(req, res) {
@@ -140,6 +136,11 @@ async function redirect(res: import("http").ServerResponse, location: string) {
 	res.writeHead(302, { Location: location, "Content-Type": "text/html" }).end(`Redirecting to <a href="${location}">${location}</a>...`)
 }
 
+paths["/about"] = {
+	methods: ["GET"],
+	handle: (_req, res) => redirect(res, "/")
+}
+
 for (const [key, value] of Object.entries(redirects)) {
 	paths[`/to/${key}`] = {
 		methods: ["GET"],
@@ -150,12 +151,12 @@ for (const [key, value] of Object.entries(redirects)) {
 const routes: {
 	[route: string]: {
 		methods: Array<string>;
-		router: (req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL, ...params: Array<string>) => Promise<unknown>;
+		router: (req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL, params: { [param: string]: string }) => Promise<unknown>;
 	}
 } = {
-	"/channels/(\\d+)": {
+	"/channels/:channelID": {
 		methods: ["GET"],
-		async router(req, res, _url, channelID) {
+		async router(req, res, _url, { channelID }) {
 			const cookies = util.getCookies(req)
 			const session = await util.getSession(cookies)
 
@@ -184,33 +185,65 @@ const routes: {
 					"Location": "/dash"
 				}).end(err)
 			})
-		},
+		}
 	}
 }
 
-const compiledRegexes = {} as { [route: string]: RegExp }
-
-for (const key of Object.keys(routes)) {
-	compiledRegexes[key] = new RegExp(key)
+type Folder = {
+	route?: string;
 }
 
-const routeKeyRegex = /\/(\d+)(\/)?/g
+const folders: Folder = {}
+
+function getRouteFromFolders(steps: Array<string>): { route: string } | null {
+	let current = folders
+	for (let i = 0; i < steps.length; i++) {
+		if (!current) return null
+		else if (current[steps[i]]) current = current[steps[i]]
+		else {
+			const traversible = Object.keys(current).find(item => item[0] === ":" && (!!current[item].route || current[item][steps[i + 1]])) // routes cannot have a dynamic key directly after one.
+			if (traversible) current = current[traversible]
+			else return null
+		}
+	}
+	if (!current.route) return null
+	return { route: current.route }
+}
+
+const slash = /\//g
+
+for (const key of Object.keys(routes)) {
+	const split = key.split(slash).slice(1)
+	let previous = folders
+	for (let i = 0; i < split.length; i++) {
+		const path = split[i]
+		if (!previous[path]) previous[path] = {}
+		if (i === split.length - 1) {
+			previous[path].route = key
+		}
+		previous = previous[path]
+	}
+}
 
 const prox = new Proxy(paths, {
 	get(target, property, receiver) {
 		const existing = Reflect.get(target, property, receiver)
 		if (existing) return existing
 		const prop = property.toString()
-		const routeKey = prop.replace(routeKeyRegex, "/(\\d+)$2")
-		if (routes[routeKey]) {
-			const match = prop.match(compiledRegexes[routeKey])
-			if (!match) throw new Error("PANIC_COMPILED_REGEX_NO_MATCHES")
-			const params = match.slice(1)
-			return {
-				methods: routes[routeKey].methods,
-				handle: (req, res, url) => routes[routeKey].router(req, res, url, ...params)
-			} as Path
-		} else return void 0
+		const split = prop.split(slash).slice(1)
+		const pt = getRouteFromFolders(split)
+		if (!pt || !pt.route) return void 0
+
+		const params = {}
+		const routeFolders = pt.route.split(slash).slice(1)
+		for (let i = 0; i < split.length; i++) {
+			if (routeFolders[i][0] === ":") params[routeFolders[i].slice(1)] = split[i]
+		}
+
+		return {
+			methods: routes[pt.route].methods,
+			handle: (req, res, url) => routes[pt.route].router(req, res, url, params)
+		} as Path
 	}
 })
 

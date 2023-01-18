@@ -226,7 +226,17 @@ commands.assign([
 			const category = cmd.data.options.get("category")?.asString()
 			const command = cmd.data.options.get("command")?.asString()
 			if (category || command) {
-				if (category && category != "hidden" && commands.categories.has(category)) {
+				if (command && commands.cache.has(command)) {
+					const c = commands.cache.get(command)!
+					const info = getDocs(c)
+					embed = {
+						author: { name: c.name },
+						description: language.replace(lang.GLOBAL.HELP_COMMAND_BODY, { "description": info.description, "args": info.options?.map(o => o.name).join(", ") || lang.GLOBAL.NONE, "category": c.category }),
+						footer: { text: lang.GLOBAL.FOOTER_HELP },
+						color: constants.standard_embed_color
+					}
+					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+				} else if (category && category != "hidden" && commands.categories.has(category)) {
 					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 					embed = {
@@ -251,18 +261,10 @@ commands.assign([
 								name = lang[c2].name
 								desc = lang[c2].description
 							}
-							return `\`${name}${" ​".repeat(maxLength - name.length)}\` ${desc}`
+							let repeat = maxLength - name.length
+							if (isNaN(repeat) || !repeat) repeat = 0
+							return `\`${name}${" ​".repeat(repeat)}\` ${desc}`
 						}).join("\n"),
-						color: constants.standard_embed_color
-					}
-					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
-				} else if (command && commands.cache.has(command)) {
-					const c = commands.cache.get(command)!
-					const info = getDocs(c)
-					embed = {
-						author: { name: c.name },
-						description: language.replace(lang.GLOBAL.HELP_COMMAND_BODY, { "description": info.description, "args": info.options?.map(o => o.name).join(", ") || lang.GLOBAL.NONE, "category": c.category }),
-						footer: { text: lang.GLOBAL.FOOTER_HELP },
 						color: constants.standard_embed_color
 					}
 					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })

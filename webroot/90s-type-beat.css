@@ -1,0 +1,34 @@
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
+
+*, input {
+	font-family: "VT323", sans-serif;
+}
+
+a:link, a:visited {
+	color: #f66 !important;
+}
+
+.container {
+	max-width: 60%;
+	margin: 0 auto;
+}
+
+.heading-box {
+	padding: 20px;
+	margin-top: 20px;
+	border: 12px solid grey;
+	border-style: ridge;
+	display: flexbox;
+	background: linear-gradient(180deg, #fead7b, #c76d7f, #462371);
+}
+
+.section {
+	margin-top: -30px;
+	vertical-align: top;
+	padding: 20px;
+	border: 12px solid grey;
+	border-style: ridge;
+	display: flexbox;
+	background-color: #282828;
+	color: white;
+}

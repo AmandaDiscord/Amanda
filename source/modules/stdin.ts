@@ -13,6 +13,7 @@ const { client, config, constants, commands, requester, sync } = passthrough
 const announcement = sync.require("../commands/status") as typeof import("../commands/status")
 
 const underscoreToEndRegex = /_\w+$/
+const nameRegex = /^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u
 
 type LocaledObject = { [locale in import("discord-typings").Locale]?: string; }
 type NameAndDesc = { name: string; description: string; }
@@ -21,7 +22,19 @@ function buildCommandLanguageObject(cmd: string) {
 	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 	return {
-		name_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.name; return acc }, {}),
+		name_localizations: localizations.reduce((acc, cur) => {
+			const toMatch = cur.cmd.name
+			if (!toMatch) return acc
+			const match = toMatch.match(nameRegex)
+			if (!match) {
+				console.log(`${toMatch} doesn't match name regex. Ignoring`)
+				return acc
+			}
+			const final = toMatch?.toLowerCase().trim()
+			if (final !== toMatch) console.error(`${toMatch} !== ${final}`)
+			acc[cur.lang] = final
+			return acc
+		}, {}),
 		description_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.description; return acc }, {})
 	}
 }
@@ -32,11 +45,33 @@ function buildCommandLanguageOptions(cmd: string) {
 	const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 	return command.options.map((cur, ind) => Object.assign({
-		name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options?.[ind].name; return acc }, {}) as LocaledObject,
+		name_localizations: localizations.reduce((acc, desc) => {
+			const toMatch = desc.cmd.options?.[ind].name
+			const match = toMatch?.match(nameRegex)
+			if (toMatch && !match) {
+				console.log(`${toMatch} doesn't match name regex. Ignoring`)
+				return acc
+			}
+			const final = toMatch?.toLowerCase().trim()
+			if (final !== toMatch) console.error(`${toMatch} !== ${final}`)
+			acc[desc.lang] = final
+			return acc
+		}, {}) as LocaledObject,
 		description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options?.[ind].description; return acc }, {}) as LocaledObject,
 		options: cur.type === 1 && cur.options
 			? cur.options.map((cur2, ind2) => Object.assign({
-				name_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].options![ind2].name; return acc }, {}) as LocaledObject,
+				name_localizations: localizations.reduce((acc, desc) => {
+					const toMatch = desc.cmd.options![ind].options![ind2].name
+					const match = toMatch.match(nameRegex)
+					if (toMatch && !match) {
+						console.log(`${toMatch} doesn't match name regex. Ignoring`)
+						return acc
+					}
+					const final = toMatch?.toLowerCase().trim()
+					if (final !== toMatch) console.error(`${toMatch} !== ${final}`)
+					acc[desc.lang] = final
+					return acc
+				}, {}) as LocaledObject,
 				description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![ind].options![ind2].description; return acc }, {}) as LocaledObject
 			}, cur2))
 			: void 0
@@ -51,8 +86,8 @@ function refreshcommands() {
 		return {
 			name: c.name,
 			description: c.description,
-			name_localizations: obj.name_localizations,
-			description_localizations: obj.description_localizations,
+			name_localizations: Object.keys(obj.name_localizations).length ? obj.name_localizations : void 0,
+			description_localizations: Object.keys(obj.description_localizations).length ? obj.description_localizations : void 0,
 			options: options,
 			default_member_permissions: null
 		} as import("discord-typings").ApplicationCommandBase
@@ -97,7 +132,7 @@ async function customEval(input: string, _context: import("vm").Context, _filena
 		const output = util.inspect(result, false, depth, true)
 		return callback(null, output)
 	} catch (e) {
-		return callback(e, undefined)
+		return callback(null, util.inspect(e, true, 100, true))
 	}
 }
 

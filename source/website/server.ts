@@ -57,7 +57,11 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
 		}
 
-		console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`)
+		if (req.headers?.cookie) delete req.headers.cookie
+
+		console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
+		if (!req.destroyed) req.destroy();
+		if (!res.destroyed) res.destroy();
 	})
 
 	server.on("upgrade", async (req, socket, head) => {

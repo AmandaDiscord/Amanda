@@ -18,7 +18,7 @@
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
 		<meta name="theme-color" content="#fef0d7">
-		<link rel="stylesheet" type="text/css" href="/main.css">
+		<link rel="stylesheet" type="text/css" href="/player.css">
 		<script type="module" src="/scripts/player.js"></script>
 		<script defer src="/scripts/external/soundcloud.js"></script>
 		<script>
@@ -27,20 +27,22 @@
 		</script>
 	</head>
 	<body>
-		<input type="checkbox" class="toggle" id="mode">
 		<div class="container">
 			<noscript>
 				Please enable JavaScript. This website won't work without it. We promise there's no trackers, ads, or other evil things.
 			</noscript>
-			<nav id="topnav">
-				<a class="navitem" href="/">Home</a>
-				<a class="navitem" href="/about">About</a>
-				<a class="active navitem" href="/dash">Dash</a>
-				<a class="right navitem">
-					<label for="mode" class="mode-toggle">Mode</label>
-				</a>
-			</nav>
 			<main>
+				<p class="heading-box">Navigation</p>
+				<div class="section">
+					<a href="/">Home</a>
+					<a href="/dash">Dash</a>
+					<a>
+						<form action="/logout" method="post">
+							<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
+							<button type="submit">Logout</button>
+						</form>
+					</a>
+				</div>
 				<div class="player-grid">
 					<div class="player-controls" id="player-container">
 						<div class="song-title nothing-playing">Connecting...</div>
@@ -57,9 +59,6 @@
 					</div>
 				</div>
 			</main>
-			<div class="frames">
-				<iframe id="f-soundcloud"></iframe>
-			</div>
 		</div>
 	</body>
 </html>

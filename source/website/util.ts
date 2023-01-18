@@ -38,15 +38,19 @@ console.log = post.bind(null, "info")
 console.warn = post.bind(null, "warn")
 console.error = post.bind(null, "error")
 
-export async function streamResponse(res: import("http").ServerResponse, fileDir: string, headersOnly = false, statusCode = 200): Promise<void> {
+export async function streamResponse(res: import("http").ServerResponse, fileDir: string, headersOnly = false, statusCode = 200, cameFrom404 = false): Promise<void> {
 	let stats: import("fs").Stats
 	try {
 		stats = await fs.promises.stat(fileDir)
 	} catch {
-		return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
+		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404, true)
+		else return void res.writeHead(404).end();
 	}
 
-	if (!stats.isFile()) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404)
+	if (!stats.isFile()) {
+		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404, true)
+		else return void res.writeHead(404).end();
+	}
 
 	const type = mime.lookup(fileDir) || "application/octet-stream"
 	res.writeHead(statusCode, { "Content-Length": stats.size, "Content-Type": type })
@@ -55,6 +59,8 @@ export async function streamResponse(res: import("http").ServerResponse, fileDir
 
 	const stream = fs.createReadStream(fileDir)
 	await new Promise((r, rej) => pipeline(stream, res, e => e ? rej(e) : r(void 0)))
+	stream.destroy();
+	res.destroy();
 }
 
 export function requestBody(req: import("http").IncomingMessage, timeout = 10000): Promise<Buffer> {
