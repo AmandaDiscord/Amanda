@@ -43,7 +43,8 @@ const webQueues: typeof import("../passthrough")["webQueues"] = new Map()
 			const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
 			const path = paths[url.pathname]
 			if (path) {
-				if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
+				if (req.method?.toUpperCase() === "OPTIONS") res.writeHead(204, { "Allow": path.methods.join(", ") })
+				else if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
 				else if (req.headers["range"]) res.writeHead(416).end()
 				else if (req.headers["expect"]) res.writeHead(417).end()
 				else {
