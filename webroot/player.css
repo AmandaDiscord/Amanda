@@ -208,7 +208,6 @@ html, body {
 	border-style: ridge;
 	padding: 16px;
 	background-color: var(--text-color);
-	padding: 12px;
 	margin-bottom: 20px;
 	visibility: hidden;
 }
@@ -221,7 +220,7 @@ html, body {
 	align-items: center;
 	border: 2px solid grey;
 	border-style: ridge;
-	background: linear-gradient(to right, #3b88c3 15px, var(--grey) 15px);
+	background: var(--grey);
 	cursor: pointer;
 	color: white;
 }
@@ -246,7 +245,6 @@ html, body {
 	border-style: ridge;
 	padding: 16px;
 	background-color: var(--text-color);
-	padding: 12px;
 	display: grid;
 	grid-template-columns: auto 1fr;
 	align-items: center;
