@@ -22,11 +22,9 @@ interface Amanda {
 }
 
 class Amanda extends EventEmitter {
-	public lavalink: import("lavacord").Manager | undefined
 	public snow: import("snowtransfer").SnowTransfer
 	public ready = false
 	public user: import("discord-typings").User
-	public application: import("discord-typings").Application
 
 	public constructor(snow: import("snowtransfer").SnowTransfer) {
 		super()

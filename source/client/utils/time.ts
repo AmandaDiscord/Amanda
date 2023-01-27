@@ -1,4 +1,4 @@
-import passthrough from "../passthrough"
+import passthrough from "../../passthrough"
 const { sync } = passthrough
 
 const text = sync.require("./string") as typeof import("./string")

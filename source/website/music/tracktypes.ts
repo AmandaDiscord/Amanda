@@ -6,12 +6,12 @@ const { constants, sync, frisky } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
-const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
-const text = sync.require("../../utils/string") as typeof import("../../utils/string")
-const arrUtils = sync.require("../../utils/array") as typeof import("../../utils/array")
-const language = sync.require("../../utils/language") as typeof import("../../utils/language")
+const timeUtils = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
+const text = sync.require("../../client/utils/string") as typeof import("../../client/utils/string")
+const arrUtils = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
+const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
 
-const AsyncValueCache = sync.require("../../utils/classes/AsyncValueCache") as typeof import("../../utils/classes/AsyncValueCache")
+const AsyncValueCache = sync.require("./AsyncValueCache") as typeof import("./AsyncValueCache")
 
 const stationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
 	["original", {
@@ -147,7 +147,7 @@ export class Track {
 }
 
 export class RequiresSearchTrack extends Track {
-	public prepareCache: import("../../utils/classes/AsyncValueCache").AsyncValueCache<void>
+	public prepareCache: import("./AsyncValueCache").AsyncValueCache<void>
 	private searchString: string
 
 	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
@@ -227,7 +227,7 @@ export class FriskyTrack extends Track {
 	public station: import("../../types").InferMapK<typeof stationData>
 	public stationData: import("../../types").InferMapV<typeof stationData>
 	public friskyStation: import("frisky-client/lib/Station")
-	public stationInfoGetter: import("../../utils/classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
+	public stationInfoGetter: import("./AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
 	public live = true
 	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }

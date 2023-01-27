@@ -1,7 +1,7 @@
 import Jimp from "jimp"
 import { BetterComponent } from "callback-components"
 
-import passthrough from "../passthrough"
+import passthrough from "../../passthrough"
 const { client, sync, config, constants } = passthrough
 
 const orm = sync.require("./orm") as typeof import("./orm")
@@ -19,7 +19,7 @@ export async function getUser(id: string) {
 	return fetched
 }
 
-export function convertCachedUser(user: import("../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
+export function convertCachedUser(user: import("../../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
 	const split = user.tag.split("#")
 	Object.assign(user, { username: split.slice(0, split.length - 1).join("#"), discriminator: split[split.length - 1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
 	return user as unknown as import("discord-typings").User
@@ -57,7 +57,7 @@ export function createPagination(cmd: import("../modules/Command"), lang: import
 			]
 		}
 		if (component) data.components = [{ type: 1, components: [component.toComponent()] }]
-		return client.snow.interaction.editOriginalInteractionResponse(client.application.id, cmd.token, data)
+		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, data)
 	})
 }
 

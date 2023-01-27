@@ -14,6 +14,7 @@ module.exports = {
 	botsgg_api_key: "discord.bots.gg api key here",
 	del_api_key: "discordextremelist.xyz api key here",
 	discords_api_key: "discords.com api key here",
+	app_public_key: "discord app public key here",
 
 	// Environment
 	machine_id: "lmao_dev_compname",
@@ -26,6 +27,8 @@ module.exports = {
 	shard_list: [0],
 	cluster_id: cluster_id,
 	add_url: "your url here",
+	amqp_url: "amqp://quest:guest@localhost:56782",
+	amqp_queue: "amanda",
 
 	// Settings
 	allow_ai: false,

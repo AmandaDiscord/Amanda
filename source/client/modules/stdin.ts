@@ -7,10 +7,8 @@ import fs from "fs"
 
 import Lang from "@amanda/lang"
 
-import passthrough from "../passthrough"
-const { client, config, constants, commands, requester, sync } = passthrough
-
-const announcement = sync.require("../commands/status") as typeof import("../commands/status")
+import passthrough from "../../passthrough"
+const { client, config, constants, commands, sync } = passthrough
 
 const underscoreToEndRegex = /_\w+$/
 const nameRegex = /^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u
@@ -92,7 +90,7 @@ function refreshcommands() {
 			default_member_permissions: null
 		} as import("discord-typings").ApplicationCommandBase
 	})
-	client.snow.interaction.bulkOverwriteApplicationCommands(client.application.id, payload)
+	client.snow.interaction.bulkOverwriteApplicationCommands(client.user.id, payload) // Amanda is a "new" account which doesn't have a different ID from the application
 }
 
 function generatedocs() {
@@ -104,7 +102,7 @@ function generatedocs() {
 		if (c.options) value.options = c.options.map(assignOptions)
 		return [c.name, value] as [string, typeof value]
 	})
-	const v = {} as { [name: string]: import("../types").UnpackArray<typeof cmds>["1"] }
+	const v = {} as { [name: string]: import("../../types").UnpackArray<typeof cmds>["1"] }
 	for (const [name, value] of cmds) v[name] = value
 	fs.promises.writeFile(path.join(__dirname, "../../webroot/commands.json"), JSON.stringify(v))
 }

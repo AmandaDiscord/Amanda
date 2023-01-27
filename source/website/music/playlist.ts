@@ -1,16 +1,16 @@
 import passthrough from "../../passthrough"
-const { client, commands, constants, sync, queues, config } = passthrough
+const { client, commands, constants, sync, queues, config, lavalink, joiningGuildShardMap } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
 const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 
-const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
-const discordUtils = sync.require("../../utils/discord") as typeof import("../../utils/discord")
-const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
-const language = sync.require("../../utils/language") as typeof import("../../utils/language")
-const text = sync.require("../../utils/string") as typeof import("../../utils/string")
-const time = sync.require("../../utils/time") as typeof import("../../utils/time")
+const arr = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
+const discordUtils = sync.require("../../client/utils/discord") as typeof import("../../client/utils/discord")
+const orm = sync.require("../../client/utils/orm") as typeof import("../../client/utils/orm")
+const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
+const text = sync.require("../../client/utils/string") as typeof import("../../client/utils/string")
+const time = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
 
 const musicDisabled = false as boolean
 const waitForClientVCJoinTimeout = 5000
@@ -21,154 +21,7 @@ commands.assign([
 		name: "playlists",
 		description: "Manage and play Amanda playlists",
 		category: "audio",
-		options: [
-			{
-				name: "meta",
-				description: "Metadata commands",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "show",
-						description: "Shows all Amanda playlists. True to only show yourself",
-						type: 5,
-						required: false
-					},
-					{
-						name: "info",
-						description: "Shows info for a playlist",
-						type: 3,
-						required: false
-					},
-					{
-						name: "create",
-						description: "Creates a playlist",
-						type: 3,
-						required: false
-					},
-					{
-						name: "delete",
-						description: "Deletes a playlist",
-						type: 3,
-						required: false
-					}
-				]
-			},
-			{
-				name: "add",
-				description: "Adds a track to a playlist",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "playlist",
-						description: "The name of the playlist",
-						type: 3,
-						required: true
-					},
-					{
-						name: "track",
-						description: "A resolveable track (link, name, id)",
-						type: 3,
-						required: true
-					}
-				]
-			},
-			{
-				name: "remove",
-				description: "Removes a track from a playlist",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "playlist",
-						description: "The name of the playlist",
-						type: 3,
-						required: true
-					},
-					{
-						name: "index",
-						description: "The 1 based index of the track to remove",
-						type: 4,
-						required: true
-					}
-				]
-			},
-			{
-				name: "move",
-				description: "Moves a track in a playlist from one index to another",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "playlist",
-						description: "The name of the playlist",
-						type: 3,
-						required: true
-					},
-					{
-						name: "from",
-						description: "The 1 based index of the track to move",
-						type: 4,
-						required: true
-					},
-					{
-						name: "to",
-						description: "The 1 based index the track should appear at",
-						type: 4,
-						required: true
-					}
-				]
-			},
-			{
-				name: "search",
-				description: "Filters tracks in a playlist",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "playlist",
-						description: "The name of the playlist",
-						type: 3,
-						required: true
-					},
-					{
-						name: "query",
-						description: "The search term to filter by",
-						type: 3,
-						required: true
-					}
-				]
-			},
-			{
-				name: "play",
-				description: "Plays a playlist",
-				type: 1,
-				required: false,
-				options: [
-					{
-						name: "playlist",
-						description: "The name of the playlist",
-						type: 3,
-						required: true
-					},
-					{
-						name: "shuffle",
-						description: "If the playlist should start shuffled",
-						type: 5,
-						required: false
-					},
-					{
-						name: "start",
-						description: "The 1 based index to start from. When shuffling, only a portion is selected and then shuffled",
-						type: 4,
-						required: false,
-						min_value: 1
-					}
-				]
-			}
-		],
-		async process(cmd, lang) {
+		async process(cmd, lang, info) {
 			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
 			if (musicDisabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.MUSIC_DISABLED } })
 			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
@@ -200,8 +53,8 @@ commands.assign([
 				if (!value) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
 				return value
 			}
-			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlists"]>) => {
-				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
+			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../client/utils/orm")["db"]["tables"]["playlists"]>) => {
+				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../client/utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
 				const unbreakDatabase = async () => {
 					console.warn("unbreakDatabase was called!")
 					await Promise.all(tracks.map((row, index) => orm.db.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
@@ -513,7 +366,7 @@ commands.assign([
 
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				if (!queue) {
-					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
+					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id, info.shard_id).catch(() => null)
 					if (!queue) return
 				}
 
@@ -529,7 +382,7 @@ commands.assign([
 	}
 ])
 
-async function createQueue(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
+async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string, shardID: number): Promise<import("./queue").Queue | null> {
 	const queue = new queueFile.Queue(cmd.guild_id!)
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd
@@ -546,7 +399,8 @@ async function createQueue(cmd: import("../../modules/Command"), lang: import("@
 		const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
 		const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 			reject = rej
-			client.lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
+			joiningGuildShardMap.set(cmd.guild_id!, shardID)
+			lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
 				resolve(p)
 				clearTimeout(timer)
 			})

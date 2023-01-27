@@ -9,7 +9,7 @@ import { BackTracker } from "backtracker"
 import passthrough from "../passthrough"
 const { rootFolder, db, sync } = passthrough
 
-const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 
 const workerNameMaxLogLength = 10
 const scopeNameMaxLogLength = 20

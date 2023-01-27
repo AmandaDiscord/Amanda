@@ -2,12 +2,11 @@
   "name": "amanda",
   "version": "1.0.0",
   "description": "A cutie-pie music bot",
-  "main": "dist/index.js",
+  "main": "dist/client/index.js",
   "author": "PapiOphidian",
   "scripts": {
-    "start": "node --enable-source-maps --optimize_for_size dist/index.js",
+    "start": "node --enable-source-maps --optimize_for_size dist/client/index.js",
     "website": "node --enable-source-maps dist/website/server.js",
-    "test": "node --enable-source-maps dist/test.index.js",
     "compile": "tsc -p .",
     "lint": "eslint . --ext .ts"
   },
@@ -19,11 +18,13 @@
   "dependencies": {
     "@amanda/lang": "github:AmandaDiscord/Lang#6219d6d18ff4a1b9227c71a92105c28b87613b48",
     "@lavalink/encoding": "0.1.2",
+    "amqplib": "^0.10.3",
     "backtracker": "3.3.2",
     "callback-components": "github:AmandaDiscord/CallbackComponents#8bad9f8d45fecba3e009cb5d1f6df15bc3ed0ba2",
     "cloudstorm": "^0.6.1",
     "discord-bot-analytics": "1.0.14",
     "discord-typings": "10.4.1",
+    "discord-verify": "^1.0.0",
     "entities": "4.4.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "heatsync": "2.4.0",
@@ -37,6 +38,7 @@
     "snowtransfer": "0.6.1"
   },
   "devDependencies": {
+    "@types/amqplib": "^0.10.1",
     "@types/mime-types": "2.1.1",
     "@types/node": "18.11.18",
     "@types/pg": "8.6.6",

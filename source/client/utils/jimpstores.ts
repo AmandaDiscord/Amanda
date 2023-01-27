@@ -1,4 +1,4 @@
-import passthrough from "../passthrough"
+import passthrough from "../../passthrough"
 const { sync } = passthrough
 
 const [ImageCache, FontCache] = [sync.require("./classes/ImageCache"), sync.require("./classes/FontCache")] as [typeof import("./classes/ImageCache"), typeof import("./classes/FontCache")]

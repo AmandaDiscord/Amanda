@@ -17,6 +17,7 @@ export type Config = {
 	"discords_api_key": string
 	"listen_moe_username": string
 	"listen_moe_password": string
+	"app_public_key": string
 
 	"sql_domain": string
 	"website_protocol": "http" | "https"
@@ -28,6 +29,8 @@ export type Config = {
 	"shard_list": Array<number>
 	"cluster_id": string
 	"add_url": string
+	"amqp_url": string
+	"amqp_queue": string
 
 	"music_dash_enabled": boolean
 	"total_shards": number
@@ -42,7 +45,7 @@ export type InferMapK<T> = T extends Map<infer K, unknown> ? K : never
 export type InferMapV<T> = T extends Map<string, infer V> ? V : never
 export type Merge<A, B> = ({ [K in keyof A]: K extends keyof B ? B[K] : A[K] } & B) extends infer O ? { [K in keyof O]: O[K] } : never
 
-export type InferModelDef<M extends import("./utils/orm").Model<unknown>> = M extends import("./utils/orm").Model<infer D> ? D : unknown
+export type InferModelDef<M extends import("./client/utils/orm").Model<unknown>> = M extends import("./client/utils/orm").Model<infer D> ? D : unknown
 
 export type LavalinkInfo = {
 	identifier: string
@@ -144,7 +147,7 @@ export type PartialTrack = {
 export type WebQueue = {
 	members: Array<{ id: string; tag: string; avatar: string | null; isAmanda: boolean }>
 	tracks: Array<PartialTrack>
-	session?: import("./website/music").Session
+	session?: import("./website/music/sessions").Session
 	playing: boolean
 	voiceChannel: { name: string; id: string }
 	pausedAt: number | null

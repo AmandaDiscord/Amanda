@@ -3,8 +3,8 @@
 import sG from "simple-git"
 const simpleGit = sG(__dirname)
 
-import passthrough from "../passthrough"
-const { client, constants, config, commands, sync, requester, queues } = passthrough
+import passthrough from "../../passthrough"
+const { client, constants, config, commands, sync, queues } = passthrough
 
 const text = sync.require("../utils/string") as typeof import("../utils/string")
 const emojis = sync.require("../emojis") as typeof import("../emojis")
@@ -24,10 +24,6 @@ commands.assign([
 				description: "The type of stats to show",
 				choices: [
 					{
-						name: "gateway",
-						value: "gw"
-					},
-					{
 						name: "music",
 						value: "m"
 					}
@@ -35,40 +31,14 @@ commands.assign([
 				required: false
 			}
 		],
-		async process(cmd, lang) {
+		async process(cmd, lang, info) {
 			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
-			const sid = cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0
+			const sid = info.shard_id
 			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} tree, branch ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
 
 			const category = cmd.data.options.get("window")?.asString()
-			if (category === "gw") {
-				const before = Date.now()
-				const stats = await requester.request(constants.GATEWAY_WORKER_CODES.STATS, undefined, (p) => passthrough.gateway.postMessage(p)) as { ram: { rss: number; heapTotal: number; heapUsed: number; }; latency: Array<number>; shards: Array<number>; uptime: number; }
-				const ram = stats.ram.rss - (stats.ram.heapTotal - stats.ram.heapUsed)
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
-						{
-							color: constants.standard_embed_color,
-							fields: [
-								{
-									name: leadingIdentity,
-									value: `**${lang.GLOBAL.HEADER_HEARTBEAT}:**\n${stats.latency.map((i, index) => `${language.replace(lang.GLOBAL.SHARD_NUMBER, { "shard": stats.shards[index] })}: ${i}ms`).join("\n")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_LATENCY}:**\n${text.numberComma(Date.now() - before)}ms\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(ram)}\n`,
-									inline: true
-								},
-								{
-									name: leadingSpace,
-									value: `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n[${stats.shards.join(", ")}]`,
-									inline: true
-								}
-							]
-						}
-					]
-				})
-			} else if (category === "m") {
+			if (category === "m") {
 				const listeningcount = [...queues.values()].reduce((acc, cur) => acc + [...cur.listeners.values()].filter(u => !u.bot).length, 0)
 				const nodes = constants.lavalinkNodes.map(n => n.id)
 				let nodeStr = ""
@@ -87,8 +57,7 @@ commands.assign([
 								},
 								{
 									name: leadingSpace,
-									value: `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(client.lavalink!.players.size)}\n` +
-										`**❯ ${lang.GLOBAL.HEADER_USERS_LISTENING}:**\n${text.numberComma(listeningcount)}\n` +
+									value: `**❯ ${lang.GLOBAL.HEADER_USERS_LISTENING}:**\n${text.numberComma(listeningcount)}\n` +
 										`**❯ ${lang.GLOBAL.HEADER_NODE_USAGE}:**\n${nodeStr || lang.GLOBAL.NO_NODES}`,
 									inline: true
 								}
@@ -98,7 +67,6 @@ commands.assign([
 				})
 			} else {
 				const stats = await cluster.getOwnStats()
-				const gateway = await requester.request(constants.GATEWAY_WORKER_CODES.STATS, undefined, (p) => passthrough.gateway.postMessage(p)) as { ram: { rss: number; heapTotal: number; heapUsed: number; }; latency: Array<number>; shards: Array<number>; uptime: number; }
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					embeds: [
 						{
@@ -106,8 +74,7 @@ commands.assign([
 							fields: [
 								{
 									name: leadingIdentity,
-									value: `**${lang.GLOBAL.HEADER_HEARTBEAT}:**\n${Math.floor(gateway.latency.reduce((acc, cur) => acc + cur, 0) / gateway.latency.length)}ms avg\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
+									value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}`,
 									inline: true
 								},
@@ -284,7 +251,7 @@ commands.assign([
 				client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
 			}
 
-			function getDocs(c: import("../types").UnpackArray<Parameters<typeof commands["assign"]>["0"]>) {
+			function getDocs(c: import("../../types").UnpackArray<Parameters<typeof commands["assign"]>["0"]>) {
 				let info = { name: c.name, description: c.description, options: c.options as Array<{ name: string; description: string; options?: Array<{ name: string; description: string; }> }> }
 				if (lang[c.name]) info = { name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].name, description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].description, options: lang[c.name as "image"].options }
 				return info

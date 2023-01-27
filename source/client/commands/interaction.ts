@@ -1,7 +1,7 @@
 import Jimp from "jimp"
 import crypto from "crypto"
 
-import passthrough from "../passthrough"
+import passthrough from "../../passthrough"
 const { constants, client, commands, sync, config } = passthrough
 
 const language = sync.require("../utils/language") as typeof import("../utils/language")
@@ -163,7 +163,7 @@ for (const source of interactionSources) {
 			}
 		],
 		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Parameters<typeof doInteraction>["2"], source.shortcut, source.url)
-	} as import("../types").UnpackArray<Parameters<typeof commands.assign>["0"]>
+	} as import("../../types").UnpackArray<Parameters<typeof commands.assign>["0"]>
 	cmds.push(newCommand)
 }
 

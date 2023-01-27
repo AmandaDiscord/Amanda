@@ -4,17 +4,17 @@ import mixin from "mixin-deep"
 import { BetterComponent } from "callback-components"
 
 import passthrough from "../../passthrough"
-const { sync, queues, client, config, constants, websiteSocket } = passthrough
+const { sync, queues, config, constants, snow, lavalink, configuredUserID } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
-const language = sync.require("../../utils/language") as typeof import("../../utils/language")
-const time = sync.require("../../utils/time") as typeof import("../../utils/time")
-const discordUtils = sync.require("../../utils/discord") as typeof import("../../utils/discord")
-const orm = sync.require("../../utils/orm") as typeof import("../../utils/orm")
+const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
+const time = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
+const discordUtils = sync.require("../../client/utils/discord") as typeof import("../../client/utils/discord")
+const orm = sync.require("../../client/utils/orm") as typeof import("../../client/utils/orm")
 
-const BetterTimeout = sync.require("../../utils/classes/BetterTimeout") as typeof import("../../utils/classes/BetterTimeout")
-const FrequencyUpdater = sync.require("../../utils/classes/FrequencyUpdater") as typeof import("../../utils/classes/FrequencyUpdater")
+const BetterTimeout = sync.require("./BetterTimeout") as typeof import("./BetterTimeout")
+const FrequencyUpdater = sync.require("./FrequencyUpdater") as typeof import("./FrequencyUpdater")
 
 const queueDestroyAfter = 20000
 const interactionExpiresAfter = 1000 * 60 * 14
@@ -39,13 +39,13 @@ class Queue {
 
 	public listeners = new Map<string, import("discord-typings").User>()
 	public leaveTimeout = new BetterTimeout.BetterTimeout().setCallback(() => {
-		if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
-	public messageUpdater: import("../../utils/classes/FrequencyUpdater").FrequencyUpdater = new FrequencyUpdater.FrequencyUpdater(() => this._updateMessage())
+	public messageUpdater: import("./FrequencyUpdater").FrequencyUpdater = new FrequencyUpdater.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
-	private _interaction: import("../../modules/Command") | undefined
+	private _interaction: import("../../client/modules/Command") | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 
@@ -57,7 +57,7 @@ class Queue {
 	public toJSON(): import("../../types").WebQueue | null {
 		if (!this.voiceChannelID) return null
 		return {
-			members: [client.user, ...this.listeners.values()].map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === client.user.id })),
+			members: [...this.listeners.values()].map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -77,7 +77,7 @@ class Queue {
 	}
 
 	public set interaction(value) {
-		if (!this._interactionExpired && this._interaction) client.snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "There's a newer now playing message" }], components: [] }).catch(() => void 0)
+		if (!this._interactionExpired && this._interaction) snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: constants.standard_embed_color, description: "There's a newer now playing message" }], components: [] }).catch(() => void 0)
 		this._interactionExpired = false
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
@@ -114,7 +114,7 @@ class Queue {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
 		this.player?.pause(newState)
-		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
+		// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
 	}
 
 	public get volume() {
@@ -186,10 +186,10 @@ class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired && this.interaction && editInteraction) await client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
 		await this.player?.destroy().catch(() => void 0)
-		await client.lavalink!.leave(this.guildID).catch(() => void 0)
-		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
+		await lavalink!.leave(this.guildID).catch(() => void 0)
+		// if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
 		queues.delete(this.guildID)
 	}
 
@@ -208,7 +208,7 @@ class Queue {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
-			await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
+			// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
 			if (removed && this.loop && !removed.error) await this.addTrack(removed)
@@ -219,19 +219,19 @@ class Queue {
 	public createNPMenu(assign = true) {
 		const newMenu = [
 			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.paused = !this.paused
 			}),
 			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.skip()
 			}),
 			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
+				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.destroy()
@@ -248,7 +248,7 @@ class Queue {
 	public async addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
-		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } }), res))
+		// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } }), res))
 	}
 
 	public async removeTrack(index: number) {
@@ -263,7 +263,7 @@ class Queue {
 		} catch (e) {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
-		await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
+		// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
 		return 0
 	}
 
@@ -295,7 +295,7 @@ class Queue {
 			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
-		websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
+		// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
 	}
 
 	private _onPlayerError(details: import("lavalink-types").TrackExceptionEvent | import("lavalink-types").WebSocketClosedEvent) {
@@ -329,7 +329,7 @@ class Queue {
 		if (track) {
 			const progress = track.getProgress(this.timeSeconds, this.paused)
 			const link = await track.showLink().catch(() => "https://amanda.moe")
-			client.snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
+			snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
 				embeds: [
 					{
 						color: constants.standard_embed_color,
@@ -350,7 +350,7 @@ class Queue {
 
 	private _onAllUsersLeave() {
 		this.leaveTimeout.run()
-		if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: language.replace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: time.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: language.replace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: time.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
 	}
 
 	private _reportError() {
@@ -359,7 +359,7 @@ class Queue {
 			contents.url = constants.server
 			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 			// Report to original channel
-			if (!this._interactionExpired && this.interaction) client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
+			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = "512869106089852949"
 			const node = this.node ? common.nodes.byID(this.node) : undefined
@@ -386,7 +386,7 @@ class Queue {
 			const detailsString = details.map(row =>
 				`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
-			client.snow.channel.createMessage(reportTarget, {
+			snow.channel.createMessage(reportTarget, {
 				embeds: [
 					{
 						color: 0xff2ee7,
@@ -415,7 +415,7 @@ class Queue {
 			}
 			if (this.errorChain === 3) {
 				if (!this._interactionExpired && this.interaction) {
-					client.snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
+					snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
 						embeds: [
 							{
 								title: this.lang.GLOBAL.TOO_MANY_ERRORS,
@@ -432,7 +432,7 @@ class Queue {
 	}
 
 	public async voiceStateUpdate(packet: import("lavacord").VoiceStateUpdate) {
-		if (packet.channel_id && packet.user_id === client.user.id) {
+		if (packet.channel_id && packet.user_id === configuredUserID) {
 			this.voiceChannelID = packet.channel_id
 
 			const states = await orm.db.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
@@ -441,66 +441,24 @@ class Queue {
 				const user = await discordUtils.getUser(state.user_id)
 				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
-			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() }))
+			// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() }))
 		}
 		// moving voice channels does not set the channel_id as null and then update
-		if (!packet.channel_id && this.voiceChannelID && packet.user_id === client.user!.id) return this.destroy()
+		if (!packet.channel_id && this.voiceChannelID && packet.user_id === configuredUserID) return this.destroy()
 		if (!packet.channel_id && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
 			if (this.listeners.size === 0) return this._onAllUsersLeave()
 		}
-		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== client.user!.id) {
+		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
 			const user = await discordUtils.getUser(packet.user_id)
 			if (!user || (user && user.bot)) return
 			this.leaveTimeout.clear()
-			if (this.leavingSoonID && this.interaction) client.snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
+			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
 			this.leavingSoonID = undefined
 			this.listeners.set(user.id, user)
 		}
-		if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } }))
+		// if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } }))
 	}
 }
-
-sync.addTemporaryListener(websiteSocket, "message", async (data: import("ws").RawData) => {
-	const message = Array.isArray(data) ? Buffer.concat(data).toString() : data.toString()
-	let packet: { op: number; d?: { [property: string]: unknown } }
-	try {
-		packet = JSON.parse(message)
-	} catch (e) {
-		return console.error(`Error parsing message from website\n${util.inspect(e, true, Infinity, true)}`)
-	}
-
-	const qs = [...queues.values()]
-	const queue = qs.find(q => q.voiceChannelID === packet.d?.channel_id)
-
-
-	if (packet.op === constants.WebsiteOPCodes.ACKNOWLEDGE) {
-		for (const q of qs) {
-			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: q.toJSON() }))
-		}
-
-
-	} else if (packet.op === constants.WebsiteOPCodes.CLEAR_QUEUE) {
-		if (queue) {
-			queue.tracks.splice(1)
-			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }))
-		}
-
-
-	} else if (packet.op === constants.WebsiteOPCodes.ATTRIBUTES_CHANGE) {
-		if (queue && packet.d) {
-			if (packet.d.loop !== undefined) queue.loop = packet.d.loop as boolean
-			websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop } } }))
-		}
-
-
-	} else if (packet.op === constants.WebsiteOPCodes.SKIP && queue) queue.skip()
-	else if (packet.op === constants.WebsiteOPCodes.STOP && queue) queue.destroy()
-	else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
-	else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {
-		const result = await queue.removeTrack(packet.d.index as number)
-		if (result === 0) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } }))
-	}
-})
 
 export { Queue }

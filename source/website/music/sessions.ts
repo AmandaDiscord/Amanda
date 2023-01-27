@@ -1,9 +1,9 @@
-import constants from "../constants"
-import passthrough from "../passthrough"
-const { sync, wss, webQueues, configuredUserID, config } = passthrough
+import constants from "../../constants"
+import passthrough from "../../passthrough"
+const { sync, wss, queues, configuredUserID, config } = passthrough
 
-const utils: typeof import("./util") = sync.require("./util")
-const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const utils: typeof import("../util") = sync.require("../util")
+const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
 
 type Packet<T> = {
 	op?: number;
@@ -19,29 +19,26 @@ const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayba
 	[constants.WebsiteOPCodes.STOP, "requestStop"],
 	[constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, "requestAttributesChange"],
 	[constants.WebsiteOPCodes.CLEAR_QUEUE, "requestClearQueue"],
-	[constants.WebsiteOPCodes.TRACK_REMOVE, "requestTrackRemove"],
-
-	[constants.WebsiteOPCodes.ACCEPT, "acceptData"],
-	[constants.WebsiteOPCodes.CREATE, "createQueue"]
+	[constants.WebsiteOPCodes.TRACK_REMOVE, "requestTrackRemove"]
 ])
 
 type PacketData = {
 	position: number
-	track: import("../types").PartialTrack
+	track: import("./tracktypes").Track
 	trackStartTime: number
 	pausedAt: number
 	playing: boolean
 	index: number
 	loop: boolean
 	auto: boolean
-	members: import("../types").WebQueue["members"]
+	members: import("./queue").Queue["listeners"]
 	lengthSeconds: number
 	amount: number
 }
 
 type Receiver = {
-	updateCallback(cache: import("../types").WebQueue, data: PacketData): import("../types").WebQueue;
-	sessionCallback(session: Session, cache: import("../types").WebQueue, data: PacketData): void;
+	updateCallback(cache: import("./queue").Queue, data: PacketData): import("./queue").Queue;
+	sessionCallback(session: Session, cache: import("./queue").Queue, data: PacketData): void;
 }
 
 export const receivers: {
@@ -87,7 +84,7 @@ export const receivers: {
 		updateCallback(cache, { trackStartTime, pausedAt, playing }) {
 			cache.trackStartTime = trackStartTime
 			cache.pausedAt = pausedAt
-			cache.playing = playing
+			cache.paused = !playing
 			return cache
 		},
 		sessionCallback(session, _, { trackStartTime, pausedAt, playing }) {
@@ -105,7 +102,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.LISTENERS_UPDATE]: {
 		updateCallback(cache, { members }) {
-			cache.members = members
+			cache.listeners = members
 			return cache
 		},
 		sessionCallback(session, _, { members }) {
@@ -114,7 +111,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.ATTRIBUTES_CHANGE]: {
 		updateCallback(cache, attributes) {
-			cache.attributes = attributes
+			cache.loop = attributes.loop
 			return cache
 		},
 		sessionCallback(session, _, attributes) {
@@ -123,7 +120,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.STOP]: {
 		updateCallback(cache) {
-			webQueues.delete(cache.voiceChannel.id)
+			queues.delete(cache.guildID)
 			return cache
 		},
 		sessionCallback(session) {
@@ -172,21 +169,15 @@ export class Session {
 	}
 
 	public onClose(): void {
-		if (this.user !== configuredUserID) console.log(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
+		console.log(`WebSocket disconnected: ${this.user || "Unauthenticated"}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
-		if (this.user !== configuredUserID) console.log(`${sessions.length} sessions in memory`)
+		console.log(`${sessions.length} sessions in memory`)
 	}
 
 	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
 		if (this.loggedin) return this.cleanClose()
-		if (data && data.d && data.d.timestamp && data.d.token && data.d.token === config.lavalink_password) {
-			// Amanda route
-			const serverTimeDiff = Date.now() - data.d.timestamp
-			this.loggedin = true
-			this.user = configuredUserID
-			this.send({ op: constants.WebsiteOPCodes.ACKNOWLEDGE, nonce: data.nonce || null, d: { serverTimeDiff } })
-		} else if (data && data.d && typeof data.d.cookie === "string" && typeof data.d.channel_id === "string" && typeof data.d.timestamp === "number") {
+		if (data && data.d && typeof data.d.cookie === "string" && typeof data.d.channel_id === "string" && typeof data.d.timestamp === "number") {
 			const serverTimeDiff = Date.now() - data.d.timestamp
 			// Check the user and guild are legit
 			const cookies = utils.getCookies({ headers: { cookie: data.d.cookie } } as unknown as import("http").IncomingMessage)
@@ -209,7 +200,7 @@ export class Session {
 
 	public sendState(data?: Packet<unknown>): void {
 		if (!this.loggedin) return
-		const state = webQueues.get(this.channel!) ? Object.assign({}, webQueues.get(this.channel!)) : null
+		const state = queues.get(this.channel!) ? Object.assign({}, queues.get(this.channel!)) : null // changed channels to guild IDs just not naming bc im lazy
 		if (state) delete state["session"] // deletes off dupe to not mutate stored state
 		let nonce: number | null = null
 		if (data && typeof data.nonce === "number") nonce = data.nonce
@@ -217,22 +208,21 @@ export class Session {
 	}
 
 	public cleanClose(): void {
-		if (this.user === configuredUserID) console.warn("cleanClose was called")
 		this.send({ op: constants.WebsiteOPCodes.STATE, d: null })
 		this.ws.close()
 	}
 
 
-	public onTrackAdd(track: import("../types").PartialTrack, position: number): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { track, position } })
+	public onTrackAdd(track: import("./tracktypes").Track, position: number): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } })
 	}
 
 	public onTrackRemove(index: number): void {
 		this.send({ op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } })
 	}
 
-	public onTrackUpdate(track: import("../types").PartialTrack, index: number ): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { track, index } })
+	public onTrackUpdate(track: import("./tracktypes").Track, index: number ): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { track: track.toObject(), index } })
 	}
 
 	public onClearQueue(): void {
@@ -243,11 +233,11 @@ export class Session {
 		this.send({ op: constants.WebsiteOPCodes.NEXT })
 	}
 
-	public onListenersUpdate(members: import("../types").WebQueue["members"]): void {
+	public onListenersUpdate(members: import("./queue").Queue["listeners"]): void {
 		this.send({ op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members } })
 	}
 
-	public onAttributesChange(attributes: import("../types").WebQueue["attributes"]) {
+	public onAttributesChange(attributes: { loop: boolean }) {
 		this.send({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: attributes })
 	}
 
@@ -258,75 +248,50 @@ export class Session {
 
 	public allowedToAction(): boolean {
 		if (!this.loggedin) return false
-		const state = webQueues.get(this.channel!)!
+		const state = queues.get(this.channel!)!
 		if (!state) return false
-		if (!state.members.find(i => i.id === this.user)) return false
+		if (!Array.from(state.listeners.values()).find(i => i.id === this.user)) return false
 		return true
 	}
 
 	public togglePlayback(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.TOGGLE_PLAYBACK, d: { channel_id: this.channel! } })
+		const q = queues.get(this.channel!)
+		if (q) q.paused = !q.paused
 	}
 
 	public requestSkip(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.SKIP, d: { channel_id: this.channel! } })
+		queues.get(this.channel!)?.skip()
 	}
 
 	public requestStop(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.STOP, d: { channel_id: this.channel! } })
+		queues.get(this.channel!)?.destroy()
 	}
 
-	public async requestAttributesChange(data: Packet<{ auto?: boolean; loop?: boolean }>) {
+	public async requestAttributesChange(data: Packet<{ loop?: boolean }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		if (typeof data === "object" && typeof data.d === "object") {
-			if (typeof data.d.auto === "boolean") webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { auto: data.d.auto, channel_id: this.channel! } })
-			if (typeof data.d.loop === "boolean") webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: data.d.loop, channel_id: this.channel! } })
+			const q = queues.get(this.channel!)
+			if (typeof data.d.loop === "boolean" && q) q.loop = data.d.loop
 		}
 	}
 
 	public async requestClearQueue() {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.CLEAR_QUEUE, d: { channel_id: this.channel! } })
+		queues.get(this.channel!)?.tracks.splice(1)
 	}
 
 	public async requestTrackRemove(data: Packet<{ index: number }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		if (data && data.d && typeof data.d.index === "number") webQueues.get(this.channel!)?.session?.send({ op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: data.d.index } })
-	}
-
-
-	public acceptData(data: Packet<Packet<any> & { channel_id: string }>) {
-		if (this.user !== configuredUserID) return
-		const queue = webQueues.get(data.d?.channel_id!)
-		if (queue) queue.session = this
-		if (data.d && data.d.op && queue) {
-			receivers[data.d.op]?.updateCallback(queue, data.d.d)
-			const subscribers = sessions.filter(s => s.channel === data.d!.channel_id && s.user !== configuredUserID)
-			for (const subscriber of subscribers) {
-				receivers[data.d.op]?.sessionCallback(subscriber, queue, data.d.d)
-			}
-		}
-	}
-
-	public createQueue(data: Packet<import("../types").WebQueue>) {
-		if (this.user !== configuredUserID) return
-		if (data && data.d && data.d.voiceChannel && data.d.voiceChannel.id && !webQueues.has(data.d.voiceChannel.id)) {
-			data.d.session = this
-			webQueues.set(data.d.voiceChannel.id, data.d)
-			const subscribers = sessions.filter(s => s.channel === data.d!.voiceChannel.id && s.user !== configuredUserID)
-			for (const subscriber of subscribers) {
-				subscriber.sendState({})
-			}
-		}
+		if (data && data.d && typeof data.d.index === "number") queues.get(this.channel!)?.tracks.splice(data.d.index, 1)
 	}
 }
 

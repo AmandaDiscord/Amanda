@@ -2,11 +2,11 @@ import { BetterComponent } from "callback-components"
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
 import passthrough from "../../passthrough"
-const { constants, sync, client, config } = passthrough
+const { constants, sync, config, lavalink, snow } = passthrough
 
-const arr = sync.require("../../utils/array") as typeof import("../../utils/array")
-const timeUtils = sync.require("../../utils/time") as typeof import("../../utils/time")
-const language = sync.require("../../utils/language") as typeof import("../../utils/language")
+const arr = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
+const timeUtils = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
+const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
 
 const selectTimeout = 1000 * 60
 
@@ -36,7 +36,7 @@ const common = {
 		},
 
 		byIdeal() {
-			const node = client.lavalink!.idealNodes[0]
+			const node = lavalink!.idealNodes[0]
 			return common.nodes.byID(node.id)
 		}
 	},
@@ -63,7 +63,7 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
+	async inputToTrack(resource: string, cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const tracks = await common.loadtracks(resource, node).catch(e => {
@@ -90,7 +90,7 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
-			client.snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
+			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
 		})
 		if (!tracks || !tracks.tracks.length) return null
 
@@ -116,7 +116,7 @@ const common = {
 	}
 }
 
-function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@amanda/lang").Lang, trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
+function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
 	const component = new BetterComponent({
 		type: 3,
 		placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
@@ -127,7 +127,7 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 	return new Promise(res => {
 		const timer = setTimeout(() => {
 			component.destroy()
-			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
 						color: constants.standard_embed_color,
@@ -139,12 +139,12 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 			return res(null)
 		}, selectTimeout)
 		component.setCallback(async (interaction) => {
-			await client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
+			await snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
 			if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
 			component.destroy()
 			clearTimeout(timer)
 			const selected = trackss[Number(interaction.data!.values![0])]
-			await client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			await snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
 						color: constants.standard_embed_color,
@@ -156,7 +156,7 @@ function trackSelection<T>(cmd: import("../../modules/Command"), lang: import("@
 			return res(selected)
 		})
 
-		client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 			embeds: [
 				{
 					color: constants.standard_embed_color,

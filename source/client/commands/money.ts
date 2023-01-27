@@ -3,10 +3,8 @@ import path from "path"
 
 import Jimp from "jimp"
 
-import passthrough from "../passthrough"
+import passthrough from "../../passthrough"
 const { client, constants, config, commands, sync } = passthrough
-
-const emojis = sync.require("../emojis") as typeof import("../emojis")
 
 const arr = sync.require("../utils/array") as typeof import("../utils/array")
 const orm = sync.require("../utils/orm") as typeof import("../utils/orm")

@@ -3,11 +3,10 @@ import util from "util"
 import passthrough from "../passthrough"
 const { config, liveUserID, sync } = passthrough
 
-const utils: typeof import("./util") = sync.require("./util")
-const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 
+const mins10inms = 1000 * 60 * 10
 function getTimeoutForStatsPosting() {
-	const mins10inms = 1000 * 60 * 10
 	const currently = Date.now()
 	return { now: currently, remaining: mins10inms - (currently % mins10inms) }
 }
