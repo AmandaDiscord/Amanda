@@ -4,9 +4,9 @@ import { BetterComponent } from "callback-components"
 import passthrough from "../../passthrough"
 const { client, sync, config, constants } = passthrough
 
-const orm = sync.require("./orm") as typeof import("./orm")
-const arr = sync.require("./array") as typeof import("./array")
-const language = sync.require("./language") as typeof import("./language")
+const orm: typeof import("./orm") = sync.require("./orm")
+const arr: typeof import("./array") = sync.require("./array")
+const language: typeof import("./language") = sync.require("./language")
 
 export async function getUser(id: string) {
 	if (id === client.user?.id) return client.user

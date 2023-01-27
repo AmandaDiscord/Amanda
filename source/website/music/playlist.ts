@@ -1,16 +1,16 @@
 import passthrough from "../../passthrough"
 const { client, commands, constants, sync, queues, config, lavalink, joiningGuildShardMap } = passthrough
 
-const common = sync.require("./utils") as typeof import("./utils")
-const queueFile = sync.require("./queue") as typeof import("./queue")
-const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
+const common: typeof import("./utils") = sync.require("./utils")
+const queueFile: typeof import("./queue") = sync.require("./queue")
+const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
-const arr = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
-const discordUtils = sync.require("../../client/utils/discord") as typeof import("../../client/utils/discord")
-const orm = sync.require("../../client/utils/orm") as typeof import("../../client/utils/orm")
-const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
-const text = sync.require("../../client/utils/string") as typeof import("../../client/utils/string")
-const time = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
+const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
+const discordUtils: typeof import("../../client/utils/discord") = sync.require("../../client/utils/discord")
+const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
+const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
+const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
+const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
 
 const musicDisabled = false as boolean
 const waitForClientVCJoinTimeout = 5000
@@ -63,7 +63,7 @@ commands.assign([
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY })
 					return []
 				}
-				const orderedTracks = [] as typeof tracks
+				const orderedTracks: typeof tracks = []
 				let track = tracks.find(row => !tracks.some(r => r.next == row.video_id))
 				while (track) {
 					orderedTracks.push(track!)

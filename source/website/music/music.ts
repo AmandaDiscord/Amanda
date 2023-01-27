@@ -4,15 +4,15 @@ import mixin from "mixin-deep"
 import passthrough from "../../passthrough"
 const { snow, commands, constants, sync, queues, config, lavalink, joiningGuildShardMap } = passthrough
 
-const common = sync.require("./utils") as typeof import("./utils")
-const queueFile = sync.require("./queue") as typeof import("./queue")
-const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
+const common: typeof import("./utils") = sync.require("./utils")
+const queueFile: typeof import("./queue") = sync.require("./queue")
+const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
-const arr = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
-const orm = sync.require("../../client/utils/orm") as typeof import("../../client/utils/orm")
-const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
-const text = sync.require("../../client/utils/string") as typeof import("../../client/utils/string")
-const time = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
+const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
+const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
+const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
+const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
+const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
 
 const waitForClientVCJoinTimeout = 5000
 

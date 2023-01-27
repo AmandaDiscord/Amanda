@@ -6,15 +6,15 @@ import { BetterComponent } from "callback-components"
 import passthrough from "../../passthrough"
 const { sync, queues, config, constants, snow, lavalink, configuredUserID } = passthrough
 
-const common = sync.require("./utils") as typeof import("./utils")
+const common: typeof import("./utils") = sync.require("./utils")
 
-const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
-const time = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
-const discordUtils = sync.require("../../client/utils/discord") as typeof import("../../client/utils/discord")
-const orm = sync.require("../../client/utils/orm") as typeof import("../../client/utils/orm")
+const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
+const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
+const discordUtils: typeof import("../../client/utils/discord") = sync.require("../../client/utils/discord")
+const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
 
-const BetterTimeout = sync.require("./BetterTimeout") as typeof import("./BetterTimeout")
-const FrequencyUpdater = sync.require("./FrequencyUpdater") as typeof import("./FrequencyUpdater")
+const BetterTimeout: typeof import("./BetterTimeout") = sync.require("./BetterTimeout")
+const FrequencyUpdater: typeof import("./FrequencyUpdater") = sync.require("./FrequencyUpdater")
 
 const queueDestroyAfter = 20000
 const interactionExpiresAfter = 1000 * 60 * 14

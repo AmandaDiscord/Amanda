@@ -1,7 +1,7 @@
 import passthrough from "../../passthrough"
 const { sync } = passthrough
 
-const text = sync.require("./string") as typeof import("./string")
+const text: typeof import("./string") = sync.require("./string")
 
 const defaultPrecision = ["d", "h", "m", "s"] as const
 

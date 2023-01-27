@@ -4,10 +4,10 @@ import crypto from "crypto"
 import passthrough from "../../passthrough"
 const { constants, client, commands, sync, config } = passthrough
 
-const language = sync.require("../utils/language") as typeof import("../utils/language")
-const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
-const discordUtils = sync.require("../utils/discord") as typeof import("../utils/discord")
-const arrayUtils = sync.require("../utils/array") as typeof import("../utils/array")
+const language: typeof import("../utils/language") = sync.require("../utils/language")
+const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const discordUtils: typeof import("../utils/discord") = sync.require("../utils/discord")
+const arrayUtils: typeof import("../utils/array") = sync.require("../utils/array")
 
 const nameRegex = /[^a-zA-Z0-9_-]+/g
 
@@ -150,7 +150,7 @@ const interactionSources = [
 ]
 
 for (const source of interactionSources) {
-	const newCommand = {
+	const newCommand: import("../../types").UnpackArray<Parameters<typeof commands.assign>["0"]> = {
 		name: source.name,
 		description: source.description,
 		category: "interaction",
@@ -163,7 +163,7 @@ for (const source of interactionSources) {
 			}
 		],
 		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Parameters<typeof doInteraction>["2"], source.shortcut, source.url)
-	} as import("../../types").UnpackArray<Parameters<typeof commands.assign>["0"]>
+	}
 	cmds.push(newCommand)
 }
 

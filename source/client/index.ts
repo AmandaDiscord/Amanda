@@ -8,7 +8,7 @@ import amqp from "amqplib"
 import Amanda from "./modules/Amanda"
 import CommandManager from "./modules/CommandManager"
 
-const config = require("../../config") as import("../types").Config // TypeScript WILL include files that use import in any way (type annotations or otherwise)
+const config: import("../types").Config = require("../../config") // TypeScript WILL include files that use import in any way (type annotations or otherwise)
 import constants from "../constants"
 import passthrough from "../passthrough"
 
@@ -39,7 +39,7 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 		passthrough.db = db
 	} else console.warn("Database disabled")
 
-	const discordUtils = await sync.require("./utils/discord") as typeof import("./utils/discord")
+	const discordUtils: typeof import("./utils/discord") = await sync.require("./utils/discord")
 	const clientUser = await discordUtils.getUser(Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8"))
 	if (!clientUser) throw new Error("Could not get client user info. Please terminate this process and try again or check for bugs")
 	client.user = clientUser
@@ -71,7 +71,7 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 })()
 
 async function globalErrorHandler(e: Error | undefined) {
-	const text = require("./utils/string") as typeof import("./utils/string")
+	const text: typeof import("./utils/string") = require("./utils/string")
 	console.error(e)
 	client.snow.channel.createMessage("512869106089852949", {
 		embeds: [

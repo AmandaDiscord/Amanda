@@ -6,11 +6,11 @@ const simpleGit = sG(__dirname)
 import passthrough from "../../passthrough"
 const { client, constants, config, commands, sync, queues } = passthrough
 
-const text = sync.require("../utils/string") as typeof import("../utils/string")
-const emojis = sync.require("../emojis") as typeof import("../emojis")
-const language = sync.require("../utils/language") as typeof import("../utils/language")
-const time = sync.require("../utils/time") as typeof import("../utils/time")
-const cluster = sync.require("../utils/cluster") as typeof import("../utils/cluster")
+const text: typeof import("../utils/string") = sync.require("../utils/string")
+const emojis: typeof import("../emojis") = sync.require("../emojis")
+const language: typeof import("../utils/language") = sync.require("../utils/language")
+const time: typeof import("../utils/time") = sync.require("../utils/time")
+const cluster: typeof import("../utils/cluster") = sync.require("../utils/cluster")
 
 commands.assign([
 	{

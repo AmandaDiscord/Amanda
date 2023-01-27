@@ -78,7 +78,7 @@ function buildCommandLanguageOptions(cmd: string) {
 
 function refreshcommands() {
 	if (!client.ready) return console.error("Client isn't ready yet")
-	const payload = [...commands.cache.values()].map(c => {
+	const payload: Array<import("discord-typings").ApplicationCommandBase> = [...commands.cache.values()].map(c => {
 		const obj = buildCommandLanguageObject(c.name)
 		const options = buildCommandLanguageOptions(c.name)
 		return {
@@ -88,7 +88,7 @@ function refreshcommands() {
 			description_localizations: Object.keys(obj.description_localizations).length ? obj.description_localizations : void 0,
 			options: options,
 			default_member_permissions: null
-		} as import("discord-typings").ApplicationCommandBase
+		}
 	})
 	client.snow.interaction.bulkOverwriteApplicationCommands(client.user.id, payload) // Amanda is a "new" account which doesn't have a different ID from the application
 }

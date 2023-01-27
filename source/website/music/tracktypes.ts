@@ -1,17 +1,17 @@
-const entities = require("entities") as typeof import("entities")
-const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
+const entities: typeof import("entities") = require("entities")
+const encoding: typeof import("@lavalink/encoding") = require("@lavalink/encoding")
 
 import passthrough from "../../passthrough"
 const { constants, sync, frisky } = passthrough
 
-const common = sync.require("./utils") as typeof import("./utils")
+const common: typeof import("./utils") = sync.require("./utils")
 
-const timeUtils = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
-const text = sync.require("../../client/utils/string") as typeof import("../../client/utils/string")
-const arrUtils = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
-const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
+const timeUtils: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
+const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
+const arrUtils: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
+const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
 
-const AsyncValueCache = sync.require("./AsyncValueCache") as typeof import("./AsyncValueCache")
+const AsyncValueCache: typeof import("./AsyncValueCache") = sync.require("./AsyncValueCache")
 
 const stationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
 	["original", {

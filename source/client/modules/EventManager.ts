@@ -5,10 +5,10 @@ const { client, sync, commands, config, constants } = passthrough
 
 import Command from "./Command"
 
-const text = sync.require("../utils/string") as typeof import("../utils/string")
-const lang = sync.require("../utils/language") as typeof import("../utils/language")
-const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
-const cluster = sync.require("../utils/cluster") as typeof import("../utils/cluster")
+const text: typeof import("../utils/string") = sync.require("../utils/string")
+const lang: typeof import("../utils/language") = sync.require("../utils/language")
+const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const cluster: typeof import("../utils/cluster") = sync.require("../utils/cluster")
 
 function getTimeoutForStatsPosting() {
 	const mins10inms = 1000 * 60 * 10
@@ -55,13 +55,13 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 	else if (p.t === "GUILD_DELETE") {
 		if (!p.d.unavailable) orm.db.delete("guilds", { client_id: client.user.id, guild_id: p.d.id })
 	} else if (p.t === "VOICE_STATE_UPDATE") {
-		const data = p.d as import("discord-typings").VoiceState
+		const data: import("discord-typings").VoiceState = p.d
 		if (data.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: data.user_id, guild_id: data.guild_id })
 		else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id || undefined }, { useBuffer: false })
 		fetch(`${config.website_protocol}://${config.website_domain}/voice-state-update`, { headers: { Authorization: config.bot_token }, body: JSON.stringify(data) })
 	} else if (p.t === "VOICE_SERVER_UPDATE") fetch(`${config.website_protocol}://${config.website_domain}/voice-server-update`, { headers: { Authorization: config.bot_token }, body: JSON.stringify(p.d) })
 	else if (p.t === "INTERACTION_CREATE") {
-		const interaction = p.d as import("discord-typings").Interaction
+		const interaction: import("discord-typings").Interaction = p.d
 		if (interaction.type === 2) {
 			const selfLang = lang.getLang(interaction.locale!)
 

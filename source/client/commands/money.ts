@@ -6,12 +6,12 @@ import Jimp from "jimp"
 import passthrough from "../../passthrough"
 const { client, constants, config, commands, sync } = passthrough
 
-const arr = sync.require("../utils/array") as typeof import("../utils/array")
-const orm = sync.require("../utils/orm") as typeof import("../utils/orm")
-const jimpStores = sync.require("../utils/jimpstores") as typeof import("../utils/jimpstores")
-const discord = sync.require("../utils/discord") as typeof import("../utils/discord")
-const text = sync.require("../utils/string") as typeof import("../utils/string")
-const language = sync.require("../utils/language") as typeof import("../utils/language")
+const arr: typeof import("../utils/array") = sync.require("../utils/array")
+const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
+const jimpStores: typeof import("../utils/jimpstores") = sync.require("../utils/jimpstores")
+const discord: typeof import("../utils/discord") = sync.require("../utils/discord")
+const text: typeof import("../utils/string") = sync.require("../utils/string")
+const language: typeof import("../utils/language") = sync.require("../utils/language")
 
 const startingCoins = 5000
 

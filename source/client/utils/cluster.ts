@@ -1,7 +1,7 @@
 import passthrough from "../../passthrough"
 const { client, config, sync, queues } = passthrough
 
-const orm = sync.require("./orm") as typeof import("./orm")
+const orm: typeof import("./orm") = sync.require("./orm")
 
 export async function getOwnStats() {
 	const ram = process.memoryUsage()

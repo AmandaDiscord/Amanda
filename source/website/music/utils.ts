@@ -1,12 +1,12 @@
 import { BetterComponent } from "callback-components"
-const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
+const encoding: typeof import("@lavalink/encoding") = require("@lavalink/encoding")
 
 import passthrough from "../../passthrough"
 const { constants, sync, config, lavalink, snow } = passthrough
 
-const arr = sync.require("../../client/utils/array") as typeof import("../../client/utils/array")
-const timeUtils = sync.require("../../client/utils/time") as typeof import("../../client/utils/time")
-const language = sync.require("../../client/utils/language") as typeof import("../../client/utils/language")
+const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
+const timeUtils: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
+const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
 
 const selectTimeout = 1000 * 60
 
@@ -175,7 +175,7 @@ function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: im
 }
 
 function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
-	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
+	const trackTypes: typeof import("./tracktypes") = require("./tracktypes")
 	const type = sourceMap.get(info.source)
 	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester, lang)
 }

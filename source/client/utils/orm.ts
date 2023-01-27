@@ -7,7 +7,7 @@
 import passthrough from "../../passthrough"
 const { sync } = passthrough
 
-const sql = sync.require("./sql") as typeof import("./sql")
+const sql: typeof import("./sql") = sync.require("./sql")
 
 type StatementBuffer = {
 	timeouts: {
