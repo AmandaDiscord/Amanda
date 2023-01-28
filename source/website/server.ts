@@ -30,7 +30,7 @@ kp.on("error", console.error)
 jp.on("unknown", console.info)
 kp.on("unknown", console.info)
 
-Object.assign(passthrough, { listenMoe: { jp, kp }, frisky, commands })
+Object.assign(passthrough, { listenMoe: { jp, kp }, frisky, commands, constants })
 
 const wss = new ws.Server({ noServer: true })
 const queues: typeof import("../passthrough")["queues"] = new Map()
