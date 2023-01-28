@@ -139,7 +139,6 @@ function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: im
 			return res(null)
 		}, selectTimeout)
 		component.setCallback(async (interaction) => {
-			await snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
 			if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
 			component.destroy()
 			clearTimeout(timer)

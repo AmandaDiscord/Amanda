@@ -126,7 +126,7 @@ passthrough.joiningGuildShardMap = new Map<string, number>()
 
 		if (req.headers.cookie) delete req.headers.cookie
 
-		if (req.headers.authorization !== config.bot_token) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
+		if (req.headers.authorization !== config.bot_token && req.url !== "/interaction") console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
 		if (!req.destroyed) req.destroy();
 		if (!res.destroyed) res.destroy();
 	})

@@ -33,8 +33,7 @@ const cmds = [
 		async process(cmd, lang) {
 			const user1 = cmd.data.users.get(cmd.data.options.get("user1")?.asString() || "") || cmd.author
 			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
-			if (user1.id == user2.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) } })
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (user1.id == user2.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) })
 
 			const canvas = new Jimp(300, 100)
 			const [pfp1, pfp2, heart] = await Promise.all([
@@ -91,11 +90,11 @@ const cmds = [
 			}
 		],
 		process(cmd, lang) {
-			if (!cmd.guild_id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) } })
+			if (!cmd.guild_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) })
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
-			if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.NO_U } })
-			if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) } })
-			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) } })
+			if (user.id == client.user!.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_U })
+			if (user.id == cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) })
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) })
 		}
 	}
 ] as Parameters<typeof commands.assign>["0"]
@@ -167,7 +166,7 @@ for (const source of interactionSources) {
 	cmds.push(newCommand)
 }
 
-async function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
+function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
 	const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
 
@@ -184,11 +183,10 @@ async function doInteraction(cmd: import("../modules/Command"), lang: import("@a
 			lang.GLOBAL.INTERACTION_RESPONSE_9,
 			"<:NotLikeCat:411364955493761044>"
 		]
-		return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: arrayUtils.random(responses) } })
+		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: arrayUtils.random(responses) })
 	}
 
-	if (user.id == client.user!.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) } })
-	await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+	if (user.id == client.user!.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) })
 	let fetched: Promise<string> | undefined = undefined
 	let footer: string
 	if (!fetched) {

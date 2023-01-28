@@ -62,10 +62,12 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 		"./commands/meta" // meta should load last always for command docs reasons
 	])
 
-	channel.consume(config.amqp_queue, msg => {
+	channel.consume(config.amqp_queue, async msg => {
 		if (!msg) return
 		channel.ack(msg)
-		client.emit("gateway", JSON.parse(msg.content.toString("utf-8")))
+		const parsed = JSON.parse(msg.content.toString("utf-8")) // -1 s means it was an interaction sent from website and this path is for bots still using gateway interactions
+		if (parsed.s === -1 && parsed.t === "INTERACTION_CREATE" && (parsed.d.type === 2 || parsed.d.type === 3)) await client.snow.interaction.createInteractionResponse(parsed.d.application_id, parsed.d.token, { type: parsed.d.type === 2 ? 5 : 6 })
+		client.emit("gateway", parsed)
 	})
 	console.log(`Successfully logged in as ${client.user.username}`)
 })()

@@ -151,7 +151,8 @@ const paths: {
 			const payload: import("discord-typings").Interaction = JSON.parse(bodyString)
 			if (payload.type === 1) return res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":1}")
 
-			res.writeHead(202).end()
+			if (payload.type === 2) res.writeHead(200).end("{\"type\":5}") // defer because Discord doesn't accept 202 accepted
+			else if (payload.type === 3) res.writeHead(200).end("{\"type\":6}")
 
 			if (payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)) {
 				const interaction = payload
@@ -159,7 +160,7 @@ const paths: {
 
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (config.db_enabled) orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
-				if (interaction.guild_id && !config.db_enabled) return snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 4, data: { content: selfLang.GLOBAL.DATABASE_OFFLINE } })
+				if (interaction.guild_id && !config.db_enabled) return snow.interaction.editOriginalInteractionResponse(interaction.application_id, interaction.token, { content: selfLang.GLOBAL.DATABASE_OFFLINE })
 				const shard = interaction.guild_id ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: interaction.guild_id }) : { shard_id: 0, cluster_id: "unknown" }
 				try {
 					const cmd = new Command(interaction)
@@ -212,7 +213,7 @@ const paths: {
 					snow.channel.createMessage("512869106089852949", { embeds: [embed] })
 				}
 			} else if (payload.type === 3) BetterComponent.handle(payload)
-			amqpChannel.sendToQueue(config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: 0 })), { contentType: "application/json" })
+			amqpChannel.sendToQueue(config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1 })), { contentType: "application/json" })
 		}
 	},
 	"/voice-state-update": {

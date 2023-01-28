@@ -75,15 +75,15 @@ async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lan
 
 function doChecks(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang) {
 	if (!config.db_enabled) {
-		snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 		return false
 	}
 	if (musicDisabled) {
-		snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.MUSIC_DISABLED } })
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED })
 		return false
 	}
 	if (!cmd.guild_id) {
-		snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.GUILD_ONLY } })
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.GUILD_ONLY })
 		return false
 	}
 	return true
@@ -92,11 +92,11 @@ function doChecks(cmd: import("../../client/modules/Command"), lang: import("@am
 function getQueueWithRequiredPresence(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang) {
 	const queue = queues.get(cmd.guild_id!)
 	if (!queue) {
-		snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 		return null
 	}
 	if (!queue.listeners.has(cmd.author.id)) {
-		snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) } })
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 		return null
 	}
 	return queue
@@ -111,8 +111,6 @@ commands.assign([
 			if (!doChecks(cmd, lang)) return
 
 			const track = cmd.data.options.get("track")!.asString()!
-
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const { queue, existed } = await getOrCreateQueue(cmd, lang, info.shard_id)
 			if (!queue) return
@@ -143,8 +141,6 @@ commands.assign([
 			if (!doChecks(cmd, lang)) return
 
 			const track = cmd.data.options.get("station")!.asString()!
-
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const { queue, existed } = await getOrCreateQueue(cmd, lang, info.shard_id)
 			if (!queue) return
@@ -180,13 +176,11 @@ commands.assign([
 			const start = cmd.data.options.get("start")?.asNumber() ?? 1
 			const amount = cmd.data.options.get("amount")?.asNumber() ?? 1
 
-			if (queue.tracks.length < (amount - start)) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.TOO_MANY_SKIPS } })
+			if (queue.tracks.length < (amount - start)) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOO_MANY_SKIPS })
 			else if (start === 1 && amount === queue.tracks.length) {
 				queue.destroy().catch(() => void 0)
-				return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.SKIPPED_ALL) } })
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.SKIPPED_ALL) })
 			}
-
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			for (let index = 0; index < amount; index++) {
 				await queue.removeTrack(start + index)
@@ -206,7 +200,7 @@ commands.assign([
 			const queue = getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			queue.destroy()
-			return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.QUEUE_STOPPED, { "username": `${cmd.author.username}#${cmd.author.discriminator}` }) } })
+			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.QUEUE_STOPPED, { "username": `${cmd.author.username}#${cmd.author.discriminator}` }) })
 		}
 	},
 	{
@@ -223,15 +217,13 @@ commands.assign([
 
 			const queue = queues.get(cmd.guild_id!)
 
-			if (!queue || !queue.tracks[0]) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type:4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			if (!queue || !queue.tracks[0]) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 
 			const userIsListening = queue.listeners.has(cmd.author.id)
 
 			const executePage = page !== null || [volume, loop, pause].every(i => i === null)
 
-			if (!userIsListening && !executePage) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) } })
-
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (!userIsListening && !executePage) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })
 
 			if (executePage) {
 				const totalLength = `\n${language.replace(lang.GLOBAL.TOTAL_LENGTH, { "length": time.prettySeconds(queue.totalDuration) })}`
@@ -260,7 +252,7 @@ commands.assign([
 
 			if (loop !== null && userIsListening) {
 				queue.loop = loop
-				const state = queue.toJSON()
+				// const state = queue.toJSON()
 				// if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			}
@@ -278,7 +270,7 @@ commands.assign([
 		process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 			const queue = queues.get(cmd.guild_id!)
-			if (!queue) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
+			if (!queue) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 			queue.interaction = cmd
 		}
 	},
@@ -289,8 +281,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 			const queue = queues.get(cmd.guild_id!)
-			if (!queue) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (!queue) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 			const info = await queue.tracks[0].showInfo()
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof info === "string" ? { content: info } : { embeds: [info] })
 		}
@@ -302,8 +293,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 			const queue = queues.get(cmd.guild_id!)
-			if (!queue) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) } })
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (!queue) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 
 			const lyrics = await queue.tracks[0].getLyrics()
 			if (!lyrics) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_LYRICS })
@@ -326,7 +316,6 @@ commands.assign([
 			const queue = getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			const timeOpt = cmd.data.options.get("time")!.asNumber()!
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const result = await queue.seek(timeOpt * 1000)
 			if (result === 1) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username }) })
 			else if (result === 2) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.CANNOT_SEEK_LIVE })
@@ -345,7 +334,6 @@ commands.assign([
 			if (!queue) return
 			const pitch = cmd.data.options.get("pitch")?.asNumber() ?? queue.pitch
 			const speed = cmd.data.options.get("speed")?.asNumber() ?? queue.speed
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const oldFilters = queue.player!.state.filters
 			const newFilters = mixin(oldFilters, { timescale: { pitch: pitch, speed: speed } })
@@ -377,8 +365,8 @@ commands.assign([
 		description: "Obtain a web dashboard login token",
 		category: "audio",
 		async process(cmd, lang) {
-			if (!config.db_enabled) return snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
-			await snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5, data: { flags: 1 << 6 } })
+			if (!config.db_enabled) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
+			if (cmd.guild_id) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "DM only" })
 			const action = cmd.data.options.get("action")?.asString() ?? null
 			if (action === "d") {
 				await orm.db.delete("web_tokens", { user_id: cmd.author.id })

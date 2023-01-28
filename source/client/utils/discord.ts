@@ -75,7 +75,6 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 		} as import("discord-typings").SelectMenu)
 
 		component.setCallback(interaction => {
-			client.snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 })
 			page = Number(interaction.data?.values?.[0] || 0)
 			callback(page, component)
 		})

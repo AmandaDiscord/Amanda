@@ -32,7 +32,6 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang, info) {
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const sid = info.shard_id
 			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} tree, branch ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
@@ -101,31 +100,28 @@ commands.assign([
 		description: "Gets info about Amanda",
 		category: "meta",
 		process(cmd, lang) {
-			return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, {
-				type: 4,
-				data: {
-					embeds: [
-						{
-							description: lang.GLOBAL.INFO_THANKS,
-							fields: [
-								{
-									name: lang.GLOBAL.HEADER_CREATORS,
-									value: "PapiOphidian#0110 <:bravery:479939311593324557> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl3:582555022508687370>"
-								},
-								{
-									name: lang.GLOBAL.HEADER_CODE,
-									value: `[node.js](https://nodejs.org/) ${process.version} + [SnowTransfer](https://www.npmjs.com/package/snowtransfer) & [CloudStorm](https://www.npmjs.com/package/cloudstorm)`
-								},
-								{
-									name: lang.GLOBAL.HEADER_LINKS,
-									value: language.replace(lang.GLOBAL.INFO_LINKS, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal, "privacy": constants.privacy, "todo": constants.todo }) +
-									`\n${constants.add}`
-								}
-							],
-							color: constants.standard_embed_color
-						}
-					]
-				}
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						description: lang.GLOBAL.INFO_THANKS,
+						fields: [
+							{
+								name: lang.GLOBAL.HEADER_CREATORS,
+								value: "PapiOphidian#0110 <:bravery:479939311593324557> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl3:582555022508687370>"
+							},
+							{
+								name: lang.GLOBAL.HEADER_CODE,
+								value: `[node.js](https://nodejs.org/) ${process.version} + [SnowTransfer](https://www.npmjs.com/package/snowtransfer) & [CloudStorm](https://www.npmjs.com/package/cloudstorm)`
+							},
+							{
+								name: lang.GLOBAL.HEADER_LINKS,
+								value: language.replace(lang.GLOBAL.INFO_LINKS, { "website": `${config.website_protocol}://${config.website_domain}/`, "stats": constants.stats, "server": constants.server, "patreon": constants.patreon, "paypal": constants.paypal, "privacy": constants.privacy, "todo": constants.todo }) +
+								`\n${constants.add}`
+							}
+						],
+						color: constants.standard_embed_color
+					}
+				]
 			})
 		}
 	},
@@ -134,7 +130,6 @@ commands.assign([
 		description: "Gets the latest git commits to Amanda",
 		category: "meta",
 		async process(cmd, lang) {
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 			const limit = 5
 			const authorNameMap = {
 				"Cadence Ember": "Cadence",
@@ -202,7 +197,7 @@ commands.assign([
 						footer: { text: lang.GLOBAL.FOOTER_HELP },
 						color: constants.standard_embed_color
 					}
-					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else if (category && category != "hidden" && commands.categories.has(category)) {
 					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
@@ -234,13 +229,13 @@ commands.assign([
 						}).join("\n"),
 						color: constants.standard_embed_color
 					}
-					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else {
 					embed = {
 						description: language.replace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${cmd.author.username}#${cmd.author.discriminator}` }),
 						color: 0xB60000
 					}
-					client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				}
 			} else {
 				embed = {
@@ -248,7 +243,7 @@ commands.assign([
 					description: `❯ ${Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")}\n\n${language.replace(lang.GLOBAL.HELP_SEE_ALL, { "prefix": "/" })}\n\n${language.replace(lang.GLOBAL.HELP_INFO, { "prefix": "/", "link": constants.invite_link_for_help })}`,
 					color: constants.standard_embed_color
 				}
-				client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { embeds: [embed], flags: 1 << 6 } })
+				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 			}
 
 			function getDocs(c: import("../../types").UnpackArray<Parameters<typeof commands["assign"]>["0"]>) {

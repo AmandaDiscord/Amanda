@@ -58,8 +58,7 @@ commands.assign([
 				required: true
 			}
 		],
-		async process(cmd, lang) {
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+		process(cmd, lang) {
 			const type = cmd.data.options.get("type")!.asString()
 			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.IMAGE_FETCH_FAILED })
 			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey).catch(onFail)

@@ -99,8 +99,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (!config.db_enabled) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 
 			const fruits = ["apple", "cherries", "watermelon", "pear", "strawberry"] // plus heart, which is chosen seperately
 			const isPremium = await orm.db.get("premium", { user_id: cmd.author.id })
@@ -153,7 +152,7 @@ commands.assign([
 			if (!amount) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { files: [{ name: "slot.png", file: await canvas.getBufferAsync(Jimp.MIME_PNG) }] })
 
 			const bet = BigInt(amount)
-			if (bet > BigInt(money.amount)) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You don't have enough money for that" } })
+			if (bet > BigInt(money.amount)) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You don't have enough money for that" })
 
 			let result: string, winning: bigint
 			if (slots.every(s => s == "heart")) {
@@ -211,10 +210,8 @@ commands.assign([
 			let side = (cmd.data.options.get("side")?.asString() ?? null) as "h" | "t" | null
 			if (!amount || !config.db_enabled) {
 				const flip = arr.random(["<:coinH:402219464348925954>", "<:coinT:402219471693021196>"])
-				return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: flip } })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: flip })
 			}
-
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const money = await getPersonalRow(cmd.author.id)
 			const bet = BigInt(amount)
@@ -279,11 +276,9 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
+			if (!config.db_enabled) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
 			const showCouple = cmd.data.options.get("couple")?.asBoolean() ?? false
-
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const money = await getPersonalRow(user.id)
 			const couple = await getCoupleRow(user.id)
@@ -429,7 +424,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
+			if (!config.db_enabled) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			const itemsPerPage = 10
 
 			let pageNumber = cmd.data.options.get("page")?.asNumber() ?? null
@@ -437,8 +432,6 @@ commands.assign([
 			if (!pageNumber) pageNumber = 1
 
 			const offset = (pageNumber - 1) * itemsPerPage
-
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
 
 			const rows = await orm.db.raw(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`) as Array<{ user_id: string; amount: string }>
 			const availableRowCount = (await orm.db.raw("SELECT COUNT(*) AS count FROM bank_accounts WHERE type = 0").then(r => r[0])).count as number
@@ -489,11 +482,10 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
+			if (!config.db_enabled) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
-			if (user.id == cmd.author.id) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: "You cannot give money to yourself" } })
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (user.id == cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You cannot give money to yourself" })
 			const authorCoins = await getPersonalRow(cmd.author.id)
 			if (amount > BigInt(authorCoins.amount)) client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "You don't have enough money for that" })
 			transact(cmd.author.id, user.id, amount)
@@ -514,8 +506,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!config.db_enabled) return client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 4, data: { content: lang.GLOBAL.DATABASE_OFFLINE } })
-			await client.snow.interaction.createInteractionResponse(cmd.id, cmd.token, { type: 5 })
+			if (!config.db_enabled) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			const money = await getPersonalRow(cmd.author.id)
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 

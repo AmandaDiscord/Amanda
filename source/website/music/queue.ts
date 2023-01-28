@@ -219,19 +219,16 @@ class Queue {
 	public createNPMenu(assign = true) {
 		const newMenu = [
 			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.paused = !this.paused
 			}),
 			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.skip()
 			}),
 			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
-				snow.interaction.createInteractionResponse(interaction.id, interaction.token, { type: 6 }).catch(() => void 0)
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.destroy()
