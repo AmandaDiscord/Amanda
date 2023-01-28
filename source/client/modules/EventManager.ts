@@ -58,8 +58,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-typings")
 		const data: import("discord-typings").VoiceState = p.d
 		if (data.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: data.user_id, guild_id: data.guild_id })
 		else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: data.channel_id || undefined }, { useBuffer: false })
-		fetch(`${config.website_protocol}://${config.website_domain}/voice-state-update`, { headers: { Authorization: config.bot_token }, body: JSON.stringify(data) })
-	} else if (p.t === "VOICE_SERVER_UPDATE") fetch(`${config.website_protocol}://${config.website_domain}/voice-server-update`, { headers: { Authorization: config.bot_token }, body: JSON.stringify(p.d) })
+		fetch(`${config.website_protocol}://${config.website_domain}/voice-state-update`, { method: "POST", headers: { Authorization: config.bot_token }, body: JSON.stringify(data) })
+	} else if (p.t === "VOICE_SERVER_UPDATE") fetch(`${config.website_protocol}://${config.website_domain}/voice-server-update`, { method: "POST", headers: { Authorization: config.bot_token }, body: JSON.stringify(p.d) })
 	else if (p.t === "INTERACTION_CREATE") {
 		const interaction: import("discord-typings").Interaction = p.d
 		if (interaction.type === 2) {
