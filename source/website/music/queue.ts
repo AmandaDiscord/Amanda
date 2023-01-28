@@ -10,7 +10,6 @@ const common: typeof import("./utils") = sync.require("./utils")
 
 const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
 const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
-const discordUtils: typeof import("../../client/utils/discord") = sync.require("../../client/utils/discord")
 const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
 
 const BetterTimeout: typeof import("./BetterTimeout") = sync.require("./BetterTimeout")
@@ -435,7 +434,7 @@ class Queue {
 			const states = await orm.db.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
 
 			for (const state of states) {
-				const user = await discordUtils.getUser(state.user_id)
+				const user = await getUser(state.user_id)
 				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
 			// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() }))
@@ -447,7 +446,7 @@ class Queue {
 			if (this.listeners.size === 0) return this._onAllUsersLeave()
 		}
 		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
-			const user = await discordUtils.getUser(packet.user_id)
+			const user = await getUser(packet.user_id)
 			if (!user || (user && user.bot)) return
 			this.leaveTimeout.clear()
 			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
@@ -456,6 +455,22 @@ class Queue {
 		}
 		// if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } }))
 	}
+}
+
+async function getUser(id: string) {
+	if (config.db_enabled) {
+		const cached = await orm.db.get("users", { id: id })
+		if (cached) return convertCachedUser(cached)
+	}
+	const fetched = await snow.user.getUser(id).catch(() => null)
+	if (fetched && config.db_enabled) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar, bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
+	return fetched
+}
+
+function convertCachedUser(user: import("../../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
+	const split = user.tag.split("#")
+	Object.assign(user, { username: split.slice(0, split.length - 1).join("#"), discriminator: split[split.length - 1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
+	return user as unknown as import("discord-typings").User
 }
 
 export { Queue }

@@ -225,12 +225,12 @@ const paths: {
 
 			if (payload.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: payload.user_id, guild_id: payload.guild_id })
 			else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: payload.guild_id, user_id: payload.user_id, channel_id: payload.channel_id || undefined }, { useBuffer: false })
-			lavalink?.voiceStateUpdate(payload as import("lavacord").VoiceStateUpdate)
+			lavalink.voiceStateUpdate(payload as import("lavacord").VoiceStateUpdate)
 			queues.get(payload.guild_id!)?.voiceStateUpdate(payload as import("lavacord").VoiceStateUpdate)
 			res.writeHead(201).end()
 		}
 	},
-	"voice-server-update": {
+	"/voice-server-update": {
 		methods: ["POST"],
 		async handle(req, res) {
 			const allowed = req.headers.authorization === config.bot_token

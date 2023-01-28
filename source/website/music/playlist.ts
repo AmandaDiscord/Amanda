@@ -1,5 +1,5 @@
 import passthrough from "../../passthrough"
-const { snow, commands, constants, sync, queues, config, lavalink, joiningGuildShardMap } = passthrough
+const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")
 const queueFile: typeof import("./queue") = sync.require("./queue")
@@ -21,7 +21,7 @@ commands.assign([
 		name: "playlists",
 		description: "Manage and play Amanda playlists",
 		category: "audio",
-		async process(cmd, lang, info) {
+		async process(cmd, lang) {
 			if (!config.db_enabled) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			if (musicDisabled) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED })
 			if (!cmd.guild_id) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.GUILD_ONLY })
@@ -352,7 +352,7 @@ commands.assign([
 
 				const node = (queue && queue.node ? common.nodes.byID(queue.node) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random())
 				if (!queue) {
-					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id, info.shard_id).catch(() => null)
+					queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
 					if (!queue) return
 				}
 
@@ -368,7 +368,7 @@ commands.assign([
 	}
 ])
 
-async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string, shardID: number): Promise<import("./queue").Queue | null> {
+async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
 	const queue = new queueFile.Queue(cmd.guild_id!)
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd
@@ -385,7 +385,6 @@ async function createQueue(cmd: import("../../client/modules/Command"), lang: im
 		const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
 		const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 			reject = rej
-			joiningGuildShardMap.set(cmd.guild_id!, shardID)
 			lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
 				resolve(p)
 				clearTimeout(timer)

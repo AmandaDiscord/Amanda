@@ -2,7 +2,7 @@ import crypto from "crypto"
 import mixin from "mixin-deep"
 
 import passthrough from "../../passthrough"
-const { snow, commands, constants, sync, queues, config, lavalink, joiningGuildShardMap } = passthrough
+const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")
 const queueFile: typeof import("./queue") = sync.require("./queue")
@@ -20,7 +20,7 @@ const musicDisabled = false as boolean
 
 const notWordRegex = /\W/g
 
-async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string, shardID: number): Promise<import("./queue").Queue | null> {
+async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
 	const queue = new queueFile.Queue(cmd.guild_id!)
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd
@@ -37,7 +37,6 @@ async function createQueue(cmd: import("../../client/modules/Command"), lang: im
 		const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
 		const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
 			reject = rej
-			joiningGuildShardMap.set(cmd.guild_id!, shardID)
 			lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
 				resolve(p)
 				clearTimeout(timer)
@@ -55,7 +54,7 @@ async function createQueue(cmd: import("../../client/modules/Command"), lang: im
 	}
 }
 
-async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, shardID: number): Promise<{ queue: import("./queue").Queue | null; existed: boolean }> {
+async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang): Promise<{ queue: import("./queue").Queue | null; existed: boolean }> {
 	let queue = queues.get(cmd.guild_id!) ?? null
 	const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id! })
 	if (!userVoiceState) {
@@ -68,7 +67,7 @@ async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lan
 	}
 	if (queue) return { queue, existed: true }
 	const node = common.nodes.byIdeal() || common.nodes.random()
-	queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id, shardID).catch(() => null)
+	queue = await createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
 	if (!queue) return { queue: null, existed: false }
 	return { queue, existed: false }
 }
@@ -112,7 +111,7 @@ commands.assign([
 
 			const track = cmd.data.options.get("track")!.asString()!
 
-			const { queue, existed } = await getOrCreateQueue(cmd, lang, info.shard_id)
+			const { queue, existed } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
@@ -137,12 +136,12 @@ commands.assign([
 		name: "radio",
 		description: "Play from radio stations",
 		category: "audio",
-		async process(cmd, lang, info) {
+		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 
 			const track = cmd.data.options.get("station")!.asString()!
 
-			const { queue, existed } = await getOrCreateQueue(cmd, lang, info.shard_id)
+			const { queue, existed } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
 			let toAdd: import("./tracktypes").Track

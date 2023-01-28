@@ -15,7 +15,6 @@ interface Passthrough {
 	liveUserID: string
 	wss: import("ws").Server<import("ws").WebSocket>
 	amqpChannel: import("amqplib").Channel
-	joiningGuildShardMap: Map<string, number>
 	snow: import("snowtransfer").SnowTransfer
 }
 

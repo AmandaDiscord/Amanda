@@ -34,7 +34,6 @@ Object.assign(passthrough, { listenMoe: { jp, kp }, frisky, commands, constants 
 
 const wss = new ws.Server({ noServer: true })
 const queues: typeof import("../passthrough")["queues"] = new Map()
-passthrough.joiningGuildShardMap = new Map<string, number>()
 
 ;(async () => {
 	if (config.db_enabled) {
@@ -70,15 +69,12 @@ passthrough.joiningGuildShardMap = new Map<string, number>()
 			user: configuredUserID,
 			shards: config.total_shards,
 			send: async packet => {
-				const url = await db.query("SELECT gateway_clusters.url FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.client_id = $1 AND guilds.guild_id = $2", [configuredUserID, packet.d.guild_id]).then(r => r.rows[0])
+				const url = await db.query("SELECT gateway_clusters.url, guilds.shard_id FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.client_id = $1 AND guilds.guild_id = $2", [configuredUserID, packet.d.guild_id]).then(r => r.rows[0])
 				if (!url) return false
-				const shardID = passthrough.joiningGuildShardMap.get(packet.d.guild_id)
-				if (!shardID) return false
-				passthrough.joiningGuildShardMap.delete(packet.d.guild_id)
-				const withSID = packet as typeof packet & { shard_id: number }
-				withSID.shard_id = shardID
+				const withSID = packet.d
+				withSID.shard_id = url.shard_id
 
-				await fetch(`${url.url}/voice-status-update`, { method: "POST", headers: { Authorization: config.bot_token }, body: JSON.stringify(withSID) })
+				await fetch(`${url.url}/gateway/voice-status-update`, { method: "POST", headers: { Authorization: config.bot_token }, body: JSON.stringify(withSID) })
 				return true
 			}
 		})
@@ -146,6 +142,20 @@ passthrough.joiningGuildShardMap = new Map<string, number>()
 
 	wss.once("close", () => console.log("Socket server has closed."));
 
-	process.on("uncaughtException", (e) => console.error(String(e)))
-	process.on("unhandledRejection", (e) => console.error(String(e)))
+	process.on("uncaughtException", globalErrorHandler)
+	process.on("unhandledRejection", globalErrorHandler)
 })()
+
+async function globalErrorHandler(e: Error | undefined) {
+	const text: typeof import("../client/utils/string") = require("../client/utils/string")
+	console.error(e)
+	passthrough.snow.channel.createMessage("512869106089852949", {
+		embeds: [
+			{
+				title: "Global error occured.",
+				description: await text.stringify(e),
+				color: 0xdd2d2d
+			}
+		]
+	})
+}
