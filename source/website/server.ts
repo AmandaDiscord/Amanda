@@ -70,7 +70,7 @@ passthrough.joiningGuildShardMap = new Map<string, number>()
 			user: configuredUserID,
 			shards: config.total_shards,
 			send: async packet => {
-				const url = await db.query("SELECT gateway_clusters.url FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.user_id = $1 AND guilds.guild_id = $2", [configuredUserID, packet.d.guild_id]).then(r => r.rows[0])
+				const url = await db.query("SELECT gateway_clusters.url FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.client_id = $1 AND guilds.guild_id = $2", [configuredUserID, packet.d.guild_id]).then(r => r.rows[0])
 				if (!url) return false
 				const shardID = passthrough.joiningGuildShardMap.get(packet.d.guild_id)
 				if (!shardID) return false
