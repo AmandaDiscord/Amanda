@@ -61,7 +61,7 @@ const paths: {
 					let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 					const csrftoken = util.generateCSRF()
 					const body = user
-						? `<a href="/channels/${user.channel_id}">View dash for channel you're active in</a>`
+						? `<a href="/channels/${user.guild_id}">View dash for channel you're active in</a>`
 						: "Try joining a voice channel to see available queues"
 					html = html.replace(bodyRegex, body).replace(csrftokenRegex, csrftoken)
 					return res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
