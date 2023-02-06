@@ -1,27 +1,28 @@
 import crypto from "crypto"
 import mixin from "mixin-deep"
 
-import passthrough from "../../passthrough"
-const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
+import passthrough from "../passthrough"
+const { snow, commands, constants, sync, queues, config, lavalink, amqpChannel } = passthrough
 
-const common: typeof import("./utils") = sync.require("./utils")
-const queueFile: typeof import("./queue") = sync.require("./queue")
-const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
+const common = sync.require("./utils") as typeof import("./utils")
+const queueFile = sync.require("./queue") as typeof import("./queue")
+const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 
-const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
-const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
-const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
-const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
-const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
+const arr = sync.require("../client/utils/array") as typeof import("../client/utils/array")
+const orm = sync.require("../client/utils/orm") as typeof import("../client/utils/orm")
+const language = sync.require("../client/utils/language") as typeof import("../client/utils/language")
+const text = sync.require("../client/utils/string") as typeof import("../client/utils/string")
+const time = sync.require("../client/utils/time") as typeof import("../client/utils/time")
 
-const waitForClientVCJoinTimeout = 5000
+const waitForClientVCJoinTimeout = 10000
 
 const musicDisabled = false as boolean
 
 const notWordRegex = /\W/g
 
-async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
+async function createQueue(cmd: import("../Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
 	const queue = new queueFile.Queue(cmd.guild_id!)
+	queue.voiceChannelID = channel
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd
 	snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -45,6 +46,7 @@ async function createQueue(cmd: import("../../client/modules/Command"), lang: im
 		queue!.node = node
 		queue!.player = player
 		queue!.addPlayerListeners()
+		console.log(`[QUEUE_START] guild: ${cmd.guild_id} channel: ${channel}`)
 		return queue
 	} catch (e) {
 		if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
@@ -54,7 +56,7 @@ async function createQueue(cmd: import("../../client/modules/Command"), lang: im
 	}
 }
 
-async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang): Promise<{ queue: import("./queue").Queue | null; existed: boolean }> {
+async function getOrCreateQueue(cmd: import("../Command"), lang: import("@amanda/lang").Lang): Promise<{ queue: import("./queue").Queue | null; existed: boolean }> {
 	let queue = queues.get(cmd.guild_id!) ?? null
 	const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id! })
 	if (!userVoiceState) {
@@ -72,7 +74,7 @@ async function getOrCreateQueue(cmd: import("../../client/modules/Command"), lan
 	return { queue, existed: false }
 }
 
-function doChecks(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang) {
+function doChecks(cmd: import("../Command"), lang: import("@amanda/lang").Lang) {
 	if (!config.db_enabled) {
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 		return false
@@ -88,7 +90,7 @@ function doChecks(cmd: import("../../client/modules/Command"), lang: import("@am
 	return true
 }
 
-function getQueueWithRequiredPresence(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang) {
+function getQueueWithRequiredPresence(cmd: import("../Command"), lang: import("@amanda/lang").Lang) {
 	const queue = queues.get(cmd.guild_id!)
 	if (!queue) {
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
@@ -106,7 +108,22 @@ commands.assign([
 		name: "play",
 		description: "Play music from multiple sources",
 		category: "audio",
-		async process(cmd, lang, info) {
+		options: [
+			{
+				name: "track",
+				type: 3,
+				description: "The track you'd like to play",
+				required: true
+			},
+			{
+				name: "position",
+				type: 4,
+				description: "1 based index to start adding tracks from",
+				required: false,
+				min_value: 2
+			}
+		],
+		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 
 			const track = cmd.data.options.get("track")!.asString()!
@@ -136,6 +153,29 @@ commands.assign([
 		name: "radio",
 		description: "Play from radio stations",
 		category: "audio",
+		options: [
+			{
+				name: "station",
+				type: 3,
+				description: "The station to play from",
+				required: true,
+				choices: [
+					{ name: "frisky original", value: "frisky/original" },
+					{ name: "frisky deep", value: "frisky/deep" },
+					{ name: "frisky chill", value: "frisky/chill" },
+					{ name: "frisky classics", value: "frisky/classics" },
+					{ name: "listen moe japanese", value: "lm/jp" },
+					{ name: "listen moe korean", value: "lm/kp" }
+				]
+			},
+			{
+				name: "position",
+				type: 4,
+				description: "1 based index to start adding tracks from",
+				required: false,
+				min_value: 2
+			}
+		],
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 
@@ -167,9 +207,25 @@ commands.assign([
 		name: "skip",
 		description: "Skip tracks in the queue",
 		category: "audio",
+		options: [
+			{
+				name: "start",
+				type: 4,
+				description: "1 based index to start skipping tracks from",
+				required: false,
+				min_value: 1
+			},
+			{
+				name: "amount",
+				type: 4,
+				description: "The amount of tracks to skip in the queue",
+				required: false,
+				min_value: 1
+			}
+		],
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
-			const queue = getQueueWithRequiredPresence(cmd, lang)
+			const queue = await getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 
 			const start = cmd.data.options.get("start")?.asNumber() ?? 1
@@ -182,7 +238,7 @@ commands.assign([
 			}
 
 			for (let index = 0; index < amount; index++) {
-				await queue.removeTrack(start + index)
+				await queue.removeTrack(start - 1 + index)
 			}
 
 			if (start === 1) queue.skip()
@@ -194,9 +250,9 @@ commands.assign([
 		name: "stop",
 		description: "Stops the queue",
 		category: "audio",
-		process(cmd, lang) {
+		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
-			const queue = getQueueWithRequiredPresence(cmd, lang)
+			const queue = await getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			queue.destroy()
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.QUEUE_STOPPED, { "username": `${cmd.author.username}#${cmd.author.discriminator}` }) })
@@ -206,7 +262,36 @@ commands.assign([
 		name: "queue",
 		description: "Show the queue and do actions",
 		category: "audio",
-		async process(cmd, lang) {
+		options: [
+			{
+				name: "page",
+				type: 4,
+				description: "Choose what page in the queue to show",
+				required: false,
+				min_value: 1
+			},
+			{
+				name: "volume",
+				type: 4,
+				min_value: 1,
+				max_value: 500,
+				description: "Set the volume % of the queue",
+				required: false
+			},
+			{
+				name: "loop",
+				type: 5,
+				description: "Set the state of loop mode for the queue",
+				required: false
+			},
+			{
+				name: "pause",
+				type: 5,
+				description: "Sets the paused state of the queue",
+				required: false
+			}
+		],
+		process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 
 			const page = cmd.data.options.get("page")?.asNumber() ?? null
@@ -251,8 +336,8 @@ commands.assign([
 
 			if (loop !== null && userIsListening) {
 				queue.loop = loop
-				// const state = queue.toJSON()
-				// if (state) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } }))
+				const state = queue.toJSON()
+				if (state) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } })))
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			}
 
@@ -310,9 +395,17 @@ commands.assign([
 		name: "seek",
 		description: "Seek to a time in the currently playing track",
 		category: "audio",
+		options: [
+			{
+				name: "time",
+				type: 4,
+				description: "The time in seconds to seek in the track",
+				required: true
+			}
+		],
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
-			const queue = getQueueWithRequiredPresence(cmd, lang)
+			const queue = await getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			const timeOpt = cmd.data.options.get("time")!.asNumber()!
 			const result = await queue.seek(timeOpt * 1000)
@@ -327,9 +420,27 @@ commands.assign([
 		name: "filters",
 		description: "Apply filters to the queue",
 		category: "audio",
+		options: [
+			{
+				name: "pitch",
+				type: 4,
+				description: "Sets the pitch of the queue in decibals",
+				min_value: -7,
+				max_value: 7,
+				required: false
+			},
+			{
+				name: "speed",
+				type: 4,
+				description: "Sets the speed % of the queue",
+				min_value: 1,
+				max_value: 500,
+				required: false
+			}
+		],
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
-			const queue = getQueueWithRequiredPresence(cmd, lang)
+			const queue = await getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			const pitch = cmd.data.options.get("pitch")?.asNumber() ?? queue.pitch
 			const speed = cmd.data.options.get("speed")?.asNumber() ?? queue.speed
@@ -347,11 +458,11 @@ commands.assign([
 		category: "audio",
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
-			const queue = getQueueWithRequiredPresence(cmd, lang)
+			const queue = await getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 			const toShuffle = queue.tracks.slice(1) // Do not shuffle the first track since it's already playing
 			queue.tracks.length = 1
-			// if (queue.voiceChannelID) await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } }), res))
+			if (queue.voiceChannelID) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } })))
 			const shuffled = arr.shuffle(toShuffle)
 			for (const track of shuffled) {
 				await queue.addTrack(track)
@@ -363,9 +474,28 @@ commands.assign([
 		name: "musictoken",
 		description: "Obtain a web dashboard login token",
 		category: "audio",
+		options: [
+			{
+				name: "action",
+				description: "What to do",
+				type: 3,
+				choices: [
+					{
+						name: "new",
+						value: "n"
+					},
+					{
+						name: "delete",
+						value: "d"
+					}
+				],
+				required: false
+			}
+		],
 		async process(cmd, lang) {
 			if (!config.db_enabled) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 			if (cmd.guild_id) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: "DM only" })
+
 			const action = cmd.data.options.get("action")?.asString() ?? null
 			if (action === "d") {
 				await orm.db.delete("web_tokens", { user_id: cmd.author.id })

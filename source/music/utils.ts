@@ -1,12 +1,12 @@
-import { BetterComponent } from "callback-components"
-const encoding: typeof import("@lavalink/encoding") = require("@lavalink/encoding")
+import cc from "callback-components"
+const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
-import passthrough from "../../passthrough"
+import passthrough from "../passthrough"
 const { constants, sync, config, lavalink, snow } = passthrough
 
-const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
-const timeUtils: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
-const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
+const arr = sync.require("../client/utils/array") as typeof import("../client/utils/array")
+const timeUtils = sync.require("../client/utils/time") as typeof import("../client/utils/time")
+const language = sync.require("../client/utils/language") as typeof import("../client/utils/language")
 
 const selectTimeout = 1000 * 60
 
@@ -63,7 +63,7 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
+	async inputToTrack(resource: string, cmd: import("../Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const tracks = await common.loadtracks(resource, node).catch(e => {
@@ -82,7 +82,7 @@ const common = {
 			const detailsString = details.map(row =>
 				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
-			const embed: import("discord-typings").Embed = {
+			const embed: import("discord-api-types/v10").APIEmbed = {
 				title: "LavaLink loadtracks exception",
 				color: 0xdd2d2d,
 				fields: [
@@ -116,14 +116,14 @@ const common = {
 	}
 }
 
-function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
-	const component = new BetterComponent({
+function trackSelection<T>(cmd: import("../Command"), lang: import("@amanda/lang").Lang, trackss: Array<T>, label: (item: T) => string): Promise<T | null> {
+	const component = new cc.BetterComponent({
 		type: 3,
 		placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
 		min_values: 1,
 		max_values: 1,
 		options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
-	} as Omit<import("discord-typings").SelectMenu, "custom_id">)
+	} as import("discord-api-types/v10").APISelectMenuComponent, { h: "trackSelect" })
 	return new Promise(res => {
 		const timer = setTimeout(() => {
 			component.destroy()
@@ -138,11 +138,12 @@ function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: im
 			}).catch(() => void 0)
 			return res(null)
 		}, selectTimeout)
-		component.setCallback(async (interaction) => {
-			if ((interaction.user ? interaction.user : interaction.member!.user).id != cmd.author.id) return
+		component.setCallback(async (interaction, user) => {
+			if (user.id != cmd.author.id) return
+			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			component.destroy()
 			clearTimeout(timer)
-			const selected = trackss[Number(interaction.data!.values![0])]
+			const selected = trackss[Number(select.data.values[0])]
 			await snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
@@ -166,15 +167,15 @@ function trackSelection<T>(cmd: import("../../client/modules/Command"), lang: im
 			components: [
 				{
 					type: 1,
-					components: [component.toComponent()]
+					components: [component.component]
 				}
 			]
 		}).catch(() => void 0)
 	})
 }
 
-function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
-	const trackTypes: typeof import("./tracktypes") = require("./tracktypes")
+function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
+	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
 	const type = sourceMap.get(info.source)
 	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester, lang)
 }

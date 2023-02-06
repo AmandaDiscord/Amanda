@@ -1,20 +1,14 @@
 import pathMod from "path"
 import fs from "fs"
 import { webcrypto } from "crypto"
-import { BetterComponent } from "callback-components"
 
 import { verify } from "discord-verify/node"
 
-import Command from "../client/modules/Command"
-
-import passthrough, { configuredUserID } from "../passthrough"
-const { sync, rootFolder, config, amqpChannel, queues, lavalink, commands, snow, constants } = passthrough
+import passthrough from "../passthrough"
+const { sync, rootFolder, config, amqpChannel, configuredUserID } = passthrough
 
 const util: typeof import("./util") = sync.require("./util")
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
-const text: typeof import("../client/utils/string") = sync.require("../client/utils/string")
-const lang: typeof import("../client/utils/language") = sync.require("../client/utils/language")
-const music: typeof import("./music/sessions") = sync.require("./music/sessions")
 
 type Path = {
 	methods: Array<string>;
@@ -26,7 +20,6 @@ const bodyRegex = /\$body/gm
 const csrftokenRegex = /\$csrftoken/gm
 const channelIDRegex = /\$channelID/gm
 const timestampRegex = /\$timestamp/gm
-const backtickRegex = /`/g
 
 const redirects = {
 	stats: "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393",
@@ -61,7 +54,7 @@ const paths: {
 					let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 					const csrftoken = util.generateCSRF()
 					const body = user
-						? `<a href="/channels/${user.guild_id}">View dash for channel you're active in</a>`
+						? `<a href="/channels/${user.channel_id}">View dash for channel you're active in</a>`
 						: "Try joining a voice channel to see available queues"
 					html = html.replace(bodyRegex, body).replace(csrftokenRegex, csrftoken)
 					return res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
@@ -148,97 +141,14 @@ const paths: {
 			const bodyString = body.toString("utf-8")
 			const allowed = await verify(bodyString, req.headers["x-signature-ed25519"] as string, req.headers["x-signature-timestamp"] as string, config.app_public_key, webcrypto.subtle)
 			if (!allowed) return res.writeHead(401).end()
-			const payload: import("discord-typings").Interaction = JSON.parse(bodyString)
+			const payload: import("discord-api-types/v10").APIInteraction = JSON.parse(bodyString)
 			if (payload.type === 1) return res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":1}")
 			else if (payload.type === 2) res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":5}") // defer because Discord doesn't accept 202 accepted
 			else if (payload.type === 3) res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":6}")
 
-			const shard = payload.guild_id ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: 0, cluster_id: "unknown" }
-			if (payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)) {
-				const interaction = payload
-				const selfLang = lang.getLang(interaction.locale!)
-
-				const user = interaction.user ? interaction.user : interaction.member!.user
-				if (config.db_enabled) orm.db.upsert("users", { id: user.id, tag: `${user.username}#${user.discriminator}`, avatar: user.avatar, bot: user.bot ? 1 : 0, added_by: config.cluster_id })
-				if (interaction.guild_id && !config.db_enabled) return snow.interaction.editOriginalInteractionResponse(interaction.application_id, interaction.token, { content: selfLang.GLOBAL.DATABASE_OFFLINE })
-				try {
-					const cmd = new Command(interaction)
-					await commands.cache.get(interaction.data!.name)?.process(cmd, selfLang, shard)
-				} catch (e) {
-					if (e && e.code) {
-						if (e.code == 10008) return
-						if (e.code == 50013) return
-					}
-
-					const embed: import("discord-typings").Embed = {
-						description: lang.replace(selfLang.GLOBAL.COMMAND_ERROR, { "name": interaction.data!.name, "server": constants.server }),
-						color: 0xdd2d2d
-					}
-
-					// Report to original channel
-					snow.interaction.createFollowupMessage(interaction.application_id, interaction.token, { embeds: [embed] }).catch(() => console.error("Error with sending alert that command failed. Probably a 403 resp code"))
-
-					// Report to #amanda-error-log
-					embed.title = "Command error occured."
-					embed.description = await text.stringify(e)
-					const details = [
-						["Tree", config.cluster_id],
-						["Branch", String(shard.shard_id)],
-						["User", `${user.username}#${user.discriminator}`],
-						["User ID", user.id],
-						["Bot", user.bot ? "Yes" : "No"],
-						["DM", interaction.guild_id ? "No" : "Yes"]
-					]
-					if (interaction.guild_id) {
-						details.push(...[
-							["Guild ID", interaction.guild_id],
-							["Channel ID", interaction.channel_id || "NONE"]
-						])
-					}
-					const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
-					const detailsString = details.map(row =>
-						`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
-					).join("\n")
-					type notSub = Exclude<import("discord-typings").ApplicationCommandInteractionDataOption, import("discord-typings").ApplicationCommandInteractionDataOptionAsTypeSub | import("discord-typings").ApplicationCommandInteractionDataOptionNotTypeNarrowed>
-					const properties = [
-						interaction.data!.name,
-						interaction.data!.options?.map((o) => `${o.name}:${(o as notSub).value}`)
-					]
-					embed.fields = [
-						{ name: "Details", value: detailsString },
-						{ name: "Message content", value: `\`\`\`\n/${properties.filter(Boolean).join(" ").replace(backtickRegex, "ˋ")}\`\`\`` }
-					]
-
-					snow.channel.createMessage("512869106089852949", { embeds: [embed] })
-				}
-			} else if (payload.type === 3) BetterComponent.handle(payload)
-			amqpChannel.sendToQueue(config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
-		}
-	},
-	"/voice-state-update": {
-		methods: ["POST"],
-		async handle(req, res) {
-			const allowed = req.headers.authorization === config.bot_token
-			if (!allowed) return res.writeHead(401).end()
-			const body = await util.requestBody(req)
-			const payload: import("discord-typings").VoiceState = JSON.parse(body.toString("utf-8"))
-
-			if (payload.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: payload.user_id, guild_id: payload.guild_id })
-			else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: payload.guild_id, user_id: payload.user_id, channel_id: payload.channel_id || undefined }, { useBuffer: false })
-			lavalink.voiceStateUpdate(payload as import("lavacord").VoiceStateUpdate)
-			queues.get(payload.guild_id!)?.voiceStateUpdate(payload as import("lavacord").VoiceStateUpdate)
-			res.writeHead(201).end()
-		}
-	},
-	"/voice-server-update": {
-		methods: ["POST"],
-		async handle(req, res) {
-			const allowed = req.headers.authorization === config.bot_token
-			if (!allowed) return res.writeHead(401).end()
-			const body = await util.requestBody(req)
-			const payload: import("discord-typings").VoiceServerUpdatePacket = JSON.parse(body.toString("utf-8"))
-			lavalink.voiceServerUpdate(payload as import("lavacord").VoiceServerUpdate)
-			res.writeHead(201).end()
+			const shard = payload.guild_id && config.db_enabled ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: -1, cluster_id: "unknown" }
+			const toMusic = payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)
+			amqpChannel.sendToQueue(toMusic ? config.amqp_music_queue : config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
 		}
 	}
 }
@@ -277,7 +187,7 @@ const routes: {
 				, expected: false
 				, errorValue: "NO_SESSION"
 			}).do({
-				code: () => config.db_enabled ? orm.db.get("voice_states", { user_id: session!.user_id, guild_id: channelID }) : undefined
+				code: () => config.db_enabled ? orm.db.get("voice_states", { user_id: session!.user_id, channel_id: channelID }) : undefined
 				, expected: v => v != null
 				, errorValue: "USER_NOT_IN_CHANNEL"
 			})

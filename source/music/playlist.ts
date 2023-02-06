@@ -1,16 +1,16 @@
-import passthrough from "../../passthrough"
+import passthrough from "../passthrough"
 const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")
 const queueFile: typeof import("./queue") = sync.require("./queue")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
-const arr: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
-const discordUtils: typeof import("../../client/utils/discord") = sync.require("../../client/utils/discord")
-const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
-const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
-const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
-const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
+const arr: typeof import("../client/utils/array") = sync.require("../client/utils/array")
+const discordUtils: typeof import("../client/utils/discord") = sync.require("../client/utils/discord")
+const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
+const language: typeof import("../client/utils/language") = sync.require("../client/utils/language")
+const text: typeof import("../client/utils/string") = sync.require("../client/utils/string")
+const time: typeof import("../client/utils/time") = sync.require("../client/utils/time")
 
 const musicDisabled = false as boolean
 const waitForClientVCJoinTimeout = 5000
@@ -53,8 +53,8 @@ commands.assign([
 				if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
 				return value
 			}
-			const getTracks = async (playlistRow: import("../../types").InferModelDef<typeof import("../../client/utils/orm")["db"]["tables"]["playlists"]>) => {
-				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../../types").InferModelDef<typeof import("../../client/utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
+			const getTracks = async (playlistRow: import("../types").InferModelDef<typeof import("../client/utils/orm")["db"]["tables"]["playlists"]>) => {
+				const tracks = await orm.db.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]) as Array<import("../types").InferModelDef<typeof import("../client/utils/orm")["db"]["tables"]["playlist_songs"]> & { name: string; length: number; }>
 				const unbreakDatabase = async () => {
 					console.warn("unbreakDatabase was called!")
 					await Promise.all(tracks.map((row, index) => orm.db.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
@@ -162,7 +162,7 @@ commands.assign([
 					if (user) authorDetails.push(`${user.username}#${user.discriminator} — ${optionInfo}`, discordUtils.displayAvatarURL(user, true) + "?size=32")
 					else authorDetails.push(optionInfo)
 
-					const a: import("discord-typings").EmbedAuthor = { name: authorDetails[0] }
+					const a: import("discord-api-types/v10").APIEmbedAuthor = { name: authorDetails[0] }
 					if (authorDetails[1]) a.url = authorDetails[1]
 
 					const orderedTracks = await getTracks(playlistRow)
@@ -207,7 +207,7 @@ commands.assign([
 										footer: { text: `${page + 1} - ${pages.length}` }
 									}
 								],
-								components: menu ? [{ type: 1, components: [menu.toComponent()] }] : []
+								components: menu ? [{ type: 1, components: [menu.component] }] : []
 							})
 						})
 					}
@@ -368,7 +368,7 @@ commands.assign([
 	}
 ])
 
-async function createQueue(cmd: import("../../client/modules/Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
+async function createQueue(cmd: import("../Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
 	const queue = new queueFile.Queue(cmd.guild_id!)
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd

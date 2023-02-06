@@ -1,17 +1,17 @@
-const entities: typeof import("entities") = require("entities")
-const encoding: typeof import("@lavalink/encoding") = require("@lavalink/encoding")
+const entities = require("entities") as typeof import("entities")
+const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
-import passthrough from "../../passthrough"
+import passthrough from "../passthrough"
 const { constants, sync, frisky } = passthrough
 
-const common: typeof import("./utils") = sync.require("./utils")
+const common = sync.require("./utils") as typeof import("./utils")
 
-const timeUtils: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
-const text: typeof import("../../client/utils/string") = sync.require("../../client/utils/string")
-const arrUtils: typeof import("../../client/utils/array") = sync.require("../../client/utils/array")
-const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
+const timeUtils = sync.require("../client/utils/time") as typeof import("../client/utils/time")
+const text = sync.require("../client/utils/string") as typeof import("../client/utils/string")
+const arrUtils = sync.require("../client/utils/array") as typeof import("../client/utils/array")
+const language = sync.require("../client/utils/language") as typeof import("../client/utils/language")
 
-const AsyncValueCache: typeof import("./AsyncValueCache") = sync.require("./AsyncValueCache")
+const AsyncValueCache = sync.require("./classes/AsyncValueCache") as typeof import("./classes/AsyncValueCache")
 
 const stationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
 	["original", {
@@ -60,12 +60,12 @@ export class Track {
 	public source: string
 	public uri: string | null
 	public input: string
-	public requester: import("discord-typings").User
+	public requester: import("discord-api-types/v10").APIUser
 	public lang: import("@amanda/lang").Lang
 
 	private _filledBarOffset = 0
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		this.lang = lang
 		this.track = track
 		this.title = info.title || lang.GLOBAL.UNKNOWN_TRACK
@@ -85,7 +85,7 @@ export class Track {
 		return Promise.resolve("https://amanda.moe")
 	}
 
-	public showInfo(): Promise<string | import("discord-typings").Embed> {
+	public showInfo(): Promise<string | import("discord-api-types/v10").APIEmbed> {
 		return Promise.resolve((this.queue?.lang || this.lang).GLOBAL.SONG_INFO_GENERIC)
 	}
 
@@ -147,12 +147,12 @@ export class Track {
 }
 
 export class RequiresSearchTrack extends Track {
-	public prepareCache: import("./AsyncValueCache").AsyncValueCache<void>
+	public prepareCache: import("./classes/AsyncValueCache").AsyncValueCache<void>
 	private searchString: string
 
-	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		super(track || "!", info, input, requester, lang)
-		this.searchString = info.author && info.title ? `${info.author} - ${info.title}` : info.title || ""
+		this.searchString = info.identifier ? info.identifier : (info.author && info.title) ? `${info.author} - ${info.title}` : info.title || ""
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new AsyncValueCache.AsyncValueCache(async () => {
@@ -183,7 +183,7 @@ export class ExternalTrack extends Track {
 	public id = String(Date.now())
 	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
 
-	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+	public constructor(track: string, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		super(track, info, input, requester, lang)
 
 		const to = new URL(info.uri!)
@@ -224,15 +224,15 @@ export class ExternalTrack extends Track {
 }
 
 export class FriskyTrack extends Track {
-	public station: import("../../types").InferMapK<typeof stationData>
-	public stationData: import("../../types").InferMapV<typeof stationData>
+	public station: import("../types").InferMapK<typeof stationData>
+	public stationData: import("../types").InferMapV<typeof stationData>
 	public friskyStation: import("frisky-client/lib/Station")
-	public stationInfoGetter: import("./AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
+	public stationInfoGetter: import("./classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
 	public live = true
 	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
 
-	public constructor(station: import("../../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+	public constructor(station: import("../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		super(track || "!", { identifier: `frisky/${station}` }, input, requester, lang)
 
 		this.station = station
@@ -311,7 +311,7 @@ export class FriskyTrack extends Track {
 		let percentPassed = Math.floor(((-stream.getTimeUntil()) / (stream.data!.duration * 1000)) * 100)
 		if (percentPassed < 0) percentPassed = 0
 		if (percentPassed > 100) percentPassed = 100
-		const embed: import("discord-typings").Embed = {
+		const embed: import("discord-api-types/v10").APIEmbed = {
 			color: constants.standard_embed_color,
 			title: `FRISKY: ${mix.data!.title}`,
 			url: `https://frisky.fm/mix/${mix.id}`,
@@ -382,7 +382,7 @@ export class ListenMoeTrack extends Track {
 	public bound: ((track: import("listensomemoe/dist/Types").Track) => unknown) | undefined
 	public thumbnail = { src: constants.listen_moe_placeholder, width: 64, height: 64 }
 
-	public constructor(station: "jp" | "kp", input: string, requester: import("discord-typings").User, lang: import("@amanda/lang").Lang) {
+	public constructor(station: "jp" | "kp", input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
 		const info = {
 			flags: 1,

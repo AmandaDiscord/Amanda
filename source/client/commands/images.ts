@@ -3,7 +3,7 @@ const { constants, config, commands, client } = passthrough
 
 const poweredbychewey = `Powered by ${constants.chewey_api}`.replace(/https?:\/\//, "")
 
-async function sendImage(host: string, path: string, cmd: import("../modules/Command"), footer: string) {
+async function sendImage(host: string, path: string, cmd: import("../../Command"), footer: string) {
 	let url: string
 	if (host == "chewey") url = `${constants.chewey_api}/${path}?auth=${config.chewey_api_key}`
 	else return Promise.reject(new Error("Host provided not supported"))

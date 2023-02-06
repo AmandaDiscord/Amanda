@@ -3,6 +3,7 @@ const cluster_id = "cluster"
 module.exports = {
 	// Keys
 	bot_token: "discord bot token here",
+	live_bot_token: "can be same as bot_token if not using multiple bots",
 	sql_password: "mysql password here",
 	chewey_api_key: "chewey bot api key here",
 	lavalink_password: "lavalink password here",
@@ -29,9 +30,10 @@ module.exports = {
 	add_url: "your url here",
 	amqp_url: "amqp://quest:guest@localhost:56782",
 	amqp_queue: "amanda",
+	amqp_music_queue: "amanda_music",
+	amqp_website_queue: "amanda_website",
 
 	// Settings
-	allow_ai: false,
 	music_dash_enabled: true,
 	total_shards: 1,
 	fake_token: "(token)",

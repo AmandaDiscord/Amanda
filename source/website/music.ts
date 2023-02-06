@@ -1,9 +1,9 @@
-import constants from "../../constants"
-import passthrough from "../../passthrough"
-const { sync, wss, queues, configuredUserID, config } = passthrough
+import constants from "../constants"
+import passthrough from "../passthrough"
+const { sync, wss, webQueues, config, amqpChannel } = passthrough
 
-const utils: typeof import("../util") = sync.require("../util")
-const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
+const utils: typeof import("./util") = sync.require("./util")
+const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 
 type Packet<T> = {
 	op?: number;
@@ -11,7 +11,7 @@ type Packet<T> = {
 	nonce?: number | null;
 }
 
-const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove" | "acceptData" | "createQueue">([
+const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove">([
 	[constants.WebsiteOPCodes.IDENTIFY, "identify"],
 	[constants.WebsiteOPCodes.STATE, "sendState"],
 	[constants.WebsiteOPCodes.TOGGLE_PLAYBACK, "togglePlayback"],
@@ -24,21 +24,21 @@ const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayba
 
 type PacketData = {
 	position: number
-	track: import("./tracktypes").Track
+	track: import("../types").PartialTrack
 	trackStartTime: number
 	pausedAt: number
 	playing: boolean
 	index: number
 	loop: boolean
 	auto: boolean
-	members: import("./queue").Queue["listeners"]
+	members: import("../types").WebQueue["members"]
 	lengthSeconds: number
 	amount: number
 }
 
 type Receiver = {
-	updateCallback(cache: import("./queue").Queue, data: PacketData): import("./queue").Queue;
-	sessionCallback(session: Session, cache: import("./queue").Queue, data: PacketData): void;
+	updateCallback(cache: import("../types").WebQueue, data: PacketData): import("../types").WebQueue;
+	sessionCallback(session: Session, cache: import("../types").WebQueue, data: PacketData): void;
 }
 
 export const receivers: {
@@ -84,7 +84,7 @@ export const receivers: {
 		updateCallback(cache, { trackStartTime, pausedAt, playing }) {
 			cache.trackStartTime = trackStartTime
 			cache.pausedAt = pausedAt
-			cache.paused = !playing
+			cache.playing = playing
 			return cache
 		},
 		sessionCallback(session, _, { trackStartTime, pausedAt, playing }) {
@@ -102,7 +102,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.LISTENERS_UPDATE]: {
 		updateCallback(cache, { members }) {
-			cache.listeners = members
+			cache.members = members
 			return cache
 		},
 		sessionCallback(session, _, { members }) {
@@ -111,7 +111,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.ATTRIBUTES_CHANGE]: {
 		updateCallback(cache, attributes) {
-			cache.loop = attributes.loop
+			cache.attributes = attributes
 			return cache
 		},
 		sessionCallback(session, _, attributes) {
@@ -120,7 +120,7 @@ export const receivers: {
 	},
 	[constants.WebsiteOPCodes.STOP]: {
 		updateCallback(cache) {
-			queues.delete(cache.guildID)
+			webQueues.delete(cache.voiceChannel.id)
 			return cache
 		},
 		sessionCallback(session) {
@@ -147,7 +147,7 @@ export class Session {
 				const method = opcodeMethodMap.get(data.op!)
 				if (method) this[method](data)
 			} catch (e) {
-				console.log(`${this.user || "Unauthenticated"} sent an invalid JSON:\n${message.toString()}`)
+				console.log(`${this.user || "Unauthenticated"} sent an invalid JSON:\n${message.toString()}`, e)
 				this.cleanClose()
 			}
 		})
@@ -184,7 +184,7 @@ export class Session {
 			const session = await utils.getSession(cookies)
 			if (!session) return
 			if (!config.db_enabled) return
-			const state = await orm.db.get("voice_states", { user_id: session.user_id })
+			const state = await orm.db.get("voice_states", { channel_id: data.d.channel_id, user_id: session.user_id })
 			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
@@ -200,7 +200,7 @@ export class Session {
 
 	public sendState(data?: Packet<unknown>): void {
 		if (!this.loggedin) return
-		const state = queues.get(this.channel!) ? Object.assign({}, queues.get(this.channel!)) : null // changed channels to guild IDs just not naming bc im lazy
+		const state = webQueues.get(this.channel!) ? Object.assign({}, webQueues.get(this.channel!)) : null
 		if (state) delete state["session"] // deletes off dupe to not mutate stored state
 		let nonce: number | null = null
 		if (data && typeof data.nonce === "number") nonce = data.nonce
@@ -213,16 +213,16 @@ export class Session {
 	}
 
 
-	public onTrackAdd(track: import("./tracktypes").Track, position: number): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } })
+	public onTrackAdd(track: import("../types").PartialTrack, position: number): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_ADD, d: { track, position } })
 	}
 
 	public onTrackRemove(index: number): void {
 		this.send({ op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } })
 	}
 
-	public onTrackUpdate(track: import("./tracktypes").Track, index: number ): void {
-		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { track: track.toObject(), index } })
+	public onTrackUpdate(track: import("../types").PartialTrack, index: number ): void {
+		this.send({ op: constants.WebsiteOPCodes.TRACK_UPDATE, d: { track, index } })
 	}
 
 	public onClearQueue(): void {
@@ -233,11 +233,11 @@ export class Session {
 		this.send({ op: constants.WebsiteOPCodes.NEXT })
 	}
 
-	public onListenersUpdate(members: import("./queue").Queue["listeners"]): void {
+	public onListenersUpdate(members: import("../types").WebQueue["members"]): void {
 		this.send({ op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members } })
 	}
 
-	public onAttributesChange(attributes: { loop: boolean }) {
+	public onAttributesChange(attributes: import("../types").WebQueue["attributes"]) {
 		this.send({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: attributes })
 	}
 
@@ -248,52 +248,77 @@ export class Session {
 
 	public allowedToAction(): boolean {
 		if (!this.loggedin) return false
-		const state = queues.get(this.channel!)!
+		const state = webQueues.get(this.channel!)!
 		if (!state) return false
-		if (!Array.from(state.listeners.values()).find(i => i.id === this.user)) return false
+		if (!state.members.find(i => i.id === this.user)) return false
 		return true
 	}
 
 	public togglePlayback(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		const q = queues.get(this.channel!)
-		if (q) q.paused = !q.paused
+		amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TOGGLE_PLAYBACK, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public requestSkip(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		queues.get(this.channel!)?.skip()
+		amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.SKIP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public requestStop(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		queues.get(this.channel!)?.destroy()
+		amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.STOP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel }})))
 	}
 
 	public async requestAttributesChange(data: Packet<{ loop?: boolean }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		if (typeof data === "object" && typeof data.d === "object") {
-			const q = queues.get(this.channel!)
-			if (typeof data.d.loop === "boolean" && q) q.loop = data.d.loop
+			if (typeof data.d.loop === "boolean") amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, t: "AMANDA_WEBSITE_MESSAGE", d: { loop: data.d.loop, channel_id: this.channel }})))
 		}
 	}
 
 	public async requestClearQueue() {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		queues.get(this.channel!)?.tracks.splice(1)
+		amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CLEAR_QUEUE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public async requestTrackRemove(data: Packet<{ index: number }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		if (data && data.d && typeof data.d.index === "number") queues.get(this.channel!)?.tracks.splice(data.d.index, 1)
+		if (data && data.d && typeof data.d.index === "number") amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TRACK_REMOVE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel!, index: data.d.index } })))
 	}
 }
+
+amqpChannel.consume(config.amqp_website_queue, msg => {
+	if (!msg) return
+	amqpChannel.ack(msg)
+	const parsed = JSON.parse(msg.content.toString("utf-8"))
+
+	if (parsed.op === constants.WebsiteOPCodes.ACCEPT) {
+		const queue = webQueues.get(parsed.d?.channel_id!)
+		if (parsed.d && parsed.d.op && queue) {
+			receivers[parsed.d.op]?.updateCallback(queue, parsed.d.d)
+			const subscribers = sessions.filter(s => s.channel === parsed.d!.channel_id)
+			for (const subscriber of subscribers) {
+				receivers[parsed.d.op]?.sessionCallback(subscriber, queue, parsed.d.d)
+			}
+		}
+
+
+	} else if (parsed.op === constants.WebsiteOPCodes.CREATE) {
+		if (parsed.d && parsed.d.voiceChannel && parsed.d.voiceChannel.id && !webQueues.has(parsed.d.voiceChannel.id)) {
+			webQueues.set(parsed.d.voiceChannel.id, parsed.d)
+			const subscribers = sessions.filter(s => s.channel === parsed.d!.voiceChannel.id)
+			for (const subscriber of subscribers) {
+				subscriber.sendState({})
+			}
+		}
+	}
+})
 
 function wsConnection(ws: import("ws").WebSocket) {
 	return new Session(ws)

@@ -166,7 +166,7 @@ for (const source of interactionSources) {
 	cmds.push(newCommand)
 }
 
-function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
+function doInteraction(cmd: import("../../Command"), lang: import("@amanda/lang").Lang, source: Extract<keyof import("@amanda/lang").Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">, shortcut: string, url?: () => Promise<string>) {
 	const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
 
@@ -198,7 +198,7 @@ function doInteraction(cmd: import("../modules/Command"), lang: import("@amanda/
 	}
 	fetched.then(u => {
 		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
-		const embed: import("discord-typings").Embed = {
+		const embed: import("discord-api-types/v10").APIEmbed = {
 			description: language.replace(lang.GLOBAL[keyOther], { "user": cmd.author.username, "action": source, "mention": `<@${user.id}>` }),
 			image: { url: u },
 			color: constants.standard_embed_color

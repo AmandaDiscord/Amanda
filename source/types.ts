@@ -31,11 +31,12 @@ export type Config = {
 	"add_url": string
 	"amqp_url": string
 	"amqp_queue": string
+	"amqp_music_queue": string
+	"amqp_website_queue": string
 
 	"music_dash_enabled": boolean
 	"total_shards": number
 	"is_dev_env": boolean
-	"post_commands": boolean
 	"db_enabled": boolean
 }
 
@@ -147,7 +148,6 @@ export type PartialTrack = {
 export type WebQueue = {
 	members: Array<{ id: string; tag: string; avatar: string | null; isAmanda: boolean }>
 	tracks: Array<PartialTrack>
-	session?: import("./website/music/sessions").Session
 	playing: boolean
 	voiceChannel: { name: string; id: string }
 	pausedAt: number | null

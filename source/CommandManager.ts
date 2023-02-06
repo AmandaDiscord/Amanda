@@ -31,7 +31,7 @@ class CommandManager<Params extends Array<unknown>> {
 
 type Command<Params extends Array<unknown>> = {
 	name: string;
-	options?: Array<import("discord-typings").ApplicationCommandOption>;
+	options?: Array<import("discord-api-types/v10").APIApplicationCommandOption>;
 	description: string;
 	category: string;
 	examples?: Array<string>;

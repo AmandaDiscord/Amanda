@@ -1,15 +1,10 @@
 import http from "http"
 import p from "path"
 
-import { Manager } from "lavacord"
 import * as ws from "ws"
 import Sync from "heatsync"
 import { Pool } from "pg"
 import amqp from "amqplib"
-import { SnowTransfer } from "snowtransfer"
-import Frisky from "frisky-client"
-import ListenSomeMoe from "listensomemoe"
-import CommandManager from "../client/modules/CommandManager"
 
 import passthrough from "../passthrough"
 const config: import("../types").Config = require("../../config")
@@ -20,17 +15,9 @@ const sync = new Sync()
 const rootFolder = p.join(__dirname, "../../webroot")
 const configuredUserID = Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")
 const liveUserID = config.is_dev_env ? Buffer.from(config.live_bot_token.split(".")[0], "base64").toString("utf8") : configuredUserID
-passthrough.snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
-const frisky = new Frisky()
-const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
-const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
-const commands = new CommandManager<[import("discord-typings").Interaction, import("@amanda/lang").Lang, { shard_id: number; cluster_id: string }]>()
-jp.on("error", console.error)
-kp.on("error", console.error)
-jp.on("unknown", console.info)
-kp.on("unknown", console.info)
+const webQueues = new Map<string, import("../types").WebQueue>()
 
-Object.assign(passthrough, { listenMoe: { jp, kp }, frisky, commands, constants })
+Object.assign(passthrough, { constants, webQueues })
 
 const wss = new ws.Server({ noServer: true })
 const queues: typeof import("../passthrough")["queues"] = new Map()
@@ -48,51 +35,12 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 		const db = await pool.connect()
 		await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
 		passthrough.db = db
-
-		const lavalinkNodeData = await db.query("SELECT * FROM lavalink_nodes").then(r => r.rows)
-		const lavalinkNodes = lavalinkNodeData.map(node => {
-			const newData = {
-				password: config.lavalink_password,
-				id: node.name.toLowerCase()
-			}
-			return Object.assign(newData, { host: node.host, port: node.port, invidious_origin: node.invidious_origin, name: node.name, search_with_invidious: node.search_with_invidious, enabled: node.enabled })
-		})
-
-		constants.lavalinkNodes.push(...lavalinkNodes)
-
-		for (const node of constants.lavalinkNodes) {
-			node.resumeKey = `${configuredUserID}/website`
-			node.resumeTimeout = 75
-		}
-
-		passthrough.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
-			user: configuredUserID,
-			shards: config.total_shards,
-			send: async packet => {
-				const url = await db.query("SELECT gateway_clusters.url, guilds.shard_id FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.client_id = $1 AND guilds.guild_id = $2", [configuredUserID, packet.d.guild_id]).then(r => r.rows[0])
-				if (!url) return false
-				const withSID = packet.d
-				withSID.shard_id = url.shard_id
-
-				await fetch(`${url.url}/gateway/voice-status-update`, { method: "POST", headers: { Authorization: config.bot_token }, body: JSON.stringify(withSID) })
-				return true
-			}
-		})
-
-		passthrough.lavalink.once("ready", () => console.log("Lavalink ready"))
-
-		passthrough.lavalink.on("error", error => console.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
-
-		try {
-			await passthrough.lavalink.connect()
-		} catch (e) {
-			console.error("There was a lavalink connect error. One of the nodes may be offline or unreachable")
-		}
 	}
 
 	const connection = await amqp.connect(config.amqp_url)
 	const channel = await connection.createChannel()
 	await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
+	await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
 
 	Object.assign(passthrough, { config, sync, rootFolder, configuredUserID, liveUserID, wss, queues, amqpChannel: channel })
 
@@ -122,15 +70,10 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 
 		if (req.headers.cookie) delete req.headers.cookie
 
-		if (req.headers.authorization !== config.bot_token && req.url !== "/interaction") console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
-		if (!req.destroyed) req.destroy();
-		if (!res.destroyed) res.destroy();
+		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
+		if (!req.destroyed) req.destroy()
+		if (!res.destroyed) res.destroy()
 	})
-
-	sync.require([
-		"./music/music",
-		"./music/playlist"
-	])
 
 	server.on("upgrade", async (req, socket, head) => {
 		wss.handleUpgrade(req, socket, head, s => wss.emit("connection", s, req))
@@ -140,7 +83,8 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 
 	server.listen(10400)
 
-	wss.once("close", () => console.log("Socket server has closed."));
+	wss.once("close", () => console.log("Socket server has closed."))
+	require("./music")
 
 	process.on("uncaughtException", globalErrorHandler)
 	process.on("unhandledRejection", globalErrorHandler)
@@ -148,14 +92,5 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 
 async function globalErrorHandler(e: Error | undefined) {
 	const text: typeof import("../client/utils/string") = require("../client/utils/string")
-	console.error(e)
-	passthrough.snow.channel.createMessage("512869106089852949", {
-		embeds: [
-			{
-				title: "Global error occured.",
-				description: await text.stringify(e),
-				color: 0xdd2d2d
-			}
-		]
-	})
+	console.error(await text.stringify(e))
 }

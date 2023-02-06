@@ -1,5 +1,5 @@
 Amanda's Privacy Policy
-Last edited 10/1/2021 at 21:35 UTC-7
+Last edited 1/31/2023 at 03:30 UTC-7
 
 
 This privacy policy may be updated at any time for any reason to continue to meet the needs of Amanda. New policy updates will take
@@ -20,35 +20,30 @@ WHAT IS STORED:
 Data which is collected and stored by Amanda from Discord will be referred to as "cache". Data falling into a category
 outside of what is sent via Discord will be referred to as "local data".
 
-Amanda's cache includes but is not limited to Users, Channels, Guilds, User-Guild Membership relationships,
-Guild Member voice states, and Roles.
+Amanda's cache includes but is not limited to Users that use her, are included in select slash command calls,
+or that participate in a voice channel a music queue she is hosting is active in, what Guilds she's apart of, and Guild Member voice states.
 
 Local data includes but is not limited to Amanda related permission levels and Users which occupy said permission levels,
 a User's economy related data, a User's couple data, a Users playlists which are local to Amanda and their
-occupant's data, a User's Amanda premium status, and User and Guild settings which Amanda uses.
+occupant's data, and a User's Amanda premium status.
 
 
 WHY THIS DATA IS STORED:
 All cache and local data is stored on first party owned machines in countries which respect data privacy laws which
 may or may not be "remote" in relation to Amanda.
 
-The cache serves as a data store for data sent to Amanda from Discord in a
-semi-persistent state. This is used to keep as much data as possible out of Amanda's memory to provide more of it to
-Amanda to perform operations relating to Amanda's client code base. It's primary function is to hold data Discord sends which is
-necessary for a client connected to Discord to operate beyond providing bare minimum actions. Discord does not send a lot of data
-on websocket events outside of events relating to when a client reaches a READY state or when a resource is initially created.
-Internal uses may vary from specific services Amanda may provide but the primary use case is to check for if Amanda has
-sufficient permissions to perform an action against Discord's API.
-It is also used to persist data across restarts of Amanda and avoid requesting data from Discord which could be
-cached each time Amanda is restarted or needs to access said data. Finally, cached data is used by first party and
+The cache serves as a data store for data sent to Amanda from Discord in a semi-persistent state.
+The primary purpose is to prevent fetching necessary resources from Discord, incurring a hit to a rate limit (do x action every y interval).
+Rate limits are unavoidable and trying to circumvent them may lead to negative actions against Amanda such as being banned.
+An example is displaying usernames of creators on the full playlists list. The users have been fetched at some point or will be and stored for later
+for when the command is eventually run again. Finally, cached data is used by first party and
 third party services (see "REGARDING THIRD PARTY SERVICES" for more info) to measure growth over time and provide
 current statistics regarding the state of Amanda.
 
 Local data is stored when users interact with Amanda and make use of services in which Amanda provides. These services
-include but are not limited to creating and managing playlists through Amanda, participating in economy related activities,
-or configuring Amanda via arbitrary settings Amanda offers.
+include but are not limited to creating and managing playlists through Amanda or participating in Amanda's economy related activities.
 
 
 REGARDING THIRD PARTY SERVICES:
 When providing third party services data, said data is aggregated as to not provide said service with data which can
-be used to profile.
+be used to profile Amanda's individual users or their habits.

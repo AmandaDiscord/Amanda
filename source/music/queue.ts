@@ -1,19 +1,20 @@
 import util from "util"
 
 import mixin from "mixin-deep"
-import { BetterComponent } from "callback-components"
+import cc from "callback-components"
 
-import passthrough from "../../passthrough"
-const { sync, queues, config, constants, snow, lavalink, configuredUserID } = passthrough
+import passthrough from "../passthrough"
+const { sync, queues, config, constants, snow, configuredUserID, lavalink, amqpChannel } = passthrough
 
-const common: typeof import("./utils") = sync.require("./utils")
+const common = sync.require("./utils") as typeof import("./utils")
 
-const language: typeof import("../../client/utils/language") = sync.require("../../client/utils/language")
-const time: typeof import("../../client/utils/time") = sync.require("../../client/utils/time")
-const orm: typeof import("../../client/utils/orm") = sync.require("../../client/utils/orm")
+const discordUtils = sync.require("../client/utils/discord") as typeof import("../client/utils/discord")
+const language = sync.require("../client/utils/language") as typeof import("../client/utils/language")
+const time = sync.require("../client/utils/time") as typeof import("../client/utils/time")
+const orm = sync.require("../client/utils/orm") as typeof import("../client/utils/orm")
 
-const BetterTimeout: typeof import("./BetterTimeout") = sync.require("./BetterTimeout")
-const FrequencyUpdater: typeof import("./FrequencyUpdater") = sync.require("./FrequencyUpdater")
+const BetterTimeout = sync.require("./classes/BetterTimeout") as typeof import("./classes/BetterTimeout")
+const FrequencyUpdater = sync.require("./classes/FrequencyUpdater") as typeof import("./classes/FrequencyUpdater")
 
 const queueDestroyAfter = 20000
 const interactionExpiresAfter = 1000 * 60 * 14
@@ -27,8 +28,9 @@ class Queue {
 	public lang: import("@amanda/lang").Lang
 	public leavingSoonID: string | undefined
 	public player: import("lavacord").Player | undefined
-	public menu: Array<BetterComponent> = []
+	public menu: Array<cc.BetterComponent> = []
 	public playHasBeenCalled = false
+	public listeners = new Map<string, import("discord-api-types/v10").APIUser>()
 
 	public loop = false
 
@@ -36,15 +38,14 @@ class Queue {
 	public pausedAt: number | null = null
 	public errorChain = 0
 
-	public listeners = new Map<string, import("discord-typings").User>()
 	public leaveTimeout = new BetterTimeout.BetterTimeout().setCallback(() => {
 		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
-	public messageUpdater: import("./FrequencyUpdater").FrequencyUpdater = new FrequencyUpdater.FrequencyUpdater(() => this._updateMessage())
+	public messageUpdater: import("./classes/FrequencyUpdater").FrequencyUpdater = new FrequencyUpdater.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
-	private _interaction: import("../../client/modules/Command") | undefined
+	private _interaction: import("../Command") | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 
@@ -53,10 +54,10 @@ class Queue {
 		queues.set(guildID, this)
 	}
 
-	public toJSON(): import("../../types").WebQueue | null {
+	public toJSON(): import("../types").WebQueue | null {
 		if (!this.voiceChannelID) return null
 		return {
-			members: [...this.listeners.values()].map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
+			members: ([...this.listeners.values()]).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -102,6 +103,7 @@ class Queue {
 	}
 
 	public set speed(amount) {
+		console.log(`[FILTERS] guild: ${this.guildID} speed set: ${amount}`)
 		this.player?.filters(mixin(this.player!.state.filters, { timescale: { speed: amount } }))
 	}
 
@@ -113,7 +115,7 @@ class Queue {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
 		this.player?.pause(newState)
-		// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } }))
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } })))
 	}
 
 	public get volume() {
@@ -130,6 +132,7 @@ class Queue {
 	}
 
 	public set pitch(amount) {
+		console.log(`[FILTERS] guild: ${this.guildID} pitch set: ${amount}`)
 		this.player?.filters(mixin(this.player!.state.filters, { timescale: { pitch: amount } }))
 	}
 
@@ -188,8 +191,9 @@ class Queue {
 		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
 		await this.player?.destroy().catch(() => void 0)
 		await lavalink!.leave(this.guildID).catch(() => void 0)
-		// if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } }))
+		if (this.voiceChannelID) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } })))
 		queues.delete(this.guildID)
+		console.log(`[QUEUE_DESTROY] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
 	}
 
 	public async _nextTrack() {
@@ -207,7 +211,7 @@ class Queue {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
-			// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } }), res))
+			amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } })))
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
 			if (removed && this.loop && !removed.error) await this.addTrack(removed)
@@ -216,18 +220,27 @@ class Queue {
 	}
 
 	public createNPMenu(assign = true) {
-		const newMenu = [
-			new BetterComponent({ emoji: { id: null, name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+		const newMenu: Queue["menu"] = [
+			new cc.BetterComponent(
+				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ h: "playPause" }
+			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.paused = !this.paused
 			}),
-			new BetterComponent({ emoji: { id: null, name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+			new cc.BetterComponent(
+				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ h: "skip" }
+			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.skip()
 			}),
-			new BetterComponent({ emoji: { id: null, name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-typings").Button, "custom_id">).setCallback(interaction => {
+			new cc.BetterComponent(
+				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ h: "stop" }
+			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
 				this.destroy()
@@ -241,10 +254,11 @@ class Queue {
 		this.player?.stop().catch(() => void 0)
 	}
 
-	public async addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
+	public addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
-		// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } }), res))
+		console.log(`[TRACK_ADD] guild: ${this.guildID} title: ${track.title} author: ${track.author}`)
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } })))
 	}
 
 	public async removeTrack(index: number) {
@@ -259,7 +273,8 @@ class Queue {
 		} catch (e) {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
-		// await new Promise(res => websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } }), res))
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } })))
+		console.log(`[TRACK_REMOVE] guild: ${this.guildID} title: ${removed.title} author: ${removed.author}`)
 		return 0
 	}
 
@@ -291,7 +306,7 @@ class Queue {
 			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
-		// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } }))
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } })))
 	}
 
 	private _onPlayerError(details: import("lavalink-types").TrackExceptionEvent | import("lavalink-types").WebSocketClosedEvent) {
@@ -335,7 +350,7 @@ class Queue {
 				components: [
 					{
 						type: 1,
-						components: this.menu.map(bn => bn.toComponent())
+						components: this.menu.map(c => c.component)
 					}
 				]
 			}).catch(() => {
@@ -351,7 +366,7 @@ class Queue {
 
 	private _reportError() {
 		const track = this.tracks[0]
-		const sendReport = (contents: import("discord-typings").Embed) => {
+		const sendReport = (contents: import("discord-api-types/v10").APIEmbed) => {
 			contents.url = constants.server
 			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 			// Report to original channel
@@ -427,17 +442,15 @@ class Queue {
 		}
 	}
 
-	public async voiceStateUpdate(packet: import("lavacord").VoiceStateUpdate) {
+	public async voiceStateUpdate(packet: import("discord-api-types/v10").GatewayVoiceState) {
 		if (packet.channel_id && packet.user_id === configuredUserID) {
-			this.voiceChannelID = packet.channel_id
-
 			const states = await orm.db.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
 
 			for (const state of states) {
-				const user = await getUser(state.user_id)
-				if (user && !user.bot) this.listeners.set(user.id, user)
+				const user = await discordUtils.getUser(state.user_id)
+				if (user && (!user.bot || user.id === configuredUserID)) this.listeners.set(user.id, user)
 			}
-			// websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() }))
+			amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
 		}
 		// moving voice channels does not set the channel_id as null and then update
 		if (!packet.channel_id && this.voiceChannelID && packet.user_id === configuredUserID) return this.destroy()
@@ -446,31 +459,15 @@ class Queue {
 			if (this.listeners.size === 0) return this._onAllUsersLeave()
 		}
 		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
-			const user = await getUser(packet.user_id)
+			const user = await discordUtils.getUser(packet.user_id)
 			if (!user || (user && user.bot)) return
 			this.leaveTimeout.clear()
-			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
+			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID).catch(() => void 0)
 			this.leavingSoonID = undefined
 			this.listeners.set(user.id, user)
 		}
-		// if (this.voiceChannelID) websiteSocket.send(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } }))
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } })))
 	}
-}
-
-async function getUser(id: string) {
-	if (config.db_enabled) {
-		const cached = await orm.db.get("users", { id: id })
-		if (cached) return convertCachedUser(cached)
-	}
-	const fetched = await snow.user.getUser(id).catch(() => null)
-	if (fetched && config.db_enabled) orm.db.upsert("users", { id: id, tag: `${fetched.username}#${fetched.discriminator}`, avatar: fetched.avatar, bot: fetched.bot ? 1 : 0, added_by: config.cluster_id })
-	return fetched
-}
-
-function convertCachedUser(user: import("../../types").InferModelDef<typeof orm.db["tables"]["users"]>) {
-	const split = user.tag.split("#")
-	Object.assign(user, { username: split.slice(0, split.length - 1).join("#"), discriminator: split[split.length - 1], bot: !!user.bot, avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar })
-	return user as unknown as import("discord-typings").User
 }
 
 export { Queue }

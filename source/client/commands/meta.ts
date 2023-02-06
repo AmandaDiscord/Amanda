@@ -4,7 +4,7 @@ import sG from "simple-git"
 const simpleGit = sG(__dirname)
 
 import passthrough from "../../passthrough"
-const { client, constants, config, commands, sync, queues } = passthrough
+const { client, constants, config, commands, sync } = passthrough
 
 const text: typeof import("../utils/string") = sync.require("../utils/string")
 const emojis: typeof import("../emojis") = sync.require("../emojis")
@@ -17,78 +17,34 @@ commands.assign([
 		name: "stats",
 		description: "Show detailed statistics",
 		category: "meta",
-		options: [
-			{
-				name: "window",
-				type: 3,
-				description: "The type of stats to show",
-				choices: [
-					{
-						name: "music",
-						value: "m"
-					}
-				],
-				required: false
-			}
-		],
 		async process(cmd, lang, info) {
 			const sid = info.shard_id
 			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} tree, branch ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
 
-			const category = cmd.data.options.get("window")?.asString()
-			if (category === "m") {
-				const listeningcount = [...queues.values()].reduce((acc, cur) => acc + [...cur.listeners.values()].filter(u => !u.bot).length, 0)
-				const nodes = constants.lavalinkNodes.map(n => n.id)
-				let nodeStr = ""
-				for (const node of nodes) {
-					nodeStr += `${node}: ${[...queues.values()].filter(q => q.node === node).length}\n`
-				}
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
-						{
-							color: constants.standard_embed_color,
-							fields: [
-								{
-									name: leadingIdentity,
-									value: `**❯ ${lang.GLOBAL.HEADER_SONGS_QUEUED}:**\n${text.numberComma(Array.from(queues.values()).reduce((acc, cur) => acc + cur.tracks.length, 0))}`,
-									inline: true
-								},
-								{
-									name: leadingSpace,
-									value: `**❯ ${lang.GLOBAL.HEADER_USERS_LISTENING}:**\n${text.numberComma(listeningcount)}\n` +
-										`**❯ ${lang.GLOBAL.HEADER_NODE_USAGE}:**\n${nodeStr || lang.GLOBAL.NO_NODES}`,
-									inline: true
-								}
-							]
-						}
-					]
-				})
-			} else {
-				const stats = await cluster.getOwnStats()
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
-						{
-							color: constants.standard_embed_color,
-							fields: [
-								{
-									name: leadingIdentity,
-									value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}`,
-									inline: true
-								},
-								{
-									name: leadingSpace,
-									value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${text.numberComma(stats.users)}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${text.numberComma(stats.guilds)}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
-									inline: true
-								}
-							]
-						}
-					]
-				})
-			}
+			const stats = await cluster.getOwnStats()
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						color: constants.standard_embed_color,
+						fields: [
+							{
+								name: leadingIdentity,
+								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}`,
+								inline: true
+							},
+							{
+								name: leadingSpace,
+								value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${text.numberComma(stats.users)}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${text.numberComma(stats.guilds)}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
+								inline: true
+							}
+						]
+					}
+				]
+			})
 
 			function bToMB(number: number) {
 				return `${((number / 1024) / 1024).toFixed(2)}MB`
@@ -184,7 +140,7 @@ commands.assign([
 			}
 		],
 		process(cmd, lang) {
-			let embed: import("discord-typings").Embed
+			let embed: import("discord-api-types/v10").APIEmbed
 			const category = cmd.data.options.get("category")?.asString()
 			const command = cmd.data.options.get("command")?.asString()
 			if (category || command) {
@@ -224,7 +180,7 @@ commands.assign([
 								desc = lang[c2].description
 							}
 							let repeat = maxLength - name.length
-							if (isNaN(repeat) || !repeat) repeat = 0
+							if (isNaN(repeat) || !repeat || repeat < 0) repeat = 0
 							return `\`${name}${" ​".repeat(repeat)}\` ${desc}`
 						}).join("\n"),
 						color: constants.standard_embed_color

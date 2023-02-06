@@ -5,16 +5,19 @@ import { Pool } from "pg"
 import { SnowTransfer } from "snowtransfer"
 import amqp from "amqplib"
 
-import Amanda from "./modules/Amanda"
-import CommandManager from "./modules/CommandManager"
+import Amanda from "./Amanda"
+import CommandManager from "../CommandManager"
 
 const config: import("../types").Config = require("../../config") // TypeScript WILL include files that use import in any way (type annotations or otherwise)
 import constants from "../constants"
 import passthrough from "../passthrough"
 
+const clientID = Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")
+passthrough.configuredUserID = clientID
+
 const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const client = new Amanda(snow)
-const commands = new CommandManager<[import("discord-typings").Interaction, import("@amanda/lang").Lang, { shard_id: number; cluster_id: string }]>()
+const commands = new CommandManager<[import("../Command"), import("@amanda/lang").Lang, { shard_id: number; cluster_id: string }]>()
 const sync = new HeatSync()
 
 Object.assign(passthrough, { client, sync, config, constants, commands })
@@ -40,7 +43,7 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 	} else console.warn("Database disabled")
 
 	const discordUtils: typeof import("./utils/discord") = await sync.require("./utils/discord")
-	const clientUser = await discordUtils.getUser(Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8"))
+	const clientUser = await discordUtils.getUser(clientID)
 	if (!clientUser) throw new Error("Could not get client user info. Please terminate this process and try again or check for bugs")
 	client.user = clientUser
 
@@ -50,10 +53,12 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 	const channel = await connection.createChannel()
 	await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
 
-	import("./modules/stdin")
+	Object.assign(passthrough, { amqpChannel: channel })
+
+	import("./stdin")
 
 	sync.require([
-		"./modules/EventManager",
+		"./EventManager",
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",
@@ -65,8 +70,12 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 	channel.consume(config.amqp_queue, async msg => {
 		if (!msg) return
 		channel.ack(msg)
-		const parsed = JSON.parse(msg.content.toString("utf-8")) // -1 s means it was an interaction sent from website and this path is for bots still using gateway interactions
-		if (parsed.s !== -1 && parsed.t === "INTERACTION_CREATE" && (parsed.d.type === 2 || parsed.d.type === 3)) await client.snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: parsed.d.type === 2 ? 5 : 6 })
+		const parsed: import("discord-api-types/v10").GatewayDispatchPayload & { shard_id: number; cluster_id: string } = JSON.parse(msg.content.toString("utf-8"))
+		// -1 s means it was an interaction sent from website and this path is for bots still using gateway interactions
+		if (parsed.s !== -1 && parsed.t === "INTERACTION_CREATE" && (parsed.d.type === 2 || parsed.d.type === 3)) {
+			await client.snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: parsed.d.type === 2 ? 5 : 6 })
+			if (parsed.d.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(parsed.d.data.name)) return channel.sendToQueue(config.amqp_music_queue, msg.content)
+		}
 		client.emit("gateway", parsed)
 	})
 	console.log(`Successfully logged in as ${client.user.username}`)

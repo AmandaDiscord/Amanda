@@ -1,7 +1,7 @@
 import { EventEmitter } from "events"
 
 interface Events {
-	gateway: [import("discord-typings").GatewayPayload],
+	gateway: [import("discord-api-types/v10").GatewayDispatchPayload & { shard_id: number; cluster_id: string }],
 	ready: []
 }
 
@@ -23,8 +23,7 @@ interface Amanda {
 
 class Amanda extends EventEmitter {
 	public snow: import("snowtransfer").SnowTransfer
-	public ready = false
-	public user: import("discord-typings").User
+	public user: import("discord-api-types/v10").APIUser
 
 	public constructor(snow: import("snowtransfer").SnowTransfer) {
 		super()

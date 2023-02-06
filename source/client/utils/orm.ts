@@ -215,7 +215,6 @@ export const db = new Database({
 	bank_access: new Model<{ id: string, user_id: string }>(),
 	bank_accounts: new Model<{ id: string, amount: string, type: number }>(["id"]),
 	bans: new Model<{ user_id: string, temporary: number, expires: number }>(["user_id"]),
-	channels: new Model<{ id: string, type: number, guild_id: string, name: string, rtc_region: string }>(["id"], { useBuffer: true, bufferSize: 5000 }),
 	couples: new Model<{ user1: string, user2: string, married_at: string, balance: number }>(),
 	csrf_tokens: new Model<{ token: string, login_token: string, expires: number }>(["token"]),
 	daily_cooldown: new Model<{ user_id: string, last_claim: number }>(["user_id"]),
@@ -236,7 +235,7 @@ export const db = new Database({
 	transactions: new Model<{ id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>(["id"]),
 	user_permissions: new Model<{ user_id: string, eval: number, owner: number }>(["user_id"]),
 	users: new Model<{ id: string, tag: string, avatar: string | null, bot: number, added_by: string }>(["id"], { useBuffer: true }),
-	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id"], { useBuffer: true, bufferSize: 300 }),
+	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id", "guild_id"], { useBuffer: true, bufferSize: 300 }),
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"]),
 	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
 	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"])

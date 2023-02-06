@@ -7,32 +7,6 @@ try {
 	config = {} as import("./types").Config
 }
 
-export const GATEWAY_WORKER_CODES = {
-	/**
-	 * Receive
-	 */
-	DISCORD: 0 as const,
-	/**
-	 * Send
-	 */
-	STATS: 1 as const,
-	/**
-	 * Send
-	 */
-	STATUS_UPDATE: 2 as const,
-	/**
-	 * Send
-	 */
-	SEND_MESSAGE: 3 as const,
-	/**
-	 * Receive
-	 */
-	RESPONSE: 4 as const,
-	/**
-	 * Receive
-	 */
-	ERROR_RESPONSE: 5 as const
-}
 export const baseURL = `${config.website_protocol}://${config.website_domain}`
 export const patreon = `${baseURL}/to/patreon`
 export const paypal = `${baseURL}/to/paypal`
@@ -73,8 +47,7 @@ export enum WebsiteOPCodes {
 	LISTENERS_UPDATE,
 
 	ACCEPT,
-	CREATE,
-	STATS
+	CREATE
 }
 
 export default exports as typeof import("./constants")
