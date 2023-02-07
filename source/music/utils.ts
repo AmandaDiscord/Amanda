@@ -71,7 +71,7 @@ const common = {
 			const undef = "undefined"
 			const details = [
 				["Tree", config.cluster_id],
-				["Branch", String(cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0)],
+				["Branch", "music"],
 				["User", `${cmd.author.username}#${cmd.author.discriminator}`],
 				["User ID", cmd.author.id],
 				["Guild ID", cmd.guild_id || undef],

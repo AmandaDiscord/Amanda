@@ -152,6 +152,7 @@ class Queue {
 	}
 
 	public addPlayerListeners() {
+		console.log(`[QUEUE_START  ] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
 		this.player!.on("end", event => this._onEnd(event))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
 		this.player!.on("error", event => this._onPlayerError(event))

@@ -45,7 +45,6 @@ async function createQueue(cmd: import("../Command"), lang: import("@amanda/lang
 		queue!.node = node
 		queue!.player = player
 		queue!.addPlayerListeners()
-		console.log(`[QUEUE_START] guild: ${cmd.guild_id} channel: ${channel}`)
 		return queue
 	} catch (e) {
 		if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
