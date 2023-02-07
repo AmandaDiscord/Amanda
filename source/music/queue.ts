@@ -22,7 +22,7 @@ const stopDisplayingErrorsAfter = 3
 
 class Queue {
 	public guildID: string
-	public voiceChannelID: string | undefined
+	public voiceChannelID: string
 	public tracks: Array<import("./tracktypes").Track> = []
 	public node: string | undefined
 	public lang: import("@amanda/lang").Lang
@@ -49,13 +49,13 @@ class Queue {
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 
-	public constructor(guildID: string) {
+	public constructor(guildID: string, channelID: string) {
 		this.guildID = guildID
+		this.voiceChannelID = channelID
 		queues.set(guildID, this)
 	}
 
-	public toJSON(): import("../types").WebQueue | null {
-		if (!this.voiceChannelID) return null
+	public toJSON(): import("../types").WebQueue {
 		return {
 			members: ([...this.listeners.values()]).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
 			tracks: this.tracks.map(s => s.toObject()),

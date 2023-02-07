@@ -211,7 +211,6 @@ export class Database<M extends Record<string, Model<any>>> {
 }
 
 export const db = new Database({
-	background_sync: new Model<{ machine_id: string, user_id: string, url: string }>(["machine_id", "user_id"], { useBuffer: true, bufferTimeout: 2000 }),
 	bank_access: new Model<{ id: string, user_id: string }>(),
 	bank_accounts: new Model<{ id: string, amount: string, type: number }>(["id"]),
 	bans: new Model<{ user_id: string, temporary: number, expires: number }>(["user_id"]),

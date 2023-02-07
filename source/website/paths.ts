@@ -53,9 +53,9 @@ const paths: {
 					const user = await orm.db.get("voice_states", { user_id: session.user_id })
 					let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 					const csrftoken = util.generateCSRF()
-					const body = user
+					const body = config.music_dash_enabled ? (user
 						? `<a href="/channels/${user.channel_id}">View dash for channel you're active in</a>`
-						: "Try joining a voice channel to see available queues"
+						: "Try joining a voice channel to see available queues") : "The dashboard is temporarily disabled. Please check back later"
 					html = html.replace(bodyRegex, body).replace(csrftokenRegex, csrftoken)
 					return res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
 				} else return res.writeHead(303, { "Content-Type": "text/html", "Location": "/login" }).end("Redirecting to login...")
@@ -183,7 +183,12 @@ const routes: {
 
 			return new util.Validator()
 			.do({
-				code: () => session == null
+				code: () => config.music_dash_enabled
+				, expected: true
+				, errorValue: "Dashboard temporarily disabled. Please check back later"
+			})
+			.do({
+				code: () => session === null
 				, expected: false
 				, errorValue: "NO_SESSION"
 			}).do({

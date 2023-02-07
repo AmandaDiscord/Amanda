@@ -18,13 +18,10 @@ module.exports = {
 	app_public_key: "discord app public key here",
 
 	// Environment
-	machine_id: "lmao_dev_compname",
 	sql_domain: "example.com",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
-	website_ipc_bind: "localhost",
 	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",
-	additional_intents: [],
 	shard_list: [0],
 	cluster_id: cluster_id,
 	add_url: "your url here",
@@ -36,7 +33,6 @@ module.exports = {
 	// Settings
 	music_dash_enabled: true,
 	total_shards: 1,
-	fake_token: "(token)",
 	is_dev_env: true,
 	db_enabled: true
 }

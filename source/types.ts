@@ -22,8 +22,6 @@ export type Config = {
 	"sql_domain": string
 	"website_protocol": "http" | "https"
 	"website_domain": string
-	"website_ipc_bind": string
-	"machine_id": string
 	"weeb_identifier": string
 	"additional_intents": Array<string>
 	"shard_list": Array<number>

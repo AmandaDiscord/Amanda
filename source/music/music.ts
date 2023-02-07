@@ -21,8 +21,7 @@ const musicDisabled = false as boolean
 const notWordRegex = /\W/g
 
 async function createQueue(cmd: import("../Command"), lang: import("@amanda/lang").Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
-	const queue = new queueFile.Queue(cmd.guild_id!)
-	queue.voiceChannelID = channel
+	const queue = new queueFile.Queue(cmd.guild_id!, channel)
 	queue.lang = cmd.guild_locale ? language.getLang(cmd.guild_locale) : lang
 	queue.interaction = cmd
 	snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
