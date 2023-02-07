@@ -48,6 +48,7 @@ class Queue {
 	private _interaction: import("../Command") | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
+	private _destroyed = false
 
 	public constructor(guildID: string, channelID: string) {
 		this.guildID = guildID
@@ -103,7 +104,7 @@ class Queue {
 	}
 
 	public set speed(amount) {
-		console.log(`[FILTERS] guild: ${this.guildID} speed set: ${amount}`)
+		console.log(`[QUEUE_FILTERS] guild: ${this.guildID} speed set: ${amount}`)
 		this.player?.filters(mixin(this.player!.state.filters, { timescale: { speed: amount } }))
 	}
 
@@ -114,6 +115,7 @@ class Queue {
 	public set paused(newState) {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
+		console.log(`[QUEUE_PAUSE  ] guild: ${this.guildID}`)
 		this.player?.pause(newState)
 		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } })))
 	}
@@ -132,7 +134,7 @@ class Queue {
 	}
 
 	public set pitch(amount) {
-		console.log(`[FILTERS] guild: ${this.guildID} pitch set: ${amount}`)
+		console.log(`[QUEUE_FILTERS] guild: ${this.guildID} pitch set: ${amount}`)
 		this.player?.filters(mixin(this.player!.state.filters, { timescale: { pitch: amount } }))
 	}
 
@@ -177,6 +179,9 @@ class Queue {
 	}
 
 	public async destroy(editInteraction = true) {
+		if (this._destroyed) return
+		queues.delete(this.guildID)
+		this._destroyed = true
 		this.menu.forEach(bn => bn.destroy())
 		for (const track of this.tracks) {
 			try {
@@ -192,11 +197,10 @@ class Queue {
 		await this.player?.destroy().catch(() => void 0)
 		await lavalink!.leave(this.guildID).catch(() => void 0)
 		if (this.voiceChannelID) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } })))
-		queues.delete(this.guildID)
 		console.log(`[QUEUE_DESTROY] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
 	}
 
-	public async _nextTrack() {
+	public _nextTrack() {
 		if (this.tracks[1] && this.tracks[1].live && this.speed != 1) this.speed = 1.0
 		// Special case for loop 1
 		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
@@ -214,7 +218,7 @@ class Queue {
 			amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } })))
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
-			if (removed && this.loop && !removed.error) await this.addTrack(removed)
+			if (removed && this.loop && !removed.error) this.addTrack(removed)
 			this.play()
 		}
 	}
@@ -251,13 +255,14 @@ class Queue {
 	}
 
 	public skip() {
+		console.log(`[QUEUE_SKIP   ] guild: ${this.guildID}`)
 		this.player?.stop().catch(() => void 0)
 	}
 
 	public addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
-		console.log(`[TRACK_ADD] guild: ${this.guildID} title: ${track.title} author: ${track.author}`)
+		console.log(`[TRACK_ADD    ] guild: ${this.guildID} title: ${track.title} author: ${track.author} requester: ${track.requester.username}#${track.requester.discriminator} ${track.requester.id}`)
 		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } })))
 	}
 
@@ -274,7 +279,7 @@ class Queue {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } })))
-		console.log(`[TRACK_REMOVE] guild: ${this.guildID} title: ${removed.title} author: ${removed.author}`)
+		console.log(`[TRACK_REMOVE ] guild: ${this.guildID} title: ${removed.title} author: ${removed.author}`)
 		return 0
 	}
 
@@ -284,6 +289,7 @@ class Queue {
 		if (track.live) return 2
 		if (position > (track.lengthSeconds * 1000)) return 3
 		const result = await this.player?.seek(position)
+		console.log(`[QUEUE_SEEK   ] guild: ${this.guildID} pos: ${position}`)
 		if (result) return 0
 		else return 4
 	}
