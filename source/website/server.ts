@@ -1,3 +1,5 @@
+import "../logger"
+
 import http from "http"
 import p from "path"
 
