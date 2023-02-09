@@ -37,7 +37,8 @@ const common = {
 
 		byIdeal() {
 			const node = lavalink!.idealNodes[0]
-			return common.nodes.byID(node.id)
+			if (node) return common.nodes.byID(node.id)
+			else return common.nodes.random()
 		}
 	},
 

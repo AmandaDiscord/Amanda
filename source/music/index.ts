@@ -1,4 +1,4 @@
-import "../client/utils/logger"
+import "../logger"
 
 import util from "util"
 
@@ -112,6 +112,7 @@ snow.requestHandler.on("requestError", (p, e) => console.error(`Request Error:\n
 	})
 
 	sync.require([
+		"./stdin",
 		"./music",
 		"./playlist"
 	])

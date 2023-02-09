@@ -1,4 +1,4 @@
-import "./utils/logger"
+import "../logger"
 
 import HeatSync from "heatsync"
 import { Pool } from "pg"
@@ -55,9 +55,8 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 
 	Object.assign(passthrough, { amqpChannel: channel })
 
-	import("./stdin")
-
 	sync.require([
+		"./stdin",
 		"./EventManager",
 		"./commands/hidden",
 		"./commands/images",

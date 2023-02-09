@@ -7,6 +7,7 @@ interface Passthrough {
 	sync: import("heatsync")
 	amqpChannel: import("amqplib").Channel
 	configuredUserID: string
+	repl: import("repl").REPLServer
 
 	// Client code base props
 	client: import("./client/Amanda")
