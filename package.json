@@ -27,7 +27,7 @@
     "entities": "4.4.0",
     "frisky-client": "github:cloudrac3r/frisky-client",
     "heatsync": "2.4.0",
-    "jimp": "0.22.1",
+    "jimp": "0.22.4",
     "lavacord": "github:AmandaDiscord/Lavacord#9f396d760da4ab484084b4736ac0986465fb4b53",
     "listensomemoe": "github:AmandaDiscord/ListenSomeMoe#d4df9608b48d5f8ca7b1a809f1c7fe2508bf934b",
     "mime-types": "2.1.35",
@@ -39,15 +39,11 @@
   "devDependencies": {
     "@types/amqplib": "^0.10.1",
     "@types/mime-types": "2.1.1",
-    "@types/node": "18.11.19",
+    "@types/node": "18.13.0",
     "@types/pg": "8.6.6",
-    "@types/tap": "^15.0.8",
-    "@types/ws": "8.5.4",
     "@typescript-eslint/eslint-plugin": "5.51.0",
     "@typescript-eslint/parser": "5.51.0",
     "eslint": "8.33.0",
-    "lavalink-types": "1.0.3",
-    "tap": "^16.3.4",
-    "typescript": "4.9.5"
+    "lavalink-types": "1.0.3"
   }
 }

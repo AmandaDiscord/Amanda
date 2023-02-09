@@ -391,7 +391,6 @@ class Queue {
 				["Invidious origin", `\`${node?.invidious_origin || "NONE"}\``],
 				["Queue node", this.node || "UNNAMED"]
 			]
-			if (this.interaction?.guild_id) details.unshift(...[["Shard", String((BigInt(this.interaction.guild_id) >> BigInt(22)) % BigInt(config.total_shards))]])
 			if (track) {
 				details.push(...[
 					["Track", track.id],
