@@ -7,8 +7,8 @@ import { Pool } from "pg"
 import { SnowTransfer } from "snowtransfer"
 import amqp from "amqplib"
 import { Manager } from "lavacord"
-// import Frisky from "frisky-client"
-// import ListenSomeMoe from "listensomemoe"
+import Frisky from "frisky-client"
+import ListenSomeMoe from "listensomemoe"
 
 import CommandManager from "../CommandManager"
 
@@ -23,16 +23,17 @@ const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const commands = new CommandManager<[import("../Command"), import("@amanda/lang").Lang]>()
 const sync = new HeatSync()
 const queues = new Map<string, import("./queue").Queue>()
-/* const frisky = new Frisky()
+const frisky = new Frisky()
+
 const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 jp.on("error", console.error)
 kp.on("error", console.error)
 jp.on("unknown", console.info)
 kp.on("unknown", console.info)
-*/
 
-Object.assign(passthrough, { snow, sync, config, constants, commands, queues/* , listenMoe: { jp, kp }, frisky */ })
+
+Object.assign(passthrough, { snow, sync, config, constants, commands, queues, listenMoe: { jp, kp }, frisky })
 
 const pool = new Pool({
 	host: config.sql_domain,
