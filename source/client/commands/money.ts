@@ -515,7 +515,7 @@ commands.assign([
 			const choices = [[0, 0], [1, 0], [2, 5], [3, 2], [4, 0], [5, 1], [6, 0], [7, 0]] as Array<[number, number]>
 			const choice = arr.random(choices)
 
-			const image = await fs.promises.readFile(path.join(__dirname, `../../images/precalculated/${choice[0]}.png`))
+			const image = await fs.promises.readFile(path.join(__dirname, `../../../images/precalculated/${choice[0]}.png`))
 
 			const award = (amount * BigInt(choice[1])) - amount
 			await awardAmount(cmd.author.id, award, `Wheel Of ${award <= BigInt(0) ? "Misf" : "F"}ortune`)
