@@ -4,8 +4,6 @@ import mime from "mime-types"
 import { pipeline } from "stream"
 import crypto from "crypto"
 
-import { BackTracker } from "backtracker"
-
 import passthrough from "../passthrough"
 const { rootFolder, db, sync } = passthrough
 
@@ -128,7 +126,7 @@ export function parseMultipartBody(body: string) {
 export function generateCSRF(loginToken = null) {
 	const token = crypto.randomBytes(32).toString("hex")
 	const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
-	db.query({ text: "INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", values: [token, loginToken, expires] })
+	db?.query({ text: "INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", values: [token, loginToken, expires] })
 	return token
 }
 

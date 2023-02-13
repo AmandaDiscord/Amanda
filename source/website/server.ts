@@ -39,12 +39,17 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 		passthrough.db = db
 	}
 
-	const connection = await amqp.connect(config.amqp_url)
-	const channel = await connection.createChannel()
-	await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
-	await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
+	if (config.amqp_enabled) {
+		const connection = await amqp.connect(config.amqp_url)
+		const channel = await connection.createChannel()
+		await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
+		await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
 
-	Object.assign(passthrough, { config, sync, rootFolder, configuredUserID, liveUserID, wss, queues, amqpChannel: channel })
+		Object.assign(passthrough, { amqpChannel: channel })
+		channel.on("close", console.error)
+	}
+
+	Object.assign(passthrough, { config, sync, rootFolder, configuredUserID, liveUserID, wss, queues })
 
 	const paths: typeof import("./paths") = sync.require("./paths")
 	const util: typeof import("./util") = sync.require("./util")

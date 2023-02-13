@@ -1,6 +1,5 @@
 import util from "util"
 
-import mixin from "mixin-deep"
 import cc from "callback-components"
 
 import passthrough from "../passthrough"
@@ -105,7 +104,7 @@ class Queue {
 
 	public set speed(amount) {
 		console.log(`[QUEUE_FILTERS] guild: ${this.guildID} speed set: ${amount}`)
-		this.player?.filters(mixin(this.player!.state.filters, { timescale: { speed: amount } }))
+		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: amount, pitch: this.pitch } }))
 	}
 
 	public get paused() {
@@ -135,7 +134,7 @@ class Queue {
 
 	public set pitch(amount) {
 		console.log(`[QUEUE_FILTERS] guild: ${this.guildID} pitch set: ${amount}`)
-		this.player?.filters(mixin(this.player!.state.filters, { timescale: { pitch: amount } }))
+		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: this.speed, pitch: amount } }))
 	}
 
 	public get time() {

@@ -27,9 +27,8 @@ Please join her [support server](https://amanda.moe/to/server) if you would like
 
 # Acknowledgements
 The team at AmandaDiscord would like to thank these people in particular:
-- Discord.js (for Amanda's original library used).
 - DasWolke (for providing knowledge about Discord bot microservices and libraries to make them happen).
-- cloudrac3r (for her massive contributions to this repository).
-- CheweyZ (for his help with hosting in early stages).
+- Cadence (for their massive contributions to this repository).
+- Chewey (for his help with hosting in early stages).
 - AmandaDiscord donors (for literally making all of this possible).
 - This cup of coffee (for- wait. That wasn't apart of the script).

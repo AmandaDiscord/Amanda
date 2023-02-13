@@ -8,7 +8,7 @@ import { SnowTransfer } from "snowtransfer"
 import amqp from "amqplib"
 import { Manager } from "lavacord"
 import Frisky from "frisky-client"
-// import ListenSomeMoe from "listensomemoe"
+import ListenSomeMoe from "listensomemoe"
 
 import CommandManager from "../CommandManager"
 
@@ -25,15 +25,15 @@ const sync = new HeatSync()
 const queues = new Map<string, import("./queue").Queue>()
 const frisky = new Frisky()
 
-/* const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
+const jp = new ListenSomeMoe(ListenSomeMoe.Constants.baseJPOPGatewayURL)
 const kp = new ListenSomeMoe(ListenSomeMoe.Constants.baseKPOPGatewayURL)
 jp.on("error", console.error)
 kp.on("error", console.error)
 jp.on("unknown", console.info)
-kp.on("unknown", console.info) */
+kp.on("unknown", console.info)
 
 
-Object.assign(passthrough, { snow, sync, config, constants, commands, queues, /* listenMoe: { jp, kp },*/ frisky })
+Object.assign(passthrough, { snow, sync, config, constants, commands, queues, listenMoe: { jp, kp }, frisky })
 
 const pool = new Pool({
 	host: config.sql_domain,
@@ -96,21 +96,22 @@ snow.requestHandler.on("requestError", (p, e) => console.error(`Request Error:\n
 		}
 	} else console.warn("Database disabled")
 
-	const connection = await amqp.connect(config.amqp_url)
-	const channel = await connection.createChannel()
-	await channel.assertQueue(config.amqp_music_queue, { durable: false, autoDelete: true })
-	await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
+	if (config.amqp_enabled) {
+		const connection = await amqp.connect(config.amqp_url)
+		const channel = await connection.createChannel()
+		await channel.assertQueue(config.amqp_music_queue, { durable: false, autoDelete: true })
+		await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
+		Object.assign(passthrough, { amqpChannel: channel })
 
-	Object.assign(passthrough, { amqpChannel: channel })
-
-	const eventHandler: typeof import("./EventManager") = sync.require("./EventManager")
-
-	channel.consume(config.amqp_music_queue, msg => {
-		if (!msg) return
-		channel.ack(msg)
-		const parsed = JSON.parse(msg.content.toString("utf-8"))
-		eventHandler.handle(parsed)
-	})
+		const eventHandler: typeof import("./EventManager") = sync.require("./EventManager")
+		channel.consume(config.amqp_music_queue, msg => {
+			if (!msg) return
+			channel.ack(msg)
+			const parsed = JSON.parse(msg.content.toString("utf-8"))
+			eventHandler.handle(parsed)
+		})
+		channel.on("close", console.error)
+	}
 
 	sync.require([
 		"./stdin",

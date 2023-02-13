@@ -36,6 +36,7 @@ export type Config = {
 	"total_shards": number
 	"is_dev_env": boolean
 	"db_enabled": boolean
+	"amqp_enabled": boolean
 }
 
 export type UnpackArray<T> = T extends Array<infer R> ? R : never

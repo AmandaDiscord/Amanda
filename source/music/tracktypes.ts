@@ -1,4 +1,3 @@
-const entities = require("entities") as typeof import("entities")
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
 import passthrough from "../passthrough"
@@ -13,7 +12,7 @@ const language = sync.require("../client/utils/language") as typeof import("../c
 
 const AsyncValueCache = sync.require("./classes/AsyncValueCache") as typeof import("./classes/AsyncValueCache")
 
-const stationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
+const friskyStationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
 	["original", {
 		title: "Frisky Radio: Original",
 		queue: "Frisky Radio: Original",
@@ -42,6 +41,15 @@ const stationData = new Map<"original" | "deep" | "chill" | "classics", { title:
 		url: "https://stream.classics.friskyradio.com/mp3_high", // 44100Hz 2ch 128k MP3
 		beta_url: "https://stream.classics.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
 	}]
+])
+
+const radioStations = new Map<string, Array<any>>([
+	["jpop", [
+
+	]],
+	["vocaloid", [
+
+	]]
 ])
 
 export class Track {
@@ -192,7 +200,7 @@ export class ExternalTrack extends Track {
 			const match = to.pathname.match(pathnamereg)
 			if (!match) name = lang.GLOBAL.UNKNOWN_TRACK
 			else name = match[1]
-			this.title = entities.decodeHTML(name.replace(underscoreRegex, " "))
+			this.title = decodeEntities(name.replace(underscoreRegex, " "))
 		}
 		this.live = info.isStream || true
 		this.queueLine = this.live ? `**${this.title}** (${this.lang.GLOBAL.HEADER_LIVE})` : `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
@@ -224,22 +232,22 @@ export class ExternalTrack extends Track {
 }
 
 export class FriskyTrack extends Track {
-	public station: import("../types").InferMapK<typeof stationData>
-	public stationData: import("../types").InferMapV<typeof stationData>
+	public station: import("../types").InferMapK<typeof friskyStationData>
+	public stationData: import("../types").InferMapV<typeof friskyStationData>
 	public friskyStation: import("frisky-client/lib/Station")
 	public stationInfoGetter: import("./classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
 	public bound: (() => Promise<void>) | undefined
 	public live = true
 	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
 
-	public constructor(station: import("../types").InferMapK<typeof stationData>, track: string | undefined, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
+	public constructor(station: import("../types").InferMapK<typeof friskyStationData>, track: string | undefined, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		super(track || "!", { identifier: `frisky/${station}` }, input, requester, lang)
 
 		this.station = station
 		this.noPauseReason = lang.GLOBAL.CANNOT_PAUSE_LIVE
 
-		if (!stationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
-		this.stationData = stationData.get(this.station)!
+		if (!friskyStationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
+		this.stationData = friskyStationData.get(this.station)!
 
 		this.title = this.stationData.title
 		this.queueLine = `**${this.stationData.queue}** (${this.lang.GLOBAL.HEADER_LIVE})`
@@ -441,6 +449,25 @@ export class ListenMoeTrack extends Track {
 		this.id = this._id
 		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : (this.queue?.lang || this.lang).GLOBAL.HEADER_LIVE})`
 	}
+}
+
+// https://stackoverflow.com/questions/44195322/a-plain-javascript-way-to-decode-html-entities-works-on-both-browsers-and-node
+const translateRegex = /&(nbsp|amp|quot|lt|gt);/g
+const entityCodeRegex = /&#(\d+);/gi
+function decodeEntities(encodedString: string) {
+	const translate = {
+		"nbsp": " ",
+		"amp" : "&",
+		"quot": "\"",
+		"lt" : "<",
+		"gt" : ">"
+	}
+	return encodedString.replace(translateRegex, function(_, entity) {
+		return translate[entity]
+	}).replace(entityCodeRegex, function(_, numStr) {
+		const num = parseInt(numStr, 10)
+		return String.fromCharCode(num)
+	})
 }
 
 export default exports as typeof import("./tracktypes")

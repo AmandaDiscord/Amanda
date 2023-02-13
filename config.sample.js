@@ -34,5 +34,6 @@ module.exports = {
 	music_dash_enabled: true,
 	total_shards: 1,
 	is_dev_env: true,
-	db_enabled: true
+	db_enabled: true,
+	amqp_enabled: true
 }

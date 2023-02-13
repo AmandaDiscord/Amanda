@@ -1,5 +1,10 @@
 @import url("https://fonts.googleapis.com/css2?family=VT323&display=swap");
 
+img {
+	max-width: 100%;
+	max-height: auto;
+}
+
 *, input {
 	font-family: "VT323", sans-serif;
 }
@@ -23,7 +28,7 @@ a:link, a:visited {
 }
 
 .section {
-	margin-top: -30px;
+	margin-top: -40px;
 	vertical-align: top;
 	padding: 20px;
 	border: 12px solid grey;

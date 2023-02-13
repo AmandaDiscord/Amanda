@@ -20,6 +20,8 @@ const bodyRegex = /\$body/gm
 const csrftokenRegex = /\$csrftoken/gm
 const channelIDRegex = /\$channelID/gm
 const timestampRegex = /\$timestamp/gm
+const dashRegex = /-/g
+const fileNameRegex = /(.+?)\.\w+$/
 
 const redirects = {
 	stats: "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393",
@@ -50,8 +52,10 @@ const paths: {
 				const session = await util.getSession(cookies)
 
 				if (session && config.db_enabled) {
-					const user = await orm.db.get("voice_states", { user_id: session.user_id })
-					let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
+					let [user, html] = await Promise.all([
+						orm.db.get("voice_states", { user_id: session.user_id }),
+						fs.promises.readFile(pathMod.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
+					])
 					const csrftoken = util.generateCSRF()
 					const body = config.music_dash_enabled ? (user
 						? `<a href="/channels/${user.channel_id}">View dash for channel you're active in</a>`
@@ -133,6 +137,22 @@ const paths: {
 			}
 		}
 	},
+	"/blogs": {
+		methods: ["GET"],
+		async handle(req, res) {
+			let [template, blogsDir] = await Promise.all([
+				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blogs.html"), { encoding: "utf-8" }),
+				fs.promises.readdir(pathMod.join(rootFolder, "./blogs"))
+			])
+			const stats = await Promise.all(blogsDir.map(blog => fs.promises.stat(pathMod.join(rootFolder, `./blogs/${blog}`)).then(i => ({ name: blog, stats: i }))))
+			const htmlData = stats.sort((a, b) => b.stats.ctimeMs - a.stats.ctimeMs).map(blog => {
+				const name = blog.name.match(fileNameRegex)?.[1] || "unknown regex failure"
+				return `<h2 class="heading-box">Blog from ${blog.stats.ctime.getMonth() + 1}/${blog.stats.ctime.getDate()}/${blog.stats.ctime.getFullYear()}</h2><div class="section"><a href="/blog/${name}">${name.replace(dashRegex, " ").split(" ").map(s => `${s[0]?.toUpperCase()}${s.slice(1)}`).join(" ")}</a></div>`
+			}).join("\n")
+			template = template.replace(bodyRegex, htmlData)
+			res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(template) }).end(template)
+		}
+	},
 	"/interaction": {
 		methods: ["POST"],
 		async handle(req, res) {
@@ -148,7 +168,7 @@ const paths: {
 
 			const shard = payload.guild_id && config.db_enabled ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: -1, cluster_id: "unknown" }
 			const toMusic = payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)
-			amqpChannel.sendToQueue(toMusic ? config.amqp_music_queue : config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
+			amqpChannel?.sendToQueue(toMusic ? config.amqp_music_queue : config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
 		}
 	}
 }
@@ -212,6 +232,12 @@ const routes: {
 				}).end(err)
 			})
 		}
+	},
+	"/blog/:blogID": {
+		methods: ["GET", "HEAD"],
+		async router(req, res) {
+			return util.streamResponse(res, pathMod.join(rootFolder, `./blog.html`), req.method?.toUpperCase() === "HEAD")
+		},
 	}
 }
 

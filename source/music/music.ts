@@ -1,5 +1,4 @@
 import crypto from "crypto"
-import mixin from "mixin-deep"
 
 import passthrough from "../passthrough"
 const { snow, commands, constants, sync, queues, config, lavalink, amqpChannel } = passthrough
@@ -444,7 +443,7 @@ commands.assign([
 			const speed = cmd.data.options.get("speed")?.asNumber() ?? queue.speed
 
 			const oldFilters = queue.player!.state.filters
-			const newFilters = mixin(oldFilters, { timescale: { pitch: pitch, speed: speed } })
+			const newFilters = Object.assign(oldFilters, { timescale: { pitch: pitch, speed: speed } })
 			const result = await queue.player!.filters(newFilters)
 			if (!result) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.FILTERS_ERROR })
 			else return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.FILTERS_APPLIED })

@@ -42,18 +42,33 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 		passthrough.db = db
 	} else console.warn("Database disabled")
 
+	if (config.amqp_enabled) {
+		const connection = await amqp.connect(config.amqp_url)
+		const channel = await connection.createChannel()
+		await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
+		Object.assign(passthrough, { amqpChannel: channel })
+
+		channel.consume(config.amqp_queue, async msg => {
+			if (!msg) return
+			channel.ack(msg)
+			const parsed: import("discord-api-types/v10").GatewayDispatchPayload & { shard_id: number; cluster_id: string } = JSON.parse(msg.content.toString("utf-8"))
+			// -1 s means it was an interaction sent from website and this path is for bots still using gateway interactions
+			if (parsed.s !== -1 && parsed.t === "INTERACTION_CREATE" && (parsed.d.type === 2 || parsed.d.type === 3)) {
+				await client.snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: parsed.d.type === 2 ? 5 : 6 })
+				if (parsed.d.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(parsed.d.data.name)) return channel.sendToQueue(config.amqp_music_queue, msg.content)
+			}
+			client.emit("gateway", parsed)
+		})
+
+		channel.on("close", console.error)
+	}
+
 	const discordUtils: typeof import("./utils/discord") = await sync.require("./utils/discord")
-	const clientUser = await discordUtils.getUser(clientID)
-	if (!clientUser) throw new Error("Could not get client user info. Please terminate this process and try again or check for bugs")
+	let clientUser = await discordUtils.getUser(clientID)
+	if (!clientUser) clientUser = { id: clientID, username: "Amanda detached", discriminator: "0000", avatar: null }
 	client.user = clientUser
 
 	process.title = client.user.username
-
-	const connection = await amqp.connect(config.amqp_url)
-	const channel = await connection.createChannel()
-	await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
-
-	Object.assign(passthrough, { amqpChannel: channel })
 
 	sync.require([
 		"./stdin",
@@ -65,18 +80,6 @@ client.snow.requestHandler.on("requestError", (p, e) => console.error(`Request E
 		"./commands/music-stub",
 		"./commands/meta" // meta should load last always for command docs reasons
 	])
-
-	channel.consume(config.amqp_queue, async msg => {
-		if (!msg) return
-		channel.ack(msg)
-		const parsed: import("discord-api-types/v10").GatewayDispatchPayload & { shard_id: number; cluster_id: string } = JSON.parse(msg.content.toString("utf-8"))
-		// -1 s means it was an interaction sent from website and this path is for bots still using gateway interactions
-		if (parsed.s !== -1 && parsed.t === "INTERACTION_CREATE" && (parsed.d.type === 2 || parsed.d.type === 3)) {
-			await client.snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: parsed.d.type === 2 ? 5 : 6 })
-			if (parsed.d.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(parsed.d.data.name)) return channel.sendToQueue(config.amqp_music_queue, msg.content)
-		}
-		client.emit("gateway", parsed)
-	})
 	console.log(`Successfully logged in as ${client.user.username}`)
 })()
 

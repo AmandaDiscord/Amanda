@@ -11,6 +11,7 @@ export function all(string: string, prepared?: unknown | Array<unknown>, connect
 	return new Promise((resolve, reject) => {
 		if (Array.isArray(prepared) && prepared.includes(undefined)) return reject(new Error(`Prepared statement includes undefined\n	Query: ${string}\n	Prepared: ${util.inspect(prepared)}`))
 		const query = { text: string, values: prep }
+		if (!connection) return resolve([])
 		connection.query(Array.isArray(prep) ? query : query.text).then(result => {
 			const rows = result.rows
 			resolve(rows || [])

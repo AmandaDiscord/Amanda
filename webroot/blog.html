@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Dash | Amanda</title>
+		<title>Blog | Amanda</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content ="A qt Discord music bot made for qts like you">
@@ -18,48 +18,38 @@
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
 		<meta name="theme-color" content="#fef0d7">
-		<link rel="stylesheet" type="text/css" href="/player.css">
-		<script type="module" src="/scripts/player.js"></script>
-		<script defer src="/scripts/external/soundcloud.js"></script>
-		<script>
-			var _channelID = "$channelID"
-			var _serverTimeDiff = Date.now()-$timestamp
-		</script>
+		<link rel="stylesheet" type="text/css" href="/main.css">
+		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 	</head>
 	<body>
-		<div class="container">
-			<noscript>
-				Please enable JavaScript. This page won't work without it. We promise there's no trackers, ads, or other evil things.
-			</noscript>
-			<main>
+		<main>
+			<div class="container">
+				<noscript>
+					Please enable JavaScript. This page won't work without it. We promise there's no trackers, ads, or other evil things.
+				</noscript>
 				<h1 class="heading-box">Navigation</h1>
 				<div class="section">
 					<a href="/">Home</a>
 					<a href="/blogs">Blogs</a>
 					<a href="/dash">Dash</a>
-					<a>
-						<form action="/logout" method="post">
-							<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
-							<button type="submit">Logout</button>
-						</form>
-					</a>
 				</div>
-				<div class="player-grid">
-					<div class="player-controls" id="player-container">
-						<div class="song-title nothing-playing">Connecting...</div>
-					</div>
-					<div class="channel-info">
-						<div class="channel-words">
-							<div class="channel-name" id="voice-channel-name">Connecting...</div>
-						</div>
-					</div>
-					<div class="queue-container" id="queue-container"></div>
-					<div class="right-panels">
-						<div class="side-controls" id="side-controls"></div>
-						<div class="voice-info" id="voice-info"></div>
-					</div>
-				</div>
-			</main>
-		</div>
+				<h1 class="heading-box" id="blog-id">Fetching blog...</h1>
+				<div class="section" id="blog-data">Fetching blog...</div>
+				<script>
+					const blogName = new URL(window.location).pathname.split("/").slice(-1).join("");
+					document.getElementById("blog-id").innerHTML = blogName.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
+					var marked = marked ?? undefined;
+					if (!marked) marked = { parse: (s) => s };
+					const replacer = "It looks like this blog doesn't exist or was deleted.";
+					fetch(`/blogs/${blogName}.md`).then(d => {
+						if (d.status === 200) return d.text();
+						else {
+							document.getElementById("blog-id").innerHTML = "Unknown or deleted blog";
+							return Promise.resolve(replacer);
+						}
+					}).then(data => document.getElementById("blog-data").innerHTML = marked.parse(data)).catch(() => replacer);
+				</script>
+			</div>
+		</main>
 	</body>
 </html>

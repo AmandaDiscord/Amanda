@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Dash | Amanda</title>
+		<title>Blogs | Amanda</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<meta name="description" content ="A qt Discord music bot made for qts like you">
@@ -18,48 +18,19 @@
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
 		<meta name="theme-color" content="#fef0d7">
-		<link rel="stylesheet" type="text/css" href="/player.css">
-		<script type="module" src="/scripts/player.js"></script>
-		<script defer src="/scripts/external/soundcloud.js"></script>
-		<script>
-			var _channelID = "$channelID"
-			var _serverTimeDiff = Date.now()-$timestamp
-		</script>
+		<link rel="stylesheet" type="text/css" href="/main.css">
 	</head>
 	<body>
-		<div class="container">
-			<noscript>
-				Please enable JavaScript. This page won't work without it. We promise there's no trackers, ads, or other evil things.
-			</noscript>
-			<main>
+		<main>
+			<div class="container">
 				<h1 class="heading-box">Navigation</h1>
 				<div class="section">
 					<a href="/">Home</a>
 					<a href="/blogs">Blogs</a>
 					<a href="/dash">Dash</a>
-					<a>
-						<form action="/logout" method="post">
-							<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
-							<button type="submit">Logout</button>
-						</form>
-					</a>
 				</div>
-				<div class="player-grid">
-					<div class="player-controls" id="player-container">
-						<div class="song-title nothing-playing">Connecting...</div>
-					</div>
-					<div class="channel-info">
-						<div class="channel-words">
-							<div class="channel-name" id="voice-channel-name">Connecting...</div>
-						</div>
-					</div>
-					<div class="queue-container" id="queue-container"></div>
-					<div class="right-panels">
-						<div class="side-controls" id="side-controls"></div>
-						<div class="voice-info" id="voice-info"></div>
-					</div>
-				</div>
-			</main>
-		</div>
+				$body
+			</div>
+		</main>
 	</body>
 </html>
