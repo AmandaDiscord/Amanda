@@ -20,6 +20,7 @@ export type Config = {
 	"app_public_key": string
 
 	"sql_domain": string
+	"sql_user": string
 	"website_protocol": "http" | "https"
 	"website_domain": string
 	"weeb_identifier": string

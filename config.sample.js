@@ -19,6 +19,7 @@ module.exports = {
 
 	// Environment
 	sql_domain: "example.com",
+	sql_user: "user",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	weeb_identifier: "AmandaSelfhosted/1.0.0/prod",

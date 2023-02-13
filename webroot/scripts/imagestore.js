@@ -6,7 +6,8 @@ class ImageStore {
 	/** @param {string} url */
 	_create(url) {
 		let e = document.createElement("img")
-		if (typeof url === "string" && !(url.startsWith("https://i.ytimg.com") || url.includes("media.friskyradio.com"))) e.crossOrigin = "anonymous"
+		let host = typeof url === "string" ? new URL(url).host : undefined
+		if (!["i.ytimg.com", "media.friskyradio.com"].includes(host)) e.crossOrigin = "anonymous"
 		e.src = url
 		return e
 	}

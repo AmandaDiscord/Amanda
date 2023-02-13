@@ -28,7 +28,7 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 	if (config.db_enabled) {
 		const pool = new Pool({
 			host: config.sql_domain,
-			user: "amanda",
+			user: config.sql_user,
 			password: config.sql_password,
 			database: "main",
 			max: 2
@@ -77,7 +77,7 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 
 		if (req.headers.cookie) delete req.headers.cookie
 
-		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- ${req.headers["x-forwarded-for"] || req.socket.remoteAddress}`, req.headers)
+		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- %s`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
 		if (!req.destroyed) req.destroy()
 		if (!res.destroyed) res.destroy()
 	})

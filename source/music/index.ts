@@ -37,7 +37,7 @@ Object.assign(passthrough, { snow, sync, config, constants, commands, queues, li
 
 const pool = new Pool({
 	host: config.sql_domain,
-	user: "amanda",
+	user: config.sql_user,
 	password: config.sql_password,
 	database: "main",
 	max: 2
