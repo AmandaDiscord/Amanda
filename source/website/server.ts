@@ -72,7 +72,7 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 			} else await util.streamResponse(res, p.join(rootFolder, url.pathname))
 		} catch (e) {
 			console.error(e)
-			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end(String(e))
+			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end("Something happened on our end. Oops!")
 		}
 
 		if (req.headers.cookie) delete req.headers.cookie
