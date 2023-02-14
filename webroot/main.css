@@ -14,7 +14,8 @@ html, body {
 	padding: 0;
 	font-size: 24px;
 	color: var(--text-color);
-	background-image: url("/images/background.gif"), url("/images/overflowbg.gif");
+	background-image: url("/images/background.gif");
+	background-color: #b5d7e7;
 	image-rendering: crisp-edges;
 	background-repeat: no-repeat, repeat-y;
 	background-size: 100%, 100%;
