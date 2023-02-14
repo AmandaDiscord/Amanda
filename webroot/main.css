@@ -14,10 +14,10 @@ html, body {
 	padding: 0;
 	font-size: 24px;
 	color: var(--text-color);
-	background-image: url("/images/background.gif");
+	background-image: url("/images/background.gif"), url("/images/overflowbg.gif");
 	image-rendering: crisp-edges;
-	background-repeat: no-repeat;
-	background-size: cover;
+	background-repeat: no-repeat, repeat-y;
+	background-size: 100%, 100%;
 }
 
 .contain-image {
