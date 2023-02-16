@@ -5,7 +5,7 @@ sync.require("../logger")
 
 import passthrough = require("../passthrough")
 import CommandManager = require("../CommandManager")
-const config: typeof import("../../config") = sync.require("../../config")
+const config: typeof import("../../config.sample") = sync.require("../../config")
 const constants: typeof import("../constants") = sync.require("../constants")
 const snow = new SnowTransfer(config.bot_token, { disableEveryone: true })
 const commands = new CommandManager<[import("../Command"), import("@amanda/lang").Lang]>()

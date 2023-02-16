@@ -3,7 +3,7 @@ interface Passthrough {
 	commands: import("./CommandManager")<[import("./Command"), import("@amanda/lang").Lang, { shard_id: number; cluster_id: string }]>
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	// @ts-ignore
-	config: typeof import("../config")
+	config: typeof import("../config.sample")
 	constants: typeof import("./constants")
 	pool: import("pg").Pool
 	db: import("pg").PoolClient

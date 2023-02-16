@@ -7,7 +7,7 @@ import p = require("path")
 import ws = require("ws")
 
 import passthrough = require("../passthrough")
-const config: typeof import("../../config") = sync.require("../../config")
+const config: typeof import("../../config.sample") = sync.require("../../config")
 const constants: typeof import("../constants") = sync.require("../constants")
 const rootFolder = p.join(__dirname, "../../webroot")
 const webQueues = new Map<string, import("../types").WebQueue>()
