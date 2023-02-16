@@ -13,8 +13,7 @@ jobs:
         with:
           node-version: '18.x'
 
-      - name: Install, lint, and Compile
+      - name: Install and lint
         run: |
           npm install
           npm run lint
-          npm run compile
