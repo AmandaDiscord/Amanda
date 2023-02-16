@@ -1,7 +1,7 @@
-import Jimp from "jimp"
-import crypto from "crypto"
+import Jimp = require("jimp")
+import crypto = require("crypto")
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { constants, client, commands, sync, config } = passthrough
 
 const language: typeof import("../utils/language") = sync.require("../utils/language")
@@ -92,8 +92,8 @@ const cmds = [
 		process(cmd, lang) {
 			if (!cmd.guild_id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) })
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
-			if (user.id == client.user!.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_U })
-			if (user.id == cmd.author.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) })
+			if (user.id === passthrough.configuredUserID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_U })
+			if (user.id === passthrough.configuredUserID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) })
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` }) })
 		}
 	}
@@ -186,7 +186,7 @@ function doInteraction(cmd: import("../../Command"), lang: import("@amanda/lang"
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: arrayUtils.random(responses) })
 	}
 
-	if (user.id == client.user!.id) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) })
+	if (user.id === passthrough.configuredUserID) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) })
 	let fetched: Promise<string> | undefined = undefined
 	let footer: string
 	if (!fetched) {

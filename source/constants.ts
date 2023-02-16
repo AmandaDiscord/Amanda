@@ -1,10 +1,12 @@
-// Receive/Send annotations will be in relation to main thread
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 
-let config: import("./types").Config
+// @ts-ignore
+let config: typeof import("../config")
 try {
 	config = require("../config")
 } catch {
-	config = {} as import("./types").Config
+	// @ts-ignore
+	config = {}
 }
 
 export const baseURL = `${config.website_protocol}://${config.website_domain}`
@@ -49,5 +51,3 @@ export enum WebsiteOPCodes {
 	ACCEPT,
 	CREATE
 }
-
-export default exports as typeof import("./constants")

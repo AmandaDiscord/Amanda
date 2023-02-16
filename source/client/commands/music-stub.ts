@@ -1,4 +1,4 @@
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { commands } = passthrough
 
 commands.assign([
@@ -34,12 +34,21 @@ commands.assign([
 				description: "The station to play from",
 				required: true,
 				choices: [
+					{ name: "random", value: "random" },
 					{ name: "frisky original", value: "frisky/original" },
 					{ name: "frisky deep", value: "frisky/deep" },
 					{ name: "frisky chill", value: "frisky/chill" },
 					{ name: "frisky classics", value: "frisky/classics" },
-					{ name: "listen moe japanese", value: "lm/jp" },
-					{ name: "listen moe korean", value: "lm/kp" }
+					{ name: "listen moe japanese", value: "listenmoe/japanese" },
+					{ name: "listen moe korean", value: "listenmoe/korean" },
+					{ name: "absolute chillout", value: "radionet/absolutechillout" },
+					{ name: "radio swiss jazz", value: "radionet/swissjazz" },
+					{ name: "yoga chill", value: "radionet/yogachill" },
+					{ name: "95.7 the rock", value: "radionet/therock" },
+					{ name: "classic country", value: "radionet/classiccountry" },
+					{ name: "94.9 the surf", value: "radionet/thesurf" },
+					{ name: "gay fm", value: "radionet/gayfm" },
+					{ name: "aardvark blues", value: "radionet/aardvarkblues" }
 				]
 			},
 			{

@@ -1,6 +1,6 @@
-import util from "util"
+import util = require("util")
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { db } = passthrough
 
 export function all(string: string, prepared?: unknown | Array<unknown>, connection: import("pg").PoolClient = db, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
@@ -36,5 +36,3 @@ export async function hasPermission(user: import("discord-api-types/v10").APIUse
 	if (result) r = Object.values(result)[0] as number
 	return !!r
 }
-
-export default exports as typeof import("./sql")

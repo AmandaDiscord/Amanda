@@ -1,8 +1,11 @@
 interface Passthrough {
 	// Global props
 	commands: import("./CommandManager")<[import("./Command"), import("@amanda/lang").Lang, { shard_id: number; cluster_id: string }]>
-	config: import("./types").Config
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	config: typeof import("../config")
 	constants: typeof import("./constants")
+	pool: import("pg").Pool
 	db: import("pg").PoolClient
 	sync: import("heatsync")
 	amqpChannel: import("amqplib").Channel
@@ -17,11 +20,10 @@ interface Passthrough {
 	liveUserID: string
 	wss: import("ws").Server<import("ws").WebSocket>
 	webQueues: Map<string, import("./types").WebQueue>
+	sessions: Array<typeof import("./website/music")["Session"]["prototype"]>
 
 	// Music worker props
 	queues: Map<string, import("./music/queue").Queue>
-	frisky: import("frisky-client")
-	listenMoe: { jp: import("listensomemoe"); kp: import("listensomemoe") }
 	lavalink: import("lavacord").Manager
 	snow: import("snowtransfer").SnowTransfer
 }

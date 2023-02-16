@@ -1,4 +1,4 @@
-import Jimp from "jimp"
+import Jimp = require("jimp")
 
 class BitmapCache<K, T extends "image" | "font"> {
 	public type: T

@@ -1,9 +1,9 @@
-import cc from "callback-components"
+import cc = require("callback-components")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { client, sync, commands, config, constants, amqpChannel } = passthrough
 
-import Command from "../Command"
+import Command = require("../Command")
 
 // const discordUtils: typeof import("./utils/discord") = sync.require("./utils/discord")
 const text: typeof import("./utils/string") = sync.require("./utils/string")
@@ -37,7 +37,7 @@ async function onStatsPosting(time: number) {
 		const stats = await cluster.getOwnStats()
 		await orm.db.insert("stat_logs", {
 			time,
-			id: client.user.id,
+			id: passthrough.configuredUserID,
 			ram_usage_kb: Math.floor(stats.ram / 1000), // stats.ram is in bytes
 			users: stats.users,
 			guilds: stats.guilds,
@@ -60,11 +60,11 @@ const backtickRegex = /`/g
 sync.addTemporaryListener(client, "gateway", async (p: import("discord-api-types/v10").GatewayDispatchPayload & { shard_id: number; cluster_id: string }) => {
 	if (p.t === "GUILD_CREATE") {
 		if (p.d.voice_states) p.d.voice_states.forEach(i => orm.db.upsert("voice_states", { guild_id: p.d.id, channel_id: i.channel_id!, user_id: i.user_id }))
-		orm.db.upsert("guilds", { client_id: client.user.id, guild_id: p.d.id, cluster_id: p.cluster_id, shard_id: p.shard_id })
+		orm.db.upsert("guilds", { client_id: passthrough.configuredUserID, guild_id: p.d.id, cluster_id: p.cluster_id, shard_id: p.shard_id })
 	} else if (p.t === "GUILD_DELETE") {
 		if (!p.d.unavailable) {
 			orm.db.delete("voice_states", { guild_id: p.d.id })
-			orm.db.delete("guilds", { client_id: client.user.id, guild_id: p.d.id })
+			orm.db.delete("guilds", { client_id: passthrough.configuredUserID, guild_id: p.d.id })
 		}
 	} else if (p.t === "VOICE_STATE_UPDATE") {
 		if (p.d.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: p.d.user_id, guild_id: p.d.guild_id })

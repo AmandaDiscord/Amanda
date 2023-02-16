@@ -1,4 +1,4 @@
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { commands, constants, client } = passthrough
 
 commands.assign([

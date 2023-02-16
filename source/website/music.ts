@@ -1,6 +1,6 @@
-import constants from "../constants"
-import passthrough from "../passthrough"
-const { sync, wss, webQueues, config, amqpChannel } = passthrough
+import constants = require("../constants")
+import passthrough = require("../passthrough")
+const { sync, wss, webQueues, config, sessions } = passthrough
 
 const utils: typeof import("./util") = sync.require("./util")
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
@@ -41,7 +41,7 @@ type Receiver = {
 	sessionCallback(session: Session, cache: import("../types").WebQueue, data: PacketData): void;
 }
 
-export const receivers: {
+const receivers: {
 	[op: number]: Receiver
 } = {
 	[constants.WebsiteOPCodes.TRACK_ADD]: {
@@ -129,9 +129,7 @@ export const receivers: {
 	}
 }
 
-const sessions: Array<Session> = []
-
-export class Session {
+class Session {
 	public ws: import("ws").WebSocket
 	public loggedin = false
 	public channel: string | null = null
@@ -257,72 +255,47 @@ export class Session {
 	public togglePlayback(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TOGGLE_PLAYBACK, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TOGGLE_PLAYBACK, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public requestSkip(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.SKIP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.SKIP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public requestStop(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.STOP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel }})))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.STOP, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel }})))
 	}
 
 	public async requestAttributesChange(data: Packet<{ loop?: boolean }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		if (typeof data === "object" && typeof data.d === "object") {
-			if (typeof data.d.loop === "boolean") amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, t: "AMANDA_WEBSITE_MESSAGE", d: { loop: data.d.loop, channel_id: this.channel }})))
+			if (typeof data.d.loop === "boolean") passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, t: "AMANDA_WEBSITE_MESSAGE", d: { loop: data.d.loop, channel_id: this.channel }})))
 		}
 	}
 
 	public async requestClearQueue() {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CLEAR_QUEUE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CLEAR_QUEUE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel! } })))
 	}
 
 	public async requestTrackRemove(data: Packet<{ index: number }>) {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
-		if (data && data.d && typeof data.d.index === "number") amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TRACK_REMOVE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel!, index: data.d.index } })))
+		if (data && data.d && typeof data.d.index === "number") passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.TRACK_REMOVE, t: "AMANDA_WEBSITE_MESSAGE", d: { channel_id: this.channel!, index: data.d.index } })))
 	}
 }
-
-amqpChannel?.consume(config.amqp_website_queue, msg => {
-	if (!msg) return
-	amqpChannel?.ack(msg)
-	const parsed = JSON.parse(msg.content.toString("utf-8"))
-
-	if (parsed.op === constants.WebsiteOPCodes.ACCEPT) {
-		const queue = webQueues.get(parsed.d?.channel_id!)
-		if (parsed.d && parsed.d.op && queue) {
-			receivers[parsed.d.op]?.updateCallback(queue, parsed.d.d)
-			const subscribers = sessions.filter(s => s.channel === parsed.d!.channel_id)
-			for (const subscriber of subscribers) {
-				receivers[parsed.d.op]?.sessionCallback(subscriber, queue, parsed.d.d)
-			}
-		}
-
-
-	} else if (parsed.op === constants.WebsiteOPCodes.CREATE) {
-		if (parsed.d && parsed.d.voiceChannel && parsed.d.voiceChannel.id && !webQueues.has(parsed.d.voiceChannel.id)) {
-			webQueues.set(parsed.d.voiceChannel.id, parsed.d)
-			const subscribers = sessions.filter(s => s.channel === parsed.d!.voiceChannel.id)
-			for (const subscriber of subscribers) {
-				subscriber.sendState({})
-			}
-		}
-	}
-})
 
 function wsConnection(ws: import("ws").WebSocket) {
 	return new Session(ws)
 }
-wss.on("connection", wsConnection)
+sync.addTemporaryListener(wss, "connection", wsConnection)
 
 console.log("Websocket API loaded")
+
+export = { receivers, Session }

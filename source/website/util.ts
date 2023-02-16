@@ -1,11 +1,11 @@
-import p from "path"
-import fs from "fs"
-import mime from "mime-types"
+import p = require("path")
+import fs = require("fs")
+import mime = require("mime-types")
 import { pipeline } from "stream"
-import crypto from "crypto"
+import crypto = require("crypto")
 
-import passthrough from "../passthrough"
-const { rootFolder, db, sync } = passthrough
+import passthrough = require("../passthrough")
+const { rootFolder, db, sync, config } = passthrough
 
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 
@@ -231,7 +231,7 @@ export class Validator {
 }
 
 export class FormValidator extends Validator {
-	public trust({ req, body, config }: { req: import("http").IncomingMessage, body: string | Buffer, config: import("../types").Config }) {
+	public trust({ req, body }: { req: import("http").IncomingMessage, body: string | Buffer, config: typeof config }) {
 		if (!req || !body || !config) throw new Error("Not all parameters were passed")
 		this.do(
 			() => req.headers["origin"] || req.headers["referer"] || ""
@@ -277,5 +277,3 @@ export class FormValidator extends Validator {
 		return this
 	}
 }
-
-export default exports as typeof import("./util")

@@ -1,86 +1,37 @@
-import "../logger"
+import HeatSync = require("heatsync")
+const sync = new HeatSync()
+sync.require("../logger")
 
-import http from "http"
-import p from "path"
+import http = require("http")
+import p = require("path")
+import ws = require("ws")
 
-import * as ws from "ws"
-import Sync from "heatsync"
-import { Pool } from "pg"
-import amqp from "amqplib"
-
-import passthrough from "../passthrough"
-const config: import("../types").Config = require("../../config")
-import constants from "../constants"
-
-
-const sync = new Sync()
+import passthrough = require("../passthrough")
+const config: typeof import("../../config") = sync.require("../../config")
+const constants: typeof import("../constants") = sync.require("../constants")
 const rootFolder = p.join(__dirname, "../../webroot")
-const configuredUserID = Buffer.from(config.bot_token.split(".")[0], "base64").toString("utf8")
-const liveUserID = config.is_dev_env ? Buffer.from(config.live_bot_token.split(".")[0], "base64").toString("utf8") : configuredUserID
 const webQueues = new Map<string, import("../types").WebQueue>()
-
-Object.assign(passthrough, { constants, webQueues })
-
 const wss = new ws.Server({ noServer: true })
-const queues: typeof import("../passthrough")["queues"] = new Map()
+const sessions = [] as Array<typeof import("./music")["Session"]["prototype"]>
+Object.assign(passthrough, { sync, config, constants, rootFolder, webQueues, wss, sessions })
+
+const setup: typeof import("./setup") = sync.require("./setup")
 
 ;(async () => {
-	if (config.db_enabled) {
-		const pool = new Pool({
-			host: config.sql_domain,
-			user: config.sql_user,
-			password: config.sql_password,
-			database: "main",
-			max: 2
-		})
+	if (config.db_enabled) await setup.setupPg()
+	else console.warn("Database disabled")
 
-		const db = await pool.connect()
-		await db.query({ text: "DELETE FROM csrf_tokens WHERE expires < $1", values: [Date.now()] })
-		passthrough.db = db
-	}
+	const music: typeof import("./music") = sync.require("./music")
 
-	if (config.amqp_enabled) {
-		const connection = await amqp.connect(config.amqp_url)
-		const channel = await connection.createChannel()
-		await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
-		await channel.assertQueue(config.amqp_website_queue, { durable: false, autoDelete: true })
-
-		Object.assign(passthrough, { amqpChannel: channel })
-		channel.on("close", console.error)
-	}
-
-	Object.assign(passthrough, { config, sync, rootFolder, configuredUserID, liveUserID, wss, queues })
+	if (config.amqp_enabled) await setup.setupAmqp(music)
+	else console.warn("AMQP disabled")
 
 	const paths: typeof import("./paths") = sync.require("./paths")
 	const util: typeof import("./util") = sync.require("./util")
-	import("./api")
 
-	const server = http.createServer(async (req, res) => {
-		try {
-			const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
-			const path = paths[url.pathname]
-			if (path) {
-				if (req.method?.toUpperCase() === "OPTIONS") res.writeHead(204, { "Allow": path.methods.join(", ") })
-				else if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
-				else if (req.headers["range"]) res.writeHead(416).end()
-				else if (req.headers["expect"]) res.writeHead(417).end()
-				else {
-					if (path.static) await util.streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
-					else if (path.handle) await path.handle(req, res, url)
-					else res.writeHead(500).end()
-				}
-			} else await util.streamResponse(res, p.join(rootFolder, url.pathname))
-		} catch (e) {
-			console.error(e)
-			if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end("Something happened on our end. Oops!")
-		}
+	sync.require("./api")
 
-		if (req.headers.cookie) delete req.headers.cookie
-
-		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- %s`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
-		if (!req.destroyed) req.destroy()
-		if (!res.destroyed) res.destroy()
-	})
+	const server = http.createServer((req, res) => setup.onIncomingRequest(req, res, paths, util))
 
 	server.on("upgrade", async (req, socket, head) => {
 		wss.handleUpgrade(req, socket, head, s => wss.emit("connection", s, req))
@@ -91,13 +42,7 @@ const queues: typeof import("../passthrough")["queues"] = new Map()
 	server.listen(10400)
 
 	wss.once("close", () => console.log("Socket server has closed."))
-	require("./music")
-
-	process.on("uncaughtException", globalErrorHandler)
-	process.on("unhandledRejection", globalErrorHandler)
 })()
 
-async function globalErrorHandler(e: Error | undefined) {
-	const text: typeof import("../client/utils/string") = require("../client/utils/string")
-	console.error(await text.stringify(e))
-}
+process.on("uncaughtException", e => setup.onGlobalError(e))
+process.on("unhandledRejection", e => setup.onGlobalError(e))

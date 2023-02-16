@@ -1,7 +1,5 @@
-const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
-
-import passthrough from "../passthrough"
-const { constants, sync, frisky } = passthrough
+import passthrough = require("../passthrough")
+const { constants, sync } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -12,44 +10,116 @@ const language = sync.require("../client/utils/language") as typeof import("../c
 
 const AsyncValueCache = sync.require("./classes/AsyncValueCache") as typeof import("./classes/AsyncValueCache")
 
-const friskyStationData = new Map<"original" | "deep" | "chill" | "classics", { title: string; queue: string; client_name: string; url: string; beta_url: string; }>([
-	["original", {
-		title: "Frisky Radio: Original",
-		queue: "Frisky Radio: Original",
-		client_name: "frisky",
-		url: "http://stream.friskyradio.com/frisky_mp3_hi", // 44100Hz 2ch 128k MP3
-		beta_url: "http://stream.friskyradio.com/frisky_mp3_hi" // 44100Hz 2ch 128k MP3
+const feelingFrisky = "Feeling Frisky?"
+const friskyLyrics = "[Intro]\nFeeling frisky?\n\n[Verse ∞]\nFrisky...\n\n[Chorus]\n<other lyrics and bloops>\n\n"
+
+const radioStations = new Map<string, { [station: string]: { title: string; author: string; url: string; viewURL: string; lyrics?: string }}>([
+	["frisky", {
+		"original": {
+			title: "Frisky Radio: Original",
+			author: feelingFrisky,
+			url: "http://stream.friskyradio.com/frisky_mp3_hi",
+			viewURL: "https://frisky.fm",
+			lyrics: friskyLyrics
+		},
+		"deep": {
+			title: "Frisky Radio: Deep",
+			author: feelingFrisky,
+			url: "http://deep.friskyradio.com/friskydeep_aachi",
+			viewURL: "https://frisky.fm",
+			lyrics: friskyLyrics
+		},
+		"chill": {
+			title: "Frisky Radio: Chill",
+			author: feelingFrisky,
+			url: "http://chill.friskyradio.com/friskychill_mp3_high",
+			viewURL: "https://frisky.fm",
+			lyrics: friskyLyrics
+		},
+		"classics": {
+			title: "Frisky Radio: Classics",
+			author: feelingFrisky,
+			url: "https://stream.classics.friskyradio.com/mp3_high",
+			viewURL: "https://frisky.fm",
+			lyrics: friskyLyrics
+		}
 	}],
-	["deep", {
-		title: "Frisky Radio: Deep",
-		queue: "Frisky Radio: Deep",
-		client_name: "deep",
-		url: "http://deep.friskyradio.com/friskydeep_acchi", // 32000Hz 2ch 128k MP3 (!)
-		beta_url: "http://deep.friskyradio.com/friskydeep_aachi" // 32000Hz 2ch 128k MP3 (!)
+	["listenmoe", {
+		"japanese": {
+			title: "Listen.moe: Japanese",
+			author: "Delivering the best JPOP and KPOP music around!",
+			url: "https://listen.moe/opus",
+			viewURL: "https://listen.moe"
+		},
+		"korean": {
+			title: "Listen.moe: Korean",
+			author: "Delivering the best JPOP and KPOP music around!",
+			url: "https://listen.moe/kpop/opus",
+			viewURL: "https://listen.moe"
+		}
 	}],
-	["chill", {
-		title: "Frisky Radio: Chill",
-		queue: "Frisky Radio: Chill",
-		client_name: "chill",
-		url: "http://chill.friskyradio.com/friskychill_mp3_high", // 44100Hz 2ch 128k MP3
-		beta_url: "https://stream.chill.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
-	}],
-	["classics", {
-		title: "Frisky Radio: Classics",
-		queue: "Frisky Radio: Classics",
-		client_name: "classics",
-		url: "https://stream.classics.friskyradio.com/mp3_high", // 44100Hz 2ch 128k MP3
-		beta_url: "https://stream.classics.friskyradio.com/mp3_high" // 44100Hz 2ch 128k MP3
+	["radionet", {
+		"absolutechillout": {
+			title: "Absolute Chillout",
+			author: "Absolute Chillout",
+			url: "https://streaming.live365.com/b05055_128mp3",
+			viewURL: "https://www.radio.net/s/absolutechillout"
+		},
+		"swissjazz": {
+			title: "Radio Swiss Jazz",
+			author: "Radio Swiss Jazz",
+			url: "https://stream.srg-ssr.ch/m/rsj/mp3_128",
+			viewURL: "https://www.radio.net/s/swissjazz"
+		},
+		"yogachill": {
+			title: "Yoga Chill",
+			author: "VIP Chill",
+			url: "https://radio4.vip-radios.fm:18027/stream-128kmp3-YogaChill",
+			viewURL: "https://www.radio.net/s/vipyoga"
+		},
+		"therock": {
+			title: "95.7 The Rock",
+			author: "KMKO-FM",
+			url: "https://live.wostreaming.net/direct/alphacorporate-kmkofmaac-imc4",
+			viewURL: "https://www.radio.net/s/kmkofm"
+		},
+		"classiccountry": {
+			title: "104.9 Classic Country",
+			author: "Classic Country",
+			url: "https://ice10.securenetsystems.net/OZARK",
+			viewURL: "https://www.radio.net/s/classiccountry1049"
+		},
+		"thesurf": {
+			title: "94.9 The Surf FM",
+			author: "The Surf FM",
+			url: "https://ice24.securenetsystems.net/WVCO",
+			viewURL: "https://www.radio.net/s/949thesurffm"
+		},
+		"gayfm": {
+			title: "Gay FM",
+			author: "Gay FM",
+			url: "https://icepool.silvacast.com/GAYFM.mp3",
+			viewURL: "https://www.radio.net/s/gayfm"
+		},
+		"aardvarkblues": {
+			title: "Aardvark Blues",
+			author: "BluesFM",
+			url: "https://streaming.live365.com/b77280_128mp3",
+			viewURL: "https://www.radio.net/s/aardvarkblues"
+		}
 	}]
 ])
-
-const radioStations = new Map<string, Array<any>>([
-	["jpop", [
-
-	]],
-	["vocaloid", [
-
-	]]
+const radioStationGenres = new Map<string, Array<string>>([
+	["jpop", ["listenmoe/japanese"]],
+	["kpop", ["listenmoe/korean"]],
+	["chillout", ["frisky/chill", "radionet/absolutechillout", "radionet/yogachill"]],
+	["house", ["frisky/deep"]],
+	["jazz", ["radionet/swissjazz"]],
+	["rock", ["radionet/therock"]],
+	["country", ["radionet/classiccountry"]],
+	["oldies", ["radionet/thesurf"]],
+	["electro", ["radionet/gayfm"]],
+	["blues", ["radionet/aardvarkblues"]]
 ])
 
 export class Track {
@@ -133,7 +203,7 @@ export class Track {
 			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 		} else {
 			const part = "= ⋄ ==== ⋄ ==="
-			const fragment = part.substr(7 - this._filledBarOffset, 7)
+			const fragment = common.substr(part, 7 - this._filledBarOffset, 7)
 			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 			this._filledBarOffset++
 			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
@@ -164,6 +234,7 @@ export class RequiresSearchTrack extends Track {
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new AsyncValueCache.AsyncValueCache(async () => {
+			if (this.track !== "!") return
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 			try {
 				tracks = await common.loadtracks(this.searchString, this.queue?.node)
@@ -231,223 +302,53 @@ export class ExternalTrack extends Track {
 	}
 }
 
-export class FriskyTrack extends Track {
-	public station: import("../types").InferMapK<typeof friskyStationData>
-	public stationData: import("../types").InferMapV<typeof friskyStationData>
-	public friskyStation: import("frisky-client/lib/Station")
-	public stationInfoGetter: import("./classes/AsyncValueCache").AsyncValueCache<import("frisky-client/lib/Stream")>
-	public bound: (() => Promise<void>) | undefined
-	public live = true
-	public thumbnail = { src: constants.frisky_placeholder, width: 320, height: 180 }
+export class RadioTrack extends RequiresSearchTrack {
+	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
+	public stationData: import("../types").UnpackRecord<import("../types").InferMapV<typeof radioStations>>
 
-	public constructor(station: import("../types").InferMapK<typeof friskyStationData>, track: string | undefined, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
-		super(track || "!", { identifier: `frisky/${station}` }, input, requester, lang)
-
-		this.station = station
-		this.noPauseReason = lang.GLOBAL.CANNOT_PAUSE_LIVE
-
-		if (!friskyStationData.has(this.station)) throw new Error(`Unsupported station: ${this.station}`)
-		this.stationData = friskyStationData.get(this.station)!
-
-		this.title = this.stationData.title
-		this.queueLine = `**${this.stationData.queue}** (${this.lang.GLOBAL.HEADER_LIVE})`
-		if (!track) {
-			const url = this.station === "chill" ? this.stationData.url : this.stationData.beta_url
-			this.track = encoding.encode({
-				flags: 1,
-				version: 2,
-				title: "Frisky Radio",
-				author: "Feeling Frisky?",
-				length: BigInt(0),
-				identifier: url,
-				isStream: true,
-				uri: url,
-				source: "http",
-				position: BigInt(0)
-			})
-		}
-
-		this.friskyStation = frisky.managers.stream.stations.get(this.stationData.client_name)!
-		this.stationInfoGetter = new AsyncValueCache.AsyncValueCache(() => new Promise((resolve, reject) => {
-			let attempts = 0
-
-			const attempt = () => {
-				const retry = (reason: string) => {
-					if (attempts < 5) {
-						setTimeout(() => {
-							attempt()
-						}, 1000)
-					} else {
-						reject(reason)
-					}
-				}
-
-				attempts++
-				const index = this.friskyStation.findNowPlayingIndex()
-				if (index == null) return retry("Current item is unknown")
-				const stream = this.friskyStation.getSchedule()[index]
-				if (!stream) return retry("Current stream not available")
-				if (!stream.mix) return retry("Current mix not available")
-				if (!stream.mix.data) return retry("Current mix data not available")
-				const episode = stream.mix.episode
-				if (!episode) return retry("Current episode not available")
-				if (!episode.data) return retry("Current episode data not available")
-				return resolve(stream)
-			}
-			attempt()
-		}))
-	}
-
-	public async showLink() {
-		try {
-			const stream = await this.stationInfoGetter.get()
-			return `https://frisky.fm/mix/${stream.mix!.id}`
-		} catch {
-			return "https://frisy.fm"
-		}
-	}
-
-	public async showInfo() {
-		let stream: import("frisky-client/lib/Stream")
-		try {
-			stream = await this.stationInfoGetter.get()
-		} catch {
-			return (this.queue?.lang || this.lang).GLOBAL.SONG_INFO_FETCH_FAIL
-		}
-		const mix = stream.mix!
-		const stationCase = this.station[0].toUpperCase() + this.station.slice(1).toLowerCase()
-		let percentPassed = Math.floor(((-stream.getTimeUntil()) / (stream.data!.duration * 1000)) * 100)
-		if (percentPassed < 0) percentPassed = 0
-		if (percentPassed > 100) percentPassed = 100
-		const embed: import("discord-api-types/v10").APIEmbed = {
-			color: constants.standard_embed_color,
-			title: `FRISKY: ${mix.data!.title}`,
-			url: `https://frisky.fm/mix/${mix.id}`,
-			fields: [
-				{
-					name: this.queue?.lang.GLOBAL.HEADER_DETAILS || this.lang.GLOBAL.HEADER_DETAILS,
-					value: arrUtils.tableifyRows(
-						[
-							[(this.queue?.lang || this.lang).GLOBAL.HEADER_EPISODE || this.lang.GLOBAL.HEADER_EPISODE, `${mix.data!.title} / [Frisky](https://frisky.fm/mix/${mix.id})`],
-							[(this.queue?.lang || this.lang).GLOBAL.HEADER_SHOW || this.lang.GLOBAL.HEADER_SHOW, `${mix.data!.title.split(" - ")[0]} / [Frisky](https://frisky.fm/shows/${mix!.data!.show_id.id})`],
-							[(this.queue?.lang || this.lang).GLOBAL.HEADER_GENRE, mix.data!.genre.join(", ")],
-							[(this.queue?.lang || this.lang).GLOBAL.HEADER_STATION, stationCase],
-							[(this.queue?.lang || this.lang).GLOBAL.HEADER_SCHEDULE, language.replace((this.queue?.lang || this.lang).GLOBAL.SONG_STARTED_AND_REMAINING, { "ago": timeUtils.shortTime(-stream.getTimeUntil(), "ms", ["d", "h", "m"]), "remaining": timeUtils.shortTime(stream.getTimeUntil() + stream.data!.duration * 1000, "ms", ["d", "h", "m"]), "percent": percentPassed })]
-						],
-						["left", "none"],
-						() => "`"
-					).join("\n")
-				}
-			]
-		}
-
-		if (mix.episode) embed.thumbnail = { url: this.thumbnail.src }
-		if (mix.data!.track_list && mix.data!.track_list.length) {
-			const trackList = mix.data!.track_list
-				.slice(0, 6)
-				.map(track => `${track.artist} - ${track.title}`)
-				.join("\n")
-			embed.fields!.push({ name: (this.queue?.lang || this.lang).GLOBAL.HEADER_TRACK_LIST, value: trackList })
-		}
-		return embed
-	}
-
-	public async prepare() {
-		if (!this.bound) {
-			this.bound = this.stationUpdate.bind(this)
-			this.friskyStation.events.addListener("changed", this.bound)
-			await this.stationUpdate()
-		}
-		return Promise.resolve(void 0)
-	}
-
-	public async stationUpdate() {
-		this.stationInfoGetter.clear()
-		const stream = await this.stationInfoGetter.get()
-		const mix = stream.mix!
-		// console.log(mix)
-		this.title = mix.data!.title
-		this.thumbnail.src = mix.episode!.data!.album_art.url
-		this.thumbnail.width = mix.episode!.data!.album_art.thumb_width
-		this.thumbnail.height = mix.episode!.data!.album_art.thumb_height
-	}
-
-	public resume() {
-		return this.prepare()
-	}
-
-	public destroy() {
-		if (this.bound) this.friskyStation.events.removeListener("changed", this.bound)
-	}
-
-	public getLyrics(): Promise<string | null> {
-		return Promise.resolve("[Intro]\nFeeling frisky?\n\n[Verse ∞]\nFrisky...\n\n")
-	}
-}
-
-export class ListenMoeTrack extends Track {
-	public stationData: import("listensomemoe")
-	public bound: ((track: import("listensomemoe/dist/Types").Track) => unknown) | undefined
-	public thumbnail = { src: constants.listen_moe_placeholder, width: 64, height: 64 }
-
-	public constructor(station: "jp" | "kp", input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
-		const uri = passthrough.listenMoe[station].Constants.STREAM_URLS[station === "jp" ? "JPOP" : "KPOP"].opus
+	public constructor(station: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
+		const [namespace, substation] = station.split("/")
+		const stationData = radioStations.get(namespace)?.[substation]
+		if (!stationData) throw new Error("Invalid radio station")
 		const info = {
-			flags: 1,
-			version: 2,
-			title: passthrough.listenMoe[station].nowPlaying.title,
-			author: "Delivering the best JPOP and KPOP music around!",
-			length: BigInt(passthrough.listenMoe[station].nowPlaying.duration),
-			identifier: uri,
-			isStream: true,
-			uri: uri,
+			flags: 0,
 			source: "http",
-			position: BigInt(0)
+			identifier: stationData.url,
+			author: stationData.author,
+			length: BigInt(0),
+			isStream: true,
+			position: BigInt(0),
+			title: stationData.title,
+			uri: stationData.url,
+			version: 1
 		}
-		const track = encoding.encode(info)
-
-		super(track, info, input, requester, lang)
-
-		this.noPauseReason = lang.GLOBAL.CANNOT_PAUSE_LIVE
-		this.stationData = passthrough.listenMoe[station]
-		this.id = this._id
-		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : this.lang.GLOBAL.HEADER_LIVE})`
-	}
-
-	private get _id() {
-		return String((this.stationData.nowPlaying.albums && this.stationData.nowPlaying.albums[0] ? (this.stationData.nowPlaying.albums[0].id || this.stationData.nowPlaying.id) : this.stationData.nowPlaying.id))
-	}
-
-	public prepare() {
-		if (!this.bound) {
-			this.bound = this.stationUpdate.bind(this)
-			this.stationData.on("trackUpdate", this.bound)
-		}
-		return Promise.resolve(void 0)
+		super("!", info, station, requester, lang)
+		this.stationData = stationData
+		this.queueLine = `**${this.stationData.title}** (${this.lang.GLOBAL.HEADER_LIVE})`
 	}
 
 	public showLink() {
-		return Promise.resolve(`https://listen.moe/albums/${this.id}`)
+		return Promise.resolve(this.stationData.viewURL)
 	}
 
 	public async showInfo() {
-		const link = await this.showLink()
-		return `https://listen.moe\n${link}`
+		return `Try finding more radio stations like this one on ${await this.showLink()}`
 	}
 
-	public resume() {
-		return this.prepare()
+	public getLyrics() {
+		return Promise.resolve(this.stationData.lyrics ?? null)
 	}
 
-	public destroy() {
-		if (this.bound) this.stationData.removeListener("trackUpdate", this.bound)
+	public static randomFromGenre(genre: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang): RadioTrack | null {
+		const fromGenre = radioStationGenres.get(genre)
+		if (!fromGenre?.length) return null
+		return new RadioTrack(arrUtils.random(fromGenre), requester, lang)
 	}
 
-	public stationUpdate(track: import("listensomemoe/dist/Types").Track) {
-		this.title = track.title
-		this.lengthSeconds = track.duration
-		this.id = this._id
-		this.queueLine = `**${this.title}** (${this.lengthSeconds ? timeUtils.prettySeconds(this.lengthSeconds) : (this.queue?.lang || this.lang).GLOBAL.HEADER_LIVE})`
+	public static random(requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
+		const keys = Array.from(radioStationGenres.keys())
+		const genre = arrUtils.random(keys)
+		return RadioTrack.randomFromGenre(genre, requester, lang)!
 	}
 }
 
@@ -469,5 +370,3 @@ function decodeEntities(encodedString: string) {
 		return String.fromCharCode(num)
 	})
 }
-
-export default exports as typeof import("./tracktypes")

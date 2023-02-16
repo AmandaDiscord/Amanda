@@ -1,4 +1,4 @@
-import util from "util"
+import util = require("util")
 
 export async function stringify(data: unknown, depth = 0, returnRaw = false): Promise<string> {
 	let result: string
@@ -78,5 +78,3 @@ export function abbreviateNumber(value: number | string | bigint, precision = 2)
 	}
 	return converted.toLocaleString()
 }
-
-export default exports as typeof import("./string")

@@ -1,4 +1,4 @@
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { constants, config, commands, client } = passthrough
 
 const poweredbychewey = `Powered by ${constants.chewey_api}`.replace(/https?:\/\//, "")

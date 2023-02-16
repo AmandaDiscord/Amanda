@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import path from "path"
-import repl from "repl"
-import util from "util"
-import fs from "fs"
+import path = require("path")
+import repl = require("repl")
+import util = require("util")
+import fs = require("fs")
 
-import Lang from "@amanda/lang"
+import Lang = require("@amanda/lang")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { client, config, constants, commands, sync } = passthrough
 
 type LocaledObject = { [locale in import("discord-api-types/v10").LocaleString]?: string; }
@@ -75,7 +75,7 @@ const extraContext = {
 		}, cur))
 	},
 	refreshcommands() {
-		const payload = [...commands.cache.values()].map(c => {
+		const payload = Array.from(commands.cache.values()).map(c => {
 			const obj = extraContext.buildCommandLanguageObject(c.name)
 			const options = extraContext.buildCommandLanguageOptions(c.name)
 			return {
@@ -87,10 +87,10 @@ const extraContext = {
 				default_member_permissions: null
 			}
 		})
-		client.snow.interaction.bulkOverwriteApplicationCommands(client.user.id, payload) // Amanda is a "new" account which doesn't have a different ID from the application
+		client.snow.interaction.bulkOverwriteApplicationCommands(passthrough.configuredUserID, payload) // Amanda is a "new" account which doesn't have a different ID from the application
 	},
 	generatedocs() {
-		const cmds = [...commands.cache.values()].map(c => {
+		const cmds = Array.from(commands.cache.values()).map(c => {
 			const value: NameAndDesc & { options?: Array<NameAndDesc>; } = {
 				name: c.name,
 				description: c.description

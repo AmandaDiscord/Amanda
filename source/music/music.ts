@@ -1,6 +1,6 @@
-import crypto from "crypto"
+import crypto = require("crypto")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { snow, commands, constants, sync, queues, config, lavalink, amqpChannel } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
@@ -157,12 +157,21 @@ commands.assign([
 				description: "The station to play from",
 				required: true,
 				choices: [
+					{ name: "random", value: "random" },
 					{ name: "frisky original", value: "frisky/original" },
 					{ name: "frisky deep", value: "frisky/deep" },
 					{ name: "frisky chill", value: "frisky/chill" },
 					{ name: "frisky classics", value: "frisky/classics" },
-					{ name: "listen moe japanese", value: "lm/jp" },
-					{ name: "listen moe korean", value: "lm/kp" }
+					{ name: "listen moe japanese", value: "listenmoe/japanese" },
+					{ name: "listen moe korean", value: "listenmoe/korean" },
+					{ name: "absolute chillout", value: "radionet/absolutechillout" },
+					{ name: "radio swiss jazz", value: "radionet/swissjazz" },
+					{ name: "yoga chill", value: "radionet/yogachill" },
+					{ name: "95.7 the rock", value: "radionet/therock" },
+					{ name: "classic country", value: "radionet/classiccountry" },
+					{ name: "94.9 the surf", value: "radionet/thesurf" },
+					{ name: "gay fm", value: "radionet/gayfm" },
+					{ name: "aardvark blues", value: "radionet/aardvarkblues" }
 				]
 			},
 			{
@@ -181,20 +190,12 @@ commands.assign([
 			const { queue, existed } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
-			let toAdd: import("./tracktypes").Track
-
 			const slashIndex = track.indexOf("/")
 			if (slashIndex === -1) throw new Error(lang.GLOBAL.NEGATIVE_1_INDEX_IN_RADIO)
-			const namespace = track.slice(0, slashIndex)
-			const value = track.slice(slashIndex + 1)
-
-			if (namespace === "frisky") toAdd = new trackTypes.FriskyTrack(value as ConstructorParameters<typeof trackTypes.FriskyTrack>["0"], undefined, track, cmd.author, language.getLang(cmd.guild_locale!))
-			else if (namespace === "lm") toAdd = new trackTypes.ListenMoeTrack(value as ConstructorParameters<typeof trackTypes.ListenMoeTrack>["0"], track, cmd.author, language.getLang(cmd.guild_locale!))
-			else throw new Error(lang.GLOBAL.INVALID_RADIO_NAMESPACE)
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
-			await queue.addTrack(toAdd, position)
+			await queue.addTrack(track === "random" ? trackTypes.RadioTrack.random(cmd.author, lang) : new trackTypes.RadioTrack(track, cmd.author, lang), position)
 
 			if (!existed || !queue.playHasBeenCalled) queue.play()
 			else queue.interaction = cmd

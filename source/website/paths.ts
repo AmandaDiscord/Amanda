@@ -1,10 +1,10 @@
-import pathMod from "path"
-import fs from "fs"
+import pathMod = require("path")
+import fs = require("fs")
 import { webcrypto } from "crypto"
 
 import { verify } from "discord-verify/node"
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { sync, rootFolder, config, amqpChannel, configuredUserID } = passthrough
 
 const util: typeof import("./util") = sync.require("./util")

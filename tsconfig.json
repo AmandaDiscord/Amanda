@@ -1,9 +1,9 @@
 {
 	"compilerOptions": {
-		"allowSyntheticDefaultImports": true,
+		"allowSyntheticDefaultImports": false,
 		"allowJs": true,
 		"checkJs": true,
-		"esModuleInterop": true,
+		"esModuleInterop": false,
 		"declaration": false,
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,
@@ -15,15 +15,16 @@
 		"outDir": "./dist",
 		"pretty": true,
 		"removeComments": true,
-		"resolveJsonModule": true,
+		"resolveJsonModule": false,
 		"sourceMap": true,
 		"skipLibCheck": true,
 		"strictFunctionTypes": true,
 		"strictBindCallApply": true,
 		"strictNullChecks": true,
 		"target": "ES2020",
-		"types": ["node"]
+		"types": ["node"],
+		"rootDir": "source"
 	},
-	"include": ["./source"],
-	"exclude": ["node_modules"]
+	"include": ["source/**/*.ts"],
+	"exclude": ["node_modules", "dist/**/*", "config.js"]
 }

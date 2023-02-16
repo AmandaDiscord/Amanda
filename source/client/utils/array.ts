@@ -103,5 +103,3 @@ export function createPages(rows: Array<string>, maxLength: number, itemsPerPage
 	pages.push(currentPage)
 	return pages
 }
-
-export default exports as typeof import("./array")

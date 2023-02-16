@@ -1,6 +1,6 @@
-import path from "path"
+import path = require("path")
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { sync } = passthrough
 
 const [ImageCache, FontCache] = [sync.require("./classes/ImageCache"), sync.require("./classes/FontCache")] as [typeof import("./classes/ImageCache"), typeof import("./classes/FontCache")]

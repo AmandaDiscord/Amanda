@@ -1,7 +1,7 @@
-import cc from "callback-components"
+import cc = require("callback-components")
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { constants, sync, config, lavalink, snow } = passthrough
 
 const arr = sync.require("../client/utils/array") as typeof import("../client/utils/array")
@@ -114,6 +114,21 @@ const common = {
 		const json: import("lavalink-types").TrackLoadingResult = await data.json()
 		if (json.exception) throw new Error(json.exception.message)
 		return json
+	},
+
+	// TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability
+	// this polyfill has been tested to be compliant with the real substr with some of its quirks like not actually returning a length
+	// of the specified length
+	/**
+	 * Gets a substring beginning at the specified location and having the specified length.
+	 * @param text this string
+	 * @param from The starting position of the desired substring. The index of the first character in the string is zero.
+	 * @param length The number of characters to include in the returned substring.
+	 */
+	substr(text: string, from: number, length?: number) {
+		if (length === 0) return ""
+		if (!length || (from + length) <= text.length) return text.slice(from, length ? from + length : void 0)
+		return text.repeat(Math.ceil(length / (from + text.length))).slice(from, from + length)
 	}
 }
 

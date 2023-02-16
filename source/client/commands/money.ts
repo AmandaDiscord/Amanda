@@ -1,9 +1,9 @@
-import fs from "fs"
-import path from "path"
+import fs = require("fs")
+import path = require("path")
 
-import Jimp from "jimp"
+import Jimp = require("jimp")
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { client, constants, config, commands, sync } = passthrough
 
 const arr: typeof import("../utils/array") = sync.require("../utils/array")
@@ -39,7 +39,7 @@ async function awardAmount(userID: string, value: bigint, reason: string) {
 	const row = await getPersonalRow(userID)
 	await Promise.all([
 		orm.db.update("bank_accounts", { amount: (BigInt(row.amount) + value).toString() }, { id: row.id }),
-		orm.db.insert("transactions", { user_id: client.user.id, amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(), mode: value < BigInt(0) ? 1 : 0, description: reason, target: row.id })
+		orm.db.insert("transactions", { user_id: passthrough.configuredUserID, amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(), mode: value < BigInt(0) ? 1 : 0, description: reason, target: row.id })
 	])
 }
 

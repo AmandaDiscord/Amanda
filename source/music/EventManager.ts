@@ -1,10 +1,10 @@
-import util from "util"
+import util = require("util")
 
-import cc from "callback-components"
+import cc = require("callback-components")
 
-import Command from "../Command"
+import Command = require("../Command")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { commands, constants, snow, config, sync, amqpChannel, queues } = passthrough
 
 const lang: typeof import("../client/utils/language") = sync.require("../client/utils/language")
@@ -76,7 +76,7 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 
 	} else if (packet.t === "VOICE_SERVER_UPDATE") passthrough.lavalink.voiceServerUpdate(packet.d as import("lavacord").VoiceServerUpdate)
 	else if (packet.t === "AMANDA_WEBSITE_MESSAGE") {
-		const qs = [...queues.values()]
+		const qs = Array.from(queues.values())
 		const queue = qs.find(q => q.voiceChannelID === packet.d?.channel_id)
 
 
@@ -103,5 +103,3 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 		}
 	}
 }
-
-export default exports as typeof import("./EventManager")

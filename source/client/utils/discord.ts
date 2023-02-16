@@ -1,14 +1,14 @@
-import Jimp from "jimp"
-import cc from "callback-components"
+import Jimp = require("jimp")
+import cc = require("callback-components")
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { client, sync, config, constants, snow } = passthrough
 
 const orm: typeof import("./orm") = sync.require("./orm")
 const arr: typeof import("./array") = sync.require("./array")
 const language: typeof import("./language") = sync.require("./language")
 
-export async function getUser(id: string) {
+export async function getUser(id: string): Promise<import("discord-api-types/v10").APIUser> {
 	if (id === client?.user?.id) return client.user
 	if (config.db_enabled) {
 		const cached = await orm.db.get("users", { id: id })
@@ -93,5 +93,3 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 	} else callback(page, null)
 	return null
 }
-
-export default exports as typeof import("./discord")

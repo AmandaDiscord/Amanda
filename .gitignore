@@ -13,3 +13,4 @@ dblimg.png
 /.nyc_output
 /coverage
 /dist
+tsconfig.tsbuildinfo

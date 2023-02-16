@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
-import sG from "simple-git"
-const simpleGit = sG(__dirname)
+import sG = require("simple-git")
+const simpleGit = sG.simpleGit(__dirname)
 
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { client, constants, config, commands, sync } = passthrough
 
 const text: typeof import("../utils/string") = sync.require("../utils/string")

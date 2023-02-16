@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import repl from "repl"
-import util from "util"
+import repl = require("repl")
+import util = require("util")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { snow, config, constants, commands, sync, queues } = passthrough
 
 const extraContext = {}

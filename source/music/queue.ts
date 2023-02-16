@@ -1,8 +1,8 @@
-import util from "util"
+import util = require("util")
 
-import cc from "callback-components"
+import cc = require("callback-components")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { sync, queues, config, constants, snow, configuredUserID, lavalink, amqpChannel } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
@@ -57,7 +57,7 @@ class Queue {
 
 	public toJSON(): import("../types").WebQueue {
 		return {
-			members: ([...this.listeners.values()]).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
+			members: (Array.from(this.listeners.values())).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -158,6 +158,7 @@ class Queue {
 	}
 
 	public async play() {
+		if (!this.tracks[0]) throw new Error("NO_TRACK")
 		this.playHasBeenCalled = true
 		const track = this.tracks[0]
 		if (this.tracks[1]) this.tracks[1].prepare()

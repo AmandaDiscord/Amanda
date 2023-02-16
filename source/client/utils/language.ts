@@ -1,5 +1,5 @@
-import Lang from "@amanda/lang"
-import replace from "@amanda/lang/replace"
+import Lang = require("@amanda/lang")
+import replace = require("@amanda/lang/replace")
 
 const dashRegex = /-/g
 
@@ -9,5 +9,3 @@ export function getLang(id: string): import("@amanda/lang").Lang {
 }
 
 export { replace }
-
-export default exports as typeof import("./language")

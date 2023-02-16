@@ -1,4 +1,4 @@
-import passthrough from "../../passthrough"
+import passthrough = require("../../passthrough")
 const { sync } = passthrough
 
 const text: typeof import("./string") = sync.require("./string")
@@ -84,5 +84,3 @@ export function prettySeconds(seconds: number) {
 	output.push(seconds.toString().padStart(2, "0"))
 	return output.join(":")
 }
-
-export default exports as typeof import("./time")

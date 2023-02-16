@@ -4,7 +4,7 @@
  * Optimization is top priority.
  */
 
-import passthrough from "../../passthrough"
+ import passthrough = require("../../passthrough")
 const { sync } = passthrough
 
 const sql: typeof import("./sql") = sync.require("./sql")
@@ -239,5 +239,3 @@ export const db = new Database({
 	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
 	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"])
 })
-
-export default exports as typeof import("./orm")

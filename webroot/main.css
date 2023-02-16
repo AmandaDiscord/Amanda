@@ -17,7 +17,7 @@ html, body {
 	background-image: url("/images/background.gif");
 	background-color: #b5d7e7;
 	image-rendering: crisp-edges;
-	background-repeat: no-repeat, repeat-y;
+	background-repeat: no-repeat;
 	background-size: 100%, 100%;
 }
 

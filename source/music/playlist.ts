@@ -1,4 +1,4 @@
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")

@@ -1,6 +1,6 @@
-import util from "util"
+import util = require("util")
 
-import passthrough from "../passthrough"
+import passthrough = require("../passthrough")
 const { config, liveUserID, sync } = passthrough
 
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
@@ -12,6 +12,7 @@ function getTimeoutForStatsPosting() {
 }
 
 let statsTimeout: NodeJS.Timeout
+sync.addTemporaryListener(sync.events, __filename, () => clearTimeout(statsTimeout))
 
 function setTimeoutForStats() {
 	const dateExpected = getTimeoutForStatsPosting()
