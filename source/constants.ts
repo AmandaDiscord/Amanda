@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 
 // @ts-ignore
-let config: typeof import("../config")
+let config: typeof import("../config.sample")
 try {
 	config = require("../config")
 } catch {
