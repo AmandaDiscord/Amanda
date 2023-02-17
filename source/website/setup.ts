@@ -107,7 +107,7 @@ const setup = {
 
 		if (req.headers.cookie) delete req.headers.cookie
 
-		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} --- %s`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
+		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} ---`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
 		if (!req.destroyed) req.destroy()
 		if (!res.destroyed) res.destroy()
 	},
