@@ -81,7 +81,7 @@ const setup = {
 		}
 	},
 
-	onAmqpChannelClose(...params: Array<any>) {
+	onAmqpChannelClose(...params: Array<unknown>) {
 		console.error(...params)
 	},
 
@@ -112,7 +112,7 @@ const setup = {
 		if (!res.destroyed) res.destroy()
 	},
 
-	async onGlobalError(e: any) {
+	async onGlobalError(e: unknown) {
 		console.error(await require("../client/utils/string").stringify(e))
 	}
 }

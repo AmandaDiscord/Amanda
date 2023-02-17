@@ -48,6 +48,7 @@ const setup = {
 		const connection = await amqp.connect(config.amqp_url)
 		const channel = await connection.createChannel()
 		await channel.assertQueue(config.amqp_queue, { durable: false, autoDelete: true })
+		await channel.assertQueue(config.amqp_music_queue, { durable: false, autoDelete: true })
 		console.log("Connected to AMQP")
 		passthrough.amqpChannel = channel
 
@@ -74,7 +75,7 @@ const setup = {
 		client.emit("gateway", parsed)
 	},
 
-	onAmqpChannelClose(...params: Array<any>) {
+	onAmqpChannelClose(...params: Array<unknown>) {
 		console.error(...params)
 	},
 
@@ -91,7 +92,7 @@ const setup = {
 		])
 	},
 
-	async onGlobalError(e: any) {
+	async onGlobalError(e: unknown) {
 		console.error(e)
 		client.snow.channel.createMessage("512869106089852949", {
 			embeds: [

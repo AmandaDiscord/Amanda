@@ -8,6 +8,7 @@
     "start": "node --enable-source-maps --optimize_for_size dist/client/index.js",
     "website": "node --enable-source-maps dist/website/server.js",
     "music": "node --enable-source-maps dist/music/index.js",
+    "backup": "node --enable-source-maps dist/backup/index.js",
     "compile": "tsc -p .",
     "lint": "eslint . --ext .ts"
   },

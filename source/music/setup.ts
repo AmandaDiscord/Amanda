@@ -64,7 +64,7 @@ const setup = {
 		eventHandler.handle(parsed)
 	},
 
-	onAmqpChannelClose(...params: Array<any>) {
+	onAmqpChannelClose(...params: Array<unknown>) {
 		console.error(...params)
 	},
 
@@ -124,7 +124,7 @@ const setup = {
 		])
 	},
 
-	async onGlobalError(e: any) {
+	async onGlobalError(e: unknown) {
 		console.error(e)
 		snow.channel.createMessage("512869106089852949", {
 			embeds: [

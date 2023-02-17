@@ -17,7 +17,7 @@ function getPrefix(type: "warn" | "info" | "error") {
 	return `\x1b[90m${new Date().toISOString().replace(T, " ").replace(Z, "")} ${type.length === 4 ? " " : ""}${color}${type.toUpperCase()} \x1b[0m--- \x1b[36m${scope}${" ".repeat((scopeNameMaxLogLength - scope.length) < 1 ? 1 : scopeNameMaxLogLength - scope.length)}\x1b[0m :`
 }
 
-function post(type: "info" | "warn" | "error", ...data: Array<any>): void {
+function post(type: "info" | "warn" | "error", ...data: Array<unknown>): void {
 	// @ts-ignore
 	const fn = type === "info" ? console._oldLog : type === "warn" ? console._oldWarn : console._oldErr
 	fn(getPrefix(type), ...data)

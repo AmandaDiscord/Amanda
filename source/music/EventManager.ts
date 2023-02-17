@@ -12,7 +12,7 @@ const lang: typeof import("../client/utils/language") = sync.require("../client/
 const backtickRegex = /`/g
 
 type MusicInboundPacket = import("discord-api-types/v10").GatewayDispatchPayload |
-	{ t: "AMANDA_WEBSITE_MESSAGE", op: import("../constants").WebsiteOPCodes, d: any }
+	{ t: "AMANDA_WEBSITE_MESSAGE", op: import("../constants").WebsiteOPCodes, d: Record<string, unknown> }
 
 export async function handle(packet: MusicInboundPacket & { shard_id: number }) {
 	if (packet.t === "INTERACTION_CREATE") {
@@ -70,11 +70,11 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 
 
 	} else if (packet.t === "VOICE_STATE_UPDATE") {
-		passthrough.lavalink.voiceStateUpdate(packet.d as import("lavacord").VoiceStateUpdate)
+		passthrough.lavalink?.voiceStateUpdate(packet.d as import("lavacord").VoiceStateUpdate)
 		queues.get(packet.d.guild_id!)?.voiceStateUpdate(packet.d)
 
 
-	} else if (packet.t === "VOICE_SERVER_UPDATE") passthrough.lavalink.voiceServerUpdate(packet.d as import("lavacord").VoiceServerUpdate)
+	} else if (packet.t === "VOICE_SERVER_UPDATE") passthrough.lavalink?.voiceServerUpdate(packet.d as import("lavacord").VoiceServerUpdate)
 	else if (packet.t === "AMANDA_WEBSITE_MESSAGE") {
 		const qs = Array.from(queues.values())
 		const queue = qs.find(q => q.voiceChannelID === packet.d?.channel_id)
