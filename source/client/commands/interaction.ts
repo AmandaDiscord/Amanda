@@ -192,7 +192,7 @@ function doInteraction(cmd: import("../../Command"), lang: import("@amanda/lang"
 	if (!fetched) {
 		if (shortcut == "weeb.sh") {
 			footer = "Powered by weeb.sh"
-			fetched = fetch(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, { headers: { Authorization: `Wolke ${config.weeb_api_key}` } }).then(d => d.json().then(j => j.url))
+			fetched = fetch(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, { headers: { Authorization: `Wolke ${config.weeb_api_key}` } }).then(d => d.json().then(j => j.url)).catch(() => "https://cdn.discordapp.com/attachments/608456955660468224/1076558288604364830/helloamanda.png")
 		} else if (shortcut == "durl") fetched = url!()
 		else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 	}

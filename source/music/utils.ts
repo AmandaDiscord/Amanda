@@ -44,7 +44,7 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = undefined): Promise<string | null> {
-			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).then(d => d.json()).then(j => j.lyrics || j.error || null)
+			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).then(d => d.json()).then(j => j.lyrics || j.error || null).catch(() => null)
 		},
 
 		pickApart(track: import("./tracktypes").Track) {
@@ -191,9 +191,10 @@ function trackSelection<T>(cmd: import("../Command"), lang: import("@amanda/lang
 }
 
 function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
-	const trackTypes = require("./tracktypes") as typeof import("./tracktypes")
+	const trackTypes = require("./tracktypes") as Omit<typeof import("./tracktypes"), "RadioTrack">
 	const type = sourceMap.get(info.source)
-	return new (type ? trackTypes[type] : trackTypes["Track"])(track, info, input, requester, lang)
+	const Track = (type ? trackTypes[type] : trackTypes["Track"])
+	return new Track(track, info, input, requester, lang)
 }
 
 export = common
