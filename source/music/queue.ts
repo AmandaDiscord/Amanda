@@ -462,7 +462,7 @@ class Queue {
 		if (!packet.channel_id && this.voiceChannelID && packet.user_id === configuredUserID) return this.destroy()
 		if (!packet.channel_id && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
-			if (this.listeners.size === 0) return this._onAllUsersLeave()
+			if (this.listeners.size === 1) return this._onAllUsersLeave() // just Amanda
 		}
 		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
 			const user = await discordUtils.getUser(packet.user_id)
