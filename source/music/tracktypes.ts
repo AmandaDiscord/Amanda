@@ -230,11 +230,10 @@ export class RequiresSearchTrack extends Track {
 
 	public constructor(track: string | null = null, info: Partial<import("@lavalink/encoding").TrackInfo>, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		super(track || "!", info, input, requester, lang)
-		this.searchString = info.identifier ? info.identifier : (info.author && info.title) ? `${info.author} - ${info.title}` : info.title || ""
+		this.searchString = (info.author && info.title) ? `${info.author} - ${info.title}` : info.title || ""
 		this.queueLine = `**${this.title}** (${timeUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new AsyncValueCache.AsyncValueCache(async () => {
-			if (this.track !== "!") return
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 			try {
 				tracks = await common.loadtracks(this.searchString, this.queue?.node)
@@ -314,15 +313,16 @@ export class RadioTrack extends RequiresSearchTrack {
 			flags: 0,
 			source: "http",
 			identifier: stationData.url,
-			author: stationData.author,
 			length: BigInt(0),
 			isStream: true,
 			position: BigInt(0),
-			title: stationData.title,
+			title: stationData.url,
 			uri: stationData.url,
 			version: 1
 		}
 		super("!", info, station, requester, lang)
+		this.title = stationData.title
+		this.author = stationData.author
 		this.stationData = stationData
 		this.queueLine = `**${this.stationData.title}** (${this.lang.GLOBAL.HEADER_LIVE})`
 	}
