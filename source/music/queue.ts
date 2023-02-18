@@ -456,23 +456,22 @@ class Queue {
 				const user = await discordUtils.getUser(state.user_id)
 				if (user && (!user.bot || user.id === configuredUserID)) this.listeners.set(user.id, user)
 			}
-			amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
+			return amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
 		}
 		// moving voice channels does not set the channel_id as null and then update
 		if (!packet.channel_id && this.voiceChannelID && packet.user_id === configuredUserID) return this.destroy()
-		if (!packet.channel_id && this.listeners.has(packet.user_id)) {
+		if (packet.channel_id !== this.voiceChannelID && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
-			if (this.listeners.size === 1) return this._onAllUsersLeave() // just Amanda
+			if (this.listeners.size === 1) this._onAllUsersLeave() // just Amanda
 		}
-		if (packet.channel_id && packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
-			const user = await discordUtils.getUser(packet.user_id)
-			if (!user || (user && user.bot)) return
+		if (packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
+			if (!packet.member?.user || packet.member.user.bot) return
 			this.leaveTimeout.clear()
 			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID).catch(() => void 0)
 			this.leavingSoonID = undefined
-			this.listeners.set(user.id, user)
+			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON()!.members } } })))
+		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON().members } } })))
 	}
 }
 

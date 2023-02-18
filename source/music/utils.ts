@@ -16,9 +16,6 @@ const hiddenEmbedRegex = /(^<|>$)/g
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
 const sourceMap = new Map<string, Key>([
-	["soundcloud", "Track"],
-	["newgrounds", "Track"],
-	["twitter", "Track"],
 	["itunes", "RequiresSearchTrack"],
 	["spotify", "RequiresSearchTrack"],
 	["http", "ExternalTrack"]
