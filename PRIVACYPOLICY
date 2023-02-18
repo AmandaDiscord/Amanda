@@ -1,5 +1,5 @@
 Amanda's Privacy Policy
-Last edited 1/31/2023 at 03:30 UTC-7
+Last edited 2/18/2023 at 00:26 UTC-7
 
 
 This privacy policy may be updated at any time for any reason to continue to meet the needs of Amanda. New policy updates will take
@@ -8,12 +8,13 @@ server (https://amanda.moe/to/server). If you do not agree with this statement, 
 (see one paragraph below.)
 
 
-Amanda may collect and store data sent to her from Discord permanently and/or temporarily unless a valid request in which
+Amanda collects and stores data sent to her from Discord permanently and/or temporarily unless a valid request in which
 the requester has ownership over data requests said data to be deleted. Whether a User has ownership over data or not
 is determined by if a User is making a request regarding their own User/Member data or if they are the owner of a Guild
-or are making a request on the data owner's behalf.
+or are making a request on the data owner's behalf with written consent if the data owner is alive and capable of providing such consent.
 Users making requests regarding data must DM PapiOphidian#0110 (User ID: 320067006521147393) on Discord.
-Requests regarding data may take up to two weeks to provide a User with or take action against said data.
+Requests regarding data can take up to two weeks to provide a User with or take action against said data.
+Data owners reserve the right to do with their data as they please. Data owners reserve the right to file a complaint with a supervisory authority.
 
 
 WHAT IS STORED:
@@ -29,14 +30,12 @@ occupant's data, and a User's Amanda premium status.
 
 
 WHY THIS DATA IS STORED:
-All cache and local data is stored on first party owned machines in countries which respect data privacy laws which
-may or may not be "remote" in relation to Amanda.
+All cache and local data is stored on first party owned machines in countries which respect data privacy laws which can be saved on machines that Amanda's code doesn't run on.
 
 The cache serves as a data store for data sent to Amanda from Discord in a semi-persistent state.
 The primary purpose is to prevent fetching necessary resources from Discord, incurring a hit to a rate limit (do x action every y interval).
-Rate limits are unavoidable and trying to circumvent them may lead to negative actions against Amanda such as being banned.
-An example is displaying usernames of creators on the full playlists list. The users have been fetched at some point or will be and stored for later
-for when the command is eventually run again. Finally, cached data is used by first party and
+Rate limits are unavoidable and trying to circumvent them can lead to negative actions against Amanda such as being banned.
+An example is displaying usernames of creators on the full playlists list. The users have been fetched at one point or will be and stored for later for when the command is eventually run again. Finally, cached data is used by first party and
 third party services (see "REGARDING THIRD PARTY SERVICES" for more info) to measure growth over time and provide
 current statistics regarding the state of Amanda.
 
@@ -47,3 +46,15 @@ include but are not limited to creating and managing playlists through Amanda or
 REGARDING THIRD PARTY SERVICES:
 When providing third party services data, said data is aggregated as to not provide said service with data which can
 be used to profile Amanda's individual users or their habits.
+
+REGARDING COOKIES:
+Amanda's website makes use of a cookie for the web dashboard. This cookie is strictly necessary and only consist of a token that cooresponds to a user ID, what paths on the website your browser should send the cookie on (currently has a value of "/" which means all paths), and when the cookie expires, which is currently always 1 year after submitting the token on the login page. This cookie verifies your identity with the server.
+
+An example of the cookie the format above describes which the server always sends is: "token=speciallogintoken; path=/; expires=Sun, 18 Feb 2024 07:19:31 GMT"
+Specific values vary such as the token and expires parameters. The token provided is for demonstration purposes only and is not real.
+
+What the server does to verify your identity in all cases is to get the user ID cooresponding to the cookie token and see if the user is in a voice channel.
+
+If the user is on the landing page of the dashboard, then the server takes the extra step of providing the user a means of viewing the dashboard of a voice channel should the user be in a voice channel, otherwise, it directs the user to join a voice channel to be able to be directed to the dashboard of said voice channel.
+
+If the user is on the voice channel dashboard page, then your browser also uses that cookie to identify your connection to the WebSocket API for the WebSocket server to see if the user is in the voice channel your browser is attempting to access so that the server can link that connection to the user account tied to the cookie. This is necessary for routing events to verified subscribers related to Amanda's queue.
