@@ -88,7 +88,7 @@ const setup = {
 	async onIncomingRequest(req: import("http").IncomingMessage, res: import("http").ServerResponse, paths: typeof import("./paths"), util: typeof import("./util")) {
 		try {
 			const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
-			const path = paths[url.pathname]
+			const path = paths.paths[url.pathname]
 			if (path) {
 				if (req.method?.toUpperCase() === "OPTIONS") res.writeHead(204, { "Allow": path.methods.join(", ") })
 				else if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()

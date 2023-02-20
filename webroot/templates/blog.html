@@ -4,13 +4,16 @@
 		<title>Blog | Amanda</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content ="Start reading this blog and others by Amanda">
-		<meta name="og:title" content="Blog">
+		<meta name="description" content ="$bodyshort">
+		<meta name="og:title" content="$title">
 		<meta name="og:url" content="https://amanda.moe">
 		<meta name="og:image" content="https://amanda.moe/images/amanda-reading.webp">
+		<meta name="og:description" content="$bodyshort">
 		<meta name="og:site_name" content="Amanda">
 		<meta name="og:type" content="article">
 		<meta name="og:article:author" content="Amanda">
+		<meta name="og:article:published_time" content="$timestamp">
+		<meta name="og:article:modified_time" content="$modified">
 		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.webp?v=lk9Bb25nwO">
 		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.webp?v=lk9Bb25nwO">
 		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.webp?v=lk9Bb25nwO">
@@ -21,13 +24,9 @@
 		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
 		<meta name="theme-color" content="#fef0d7">
 		<link rel="stylesheet" type="text/css" href="/main.css">
-		<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 	</head>
 	<body>
 		<div class="container">
-			<noscript>
-				Please enable JavaScript. This page won't work without it. We promise there's no trackers, ads, or other evil things.
-			</noscript>
 			<main>
 				<h1 class="heading-box">Navigation</h1>
 				<div class="section">
@@ -37,22 +36,8 @@
 					<a href="/to/add">Add Amanda</a>
 					<a href="/to/server">Join server</a>
 				</div>
-				<h1 class="heading-box" id="blog-id">Fetching blog...</h1>
-				<div class="section" id="blog-data">Fetching blog...</div>
-				<script>
-					const blogName = new URL(window.location).pathname.split("/").slice(-1).join("");
-					document.getElementById("blog-id").innerHTML = blogName.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
-					var marked = marked ?? undefined;
-					if (!marked) marked = { parse: (s) => s };
-					const replacer = "It looks like this blog doesn't exist or was deleted.";
-					fetch(`/blogs/${blogName}.md`).then(d => {
-						if (d.status === 200) return d.text();
-						else {
-							document.getElementById("blog-id").innerHTML = "Unknown or deleted blog";
-							return Promise.resolve(replacer);
-						}
-					}).then(data => document.getElementById("blog-data").innerHTML = marked.parse(data)).catch(() => replacer);
-				</script>
+				<h1 class="heading-box">$title</h1>
+				<div class="section">$body</div>
 				<h1 class="heading-box">Comments</h1>
 				<div class="section">
 					<script src="https://giscus.app/client.js"

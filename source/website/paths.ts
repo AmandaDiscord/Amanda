@@ -1,8 +1,10 @@
 import pathMod = require("path")
 import fs = require("fs")
 import { webcrypto } from "crypto"
+import { pipeline } from "stream"
 
 import { verify } from "discord-verify/node"
+import marked = require("marked")
 
 import passthrough = require("../passthrough")
 const { sync, rootFolder, config, amqpChannel, configuredUserID } = passthrough
@@ -20,6 +22,9 @@ const bodyRegex = /\$body/gm
 const csrftokenRegex = /\$csrftoken/gm
 const channelIDRegex = /\$channelID/gm
 const timestampRegex = /\$timestamp/gm
+const titleRegex = /\$title/gm
+const bodyShortRegex = /\$bodyshort/gm
+const modifiedRegex = /\$modified/gm
 const dashRegex = /-/g
 const fileNameRegex = /(.+?)\.\w+$/
 
@@ -235,9 +240,26 @@ const routes: {
 	},
 	"/blog/:blogID": {
 		methods: ["GET", "HEAD"],
-		async router(req, res) {
-			return util.streamResponse(res, pathMod.join(rootFolder, `./blog.html`), req.method?.toUpperCase() === "HEAD")
-		},
+		async router(req, res, url, { blogID }) {
+			const title = blogID.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
+			const toMD = pathMod.join(rootFolder, `./blogs/${blogID}.md`)
+			const stat = await fs.promises.stat(toMD).catch(() => void 0)
+			if (!stat) return util.streamResponse(res, pathMod.join(rootFolder, "./404.html"), req.method === "HEAD", 404)
+			const [template, data] = await Promise.all([
+				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blog.html"), { encoding: "utf-8" }),
+				fs.promises.readFile(toMD, { encoding: "utf-8" })
+			])
+			const rendered = marked.marked(data)
+			const sliced = data.slice(0, 60)
+			const short = data.length > 60 ? `${sliced}...` : sliced
+			const html = template
+				.replace(titleRegex, title)
+				.replace(timestampRegex, stat.ctime.toISOString())
+				.replace(modifiedRegex, stat.mtime.toISOString())
+				.replace(bodyShortRegex, short)
+				.replace(bodyRegex, rendered)
+			return res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
+		}
 	}
 }
 
@@ -299,4 +321,4 @@ const prox = new Proxy(paths, {
 	}
 })
 
-export = prox
+export = { paths: prox }

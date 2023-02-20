@@ -14,12 +14,12 @@ export async function streamResponse(res: import("http").ServerResponse, fileDir
 	try {
 		stats = await fs.promises.stat(fileDir)
 	} catch {
-		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404, true)
+		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
 		else return void res.writeHead(404).end();
 	}
 
 	if (!stats.isFile()) {
-		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "/404.html"), headersOnly, 404, true)
+		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
 		else return void res.writeHead(404).end();
 	}
 
