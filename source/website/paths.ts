@@ -1,7 +1,6 @@
 import pathMod = require("path")
 import fs = require("fs")
 import { webcrypto } from "crypto"
-import { pipeline } from "stream"
 
 import { verify } from "discord-verify/node"
 import marked = require("marked")
@@ -16,6 +15,7 @@ type Path = {
 	methods: Array<string>;
 	static?: string;
 	handle?(req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL): Promise<unknown>;
+	earlyHints?: Array<string>;
 }
 
 const bodyRegex = /\$body/gm
@@ -47,10 +47,12 @@ const paths: {
 } = {
 	"/": {
 		methods: ["GET", "HEAD"],
-		static: "index.html"
+		static: "index.html",
+		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/amanda.webp>; rel=preload; as=image", "</images/background.gif>; rel=preload; as=image"]
 	},
 	"/dash": {
 		methods: ["GET", "HEAD", "POST"],
+		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
 		async handle(req, res) {
 			if (["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) {
 				const cookies = util.getCookies(req)
@@ -69,7 +71,9 @@ const paths: {
 					return res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
 				} else return res.writeHead(303, { "Content-Type": "text/html", "Location": "/login" }).end("Redirecting to login...")
 			} else {
-				if (!req.headers["content-length"]) return res.writeHead(411).end()
+				if (!req.headers["content-length"] || isNaN(Number(req.headers["content-length"]))) return res.writeHead(411).end()
+				if (Number(req.headers["content-length"]) > 130) return res.writeHead(413).end()
+				if (req.headers["content-type"] !== "application/x-www-form-urlencoded") return res.writeHead(415).end()
 				let body: Buffer
 				try {
 					body = await util.requestBody(req)
@@ -104,8 +108,9 @@ const paths: {
 	},
 	"/login": {
 		methods: ["GET", "HEAD"],
+		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
 		async handle(req, res) {
-			if (req.method?.toUpperCase() === "HEAD") return util.streamResponse(res, pathMod.join(rootFolder, "templates/login.html"), true)
+			if (req.method?.toUpperCase() === "HEAD") return util.streamResponse(req, res, pathMod.join(rootFolder, "templates/login.html"), true)
 			let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/login.html"), { encoding: "utf8" })
 			const csrftoken = util.generateCSRF()
 			html = html.replace(csrftokenRegex, csrftoken)
@@ -117,7 +122,9 @@ const paths: {
 		async handle(req, res) {
 			if (["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) return res.writeHead(303, { "Content-Type": "text/html", "Location": "/dash" }).end(req.method?.toUpperCase() === "HEAD" ? void 0 : "Redirecting to dash...")
 			else {
-				if (!req.headers["content-length"]) return res.writeHead(411).end()
+				if (!req.headers["content-length"] || isNaN(Number(req.headers["content-length"]))) return res.writeHead(411).end()
+				if (Number(req.headers["content-length"]) > 100) return res.writeHead(413).end()
+				if (req.headers["content-type"] !== "application/x-www-form-urlencoded") return res.writeHead(415).end()
 				let body: Buffer
 				try {
 					body = await util.requestBody(req)
@@ -144,6 +151,7 @@ const paths: {
 	},
 	"/blogs": {
 		methods: ["GET"],
+		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
 		async handle(req, res) {
 			let [template, blogsDir] = await Promise.all([
 				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blogs.html"), { encoding: "utf-8" }),
@@ -161,7 +169,9 @@ const paths: {
 	"/interaction": {
 		methods: ["POST"],
 		async handle(req, res) {
-			if (req.headers["content-type"] !== "application/json" || !req.headers["x-signature-ed25519"] || !req.headers["x-signature-timestamp"]) return res.writeHead(400).end()
+			if (req.headers["content-type"] !== "application/json") return res.writeHead(415).end()
+			if (!req.headers["x-signature-ed25519"] || !req.headers["x-signature-timestamp"]) return res.writeHead(400).end()
+			if (!req.headers["content-length"] || isNaN(Number(req.headers["content-length"]))) return res.writeHead(411).end()
 			const body = await util.requestBody(req, 10000)
 			const bodyString = body.toString("utf-8")
 			const allowed = await verify(bodyString, req.headers["x-signature-ed25519"] as string, req.headers["x-signature-timestamp"] as string, config.app_public_key, webcrypto.subtle)
@@ -197,11 +207,13 @@ for (const [key, value] of Object.entries(redirects)) {
 const routes: {
 	[route: string]: {
 		methods: Array<string>;
+		earlyHints?: Array<string>;
 		router: (req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL, params: { [param: string]: string }) => Promise<unknown>;
 	}
 } = {
 	"/channels/:channelID": {
 		methods: ["GET"],
+		earlyHints: ["</player.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style"],
 		async router(req, res, _url, { channelID }) {
 			const cookies = util.getCookies(req)
 			const session = await util.getSession(cookies)
@@ -240,11 +252,12 @@ const routes: {
 	},
 	"/blog/:blogID": {
 		methods: ["GET", "HEAD"],
+		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
 		async router(req, res, url, { blogID }) {
 			const title = blogID.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
 			const toMD = pathMod.join(rootFolder, `./blogs/${blogID}.md`)
 			const stat = await fs.promises.stat(toMD).catch(() => void 0)
-			if (!stat) return util.streamResponse(res, pathMod.join(rootFolder, "./404.html"), req.method === "HEAD", 404)
+			if (!stat) return util.streamResponse(req, res, pathMod.join(rootFolder, "./404.html"), req.method?.toUpperCase() === "HEAD", 404)
 			const [template, data] = await Promise.all([
 				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blog.html"), { encoding: "utf-8" }),
 				fs.promises.readFile(toMD, { encoding: "utf-8" })
@@ -316,6 +329,7 @@ const prox = new Proxy(paths, {
 
 		return {
 			methods: routes[pt.route].methods,
+			earlyHints: routes[pt.route].earlyHints,
 			handle: (req, res, url) => routes[pt.route].router(req, res, url, params)
 		} as Path
 	}

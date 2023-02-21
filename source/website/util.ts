@@ -8,23 +8,100 @@ import passthrough = require("../passthrough")
 const { rootFolder, db, sync, config } = passthrough
 
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
+const spaceRegex = / /g
+const colonRegex = /:/g
+const semiRegex = /;/g
+const commaRegex = /,/g
+const slashSingleRegex = /\//
+const toEndOfSemiRegex = /([^;]+);?/
 
-export async function streamResponse(res: import("http").ServerResponse, fileDir: string, headersOnly = false, statusCode = 200, cameFrom404 = false): Promise<void> {
+const dateDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const dateMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+
+export function checkDateHeader(date?: string): boolean {
+	if (!date) return false
+	if (!dateDays.includes(date.slice(0, 3))) {
+		console.log(date.slice(0, 3), " is not in date days")
+		return false
+	}
+	const [day, month, year, time, tz] = date.slice(5).split(spaceRegex)
+	if (day?.length !== 2) {
+		console.log(day, " day length is not 2")
+		return false
+	}
+	if (!dateMonths.includes(month)) {
+		console.log(month, " is not in date months")
+		return false
+	}
+	if (year?.length !== 4) {
+		console.log(year, " year length is not 4")
+		return false // sucks for people past Year 9999, but the HTTP spec says 4 digit
+	}
+	const [hour, minute, second] = time?.split(colonRegex)
+	if (hour?.length !== 2) {
+		console.log(hour, " hour length is not 2")
+		return false
+	}
+	if (minute?.length !== 2) {
+		console.log(minute, " minute length is not 2")
+		return false
+	}
+	if (second?.length !== 2) {
+		console.log(second, " second length is not 2")
+		return false
+	}
+	if (tz !== "GMT") {
+		console.log(tz, " timezone is not GMT")
+		return false
+	}
+	return true
+}
+
+export async function streamResponse(req: import("http").IncomingMessage, res: import("http").ServerResponse, fileDir: string, headersOnly = false, statusCode = 200, cameFrom404 = false): Promise<void> {
 	let stats: import("fs").Stats
 	try {
 		stats = await fs.promises.stat(fileDir)
 	} catch {
-		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
+		if (!cameFrom404) return streamResponse(req, res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
 		else return void res.writeHead(404).end();
 	}
 
 	if (!stats.isFile()) {
-		if (!cameFrom404) return streamResponse(res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
+		if (!cameFrom404) return streamResponse(req, res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
 		else return void res.writeHead(404).end();
 	}
 
+	if (stats.size === 0) return void res.writeHead(204).end()
+
 	const type = mime.lookup(fileDir) || "application/octet-stream"
-	res.writeHead(statusCode, { "Content-Length": stats.size, "Content-Type": type })
+
+	const acceptable = req.headers["accept"] || "*/*"
+	const splitAccept = acceptable.split(commaRegex)
+	const canAccept = splitAccept.some(i => {
+		const [reqNamespace, reqType] = i.split(slashSingleRegex)
+		if (!reqNamespace || !reqType) return false
+		const vWithoutQ = reqType.match(toEndOfSemiRegex)
+		if (!vWithoutQ) return false
+		const [resNamespace, resType] = type.split(slashSingleRegex)
+		if (reqNamespace !== "*" && resNamespace !== reqNamespace) return false
+		if (reqType !== "*" && resType !== reqType) return false
+		return true
+	})
+	if (!canAccept) return void res.writeHead(406).end()
+
+	const writeHeaders = { "Content-Length": stats.size, "Content-Type": type, "Last-Modified": stats.mtime.toUTCString(), "Cache-Control": "no-cache" }
+
+	if (!cameFrom404 && ["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) { // check modified header(s)
+		if (checkDateHeader(req.headers["if-modified-since"])) {
+			const expecting = new Date(req.headers["if-modified-since"]!)
+			if (stats.mtimeMs >= expecting.getTime()) {
+				statusCode = 304
+				headersOnly = true
+			}
+		}
+	}
+	res.writeHead(statusCode, writeHeaders)
 
 	if (headersOnly) return void res.end()
 

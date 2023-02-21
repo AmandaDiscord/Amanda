@@ -86,30 +86,34 @@ const setup = {
 	},
 
 	async onIncomingRequest(req: import("http").IncomingMessage, res: import("http").ServerResponse, paths: typeof import("./paths"), util: typeof import("./util")) {
-		try {
-			const url = new URL(req.url!, `${config.website_protocol}://${req.headers.host}`)
-			const path = paths.paths[url.pathname]
-			if (path) {
-				if (req.method?.toUpperCase() === "OPTIONS") res.writeHead(204, { "Allow": path.methods.join(", ") })
-				else if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
-				else if (req.headers["range"]) res.writeHead(416).end()
-				else if (req.headers["expect"]) res.writeHead(417).end()
-				else {
-					if (path.static) await util.streamResponse(res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
-					else if (path.handle) await path.handle(req, res, url)
-					else res.writeHead(500).end()
+		if (!req.url) return res.writeHead(400).end()
+		if (req.url.length < 50) {
+			try {
+				const url = new URL(req.url, `${config.website_protocol}://${req.headers.host}`)
+				const path = paths.paths[url.pathname]
+				if (path) {
+					if (req.method?.toUpperCase() === "OPTIONS") res.writeHead(204, { "Allow": path.methods.join(", ") })
+					else if (!path.methods.includes(req.method?.toUpperCase()!)) res.writeHead(405).end()
+					else if (req.headers["range"]) res.writeHead(416).end()
+					else if (req.headers["expect"]) res.writeHead(417).end()
+					else {
+						if (path.earlyHints && ["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) res.writeEarlyHints({ link: path.earlyHints })
+						if (path.static) await util.streamResponse(req, res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
+						else if (path.handle) await path.handle(req, res, url)
+						else res.writeHead(500).end()
+					}
+				} else await util.streamResponse(req, res, p.join(rootFolder, url.pathname), req.method?.toUpperCase() === "HEAD")
+			} catch (e) {
+				if (e?.code !== "ERR_STREAM_PREMATURE_CLOSE") {
+					console.error(e)
+					if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end("Something happened on our end. Oops!")
 				}
-			} else await util.streamResponse(res, p.join(rootFolder, url.pathname))
-		} catch (e) {
-			if (e?.code !== "ERR_STREAM_PREMATURE_CLOSE") {
-				console.error(e)
-				if (res.writable) res.writeHead(500, { "Content-Type": "text/plain" }).end("Something happened on our end. Oops!")
 			}
-		}
+		} else res.writeHead(414).end()
 
 		if (req.headers.cookie) delete req.headers.cookie
 
-		if (res.statusCode >= 300) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} ---`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
+		if (res.statusCode >= 400) console.log(`${res.statusCode || "000"} ${req.method?.toUpperCase() || "UNK"} ${req.url} ---`, req.headers["x-forwarded-for"] || req.socket.remoteAddress, req.headers)
 		if (!req.destroyed) req.destroy()
 		if (!res.destroyed) res.destroy()
 	},
