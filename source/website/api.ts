@@ -82,15 +82,6 @@ async function onStatsPosting(time: number) {
 		body: JSON.stringify({ shard_count: config.total_shards, server_count: totalStats.guilds })
 	}).then(onResponse).catch(e => console.error(`top gg stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
 
-	fetch(`https://api.discordextremelist.xyz/v2/bot/${liveUserID}/stats`, {
-		method: "POST",
-		headers: {
-			Authorization: config.del_api_key,
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify({ shardCount: config.total_shards, guildCount: totalStats.guilds })
-	}).then(onResponse).catch(e => console.error(`discord extreme list stats api threw an Error:\n${util.inspect(e, false, Infinity, true)}`))
-
 	fetch(`https://discords.com/bots/api/bot/${liveUserID}`, {
 		method: "POST",
 		headers: {
