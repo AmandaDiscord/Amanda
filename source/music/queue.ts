@@ -1,4 +1,5 @@
 import util = require("util")
+import { createHash } from "crypto"
 
 import cc = require("callback-components")
 
@@ -48,6 +49,9 @@ class Queue {
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 	private _destroyed = false
+	private _onListenersSet: Promise<void> = new Promise(res => this._onListenersSetResolve = res)
+	private _listenersHaveBeenSet = false
+	private _onListenersSetResolve: (() => unknown)
 
 	public constructor(guildID: string, channelID: string) {
 		this.guildID = guildID
@@ -176,6 +180,30 @@ class Queue {
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
 			this._startNPUpdates()
+			if (!this._listenersHaveBeenSet) await this._onListenersSet
+			if (this.listeners.size > 1) {
+				const sql = `SELECT * FROM connections WHERE type = $1 AND user_id IN (${new Array(this.listeners.size).fill("?").map((_, ind) => `$${ind + 2}`)})`
+				const prepared = ["lastfm"]
+				for (const user of this.listeners.values()) {
+					prepared.push(user.id)
+				}
+				const connections = await orm.db.raw(sql, prepared) as Array<import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>>
+				for (const row of connections) {
+					const params = new URLSearchParams({
+						method: "track.scrobble",
+						"artist[0]": track.author,
+						"track[0]": track.title,
+						"timestamp[0]": String(Math.floor(Date.now() / 1000)),
+						"duration[0]": String(track.lengthSeconds),
+						"chosenByUser[0]": track.requester.id === row.user_id ? "1" : "0",
+						api_key: config.lastfm_key,
+						sk: row.access
+					})
+					const orderedWithSecret = `${Array.from(params.keys()).sort().map(param => `${param}${params.get(param)!}`).join("")}${config.lastfm_secret}`
+					const signature = createHash("md5").update(orderedWithSecret).digest("hex")
+					await fetch("https://ws.audioscrobbler.com/2.0/", { method: "POST", body: `${params.toString()}&api_sig=${signature}&format=json`, headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then(d => d.json())
+				}
+			}
 		}
 	}
 
@@ -263,6 +291,7 @@ class Queue {
 	public addTrack(track: import("./tracktypes").Track, position = this.tracks.length) {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
+		if (!this.playHasBeenCalled) this.play()
 		console.log(`[TRACK_ADD    ] guild: ${this.guildID} title: ${track.title} author: ${track.author} requester: ${track.requester.username}#${track.requester.discriminator} ${track.requester.id}`)
 		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } })))
 	}
@@ -456,6 +485,8 @@ class Queue {
 				const user = await discordUtils.getUser(state.user_id)
 				if (user && (!user.bot || user.id === configuredUserID)) this.listeners.set(user.id, user)
 			}
+			if (!this._listenersHaveBeenSet) this._onListenersSetResolve!()
+			this._listenersHaveBeenSet = true
 			return amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
 		}
 		// moving voice channels does not set the channel_id as null and then update

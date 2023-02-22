@@ -142,8 +142,7 @@ commands.assign([
 				await queue.addTrack(tracks[index], position + index)
 			}
 
-			if (!existed || !queue.playHasBeenCalled) queue.play()
-			else queue.interaction = cmd
+			queue.interaction = cmd
 		}
 	},
 	{
@@ -197,8 +196,7 @@ commands.assign([
 
 			await queue.addTrack(track === "random" ? trackTypes.RadioTrack.random(cmd.author, lang) : new trackTypes.RadioTrack(track, cmd.author, lang), position)
 
-			if (!existed || !queue.playHasBeenCalled) queue.play()
-			else queue.interaction = cmd
+			queue.interaction = cmd
 		}
 	},
 	{
