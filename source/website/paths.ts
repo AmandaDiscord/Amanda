@@ -205,7 +205,7 @@ const paths: {
 				const csrftoken = util.generateCSRF(session.token)
 				const html = template
 					.replace(lastfmKeyRegex, config.lastfm_key)
-					.replace(lastfmCallback, `${config.website_protocol}://${config.website_domain}/flow?user_id=${session.user_id}&type=lastfm`)
+					.replace(lastfmCallback, encodeURIComponent(`${config.website_protocol}://${config.website_domain}/flow?user_id=${session.user_id}&type=lastfm`))
 					.replace(connectionsRegex, !connections.length ? "None" : connections.map(c => `<form action="/unlink" method="post"><input type="hidden" id="csrftoken" name="csrftoken" value="${csrftoken}"><input type="hidden" id="type" name="type" value="${c.type}"><button type="submit">Unlink ${c.type}</button></form>`).join("<br>"))
 				res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
 			} else return res.writeHead(303, { "Content-Type": "text/html", "Location": "/login" }).end("Redirecting to login...")
