@@ -275,8 +275,7 @@ const paths: {
 								const orderedWithSecret = `${Array.from(params.keys()).sort().map(param => `${param}${params.get(param)!}`).join("")}${config.lastfm_secret}`
 								const signature = createHash("md5").update(orderedWithSecret).digest("hex")
 								const session = await fetch(`http://ws.audioscrobbler.com/2.0/?${params.toString()}&api_sig=${signature}&format=json`).then(d => d.json())
-								console.log(session)
-								return session.key
+								return session.session.key
 							} else throw new Error("INVALID_TYPE")
 						},
 						expected: i => !!i,
