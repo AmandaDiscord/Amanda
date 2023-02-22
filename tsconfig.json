@@ -26,5 +26,5 @@
 		"rootDir": "source"
 	},
 	"include": ["source/**/*.ts"],
-	"exclude": ["node_modules", "dist/**/*", "config.js"]
+	"exclude": ["node_modules", "dist/**/*", "config.js", "config.sample.js"]
 }

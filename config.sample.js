@@ -16,6 +16,8 @@ module.exports = {
 	del_api_key: "discordextremelist.xyz api key here",
 	discords_api_key: "discords.com api key here",
 	app_public_key: "discord app public key here",
+	lastfm_key: "last.fm api key here",
+	lastfm_secret: "last.fm api secret here",
 
 	// Environment
 	sql_domain: "example.com",

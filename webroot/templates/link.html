@@ -1,14 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>Dash | Amanda</title>
+		<title>Link Accounts | Amanda</title>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<meta name="description" content ="See what queues you're listening to">
-		<meta name="og:title" content="Dash">
+		<meta name="description" content ="Link your accounts with Amanda">
+		<meta name="og:title" content="Link Accounts">
 		<meta name="og:url" content="https://amanda.moe">
-		<meta name="og:image" content="https://amanda.moe/images/local.webp">
-		<meta name="og:description" content ="See what queues you're listening to">
+		<meta name="og:image" content="https://amanda.moe/images/amanda.webp">
+		<meta name="og:description" content ="Link your accounts with Amanda">
 		<meta name="og:site_name" content="Amanda">
 		<meta name="og:type" content="website">
 		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.webp?v=lk9Bb25nwO">
@@ -32,20 +32,16 @@
 					<a href="/dash">Dash</a>
 					<a href="/to/add">Add Amanda</a>
 					<a href="/to/server">Join server</a>
-					<a>
-						<form action="/logout" method="post">
-							<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
-							<button type="submit">Logout</button>
-						</form>
-					</a>
 				</div>
-				<h1 class="heading-box">Welcome back</h1>
+				<h1 class="heading-box">Services</h1>
 				<div class="section">
-					$body
+					Amanda offers some services you can link your account with to gain extra functionality of Amanda
 					<br>
 					<br>
-					You can also link other accounts to Amanda <a href="/link">here</a>
+					<a href="https://www.last.fm/api/auth/?api_key=$lastfmkey&cb=$lastfmcallback">Last.fm</a>
 				</div>
+				<h1 class="heading-box">Connected Accounts</h1>
+				<div class="section">$connections</div>
 			</main>
 			<br>
 			<br>

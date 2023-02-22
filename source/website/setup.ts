@@ -87,7 +87,7 @@ const setup = {
 
 	async onIncomingRequest(req: import("http").IncomingMessage, res: import("http").ServerResponse, paths: typeof import("./paths"), util: typeof import("./util")) {
 		if (!req.url) return res.writeHead(400).end()
-		if (req.url.length < 50) {
+		if (req.url.length < 100) {
 			try {
 				const url = new URL(req.url, `${config.website_protocol}://${req.headers.host}`)
 				const path = paths.paths[url.pathname]

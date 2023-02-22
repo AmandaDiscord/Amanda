@@ -237,5 +237,6 @@ export const db = new Database({
 	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id", "guild_id"], { useBuffer: true, bufferSize: 300 }),
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"]),
 	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
-	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"])
+	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"]),
+	connections: new Model<{ user_id: string, type: "lastfm", access: string }>(["user_id", "type"])
 })

@@ -1,6 +1,6 @@
 import pathMod = require("path")
 import fs = require("fs")
-import { webcrypto } from "crypto"
+import { webcrypto, createHash } from "crypto"
 
 import { verify } from "discord-verify/node"
 import marked = require("marked")
@@ -25,8 +25,13 @@ const timestampRegex = /\$timestamp/gm
 const titleRegex = /\$title/gm
 const bodyShortRegex = /\$bodyshort/gm
 const modifiedRegex = /\$modified/gm
+const lastfmKeyRegex = /\$lastfmkey/gm
+const lastfmCallback = /\$lastfmcallback/gm
+const connectionsRegex = /\$connections/gm
 const dashRegex = /-/g
 const fileNameRegex = /(.+?)\.\w+$/
+
+const xmlKeyRegex = /<key>(.+?)<\/key>/gm
 
 const redirects = {
 	stats: "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393",
@@ -83,11 +88,11 @@ const paths: {
 					return res.writeHead(code).end()
 				}
 				return new util.FormValidator()
-					.trust({ req, body, config })
+					.trust({ req, body })
 					.ensureParams(["token", "csrftoken"])
 					.useCSRF()
 					.do({
-						code: (state) => config.db_enabled ? orm.db.get("web_tokens", { token: state.params.get("token") }) : undefined
+						code: (state) => config.db_enabled ? orm.db.get("web_tokens", { token: state.params.get("token")! }) : undefined
 						, assign: "row"
 						, expected: v => v !== undefined
 						, errorValue: [400, "Invalid token"]
@@ -134,7 +139,7 @@ const paths: {
 					return res.writeHead(code).end()
 				}
 				return new util.FormValidator()
-					.trust({ req, body, config })
+					.trust({ req, body })
 					.ensureParams(["csrftoken"])
 					.useCSRF()
 					.go()
@@ -150,7 +155,7 @@ const paths: {
 		}
 	},
 	"/blogs": {
-		methods: ["GET"],
+		methods: ["GET", "HEAD"],
 		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
 		async handle(req, res) {
 			let [template, blogsDir] = await Promise.all([
@@ -184,6 +189,106 @@ const paths: {
 			const shard = payload.guild_id && config.db_enabled ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: -1, cluster_id: "unknown" }
 			const toMusic = payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)
 			amqpChannel?.sendToQueue(toMusic ? config.amqp_music_queue : config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
+		}
+	},
+	"/link": {
+		methods: ["GET", "HEAD"],
+		async handle(req, res) {
+			const cookies = util.getCookies(req)
+			const session = await util.getSession(cookies)
+
+			if (session && config.db_enabled) {
+				const [template, connections] = await Promise.all([
+					fs.promises.readFile(pathMod.join(rootFolder, "./templates/link.html"), { encoding: "utf-8" }),
+					orm.db.select("connections", { user_id: session.user_id }),
+				])
+				const csrftoken = util.generateCSRF(session.token)
+				const html = template
+					.replace(lastfmKeyRegex, config.lastfm_key)
+					.replace(lastfmCallback, `${config.website_protocol}://${config.website_domain}/flow?user_id=${session.user_id}&type=lastfm`)
+					.replace(connectionsRegex, !connections.length ? "None" : connections.map(c => `<form action="/unlink" method="post"><input type="hidden" id="csrftoken" name="csrftoken" value="${csrftoken}"><input type="hidden" id="type" name="type" value="${c.type}"><button type="submit">Unlink ${c.type}</button></form>`).join("<br>"))
+				res.writeHead(200, { "Content-Type": "text/html", "Content-Length": Buffer.byteLength(html) }).end(html)
+			} else return res.writeHead(303, { "Content-Type": "text/html", "Location": "/login" }).end("Redirecting to login...")
+		}
+	},
+	"/unlink": {
+		methods: ["GET", "HEAD", "POST"],
+		async handle(req, res) {
+			if (["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) return res.writeHead(303, { "Content-Type": "text/html", "Location": "/dash" }).end(req.method?.toUpperCase() === "HEAD" ? void 0 : "Redirecting to dash...")
+			else {
+				if (!req.headers["content-length"] || isNaN(Number(req.headers["content-length"]))) return res.writeHead(411).end()
+				if (Number(req.headers["content-length"]) > 100) return res.writeHead(413).end()
+				if (req.headers["content-type"] !== "application/x-www-form-urlencoded") return res.writeHead(415).end()
+				const cookies = util.getCookies(req)
+				const session = await util.getSession(cookies)
+				if (!session) return res.writeHead(401).end()
+				let body: Buffer
+				try {
+					body = await util.requestBody(req)
+				} catch (e) {
+					const error: Error = e
+					let code = error.message.includes("BYTE_SIZE") ? 413 : 408
+					return res.writeHead(code).end()
+				}
+				return new util.FormValidator()
+					.trust({ req, body })
+					.ensureParams(["type", "csrftoken"])
+					.useCSRF(session.token)
+					.do({
+						code: (state) => config.db_enabled ? orm.db.get("connections", { user_id: session.user_id, type: state.params.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }) : undefined
+						, assign: "row"
+						, expected: v => v !== undefined
+						, errorValue: [400, "Connection not linked"]
+					})
+					.go()
+					.then(async state => {
+						await orm.db.delete("connections", { user_id: session.user_id, type: state.params.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).catch(console.error)
+						res.writeHead(200, { "Content-Type": "text/html" }).end("Logged out successfully")
+					})
+					.catch(errorValue => res.writeHead(errorValue[0], { "Content-Type": "text/plain" }).end(errorValue[1]))
+			}
+		}
+	},
+	"/flow": {
+		methods: ["GET", "HEAD"],
+		async handle(req, res, url) {
+			return new util.Validator()
+				.do(
+					() => url.searchParams.has("user_id") && url.searchParams.has("token") && url.searchParams.has("type"),
+					[400, "Missing params"]
+				).do(
+					() => orm.db.get("connections", { user_id: url.searchParams.get("user_id")!, type: url.searchParams.get("type")! as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).then(r => !r),
+					[403, "Already connected"]
+				).do({
+					code: () => config.db_enabled,
+					expected: true,
+					errorValue: [500, "Database not enabled"]
+				}).do({
+						code: async () => {
+							const type = url.searchParams.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"]
+							if (type === "lastfm") {
+								const params = new URLSearchParams({
+									method: "auth.getSession",
+									token: url.searchParams.get("token")!,
+									api_key: config.lastfm_key
+								})
+								const orderedWithSecret = `${Array.from(params.keys()).sort().map(param => `${param}${params.get(param)!}`).join("")}${config.lastfm_secret}`
+								const signature = createHash("md5").update(orderedWithSecret).digest("hex")
+								const session = await fetch(`http://ws.audioscrobbler.com/2.0/?${params.toString()}&api_sig=${signature}&format=json`).then(d => d.json())
+								console.log(session)
+								return session.key
+							} else throw new Error("INVALID_TYPE")
+						},
+						expected: i => !!i,
+						assign: "access",
+						errorValue: [400, "Invalid token"]
+					})
+				.go()
+				.then(async state => {
+					await orm.db.insert("connections", { user_id: url.searchParams.get("user_id")!, access: state.access, type: url.searchParams.get("type")! as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).catch(console.error)
+					redirect(res, "/link")
+				})
+				.catch(errorValue => res.writeHead(errorValue[0], { "Content-Type": "text/plain" }).end(errorValue[1]))
 		}
 	}
 }

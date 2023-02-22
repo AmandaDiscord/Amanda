@@ -200,7 +200,7 @@ export function parseMultipartBody(body: string) {
 	return ret
 }
 
-export function generateCSRF(loginToken = null) {
+export function generateCSRF(loginToken: string | null = null) {
 	const token = crypto.randomBytes(32).toString("hex")
 	const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
 	db?.query({ text: "INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", values: [token, loginToken, expires] })
@@ -236,66 +236,70 @@ export function getSession(token: string | Map<string, string>) {
 	else return Promise.resolve(null)
 }
 
-export type Operation<T> = {
-	code?(state: { [assign: string]: any }, nextValue: T): T | Promise<T>;
-	assign?: string;
+type State = Record<string, any>
+type ConditionalMergeState<S extends State, B extends Operation<any, any, any, any>> = B["assign"] extends undefined ? S : import("../types").Merge<S, { [K in B["assign"]]: Awaited<ReturnType<B["code"]>> }>
+
+export type Operation<S extends State, T, N, A extends string | undefined> = {
+	code(state: S, previousValue: N): T | Promise<T>;
+	assign?: A;
 	expected?: ((value: T) => boolean) | T;
 	errorValue?: [number, string] | string;
 }
 
-export class Validator {
-	public state: Parameters<NonNullable<Operation<any>["code"]>>["0"] = {}
-	public nextValue = undefined
-	public operations: Array<Operation<any>> = []
+export class Validator<S extends State, N> {
+	public state = {}
+	public nextValue: N
+	public operations: Array<Operation<State, any, any, string>> = []
 	public stage = 0
-	public promise: Promise<this["state"]>
+	public promise: Promise<S>
 
-	public do<T>(operation: Operation<T>): this
-	public do<T>(operation: NonNullable<Operation<T>["code"]>, errorValue: [number, string] | string): this
-	public do<T>(operation: NonNullable<Operation<T>["code"]>, expected: NonNullable<Operation<T>["expected"]>, errorValue: [number, string] | string): this
-	public do<T>(operation: Operation<T>, errorValue: [number, string] | string): this
-	public do<T>(operation: Operation<T>, expected: NonNullable<Operation<T>["expected"]>, errorValue: [number, string] | string): this
-	public do<T>(operation: Operation<T> | NonNullable<Operation<T>["code"]>, errorOrExpected?: [number, string] | string | NonNullable<Operation<T>["expected"]>, errorValue?: [number, string] | string) {
-		if (typeof (operation) == "function") operation = { code: operation }
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O): Validator<ConditionalMergeState<S, O>, T>
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O["code"], errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O["code"], expected: NonNullable<O["expected"]>, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O, expected: NonNullable<O["expected"]>, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
+	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O | O["code"], errorOrExpected?: [number, string] | string | NonNullable<O["expected"]>, errorValue?: [number, string] | string): Validator<ConditionalMergeState<S, O>, T> {
+		if (typeof (operation) == "function") operation = { code: operation } as O
 		if (arguments.length == 2) operation.errorValue = errorOrExpected as [number, string]
 		else if (arguments.length == 3) {
-			operation.expected = errorOrExpected as NonNullable<Operation<T>["expected"]>
+			operation.expected = errorOrExpected as NonNullable<Operation<S, T, N, A>["expected"]>
 			operation.errorValue = errorValue
 		}
+		// @ts-ignore
 		this.operations.push(operation)
-		return this
+		return this as unknown as Validator<ConditionalMergeState<S, O>, T>
 	}
 
-	public go() {
-		if (!this.promise) this.promise = new Promise<this["state"]>((resolve, reject) => setImmediate(() => this._next(resolve, reject)))
+	public go(): Promise<S> {
+		if (!this.promise) this.promise = new Promise<S>((resolve, reject) => setImmediate(() => this._next(resolve, reject)))
 		return this.promise
 	}
 
-	private _next(resolve: (value: this["state"]) => void, reject: Parameters<ConstructorParameters<PromiseConstructor>["0"]>["1"]) {
-		if (this.operations.length == 0) return resolve(this.state)
+	private _next(resolve: (value: S) => void, reject: Parameters<ConstructorParameters<PromiseConstructor>["0"]>["1"]) {
+		if (this.operations.length == 0) return resolve(this.state as S)
 
 		this.stage++
 		const input = this.operations.shift()
+		if (!input) throw new Error("NO_INPUT")
 
 		const processSuccess = (result: any) => {
-			if (input?.expected) {
+			if (input.expected) {
 				if (typeof (input.expected) == "function") {
 					if (!input.expected(result)) return processError()
 				} else
 				if (input.expected !== result) return processError()
 			}
-			if (input?.assign !== undefined) this.state[input.assign] = result
+			if (input.assign !== undefined) this.state[input.assign] = result
 			this.nextValue = result
 			this._next(resolve, reject)
 		}
 
 		const processError = () => {
-			if (input?.errorValue !== undefined) reject(input.errorValue)
+			if (input.errorValue !== undefined) reject(input.errorValue)
 			else reject(new Error(`Unlabelled error in validator stage ${this.stage}`))
 		}
 
 		try {
-			// @ts-expect-error
 			const result = input.code(this.state, this.nextValue)
 			if (result instanceof Promise) {
 				result.then(processSuccess)
@@ -307,8 +311,8 @@ export class Validator {
 	}
 }
 
-export class FormValidator extends Validator {
-	public trust({ req, body }: { req: import("http").IncomingMessage, body: string | Buffer, config: typeof config }) {
+export class FormValidator<S extends { params: URLSearchParams }, N> extends Validator<S, N> {
+	public trust({ req, body }: { req: import("http").IncomingMessage, body: string | Buffer }) {
 		if (!req || !body || !config) throw new Error("Not all parameters were passed")
 		this.do(
 			() => req.headers["origin"] || req.headers["referer"] || ""
@@ -325,7 +329,7 @@ export class FormValidator extends Validator {
 		).do(
 			() => typeof (body) == "string" ? body : body.toString("ascii")
 			, [400, "Failed to convert body to a string"]
-		).do<any>({
+		).do({
 			code: (_, bod) => new URLSearchParams(bod)
 			, assign: "params"
 			, errorValue: [400, "Failed to convert body to URLSearchParams"]
@@ -333,11 +337,11 @@ export class FormValidator extends Validator {
 		return this
 	}
 
-	public ensureParams(list: Array<string>, matchMode = "get") {
+	public ensureParams(list: Array<string>, matchMode: "get" | "has" = "get") {
 		if (!(list instanceof Array)) list = [list]
 		list.forEach(item => {
 			this.do(
-				(_) => _.params[matchMode](item)
+				(_) => !!_.params[matchMode](item)
 				, v => v
 				, [400, `Missing ${item}`]
 			)
@@ -347,7 +351,7 @@ export class FormValidator extends Validator {
 
 	public useCSRF(loginToken?: string) {
 		this.do(
-			() => checkCSRF(this.state.params.get("csrftoken"), loginToken, true)
+			(state) => checkCSRF(state.params.get("csrftoken")!, loginToken, true)
 			, true
 			, [400, "Invalid CSRF token"]
 		)
