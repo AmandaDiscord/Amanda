@@ -186,7 +186,7 @@ const paths: {
 			else if (payload.type === 2) res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":5}") // defer because Discord doesn't accept 202 accepted
 			else if (payload.type === 3) res.writeHead(200, { "Content-Type": "application/json" }).end("{\"type\":6}")
 
-			const shard = payload.guild_id && config.db_enabled ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: -1, cluster_id: "unknown" }
+			const shard = payload.guild_id && config.db_enabled ? await orm.db.get("guilds", { client_id: configuredUserID, guild_id: payload.guild_id }) : { shard_id: payload.guild_id ? Number((BigInt(payload.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0, cluster_id: "unknown" }
 			const toMusic = payload.type === 2 && ["play", "radio", "skip", "stop", "queue", "nowplaying", "trackinfo", "lyrics", "seek", "filters", "shuffle", "musictoken", "playlists"].includes(payload.data!.name)
 			amqpChannel?.sendToQueue(toMusic ? config.amqp_music_queue : config.amqp_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: payload, s: -1, shard_id: shard.shard_id, cluster_id: shard.cluster_id })), { contentType: "application/json" })
 		}

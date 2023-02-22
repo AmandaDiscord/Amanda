@@ -23,7 +23,7 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 			const user = interaction.user ? interaction.user : interaction.member!.user
 			try {
 				const cmd = new Command(interaction)
-				await commands.cache.get(interaction.data!.name)?.process(cmd, selfLang, { shard_id: -1, cluster_id: "unknown" })
+				await commands.cache.get(interaction.data!.name)?.process(cmd, selfLang, { shard_id: interaction.guild_id ? Number((BigInt(interaction.guild_id) >> BigInt(22)) % BigInt(config.total_shards)) : 0, cluster_id: "unknown" })
 			} catch (e) {
 				if (e && e.code) {
 					if (e.code == 10008) return
