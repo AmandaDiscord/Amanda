@@ -1,5 +1,5 @@
 Amanda's Privacy Policy
-Last edited 2/18/2023 at 00:26 UTC-7
+Last edited 2/22/2023 at 03:40 UTC-7
 
 
 This privacy policy may be updated at any time for any reason to continue to meet the needs of Amanda. New policy updates will take
@@ -26,7 +26,7 @@ or that participate in a voice channel a music queue she is hosting is active in
 
 Local data includes but is not limited to Amanda related permission levels and Users which occupy said permission levels,
 a User's economy related data, a User's couple data, a Users playlists which are local to Amanda and their
-occupant's data, and a User's Amanda premium status.
+occupant's data, a User's third party connections, and a User's Amanda premium status.
 
 
 WHY THIS DATA IS STORED:
@@ -44,8 +44,14 @@ include but are not limited to creating and managing playlists through Amanda or
 
 
 REGARDING THIRD PARTY SERVICES:
-When providing third party services data, said data is aggregated as to not provide said service with data which can
-be used to profile Amanda's individual users or their habits.
+Amanda sends data to a couple of third party services, including current statistics and track playback.
+
+When Amanda sends current statistic data, the data is grouped together in a way that doesn't allow individual users to be tracked or profiled.
+An example is the [Chewey Bot Stats api](https://amanda.moe/to/stats) which shows how many and how often users interact with or invite Amanda.
+
+Some services Amanda integrates with do track user habits, but these services are opt-in.
+One such service which tracks user habits is [last.fm](https://last.fm) which Amanda uses to "scrobble" tracks users listen to.
+These services require the user to link Amanda to their accounts to activate the functionality and the connections can be terminated at any point in time.
 
 REGARDING COOKIES:
 Amanda's website makes use of a cookie for the web dashboard. This cookie is strictly necessary and only consist of a token that cooresponds to a user ID, what paths on the website your browser should send the cookie on (currently has a value of "/" which means all paths), and when the cookie expires, which is currently always 1 year after submitting the token on the login page. This cookie verifies your identity with the server.

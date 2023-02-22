@@ -125,7 +125,7 @@ commands.assign([
 
 			const track = cmd.data.options.get("track")!.asString()!
 
-			const { queue, existed } = await getOrCreateQueue(cmd, lang)
+			const { queue } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
@@ -186,7 +186,7 @@ commands.assign([
 
 			const track = cmd.data.options.get("station")!.asString()!
 
-			const { queue, existed } = await getOrCreateQueue(cmd, lang)
+			const { queue } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
 			const slashIndex = track.indexOf("/")

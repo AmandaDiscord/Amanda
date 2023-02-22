@@ -344,7 +344,6 @@ commands.assign([
 				if (orderedTracks.length === 0) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY })
 
 				let queue = queues.get(cmd.guild_id) ?? null
-				const queueDidntExist = !queue
 
 				const userVoiceState = await orm.db.get("voice_states", { user_id: cmd.author.id, guild_id: cmd.guild_id })
 				if (!userVoiceState) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) })

@@ -243,7 +243,7 @@ export class RequiresSearchTrack extends Track {
 			}
 			if (tracks && tracks.tracks[0] && tracks.tracks[0].track) {
 				this.track = tracks.tracks[0].track
-				if (tracks.tracks[0].info) this.author = tracks.tracks[0].info.author
+				if (tracks.tracks[0].info && this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = tracks.tracks[0].info.author
 			} else if (tracks.tracks[0] && !tracks.tracks[0].track) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
 			else this.error = (this.queue?.lang || this.lang).GLOBAL.NO_RESULTS
 		})
