@@ -236,38 +236,20 @@ export function getSession(token: string | Map<string, string>) {
 	else return Promise.resolve(null)
 }
 
-type State = Record<string, any>
-type ConditionalMergeState<S extends State, B extends Operation<any, any, any, any>> = B["assign"] extends undefined ? S : import("../types").Merge<S, { [K in B["assign"]]: Awaited<ReturnType<B["code"]>> }>
+type State = {}
 
-export type Operation<S extends State, T, N, A extends string | undefined> = {
-	code(state: S, previousValue: N): T | Promise<T>;
-	assign?: A;
-	expected?: ((value: T) => boolean) | T;
-	errorValue?: [number, string] | string;
-}
-
-export class Validator<S extends State, N> {
-	public state = {}
-	public nextValue: N
-	public operations: Array<Operation<State, any, any, string>> = []
+export class Validator<S extends State, P> {
+	public state = {} as S
+	public previousValue: P
+	public operations: Array<{ expected: any, assign: string | undefined, errorValue: [number, string] | string | undefined, code: (state: S, previousValue: P) => any }> = []
 	public stage = 0
 	public promise: Promise<S>
 
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O): Validator<ConditionalMergeState<S, O>, T>
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O["code"], errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O["code"], expected: NonNullable<O["expected"]>, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O, expected: NonNullable<O["expected"]>, errorValue: [number, string] | string): Validator<ConditionalMergeState<S, O>, T>
-	public do<T, A extends string | undefined, O extends Operation<S, T, N, A>>(operation: O | O["code"], errorOrExpected?: [number, string] | string | NonNullable<O["expected"]>, errorValue?: [number, string] | string): Validator<ConditionalMergeState<S, O>, T> {
-		if (typeof (operation) == "function") operation = { code: operation } as O
-		if (arguments.length == 2) operation.errorValue = errorOrExpected as [number, string]
-		else if (arguments.length == 3) {
-			operation.expected = errorOrExpected as NonNullable<Operation<S, T, N, A>["expected"]>
-			operation.errorValue = errorValue
-		}
-		// @ts-ignore
-		this.operations.push(operation)
-		return this as unknown as Validator<ConditionalMergeState<S, O>, T>
+	public do<C extends (state: S, previousValue: P) => unknown | Promise<unknown>, A extends undefined>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | string | undefined, assign?: A): Validator<S, Awaited<ReturnType<C>>>
+	public do<C extends (state: S, previousValue: P) => unknown | Promise<unknown>, A extends string>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | string | undefined, assign?: A): Validator<S & { [K in A]: Awaited<ReturnType<C>> }, Awaited<ReturnType<C>>>
+	public do<C extends (state: S, previousValue: P) => unknown | Promise<unknown>, A extends string | undefined>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | string | undefined, assign?: A): this | Validator<S & { [K in A extends undefined ? never : A]: Awaited<ReturnType<C>> }, Awaited<ReturnType<C>>> {
+		this.operations.push({ expected, assign, errorValue, code })
+		return this
 	}
 
 	public go(): Promise<S> {
@@ -275,85 +257,82 @@ export class Validator<S extends State, N> {
 		return this.promise
 	}
 
-	private _next(resolve: (value: S) => void, reject: Parameters<ConstructorParameters<PromiseConstructor>["0"]>["1"]) {
-		if (this.operations.length == 0) return resolve(this.state as S)
+	private async _next(resolve: (value: S | PromiseLike<S>) => void, reject: (reason?: [number, string] | string) => void) {
+		if (this.operations.length == 0) return resolve(this.state)
 
 		this.stage++
 		const input = this.operations.shift()
-		if (!input) throw new Error("NO_INPUT")
+		if (!input) return reject([500, "NO_INPUT"])
 
 		const processSuccess = (result: any) => {
-			if (input.expected) {
-				if (typeof (input.expected) == "function") {
-					if (!input.expected(result)) return processError()
-				} else
-				if (input.expected !== result) return processError()
-			}
-			if (input.assign !== undefined) this.state[input.assign] = result
-			this.nextValue = result
+			if (input.expected && ((typeof input.expected === "function" && !input.expected(result)) || input.expected !== result)) return processError()
+			if (input.assign !== undefined) this.state[input.assign as keyof S] = result
+			this.previousValue = result
 			this._next(resolve, reject)
 		}
 
 		const processError = () => {
 			if (input.errorValue !== undefined) reject(input.errorValue)
-			else reject(new Error(`Unlabelled error in validator stage ${this.stage}`))
+			else reject(`Unlabelled error in validator stage ${this.stage}`)
 		}
 
 		try {
-			const result = input.code(this.state, this.nextValue)
-			if (result instanceof Promise) {
-				result.then(processSuccess)
-				result.catch(processError)
-			} else processSuccess(result)
+			const result = input.code(this.state, this.previousValue)
+			if (result instanceof Promise) await result.then(processSuccess)
+			else processSuccess(result)
 		} catch {
 			processError()
 		}
 	}
 }
 
-export class FormValidator<S extends { params: URLSearchParams }, N> extends Validator<S, N> {
-	public trust({ req, body }: { req: import("http").IncomingMessage, body: string | Buffer }) {
+export class FormValidator<S extends State, P> extends Validator<S, P> {
+	public trust({ req, body }: { req: import("http").IncomingMessage, body: string | Buffer }): FormValidator<S & { params: URLSearchParams }, URLSearchParams> {
 		if (!req || !body || !config) throw new Error("Not all parameters were passed")
 		this.do(
-			() => req.headers["origin"] || req.headers["referer"] || ""
-			, v => {
+			() => req.headers["origin"] || req.headers["referer"] || "",
+			(v: string) => {
 				if (v.startsWith(`${config.website_protocol}://${config.website_domain}`)) return true
 				if (config.website_domain.startsWith("localhost") && req.headers.host && v.startsWith(`http://${req.headers.host}`)) return true
 				return false
-			}
-			, [400, "Origin or referer must start with the current domain"]
+			},
+			[400, "Origin or referer must start with the current domain"]
 		).do(
-			() => req.headers["content-type"]
-			, "application/x-www-form-urlencoded"
-			, [400, "Content-Type must be application/x-www-form-urlencoded"]
+			() => req.headers["content-type"] || "",
+			"application/x-www-form-urlencoded",
+			[400, "Content-Type must be application/x-www-form-urlencoded"]
 		).do(
-			() => typeof (body) == "string" ? body : body.toString("ascii")
-			, [400, "Failed to convert body to a string"]
-		).do({
-			code: (_, bod) => new URLSearchParams(bod)
-			, assign: "params"
-			, errorValue: [400, "Failed to convert body to URLSearchParams"]
-		})
-		return this
+			() => body.toString("ascii"),
+			undefined,
+			[400, "Failed to convert body to a string"]
+		).do(
+			(_, bod) => new URLSearchParams(bod),
+			undefined,
+			[400, "Failed to convert body to URLSearchParams"],
+			"params"
+		)
+		return this as unknown as FormValidator<S & { params: URLSearchParams }, URLSearchParams>
 	}
 
 	public ensureParams(list: Array<string>, matchMode: "get" | "has" = "get") {
 		if (!(list instanceof Array)) list = [list]
 		list.forEach(item => {
-			this.do(
-				(_) => !!_.params[matchMode](item)
-				, v => v
-				, [400, `Missing ${item}`]
+			// @ts-expect-error
+			this.do<(state: S & { params: URLSearchParams }, previousValue: P) => boolean, undefined>(
+				state => !!state.params[matchMode](item),
+				v => v,
+				[400, `Missing ${item}`]
 			)
 		})
 		return this
 	}
 
 	public useCSRF(loginToken?: string) {
-		this.do(
-			(state) => checkCSRF(state.params.get("csrftoken")!, loginToken, true)
-			, true
-			, [400, "Invalid CSRF token"]
+		// @ts-expect-error
+		this.do<(state: S & { params: URLSearchParams }, previousValue: P) => boolean, undefined>(
+			state => checkCSRF(state.params.get("csrftoken")!, loginToken, true),
+			true,
+			[400, "Invalid CSRF token"]
 		)
 		return this
 	}

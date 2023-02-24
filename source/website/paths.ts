@@ -91,12 +91,11 @@ const paths: {
 					.trust({ req, body })
 					.ensureParams(["token", "csrftoken"])
 					.useCSRF()
-					.do({
-						code: (state) => config.db_enabled ? orm.db.get("web_tokens", { token: state.params.get("token")! }) : undefined
-						, assign: "row"
-						, expected: v => v !== undefined
-						, errorValue: [400, "Invalid token"]
-					})
+					.do(
+						state => config.db_enabled ? orm.db.get("web_tokens", { token: state.params.get("token")! }) : undefined,
+						v => v !== undefined,
+						[400, "Invalid token"]
+					)
 					.go()
 					.then(state => {
 						const token = state.params.get("token")
@@ -234,12 +233,11 @@ const paths: {
 					.trust({ req, body })
 					.ensureParams(["type", "csrftoken"])
 					.useCSRF(session.token)
-					.do({
-						code: (state) => config.db_enabled ? orm.db.get("connections", { user_id: session.user_id, type: state.params.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }) : undefined
-						, assign: "row"
-						, expected: v => v !== undefined
-						, errorValue: [400, "Connection not linked"]
-					})
+					.do(
+						state => config.db_enabled ? orm.db.get("connections", { user_id: session.user_id, type: state.params.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }) : undefined,
+						v => v !== undefined,
+						[400, "Connection not linked"]
+					)
 					.go()
 					.then(async state => {
 						await orm.db.delete("connections", { user_id: session.user_id, type: state.params.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).catch(console.error)
@@ -255,16 +253,18 @@ const paths: {
 			return new util.Validator()
 				.do(
 					() => url.searchParams.has("user_id") && url.searchParams.has("token") && url.searchParams.has("type"),
+					true,
 					[400, "Missing params"]
 				).do(
 					() => orm.db.get("connections", { user_id: url.searchParams.get("user_id")!, type: url.searchParams.get("type")! as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).then(r => !r),
+					true,
 					[403, "Already connected"]
-				).do({
-					code: () => config.db_enabled,
-					expected: true,
-					errorValue: [500, "Database not enabled"]
-				}).do({
-						code: async () => {
+				).do(
+					() => config.db_enabled,
+					true,
+					[500, "Database not enabled"]
+				).do(
+						async () => {
 							const type = url.searchParams.get("type") as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"]
 							if (type === "lastfm") {
 								const params = new URLSearchParams({
@@ -275,13 +275,13 @@ const paths: {
 								const orderedWithSecret = `${Array.from(params.keys()).sort().map(param => `${param}${params.get(param)!}`).join("")}${config.lastfm_secret}`
 								const signature = createHash("md5").update(orderedWithSecret).digest("hex")
 								const session = await fetch(`https://ws.audioscrobbler.com/2.0/?${params.toString()}&api_sig=${signature}&format=json`).then(d => d.json())
-								return session.session.key
+								return session.session.key as string
 							} else throw new Error("INVALID_TYPE")
 						},
-						expected: i => !!i,
-						assign: "access",
-						errorValue: [400, "Invalid token"]
-					})
+						i => !!i,
+						[400, "Invalid token"],
+						"access"
+					)
 				.go()
 				.then(async state => {
 					await orm.db.insert("connections", { user_id: url.searchParams.get("user_id")!, access: state.access, type: url.searchParams.get("type")! as import("../types").InferModelDef<typeof orm["db"]["tables"]["connections"]>["type"] }).catch(console.error)
@@ -323,20 +323,20 @@ const routes: {
 			const session = await util.getSession(cookies)
 
 			return new util.Validator()
-			.do({
-				code: () => config.music_dash_enabled
-				, expected: true
-				, errorValue: "Dashboard temporarily disabled. Please check back later"
-			})
-			.do({
-				code: () => session === null
-				, expected: false
-				, errorValue: "NO_SESSION"
-			}).do({
-				code: () => config.db_enabled ? orm.db.get("voice_states", { user_id: session!.user_id, channel_id: channelID }) : undefined
-				, expected: v => v != null
-				, errorValue: "USER_NOT_IN_CHANNEL"
-			})
+			.do(
+				() => config.music_dash_enabled,
+				true,
+				"Dashboard temporarily disabled. Please check back later"
+			)
+			.do(
+				() => session === null,
+				false,
+				"NO_SESSION"
+			).do(
+				() => config.db_enabled ? orm.db.get("voice_states", { user_id: session!.user_id, channel_id: channelID }) : undefined,
+				v => !!v,
+				"USER_NOT_IN_CHANNEL"
+			)
 			.go()
 			.then(async () => {
 				let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/channel.html"), { encoding: "utf8" })
