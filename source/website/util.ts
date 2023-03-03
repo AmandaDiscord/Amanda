@@ -265,7 +265,7 @@ export class Validator<S extends State, P> {
 		if (!input) return reject([500, "NO_INPUT"])
 
 		const processSuccess = (result: any) => {
-			if (input.expected && ((typeof input.expected === "function" && !input.expected(result)) || input.expected !== result)) return processError()
+			if (input.expected && (typeof input.expected === "function" ? !input.expected(result) : input.expected !== result)) return processError()
 			if (input.assign !== undefined) this.state[input.assign as keyof S] = result
 			this.previousValue = result
 			this._next(resolve, reject)
