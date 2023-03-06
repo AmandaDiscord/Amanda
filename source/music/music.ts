@@ -189,8 +189,7 @@ commands.assign([
 			const { queue } = await getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
-			const slashIndex = track.indexOf("/")
-			if (slashIndex === -1) throw new Error(lang.GLOBAL.NEGATIVE_1_INDEX_IN_RADIO)
+			if (track !== "random" && track.indexOf("/") === -1) throw new Error(lang.GLOBAL.NEGATIVE_1_INDEX_IN_RADIO)
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
