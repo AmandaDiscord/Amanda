@@ -1,4 +1,4 @@
-![Amanda's avatar, a red-haired catgirl, at a desk in front of a computer.](https://b.catgirlsare.sexy/rD4aNJB1X4KE.png)
+![Amanda's avatar, a red-haired catgirl, at a desk in front of a computer.](https://cdn.discordapp.com/attachments/608456955660468224/960449965354811432/Amanda_Banner.png)
 
 # A qt music bot made for qts like you
 Amanda is a 100% free Discord music bot written in Typescript transpiled down to CommonJS.
