@@ -22,37 +22,37 @@ const dateMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
 export function checkDateHeader(date?: string): boolean {
 	if (!date) return false
 	if (!dateDays.includes(date.slice(0, 3))) {
-		console.log(date.slice(0, 3), " is not in date days")
+		console.log("not in date days", date.slice(0, 3))
 		return false
 	}
 	const [day, month, year, time, tz] = date.slice(5).split(spaceRegex)
 	if (day?.length !== 2) {
-		console.log(day, " day length is not 2")
+		console.log("day length is not 2", day)
 		return false
 	}
 	if (!dateMonths.includes(month)) {
-		console.log(month, " is not in date months")
+		console.log("not in date months", month)
 		return false
 	}
 	if (year?.length !== 4) {
-		console.log(year, " year length is not 4")
+		console.log("year length is not 4", year)
 		return false // sucks for people past Year 9999, but the HTTP spec says 4 digit
 	}
 	const [hour, minute, second] = time?.split(colonRegex)
 	if (hour?.length !== 2) {
-		console.log(hour, " hour length is not 2")
+		console.log("hour length is not 2", hour)
 		return false
 	}
 	if (minute?.length !== 2) {
-		console.log(minute, " minute length is not 2")
+		console.log("minute length is not 2", minute)
 		return false
 	}
 	if (second?.length !== 2) {
-		console.log(second, " second length is not 2")
+		console.log("second length is not 2", second)
 		return false
 	}
 	if (tz !== "GMT") {
-		console.log(tz, " timezone is not GMT")
+		console.log("timezone is not GMT", tz)
 		return false
 	}
 	return true
