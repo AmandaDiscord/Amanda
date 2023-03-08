@@ -94,7 +94,7 @@ const setup = {
 
 	async onGlobalError(e: unknown) {
 		console.error(e)
-		client.snow.channel.createMessage("512869106089852949", {
+		client.snow.channel.createMessage(config.error_log_channel_id, {
 			embeds: [
 				{
 					title: "Global error occured.",

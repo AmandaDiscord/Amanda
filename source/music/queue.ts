@@ -408,7 +408,7 @@ class Queue {
 			// Report to original channel
 			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
-			const reportTarget = "512869106089852949"
+			const reportTarget = config.error_log_channel_id
 			const node = this.node ? common.nodes.byID(this.node) : undefined
 			const undef = "undefined"
 			const details = [

@@ -122,7 +122,7 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-api-types
 					{ name: "Message content", value: `\`\`\`\n${JSON.stringify(interaction.data).replace(backtickRegex, "ˋ")}\`\`\`` }
 				]
 
-				client.snow.channel.createMessage("512869106089852949", { embeds: [embed] })
+				client.snow.channel.createMessage(config.error_log_channel_id, { embeds: [embed] })
 			}
 		} else if (interaction.type === 3) return cc.handle(interaction)
 	}

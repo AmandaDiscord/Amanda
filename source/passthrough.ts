@@ -25,6 +25,8 @@ interface Passthrough {
 	// Music worker props
 	queues: Map<string, import("./music/queue").Queue>
 	lavalink: import("lavacord").Manager
+
+	// extras shared by only a couple
 	snow: import("snowtransfer").SnowTransfer
 }
 

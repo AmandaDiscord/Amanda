@@ -65,7 +65,7 @@ const common = {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const tracks = await common.loadtracks(resource, node).catch(e => {
-			const reportTarget = "512869106089852949"
+			const reportTarget = config.error_log_channel_id
 			const undef = "undefined"
 			const details = [
 				["Tree", config.cluster_id],

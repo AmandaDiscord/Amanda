@@ -4,6 +4,7 @@ module.exports = {
 	// Keys
 	bot_token: "discord bot token here",
 	live_bot_token: "can be same as bot_token if not using multiple bots",
+	helper_bot_token: "optional bot token that's allowed to access the GUILD_MEMBERS intent for premium updates",
 	sql_password: "mysql password here",
 	chewey_api_key: "chewey bot api key here",
 	lavalink_password: "lavalink password here",
@@ -32,6 +33,9 @@ module.exports = {
 	amqp_queue: "amanda",
 	amqp_music_queue: "amanda_music",
 	amqp_website_queue: "amanda_website",
+	error_log_channel_id: "channel id here",
+	premium_guild_id: "guild id here",
+	premium_role_id: "role id here",
 
 	// Settings
 	music_dash_enabled: true,

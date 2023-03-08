@@ -1,9 +1,9 @@
 import util = require("util")
 
 import passthrough = require("../../passthrough")
-const { db } = passthrough
 
-export function all(string: string, prepared?: unknown | Array<unknown>, connection: import("pg").PoolClient = db, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
+export function all(string: string, prepared?: unknown | Array<unknown>, connection?: import("pg").PoolClient, attempts = 2): Promise<Array<{ [column: string]: unknown }>> {
+	if (!connection) connection = passthrough.db
 	let prep: Array<unknown>
 	if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
 	else if (prepared !== undefined && Array.isArray(prepared)) prep = prepared

@@ -64,7 +64,7 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 					{ name: "Message content", value: `\`\`\`\n${JSON.stringify(interaction.data).replace(backtickRegex, "ˋ")}\`\`\`` }
 				]
 
-				snow.channel.createMessage("512869106089852949", { embeds: [embed] })
+				snow.channel.createMessage(config.error_log_channel_id, { embeds: [embed] })
 			}
 		} else if (interaction.type === 3) cc.handle(interaction)
 
