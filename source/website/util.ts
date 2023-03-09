@@ -85,7 +85,7 @@ export async function streamResponse(req: import("http").IncomingMessage, res: i
 		if (!vWithoutQ) return false
 		const [resNamespace, resType] = type.split(slashSingleRegex)
 		if (reqNamespace !== "*" && resNamespace !== reqNamespace) return false
-		if (reqType !== "*" && resType !== reqType) return false
+		if (vWithoutQ[1] !== "*" && resType !== vWithoutQ[1]) return false
 		return true
 	})
 	if (!canAccept) return void res.writeHead(406).end()
