@@ -97,7 +97,7 @@ const setup = {
 					else if (req.headers["range"]) res.writeHead(416).end()
 					else if (req.headers["expect"]) res.writeHead(417).end()
 					else {
-						// if (path.earlyHints && ["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) res.writeEarlyHints({ link: path.earlyHints })
+						if (path.links && ["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) res.setHeader("Link", path.links)
 						if (path.static) await util.streamResponse(req, res, p.join(rootFolder, path.static), req.method?.toUpperCase() === "HEAD")
 						else if (path.handle) await path.handle(req, res, url)
 						else res.writeHead(500).end()

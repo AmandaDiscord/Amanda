@@ -15,7 +15,7 @@ type Path = {
 	methods: Array<string>;
 	static?: string;
 	handle?(req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL): Promise<unknown>;
-	earlyHints?: Array<string>;
+	links?: Array<string>;
 }
 
 const bodyRegex = /\$body/gm
@@ -53,11 +53,11 @@ const paths: {
 	"/": {
 		methods: ["GET", "HEAD"],
 		static: "index.html",
-		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/amanda.webp>; rel=preload; as=image", "</images/background.gif>; rel=preload; as=image"]
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/amanda.webp>; rel=preload; as=image", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"]
 	},
 	"/dash": {
 		methods: ["GET", "HEAD", "POST"],
-		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			if (["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) {
 				const cookies = util.getCookies(req)
@@ -112,7 +112,7 @@ const paths: {
 	},
 	"/login": {
 		methods: ["GET", "HEAD"],
-		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			if (req.method?.toUpperCase() === "HEAD") return util.streamResponse(req, res, pathMod.join(rootFolder, "templates/login.html"), true)
 			let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/login.html"), { encoding: "utf8" })
@@ -155,7 +155,7 @@ const paths: {
 	},
 	"/blogs": {
 		methods: ["GET", "HEAD"],
-		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			let [template, blogsDir] = await Promise.all([
 				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blogs.html"), { encoding: "utf-8" }),
@@ -311,13 +311,13 @@ for (const [key, value] of Object.entries(redirects)) {
 const routes: {
 	[route: string]: {
 		methods: Array<string>;
-		earlyHints?: Array<string>;
+		links?: Array<string>;
 		router: (req: import("http").IncomingMessage, res: import("http").ServerResponse, url: URL, params: { [param: string]: string }) => Promise<unknown>;
 	}
 } = {
 	"/channels/:channelID": {
 		methods: ["GET"],
-		earlyHints: ["</player.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style"],
+		links: ["</player.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "<https://fonts.google.com>; rel=preconnect"],
 		async router(req, res, _url, { channelID }) {
 			const cookies = util.getCookies(req)
 			const session = await util.getSession(cookies)
@@ -356,7 +356,7 @@ const routes: {
 	},
 	"/blog/:blogID": {
 		methods: ["GET", "HEAD"],
-		earlyHints: ["</main.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async router(req, res, url, { blogID }) {
 			const title = blogID.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
 			const toMD = pathMod.join(rootFolder, `./blogs/${blogID}.md`)
@@ -433,7 +433,7 @@ const prox = new Proxy(paths, {
 
 		return {
 			methods: routes[pt.route].methods,
-			earlyHints: routes[pt.route].earlyHints,
+			links: routes[pt.route].links,
 			handle: (req, res, url) => routes[pt.route].router(req, res, url, params)
 		} as Path
 	}

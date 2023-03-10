@@ -117,7 +117,7 @@ export function requestBody(req: import("http").IncomingMessage, timeout = 10000
 	return new Promise<Buffer>((res, rej) => {
 		let timer: NodeJS.Timeout | null = null
 		let totalSize = 0
-		const chunks: Array<Buffer> = []
+		const acc = new BufferAccumulator(sizeToMeet)
 		function onData(chunk: Buffer) {
 			totalSize += chunk.byteLength
 			if (totalSize > sizeToMeet) {
@@ -125,12 +125,12 @@ export function requestBody(req: import("http").IncomingMessage, timeout = 10000
 				req.removeListener("end", onEnd)
 				return rej(new Error("BYTE_SIZE_DOES_NOT_MATCH_LENGTH"))
 			}
-			chunks.push(chunk)
+			acc.add(chunk)
 		}
 		function onEnd() {
 			clearTimeout(timer!)
 			req.removeListener("data", onData)
-			res(Buffer.concat(chunks))
+			res(acc.concat() ?? Buffer.allocUnsafe(0))
 		}
 		req.on("data", onData)
 		req.once("end", onEnd)
@@ -140,6 +140,58 @@ export function requestBody(req: import("http").IncomingMessage, timeout = 10000
 			rej(new Error("TIMEOUT_WAITING_FOR_BODY_REACHED"))
 		}, timeout)
 	})
+}
+
+export type AccumulatorNode = {
+	chunk: Buffer;
+	next: AccumulatorNode | null;
+}
+
+export class BufferAccumulator {
+	public first: AccumulatorNode | null = null;
+	public last: AccumulatorNode | null = null;
+	public size = 0;
+	public expecting: number | null;
+
+	private _allocated: Buffer | null = null;
+	private _streamed: number | null = null;
+
+	public constructor(expecting?: number) {
+		if (expecting) {
+			this._allocated = Buffer.allocUnsafe(expecting);
+			this._streamed = 0;
+		}
+		this.expecting = expecting ?? null;
+	}
+
+	public add(buf: Buffer): void {
+		if (this._allocated && this._streamed !== null && this.expecting !== null) {
+			if (this._streamed === this.expecting) return;
+			if ((this._streamed + buf.byteLength) > this.expecting) buf.subarray(0, this.expecting - this._streamed).copy(this._allocated, this._streamed);
+			else buf.copy(this._allocated, this._streamed);
+			return;
+		}
+		const obj = { chunk: buf, next: null };
+		if (!this.first) this.first = obj
+		if (this.last) this.last.next = obj
+		this.last = obj
+		this.size += buf.byteLength;
+	}
+
+	public concat(): Buffer | null {
+		if (this._allocated) return this._allocated;
+		if (!this.first) return null;
+		if (!this.first.next) return this.first.chunk;
+		const r = Buffer.allocUnsafe(this.size);
+		let written = 0;
+		let current: AccumulatorNode | null = this.first;
+		while (current) {
+			current.chunk.copy(r, written);
+			written += current.chunk.byteLength;
+			current = current.next;
+		}
+		return r;
+	}
 }
 
 const boundaryReg = /^-+[^\n]+$/
