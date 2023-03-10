@@ -109,6 +109,13 @@ const extraContext = {
 		}
 		if (option.type === 1 && option.options) rt.options = option.options.map(extraContext.assignOptions)
 		return rt
+	},
+	async dropVolatile() {
+		if (!config.db_enabled) return "db not enabled"
+		await Promise.all([
+			passthrough.db.query({ text: "DELETE FROM voice_states" }),
+			passthrough.db.query({ text: "DELETE FROM guilds" })
+		])
 	}
 }
 
