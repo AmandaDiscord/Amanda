@@ -30,6 +30,7 @@ if (config.is_dev_env) lavalinkNodes.push(devNode)
 export const frisky_placeholder = `${baseURL}/images/frisky-new.webp`
 export const local_placeholder = `${baseURL}/images/local.webp`
 export const listen_moe_placeholder = `${baseURL}/images/listen-moe-logo.webp`
+export const unknown_placeholder = `${baseURL}/images/unknown.webp`
 
 // eslint-disable-next-line no-shadow
 export enum WebsiteOPCodes {

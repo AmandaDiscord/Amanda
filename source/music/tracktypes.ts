@@ -133,7 +133,7 @@ export class Track {
 	public error = ""
 	public id: string
 	public live: boolean
-	public thumbnail = { src: "", width: 0, height: 0 }
+	public thumbnail = { src: constants.unknown_placeholder, width: 128, height: 128 }
 	public queue: import("./queue").Queue | undefined
 	public source: string
 	public uri: string | null
