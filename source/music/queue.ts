@@ -4,7 +4,7 @@ import { createHash } from "crypto"
 import cc = require("callback-components")
 
 import passthrough = require("../passthrough")
-const { sync, queues, config, constants, snow, configuredUserID, lavalink, amqpChannel } = passthrough
+const { sync, queues, config, constants, snow, lavalink } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -61,7 +61,7 @@ class Queue {
 
 	public toJSON(): import("../types").WebQueue {
 		return {
-			members: (Array.from(this.listeners.values())).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === configuredUserID })),
+			members: (Array.from(this.listeners.values())).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === passthrough.configuredUserID })),
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -120,7 +120,7 @@ class Queue {
 		else this.pausedAt = null
 		console.log(`[QUEUE_PAUSE  ] guild: ${this.guildID}`)
 		this.player?.pause(newState)
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !newState } } })))
 	}
 
 	public get volume() {
@@ -225,7 +225,7 @@ class Queue {
 		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
 		await this.player?.destroy().catch(() => void 0)
 		await lavalink!.leave(this.guildID).catch(() => void 0)
-		if (this.voiceChannelID) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } })))
+		if (this.voiceChannelID) passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } })))
 		console.log(`[QUEUE_DESTROY] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
 	}
 
@@ -244,7 +244,7 @@ class Queue {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
-			amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } })))
+			passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.NEXT } })))
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
 			if (removed && this.loop && !removed.error) this.addTrack(removed)
@@ -293,7 +293,7 @@ class Queue {
 		else this.tracks.splice(position, 0, track)
 		if (!this.playHasBeenCalled) this.play()
 		console.log(`[TRACK_ADD    ] guild: ${this.guildID} title: ${track.title} author: ${track.author} requester: ${track.requester.username}#${track.requester.discriminator} ${track.requester.id}`)
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_ADD, d: { track: track.toObject(), position } } })))
 	}
 
 	public async removeTrack(index: number) {
@@ -308,7 +308,7 @@ class Queue {
 		} catch (e) {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index } } })))
 		console.log(`[TRACK_REMOVE ] guild: ${this.guildID} title: ${removed.title} author: ${removed.author}`)
 		return 0
 	}
@@ -342,7 +342,7 @@ class Queue {
 			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } })))
 	}
 
 	private _onPlayerError(details: import("lavalink-types").TrackExceptionEvent | import("lavalink-types").WebSocketClosedEvent) {
@@ -478,31 +478,31 @@ class Queue {
 	}
 
 	public async voiceStateUpdate(packet: import("discord-api-types/v10").GatewayVoiceState) {
-		if (packet.channel_id && packet.user_id === configuredUserID) {
+		if (packet.channel_id && packet.user_id === passthrough.configuredUserID) {
 			const states = await orm.db.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
 
 			for (const state of states) {
 				const user = await discordUtils.getUser(state.user_id)
-				if (user && (!user.bot || user.id === configuredUserID)) this.listeners.set(user.id, user)
+				if (user && (!user.bot || user.id === passthrough.configuredUserID)) this.listeners.set(user.id, user)
 			}
 			if (!this._listenersHaveBeenSet) this._onListenersSetResolve!()
 			this._listenersHaveBeenSet = true
-			return amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
+			return passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.CREATE, d: this.toJSON() })))
 		}
 		// moving voice channels does not set the channel_id as null and then update
-		if (!packet.channel_id && this.voiceChannelID && packet.user_id === configuredUserID) return this.destroy()
+		if (!packet.channel_id && this.voiceChannelID && packet.user_id === passthrough.configuredUserID) return this.destroy()
 		if (packet.channel_id !== this.voiceChannelID && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
 			if (this.listeners.size === 1) this._onAllUsersLeave() // just Amanda
 		}
-		if (packet.channel_id === this.voiceChannelID && packet.user_id !== configuredUserID) {
+		if (packet.channel_id === this.voiceChannelID && packet.user_id !== passthrough.configuredUserID) {
 			if (!packet.member?.user || packet.member.user.bot) return
 			this.leaveTimeout.clear()
 			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID).catch(() => void 0)
 			this.leavingSoonID = undefined
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
-		amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON().members } } })))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.LISTENERS_UPDATE, d: { members: this.toJSON().members } } })))
 	}
 }
 

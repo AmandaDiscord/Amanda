@@ -11,9 +11,9 @@ const extraContext = {}
 setImmediate(() => { // assign after since old extraContext data will get removed
 	if (!passthrough.repl) {
 		const cli = repl.start({ prompt: "", eval: customEval, writer: s => s })
-		Object.assign(cli.context, extraContext, passthrough)
+		Object.assign(cli.context, { extraContext }, passthrough)
 		passthrough.repl = cli
-	} else Object.assign(passthrough.repl.context, extraContext)
+	} else Object.assign(passthrough.repl.context.extraContext, extraContext)
 })
 
 async function customEval(input: string, _context: import("vm").Context, _filename: string, callback: (err: Error | null, result: unknown) => unknown) {
@@ -36,7 +36,7 @@ async function customEval(input: string, _context: import("vm").Context, _filena
 
 sync.events.once(__filename, () => {
 	for (const key in extraContext) {
-		delete passthrough.repl.context[key]
+		delete passthrough.repl.context.extraContext[key]
 	}
 })
 sync.addTemporaryListener(process, "exit", () => process.exit())

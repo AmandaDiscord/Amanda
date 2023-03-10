@@ -5,7 +5,7 @@ import { pipeline } from "stream"
 import crypto = require("crypto")
 
 import passthrough = require("../passthrough")
-const { rootFolder, db, sync, config } = passthrough
+const { rootFolder, sync, config } = passthrough
 
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 const spaceRegex = / /g
@@ -255,7 +255,7 @@ export function parseMultipartBody(body: string) {
 export function generateCSRF(loginToken: string | null = null) {
 	const token = crypto.randomBytes(32).toString("hex")
 	const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
-	db?.query({ text: "INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", values: [token, loginToken, expires] })
+	passthrough.db?.query({ text: "INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", values: [token, loginToken, expires] })
 	return token
 }
 

@@ -1,7 +1,7 @@
 import cc = require("callback-components")
 
 import passthrough = require("../passthrough")
-const { client, sync, commands, config, constants, amqpChannel } = passthrough
+const { client, sync, commands, config, constants } = passthrough
 
 import Command = require("../Command")
 
@@ -12,11 +12,11 @@ const orm: typeof import("./utils/orm") = sync.require("./utils/orm")
 const cluster: typeof import("./utils/cluster") = sync.require("./utils/cluster")
 
 cc.setHandlers(component => cc.decode(component.custom_id, "object").h || component.custom_id, {
-	page: (interaction, user) => amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
-	trackSelect: (interaction, user) => amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
-	playPause: (interaction, user) => amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
-	skip: (interaction, user) => amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
-	stop: (interaction, user) => amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } })))
+	page: (interaction, user) => passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
+	trackSelect: (interaction, user) => passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
+	playPause: (interaction, user) => passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
+	skip: (interaction, user) => passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } }))),
+	stop: (interaction, user) => passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify({ op: 0, t: "INTERACTION_CREATE", d: { type: 3, user, data: interaction } })))
 })
 
 function getTimeoutForStatsPosting() {
@@ -69,8 +69,8 @@ sync.addTemporaryListener(client, "gateway", async (p: import("discord-api-types
 	} else if (p.t === "VOICE_STATE_UPDATE") {
 		if (p.d.channel_id === null && config.db_enabled) orm.db.delete("voice_states", { user_id: p.d.user_id, guild_id: p.d.guild_id })
 		else if (config.db_enabled) orm.db.upsert("voice_states", { guild_id: p.d.guild_id, user_id: p.d.user_id, channel_id: p.d.channel_id || undefined }, { useBuffer: false })
-		amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify(p)))
-	} else if (p.t === "VOICE_SERVER_UPDATE") amqpChannel.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify(p)))
+		passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify(p)))
+	} else if (p.t === "VOICE_SERVER_UPDATE") passthrough.amqpChannel?.sendToQueue(config.amqp_music_queue, Buffer.from(JSON.stringify(p)))
 	else if (p.t === "INTERACTION_CREATE") {
 		const interaction = p.d as import("discord-api-types/v10").APIChatInputApplicationCommandInteraction
 		if (interaction.type === 2) {

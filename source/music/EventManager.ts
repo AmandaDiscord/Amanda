@@ -5,7 +5,7 @@ import cc = require("callback-components")
 import Command = require("../Command")
 
 import passthrough = require("../passthrough")
-const { commands, constants, snow, config, sync, amqpChannel, queues } = passthrough
+const { commands, constants, snow, config, sync, queues } = passthrough
 
 const lang: typeof import("../client/utils/language") = sync.require("../client/utils/language")
 
@@ -83,14 +83,14 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 		if (packet.op === constants.WebsiteOPCodes.CLEAR_QUEUE) {
 			if (queue) {
 				queue.tracks.splice(1)
-				amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } })))
+				passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } })))
 			}
 
 
 		} else if (packet.op === constants.WebsiteOPCodes.ATTRIBUTES_CHANGE) {
 			if (queue && packet.d) {
 				if (packet.d.loop !== undefined) queue.loop = packet.d.loop as boolean
-				amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop } } })))
+				passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop } } })))
 			}
 
 
@@ -99,7 +99,7 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 		else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
 		else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {
 			const result = await queue.removeTrack(packet.d.index as number)
-			if (result === 0) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } })))
+			if (result === 0) passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.TRACK_REMOVE, d: { index: packet.d.index } } })))
 		}
 	}
 }

@@ -1,7 +1,7 @@
 import crypto = require("crypto")
 
 import passthrough = require("../passthrough")
-const { snow, commands, constants, sync, queues, config, lavalink, amqpChannel } = passthrough
+const { snow, commands, constants, sync, queues, config, lavalink } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const queueFile = sync.require("./queue") as typeof import("./queue")
@@ -332,7 +332,7 @@ commands.assign([
 			if (loop !== null && userIsListening) {
 				queue.loop = loop
 				const state = queue.toJSON()
-				if (state) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } })))
+				if (state) passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue.voiceChannelID, op: constants.WebsiteOPCodes.ATTRIBUTES_CHANGE, d: state.attributes } })))
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			}
 
@@ -457,7 +457,7 @@ commands.assign([
 			if (!queue) return
 			const toShuffle = queue.tracks.slice(1) // Do not shuffle the first track since it's already playing
 			queue.tracks.length = 1
-			if (queue.voiceChannelID) amqpChannel.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } })))
+			if (queue.voiceChannelID) passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: queue!.voiceChannelID, op: constants.WebsiteOPCodes.CLEAR_QUEUE } })))
 			const shuffled = arr.shuffle(toShuffle)
 			for (const track of shuffled) {
 				await queue.addTrack(track)
