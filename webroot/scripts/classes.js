@@ -192,9 +192,7 @@ class QueueItem extends ElemJS {
 		this.child(this.parts.controls)
 	}
 	preloadThumbnail() {
-		if (this.data.thumbnail && this.data.thumbnail.src) {
-			imageStore.add(this.data.thumbnail.src)
-		}
+		if (this.data.thumbnail && this.data.thumbnail.src && this.data.thumbnail.src.length) imageStore.add(this.data.thumbnail.src)
 	}
 	remove() {
 		let index = this.queue.children.indexOf(this)

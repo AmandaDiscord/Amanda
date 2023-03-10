@@ -31,8 +31,6 @@ const connectionsRegex = /\$connections/gm
 const dashRegex = /-/g
 const fileNameRegex = /(.+?)\.\w+$/
 
-const xmlKeyRegex = /<key>(.+?)<\/key>/gm
-
 const redirects = {
 	stats: "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393",
 	patreon: "https://www.patreon.com/papiophidian",
@@ -320,7 +318,7 @@ const routes: {
 } = {
 	"/channels/:channelID": {
 		methods: ["GET"],
-		links: ["</player.css>; rel=preload; as=style", "</90s-type-beat.css>; rel=preload; as=style", "<https://fonts.google.com>; rel=preconnect"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "<https://fonts.google.com>; rel=preconnect"],
 		async router(req, res, _url, { channelID }) {
 			const cookies = util.getCookies(req)
 			const session = await util.getSession(cookies)

@@ -303,7 +303,7 @@ export class ExternalTrack extends Track {
 
 export class RadioTrack extends RequiresSearchTrack {
 	public thumbnail = { src: constants.local_placeholder, width: 512, height: 512 }
-	public stationData: import("../types").UnpackRecord<import("../types").InferMapV<typeof radioStations>>
+	public stationData: import("../types").UnpackRecord<import("../types").InferMap<typeof radioStations>["value"]>
 
 	public constructor(station: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
 		const [namespace, substation] = station.split("/")

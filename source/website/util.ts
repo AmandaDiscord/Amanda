@@ -10,7 +10,6 @@ const { rootFolder, sync, config } = passthrough
 const orm: typeof import("../client/utils/orm") = sync.require("../client/utils/orm")
 const spaceRegex = / /g
 const colonRegex = /:/g
-const semiRegex = /;/g
 const commaRegex = /,/g
 const slashSingleRegex = /\//
 const toEndOfSemiRegex = /([^;]+);?/
