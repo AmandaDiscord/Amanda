@@ -23,6 +23,7 @@ class ImageStore {
 	}
 	/** @param {string} url */
 	get(url) {
+		if (!url.length) return undefined
 		if (this.store.has(url)) {
 			let e = this.store.get(url)
 			this.store.delete(url)
