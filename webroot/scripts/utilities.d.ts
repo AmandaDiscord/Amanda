@@ -1,4 +1,4 @@
-export const q: (s: string) => HTMLElement
+export const q: (s: string) => HTMLElement | null
 
 export enum opcodes {
 	IDENTIFY = 1,
