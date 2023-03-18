@@ -223,7 +223,6 @@ class Queue {
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
 		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: constants.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
-		await this.player?.destroy().catch(() => void 0)
 		await lavalink!.leave(this.guildID).catch(() => void 0)
 		if (this.voiceChannelID) passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.STOP } })))
 		console.log(`[QUEUE_DESTROY] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
