@@ -158,7 +158,7 @@ class Queue {
 		console.log(`[QUEUE_START  ] guild: ${this.guildID} channel: ${this.voiceChannelID}`)
 		this.player!.on("end", event => this._onEnd(event))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
-		this.player!.on("error", event => this._onPlayerError(event))
+		this.player!.on("error", event => this._onPlayerError(event as Parameters<Queue["_onPlayerError"]>["0"]))
 	}
 
 	public async play() {
@@ -345,7 +345,7 @@ class Queue {
 		passthrough.amqpChannel?.sendToQueue(config.amqp_website_queue, Buffer.from(JSON.stringify({ op: constants.WebsiteOPCodes.ACCEPT, d: { channel_id: this.voiceChannelID, op: constants.WebsiteOPCodes.TIME_UPDATE, d: { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt, playing: !this.paused } } })))
 	}
 
-	private _onPlayerError(details: import("lavalink-types").TrackExceptionEvent | import("lavalink-types").WebSocketClosedEvent) {
+	private _onPlayerError(details: Extract<import("lavalink-types").EventOP, { type: "TrackExceptionEvent" | "WebSocketClosedEvent" }>) {
 		if (details.type === "WebSocketClosedEvent") {
 			// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 			// Simply respond by stopping the queue, since that was most likely the intention.

@@ -236,7 +236,7 @@ commands.assign([
 				await queue.removeTrack(start - 1 + index)
 			}
 
-			if (start === 1) queue.skip()
+			if (start === 1) await queue.skip()
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.SKIPPED_AMOUNT, { "amount": amount }) })
 		}

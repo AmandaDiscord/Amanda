@@ -241,10 +241,10 @@ export class RequiresSearchTrack extends Track {
 				this.error = e
 				return
 			}
-			if (tracks && tracks.tracks[0] && tracks.tracks[0].track) {
-				this.track = tracks.tracks[0].track
+			if (tracks && tracks.tracks[0] && tracks.tracks[0].encoded) {
+				this.track = tracks.tracks[0].encoded
 				if (tracks.tracks[0].info && this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = tracks.tracks[0].info.author
-			} else if (tracks.tracks[0] && !tracks.tracks[0].track) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
+			} else if (tracks.tracks[0] && !tracks.tracks[0].encoded) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
 			else this.error = (this.queue?.lang || this.lang).GLOBAL.NO_RESULTS
 		})
 	}
@@ -288,9 +288,9 @@ export class ExternalTrack extends Track {
 			return
 		}
 
-		if (!Array.isArray(info) || !info || !info[0] || !info[0].track) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.title })
+		if (!Array.isArray(info) || !info || !info[0] || !info[0].encoded) this.error = language.replace((this.queue?.lang || this.lang).GLOBAL.MISSING_TRACK, { "id": this.title })
 		else {
-			this.track = info[0].track
+			this.track = info[0].encoded
 			if (info[0].info.isSeekable) {
 				this.live = false
 				this.lengthSeconds = Math.round(info[0].info.length / 1000)

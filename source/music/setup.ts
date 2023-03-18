@@ -91,7 +91,6 @@ const setup = {
 
 		passthrough.lavalink = new Manager(constants.lavalinkNodes.filter(n => n.enabled), {
 			user: passthrough.configuredUserID,
-			shards: config.total_shards,
 			send: packet => syncedSetup.sendLavalinkPacket(packet)
 		})
 

@@ -28,24 +28,25 @@
     "discord-verify": "^1.0.0",
     "heatsync": "2.4.0",
     "jimp": "0.22.7",
-    "lavacord": "github:AmandaDiscord/Lavacord#9f396d760da4ab484084b4736ac0986465fb4b53",
+    "lavacord": "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a",
     "marked": "^4.2.12",
     "mime-types": "2.1.35",
     "pg": "8.10.0",
     "simple-git": "3.17.0",
     "snowtransfer": "0.7.0",
+    "typescript": "^5.0.2",
     "ws": "^8.13.0"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.1",
     "@types/marked": "^4.0.8",
     "@types/mime-types": "2.1.1",
-    "@types/node": "18.15.0",
+    "@types/node": "18.15.3",
     "@types/pg": "8.6.6",
     "@types/ws": "^8.5.4",
-    "@typescript-eslint/eslint-plugin": "5.54.1",
-    "@typescript-eslint/parser": "5.54.1",
-    "eslint": "8.35.0",
-    "lavalink-types": "1.0.3"
+    "@typescript-eslint/eslint-plugin": "5.55.0",
+    "@typescript-eslint/parser": "5.55.0",
+    "eslint": "8.36.0",
+    "lavalink-types": "2.0.2"
   }
 }

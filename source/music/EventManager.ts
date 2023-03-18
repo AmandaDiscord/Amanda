@@ -94,7 +94,7 @@ export async function handle(packet: MusicInboundPacket & { shard_id: number }) 
 			}
 
 
-		} else if (packet.op === constants.WebsiteOPCodes.SKIP && queue) queue.skip()
+		} else if (packet.op === constants.WebsiteOPCodes.SKIP && queue) await queue.skip()
 		else if (packet.op === constants.WebsiteOPCodes.STOP && queue) queue.destroy()
 		else if (packet.op === constants.WebsiteOPCodes.TOGGLE_PLAYBACK && queue) queue.paused = !queue.paused
 		else if (packet.op === constants.WebsiteOPCodes.TRACK_REMOVE && queue && packet.d && packet.d.index) {

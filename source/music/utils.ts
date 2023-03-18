@@ -1,5 +1,6 @@
 import cc = require("callback-components")
 const encoding = require("@lavalink/encoding") as typeof import("@lavalink/encoding")
+import { Rest } from "lavacord"
 
 import passthrough = require("../passthrough")
 const { constants, sync, config, lavalink, snow } = passthrough
@@ -92,25 +93,24 @@ const common = {
 		})
 		if (!tracks || !tracks.tracks.length) return null
 
-		const decoded = tracks.tracks.map(t => encoding.decode(t.track))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].track, decoded[0], resource, cmd.author, language.getLang(cmd.guild_locale!))]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].track, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
+		const decoded = tracks.tracks.map(t => encoding.decode(t.encoded))
+		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].encoded, decoded[0], resource, cmd.author, language.getLang(cmd.guild_locale!))]
+		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].encoded, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) return null
-		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].track, chosen, resource, cmd.author, language.getLang(cmd.guild_locale!))]
+		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].encoded, chosen, resource, cmd.author, language.getLang(cmd.guild_locale!))]
 	},
 
 	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
 		const node = nodeID ? common.nodes.byID(nodeID) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random()
 
-		const params = new URLSearchParams()
-		params.append("identifier", input)
+		const llnode = lavalink.nodes.get(node.id)
+		if (!llnode) throw new Error(`Lavalink node ${node.id} doesn't exist in lavacord`)
 
-		const data = await fetch(`http://${node.host}:${node.port}/loadtracks?${params.toString()}`, { headers: { Authorization: node.password } })
-		const json: import("lavalink-types").TrackLoadingResult = await data.json()
-		if (json.exception) throw new Error(json.exception.message)
-		return json
+		const data = await Rest.load(llnode, input)
+		if (data.exception) throw new Error(data.exception.message)
+		return data
 	},
 
 	// TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability
