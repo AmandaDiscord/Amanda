@@ -29,7 +29,7 @@
     "heatsync": "2.4.0",
     "jimp": "0.22.7",
     "lavacord": "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a",
-    "marked": "^4.2.12",
+    "marked": "^4.3.0",
     "mime-types": "2.1.35",
     "pg": "8.10.0",
     "simple-git": "3.17.0",
