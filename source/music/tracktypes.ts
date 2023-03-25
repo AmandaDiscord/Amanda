@@ -277,6 +277,10 @@ export class ExternalTrack extends Track {
 		this.noPauseReason = this.live ? this.lang.GLOBAL.CANNOT_PAUSE_LIVE : this.noPauseReason
 	}
 
+	public showLink(): Promise<string> {
+		return this.uri ? Promise.resolve(this.uri) : super.showLink()
+	}
+
 	public async prepare() {
 		if (this.track !== "!") return
 		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]

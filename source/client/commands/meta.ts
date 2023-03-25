@@ -11,6 +11,7 @@ const emojis: typeof import("../emojis") = sync.require("../emojis")
 const language: typeof import("../utils/language") = sync.require("../utils/language")
 const time: typeof import("../utils/time") = sync.require("../utils/time")
 const cluster: typeof import("../utils/cluster") = sync.require("../utils/cluster")
+const orm: typeof import("../utils/orm") = sync.require("../utils/orm")
 
 commands.assign([
 	{
@@ -21,8 +22,16 @@ commands.assign([
 			const sid = info.shard_id
 			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${config.cluster_id} tree, branch ${sid}`
 			const leadingSpace = `${emojis.bl}\n​`
+			const [stats, gwDetails] = await Promise.all([
+				cluster.getOwnStats(),
+				config.db_enabled ? orm.db.get("gateway_clusters", { cluster_id: info.cluster_id }) : Promise.resolve(void 0)
+			])
+			let gwStats: { shards: Array<{ id: number; status: string; ready: boolean; trace: Array<string>; seq: number; }>, endpoint: string; } = { shards: [{ id: info.shard_id, status: "disconnected", ready: false, trace: [], seq: -1 }], endpoint: "wss://gateway.discord.gg" }
+			if (gwDetails) {
+				const fetched = await fetch(`${gwDetails.url}/shards/status`, { headers: { Authorization: config.bot_token } }).then(res => res.status === 200 ? res.json() : void 0)
+				if (fetched) gwStats = fetched
+			}
 
-			const stats = await cluster.getOwnStats()
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
@@ -31,7 +40,8 @@ commands.assign([
 							{
 								name: leadingIdentity,
 								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}`,
+								+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n${gwStats.shards.map(s => `${s.id}: ${s.status}`)}`,
 								inline: true
 							},
 							{

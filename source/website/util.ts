@@ -63,12 +63,12 @@ export async function streamResponse(req: import("http").IncomingMessage, res: i
 		stats = await fs.promises.stat(fileDir)
 	} catch {
 		if (!cameFrom404) return streamResponse(req, res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
-		else return void res.writeHead(404).end();
+		else return void res.writeHead(404).end()
 	}
 
 	if (!stats.isFile()) {
 		if (!cameFrom404) return streamResponse(req, res, p.join(rootFolder, "./404.html"), headersOnly, 404, true)
-		else return void res.writeHead(404).end();
+		else return void res.writeHead(404).end()
 	}
 
 	if (stats.size === 0) return void res.writeHead(204).end()
@@ -106,8 +106,8 @@ export async function streamResponse(req: import("http").IncomingMessage, res: i
 
 	const stream = fs.createReadStream(fileDir)
 	await new Promise((r, rej) => pipeline(stream, res, e => e ? rej(e) : r(void 0)))
-	stream.destroy();
-	res.destroy();
+	stream.destroy()
+	res.destroy()
 }
 
 export function requestBody(req: import("http").IncomingMessage, timeout = 10000): Promise<Buffer> {
@@ -147,49 +147,49 @@ export type AccumulatorNode = {
 }
 
 export class BufferAccumulator {
-	public first: AccumulatorNode | null = null;
-	public last: AccumulatorNode | null = null;
-	public size = 0;
-	public expecting: number | null;
+	public first: AccumulatorNode | null = null
+	public last: AccumulatorNode | null = null
+	public size = 0
+	public expecting: number | null
 
-	private _allocated: Buffer | null = null;
-	private _streamed: number | null = null;
+	private _allocated: Buffer | null = null
+	private _streamed: number | null = null
 
 	public constructor(expecting?: number) {
 		if (expecting) {
-			this._allocated = Buffer.allocUnsafe(expecting);
-			this._streamed = 0;
+			this._allocated = Buffer.allocUnsafe(expecting)
+			this._streamed = 0
 		}
-		this.expecting = expecting ?? null;
+		this.expecting = expecting ?? null
 	}
 
 	public add(buf: Buffer): void {
 		if (this._allocated && this._streamed !== null && this.expecting !== null) {
-			if (this._streamed === this.expecting) return;
-			if ((this._streamed + buf.byteLength) > this.expecting) buf.subarray(0, this.expecting - this._streamed).copy(this._allocated, this._streamed);
-			else buf.copy(this._allocated, this._streamed);
-			return;
+			if (this._streamed === this.expecting) return
+			if ((this._streamed + buf.byteLength) > this.expecting) buf.subarray(0, this.expecting - this._streamed).copy(this._allocated, this._streamed)
+			else buf.copy(this._allocated, this._streamed)
+			return
 		}
-		const obj = { chunk: buf, next: null };
+		const obj = { chunk: buf, next: null }
 		if (!this.first) this.first = obj
 		if (this.last) this.last.next = obj
 		this.last = obj
-		this.size += buf.byteLength;
+		this.size += buf.byteLength
 	}
 
 	public concat(): Buffer | null {
-		if (this._allocated) return this._allocated;
-		if (!this.first) return null;
-		if (!this.first.next) return this.first.chunk;
-		const r = Buffer.allocUnsafe(this.size);
-		let written = 0;
-		let current: AccumulatorNode | null = this.first;
+		if (this._allocated) return this._allocated
+		if (!this.first) return null
+		if (!this.first.next) return this.first.chunk
+		const r = Buffer.allocUnsafe(this.size)
+		let written = 0
+		let current: AccumulatorNode | null = this.first
 		while (current) {
-			current.chunk.copy(r, written);
-			written += current.chunk.byteLength;
-			current = current.next;
+			current.chunk.copy(r, written)
+			written += current.chunk.byteLength
+			current = current.next
 		}
-		return r;
+		return r
 	}
 }
 

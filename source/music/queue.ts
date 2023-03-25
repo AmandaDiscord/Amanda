@@ -353,7 +353,7 @@ class Queue {
 		}
 		console.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
 		if (this.tracks[0]) {
-			this.tracks[0].error = details.exception.message
+			this.tracks[0].error = details.exception.message ?? "Unknown error"
 			console.error("Track error call B")
 			this._reportError()
 			this._nextTrack()
