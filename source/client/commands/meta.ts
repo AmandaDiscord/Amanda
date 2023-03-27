@@ -26,7 +26,7 @@ commands.assign([
 				cluster.getOwnStats(),
 				config.db_enabled ? orm.db.get("gateway_clusters", { cluster_id: info.cluster_id }) : Promise.resolve(void 0)
 			])
-			let gwStats: { shards: Array<{ id: number; status: string; ready: boolean; trace: Array<string>; seq: number; }>, endpoint: string; } = { shards: [{ id: info.shard_id, status: "disconnected", ready: false, trace: [], seq: -1 }], endpoint: "wss://gateway.discord.gg" }
+			let gwStats: { shards: Record<string, { id: number; status: string; ready: boolean; trace: Array<string>; seq: number; }>, endpoint: string; } = { shards: { [info.shard_id]: { id: info.shard_id, status: "disconnected", ready: false, trace: [], seq: -1 } }, endpoint: "wss://gateway.discord.gg" }
 			if (gwDetails) {
 				const fetched = await fetch(`${gwDetails.url}/shards/status`, { headers: { Authorization: config.bot_token } }).then(res => res.status === 200 ? res.json() : void 0)
 				if (fetched) gwStats = fetched
@@ -41,7 +41,7 @@ commands.assign([
 								name: leadingIdentity,
 								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
 								+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n${gwStats.shards.map(s => `${s.id}: ${s.status}`)}`,
+								+ `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n${Object.values(gwStats.shards).map(s => `${s.id}: ${s.status}`)}`,
 								inline: true
 							},
 							{

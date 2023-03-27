@@ -13,6 +13,8 @@ const selectTimeout = 1000 * 60
 
 const trackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const hiddenEmbedRegex = /(^<|>$)/g
+const searchShortRegex = /^\w+?search:/
+const startsWithHTTP = /^https?:\/\//
 
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
@@ -108,8 +110,10 @@ const common = {
 		const llnode = lavalink.nodes.get(node.id)
 		if (!llnode) throw new Error(`Lavalink node ${node.id} doesn't exist in lavacord`)
 
+		if (!startsWithHTTP.test(input) && !searchShortRegex.test(input)) input = `${config.lavalink_default_search_short}${input}`
+
 		const data = await Rest.load(llnode, input)
-		if (data.exception) throw new Error(data.exception.message)
+		if (data.exception) throw new Error(data.exception.message ?? "There was an exception somewhere")
 		return data
 	},
 

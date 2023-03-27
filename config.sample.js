@@ -36,6 +36,7 @@ module.exports = {
 	error_log_channel_id: "channel id here",
 	premium_guild_id: "guild id here",
 	premium_role_id: "role id here",
+	lavalink_default_search_short: "",
 
 	// Settings
 	music_dash_enabled: true,
