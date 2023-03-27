@@ -41,7 +41,7 @@ commands.assign([
 								name: leadingIdentity,
 								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${time.shortTime(stats.uptime, "sec")}\n`
 								+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(stats.ram)}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n${Object.values(gwStats.shards).map(s => `${s.id}: ${s.status}`)}`,
+								+ `**❯ ${lang.GLOBAL.HEADER_SHARDS}:**\n${Object.values(gwStats.shards).map(s => `${s.id}: ${s.status}`).join("\n")}`,
 								inline: true
 							},
 							{
