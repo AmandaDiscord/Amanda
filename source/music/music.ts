@@ -360,7 +360,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!doChecks(cmd, lang)) return
 			const queue = queues.get(cmd.guild_id!)
-			if (!queue) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
+			if (!queue || !queue.tracks[0]) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: language.replace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) })
 			const info = await queue.tracks[0].showInfo()
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, typeof info === "string" ? { content: info } : { embeds: [info] })
 		}
