@@ -130,7 +130,10 @@ commands.assign([
 
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
 
-			if (!tracks.length) return queue.destroy(false)
+			if (!tracks.length) {
+				if (!queue.playHasBeenCalled) return queue.destroy(false)
+				else return
+			}
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
