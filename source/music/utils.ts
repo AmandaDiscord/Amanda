@@ -91,6 +91,7 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
+			snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided" }).catch(() => void 0)
 			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
 		})
 		if (!tracks || !tracks.tracks.length) return null

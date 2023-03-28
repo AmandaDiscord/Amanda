@@ -238,7 +238,7 @@ export class RequiresSearchTrack extends Track {
 			try {
 				tracks = await common.loadtracks(this.searchString, this.queue?.node)
 			} catch (e) {
-				this.error = e
+				this.error = e.message
 				return
 			}
 			if (tracks && tracks.tracks[0] && tracks.tracks[0].encoded) {

@@ -247,7 +247,12 @@ commands.assign([
 				if (!playlistRow) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_NOT_EXIST })
 				if (playlistRow.author !== cmd.author.id) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE })
 
-				const result = await common.loadtracks(`${optionTrack}`).then(d => d[0]?.info)
+				let result
+				try {
+					result = await common.loadtracks(`${optionTrack}`).then(d => d.tracks[0]?.info)
+				} catch (e) {
+					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message })
+				}
 
 				if (!result) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS })
 
