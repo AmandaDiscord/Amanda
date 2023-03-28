@@ -91,17 +91,23 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
-			snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided" }).catch(() => void 0)
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided" }).catch(() => void 0)
 			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
 		})
-		if (!tracks || !tracks.tracks.length) return null
+		if (!tracks || !tracks.tracks.length) {
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] }).catch(() => void 0)
+			return null
+		}
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.encoded))
 		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].encoded, decoded[0], resource, cmd.author, language.getLang(cmd.guild_locale!))]
 		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].encoded, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
-		if (!chosen) return null
+		if (!chosen) {
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] }).catch(() => void 0)
+			return null
+		}
 		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].encoded, chosen, resource, cmd.author, language.getLang(cmd.guild_locale!))]
 	},
 
