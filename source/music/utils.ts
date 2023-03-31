@@ -91,7 +91,7 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided" }).catch(() => void 0)
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided", embeds: [] }).catch(() => void 0)
 			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
 		})
 		if (!tracks || !tracks.tracks.length) {
@@ -162,8 +162,8 @@ function trackSelection<T>(cmd: import("../Command"), lang: import("@amanda/lang
 			}).catch(() => void 0)
 			return res(null)
 		}, selectTimeout)
-		component.setCallback(async (interaction, user) => {
-			if (user.id != cmd.author.id) return
+		component.setCallback(async (interaction) => {
+			if (interaction.user?.id != cmd.author.id) return
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			component.destroy()
 			clearTimeout(timer)
