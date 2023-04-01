@@ -67,7 +67,10 @@ const common = {
 	async inputToTrack(resource: string, cmd: import("../Command"), lang: import("@amanda/lang").Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
-		const tracks = await common.loadtracks(resource, node).catch(e => {
+		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
+		try {
+			tracks = await common.loadtracks(resource, node)
+		} catch (e) {
 			const reportTarget = config.error_log_channel_id
 			const undef = "undefined"
 			const details = [
@@ -93,7 +96,9 @@ const common = {
 			}
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided", embeds: [] }).catch(() => void 0)
 			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
-		})
+			return null
+		}
+
 		if (!tracks || !tracks.tracks.length) {
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] }).catch(() => void 0)
 			return null
@@ -101,7 +106,7 @@ const common = {
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.encoded))
 		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].encoded, decoded[0], resource, cmd.author, language.getLang(cmd.guild_locale!))]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks.tracks[ind].encoded, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
+		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks!.tracks[ind].encoded, i, resource, cmd.author, language.getLang(cmd.guild_locale!)))
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${timeUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) {
