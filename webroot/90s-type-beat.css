@@ -33,7 +33,7 @@ a:link, a:visited {
 	border: 12px solid grey;
 	border-style: ridge;
 	display: flexbox;
-	background: linear-gradient(180deg, #fead7b, #c76d7f, #462371);
+	background: linear-gradient(180deg, #462371, #c76d7f, #fead7b);
 }
 
 .section {

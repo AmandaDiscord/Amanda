@@ -51,11 +51,11 @@ const paths: {
 	"/": {
 		methods: ["GET", "HEAD"],
 		static: "index.html",
-		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/amanda.webp>; rel=preload; as=image", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"]
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/amandark.webp>; rel=preload; as=image", "</images/night-background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"]
 	},
 	"/dash": {
 		methods: ["GET", "HEAD", "POST"],
-		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/night-background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			if (["GET", "HEAD"].includes(req.method?.toUpperCase() || "")) {
 				const cookies = util.getCookies(req)
@@ -110,7 +110,7 @@ const paths: {
 	},
 	"/login": {
 		methods: ["GET", "HEAD"],
-		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/night-background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			if (req.method?.toUpperCase() === "HEAD") return util.streamResponse(req, res, pathMod.join(rootFolder, "templates/login.html"), true)
 			let html = await fs.promises.readFile(pathMod.join(rootFolder, "templates/login.html"), { encoding: "utf8" })
@@ -153,7 +153,7 @@ const paths: {
 	},
 	"/blogs": {
 		methods: ["GET", "HEAD"],
-		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/night-background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async handle(req, res) {
 			let [template, blogsDir] = await Promise.all([
 				fs.promises.readFile(pathMod.join(rootFolder, "./templates/blogs.html"), { encoding: "utf-8" }),
@@ -357,7 +357,7 @@ const routes: {
 	},
 	"/blog/:blogID": {
 		methods: ["GET", "HEAD"],
-		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
+		links: ["</90s-type-beat.css>; rel=preload; as=style", "</images/night-background.gif>; rel=preload; as=image", "<https://fonts.google.com>; rel=preconnect"],
 		async router(req, res, url, { blogID }) {
 			const title = blogID.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ");
 			const toMD = pathMod.join(rootFolder, `./blogs/${blogID}.md`)
