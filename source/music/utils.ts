@@ -24,6 +24,12 @@ const sourceMap = new Map<string, Key>([
 	["http", "ExternalTrack"]
 ])
 
+class LoadTracksError extends Error {
+	constructor(message: string, public node: string, options?: ErrorOptions) {
+		super(message, options)
+	}
+}
+
 const common = {
 	nodes: {
 		random() {
@@ -70,12 +76,14 @@ const common = {
 		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 		try {
 			tracks = await common.loadtracks(resource, node)
-		} catch (e) {
+		} catch (er) {
+			const e: LoadTracksError = er
 			const reportTarget = config.error_log_channel_id
 			const undef = "undefined"
 			const details = [
 				["Tree", config.cluster_id],
 				["Branch", "music"],
+				["Node", e.node],
 				["User", `${cmd.author.username}#${cmd.author.discriminator}`],
 				["User ID", cmd.author.id],
 				["Guild ID", cmd.guild_id || undef],
@@ -120,12 +128,12 @@ const common = {
 		const node = nodeID ? common.nodes.byID(nodeID) || common.nodes.byIdeal() || common.nodes.random() : common.nodes.byIdeal() || common.nodes.random()
 
 		const llnode = lavalink.nodes.get(node.id)
-		if (!llnode) throw new Error(`Lavalink node ${node.id} doesn't exist in lavacord`)
+		if (!llnode) throw new LoadTracksError(`Lavalink node ${node.id} doesn't exist in lavacord`, node.id)
 
 		if (!startsWithHTTP.test(input) && !searchShortRegex.test(input)) input = `${config.lavalink_default_search_short}${input}`
 
 		const data = await Rest.load(llnode, input)
-		if (data.exception) throw new Error(data.exception.message ?? "There was an exception somewhere")
+		if (data.exception) throw new LoadTracksError(data.exception.message ?? "There was an exception somewhere", node.id)
 		return data
 	},
 
