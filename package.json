@@ -25,7 +25,7 @@
     "backtracker": "3.3.2",
     "callback-components": "github:AmandaDiscord/CallbackComponents#a61d6fff0f3a45a6e56877119f1c2dbf7453ffb5",
     "cloudstorm": "^0.7.0",
-    "discord-verify": "^1.0.2",
+    "discord-verify": "^1.0.3",
     "heatsync": "2.4.0",
     "jimp": "0.22.7",
     "lavacord": "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a",
