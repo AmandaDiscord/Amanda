@@ -41,7 +41,7 @@
     "@types/amqplib": "^0.10.1",
     "@types/marked": "^4.0.8",
     "@types/mime-types": "2.1.1",
-    "@types/node": "18.15.11",
+    "@types/node": "18.16.2",
     "@types/pg": "8.6.6",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "5.58.0",
