@@ -1,0 +1,13 @@
+{
+  "name": "@amanda/commands",
+  "version": "1.0.0",
+  "description": "A command manager and parser for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

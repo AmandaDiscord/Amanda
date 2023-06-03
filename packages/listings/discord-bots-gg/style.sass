@@ -1,0 +1,45 @@
+@import "../common/_colors.sass"
+
+
+@import url("https://fonts.googleapis.com/css2?family=VT323&display=swap")
+
+*, input
+	font-family: "VT323", sans-serif;
+
+a:link, a:visited
+	color: #f66 !important;
+
+
+body, html
+	image-rendering: crisp-edges
+
+img
+	max-width: 100%;
+	max-height: auto;
+
+
+.bot__header
+	background: $background
+	background-color: $background-overflow
+	background-repeat: no-repeat
+	animation: none !important
+	background-size: 100%
+
+.bot__bar
+	background: $section-color
+
+.bot__bar.is-stuck
+	border-top: $border
+	border-top-style: ridge
+	background: $section-color
+
+.button, .button:hover
+	background: rgba(0,0,0,.75)
+
+.bot__body
+	background: $section-color
+	border: $border
+	border-style: ridge
+
+.footer
+	background: $background-overflow

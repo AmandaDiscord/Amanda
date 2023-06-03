@@ -1,0 +1,22 @@
+{
+  "name": "@amanda/lang",
+  "version": "1.0.0",
+  "description": "A package which has translations for strings used by @AmandaDiscord",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "build": "node ./generate.js",
+    "lint": "eslint ."
+  },
+  "author": "PapiOphidian",
+  "license": "MIT",
+  "files": [
+    "./localizations",
+    "./typings",
+    "./index.js",
+    "./LICENSE",
+    "./README.md",
+    "./replace.d.ts",
+    "./replace.js"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "@amanda/logger",
+  "version": "1.0.0",
+  "description": "A logger that overrides console methods for AmandaDiscord",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

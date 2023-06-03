@@ -1,0 +1,19 @@
+{
+  "name": "@amanda/amqp",
+  "version": "1.0.0",
+  "description": "An AMQP provider for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && node ../../scripts/fixup-dts.js",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.1"
+  }
+}

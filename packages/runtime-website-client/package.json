@@ -1,0 +1,12 @@
+{
+  "name": "@amanda-runtime/web-client",
+  "version": "1.0.0",
+  "description": "Code base for the website's client code",
+  "main": "dist/index.js",
+  "scripts": {
+    "lint": "eslint . --ext .ts",
+    "build": "tsup"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

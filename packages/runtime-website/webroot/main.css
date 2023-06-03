@@ -1,0 +1,48 @@
+@import url("/90s-type-beat.css");
+
+:root {
+	--grey: #444;
+	--pink: #de56a9;
+	--text-color: #282828;
+	--header-bg: linear-gradient(180deg, #fead7b, #c76d7f, #462371);
+}
+
+html, body {
+	max-width: 100%;
+	overflow-x: hidden;
+	margin: 0;
+	padding: 0;
+	font-size: 24px;
+	color: var(--text-color);
+	background-image: url("/images/background.gif");
+	background-color: #b5d7e7;
+	image-rendering: crisp-edges;
+	background-repeat: no-repeat;
+	background-size: 100%, 100%;
+}
+
+.contain-image {
+	max-width: 256px;
+	width: 20%;
+	height: auto;
+}
+
+.aligned-center-image {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.aligned-center-text {
+	display: inline-block;
+	vertical-align: middle;
+}
+
+.top-box {
+	background: var(--header-bg);
+	border: 12px solid grey;
+	border-style: ridge;
+	padding: 0px;
+	display: flexbox;
+	text-align: center;
+	margin-top: 20px;
+}

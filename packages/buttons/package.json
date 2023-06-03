@@ -1,0 +1,13 @@
+{
+  "name": "@amanda/buttons",
+  "version": "1.0.0",
+  "description": "A button package for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "MIT"
+}

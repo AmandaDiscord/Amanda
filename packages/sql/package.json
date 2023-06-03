@@ -1,0 +1,19 @@
+{
+  "name": "@amanda/sql",
+  "version": "1.0.0",
+  "description": "An SQL provider and ORM for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup && node ../../scripts/fixup-dts.js",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "pg": "^8.11.0"
+  },
+  "devDependencies": {
+    "@types/pg": "8.10.1"
+  }
+}

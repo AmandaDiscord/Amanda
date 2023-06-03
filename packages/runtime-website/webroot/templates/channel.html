@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>Dash | Amanda</title>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<meta name="description" content ="Manage and get realtime events for your vc">
+		<meta name="og:title" content="Channel Dash">
+		<meta name="og:url" content="https://amanda.moe">
+		<meta name="og:image" content="https://cdn.discordapp.com/attachments/608456955660468224/608457010102665226/525fac.png">
+		<meta name="og:description" content ="Manage and get realtime events for your vc">
+		<meta name="og:site_name" content="Amanda">
+		<meta name="og:type" content="website">
+		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.webp?v=lk9Bb25nwO">
+		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.webp?v=lk9Bb25nwO">
+		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.webp?v=lk9Bb25nwO">
+		<link rel="manifest" href="/site.webmanifest?v=lk9Bb25nwO">
+		<link rel="mask-icon" href="/images/safari-pinned-tab.svg?v=lk9Bb25nwO" color="#5bbad5">
+		<link rel="shortcut icon" href="/favicon.ico?v=lk9Bb25nwO">
+		<meta name="msapplication-TileColor" content="#da532c">
+		<meta name="msapplication-config" content="/browserconfig.xml?v=lk9Bb25nwO">
+		<meta name="theme-color" content="#fef0d7">
+		<link rel="stylesheet" type="text/css" href="/player.css">
+		<script type="module" src="/scripts/player.mjs"></script>
+		<script defer src="/scripts/external/soundcloud.js"></script>
+		<script>
+			var _channelID = "$channelID"
+			var _serverTimeDiff = Date.now()-$timestamp
+		</script>
+	</head>
+	<body>
+		<div class="container">
+			<noscript>
+				Please enable JavaScript. This page won't work without it. We promise there's no trackers, ads, or other evil things.
+			</noscript>
+			<main>
+				<h1 class="heading-box">Navigation</h1>
+				<div class="section">
+					<nav>
+						❯ <a href="/">Home</a>
+						<br>
+						❯ <a href="/blogs">Blogs</a>
+						<br>
+						❯ <a href="/dash">Dash</a>
+						<br>
+						❯ <a href="/to/add">Add Amanda</a>
+						<br>
+						❯ <a href="/to/server">Join server</a>
+						<a>
+							<form action="/logout" method="post">
+								<input type="hidden" id="csrftoken" name="csrftoken" value="$csrftoken">
+								<button type="submit">Logout</button>
+							</form>
+						</a>
+					</nav>
+				</div>
+				<div class="player-grid">
+					<div class="player-controls" id="player-container">
+						<div class="song-title nothing-playing">Connecting...</div>
+					</div>
+					<div class="channel-info">
+						<div class="channel-words">
+							<div class="channel-name" id="voice-channel-name">Connecting...</div>
+						</div>
+					</div>
+					<div class="queue-container" id="queue-container"></div>
+					<div class="right-panels">
+						<div class="side-controls" id="side-controls"></div>
+						<div class="voice-info" id="voice-info"></div>
+					</div>
+				</div>
+			</main>
+		</div>
+	</body>
+</html>

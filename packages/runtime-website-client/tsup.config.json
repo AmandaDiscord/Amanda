@@ -1,0 +1,20 @@
+{
+	"clean": false,
+	"dts": false,
+	"entry": [
+		"src/player.ts"
+	],
+	"format": [
+			"esm"
+	],
+	"platform": "browser",
+	"minifyWhitespace": true,
+	"minifySyntax": true,
+	"skipNodeModulesBundle": true,
+	"sourcemap": true,
+	"target": "es2015",
+	"splitting": false,
+	"keepNames": true,
+	"external": ["../runtime-website", "../shared-types"],
+	"outDir": "../runtime-website/webroot/scripts"
+}

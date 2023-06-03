@@ -1,0 +1,548 @@
+{
+	"GLOBAL": {
+		"MUSIC_DISABLED": "Музыка в данный момент не работает из-за неполадок. Мы работаем над исправлением этого.",
+		"GUILD_ONLY": "Эта команда может использована только в сервере.",
+		"MUSIC_INVALID_ACTION": "%username, это не одно из доступных действий. Если ты хочешь что-то включить, используй `%prefixplay track:<трек>`.\nИспользуйте `%prefixhelp category:audio` и `%prefixhelp command:playlists` для списка всех возможностей!",
+		"ONE_ACTION": "За раз можно делать лишь 1 действие.",
+		"NOTHING_PLAYING": "%username, в данный момент ничего не играет.",
+		"MUSIC_SEE_OTHER": "Сейчас музыка играет в канале %channel. Зайдите и послушайте, что там!",
+		"VC_REQUIRED": "%username, тебе нужно зайти в голосовой канал, чтобы это сделать.",
+		"NOW_PLAYING": "Сейчас играет: %song",
+		"VC_NOT_JOINABLE": "%username, у меня нет прав для подключения к этому каналу.",
+		"NO_RESULTS": "Нет результатов.",
+		"QUEUE_STOPPED": "Очередь остановлена %username.",
+		"LOOP_ON": "Повторение включено.",
+		"LOOP_OFF": "Повторение выключено",
+		"NO_LYRICS": "Либо произошла ошибка при получении слов, либо их нет.",
+		"QUEUE_PAUSED": "Очередь приостановлена.",
+		"QUEUE_UNPAUSED": "Очередь продолжается.",
+		"TOTAL_LENGTH": "Общая длина: %length",
+		"QUEUE_FOR": "Очередь для этого сервера",
+		"TOO_MANY_SKIPS": "Вы не можете пропустить больше треков, чем есть в очереди!",
+		"SKIPPED_ALL": "Все треки в очереди были пропущены, а сама очередь - уничтожена.",
+		"SKIPPED_AMOUNT": "Пропущено %amount треков.",
+		"SHUFFLED": "Треки в очереди перемешаны.",
+		"TOKENS_DELETED": "Все твои токены были удалены. Используй `%prefixmusictoken action:new` для генерации нового.",
+		"TOKENS_NEW": "Твои существующие токены были удалены, и был создан новый.\nНи с кем не делись этим токеном. Если же он у кого-то будет, используй `%prefixmusictoken action:delete`, чтобы его удалить и быть в безопасности.\nТы теперь можешь войти на %website",
+		"TOKENS_PREVIOUS": "Вот токен, который был сгенерирован ранее:\nТы можешь использовать `%prefixmusictoken action:delete` для его удаления, или `%prefixmusictoken action:new` для пересоздания.",
+		"TOKENS_NONE": "В данный момент у тебя нет токенов. Используй `%prefixmusictoken action:new` для его генерации.",
+		"HEADER_UNKNOWN": "Неизвестно",
+		"HEADER_PLAYLIST": "Плейлист",
+		"HEADER_SONGS": "Треки",
+		"HEADER_LENGTH": "Длина",
+		"HEADER_PLAY_COUNT": "Проигрываний",
+		"HEADER_AUTHOR": "Автор",
+		"EVERYONE_LEFT": "Все ушли, а потому и я тоже ушла.",
+		"NEWER_NOW_PLAYING": "Есть более новое сообщение с играющим треком.",
+		"SONG_ERROR_EXCLAIMATION": "Идентификатором трека было значение заголовка `!`\nЭто баг.",
+		"SONG_ERROR_NULL": "Идентификатор трека `null` или `undefined`\nЭто баг.",
+		"QUEUE_ENDED": "Похоже, что очередь закончилась.",
+		"SONG_STUCK": "Песня не загружается.",
+		"UNKNOWN_TRACK_EXCEPTION": "Произошла ошибка при попытке включить этот трек. Это все, что я знаю.",
+		"NO_USERS_IN_VC": "Я одна в голосовом канале. Я уйду через %time секунд, если никто не присоединится.",
+		"SONG_NOT_PLAYABLE": "Я не смогла включить этот трек.",
+		"SONG_NOT_OBJECT": "Song is not an object %song",
+		"ERROR_OCCURRED": "У нас произошла ошибка.",
+		"TOO_MANY_ERRORS": "Слишком много ошибок!",
+		"ERRORS_SUPPRESSED": "Последующие ошибки с этой очередью не будут присылаться.\nЕсли будут проблемы с загрузкой треков, они будут пропущены без сообщения.\nЧтобы рассказать об ошибке, зайдите сюда: https://discord.gg/YMkZDsK",
+		"HEADER_PAUSED": "ОСТАНОВЛЕНО",
+		"MISSING_TRACK": "Не найден трек для %id",
+		"INVIDIOUS_NO_DATA": "Invidious не вернул корректные данные\n%api\n%link\n%yt",
+		"HEADER_LIVE": "В ПРЯМОМ ЭФИРЕ",
+		"CANNOT_PAUSE_LIVE": "Нельзя приостановить прямой эфир.",
+		"SONG_INFO_FETCH_FAIL": "К сожалению, у меня не получилось получить информацию о треке.",
+		"HEADER_DETAILS": "Детали",
+		"HEADER_EPISODE": "Эпизод",
+		"HEADER_SHOW": "Шоу",
+		"HEADER_GENRE": "Жанр",
+		"HEADER_STATION": "Станция",
+		"HEADER_SCHEDULE": "Расписание",
+		"HEADER_TRACK_LIST": "Список треков",
+		"UNKNOWN_TRACK": "Неизвестный трек",
+		"HEADER_LOADING": "ЗАГРУЗКА",
+		"HEADER_SONG_SELECTION": "Выбор песни",
+		"SONG_SELECTION_FOOTER": "Выберите одну из опций ниже. Будет недействительно через %timeout.",
+		"IMAGE_FETCH_FAILED": "Произошла ошибка при загрузке картинки.",
+		"HEADER_IMAGE_ERROR": "О-оу.",
+		"NEKOS_LIFE_OFFLINE": "Похоже, что nekos.life API в данный момент не работает.\nМы пока что не можем получить новые изображения.\nПолюбуйтесь на сонную кошкодевочка, пока мы ждем, когда API снова заработает.",
+		"INTERACTION_RESPONSE_1": "Это совсем не странно...",
+		"INTERACTION_RESPONSE_2": "Ч-что? Почему?",
+		"INTERACTION_RESPONSE_3": "Мне кажется странным, что ты это попытался сделать...",
+		"INTERACTION_RESPONSE_4": "Ладно...",
+		"INTERACTION_RESPONSE_5": "Я не уверена, что понимаю...",
+		"INTERACTION_RESPONSE_6": "Ну... Не делай из себя дурака..",
+		"INTERACTION_RESPONSE_7": "Зачем даже пытаться?",
+		"INTERACTION_RESPONSE_8": "Я не уверена, что понимаю тебя...",
+		"INTERACTION_RESPONSE_9": "Ты такой странный...",
+		"CANNOT_SELF_SHIP": "%username, нельзя кого-то зашипперить с самим собой, глупыш",
+		"SHIP_ALREADY_COUPLE_SELF": "Я думаю, мне даже не стоит оценивать союз между тобой и %other, раз уж вы уже женаты. Вы - милая пара %emoji",
+		"SHIP_ALREADY_COUPLE_OTHER": "Я думаю, мне даже не стоит оценивать союз между %user1 и %other, раз уж они уже женаты. Они - милая пара %emoji",
+		"AVATAR_FETCH_FAILED": "Произошла ошибка при получении аватарки одного из пользователей",
+		"SHIP_RATING": "Я бы сказала, что шансы %display1 и %display2 быть вместе - %percentage%",
+		"NO_U": "нет ты",
+		"CANNOT_SELF_BEAN": "%username, нельзя забанить себя же, глупыш",
+		"BEANED": "%tag был забанен!",
+		"HUG_AMANDA": "**Обняла %username в ответ** :heart:",
+		"NOM_AMANDA": "ай",
+		"KISS_AMANDA": "**Поцеловала %username в ответ** :heart:",
+		"CUDDLE_AMANDA": "**Прижалась к %username в ответ** :heart:",
+		"POKE_AMANDA": "Не тыкай в меня ; ^ ;",
+		"SLAP_AMANDA": "**Дала пощечину %username в ответ** Это было больно ; ^ ;",
+		"BOOP_AMANDA": "Не тыкай мне по носу ; ^ ;",
+		"PAT_AMANDA": "≥ w ≤",
+		"HUG_OTHER": "%user обнял(а) %mention",
+		"NOM_OTHER": "%user укусил(а) %mention",
+		"KISS_OTHER": "%user поцеловал(а) %mention",
+		"CUDDLE_OTHER": "%user прижался к %mention",
+		"POKE_OTHER": "%user тыкнул(а) %mention",
+		"SLAP_OTHER": "%user дал(а) пощечину %mention",
+		"BOOP_OTHER": "%user тыкнул(а) по носу %mention",
+		"PAT_OTHER": "%user погладил(а) по голлове %mention",
+		"HEADER_HEARTBEAT": "Пульс",
+		"HEADER_LATENCY": "Задержка",
+		"HEADER_UPTIME": "Время работы",
+		"HEADER_MEMORY": "Память",
+		"HEADER_SHARDS": "Шарды",
+		"HEADER_SONGS_QUEUED": "Треков в очереди",
+		"HEADER_USERS_LISTENING": "Пользователей, слушающих музыку",
+		"HEADER_NODE_USAGE": "Node usage",
+		"NO_NODES": "No nodes",
+		"SHARD_NUMBER": "Шард %shard",
+		"HEADER_USER_COUNT": "Количество пользователей",
+		"HEADER_GUILD_COUNT": "Количество серверов",
+		"HEADER_CHANNEL_COUNT": "Количество каналов",
+		"HEADER_VOICE_CONNECTIONS": "Подключений к голосовым каналам",
+		"HEADER_CREATORS": "Создатели",
+		"HEADER_CODE": "Код",
+		"HEADER_LINKS": "Ссылки",
+		"INFO_THANKS": "Спасибо, что выбрали меня в компаньоны! :heart:\nВот немного информации обо мне...",
+		"INFO_LINKS": "Посетите [сайт](%website) Аманды или ее [сервер](%server)\nХотите задонатить? Это можно сделать через [Patreon](%patreon) или через [PayPal](%paypal).\nХотите посмотреть, как Аманда росла и развивалась? Это можно сделать [здесь](%stats)\nПолитика конфиденциальности: %privacy\nСписок того, что нужно сделать: %todo",
+		"GIT_FILES_CHANGED": "Изменено %amount файлов",
+		"GIT_FILE_CHANGED": "1 файл изменен",
+		"GIT_INSERTIONS": "%amount добавлений",
+		"GIT_INSERTION": "1 добавление",
+		"GIT_DELETIONS": "%amount удалений",
+		"GIT_DELETION": "1 удаление",
+		"HEADER_STATUS": "Статус",
+		"HEADER_GIT_INFO": "Информация о git",
+		"GIT_STATUS": "Версия %branch, последний коммит - %hash",
+		"GIT_COMMITS": "Коммиты (последние %amount записей)",
+		"FOOTER_HELP": "<> = обязательно, [] = опционально, | = или. Не используйте <>, [] или | при вводе.",
+		"HELP_COMMAND_BODY_LIST": "%description\n*Параметры*: %args",
+		"HELP_COMMAND_BODY": "%description\nПараметры: %args\nКатегория: %category",
+		"HEADER_COMMAND_CATEGORY": "Категория команды: %category",
+		"FOOTER_HELP_MAIN": "Напиши `%prefixhelp [command:команда]` для более подробной информации о команде",
+		"HELP_INVALID_COMMAND": "**%tag**, я не смогла получить информацию об этой команде.",
+		"HEADER_COMMAND_CATEGORIES": "Категории Команд",
+		"HELP_SEE_ALL": "Напиши `%prefixhelp [category:категория]`, чтобы увидеть все команды в этой категории.\nНапиши `%prefixhelp [command:команда]`, чтобы увидеть больше информации о команде",
+		"HELP_INFO": "напиши `%prefixinfo`, чтобы узнать общую информацию об Аманде.\nДля больших подробностей зайди на сервер: %link",
+		"TIMED_OUT": "Время вышло",
+		"DATABASE_OFFLINE": "База данных в данный момент не подключена. Об этом известно и уже исправляется.",
+		"NEGATIVE_1_INDEX_IN_RADIO": "Индекс -1 в радио",
+		"INVALID_RADIO_NAMESPACE": "Неизвестное название радио",
+		"PAGE_X_OF_Y": "Страница %current из %total",
+		"PAGE_LENGTH": "Длина страницы: %time",
+		"VOLUME_SET": "Громкость очереди поставлена на %volume%",
+		"CANNOT_SEEK_LIVE": "Нельзя перематывать прямой эфир.",
+		"SEEK_GREATER_THAN_SONG_LENGTH": "Время, которое ты указал, больше, чем длина трека.",
+		"SEEK_ERROR": "Произошла ошибка при перематывании. Твоя перемотка была распознана как %parsed миллисекунд, но LavaLink не перемотал. Это баг. Пожалуйста, напишите об этом: %server",
+		"SEEKING": "Перематываю на %time. Пожалуйста, подождите",
+		"FILTERS_ERROR": "Произошла ошибка при использовании фильтров. Может, подключение к LavaLink недействительно?",
+		"FILTERS_APPLIED": "Указанные фильтры сейчас будут применены. Пожалуйста, подождите",
+		"INVALID_PLAYLIST_NAME": "Некорректное название плейлиста. Названия плейлистов не должны содержать ссылок или быть более 24 символов в длину",
+		"DATABASE_FIXED": "База данных была неисправна, но уже починена. Если ты видишь это сообщение, пожалуйста, уведоми нас об этом.",
+		"PLAYLIST_EMPTY": "Этот плейлист пуст.",
+		"PLAYLIST_NOT_EXIST": "Плейлист не существует",
+		"PLAYLIST_ALREADY_EXISTS": "Плейлист уже существует",
+		"PLAYLIST_CREATED": "Плейлист создан",
+		"PLAYLIST_CANNOT_MANAGE": "Тебе не разрешено изменять этот плейлист.",
+		"PLAYLIST_DELETED": "Плейлист удален.",
+		"PLAYLIST_DUPLICATE_SONG": "Ты попытался добавить один и тот же трек дважды в один плейлист.",
+		"PLAYLIST_SONG_ADDED": "Добавлен %title",
+		"OUT_OF_BOUNDS": "Индекс за пределами",
+		"PLAYLIST_SONG_REMOVED": "Убран %title",
+		"PLAYLIST_INDEXES_EQUAL": "Начальный и конечный индексы не могут быть равны.",
+		"PLAYLIST_SONG_MOVED": "Трек передвинут",
+		"TITLE_JOIN_SERVER": "Нажми на заголовок, чтобы зайти на сервер",
+		"SONG_INFO_GENERIC": "Попробуй найти информацию о треке на сайте, на котором он был найден",
+		"SONG_STARTED_AND_REMAINING": "началось %ago назад, %remaining осталось (%percent%)",
+		"SONG_SELECTION_CANCELLED": "Выбор трека отменен",
+		"NONE": "Нет",
+		"COMMAND_ERROR": "Произошла неизвестная ошибка при использовании команды %name. Разработчикам были уведомлены. Если ты снова используешь команду и увидишь это сообщение, пожалуйста, подожди какое-то время. Расскажи об этом, если снова повторится: %server",
+		"UNKNOWN_AUTHOR": "Неизвестный автор"
+	},
+	"sit": {
+		"name": "сидеть",
+		"description": "mood"
+	},
+	"image": {
+		"name": "картинку",
+		"description": "Прислать картинку чего-то",
+		"options": [
+			{
+				"name": "тип",
+				"description": "Тип изображения"
+			}
+		]
+	},
+	"ship": {
+		"name": "ship",
+		"description": "Шипперит двух людей",
+		"options": [
+			{
+				"name": "человек2",
+				"description": "Второй пользователь для шиппа"
+			},
+			{
+				"name": "человек1",
+				"description": "Человек, которого нужно зашипперить со вторым, кроме себя."
+			}
+		]
+	},
+	"bean": {
+		"name": "бан",
+		"description": "Банит пользователя",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Человек, которого нужно забанить"
+			}
+		]
+	},
+	"hug": {
+		"name": "обнять",
+		"description": "Обнять кого-то",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Человек, которого хочется обнять"
+			}
+		]
+	},
+	"nom": {
+		"name": "укусить",
+		"description": "Укусить кого-то",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Человек, которого хочется укусить"
+			}
+		]
+	},
+	"kiss": {
+		"name": "поцеловать",
+		"description": "Кого-то поцеловать",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Тот, кого хочется поцеловать"
+			}
+		]
+	},
+	"cuddle": {
+		"name": "прижаться",
+		"description": "Прижаться к кому-то",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Тот, к кому хочется прижаться"
+			}
+		]
+	},
+	"poke": {
+		"name": "тыкнуть",
+		"description": "Тыкнуть в кого-то",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Тот, в кого хочется тыкнуть"
+			}
+		]
+	},
+	"slap": {
+		"name": "пощечину",
+		"description": "Дать кому-то пощечину",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Человек, которому хочется дать пощечину"
+			}
+		]
+	},
+	"boop": {
+		"name": "boop",
+		"description": "Когда тыкнуть хочется именно в нос.",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Тот, кому хочется тыкнуть в нос"
+			}
+		]
+	},
+	"pat": {
+		"name": "pat",
+		"description": "Гладит кого-то по голове",
+		"options": [
+			{
+				"name": "человек",
+				"description": "Тот, кого хочется погладить"
+			}
+		]
+	},
+	"play": {
+		"name": "play",
+		"description": "Играет музыку из различных источников",
+		"options": [
+			{
+				"name": "track",
+				"description": "Трек, который хочется включить"
+			},
+			{
+				"name": "position",
+				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
+			}
+		]
+	},
+	"radio": {
+		"name": "radio",
+		"description": "Играть музыку с радиостанций",
+		"options": [
+			{
+				"name": "station",
+				"description": "Станция, с которой надо включить музыку"
+			},
+			{
+				"name": "position",
+				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
+			}
+		]
+	},
+	"skip": {
+		"name": "skip",
+		"description": "Пропускает трек в очереди",
+		"options": [
+			{
+				"name": "start",
+				"description": "Номер, с которого нужно пропускать треки (начиная с 1)"
+			},
+			{
+				"name": "amount",
+				"description": "Количество треков, которые нужно пропустить"
+			}
+		]
+	},
+	"stop": {
+		"name": "stop",
+		"description": "Останавливает очередь"
+	},
+	"queue": {
+		"name": "queue",
+		"description": "Показать очередь и действия",
+		"options": [
+			{
+				"name": "page",
+				"description": "Выбрать, какую страницу очереди показать"
+			},
+			{
+				"name": "volume",
+				"description": "Нужная громкость музыки (в %)"
+			},
+			{
+				"name": "loop",
+				"description": "Включить повторение очереди"
+			},
+			{
+				"name": "pause",
+				"description": "Останавливает очередь"
+			}
+		]
+	},
+	"nowplaying": {
+		"name": "nowplaying",
+		"description": "Прислать сообщение с играющим треком"
+	},
+	"trackinfo": {
+		"name": "trackinfo",
+		"description": "Показывает информацию об играющем треке"
+	},
+	"lyrics": {
+		"name": "lyrics",
+		"description": "Показывает слова играющего трека"
+	},
+	"seek": {
+		"name": "seek",
+		"description": "Перемотать трек на нужное время",
+		"options": [
+			{
+				"name": "time",
+				"description": "Время в секундах, на которое нужно перемотать."
+			}
+		]
+	},
+	"filters": {
+		"name": "filters",
+		"description": "Применить фильтры к очереди",
+		"options": [
+			{
+				"name": "pitch",
+				"description": "Изменить высоту звука в очереди"
+			},
+			{
+				"name": "speed",
+				"description": "Устанавливает скорость (в %) в очереди"
+			}
+		]
+	},
+	"shuffle": {
+		"name": "shuffle",
+		"description": "Перемешивает песни в очереди"
+	},
+	"musictoken": {
+		"name": "musictoken",
+		"description": "Получить токен ",
+		"options": [
+			{
+				"name": "действия",
+				"description": "То, что нужно сделать"
+			}
+		]
+	},
+	"playlists": {
+		"name": "playlists",
+		"description": "Изменять и проигрывать плейлисты",
+		"options": [
+			{
+				"name": "meta",
+				"description": "Команды для метаданных",
+				"options": [
+					{
+						"name": "show",
+						"description": "Показывает все плейлисты."
+					},
+					{
+						"name": "info",
+						"description": "Показывает информацию о плейлисте"
+					},
+					{
+						"name": "create",
+						"description": "Создает плейлист"
+					},
+					{
+						"name": "delete",
+						"description": "Удаляет плейлист"
+					}
+				]
+			},
+			{
+				"name": "add",
+				"description": "Добавляет трек в плейлист",
+				"options": [
+					{
+						"name": "playlist",
+						"description": "Имя плейлиста"
+					},
+					{
+						"name": "track",
+						"description": "Трек (ссылка, название, id)"
+					}
+				]
+			},
+			{
+				"name": "remove",
+				"description": "Удаляет трек из плейлиста",
+				"options": [
+					{
+						"name": "playlist",
+						"description": "Имя плейлиста"
+					},
+					{
+						"name": "index",
+						"description": "Номер трека, который нужно удалить (начиная с 1)"
+					}
+				]
+			},
+			{
+				"name": "move",
+				"description": "Двигает трек в плейлисте с одной позиции на другую",
+				"options": [
+					{
+						"name": "playlist",
+						"description": "Имя плейлиста"
+					},
+					{
+						"name": "from",
+						"description": "Номер трека, который нужно передвинуть (начиная с 1)"
+					},
+					{
+						"name": "to",
+						"description": "Номер, на который нужно передвинуть трек (начиная с 1)"
+					}
+				]
+			},
+			{
+				"name": "search",
+				"description": "Фильтрует треки в плейлисте",
+				"options": [
+					{
+						"name": "playlist",
+						"description": "Имя плейлиста"
+					},
+					{
+						"name": "query",
+						"description": "Слово, по которому нужно фильтровать"
+					}
+				]
+			},
+			{
+				"name": "play",
+				"description": "Проигрывает плейлист",
+				"options": [
+					{
+						"name": "playlist",
+						"description": "Имя плейлиста"
+					},
+					{
+						"name": "shuffle",
+						"description": "Должен ли плейлист перемешаться"
+					},
+					{
+						"name": "start",
+						"description": "Номер, с которого нужно начать (начиная с 1). При перемешивании выбирается лишь часть и перемешивается"
+					}
+				]
+			}
+		]
+	},
+	"stats": {
+		"name": "stats",
+		"description": "Показывает детальную статистику",
+		"options": [
+			{
+				"name": "window",
+				"description": "Какую статистику нужно показать"
+			}
+		]
+	},
+	"info": {
+		"name": "info",
+		"description": "Информация об Аманде"
+	},
+	"git": {
+		"name": "git",
+		"description": "Получает последние git коммиты."
+	},
+	"help": {
+		"name": "help",
+		"description": "Самая обыкновенная команда с помощью.",
+		"options": [
+			{
+				"name": "category",
+				"description": "Категория, с которой нужна помощь"
+			},
+			{
+				"name": "command",
+				"description": "Команда, с которой нужна помощь"
+			}
+		]
+	}
+}

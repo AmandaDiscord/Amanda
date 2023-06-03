@@ -1,0 +1,548 @@
+{
+	"GLOBAL": {
+		"MUSIC_DISABLED": "Funkcja muzyczna jest wyłączona z powodu problemów. Prace nad poprawką trwają.",
+		"GUILD_ONLY": "Możesz użyć tej komendy tylko na serwerze.",
+		"MUSIC_INVALID_ACTION": "%username, to nie jest poprawna akcja. Jeżeli chcesz coś zagrać, spróbuj `%prefixplay track:<song>`.\nSprawdź `%prefixhelp category:audio` oraz `%prefixhelp command:playlists` by uzyskać więcej informacji!",
+		"ONE_ACTION": "Możesz wykonać tylko jedną akcję na raz.",
+		"NOTHING_PLAYING": "%username, nic obecnie nie gra.",
+		"MUSIC_SEE_OTHER": "Obecna trwa sesja muzyczna w %channel. Wejdź tam, by zobaczyć co jest grane!",
+		"VC_REQUIRED": "%username, musisz dołączyć do kanału głosowego by móc tego użyć.",
+		"NOW_PLAYING": "Teraz gramy: %song",
+		"VC_NOT_JOINABLE": "%username, nie mam uprawnień by dołączyć do kanału głosowego.",
+		"NO_RESULTS": "Brak wyników.",
+		"QUEUE_STOPPED": "Kolejka zatrzymana przez %username.",
+		"LOOP_ON": "Zapętlanie zostało włączone.",
+		"LOOP_OFF": "Zapętlanie zostało wyłączone.",
+		"NO_LYRICS": "Wystąpił problem przy pobieraniu tekstu piosenki, lub takiego nie ma.",
+		"QUEUE_PAUSED": "Kolejka została wstrzymana.",
+		"QUEUE_UNPAUSED": "Kolejka została wznowiona.",
+		"TOTAL_LENGTH": "Całkowita długość: %length",
+		"QUEUE_FOR": "Kolejka dla tego serwera",
+		"TOO_MANY_SKIPS": "Nie możesz pominąć więcej piosenek, niż jest ich w kolejce!",
+		"SKIPPED_ALL": "Wszystkie piosenki w kolecje zostały pominięte, a kolejka usunięta.",
+		"SKIPPED_AMOUNT": "Pominięto %amount piosenek.",
+		"SHUFFLED": "Kolejka została przetasowana.",
+		"TOKENS_DELETED": "Usunięto wszystkie tokeny. Użyj `%prefixmusictoken action:new` by wygenerować nowy.",
+		"TOKENS_NEW": "Twoje istniejące tokeny zostały usunięte, a nowy został utworzony.\nNie wysyłaj tego tokenu nikomu. Jeśli przez przypadek go udostępnisz, możesz użyć `%prefixmusictoken action:delete` by go usunąć i być bezpiecznym.\nMożesz się teraz zalogować na %website",
+		"TOKENS_PREVIOUS": "Oto twój poprzednio wygenerowany token:\nMożesz użyć `%prefixmusictoken action:delete` aby go usunąć, lub `%prefixmusictoken action:new` by wygenerować go na nowo.",
+		"TOKENS_NONE": "Nie posiadasz obecnie żadnych tokenów. Użyj `%prefixmusictoken action:new` aby wygenerować nowy.",
+		"HEADER_UNKNOWN": "Nieznany",
+		"HEADER_PLAYLIST": "Playlista",
+		"HEADER_SONGS": "Ścieżki",
+		"HEADER_LENGTH": "Długość",
+		"HEADER_PLAY_COUNT": "Odtworzenia",
+		"HEADER_AUTHOR": "Autor",
+		"EVERYONE_LEFT": "Wszyscy wyszli, więc wyjdę i ja.",
+		"NEWER_NOW_PLAYING": "Pojawiła się nowa wiadomość 'teraz gramy'.",
+		"SONG_ERROR_EXCLAIMATION": "Wewnętrzny identyfikator dla piosenki ma wartość zastępczą `!`\nTo jest błąd.",
+		"SONG_ERROR_NULL": "Wewnętrzny identyfikator dla piosenki ma wartość `null` lub `undefined`\nTo jest błąd.",
+		"QUEUE_ENDED": "Wygląda na to, że kolejka się zakończyła.",
+		"SONG_STUCK": "Ładowanie piosenki zawiesiło się.",
+		"UNKNOWN_TRACK_EXCEPTION": "Wystąpił problem przy uruchomieniu tej piosenki. To wszystko co wiem.",
+		"NO_USERS_IN_VC": "Nikt nie jest obecny na moim kanale głosowym. Przestanę grać za %time sekund jesli nikt nie dołączy.",
+		"SONG_NOT_PLAYABLE": "Nie mogliśmy uruchomić tej piosenki",
+		"SONG_NOT_OBJECT": "Piosenka nie jest obiektem %song",
+		"ERROR_OCCURRED": "Napotkaliśmy problem",
+		"TOO_MANY_ERRORS": "Za dużo błędów!",
+		"ERRORS_SUPPRESSED": "Przyszłe błędy dla tej kolejki będą wyciszone\nJeśli kolejne piosenki nie będą się uruchamiać, zostaną pominięte bez informacji o błędzie.\nBy zgłosić błąd, dołącz na nasz serwer: https://discord.gg/YMkZDsK",
+		"HEADER_PAUSED": "PAUZA",
+		"MISSING_TRACK": "Brakująca ścieżka dla %id",
+		"INVIDIOUS_NO_DATA": "Invidious nie wysłał prawidłowych danych\n%api\n%link\n%yt",
+		"HEADER_LIVE": "NA ŻYWO",
+		"CANNOT_PAUSE_LIVE": "Nie możesz zapauzować transmisji na żywo.",
+		"SONG_INFO_FETCH_FAIL": "Niestety nie udało mi się zebrać informacji o tej piosence.",
+		"HEADER_DETAILS": "Szczegóły",
+		"HEADER_EPISODE": "Odcinek",
+		"HEADER_SHOW": "Show",
+		"HEADER_GENRE": "Gatunek",
+		"HEADER_STATION": "Stacja",
+		"HEADER_SCHEDULE": "Rozkład",
+		"HEADER_TRACK_LIST": "Lista ścieżek",
+		"UNKNOWN_TRACK": "Nieznana ścieżka",
+		"HEADER_LOADING": "ŁADOWANIE",
+		"HEADER_SONG_SELECTION": "Wybór piosenki",
+		"SONG_SELECTION_FOOTER": "Wybierz jedną z opcji w poniższym menu. Wygasa za %timeout.",
+		"IMAGE_FETCH_FAILED": "Wystąpił problem przy pobieraniu obrazu.",
+		"HEADER_IMAGE_ERROR": "Uh oh.",
+		"NEKOS_LIFE_OFFLINE": "Wygląda na to, że nekos.life API jest obecnie offline.\nNie jestem w stanie pobrać nowych obrazków.\nMasz tu śpiącą kocicę podczas gdy czekamy, aż serwer ożyje.",
+		"INTERACTION_RESPONSE_1": "To nie jest ani trochę dziwne...",
+		"INTERACTION_RESPONSE_2": "C-Co? Czemu?",
+		"INTERACTION_RESPONSE_3": "Dziwne, że chciałeś/aś to zrobić...",
+		"INTERACTION_RESPONSE_4": "Niech będzie...",
+		"INTERACTION_RESPONSE_5": "Nie wydaje mi się, że rozumiem...",
+		"INTERACTION_RESPONSE_6": "Weź...nie rób z siebie debila...",
+		"INTERACTION_RESPONSE_7": "Po co próbujesz?",
+		"INTERACTION_RESPONSE_8": "Nie wydaje mi się, że Cię rozumiem...",
+		"INTERACTION_RESPONSE_9": "Jesteś dziwny/a...",
+		"CANNOT_SELF_SHIP": "%username, nie możesz shipować kogoś z samym sobą, głupiutki/a",
+		"SHIP_ALREADY_COUPLE_SELF": "Chyba nie muszę oceniać Ciebie i %other Skoro już się pobraliście. Jesteście uroczą parą %emoji",
+		"SHIP_ALREADY_COUPLE_OTHER": "Chyba nie muszę oceniać %user1 i %other skoro już się pobrali. Są uroczą parą %emoji",
+		"AVATAR_FETCH_FAILED": "Wystąpił problem przy pobieraniu jednego z awatarów",
+		"SHIP_RATING": "Myślę, że %display1 i %display2 mogą być razem na %percentage%",
+		"NO_U": "Nie, ty",
+		"CANNOT_SELF_BEAN": "%username, nie możesz się zbeanować, głupiutki/a",
+		"BEANED": "%tag został zbanowany!",
+		"HUG_AMANDA": "**Przytula %username z powrotem** :heart:",
+		"NOM_AMANDA": "owie",
+		"KISS_AMANDA": "**Całuje %username z powrotem** :heart:",
+		"CUDDLE_AMANDA": "**Wtula się w %username z powrotem** :heart:",
+		"POKE_AMANDA": "Nie szturchaj mnie ; ^ ;",
+		"SLAP_AMANDA": "**Uderza %username z powrotem** To bolało ; ^ ;",
+		"BOOP_AMANDA": "Nie dotykaj mojego nosa ; ^ ;",
+		"PAT_AMANDA": "≥ w ≤",
+		"HUG_OTHER": "%user tuli %mention",
+		"NOM_OTHER": "%user pogryza %mention",
+		"KISS_OTHER": "%user całuje %mention",
+		"CUDDLE_OTHER": "%user wtula się w %mention",
+		"POKE_OTHER": "%user szturchnął %mention",
+		"SLAP_OTHER": "%user uderzył %mention",
+		"BOOP_OTHER": "%user dotknął nosa %mention",
+		"PAT_OTHER": "%user pogłaskał po głowie %mention",
+		"HEADER_HEARTBEAT": "Heartbeat",
+		"HEADER_LATENCY": "Opóźnienie",
+		"HEADER_UPTIME": "Czas działania",
+		"HEADER_MEMORY": "Pamięć",
+		"HEADER_SHARDS": "Shardy",
+		"HEADER_SONGS_QUEUED": "Piosenki w kolejce",
+		"HEADER_USERS_LISTENING": "Słuchających użytkowników ",
+		"HEADER_NODE_USAGE": "Użycie Node",
+		"NO_NODES": "Brak node'ów",
+		"SHARD_NUMBER": "Shardy %shard",
+		"HEADER_USER_COUNT": "Liczba użytkowników",
+		"HEADER_GUILD_COUNT": "Liczba serwerów",
+		"HEADER_CHANNEL_COUNT": "Liczba kanałów",
+		"HEADER_VOICE_CONNECTIONS": "Połączenia głosowe",
+		"HEADER_CREATORS": "Twórcy",
+		"HEADER_CODE": "Kod",
+		"HEADER_LINKS": "Linki",
+		"INFO_THANKS": "Dziękuję Ci, że wybrałeś mnie na Swojego towarzysza! :heart:\nTu jest trochę więcej info na mój temat...",
+		"INFO_LINKS": "Odwiedź [website](%website) Amandy lub jej [support server](%server)\nChcesz złożyć dotację? Sprawdź jej [Patreon](%patreon) lub wykonaj jednorazową wpłatę poprzez [PayPal](%paypal).\nChcesz zobaczyć rozwój Amandy? Możesz to zrobić [here](%stats)\nPolityka prywatności: %privacy\nLista zadań: %todo",
+		"GIT_FILES_CHANGED": "%amount zmienionych plików",
+		"GIT_FILE_CHANGED": "1 plik zmieniony",
+		"GIT_INSERTIONS": "%amount wstawień",
+		"GIT_INSERTION": "1 wstawienie",
+		"GIT_DELETIONS": "%amount usunięć",
+		"GIT_DELETION": "1 usunięcie",
+		"HEADER_STATUS": "Status",
+		"HEADER_GIT_INFO": "Git info",
+		"GIT_STATUS": "Na branchu %branch, ostatni commit %hash",
+		"GIT_COMMITS": "Commity (ostatnie %amount wpisów)",
+		"FOOTER_HELP": "<> = wymagane, [] = opcjonalne, | = lub. Nie wstawiaj <>, [] lub | do swojej komendy.",
+		"HELP_COMMAND_BODY_LIST": "%description\n*Arguments*: %args",
+		"HELP_COMMAND_BODY": "%description\nArguments: %args\nCategory: %category",
+		"HEADER_COMMAND_CATEGORY": "nKategoria komendy: %category",
+		"FOOTER_HELP_MAIN": "Wpisz `%prefixhelp [command:command]` by uzyskać więcej informacji o tej komendzie",
+		"HELP_INVALID_COMMAND": "**%tag**, nie mogłam znaleźć panelu pomocy dla tej komendy",
+		"HEADER_COMMAND_CATEGORIES": "Kategorie komend",
+		"HELP_SEE_ALL": "Wpisz `%prefixhelp [category:category]` by zobaczyć wszystkie komendy dla tej kategorii.\nWpisz `%prefixhelp [command:command]` by uzyskać więcej informacji o tje komendzie.",
+		"HELP_INFO": "Wpisz `%prefixinfo` by zobaczyć informacje ogólne o Amandzie.\nWięcej informacji na naszym serwerze wsparcia: %link",
+		"TIMED_OUT": "Wygasło",
+		"DATABASE_OFFLINE": "Baza danych nie jest obecnie podłączona. Wiemy o tym, pracujemy nad poprawką",
+		"NEGATIVE_1_INDEX_IN_RADIO": "-1 index in radio",
+		"INVALID_RADIO_NAMESPACE": "Niewłaściwa nazwa stacji",
+		"PAGE_X_OF_Y": "Strona %current z %total",
+		"PAGE_LENGTH": "Długość strony: %time",
+		"VOLUME_SET": "Głośność kolejki ustawiona na %volume%",
+		"CANNOT_SEEK_LIVE": "Nie możesz przewinąć audio na żywo",
+		"SEEK_GREATER_THAN_SONG_LENGTH": "Podany czas jest dłuższy, niż długość piosenki",
+		"SEEK_ERROR": "Wystąpił problem w przewijaniu do podanego miejsca. Twoja długość została odebrana jako %parsed millisekund, ale LavaLink nie przewinął. To jest błąd. Zgłoś to na: %server",
+		"SEEKING": "Przewijam do %time. Proszę czekać",
+		"FILTERS_ERROR": "Wystapił problem przy ustawianiu filtrów. Połączenie z LavaLink zostało zerwane?",
+		"FILTERS_APPLIED": "Filtry zostały sprecyzowane i są ustawiane. Proszę czekać",
+		"INVALID_PLAYLIST_NAME": "Niewłaściwa nazwa playlisty. Nazwy platlist nie mogą zawierać linków i nie mogą być dłuższe niż 24 znaki",
+		"DATABASE_FIXED": "Baza danych nie działała, mimo, że zostało to naprawione. Jeśli widzisz tą wiadomość, zgłoś to",
+		"PLAYLIST_EMPTY": "Ta playlista jest pusta",
+		"PLAYLIST_NOT_EXIST": "Ta playlista nie istnieje",
+		"PLAYLIST_ALREADY_EXISTS": "Ta playlista już istnieje",
+		"PLAYLIST_CREATED": "Playlista stworzona",
+		"PLAYLIST_CANNOT_MANAGE": "Nie możesz zarządzać tą playlistą",
+		"PLAYLIST_DELETED": "Playlista usunięta",
+		"PLAYLIST_DUPLICATE_SONG": "Próbowałeś/aś zduplikować ścieżkę w swojej playliście",
+		"PLAYLIST_SONG_ADDED": "%title dodany",
+		"OUT_OF_BOUNDS": "Index poza zasięgiem",
+		"PLAYLIST_SONG_REMOVED": "%title usunięty",
+		"PLAYLIST_INDEXES_EQUAL": "Wartości indeksu dla 'z' i 'do' nie mogą być równe",
+		"PLAYLIST_SONG_MOVED": "Ścieżka przeniesiona",
+		"TITLE_JOIN_SERVER": "Kliknij tytuł by dołączyć do naszego serwera wsparcia",
+		"SONG_INFO_GENERIC": "Spróbuj znaleźć informacje o tej ścieżce na stronie, na której tą znalazłeś/aś.",
+		"SONG_STARTED_AND_REMAINING": "rozpoczęto %ago temu, %remaining pozostało (%percent%)",
+		"SONG_SELECTION_CANCELLED": "Wybór ścieżki anulowany",
+		"NONE": "Brak",
+		"COMMAND_ERROR": "Wystapił problem z komendą %name. Deweloperzy zostali powiadomieni. Jeśli użyjesz tej komendy jeszcze raz i zobaczysz tą wiadomość, proszę poczekaj aż usterka zostanie naprawiona. Zgłoś to jeśli wystapi ona jeszcze raz: %server",
+		"UNKNOWN_AUTHOR": "Nieznany autor"
+	},
+	"sit": {
+		"name": "siad",
+		"description": "nastrój"
+	},
+	"image": {
+		"name": "obrazek",
+		"description": "Wyślij obraz czegoś",
+		"options": [
+			{
+				"name": "typ",
+				"description": "Typ obrazu"
+			}
+		]
+	},
+	"ship": {
+		"name": "shipuj",
+		"description": "Shipuj dwie osoby",
+		"options": [
+			{
+				"name": "użytkownik2",
+				"description": "Drugi użytkownik do shipowania"
+			},
+			{
+				"name": "użytkownik1",
+				"description": "Użytkownik1 shipujący użytkownika2, innego niż Ty"
+			}
+		]
+	},
+	"bean": {
+		"name": "bean",
+		"description": "Banuje użytkownika",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do zbanowania"
+			}
+		]
+	},
+	"hug": {
+		"name": "przytulas",
+		"description": "Przytula kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do przytulenia"
+			}
+		]
+	},
+	"nom": {
+		"name": "nom",
+		"description": "Podgryza kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do 'podgryzania'"
+			}
+		]
+	},
+	"kiss": {
+		"name": "całus",
+		"description": "Całuje kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do całowania"
+			}
+		]
+	},
+	"cuddle": {
+		"name": "cuddle",
+		"description": "Wtula się w kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do wtulenia się"
+			}
+		]
+	},
+	"poke": {
+		"name": "szturch",
+		"description": "Szturcha kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do szturchnięcia"
+			}
+		]
+	},
+	"slap": {
+		"name": "policzek",
+		"description": "Uderza kogoś",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do uderzenia"
+			}
+		]
+	},
+	"boop": {
+		"name": "boop",
+		"description": "Dotyka czyjegoś noska",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do dotknięcia"
+			}
+		]
+	},
+	"pat": {
+		"name": "pat",
+		"description": "Głaszcze kogoś po głowie",
+		"options": [
+			{
+				"name": "użytkownik",
+				"description": "Użytkownik do pogłaskania"
+			}
+		]
+	},
+	"play": {
+		"name": "play",
+		"description": "Gra muzykę z różnych źródeł",
+		"options": [
+			{
+				"name": "ścieżka",
+				"description": "Ścieżka jaką chciałbyś/aś odtworzyć"
+			},
+			{
+				"name": "pozycja",
+				"description": "Miejsce, w którym chcesz wstawić ścieżkę (indeks zaczynający się od 1)"
+			}
+		]
+	},
+	"radio": {
+		"name": "radio",
+		"description": "Gra muzykę ze stacji radiowych",
+		"options": [
+			{
+				"name": "stacja",
+				"description": "Stacja, z której chcesz odtwarzać"
+			},
+			{
+				"name": "pozycja",
+				"description": "Miejsce w kolejce, w których chcesz dodać ścieżkę (indeks zaczynający się od 1)"
+			}
+		]
+	},
+	"skip": {
+		"name": "skip",
+		"description": "Pomija piosenki w kolejce",
+		"options": [
+			{
+				"name": "start",
+				"description": "Miejsce w kolejce, które chcesz pominąć (indeks zaczynający się od 1)"
+			},
+			{
+				"name": "ilość",
+				"description": "Ilość piosenek w kolejce do pominięcia"
+			}
+		]
+	},
+	"stop": {
+		"name": "stop",
+		"description": "Zatrzymuje kolejkę"
+	},
+	"queue": {
+		"name": "kolejka",
+		"description": "Pokazuje kolejkę i dostępne akcje",
+		"options": [
+			{
+				"name": "strona",
+				"description": "Wskazuje, którą stronę z kolejki pokazać"
+			},
+			{
+				"name": "głośność",
+				"description": "Ustala głośność dla kolejki w %"
+			},
+			{
+				"name": "pętla",
+				"description": "Ustawia stan zapętlania dla kolejki"
+			},
+			{
+				"name": "pauza",
+				"description": "Ustawia status pauzy dla kolejki"
+			}
+		]
+	},
+	"nowplaying": {
+		"name": "terazgramy",
+		"description": "Pokazuje wiadomość o obecnie grającej piosence z kolejki"
+	},
+	"trackinfo": {
+		"name": "infoościeżce",
+		"description": "Pokazuje informacje o obecnie grającej piosence"
+	},
+	"lyrics": {
+		"name": "tekst",
+		"description": "Pokazuje tekst do obecnie grającej piosenki"
+	},
+	"seek": {
+		"name": "przewiń",
+		"description": "Przewija do konkretnego momentu w grającej piosence",
+		"options": [
+			{
+				"name": "czas",
+				"description": "Czas do którego piosenka ma być przewinięta, w sekundach"
+			}
+		]
+	},
+	"filters": {
+		"name": "filtry",
+		"description": "Ustaw filtry dla kolejki",
+		"options": [
+			{
+				"name": "ton",
+				"description": "Ustawia wysokość tomu dla kolejki w dB"
+			},
+			{
+				"name": "prędkość",
+				"description": "Ustawia prędkość kolejki w %"
+			}
+		]
+	},
+	"shuffle": {
+		"name": "przetasowanie",
+		"description": "Przetasowuje kolejkę"
+	},
+	"musictoken": {
+		"name": "tokenmuzyczny",
+		"description": "Otrzymaj token do logowania się na panelu użytkownika",
+		"options": [
+			{
+				"name": "akcja",
+				"description": "Co ma zrobić"
+			}
+		]
+	},
+	"playlists": {
+		"name": "playlisty",
+		"description": "Zarządza i odtwarza playlisty Amandy",
+		"options": [
+			{
+				"name": "meta",
+				"description": "Komendy Metadata",
+				"options": [
+					{
+						"name": "pokaż",
+						"description": "Pokazuje wszystkie playlisty Amandy. Ustaw 'true' by pokazywać tylko sobie"
+					},
+					{
+						"name": "info",
+						"description": "Pokazuje informacje dla playlisty"
+					},
+					{
+						"name": "stwórz",
+						"description": "Tworzy playlistę"
+					},
+					{
+						"name": "usuń",
+						"description": "Usuwa playlistę"
+					}
+				]
+			},
+			{
+				"name": "dodaj",
+				"description": "Dodaje ścieżkę do playlisty",
+				"options": [
+					{
+						"name": "playlista",
+						"description": "Nazwa playlisty"
+					},
+					{
+						"name": "ścieżka",
+						"description": "Rozpoznawalna ścieżka (link, nazwa, id)"
+					}
+				]
+			},
+			{
+				"name": "usuń",
+				"description": "Usuwa ścieżkę z playlisty",
+				"options": [
+					{
+						"name": "playlista",
+						"description": "Nazwa playlisty"
+					},
+					{
+						"name": "index",
+						"description": "Numer ścieżki do usunięcia (indeks zaczynający się od 1)"
+					}
+				]
+			},
+			{
+				"name": "przesuń",
+				"description": "Przenosi scieżkę w playliście z jednego indeksu do drugiego",
+				"options": [
+					{
+						"name": "playlista",
+						"description": "Nazwa playlisty"
+					},
+					{
+						"name": "z",
+						"description": "Numer ścieżki do przesunięcia (indeks zaczynający się od 1)"
+					},
+					{
+						"name": "do",
+						"description": "Indeks w którym powinna pojawić się ścieżka (indeks zaczynający się od 1)"
+					}
+				]
+			},
+			{
+				"name": "szukaj",
+				"description": "Filtruje ścieżki w playliście",
+				"options": [
+					{
+						"name": "playlista",
+						"description": "Nazwa playlisty"
+					},
+					{
+						"name": "query",
+						"description": "Fraza, po której ma być dodane filtrowanie"
+					}
+				]
+			},
+			{
+				"name": "play",
+				"description": "Odtwarza playlistę",
+				"options": [
+					{
+						"name": "playlista",
+						"description": "Nazwa playlisty"
+					},
+					{
+						"name": "przetasowanie",
+						"description": "Czy kolejka powinna wystartować przetasowana"
+					},
+					{
+						"name": "start",
+						"description": "Indeks, od którego ma wystartować playlista. W przypadku przetasowania, tylko część jest wybierana, a potem mieszana (indeks zaczynający się od 1)"
+					}
+				]
+			}
+		]
+	},
+	"stats": {
+		"name": "statystyki",
+		"description": "Pokazuje szczegółowe statystyki",
+		"options": [
+			{
+				"name": "okno",
+				"description": "Typ statystyk do pokazania"
+			}
+		]
+	},
+	"info": {
+		"name": "info",
+		"description": "Zbiera informacje o Amandzie"
+	},
+	"git": {
+		"name": "git",
+		"description": "Zbiera najnowsze commity do repozytorium Amandy"
+	},
+	"help": {
+		"name": "pomoc",
+		"description": "Twoja typowa komenda pomocy",
+		"options": [
+			{
+				"name": "kategoria",
+				"description": "Kategoria, która wymaga pomocy"
+			},
+			{
+				"name": "komenda",
+				"description": "Komenda, która wymaga pomocy"
+			}
+		]
+	}
+}

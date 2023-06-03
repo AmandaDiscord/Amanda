@@ -1,0 +1,13 @@
+{
+  "name": "@amanda/shared-utils",
+  "version": "1.0.0",
+  "description": "Shared utilities for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

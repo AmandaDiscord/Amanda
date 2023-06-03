@@ -1,0 +1,13 @@
+{
+  "name": "@amanda/config",
+  "version": "1.0.0",
+  "description": "A config provider with auto generated types to avoid config file requires being included in src inputs for AmandaDiscord",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "node ./generate.js && tsc -p .",
+    "lint": "eslint ."
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

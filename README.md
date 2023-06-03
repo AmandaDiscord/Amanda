@@ -1,26 +1,28 @@
-![Amanda's avatar, a red-haired catgirl, at a desk in front of a computer.](https://cdn.discordapp.com/attachments/608456955660468224/960449965354811432/Amanda_Banner.png)
+![Amanda's avatar, a red-haired catgirl, at a desk in front of a computer.](https://b.catgirlsare.sexy/rD4aNJB1X4KE.png)
 
 # A qt music bot made for qts like you
 Amanda is a 100% free Discord music bot written in Typescript transpiled down to CommonJS.
 
 # Legal
-PLEASE read Amanda's license in [LICENSE](https://github.com/AmandaDiscord/Amanda/blob/main/LICENSE).
+Some packages in this monorepo are licensed under a non permissive license written in house which will not take precedence over a license defined in a package's sub folder.
+Most of Amanda's code is covered by this license.
+PLEASE read it [here](./LICENSE).
 We will take offenses against this license very seriously.
 
+Other packages with a license defined in their folder will be under the MIT license.
+
 # Features
-- Play music from a wide array of main stream and not-so-main-stream sites, [Frisky Radio](https://frisky.fm/), [listen.moe](https://listen.moe/), and your own audio files*.
+- Play music from a wide array of main stream and not-so-main-stream sites, [Frisky Radio](https://frisky.fm/), [listen.moe](https://listen.moe/), and your own audio files.
 - Social Interaction.
 - Web Dashboard.
 - Reliable and smooth playback.
 - Simple and clean navigation.
-- Multilingual. See [her translations](https://github.com/AmandaDiscord/Lang).
+- Multilingual. See [her translations](./packages/lang/README.md).
 - Creating and playing local playlists of tracks.
 - Audio filter control such as pitch and speed.
 
-* Some audio files cannot be played due to technical limitations which includes but is not limited to midi.
-
 # Self Hosting
-Please read through her [documentation repo](https://github.com/AmandaDiscord/Docs). (It may not always be up to date).
+Please read through her [documentation](./packages/docs/README.md) (It may not always be up to date)
 
 # Contributing
 Please join her [support server](https://amanda.moe/to/server) if you would like to report bugs or suggest features.

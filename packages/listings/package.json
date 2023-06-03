@@ -1,0 +1,18 @@
+{
+  "name": "@amanda/listings",
+  "version": "1.0.0",
+  "description": "@AmandaDiscord's listing site styles",
+  "scripts": {
+    "build": "node node-build.js",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "listings"
+  ],
+  "author": "PapiOphidian",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node-sass": "4.11.3",
+    "node-sass": "^9.0.0"
+  }
+}

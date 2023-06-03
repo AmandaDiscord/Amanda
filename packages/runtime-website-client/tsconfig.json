@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.json",
+	"include": ["./src/**/*.ts"],
+	"compilerOptions": {
+		"resolveJsonModule": false,
+		"outDir": "../runtime-website/webroot/scripts",
+		"incremental": false,
+		"target": "es2015",
+		"module": "es2015",
+		"moduleResolution": "classic"
+	}
+}

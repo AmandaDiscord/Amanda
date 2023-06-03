@@ -1,0 +1,9 @@
+{
+  "name": "@amanda/shared-types",
+  "version": "1.0.0",
+  "description": "Shared types for AmandaDiscord",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "author": "PapiOphidian",
+  "license": "MIT"
+}

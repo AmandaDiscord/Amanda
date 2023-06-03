@@ -1,0 +1,7 @@
+{
+	"extends": "../../tsconfig.json",
+	"include": ["./*.js", "index.d.ts"],
+	"compilerOptions": {
+		"outDir": "./void"
+	}
+}
