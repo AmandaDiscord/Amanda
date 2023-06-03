@@ -16,6 +16,8 @@ import type {
 	APIApplicationCommandOption
 } from "discord-api-types/v10"
 
+import type { SnowTransfer } from "snowtransfer"
+
 export class ChatInputCommand {
 	public author: APIUser
 	public member: APIInteractionGuildMember | null
@@ -131,13 +133,14 @@ export class CommandManager<Params extends Array<unknown>> {
 		}
 	}
 
-	public handle(command: APIChatInputApplicationCommandInteraction): boolean {
+	public handle(command: APIChatInputApplicationCommandInteraction, snow?: SnowTransfer): boolean {
 		if (!this.commands.has(command.data.name)) return false
 
-		setImmediate(() => {
+		setImmediate(async () => {
 			const params = this.paramGetter(command)
 			let returnValue: unknown = undefined
 			try {
+				if (snow) await snow.interaction.createInteractionResponse(command.id, command.token, { type: 5 })
 				returnValue = this.commands.get(command.data.name)!.process(...params)
 			} catch (e) {
 				this.errorHandler?.(e)

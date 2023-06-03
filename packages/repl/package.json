@@ -1,0 +1,12 @@
+{
+  "name": "@amanda/repl",
+  "version": "1.0.0",
+  "description": "A repl provider for AmandaDiscord",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup && node ../../scripts/fixup-dts.js",
+    "lint": "eslint ."
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE"
+}

@@ -139,7 +139,7 @@ commands.assign([
 
 			if (queue.tracks.length < (amount - start)) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.TOO_MANY_SKIPS })
 			else if (start === 1 && amount === queue.tracks.length) {
-				queue.destroy().catch(() => void 0)
+				queue.destroy()
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.SKIPPED_ALL })
 			}
 
@@ -160,7 +160,7 @@ commands.assign([
 			if (!common.queues.doChecks(cmd, lang)) return
 			const queue = await common.queues.getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
-			queue.destroy().catch(() => void 0)
+			queue.destroy()
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.QUEUE_STOPPED, { "username": `${cmd.author.username}#${cmd.author.discriminator}` }) })
 		}
 	},
@@ -232,23 +232,23 @@ commands.assign([
 							color: confprovider.config.standard_embed_color
 						}
 					]
-				}).catch(() => void 0)
+				})
 			}
 
 			if (volume !== null && userIsListening) {
 				queue.volume = volume / 100
-				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.VOLUME_SET, { "volume": volume }) }).catch(() => void 0)
+				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.VOLUME_SET, { "volume": volume }) })
 			}
 
 			if (loop !== null && userIsListening) {
 				queue.loop = loop
 				sessions.filter(s => s.guild === queue.guildID).forEach(s => s.onAttributesChange(queue))
-				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] }).catch(() => void 0)
+				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] })
 			}
 
 			if (pause !== null && userIsListening) {
 				queue.paused = pause
-				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.paused ? "QUEUE_PAUSED" : "QUEUE_UNPAUSED"] }).catch(() => void 0)
+				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, { content: lang.GLOBAL[queue.paused ? "QUEUE_PAUSED" : "QUEUE_UNPAUSED"] })
 			}
 		}
 	},

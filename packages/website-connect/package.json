@@ -1,9 +1,8 @@
 {
-  "name": "@amanda/amqp",
+  "name": "@amanda/web-internal",
   "version": "1.0.0",
-  "description": "An AMQP provider for AmandaDiscord",
+  "description": "Code base for internal and gateway website websocket routes",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup && node ../../scripts/fixup-dts.js",
     "lint": "eslint . --ext .ts"
@@ -11,9 +10,10 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "amqplib": "^0.10.3"
+    "@amanda/config": "1.0.0",
+    "ws": "^8.13.0"
   },
   "devDependencies": {
-    "@types/amqplib": "^0.10.1"
+    "@types/ws": "8.5.4"
   }
 }

@@ -1,0 +1,18 @@
+{
+  "name": "@amanda-runtime/gateway",
+  "version": "1.0.0",
+  "description": "Gateway worker package for AmandaDiscord",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@amanda/config": "1.0.0",
+    "@amanda/repl": "1.0.0",
+    "@amanda/web-internal": "1.0.0",
+    "cloudstorm": "0.7.3"
+  }
+}

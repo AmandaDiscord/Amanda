@@ -34,8 +34,8 @@ export class Queue {
 	public errorChain = 0
 
 	public leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
-		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT }).catch(() => void 0)
-		this.destroy().catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT })
+		this.destroy()
 	}).setDelay(queueDestroyAfter)
 	public messageUpdater: import("@amanda/shared-utils").FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
@@ -74,7 +74,7 @@ export class Queue {
 	}
 
 	public set interaction(value) {
-		if (!this._interactionExpired && this._interaction) snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: "There's a newer now playing message" }], components: [] }).catch(() => void 0)
+		if (!this._interactionExpired && this._interaction) snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: "There's a newer now playing message" }], components: [] })
 		this._interactionExpired = false
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
@@ -92,7 +92,7 @@ export class Queue {
 			this.messageUpdater.stop()
 		}
 		this._interaction = value
-		if (this._interaction) this._updateMessage().catch(() => void 0)
+		if (this._interaction) this._updateMessage()
 	}
 
 	public get speed(): number {
@@ -100,7 +100,7 @@ export class Queue {
 	}
 
 	public set speed(amount) {
-		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: amount, pitch: this.pitch } })).catch(() => void 0)
+		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: amount, pitch: this.pitch } }))
 	}
 
 	public get paused(): boolean {
@@ -110,7 +110,7 @@ export class Queue {
 	public set paused(newState) {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
-		this.player?.pause(newState).catch(() => void 0)
+		this.player?.pause(newState)
 	}
 
 	public get volume(): number {
@@ -119,7 +119,7 @@ export class Queue {
 
 	public set volume(amount) {
 		this._volume = amount
-		this.player?.volume(amount).catch(() => void 0)
+		this.player?.volume(amount)
 	}
 
 	public get pitch(): number {
@@ -127,7 +127,7 @@ export class Queue {
 	}
 
 	public set pitch(amount) {
-		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: this.speed, pitch: amount } })).catch(() => void 0)
+		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: this.speed, pitch: amount } }))
 	}
 
 	public get time(): number {
@@ -153,7 +153,7 @@ export class Queue {
 		if (!this.tracks[0]) throw new Error("NO_TRACK")
 		this.playHasBeenCalled = true
 		const track = this.tracks[0]
-		if (this.tracks[1]) this.tracks[1].prepare().catch(() => void 0)
+		if (this.tracks[1]) this.tracks[1].prepare()
 		await track.prepare()
 		if (!track.error) {
 			if (track.track == "!") track.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
@@ -175,8 +175,8 @@ export class Queue {
 				for (const user of this.listeners.values()) {
 					prepared.push(user.id)
 				}
-				const connections = await sql.orm.raw(sqlString, prepared)
-				for (const row of connections?.rows ?? []) {
+				const connections = await sql.all(sqlString, prepared)
+				for (const row of connections ?? []) {
 					const params = new URLSearchParams({
 						method: "track.scrobble",
 						"artist[0]": track.author,
@@ -210,15 +210,15 @@ export class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] }).catch(() => void 0)
-		await lavalink!.leave(this.guildID).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] })
+		await lavalink!.leave(this.guildID)
 	}
 
 	private _nextTrack(): void {
 		if (this.tracks?.[1].live && this.speed != 1) this.speed = 1.0
 		// Special case for loop 1
 		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
-			this.play().catch(() => void 0)
+			this.play()
 			return
 		}
 
@@ -227,13 +227,13 @@ export class Queue {
 		// Out of tracks? (This should only pass if loop mode is also disabled.)
 		if (this.tracks.length <= 1) {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
-			this.destroy().catch(() => void 0)
+			this.destroy()
 		} else { // We have more tracks. Move on.
 			sessions.filter(s => s.guild === this.guildID).forEach(s => s.onNext())
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
 			if (removed && this.loop && !removed.error) this.addTrack(removed)
-			this.play().catch(() => void 0)
+			this.play()
 		}
 	}
 
@@ -261,7 +261,7 @@ export class Queue {
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
-				this.destroy().catch(() => void 0)
+				this.destroy()
 			})
 		]
 		if (assign) this.menu = newMenu
@@ -269,13 +269,13 @@ export class Queue {
 	}
 
 	public skip(): void {
-		this.player?.stop().catch(() => void 0)
+		this.player?.stop()
 	}
 
 	public addTrack(track: import("./tracktypes").Track, position = this.tracks.length): void {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
-		if (!this.playHasBeenCalled) this.play().catch(() => void 0)
+		if (!this.playHasBeenCalled) this.play()
 		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackAdd(track, position))
 	}
 
@@ -331,7 +331,7 @@ export class Queue {
 			// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 			// Simply respond by stopping the queue, since that was most likely the intention.
 			// this.audit.push({ action: "Queue Destroy (Socket Closed. Was the channel deleted?)", platform: "System", user: "Amanda" })
-			return void this.destroy().catch(() => void 0)
+			return void this.destroy()
 		}
 		console.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
 		if (this.tracks[0]) {
@@ -339,7 +339,7 @@ export class Queue {
 			console.error("Track error call B")
 			this._reportError()
 			this._nextTrack()
-		} else this.destroy().catch(() => void 0)
+		} else this.destroy()
 	}
 
 	private _startNPUpdates(): void {
@@ -378,7 +378,7 @@ export class Queue {
 
 	private _onAllUsersLeave(): void {
 		this.leaveTimeout.run()
-		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id).catch(() => void 0)
+		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id)
 	}
 
 	private _reportError(): void {
@@ -388,7 +388,7 @@ export class Queue {
 			contents.url = serverURL
 			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 			// Report to original channel
-			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] }).catch(() => void 0)
+			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = confprovider.config.error_log_channel_id
 			const node = this.node ? common.nodes.byID(this.node) : undefined
@@ -424,7 +424,7 @@ export class Queue {
 					},
 					contents
 				]
-			}).catch(() => void 0)
+			})
 		}
 		this.errorChain++
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
@@ -453,7 +453,7 @@ export class Queue {
 								footer: { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 							}
 						]
-					}).catch(() => void 0)
+					})
 				}
 			}
 		}
@@ -480,7 +480,7 @@ export class Queue {
 		if (packet.channel_id === this.voiceChannelID && packet.user_id !== confprovider.config.client_id) {
 			if (!packet.member?.user || packet.member.user.bot) return
 			this.leaveTimeout.clear()
-			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID).catch(() => void 0)
+			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
 			this.leavingSoonID = undefined
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}

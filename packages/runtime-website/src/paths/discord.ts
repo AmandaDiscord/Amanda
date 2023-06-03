@@ -3,11 +3,12 @@ import { webcrypto } from "crypto"
 import { verify } from "discord-verify/node"
 
 import buttons = require("@amanda/buttons")
+import sharedUtils = require("@amanda/shared-utils")
 
 import type { APIInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
 
 import passthrough = require("../passthrough")
-const { server, sync, confprovider, commands } = passthrough
+const { server, sync, confprovider, commands, commandWorkers } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -23,7 +24,7 @@ server.post("/interaction", async (res, req) => {
 	if (!reqSig || !reqTimestamp) return void res.writeStatus("400").endWithoutBody()
 	if (!reqLength || isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
 
-	const body = await utils.requestBody(res, Number(reqLength)).catch(() => void 0)
+	const body = await utils.requestBody(res, Number(reqLength))
 	if (!body) {
 		if (!res.continue) return
 		return void res.writeStatus("400").endWithoutBody()
@@ -36,32 +37,36 @@ server.post("/interaction", async (res, req) => {
 	if (!allowed) return void res.writeStatus("401").endWithoutBody()
 
 	const payload: APIInteraction = JSON.parse(bodyString)
+	let rt = "{}"
+	let commandHandled = false
 
 	// Pings to verify
-	if (payload.type === 1) {
-		return void res
-			.writeStatus("200")
-			.writeHeader("Content-Type", "application/json")
-			.end("{\"type\":1}")
-	}
+	if (payload.type === 1) rt = "{\"type\":1}"
+	else if (payload.type === 2) { // Commands
+		rt = "{\"type\":5}"
+		if (commands.handle(payload as APIChatInputApplicationCommandInteraction)) commandHandled = true
+	} else if (payload.type === 3) { // Buttons
+		rt = "{\"type\":6}"
+		buttons.handle(payload)
+	} else console.error(`Unknown payload type ${payload.type}\n`, payload)
 
-	// Commands
-	if (payload.type === 2) {
-		if (commands.handle(payload as APIChatInputApplicationCommandInteraction)) {
+	if (!commandHandled) {
+		if (!commandWorkers.length) {
+			console.warn("No command workers to handle interaction")
 			return void res
-				.writeStatus("200")
-				.writeHeader("Content-Type", "application/json")
-				.end("{\"type\":5}")
+				.writeStatus("503 Service Unavailable")
+				.endWithoutBody()
 		}
+		const worker = sharedUtils.arrayRandom(commandWorkers)
+		worker.send({
+			op: 0,
+			t: "INTERACTION_CREATE",
+			d: payload
+		})
 	}
 
-	// Buttons
-	if (payload.type === 3) {
-		res
-			.writeStatus("200")
-			.writeHeader("Content-Type", "application/json")
-			.end("{\"type\":6}")
-
-		return void buttons.handle(payload)
-	}
+	return void res
+		.writeStatus("200")
+		.writeHeader("Content-Type", "application/json")
+		.end(rt)
 })

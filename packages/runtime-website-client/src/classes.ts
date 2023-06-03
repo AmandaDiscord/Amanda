@@ -656,7 +656,7 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 			if (!this.members.includes(id)) {
 				this.memberStore.get(id)!.leave().then(() => {
 					this.memberStore.delete(id)
-				}).catch(() => void 0)
+				})
 			}
 		})
 		this.render()
@@ -678,14 +678,14 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 					newAmanda = true
 					member.join(this).then(() => {
 						this.memberStore.forEach(member2 => {
-							member2.join(this).catch(() => void 0)
+							member2.join(this)
 						})
-					}).catch(() => void 0)
+					})
 				}
 			})
 			if (!newAmanda) {
 				this.memberStore.forEach(member => {
-					member.join(this).catch(() => void 0)
+					member.join(this)
 				})
 			}
 		} else {

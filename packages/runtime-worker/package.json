@@ -1,0 +1,22 @@
+{
+  "name": "@amanda-runtime/worker",
+  "version": "1.0.0",
+  "description": "Command handler worker package for AmandaDiscord",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "lint": "eslint . --ext .ts"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@amanda/commands": "1.0.0",
+    "@amanda/config": "1.0.0",
+    "@amanda/lang": "1.0.0",
+    "@amanda/repl": "1.0.0",
+    "@amanda/shared-utils": "1.0.0",
+    "@amanda/sql": "1.0.0",
+    "@amanda/web-internal": "1.0.0",
+    "simple-git": "^3.19.0"
+  }
+}

@@ -167,7 +167,7 @@ export class Session {
 		if (!allowed) return
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
-		q.destroy(true).catch(() => void 0)
+		q.destroy(true)
 	}
 
 	public requestAttributesChange(data: Packet<{ loop?: boolean }>) {
@@ -191,7 +191,7 @@ export class Session {
 		if (!allowed) return
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
-		if (typeof data?.d?.index === "number") q.removeTrack(data.d.index).catch(() => void 0)
+		if (typeof data?.d?.index === "number") q.removeTrack(data.d.index)
 	}
 }
 
@@ -222,8 +222,8 @@ server.ws("/public", {
 		}
 	},
 	close(ws) {
-		sessions.find(s => s.ws === ws)?.onClose()
+		ws.getUserData().session.onClose()
 	}
 } as WebSocketBehavior<{ session: Session }>)
 
-console.log("Websocket API loaded")
+console.log("Public websocket API loaded")

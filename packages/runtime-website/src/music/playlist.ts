@@ -41,17 +41,17 @@ commands.assign([
 				let value = true
 				if (playlistName.includes("http") || playlistName.includes("www.") || plRegex.exec(playlistName)) value = false
 				if (playlistName.length > 24) value = false
-				if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME }).catch(() => void 0)
+				if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
 				return value
 			}
 			const getTracks = async (playlistRow) => {
-				const tracks = await sql.orm.raw("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id]).then(r => r?.rows ?? [])
+				const tracks = await sql.all("SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1", [playlistRow.playlist_id])
 				const unbreakDatabase = async () => {
 					console.warn("unbreakDatabase was called!")
-					await Promise.all(tracks.map((row, index) => sql.orm.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id }))).catch(() => void 0)
+					await Promise.all(tracks.map((row, index) => sql.orm.update("playlist_songs", { next: (tracks[index + 1] ? tracks[index + 1].video_id : null) }, { playlist_id: row.playlist_id, video_id: row.video_id })))
 				}
 				if (tracks.length === 0) {
-					snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY }).catch(() => void 0)
+					snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_EMPTY })
 					return []
 				}
 				const orderedTracks: typeof tracks = []
@@ -88,7 +88,7 @@ commands.assign([
 				if (optionShow !== null) {
 
 
-					let playlists = await sql.orm.raw(
+					let playlists = await sql.raw(
 						"SELECT playlists.playlist_id, playlists.name, playlists.author, playlists.play_count, count(*) as count, sum(songs.length) as length \
 						FROM playlist_songs \
 						INNER JOIN songs USING (video_id) INNER JOIN playlists USING (playlist_id) \
@@ -118,7 +118,7 @@ commands.assign([
 					})
 					// eslint-disable-next-line no-inner-declarations
 					async function getAuthor(u: string) {
-						const user = await sharedUtils.getUser(u, confprovider, sql, snow).catch(() => void 0)
+						const user = await sharedUtils.getUser(u, confprovider, sql, snow)
 						if (user) {
 							let username = user.username || lang.GLOBAL.HEADER_UNKNOWN
 							if (username.length > 14) username = `${username.slice(0, 13)}…`
@@ -253,9 +253,9 @@ commands.assign([
 				if (orderedTracks.some(row => row.video_id == result.identifier)) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG })
 
 				await Promise.all([
-					sql.orm.raw("INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)", [result.identifier, result.title, Math.floor(result.length / 1000)]),
+					sql.raw("INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)", [result.identifier, result.title, Math.floor(result.length / 1000)]),
 					sql.orm.insert("playlist_songs", { playlist_id: playlistRow.playlist_id, video_id: result.identifier, next: null }),
-					sql.orm.raw("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $1", [result.identifier, playlistRow.playlist_id])
+					sql.raw("UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $1", [result.identifier, playlistRow.playlist_id])
 				])
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.PLAYLIST_SONG_ADDED, { "title": result.title }) })
 			} else if (optionRemove !== null) {

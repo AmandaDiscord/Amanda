@@ -8,7 +8,7 @@ import { Manager } from "lavacord"
 
 import ConfigProvider = require("@amanda/config")
 import SQLProvider = require("@amanda/sql")
-import AMQPProvider = require("@amanda/amqp")
+import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
 
@@ -20,9 +20,6 @@ passthrough.server = uWS.App()
 passthrough.sync = new Sync()
 passthrough.confprovider = new ConfigProvider(passthrough.sync)
 passthrough.sql = new SQLProvider(passthrough.confprovider)
-passthrough.amqp = new AMQPProvider(passthrough.confprovider, {
-	[passthrough.confprovider.config.amqp_receive_queue_command]: undefined
-})
 passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),
@@ -31,10 +28,7 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
 
 ;(async () => {
-	await Promise.all([
-		passthrough.sql.connect().catch(console.error),
-		passthrough.amqp.connect().catch(console.error)
-	])
+	await passthrough.sql.connect().catch(console.error)
 
 	const lavalinkNodeData = await passthrough.sql.orm.select("lavalink_nodes")
 	const lavalinkNodes = lavalinkNodeData.map(node => {
@@ -56,26 +50,22 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 
 	passthrough.lavalink = new Manager(passthrough.confprovider.config.lavalink_nodes.filter(n => n.enabled), {
 		user: passthrough.confprovider.config.client_id,
-		send: async packet => {
-			const url = await passthrough.sql.orm.raw(
-				"SELECT gateway_clusters.url, guilds.shard_id FROM guilds INNER JOIN gateway_clusters ON guilds.cluster_id = gateway_clusters.cluster_id WHERE guilds.client_id = $1 AND guilds.guild_id = $2",
-				[passthrough.confprovider.config.client_id, packet.d.guild_id]
-			).then(r => r?.rows[0])
+		send: packet => {
+			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
+			const worker = Object.values(passthrough.gatewayWorkers).find(w => w.shards.includes(shardID))
 
-			if (!url) return false
-			packet.d.shard_id = url.shard_id
+			if (!worker) return false
 
-			await fetch(`${url.url}/gateway/voice-status-update`, {
-				method: "POST",
-				headers: {
-					Authorization: passthrough.confprovider.config.current_token
-				},
-				body: JSON.stringify(packet.d)
-			})
+			packet.d.shard_id = shardID
+			packet.t = "SEND_MESSAGE"
+
+			worker.send(packet)
 
 			return true
 		}
 	})
+
+	void new REPLProvider(passthrough)
 
 	passthrough.lavalink.once("ready", () => console.log("Lavalink ready"))
 
@@ -90,6 +80,8 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 	import("./paths/redirects")
 	import("./paths/static")
 
+	import("./ws/gateway")
+	import("./ws/internal")
 	import("./ws/public")
 
 	passthrough.sync.require([

@@ -24,8 +24,6 @@ const config = {
 	sql_domain: "",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
-	amqp_url: "amqp://user:password@localhost",
-	amqp_receive_queue_command: "amanda_commands",
 	chewey_api_url: "https://api.chewey-bot.top",
 
 	// this cluster
@@ -38,7 +36,6 @@ const config = {
 	dash_enabled: true,
 	music_enabled: true,
 	db_enabled: true,
-	amqp_enabled: true,
 	add_url_for_web_redirect: "",
 	lavalink_default_search_prefix: "scsearch:",
 	website_port: 10400,
@@ -67,6 +64,7 @@ const config = {
 	privacy_url: "",
 	terms_url: "",
 	todo_url: "",
+	add_url: "",
 
 	// image placeholders
 	unknown_placeholder: "",
@@ -91,6 +89,7 @@ config.stats_url = `${baseURL}/to/stats`
 config.privacy_url = `${baseURL}/to/privacy`
 config.terms_url = `${baseURL}/to/terms`
 config.todo_url = `${baseURL}/to/todo`
+config.add_url = `${baseURL}/to/add`
 
 config.local_placeholder = `${baseURL}/images/local.webp`
 config.unknown_placeholder = `${baseURL}/images/unknown.webp`

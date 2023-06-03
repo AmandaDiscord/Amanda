@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-array-constructor */
+
 import path = require("path")
 
 type Passthrough = {
@@ -6,12 +8,13 @@ type Passthrough = {
 	rootFolder: string
 	confprovider: import("@amanda/config")
 	sql: import("@amanda/sql")
-	amqp: import("@amanda/amqp")
 	commands: import("@amanda/commands").CommandManager<import("@amanda/shared-types").CommandManagerParams>
 	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer
 	lavalink: import("lavacord").Manager
 	sessions: Array<import("./ws/public").Session>
+	commandWorkers: Array<import("./ws/internal").CommandWorker>
+	gatewayWorkers: { [cluster_id: string]: import("./ws/gateway").GatewayWorker }
 }
 
 export = {
@@ -19,6 +22,7 @@ export = {
 	queues: new Map(),
 	// Ignored otherwise TypeScript complains that this export isn't assignable to type Passthrough for whatever reason
 	// your guess is as good as mine
-	// eslint-disable-next-line @typescript-eslint/no-array-constructor
-	sessions: new Array()
+	sessions: new Array(),
+	commandWorkers: new Array(),
+	gatewayWorkers: {}
 } as Passthrough

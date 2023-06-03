@@ -4,24 +4,14 @@ import crypto = require("crypto")
 
 import mime = require("mime-types")
 
-import buttons = require("@amanda/buttons")
 import sharedUtils = require("@amanda/shared-utils")
+import buttons = require("@amanda/buttons")
 
 import passthrough = require("./passthrough")
-const { rootFolder, sql, confprovider } = passthrough
+const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers } = passthrough
 
-import type { HttpResponse } from "uWebSockets.js"
+import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
-
-const noop = () => void 0
-
-buttons.setHandlers(component => buttons.decode(component.custom_id, "object").h || component.custom_id, {
-	page: noop,
-	trackSelect: noop,
-	playPause: noop,
-	skip: noop,
-	stop: noop
-})
 
 const commaRegex = /,/g
 const slashSingleRegex = /\//
@@ -136,7 +126,7 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 
 	if (headersOnly) return void res.endWithoutBody()
 	const stream = fs.createReadStream(joined)
-	await streamResponse(res, stream, stats.size).catch(() => void 0)
+	await streamResponse(res, stream, stats.size)
 }
 
 export function redirect(res: HttpResponse, location: string) {
@@ -310,5 +300,33 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 		[400, "Invalid CSRF token"]
 		)
 		return this
+	}
+}
+
+export function onGatewayMessage(
+	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
+	message: ArrayBuffer,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	isBinary: boolean
+) {
+	const parsed = JSON.parse(Buffer.from(message).toString())
+	const wsData = ws.getUserData()
+	parsed.cluster_id = wsData.clusterID
+
+	if (parsed.t === "SHARD_LIST") wsData.worker.shards = parsed.d
+	else if (parsed.t === "VOICE_STATE_UPDATE") lavalink.voiceStateUpdate(parsed.d)
+	else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
+	else if (parsed.t === "INTERACTION_CREATE") {
+		if (parsed.d.type === 2) {
+			let commandHandled = false
+			if (commands.handle(parsed.d, snow)) {
+				commandHandled = true
+			}
+			if (!commandHandled && !commandWorkers.length) return console.warn("No command workers to handle interaction")
+			if (!commandHandled) {
+				const worker = sharedUtils.arrayRandom(commandWorkers)
+				worker.send(parsed)
+			}
+		} else if (parsed.d.type === 3) buttons.handle(parsed.d)
 	}
 }

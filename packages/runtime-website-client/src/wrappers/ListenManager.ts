@@ -13,8 +13,8 @@ export class ListenManager {
 		this.enabled = true
 		this._selectWrapper(track)
 		if (!this.currentWrapper) return
-		this.currentWrapper.load(track).catch(() => void 0)
-		this.currentWrapper.seekAndPlay(timeGetter, track.length * 1000).catch(() => void 0)
+		this.currentWrapper.load(track)
+		this.currentWrapper.seekAndPlay(timeGetter, track.length * 1000)
 	}
 
 	public load(track: ReturnType<WebTrack["toObject"]>): void {
@@ -22,7 +22,7 @@ export class ListenManager {
 		this.stop()
 		this._selectWrapper(track)
 		if (!this.currentWrapper) return
-		this.currentWrapper.load(track).catch(() => void 0)
+		this.currentWrapper.load(track)
 	}
 
 	public async next(track: ReturnType<WebTrack["toObject"]>): Promise<void> {
@@ -41,17 +41,17 @@ export class ListenManager {
 
 	public pause(): void {
 		if (!this.currentWrapper) return
-		this.currentWrapper.pause().catch(() => void 0)
+		this.currentWrapper.pause()
 	}
 
 	public resume(): void {
 		if (!this.currentWrapper) return
-		this.currentWrapper.resume().catch(() => void 0)
+		this.currentWrapper.resume()
 	}
 
 	public stop(): void {
 		if (!this.currentWrapper) return
-		this.currentWrapper.stop().catch(() => void 0)
+		this.currentWrapper.stop()
 		this.currentWrapper = null
 	}
 

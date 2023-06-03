@@ -11,6 +11,7 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
+    "@amanda/config": "1.0.0",
     "pg": "^8.11.0"
   },
   "devDependencies": {

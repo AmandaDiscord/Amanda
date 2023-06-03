@@ -502,7 +502,7 @@ export async function getUser(id: string, confprovider: ConfigProvider, sql: SQL
 			avatar: fetched.avatar,
 			bot: fetched.bot ? 1 : 0,
 			added_by: confprovider.config.cluster_id
-		}).catch(() => void 0)
+		})
 	}
 	return fetched
 }

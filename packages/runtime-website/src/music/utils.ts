@@ -106,13 +106,13 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided", embeds: [] }).catch(() => void 0)
-			snow.channel.createMessage(reportTarget, { embeds: [embed] }).catch(() => void 0)
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided", embeds: [] })
+			snow.channel.createMessage(reportTarget, { embeds: [embed] })
 			return null
 		}
 
 		if (!tracks?.tracks.length) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] }).catch(() => void 0)
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] })
 			return null
 		}
 
@@ -122,7 +122,7 @@ const common = {
 
 		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${sharedUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
 		if (!chosen) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] }).catch(() => void 0)
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] })
 			return null
 		}
 		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].encoded, chosen, resource, cmd.author, sharedUtils.getLang(cmd.guild_locale!))]
@@ -156,7 +156,7 @@ const common = {
 						})
 					}
 				]
-			}).catch(() => void 0)
+			})
 			try {
 				let reject: (error?: unknown) => unknown
 				const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
@@ -165,7 +165,7 @@ const common = {
 					lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
 						resolve(p)
 						clearTimeout(timer)
-					}).catch(() => void 0)
+					})
 				})
 				queue!.node = node
 				queue!.player = player
@@ -173,10 +173,10 @@ const common = {
 				return queue
 			} catch (e) {
 				if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
-				queue!.destroy().catch(() => void 0)
+				queue!.destroy()
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
-				}).catch(() => void 0)
+				})
 				return null
 			}
 		},
@@ -194,14 +194,14 @@ const common = {
 			if (!userVoiceState) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
-				}).catch(() => void 0)
+				})
 				return { queue: null, existed: !!queue }
 			}
 
 			if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
-				}).catch(() => void 0)
+				})
 				return { queue: null, existed: true }
 			}
 
@@ -215,17 +215,17 @@ const common = {
 
 		doChecks(cmd: ChatInputCommand, lang: Lang): boolean {
 			if (!confprovider.config.db_enabled) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE }).catch(() => void 0)
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 				return false
 			}
 
 			if (!confprovider.config.music_enabled) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED }).catch(() => void 0)
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED })
 				return false
 			}
 
 			if (!cmd.guild_id) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.GUILD_ONLY }).catch(() => void 0)
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.GUILD_ONLY })
 				return false
 			}
 
@@ -238,12 +238,12 @@ const common = {
 			if (!queue) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
-				}).catch(() => void 0)
+				})
 				return null
 			}
 
 			if (!queue.listeners.has(cmd.author.id)) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) }).catch(() => void 0)
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
 				return null
 			}
 
@@ -271,7 +271,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 					}
 				],
 				components: []
-			}).catch(() => void 0)
+			})
 			return res(null)
 		}, selectTimeout)
 		component.setCallback(async (interaction) => {
@@ -288,7 +288,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 					}
 				],
 				components: []
-			}).catch(() => void 0)
+			})
 			return res(selected)
 		})
 
@@ -306,7 +306,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 					components: [component.component]
 				}
 			]
-		}).catch(() => void 0)
+		})
 	})
 }
 

@@ -98,7 +98,7 @@ export class Session {
 			this.queue.isFirstAdd = false
 			this.updatePlayerTime()
 			if (oldState === null && this.state.tracks[0]) {
-				this.listenManager.next(this.state.tracks[0]).catch(() => void 0)
+				this.listenManager.next(this.state.tracks[0])
 			}
 		}
 		this.sideControls.render()
@@ -120,7 +120,7 @@ export class Session {
 		if (this.state.tracks.length == 1) {
 			this.player.setTrack(data.d.track)
 			this.updatePlayerTime()
-			this.listenManager.next(data.d.track).catch(() => void 0)
+			this.listenManager.next(data.d.track)
 		} else this.queue.addItem(data.d.track, data.d.position)
 	}
 
@@ -143,7 +143,7 @@ export class Session {
 		this.queue.shift()
 		this.resetTime()
 		this.player.setTrack(this.state.tracks[0] || null)
-		this.listenManager.next(this.state.tracks[0]).catch(() => void 0)
+		this.listenManager.next(this.state.tracks[0])
 	}
 
 	public trackUpdate(data: { d: { index: number; track: ReturnType<WebTrack["toObject"]> } }): void {
