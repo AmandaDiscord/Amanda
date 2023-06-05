@@ -44,7 +44,7 @@ class Connector extends EventEmitter {
 	}
 
 	private _createWS(protocol: "wss://" | "ws://", path: "/internal" | "/gateway"): void {
-		this.ws = new WebSocket(`${protocol}${this.confprovider.config.website_domain}${path}`, {
+		this.ws = new WebSocket(`${protocol}${this.confprovider.config.ipc_bind}${path}`, {
 			headers: {
 				Authorization: this.confprovider.config.current_token,
 				"X-Cluster-Id": this.confprovider.config.cluster_id
