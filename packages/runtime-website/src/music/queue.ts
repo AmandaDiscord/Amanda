@@ -583,11 +583,16 @@ export class Queue {
 
 	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
-			const states = await sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
+			const [clientUser, states] = await Promise.all([
+				sharedUtils.getUser(confprovider.config.client_id, confprovider, sql, snow),
+				sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
+			])
+
+			if (clientUser) this.listeners.set(clientUser.id, clientUser)
 
 			for (const state of states) {
 				const user = await sharedUtils.getUser(state.user_id, confprovider, sql, snow)
-				if (user && (!user.bot || user.id === confprovider.config.client_id)) this.listeners.set(user.id, user)
+				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
 
 			this._lastFMSetTrack()
@@ -601,7 +606,7 @@ export class Queue {
 
 		if (packet.channel_id !== this.voiceChannelID && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
-			if (this.listeners.size === 1) this._onAllUsersLeave() // just Amanda
+			if (this.listeners.size <= 1) this._onAllUsersLeave() // just Amanda
 		}
 
 		if (packet.channel_id === this.voiceChannelID && packet.user_id !== confprovider.config.client_id) {
