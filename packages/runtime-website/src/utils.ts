@@ -27,16 +27,16 @@ export function onAbortedOrFinishedResponseStream(res: HttpResponse, readStream:
 }
 
 export function streamResponse(res: HttpResponse, readStream: Readable, totalSize: number): Promise<void> {
-	let rej: (reason?: Error) => void
+	let resolveOuter: (value: void) => void
 	let cancel = false
 	res.onAborted(() => {
 		onAbortedOrFinishedResponseStream(res, readStream)
-		if (!rej) cancel = true
-		rej(new Error("Aborted"))
+		if (!resolveOuter) cancel = true
+		else resolveOuter()
 	})
 	return new Promise((resolve, reject) => {
-		if (cancel) return reject(new Error("Cancelled"))
-		rej = reject
+		if (cancel) return resolve()
+		resolveOuter = reject
 		readStream.on("data", chunk => {
 			const ab = toArrayBuffer(chunk)
 			const lastOffset = res.getWriteOffset()
