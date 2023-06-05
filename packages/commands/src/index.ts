@@ -134,7 +134,7 @@ export class CommandManager<Params extends Array<unknown>> {
 	}
 
 	public handle(command: APIChatInputApplicationCommandInteraction, snow?: SnowTransfer): boolean {
-		if (!this.commands.has(command.data.name)) return false
+		if (!this.commands.has(command.data?.name)) return false
 
 		setImmediate(async () => {
 			const params = this.paramGetter(command)
