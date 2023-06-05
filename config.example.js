@@ -47,9 +47,7 @@ const config = {
 		search_with_invidious: 0,
 		name: "DEV",
 		password: "youshallnotpass",
-		id: "dev",
-		resumeKey: "",
-		resumeTimeout: 75
+		id: "dev"
 	}],
 	standard_embed_color: 0x2f3136,
 	error_log_channel_id: "",

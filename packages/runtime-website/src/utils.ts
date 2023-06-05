@@ -8,7 +8,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
 import passthrough = require("./passthrough")
-const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers } = passthrough
+const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
@@ -303,7 +303,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 	}
 }
 
-export function onGatewayMessage(
+export async function onGatewayMessage(
 	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
 	message: ArrayBuffer,
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -314,8 +314,13 @@ export function onGatewayMessage(
 	parsed.cluster_id = wsData.clusterID
 
 	if (parsed.t === "SHARD_LIST") wsData.worker.shards = parsed.d
-	else if (parsed.t === "VOICE_STATE_UPDATE") lavalink.voiceStateUpdate(parsed.d)
-	else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
+	else if (parsed.t === "VOICE_STATE_UPDATE") {
+		if (!parsed.d.guild_id) return
+		lavalink.voiceStateUpdate(parsed.d)
+		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
+		if (parsed.d.channel_id === null) sql.orm.delete("voice_states", { user_id: parsed.d.user_id, guild_id: parsed.d.guild_id })
+		else sql.orm.upsert("voice_states", { guild_id: parsed.d.guild_id, user_id: parsed.d.user_id, channel_id: parsed.d.channel_id || undefined }, { useBuffer: false })
+	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
 	else if (parsed.t === "INTERACTION_CREATE") {
 		if (parsed.d.type === 2) {
 			let commandHandled = false
@@ -327,6 +332,9 @@ export function onGatewayMessage(
 				const worker = sharedUtils.arrayRandom(commandWorkers)
 				worker.send(parsed)
 			}
-		} else if (parsed.d.type === 3) buttons.handle(parsed.d)
+		} else if (parsed.d.type === 3) {
+			await snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: 6 })
+			buttons.handle(parsed.d)
+		}
 	}
 }

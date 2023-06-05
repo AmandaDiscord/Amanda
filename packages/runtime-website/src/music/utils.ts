@@ -7,6 +7,12 @@ import langReplace = require("@amanda/lang/replace")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
+import type { Track } from "./tracktypes"
+import type { APIEmbed, APIUser } from "discord-api-types/v10"
+import type { TrackLoadingResult } from "lavalink-types"
+import type { Queue } from "./queue"
+import type { Player } from "lavacord"
+import type { TrackInfo } from "@lavalink/encoding"
 
 import passthrough = require("../passthrough")
 const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
@@ -54,7 +60,10 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = undefined): Promise<string | null> {
-			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`).then(d => d.json()).then(j => j.lyrics || j.error || null).catch(() => null)
+			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`)
+				.then(d => d.json())
+				.then(j => j.lyrics ?? j.error ?? null)
+				.catch(() => null)
 		},
 
 		pickApart(track: import("./tracktypes").Track) {
@@ -65,6 +74,7 @@ const common = {
 				title = match[2]
 				artist = match[1]
 			}
+
 			if (!title || !artist) {
 				title = track.title
 				artist = track.author
@@ -74,7 +84,7 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<import("./tracktypes").Track> | null> {
+	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
@@ -94,11 +104,13 @@ const common = {
 				["Text channel", cmd.channel.id],
 				["Input", resource]
 			]
+
 			const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
 			const detailsString = details.map(row =>
 				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
-			const embed: import("discord-api-types/v10").APIEmbed = {
+
+			const embed: APIEmbed = {
 				title: "LavaLink loadtracks exception",
 				color: 0xdd2d2d,
 				fields: [
@@ -106,30 +118,77 @@ const common = {
 					{ name: "Exception", value: e.message || undef }
 				]
 			}
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: e.message || "A load tracks exception occured, but no error message was provided", embeds: [] })
+
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: e.message ?? "A load tracks exception occured, but no error message was provided",
+				embeds: []
+			})
+
 			snow.channel.createMessage(reportTarget, { embeds: [embed] })
 			return null
 		}
 
 		if (!tracks?.tracks.length) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] })
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: lang.GLOBAL.NO_RESULTS,
+				embeds: []
+			})
+
 			return null
 		}
 
 		const decoded = tracks.tracks.map(t => encoding.decode(t.encoded))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") return [decodedToTrack(tracks.tracks[0].encoded, decoded[0], resource, cmd.author, sharedUtils.getLang(cmd.guild_locale!))]
-		else if (tracks.loadType === "PLAYLIST_LOADED") return decoded.map((i, ind) => decodedToTrack(tracks!.tracks[ind].encoded, i, resource, cmd.author, sharedUtils.getLang(cmd.guild_locale!)))
+		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") {
+			return [
+				decodedToTrack(
+					tracks.tracks[0].encoded,
+					decoded[0],
+					resource,
+					cmd.author,
+					sharedUtils.getLang(cmd.guild_locale!)
+				)
+			]
+		} else if (tracks.loadType === "PLAYLIST_LOADED") {
+			return decoded.map((i, ind) => decodedToTrack(
+				tracks!.tracks[ind].encoded,
+				i,
+				resource,
+				cmd.author,
+				sharedUtils.getLang(cmd.guild_locale!)
+			))
+		}
 
-		const chosen = await trackSelection(cmd, lang, decoded, i => `${i.author} - ${i.title} (${sharedUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`)
+		const chosen = await trackSelection(
+			cmd,
+			lang,
+			decoded,
+			i => `${i.author} - ${i.title} (${sharedUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`
+		)
+
 		if (!chosen) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.NO_RESULTS, embeds: [] })
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: lang.GLOBAL.NO_RESULTS,
+				embeds: []
+			})
+
 			return null
 		}
-		return [decodedToTrack(tracks.tracks[decoded.indexOf(chosen)].encoded, chosen, resource, cmd.author, sharedUtils.getLang(cmd.guild_locale!))]
+
+		return [
+			decodedToTrack(
+				tracks.tracks[decoded.indexOf(chosen)].encoded,
+				chosen,
+				resource,
+				cmd.author,
+				sharedUtils.getLang(cmd.guild_locale!)
+			)
+		]
 	},
 
-	async loadtracks(input: string, nodeID?: string): Promise<import("lavalink-types").TrackLoadingResult> {
-		const node = nodeID ? common.nodes.byID(nodeID) ?? common.nodes.byIdeal() ?? common.nodes.random() : common.nodes.byIdeal() ?? common.nodes.random()
+	async loadtracks(input: string, nodeID?: string): Promise<TrackLoadingResult> {
+		const node = nodeID
+			? common.nodes.byID(nodeID) ?? common.nodes.byIdeal() ?? common.nodes.random()
+			: common.nodes.byIdeal() ?? common.nodes.random()
 
 		const llnode = lavalink.nodes.get(node.id)
 		if (!llnode) throw new LoadTracksError(`Lavalink node ${node.id} doesn't exist in lavacord`, node.id)
@@ -138,15 +197,19 @@ const common = {
 
 		const data = await Rest.load(llnode, input)
 		if (data.exception) throw new LoadTracksError(data.exception.message ?? "There was an exception somewhere", node.id)
+
 		return data
 	},
 
 	queues: {
-		async createQueue(cmd: ChatInputCommand, lang: Lang, channel: string, node: string): Promise<import("./queue").Queue | null> {
+		async createQueue(cmd: ChatInputCommand, lang: Lang, channel: string, node: string): Promise<Queue | null> {
 			const queueFile: typeof import("./queue") = sync.require("./queue")
+
 			const queue = new queueFile.Queue(cmd.guild_id!, channel)
+
 			queue.lang = cmd.guild_locale ? sharedUtils.getLang(cmd.guild_locale) : lang
 			queue.interaction = cmd
+
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
@@ -157,16 +220,19 @@ const common = {
 					}
 				]
 			})
+
 			try {
 				let reject: (error?: unknown) => unknown
 				const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
-				const player = await new Promise<import("lavacord").Player | undefined>((resolve, rej) => {
+
+				const player = await new Promise<Player | undefined>((resolve, rej) => {
 					reject = rej
 					lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
 						resolve(p)
 						clearTimeout(timer)
 					})
 				})
+
 				queue!.node = node
 				queue!.player = player
 				queue!.addPlayerListeners()
@@ -174,6 +240,7 @@ const common = {
 			} catch (e) {
 				if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
 				queue!.destroy()
+
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
 				})
@@ -186,6 +253,7 @@ const common = {
 			existed: boolean
 		}> {
 			let queue = queues.get(cmd.guild_id!) ?? null
+
 			const userVoiceState = await sql.orm.get("voice_states", {
 				user_id: cmd.author.id,
 				guild_id: cmd.guild_id!
@@ -210,6 +278,7 @@ const common = {
 
 			queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
 			if (!queue) return { queue: null, existed: false }
+
 			return { queue, existed: false }
 		},
 
@@ -232,18 +301,22 @@ const common = {
 			return true
 		},
 
-		getQueueWithRequiredPresence(cmd: ChatInputCommand, lang: Lang): import("./queue").Queue | null {
+		getQueueWithRequiredPresence(cmd: ChatInputCommand, lang: Lang): Queue | null {
 			const queue = queues.get(cmd.guild_id!)
 
 			if (!queue) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
 				})
+
 				return null
 			}
 
 			if (!queue.listeners.has(cmd.author.id)) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) })
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
+				})
+
 				return null
 			}
 
@@ -260,9 +333,11 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		max_values: 1,
 		options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
 	} as import("discord-api-types/v10").APISelectMenuComponent, { h: "trackSelect" })
+
 	return new Promise(res => {
 		const timer = setTimeout(() => {
 			component.destroy()
+
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
@@ -272,14 +347,19 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 				],
 				components: []
 			})
+
 			return res(null)
 		}, selectTimeout)
+
 		component.setCallback(async (interaction) => {
-			if (interaction.user?.id != cmd.author.id) return
+			if ((interaction.user! ?? interaction.member!.user).id != cmd.author.id) return
+
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			component.destroy()
 			clearTimeout(timer)
+
 			const selected = trackss[Number(select.data.values[0])]
+
 			await snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
@@ -310,11 +390,11 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 	})
 }
 
-function decodedToTrack(track: string, info: import("@lavalink/encoding").TrackInfo, input: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang): import("./tracktypes").Track {
+function decodedToTrack(track: string, info: TrackInfo, input: string, requester: APIUser, lang: Lang): Track {
 	const trackTypes = require("./tracktypes") as Omit<typeof import("./tracktypes"), "RadioTrack">
 	const type = sourceMap.get(info.source)
-	const Track = (type ? trackTypes[type] : trackTypes["Track"])
-	return new Track(track, info, input, requester, lang)
+	const TrackConstructor = (type ? trackTypes[type] : trackTypes["Track"])
+	return new TrackConstructor(track, info, input, requester, lang)
 }
 
 export = common

@@ -1,5 +1,5 @@
 {
-  "GLOBAL": {
+	"GLOBAL": {
 	"MUSIC_DISABLED": "Muziek is momenteel uitgeschakeld in verband met problemen. Er wordt gewerkt aan een oplossing.",
 	"GUILD_ONLY": "Je kan dit commando alleen in een server gebruiken.",
 	"MUSIC_INVALID_ACTION": "%username, dat is geen geldige handeling. Als je iets wilt afspelen, probeer dan `%prefixplay track:<song>`.\nBekijk `%prefixhelp category:audio` en `%prefixhelp command:playlists` voor meer dingen die je kan doen!",
@@ -175,379 +175,379 @@
 	"NONE": "Geen",
 	"COMMAND_ERROR": "Er is iets misgegaan bij het commando %name. De ontwikkelaars zijn op de hoogte gebracht. Als je opnieuw dit commando gebruikt en dit bericht ziet, sta dan een redelijke periode toe zodat het probleem verholpen kan worden. Meld dit probleem als het opnieuw voorkomt: %server",
 	"UNKNOWN_AUTHOR": "Onbekende auteur"
-  },
-  "sit": {
+	},
+	"sit": {
 	"name": "zit",
 	"description": "mood"
-  },
-  "image": {
+	},
+	"image": {
 	"name": "afbeelding",
 	"description": "Stuurt een afbeelding ergens van",
 	"options": [
-	  {
+		{
 		"name": "type",
 		"description": "Het type afbeelding"
-	  }
+		}
 	]
-  },
-  "ship": {
+	},
+	"ship": {
 	"name": "verkering",
 	"description": "Laat twee mensen verkering hebben",
 	"options": [
-	  {
+		{
 		"name": "gebruiker2",
 		"description": "De tweede gebruiker om verkering te laten hebben"
-	  },
-	  {
+		},
+		{
 		"name": "gebruiker1",
 		"description": "De gebruiker waarmee gebruiker2 verkering moet hebben, afgezien van jezelf"
-	  }
+		}
 	]
-  },
-  "bean": {
+	},
+	"bean": {
 	"name": "verboon",
 	"description": "Verboont een gebruiker",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te verbonen"
-	  }
+		}
 	]
-  },
-  "hug": {
+	},
+	"hug": {
 	"name": "knuffel",
 	"description": "Knuffelt iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te knuffelen"
-	  }
+		}
 	]
-  },
-  "nom": {
+	},
+	"nom": {
 	"name": "nom",
 	"description": "Nomt iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te nommen"
-	  }
+		}
 	]
-  },
-  "kiss": {
+	},
+	"kiss": {
 	"name": "zoen",
 	"description": "zoent iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te zoenen"
-	  }
+		}
 	]
-  },
-  "cuddle": {
+	},
+	"cuddle": {
 	"name": "snoezel",
 	"description": "Snoezelt met iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om mee te snoezelen"
-	  }
+		}
 	]
-  },
-  "poke": {
+	},
+	"poke": {
 	"name": "prik",
 	"description": "Prikt iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te prikken"
-	  }
+		}
 	]
-  },
-  "slap": {
+	},
+	"slap": {
 	"name": "sla",
 	"description": "Slaat iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te slaan"
-	  }
+		}
 	]
-  },
-  "boop": {
+	},
+	"boop": {
 	"name": "boop",
 	"description": "Boopt iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te boopen"
-	  }
+		}
 	]
-  },
-  "pat": {
+	},
+	"pat": {
 	"name": "aai",
 	"description": "Aait iemand",
 	"options": [
-	  {
+		{
 		"name": "gebruiker",
 		"description": "De gebruiker om te aaien"
-	  }
+		}
 	]
-  },
-  "play": {
+	},
+	"play": {
 	"name": "speel",
 	"description": "Speel muziek van meerdere bronnen af",
 	"options": [
-	  {
+		{
 		"name": "muzieknummer",
 		"description": "Het nummer dat je wilt afspleen"
-	  },
-	  {
+		},
+		{
 		"name": "positie",
 		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-	  }
+		}
 	]
-  },
-  "radio": {
+	},
+	"radio": {
 	"name": "radio",
 	"description": "Speel radiostations af",
 	"options": [
-	  {
+		{
 		"name": "station",
 		"description": "Het station om af te spelen"
-	  },
-	  {
+		},
+		{
 		"name": "positie",
 		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-	  }
+		}
 	]
-  },
-  "skip": {
+	},
+	"skip": {
 	"name": "overslaan",
 	"description": "Sla nummers in de wachtrij over",
 	"options": [
-	  {
+		{
 		"name": "start",
 		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-	  },
-	  {
+		},
+		{
 		"name": "aantal",
 		"description": "Het aantal nummers om over te slaan in de wachtrij"
-	  }
+		}
 	]
-  },
-  "stop": {
+	},
+	"stop": {
 	"name": "stop",
 	"description": "Stopt de wachtrij"
-  },
-  "queue": {
+	},
+	"queue": {
 	"name": "wachtrij",
 	"description": "Toon de wachtrij en voer acties uit",
 	"options": [
-	  {
+		{
 		"name": "pagina",
 		"description": "Kies welke pagina in de wachtrij je wilt tonen"
-	  },
-	  {
+		},
+		{
 		"name": "volume",
 		"description": "Stel het volume % in van de wachtrij"
-	  },
-	  {
+		},
+		{
 		"name": "herhaling",
 		"description": "Stel de herhalingsstand van de wachtrij in"
-	  },
-	  {
+		},
+		{
 		"name": "pauzeer",
 		"description": "Stelt de pauzestand van de wachtrij in"
-	  }
+		}
 	]
-  },
-  "nowplaying": {
+	},
+	"nowplaying": {
 	"name": "aanhetspelen",
 	"description": "Toon het bericht over het nummer dat aan het afspelen is"
-  },
-  "trackinfo": {
+	},
+	"trackinfo": {
 	"name": "nummerinfo",
 	"description": "Toont informatie over het nummer dat momenteel wordt afgespeeld"
-  },
-  "lyrics": {
+	},
+	"lyrics": {
 	"name": "songtekst",
 	"description": "Toont de songtekst van het nummer dat momenteel wordt afgespeeld"
-  },
-  "seek": {
+	},
+	"seek": {
 	"name": "afspeelpositie",
 	"description": "Stel de afspeelpositie op een bepaalde tijd in bij het nummer dat momenteel wordt afgespeeld",
 	"options": [
-	  {
+		{
 		"name": "tijd",
 		"description": "De tijd in seconden waar de afspeelpositie op ingesteld moet worden"
-	  }
+		}
 	]
-  },
-  "filters": {
-	"name": "filters",
-	"description": "Pas filters toe op de wachtrij",
-	"options": [
-	  {
-		"name": "toonhoogte",
-		"description": "Stelt de toonhoogte van de wachtrij in decibels in"
-	  },
-	  {
-		"name": "snelheid",
-		"description": "Stelt de % snelheid in van de wachtrij"
-	  }
-	]
-  },
-  "shuffle": {
-	"name": "shuffle",
-	"description": "Shuffelt de wachtrij"
-  },
-  "musictoken": {
-	"name": "muziektoken",
-	"description": "Verkrijg een web dashboard inlogtoken",
-	"options": [
-	  {
-		"name": "actie",
-		"description": "Wat er gedaan moet worden"
-	  }
-	]
-  },
-  "playlists": {
+	},
+	"filters": {
+		"name": "filters",
+		"description": "Pas filters toe op de wachtrij",
+		"options": [
+			{
+				"name": "toonhoogte",
+				"description": "Stelt de toonhoogte van de wachtrij in halve tonen in"
+			},
+			{
+				"name": "snelheid",
+				"description": "Stelt de % snelheid in van de wachtrij"
+			}
+		]
+	},
+	"shuffle": {
+		"name": "shuffle",
+		"description": "Shuffelt de wachtrij"
+	},
+	"musictoken": {
+		"name": "muziektoken",
+		"description": "Verkrijg een web dashboard inlogtoken",
+		"options": [
+			{
+			"name": "actie",
+			"description": "Wat er gedaan moet worden"
+			}
+		]
+	},
+	"playlists": {
 	"name": "playlists",
 	"description": "Beheer en speel Amanda playlists af",
 	"options": [
-	  {
+		{
 		"name": "meta",
 		"description": "Metadata commando's",
 		"options": [
-		  {
+			{
 			"name": "toon",
 			"description": "Toont alle Amanda playlists. Kies true om alleen jezelf te laten zien"
-		  },
-		  {
+			},
+			{
 			"name": "info",
 			"description": "Toont informatie over een playlist"
-		  },
-		  {
+			},
+			{
 			"name": "aanmaken",
 			"description": "Maakt een playlist aan"
-		  },
-		  {
+			},
+			{
 			"name": "verwijder",
 			"description": "Verwijdert een playlist"
-		  }
+			}
 		]
-	  },
-	  {
+		},
+		{
 		"name": "toevoegen",
 		"description": "Voegt een nummer toe aan een playlist",
 		"options": [
-		  {
+			{
 			"name": "playlist",
 			"description": "De naam van de playlist"
-		  },
-		  {
+			},
+			{
 			"name": "muzieknummer",
 			"description": "Een bruikbaar muzieknummer (link, naam, id)"
-		  }
+			}
 		]
-	  },
-	  {
+		},
+		{
 		"name": "verwijder",
 		"description": "Verwijdert een muzieknummer van een playlist",
 		"options": [
-		  {
+			{
 			"name": "playlist",
 			"description": "De naam van de playlist"
-		  },
-		  {
+			},
+			{
 			"name": "index",
 			"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
-		  }
+			}
 		]
-	  },
-	  {
+		},
+		{
 		"name": "verplaats",
 		"description": "Verplaatst een muzieknummer in een playlist van één index naar een andere",
 		"options": [
-		  {
+			{
 			"name": "playlist",
 			"description": "De naam van de playlist"
-		  },
-		  {
+			},
+			{
 			"name": "van",
 			"description": "1-gebaseerde index van het muzieknummer om te verplaatsen"
-		  },
-		  {
+			},
+			{
 			"name": "tot",
 			"description": "1-gebaseerde index van de plek waar het muzieknummer moet verschijnen"
-		  }
+			}
 		]
-	  },
-	  {
+		},
+		{
 		"name": "zoek",
 		"description": "Filtreert nummers in een playlist",
 		"options": [
-		  {
+			{
 			"name": "playlist",
 			"description": "De naam van de playlist"
-		  },
-		  {
+			},
+			{
 			"name": "zoekopdracht",
 			"description": "De zoekterm waarvoor je resultaten wilt filtreren"
-		  }
+			}
 		]
-	  },
-	  {
+		},
+		{
 		"name": "speel",
 		"description": "Speelt een playlist af",
 		"options": [
-		  {
+			{
 			"name": "playlist",
 			"description": "De naam van de playlist"
-		  },
-		  {
+			},
+			{
 			"name": "shuffle",
 			"description": "Of de playlist geshuffeld moet starten"
-		  },
-		  {
+			},
+			{
 			"name": "begin",
 			"description": "1-gebaseerde index waarvandaan wordt begonnen. Wanneer er wordt geshuffeld, wordt er maar een deel geselecteerd en geshuffeld"
-		  }
+			}
 		]
-	  }
+		}
 	]
-  },
-  "stats": {
+	},
+	"stats": {
 	"name": "statistieken",
 	"description": "Toont gedetailleerde statistieken",
 	"options": [
-	  {
+		{
 		"name": "venster",
 		"description": "Het type statistiek om te laten zien"
-	  }
+		}
 	]
-  },
-  "info": {
+	},
+	"info": {
 	"name": "info",
 	"description": "Verkrijgt informatie over Amanda"
-  },
-  "git": {
+	},
+	"git": {
 	"name": "git",
 	"description": "Verkrijgt de laatste git commits van Amanda"
-  },
-  "help": {
+	},
+	"help": {
 	"name": "help",
 	"description": "Een normaal hulpcommando",
 	"options": [
-	  {
+		{
 		"name": "categorie",
 		"description": "De categorie om hulp mee te krijgen"
-	  },
-	  {
+		},
+		{
 		"name": "commando",
 		"description": "Het commando om hulp mee te krijgen"
-	  }
+		}
 	]
-  }
+	}
 }

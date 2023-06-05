@@ -7,6 +7,10 @@ import langReplace = require("@amanda/lang/replace")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
+import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
+import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState } from "lavalink-types"
+import type { Track } from "./tracktypes"
+import type { Player } from "lavacord"
 
 import passthrough = require("../passthrough")
 const { sync, queues, confprovider, snow, lavalink, sql, sessions } = passthrough
@@ -18,14 +22,14 @@ const interactionExpiresAfter = 1000 * 60 * 14
 const stopDisplayingErrorsAfter = 3
 
 export class Queue {
-	public tracks: Array<import("./tracktypes").Track> = []
+	public tracks: Array<Track> = []
 	public node: string | undefined
 	public lang: Lang
 	public leavingSoonID: string | undefined
-	public player: import("lavacord").Player | undefined
+	public player: Player | undefined
 	public menu: Array<InstanceType<typeof BetterComponent>> = []
 	public playHasBeenCalled = false
-	public listeners = new Map<string, import("discord-api-types/v10").APIUser>()
+	public listeners = new Map<string, APIUser>()
 
 	public loop = false
 
@@ -34,19 +38,22 @@ export class Queue {
 	public errorChain = 0
 
 	public leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
-		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: this.lang.GLOBAL.EVERYONE_LEFT })
+		if (!this._interactionExpired && this.interaction) {
+			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
+				content: this.lang.GLOBAL.EVERYONE_LEFT
+			})
+		}
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
-	public messageUpdater: import("@amanda/shared-utils").FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
+
+	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 1
 	private _interaction: ChatInputCommand | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 	private _destroyed = false
-	private _onListenersSet: Promise<void> = new Promise(res => this._onListenersSetResolve = res)
-	private _listenersHaveBeenSet = false
-	private _onListenersSetResolve: (() => unknown)
+	private _lastFMSent = false
 
 	public constructor(public guildID: string, public voiceChannelID: string) {
 		queues.set(guildID, this)
@@ -54,7 +61,12 @@ export class Queue {
 
 	public toJSON() {
 		return {
-			members: (Array.from(this.listeners.values())).map(m => ({ id: m.id, tag: `${m.username}#${m.discriminator}`, avatar: m.avatar, isAmanda: m.id === confprovider.config.client_id })),
+			members: (Array.from(this.listeners.values())).map(m => ({
+				id: m.id,
+				tag: `${m.username}#${m.discriminator}`,
+				avatar: m.avatar,
+				isAmanda: m.id === confprovider.config.client_id
+			})),
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -74,10 +86,20 @@ export class Queue {
 	}
 
 	public set interaction(value) {
-		if (!this._interactionExpired && this._interaction) snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: "There's a newer now playing message" }], components: [] })
+		if (!this._interactionExpired && this._interaction) {
+			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
+				embeds: [{
+					color: confprovider.config.standard_embed_color,
+					description: "There's a newer now playing message"
+				}],
+				components: []
+			})
+		}
+
 		this._interactionExpired = false
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
+
 		if (value != undefined) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
@@ -91,6 +113,7 @@ export class Queue {
 			this._interactionExpired = false
 			this.messageUpdater.stop()
 		}
+
 		this._interaction = value
 		if (this._interaction) this._updateMessage()
 	}
@@ -100,7 +123,13 @@ export class Queue {
 	}
 
 	public set speed(amount) {
-		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: amount, pitch: this.pitch } }))
+		if (amount === this.speed) return
+
+		if (this.player) {
+			Object.assign(this.player!.state.filters, {
+				timescale: { speed: amount, pitch: this.pitch }
+			})
+		}
 	}
 
 	public get paused(): boolean {
@@ -110,6 +139,7 @@ export class Queue {
 	public set paused(newState) {
 		if (newState) this.pausedAt = Date.now()
 		else this.pausedAt = null
+
 		this.player?.pause(newState)
 	}
 
@@ -127,7 +157,13 @@ export class Queue {
 	}
 
 	public set pitch(amount) {
-		this.player?.filters(Object.assign(this.player!.state.filters, { timescale: { speed: this.speed, pitch: amount } }))
+		if (amount === this.pitch) return
+
+		if (this.player) {
+			Object.assign(this.player.state.filters, {
+				timescale: { speed: this.speed, pitch: amount }
+			})
+		}
 	}
 
 	public get time(): number {
@@ -143,22 +179,31 @@ export class Queue {
 		return this.tracks.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)
 	}
 
+	public applyFilters() {
+		return this.player?.filters(this.player!.state.filters)
+	}
+
 	public addPlayerListeners(): void {
 		this.player!.on("end", event => this._onEnd(event))
 		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
-		this.player!.on("error", event => this._onPlayerError(event as Parameters<Queue["_onPlayerError"]>["0"]))
+		this.player!.on("error", event => this._onPlayerError(event))
 	}
 
 	public async play(): Promise<void> {
 		if (!this.tracks[0]) throw new Error("NO_TRACK")
+
 		this.playHasBeenCalled = true
+
 		const track = this.tracks[0]
+
 		if (this.tracks[1]) this.tracks[1].prepare()
 		await track.prepare()
+
 		if (!track.error) {
 			if (track.track == "!") track.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
 			else if (track.track == null) track.error = this.lang.GLOBAL.SONG_ERROR_NULL
 		}
+
 		if (track.error) {
 			console.error(`Track error call C: { id: ${track.id}, error: ${track.error} }`)
 			this._reportError()
@@ -168,38 +213,67 @@ export class Queue {
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
 			this._startNPUpdates()
-			if (!this._listenersHaveBeenSet) await this._onListenersSet
-			if (this.listeners.size > 1) {
-				const sqlString = `SELECT * FROM connections WHERE type = $1 AND user_id IN (${new Array(this.listeners.size).fill("?").map((_, ind) => `$${ind + 2}`)})`
-				const prepared = ["lastfm"]
-				for (const user of this.listeners.values()) {
-					prepared.push(user.id)
-				}
-				const connections = await sql.all(sqlString, prepared)
-				for (const row of connections ?? []) {
-					const params = new URLSearchParams({
-						method: "track.scrobble",
-						"artist[0]": track.author,
-						"track[0]": track.title,
-						"timestamp[0]": String(Math.floor(Date.now() / 1000)),
-						"duration[0]": String(track.lengthSeconds),
-						"chosenByUser[0]": track.requester.id === row.user_id ? "1" : "0",
-						api_key: confprovider.config.lastfm_key,
-						sk: row.access
-					})
-					const orderedWithSecret = `${Array.from(params.keys()).sort().map(param => `${param}${params.get(param)!}`).join("")}${confprovider.config.lastfm_sec}`
-					const signature = createHash("md5").update(orderedWithSecret).digest("hex")
-					await fetch("https://ws.audioscrobbler.com/2.0/", { method: "POST", body: `${params.toString()}&api_sig=${signature}&format=json`, headers: { "Content-Type": "application/x-www-form-urlencoded" } }).then(d => d.json())
-				}
+			this._lastFMSetTrack()
+		}
+	}
+
+	private async _lastFMSetTrack() {
+		if (this._lastFMSent) return
+
+		if (this.listeners.size > 1) {
+			const track = this.tracks[0]
+			if (!track) return
+
+			this._lastFMSent = true
+			const usersAsPrepared = new Array(this.listeners.size).fill("?").map((_, ind) => `$${ind + 2}`)
+			const sqlString = `SELECT * FROM connections WHERE type = $1 AND user_id IN (${usersAsPrepared})`
+			const prepared = ["lastfm"]
+
+			for (const user of this.listeners.values()) {
+				prepared.push(user.id)
+			}
+
+			const connections = await sql.all(sqlString, prepared)
+
+			for (const row of connections ?? []) {
+				const params = new URLSearchParams({
+					method: "track.scrobble",
+					"artist[0]": track.author,
+					"track[0]": track.title,
+					"timestamp[0]": String(Math.floor(Date.now() / 1000)),
+					"duration[0]": String(track.lengthSeconds),
+					"chosenByUser[0]": track.requester.id === row.user_id ? "1" : "0",
+					api_key: confprovider.config.lastfm_key,
+					sk: row.access
+				})
+
+				const orderedParams = Array.from(params.keys())
+					.sort()
+					.map(param => `${param}${params.get(param)!}`)
+					.join("")
+
+				const orderedWithSecret = `${orderedParams}${confprovider.config.lastfm_sec}`
+
+				const signature = createHash("md5").update(orderedWithSecret).digest("hex")
+
+				await fetch("https://ws.audioscrobbler.com/2.0/", {
+					method: "POST",
+					body: `${params.toString()}&api_sig=${signature}&format=json`,
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded"
+					}
+				})
 			}
 		}
 	}
 
 	public async destroy(editInteraction = true): Promise<void> {
 		if (this._destroyed) return
+
 		queues.delete(this.guildID)
 		this._destroyed = true
 		this.menu.forEach(bn => bn.destroy())
+
 		for (const track of this.tracks) {
 			try {
 				await track.destroy()
@@ -207,15 +281,30 @@ export class Queue {
 				console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 			}
 		}
+
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		if (!this._interactionExpired && this.interaction && editInteraction) await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, { embeds: [{ color: confprovider.config.standard_embed_color, description: this.lang.GLOBAL.QUEUE_ENDED }], components: [] })
+		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onStop())
+
+		if (!this._interactionExpired && this.interaction && editInteraction) {
+			await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
+				embeds: [{
+					color: confprovider.config.standard_embed_color,
+					description: this.lang.GLOBAL.QUEUE_ENDED
+				}],
+				components: []
+			})
+		}
+
 		await lavalink!.leave(this.guildID)
 	}
 
 	private _nextTrack(): void {
-		if (this.tracks?.[1].live && this.speed != 1) this.speed = 1.0
+		this._lastFMSent = false
+
+		if (this.tracks?.[1]?.live && this.speed != 1) this.speed = 1.0
+
 		// Special case for loop 1
 		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
 			this.play()
@@ -224,12 +313,14 @@ export class Queue {
 
 		// Destroy current track (if loop is disabled)
 		if (this.tracks[0] && (!this.loop || this.tracks[0].error)) this.tracks[0].destroy()
+
 		// Out of tracks? (This should only pass if loop mode is also disabled.)
 		if (this.tracks.length <= 1) {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
 			sessions.filter(s => s.guild === this.guildID).forEach(s => s.onNext())
+
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
 			if (removed && this.loop && !removed.error) this.addTrack(removed)
@@ -240,30 +331,34 @@ export class Queue {
 	public createNPMenu(assign = true): Queue["menu"] {
 		const newMenu: Queue["menu"] = [
 			new BetterComponent(
-				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{ h: "playPause" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
+
 				this.paused = !this.paused
 			}),
 			new BetterComponent(
-				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{ h: "skip" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
+
 				this.skip()
 			}),
 			new BetterComponent(
-				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<import("discord-api-types/v10").APIButtonComponentWithCustomId, "custom_id">,
+				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{ h: "stop" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
+
 				this.destroy()
 			})
 		]
+
 		if (assign) this.menu = newMenu
 		return newMenu
 	}
@@ -272,10 +367,12 @@ export class Queue {
 		this.player?.stop()
 	}
 
-	public addTrack(track: import("./tracktypes").Track, position = this.tracks.length): void {
+	public addTrack(track: Track, position = this.tracks.length): void {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
+
 		if (!this.playHasBeenCalled) this.play()
+
 		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackAdd(track, position))
 	}
 
@@ -283,15 +380,19 @@ export class Queue {
 		// Validate index
 		if (index === 0) return 1
 		if (!this.tracks[index]) return 1
+
 		// Actually remove
 		const removed = this.tracks.splice(index, 1)[0]
 		if (!removed) return 2
+
 		try {
 			await removed.destroy()
 		} catch (e) {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
+
 		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackRemove(index))
+
 		return 0
 	}
 
@@ -300,13 +401,16 @@ export class Queue {
 		if (!track) return 1
 		if (track.live) return 2
 		if (position > (track.lengthSeconds * 1000)) return 3
+
 		const result = await this.player?.seek(position)
+
 		if (result) return 0
 		else return 4
 	}
 
-	private _onEnd(event: import("lavalink-types").TrackEndEvent | import("lavalink-types").TrackStuckEvent): void {
+	private _onEnd(event: TrackEndEvent | TrackStuckEvent): void {
 		if (event.type === "TrackEndEvent" && event.reason == "REPLACED") return
+
 		if (event.type === "TrackStuckEvent") {
 			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
 			if (this.tracks[0]) {
@@ -315,25 +419,29 @@ export class Queue {
 				this._reportError()
 			}
 		}
+
 		this._nextTrack()
 	}
 
-	private _onPlayerUpdate(data: { state: import("lavalink-types").PlayerState }): void {
+	private _onPlayerUpdate(data: { state: PlayerState }): void {
 		if (this.player && !this.paused) {
 			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
+
 		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTimeUpdate({ trackStartTime: this.trackStartTime, pausedAt: this.pausedAt ?? 0, playing: !this.paused }))
 	}
 
-	private _onPlayerError(details: Extract<import("lavalink-types").EventOP, { type: "TrackExceptionEvent" | "WebSocketClosedEvent" }>): void {
+	private _onPlayerError(details: Extract<EventOP, { type: "TrackExceptionEvent" | "WebSocketClosedEvent" }>): void {
 		if (details.type === "WebSocketClosedEvent") {
 			// Caused when either voice channel deleted, or someone disconnected Amanda through context menu
 			// Simply respond by stopping the queue, since that was most likely the intention.
 			// this.audit.push({ action: "Queue Destroy (Socket Closed. Was the channel deleted?)", platform: "System", user: "Amanda" })
 			return void this.destroy()
 		}
+
 		console.error(`Lavalink error event at ${new Date().toUTCString()}\n${util.inspect(details, true, Infinity, true)}`)
+
 		if (this.tracks[0]) {
 			this.tracks[0].error = details.exception.message ?? "Unknown error"
 			console.error("Track error call B")
@@ -344,19 +452,24 @@ export class Queue {
 
 	private _startNPUpdates(): void {
 		if (!this.tracks[0]) return console.error("Tried to call Queue._startNPUpdates but no tracks")
+
 		const frequency = this.tracks[0].npUpdateFrequency
 		const timeUntilNext5 = frequency - ((Date.now() - this.trackStartTime) % frequency)
 		const triggerNow = timeUntilNext5 > 1500
+
 		this.messageUpdater.start(frequency, triggerNow, timeUntilNext5)
 	}
 
 	private async _updateMessage(): Promise<void> {
 		if (this._interactionExpired) this.interaction = undefined
 		if (!this.interaction) return
+
 		const track = this.tracks[0]
+
 		if (track) {
 			const progress = track.getProgress(this.timeSeconds, this.paused)
 			const link = await track.showLink().catch(() => "https://amanda.moe")
+
 			snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
 				embeds: [
 					{
@@ -378,13 +491,19 @@ export class Queue {
 
 	private _onAllUsersLeave(): void {
 		this.leaveTimeout.run()
-		if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter, "ms") }) }).then(msg => this.leavingSoonID = msg.id)
+
+		if (!this._interactionExpired && this.interaction) {
+			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
+				content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter, "ms") })
+			}).then(msg => this.leavingSoonID = msg.id)
+		}
 	}
 
 	private _reportError(): void {
 		const serverURL = `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/to/server`
 		const track = this.tracks[0]
-		const sendReport = (contents: import("discord-api-types/v10").APIEmbed) => {
+
+		const sendReport = (contents: APIEmbed) => {
 			contents.url = serverURL
 			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
 			// Report to original channel
@@ -426,7 +545,9 @@ export class Queue {
 				]
 			})
 		}
+
 		this.errorChain++
+
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
 			if (track) {
 				sendReport({
@@ -441,6 +562,7 @@ export class Queue {
 					color: 0xdd2d2d
 				})
 			}
+
 			if (this.errorChain === 3) {
 				if (!this._interactionExpired && this.interaction) {
 					snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
@@ -459,7 +581,7 @@ export class Queue {
 		}
 	}
 
-	public async voiceStateUpdate(packet: import("discord-api-types/v10").GatewayVoiceState): Promise<void> {
+	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
 			const states = await sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
 
@@ -467,23 +589,31 @@ export class Queue {
 				const user = await sharedUtils.getUser(state.user_id, confprovider, sql, snow)
 				if (user && (!user.bot || user.id === confprovider.config.client_id)) this.listeners.set(user.id, user)
 			}
-			if (!this._listenersHaveBeenSet) this._onListenersSetResolve!()
-			this._listenersHaveBeenSet = true
+
+			this._lastFMSetTrack()
+
+			sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.toJSON().members))
 			return
 		}
+
 		// moving voice channels does not set the channel_id as null and then update
 		if (!packet.channel_id && this.voiceChannelID && packet.user_id === confprovider.config.client_id) return this.destroy()
+
 		if (packet.channel_id !== this.voiceChannelID && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
 			if (this.listeners.size === 1) this._onAllUsersLeave() // just Amanda
 		}
+
 		if (packet.channel_id === this.voiceChannelID && packet.user_id !== confprovider.config.client_id) {
 			if (!packet.member?.user || packet.member.user.bot) return
 			this.leaveTimeout.clear()
-			if (this.leavingSoonID && this.interaction) snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
+			if (this.leavingSoonID && this.interaction) {
+				snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
+			}
 			this.leavingSoonID = undefined
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.listeners))
+
+		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.toJSON().members))
 	}
 }

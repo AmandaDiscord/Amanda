@@ -390,7 +390,7 @@
 		"options": [
 			{
 				"name": "pitch",
-				"description": "Setze die Tonhöhe der Warteschlange in dB"
+				"description": "Setze die Tonhöhe der Warteschlange in Halbtöne"
 			},
 			{
 				"name": "speed",

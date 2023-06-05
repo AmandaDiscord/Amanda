@@ -54,7 +54,7 @@ class Connector extends EventEmitter {
 		this.ws.on("message", (data, isBinary) => this.emit("message", data, isBinary))
 		this.ws.once("open", () => void this.onOpen())
 		this.ws.once("close", (code, reason) => this.emit("close", code, reason))
-		this.ws.on("error", e => console.error(e))
+		this.ws.on("error", e => (e as unknown as { code: string }).code === "ECONNREFUSED" ? void 0 : console.error(e))
 	}
 
 	public send(data: BufferLike): Promise<void> {

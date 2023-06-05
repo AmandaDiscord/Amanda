@@ -385,7 +385,7 @@
 		"options": [
 			{
 				"name": "ton",
-				"description": "Ustawia wysokość tomu dla kolejki w dB"
+				"description": "Ustawia wysokość tomu dla kolejki w półtony"
 			},
 			{
 				"name": "prędkość",

@@ -6,10 +6,24 @@ const { sync, confprovider } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
+import type { APIEmbed, APIUser } from "discord-api-types/v10"
+import type { Queue } from "./queue"
+import type { TrackInfo } from "@lavalink/encoding"
+import type { Lang } from "@amanda/lang"
+import type { UnpackRecord, InferMap } from "@amanda/shared-types"
+
 const feelingFrisky = "Feeling Frisky?"
 const friskyLyrics = "[Intro]\nFeeling frisky?\n\n[Verse ∞]\nFrisky...\n\n[Chorus]\n<other lyrics and bloops>\n\n"
 
-const radioStations = new Map<string, { [station: string]: { title: string; author: string; url: string; viewURL: string; lyrics?: string }}>([
+const radioStations = new Map<string, {
+	[station: string]: {
+		title: string;
+		author: string;
+		url: string;
+		viewURL: string;
+		lyrics?: string
+	}}
+>([
 	["frisky", {
 		"original": {
 			title: "Frisky Radio: Original",
@@ -129,7 +143,7 @@ export class Track {
 	public id: string
 	public live: boolean
 	public thumbnail = { src: confprovider.config.unknown_placeholder, width: 128, height: 128 }
-	public queue: import("./queue").Queue | undefined
+	public queue: Queue | undefined
 	public source: string
 	public uri: string | null
 
@@ -137,10 +151,10 @@ export class Track {
 
 	public constructor(
 		public track: string,
-		info: Partial<import("@lavalink/encoding").TrackInfo>,
+		info: Partial<TrackInfo>,
 		public input: string,
-		public requester: import("discord-api-types/v10").APIUser,
-		public lang: import("@amanda/lang").Lang
+		public requester: APIUser,
+		public lang: Lang
 	) {
 		this.title = info.title ?? lang.GLOBAL.UNKNOWN_TRACK
 		this.author = info.author ?? lang.GLOBAL.UNKNOWN_AUTHOR
@@ -156,7 +170,7 @@ export class Track {
 		return Promise.resolve("https://amanda.moe")
 	}
 
-	public showInfo(): Promise<string | import("discord-api-types/v10").APIEmbed> {
+	public showInfo(): Promise<string | APIEmbed> {
 		return Promise.resolve((this.queue?.lang ?? this.lang).GLOBAL.SONG_INFO_GENERIC)
 	}
 
@@ -187,12 +201,18 @@ export class Track {
 	}
 
 	public getProgress(time: number, paused: boolean) {
+		const lang = this.queue?.lang ?? this.lang
 		if (!this.live) {
 			const max = this.lengthSeconds
 			const rightTime = sharedUtils.prettySeconds(max)
 			if (time > max) time = max
 			const leftTime = sharedUtils.prettySeconds(time)
-			const bar = sharedUtils.progressBar(18, time, max, paused ? ` [${(this.queue?.lang ?? this.lang).GLOBAL.HEADER_PAUSED}] ` : "")
+			const bar = sharedUtils.progressBar(
+				18,
+				time,
+				max,
+				paused ? ` [${lang.GLOBAL.HEADER_PAUSED}] ` : ""
+			)
 			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
 		} else {
 			const part = "= ⋄ ==== ⋄ ==="
@@ -200,33 +220,35 @@ export class Track {
 			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
 			this._filledBarOffset++
 			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-			return `\`[ ${sharedUtils.prettySeconds(time)} ​${bar}​ ${(this.queue?.lang ?? this.lang).GLOBAL.HEADER_LIVE} ]\`` // SC: ZWSP x 2
+			return `\`[ ${sharedUtils.prettySeconds(time)} ​${bar}​ ${lang.GLOBAL.HEADER_LIVE} ]\`` // SC: ZWSP x 2
 		}
 	}
 
 	public async getLyrics(): Promise<string | null> {
 		const picked = common.genius.pickApart(this)
 		if (!picked.artist || !picked.title) return null
-		let lyrics
+		let lyrics: string | null = null
+
 		try {
 			lyrics = await common.genius.getLyrics(picked.title, picked.artist)
 		} catch {
 			lyrics = null
 		}
+
 		return lyrics
 	}
 }
 
 export class RequiresSearchTrack extends Track {
-	public prepareCache: import("@amanda/shared-utils").AsyncValueCache<void>
+	public prepareCache: sharedUtils.AsyncValueCache<void>
 	private searchString: string
 
 	public constructor(
 		track: string | null = null,
-		info: Partial<import("@lavalink/encoding").TrackInfo>,
+		info: Partial<TrackInfo>,
 		input: string,
-		requester: import("discord-api-types/v10").APIUser,
-		lang: import("@amanda/lang").Lang
+		requester: APIUser,
+		lang: Lang
 	) {
 		super(track ?? "!", info, input, requester, lang)
 		this.searchString = (info.author && info.title) ? `${info.author} - ${info.title}` : info.title ?? ""
@@ -262,23 +284,28 @@ export class ExternalTrack extends Track {
 
 	public constructor(
 		track: string,
-		info: Partial<import("@lavalink/encoding").TrackInfo>,
+		info: Partial<TrackInfo>,
 		input: string,
-		requester: import("discord-api-types/v10").APIUser,
-		lang: import("@amanda/lang").Lang
+		requester: APIUser,
+		lang: Lang
 	) {
 		super(track, info, input, requester, lang)
 
 		const to = new URL(info.uri!)
-		let name: string
+		let name = ""
+
 		if (!info.title) {
 			const match = pathnamereg.exec(to.pathname)
 			if (!match) name = lang.GLOBAL.UNKNOWN_TRACK
 			else name = match[1]
 			this.title = decodeEntities(name.replace(underscoreRegex, " "))
 		}
+
 		this.live = info.isStream ?? true
-		this.queueLine = this.live ? `**${this.title}** (${this.lang.GLOBAL.HEADER_LIVE})` : `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
+		this.queueLine = this.live
+			? `**${this.title}** (${this.lang.GLOBAL.HEADER_LIVE})`
+			: `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
+
 		this.noPauseReason = this.live ? this.lang.GLOBAL.CANNOT_PAUSE_LIVE : this.noPauseReason
 	}
 
@@ -288,7 +315,7 @@ export class ExternalTrack extends Track {
 
 	public async prepare() {
 		if (this.track !== "!") return
-		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"]
+		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"] | undefined = undefined
 		try {
 			const data = await common.loadtracks(this.uri!, this.queue?.node)
 			info = data.tracks
@@ -312,16 +339,17 @@ export class ExternalTrack extends Track {
 
 export class RadioTrack extends RequiresSearchTrack {
 	public thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
-	public stationData: import("@amanda/shared-types").UnpackRecord<import("@amanda/shared-types").InferMap<typeof radioStations>["value"]>
+	public stationData: UnpackRecord<InferMap<typeof radioStations>["value"]>
 
 	public constructor(
 		station: string,
-		requester: import("discord-api-types/v10").APIUser,
-		lang: import("@amanda/lang").Lang
+		requester: APIUser,
+		lang: Lang
 	) {
 		const [namespace, substation] = station.split("/")
 		const stationData = radioStations.get(namespace)?.[substation]
 		if (!stationData) throw new Error("Invalid radio station")
+
 		const info = {
 			flags: 0,
 			source: "http",
@@ -333,11 +361,14 @@ export class RadioTrack extends RequiresSearchTrack {
 			uri: stationData.url,
 			version: 1
 		}
+
 		super("!", info, station, requester, lang)
+
 		this.title = stationData.title
 		this.author = stationData.author
 		this.stationData = stationData
 		this.queueLine = `**${this.stationData.title}** (${this.lang.GLOBAL.HEADER_LIVE})`
+		this.noPauseReason = this.live ? this.lang.GLOBAL.CANNOT_PAUSE_LIVE : this.noPauseReason
 	}
 
 	public showLink() {
@@ -352,15 +383,17 @@ export class RadioTrack extends RequiresSearchTrack {
 		return Promise.resolve(this.stationData.lyrics ?? null)
 	}
 
-	public static randomFromGenre(genre: string, requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang): RadioTrack | null {
+	public static randomFromGenre(genre: string, requester: APIUser, lang: Lang): RadioTrack | null {
 		const fromGenre = radioStationGenres.get(genre)
 		if (!fromGenre?.length) return null
+
 		return new RadioTrack(sharedUtils.arrayRandom(fromGenre), requester, lang)
 	}
 
-	public static random(requester: import("discord-api-types/v10").APIUser, lang: import("@amanda/lang").Lang) {
+	public static random(requester: import("discord-api-types/v10").APIUser, lang: Lang): RadioTrack | null {
 		const keys = Array.from(radioStationGenres.keys())
 		const genre = sharedUtils.arrayRandom(keys)
+
 		return RadioTrack.randomFromGenre(genre, requester, lang)!
 	}
 }

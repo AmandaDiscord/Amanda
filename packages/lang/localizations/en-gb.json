@@ -385,7 +385,7 @@
 		"options": [
 			{
 				"name": "pitch",
-				"description": "Sets the pitch of the queue in decibels"
+				"description": "Sets the pitch of the queue in semitones"
 			},
 			{
 				"name": "speed",

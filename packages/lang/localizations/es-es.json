@@ -385,7 +385,7 @@
 		"options": [
 			{
 				"name": "tono",
-				"description": "Configura el tono de la cola en db"
+				"description": "Configura el tono de la cola en semitonos"
 			},
 			{
 				"name": "velocidad",

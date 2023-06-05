@@ -93,14 +93,14 @@ export class Session {
 
 	public sendState(data?: Packet<unknown>): void {
 		if (!this.loggedin) return
-		const state = queues.get(this.guild!) ? Object.assign({}, queues.get(this.guild!)) : null
+		const state = queues.get(this.guild!) ?? null
 		let nonce: number | null = null
 		if (data && typeof data.nonce === "number") nonce = data.nonce
 		this.send({ op: opcodes.STATE, nonce: nonce, d: state?.toJSON() ?? null })
 	}
 
 	public cleanClose(): void {
-		this.send({ op: opcodes.STATE, d: null })
+		this.send({ op: opcodes.STATE, nonce: null, d: null })
 		this.ws.close()
 	}
 
@@ -125,8 +125,8 @@ export class Session {
 		this.send({ op: opcodes.NEXT })
 	}
 
-	public onListenersUpdate(members: Queue["listeners"]): void {
-		this.send({ op: opcodes.LISTENERS_UPDATE, d: { members: Array.from(members.values()) } })
+	public onListenersUpdate(members: ReturnType<Queue["toJSON"]>["members"]): void {
+		this.send({ op: opcodes.LISTENERS_UPDATE, d: { members: members } })
 	}
 
 	public onAttributesChange(queue: Queue) {
@@ -135,6 +135,10 @@ export class Session {
 
 	public onTimeUpdate(info: { trackStartTime: number, pausedAt: number, playing: boolean }): void {
 		this.send({ op: opcodes.TIME_UPDATE, d: info })
+	}
+
+	public onStop(): void {
+		this.send({ op: opcodes.STATE, nonce: null, d: null })
 	}
 
 

@@ -1,0 +1,1445 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: background_sync; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.background_sync (
+    machine_id character varying(200) NOT NULL,
+    user_id character varying(22) NOT NULL,
+    url text
+);
+
+
+ALTER TABLE public.background_sync OWNER TO amanda;
+
+--
+-- Name: TABLE background_sync; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.background_sync IS 'TRIAL';
+
+
+--
+-- Name: COLUMN background_sync.machine_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.background_sync.machine_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN background_sync.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.background_sync.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN background_sync.url; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.background_sync.url IS 'TRIAL';
+
+
+--
+-- Name: bank_access; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.bank_access (
+    id bigint NOT NULL,
+    user_id character varying(22) NOT NULL
+);
+
+
+ALTER TABLE public.bank_access OWNER TO amanda;
+
+--
+-- Name: bank_accounts; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.bank_accounts (
+    id bigint NOT NULL,
+    amount bigint DEFAULT 0 NOT NULL,
+    type smallint DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.bank_accounts OWNER TO amanda;
+
+--
+-- Name: bank_accounts_id_seq; Type: SEQUENCE; Schema: public; Owner: amanda
+--
+
+CREATE SEQUENCE public.bank_accounts_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.bank_accounts_id_seq OWNER TO amanda;
+
+--
+-- Name: bank_accounts_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: amanda
+--
+
+ALTER SEQUENCE public.bank_accounts_id_seq OWNED BY public.bank_accounts.id;
+
+
+--
+-- Name: bans; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.bans (
+    user_id character varying(22) NOT NULL,
+    temporary smallint,
+    expires bigint
+);
+
+
+ALTER TABLE public.bans OWNER TO amanda;
+
+--
+-- Name: TABLE bans; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.bans IS 'TRIAL';
+
+
+--
+-- Name: COLUMN bans.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.bans.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN bans.temporary; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.bans.temporary IS 'TRIAL';
+
+
+--
+-- Name: COLUMN bans.expires; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.bans.expires IS 'TRIAL';
+
+
+--
+-- Name: channels; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.channels (
+    id character varying(20) NOT NULL,
+    type smallint,
+    guild_id character varying(20) DEFAULT NULL::character varying,
+    name character varying(100),
+    rtc_region character varying(20) DEFAULT NULL::character varying
+);
+
+
+ALTER TABLE public.channels OWNER TO amanda;
+
+--
+-- Name: connections; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.connections (
+    user_id character varying(20) NOT NULL,
+    type character varying(15) NOT NULL,
+    access character varying(100)
+);
+
+
+ALTER TABLE public.connections OWNER TO amanda;
+
+--
+-- Name: couples; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.couples (
+    user1 character varying(22),
+    user2 character varying(22),
+    balance bigint DEFAULT 0 NOT NULL,
+    married_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+
+ALTER TABLE public.couples OWNER TO amanda;
+
+--
+-- Name: TABLE couples; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.couples IS 'TRIAL';
+
+
+--
+-- Name: COLUMN couples.user1; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.couples.user1 IS 'TRIAL';
+
+
+--
+-- Name: COLUMN couples.user2; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.couples.user2 IS 'TRIAL';
+
+
+--
+-- Name: COLUMN couples.balance; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.couples.balance IS 'TRIAL';
+
+
+--
+-- Name: COLUMN couples.married_at; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.couples.married_at IS 'TRIAL';
+
+
+--
+-- Name: csrf_tokens; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.csrf_tokens (
+    token character(64) NOT NULL,
+    login_token character(32),
+    expires bigint DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.csrf_tokens OWNER TO amanda;
+
+--
+-- Name: TABLE csrf_tokens; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.csrf_tokens IS 'TRIAL';
+
+
+--
+-- Name: COLUMN csrf_tokens.token; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.csrf_tokens.token IS 'TRIAL';
+
+
+--
+-- Name: COLUMN csrf_tokens.login_token; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.csrf_tokens.login_token IS 'TRIAL';
+
+
+--
+-- Name: COLUMN csrf_tokens.expires; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.csrf_tokens.expires IS 'TRIAL';
+
+
+--
+-- Name: daily_cooldown; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.daily_cooldown (
+    user_id character varying(22) NOT NULL,
+    last_claim bigint
+);
+
+
+ALTER TABLE public.daily_cooldown OWNER TO amanda;
+
+--
+-- Name: TABLE daily_cooldown; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.daily_cooldown IS 'TRIAL';
+
+
+--
+-- Name: COLUMN daily_cooldown.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.daily_cooldown.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN daily_cooldown.last_claim; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.daily_cooldown.last_claim IS 'TRIAL';
+
+
+--
+-- Name: gateway_clusters; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.gateway_clusters (
+    cluster_id character varying(20) NOT NULL,
+    url character varying(50) NOT NULL
+);
+
+
+ALTER TABLE public.gateway_clusters OWNER TO amanda;
+
+--
+-- Name: guilds; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.guilds (
+    guild_id character varying(20) NOT NULL,
+    client_id character varying(20) NOT NULL,
+    cluster_id character varying(20) NOT NULL,
+    shard_id integer NOT NULL
+);
+
+
+ALTER TABLE public.guilds OWNER TO amanda;
+
+--
+-- Name: interaction_gifs; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.interaction_gifs (
+    type text,
+    url text
+);
+
+
+ALTER TABLE public.interaction_gifs OWNER TO amanda;
+
+--
+-- Name: TABLE interaction_gifs; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.interaction_gifs IS 'TRIAL';
+
+
+--
+-- Name: COLUMN interaction_gifs.type; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.interaction_gifs.type IS 'TRIAL';
+
+
+--
+-- Name: COLUMN interaction_gifs.url; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.interaction_gifs.url IS 'TRIAL';
+
+
+--
+-- Name: lavalink_node_regions; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.lavalink_node_regions (
+    host character varying(50) NOT NULL,
+    region character varying(30) NOT NULL
+);
+
+
+ALTER TABLE public.lavalink_node_regions OWNER TO amanda;
+
+--
+-- Name: TABLE lavalink_node_regions; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.lavalink_node_regions IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_node_regions.host; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_node_regions.host IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_node_regions.region; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_node_regions.region IS 'TRIAL';
+
+
+--
+-- Name: lavalink_nodes; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.lavalink_nodes (
+    host character varying(50) NOT NULL,
+    port integer NOT NULL,
+    invidious_origin text NOT NULL,
+    enabled smallint NOT NULL,
+    search_with_invidious smallint NOT NULL,
+    name text NOT NULL
+);
+
+
+ALTER TABLE public.lavalink_nodes OWNER TO amanda;
+
+--
+-- Name: TABLE lavalink_nodes; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.lavalink_nodes IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.host; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.host IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.port; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.port IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.invidious_origin; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.invidious_origin IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.enabled; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.enabled IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.search_with_invidious; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.search_with_invidious IS 'TRIAL';
+
+
+--
+-- Name: COLUMN lavalink_nodes.name; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.lavalink_nodes.name IS 'TRIAL';
+
+
+--
+-- Name: money; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.money (
+    user_id character varying(22) NOT NULL,
+    coins bigint DEFAULT 5000 NOT NULL,
+    won_coins bigint DEFAULT 0 NOT NULL,
+    lost_coins bigint DEFAULT 0 NOT NULL,
+    given_coins bigint DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.money OWNER TO amanda;
+
+--
+-- Name: TABLE money; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.money IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money.coins; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money.coins IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money.won_coins; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money.won_coins IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money.lost_coins; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money.lost_coins IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money.given_coins; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money.given_coins IS 'TRIAL';
+
+
+--
+-- Name: money_cooldown; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.money_cooldown (
+    user_id character varying(22),
+    command text,
+    date bigint,
+    value integer
+);
+
+
+ALTER TABLE public.money_cooldown OWNER TO amanda;
+
+--
+-- Name: TABLE money_cooldown; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.money_cooldown IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money_cooldown.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money_cooldown.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money_cooldown.command; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money_cooldown.command IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money_cooldown.date; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money_cooldown.date IS 'TRIAL';
+
+
+--
+-- Name: COLUMN money_cooldown.value; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.money_cooldown.value IS 'TRIAL';
+
+
+--
+-- Name: pending_relations; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.pending_relations (
+    user1 character varying(22),
+    user2 character varying(22)
+);
+
+
+ALTER TABLE public.pending_relations OWNER TO amanda;
+
+--
+-- Name: TABLE pending_relations; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.pending_relations IS 'TRIAL';
+
+
+--
+-- Name: COLUMN pending_relations.user1; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.pending_relations.user1 IS 'TRIAL';
+
+
+--
+-- Name: COLUMN pending_relations.user2; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.pending_relations.user2 IS 'TRIAL';
+
+
+--
+-- Name: playlist_songs; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.playlist_songs (
+    playlist_id integer NOT NULL,
+    video_id character(11) NOT NULL,
+    next character(11)
+);
+
+
+ALTER TABLE public.playlist_songs OWNER TO amanda;
+
+--
+-- Name: TABLE playlist_songs; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.playlist_songs IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlist_songs.playlist_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlist_songs.playlist_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlist_songs.video_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlist_songs.video_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlist_songs.next; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlist_songs.next IS 'TRIAL';
+
+
+--
+-- Name: playlists; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.playlists (
+    playlist_id integer NOT NULL,
+    author character varying(22),
+    name text,
+    play_count integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.playlists OWNER TO amanda;
+
+--
+-- Name: TABLE playlists; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.playlists IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlists.playlist_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlists.playlist_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlists.author; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlists.author IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlists.name; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlists.name IS 'TRIAL';
+
+
+--
+-- Name: COLUMN playlists.play_count; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.playlists.play_count IS 'TRIAL';
+
+
+--
+-- Name: playlists_playlistid_seq; Type: SEQUENCE; Schema: public; Owner: amanda
+--
+
+CREATE SEQUENCE public.playlists_playlistid_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.playlists_playlistid_seq OWNER TO amanda;
+
+--
+-- Name: playlists_playlistid_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: amanda
+--
+
+ALTER SEQUENCE public.playlists_playlistid_seq OWNED BY public.playlists.playlist_id;
+
+
+--
+-- Name: premium; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.premium (
+    user_id character varying(22) NOT NULL,
+    state integer DEFAULT 0 NOT NULL,
+    flavor text
+);
+
+
+ALTER TABLE public.premium OWNER TO amanda;
+
+--
+-- Name: TABLE premium; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.premium IS 'TRIAL';
+
+
+--
+-- Name: COLUMN premium.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.premium.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN premium.state; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.premium.state IS 'TRIAL';
+
+
+--
+-- Name: songs; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.songs (
+    video_id character(11) NOT NULL,
+    name text,
+    length integer
+);
+
+
+ALTER TABLE public.songs OWNER TO amanda;
+
+--
+-- Name: TABLE songs; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.songs IS 'TRIAL';
+
+
+--
+-- Name: COLUMN songs.video_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.songs.video_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN songs.name; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.songs.name IS 'TRIAL';
+
+
+--
+-- Name: COLUMN songs.length; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.songs.length IS 'TRIAL';
+
+
+--
+-- Name: stat_logs; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.stat_logs (
+    "time" bigint NOT NULL,
+    id character varying(22) NOT NULL,
+    ram_usage_kb integer,
+    users integer,
+    guilds integer,
+    channels integer,
+    voice_connections integer,
+    uptime integer,
+    shard integer DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.stat_logs OWNER TO amanda;
+
+--
+-- Name: TABLE stat_logs; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.stat_logs IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs."time"; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs."time" IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.ram_usage_kb; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.ram_usage_kb IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.users; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.users IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.guilds; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.guilds IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.channels; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.channels IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.voice_connections; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.voice_connections IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.uptime; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.uptime IS 'TRIAL';
+
+
+--
+-- Name: COLUMN stat_logs.shard; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.stat_logs.shard IS 'TRIAL';
+
+
+--
+-- Name: status_messages; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.status_messages (
+    id integer NOT NULL,
+    dates character varying(20),
+    users character varying(20),
+    message character varying(100) NOT NULL,
+    type smallint NOT NULL,
+    demote smallint DEFAULT 1 NOT NULL
+);
+
+
+ALTER TABLE public.status_messages OWNER TO amanda;
+
+--
+-- Name: TABLE status_messages; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.status_messages IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.dates; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.dates IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.users; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.users IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.message; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.message IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.type; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.type IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_messages.demote; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_messages.demote IS 'TRIAL';
+
+
+--
+-- Name: status_ranges; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.status_ranges (
+    label character varying(20) NOT NULL,
+    start_month smallint,
+    start_day smallint,
+    end_month smallint,
+    end_day smallint
+);
+
+
+ALTER TABLE public.status_ranges OWNER TO amanda;
+
+--
+-- Name: TABLE status_ranges; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.status_ranges IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_ranges.label; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_ranges.label IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_ranges.start_month; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_ranges.start_month IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_ranges.start_day; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_ranges.start_day IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_ranges.end_month; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_ranges.end_month IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_ranges.end_day; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_ranges.end_day IS 'TRIAL';
+
+
+--
+-- Name: status_users; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.status_users (
+    label character varying(20) NOT NULL,
+    user_id character varying(22) NOT NULL
+);
+
+
+ALTER TABLE public.status_users OWNER TO amanda;
+
+--
+-- Name: TABLE status_users; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.status_users IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_users.label; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_users.label IS 'TRIAL';
+
+
+--
+-- Name: COLUMN status_users.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.status_users.user_id IS 'TRIAL';
+
+
+--
+-- Name: statusmessages_id_seq; Type: SEQUENCE; Schema: public; Owner: amanda
+--
+
+CREATE SEQUENCE public.statusmessages_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.statusmessages_id_seq OWNER TO amanda;
+
+--
+-- Name: statusmessages_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: amanda
+--
+
+ALTER SEQUENCE public.statusmessages_id_seq OWNED BY public.status_messages.id;
+
+
+--
+-- Name: transactions; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.transactions (
+    id bigint NOT NULL,
+    user_id character varying(22) NOT NULL,
+    amount bigint NOT NULL,
+    mode smallint NOT NULL,
+    description character varying(50) NOT NULL,
+    date timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    target bigint NOT NULL
+);
+
+
+ALTER TABLE public.transactions OWNER TO amanda;
+
+--
+-- Name: transactions_id_seq; Type: SEQUENCE; Schema: public; Owner: amanda
+--
+
+CREATE SEQUENCE public.transactions_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER TABLE public.transactions_id_seq OWNER TO amanda;
+
+--
+-- Name: transactions_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: amanda
+--
+
+ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
+
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.users (
+    id character varying(20) NOT NULL,
+    tag character varying(37) NOT NULL,
+    avatar character varying(50) DEFAULT NULL::character varying,
+    bot smallint DEFAULT 0 NOT NULL,
+    added_by character varying(12) NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO amanda;
+
+--
+-- Name: voice_servers; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.voice_servers (
+    token character varying(30),
+    guild_id character varying(20) NOT NULL,
+    endpoint character varying(50)
+);
+
+
+ALTER TABLE public.voice_servers OWNER TO amanda;
+
+--
+-- Name: voice_states; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.voice_states (
+    guild_id character varying(20) NOT NULL,
+    channel_id character varying(20) NOT NULL,
+    user_id character varying(20) NOT NULL,
+    session_id character varying(50) DEFAULT NULL::character varying
+);
+
+
+ALTER TABLE public.voice_states OWNER TO amanda;
+
+--
+-- Name: web_tokens; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.web_tokens (
+    user_id character varying(22) NOT NULL,
+    token character(32) NOT NULL,
+    staging smallint DEFAULT 0 NOT NULL
+);
+
+
+ALTER TABLE public.web_tokens OWNER TO amanda;
+
+--
+-- Name: TABLE web_tokens; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON TABLE public.web_tokens IS 'TRIAL';
+
+
+--
+-- Name: COLUMN web_tokens.user_id; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.web_tokens.user_id IS 'TRIAL';
+
+
+--
+-- Name: COLUMN web_tokens.token; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.web_tokens.token IS 'TRIAL';
+
+
+--
+-- Name: COLUMN web_tokens.staging; Type: COMMENT; Schema: public; Owner: amanda
+--
+
+COMMENT ON COLUMN public.web_tokens.staging IS 'TRIAL';
+
+
+--
+-- Name: bank_accounts id; Type: DEFAULT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.bank_accounts ALTER COLUMN id SET DEFAULT nextval('public.bank_accounts_id_seq'::regclass);
+
+
+--
+-- Name: playlists playlist_id; Type: DEFAULT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.playlists ALTER COLUMN playlist_id SET DEFAULT nextval('public.playlists_playlistid_seq'::regclass);
+
+
+--
+-- Name: status_messages id; Type: DEFAULT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.status_messages ALTER COLUMN id SET DEFAULT nextval('public.statusmessages_id_seq'::regclass);
+
+
+--
+-- Name: transactions id; Type: DEFAULT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.transactions ALTER COLUMN id SET DEFAULT nextval('public.transactions_id_seq'::regclass);
+
+
+--
+-- Name: bank_accounts bank_accounts_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.bank_accounts
+    ADD CONSTRAINT bank_accounts_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: channels channels_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.channels
+    ADD CONSTRAINT channels_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: connections connections_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.connections
+    ADD CONSTRAINT connections_pkey PRIMARY KEY (user_id, type);
+
+
+--
+-- Name: gateway_clusters gateway_clusters_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.gateway_clusters
+    ADD CONSTRAINT gateway_clusters_pkey PRIMARY KEY (cluster_id);
+
+
+--
+-- Name: guilds guilds_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.guilds
+    ADD CONSTRAINT guilds_pkey PRIMARY KEY (client_id, guild_id);
+
+
+--
+-- Name: background_sync pk_backgroundsync; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.background_sync
+    ADD CONSTRAINT pk_backgroundsync PRIMARY KEY (machine_id, user_id);
+
+
+--
+-- Name: bans pk_bans; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.bans
+    ADD CONSTRAINT pk_bans PRIMARY KEY (user_id);
+
+
+--
+-- Name: csrf_tokens pk_csrftokens; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.csrf_tokens
+    ADD CONSTRAINT pk_csrftokens PRIMARY KEY (token);
+
+
+--
+-- Name: daily_cooldown pk_dailycooldown; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.daily_cooldown
+    ADD CONSTRAINT pk_dailycooldown PRIMARY KEY (user_id);
+
+
+--
+-- Name: lavalink_node_regions pk_lavalinknoderegions; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.lavalink_node_regions
+    ADD CONSTRAINT pk_lavalinknoderegions PRIMARY KEY (host, region);
+
+
+--
+-- Name: lavalink_nodes pk_lavalinknodes; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.lavalink_nodes
+    ADD CONSTRAINT pk_lavalinknodes PRIMARY KEY (host);
+
+
+--
+-- Name: money pk_money; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.money
+    ADD CONSTRAINT pk_money PRIMARY KEY (user_id);
+
+
+--
+-- Name: playlists pk_playlists; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.playlists
+    ADD CONSTRAINT pk_playlists PRIMARY KEY (playlist_id);
+
+
+--
+-- Name: playlist_songs pk_playlistsongs; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.playlist_songs
+    ADD CONSTRAINT pk_playlistsongs PRIMARY KEY (playlist_id, video_id);
+
+
+--
+-- Name: premium pk_premium; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.premium
+    ADD CONSTRAINT pk_premium PRIMARY KEY (user_id);
+
+
+--
+-- Name: songs pk_songs; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.songs
+    ADD CONSTRAINT pk_songs PRIMARY KEY (video_id);
+
+
+--
+-- Name: stat_logs pk_statlogs; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.stat_logs
+    ADD CONSTRAINT pk_statlogs PRIMARY KEY ("time", id, shard);
+
+
+--
+-- Name: status_messages pk_statusmessages; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.status_messages
+    ADD CONSTRAINT pk_statusmessages PRIMARY KEY (id);
+
+
+--
+-- Name: status_ranges pk_statusranges; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.status_ranges
+    ADD CONSTRAINT pk_statusranges PRIMARY KEY (label);
+
+
+--
+-- Name: status_users pk_statususers; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.status_users
+    ADD CONSTRAINT pk_statususers PRIMARY KEY (label, user_id);
+
+
+--
+-- Name: web_tokens pk_webtokens; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.web_tokens
+    ADD CONSTRAINT pk_webtokens PRIMARY KEY (user_id);
+
+
+--
+-- Name: transactions transactions_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.transactions
+    ADD CONSTRAINT transactions_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: voice_servers voice_servers_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.voice_servers
+    ADD CONSTRAINT voice_servers_pkey PRIMARY KEY (guild_id);
+
+
+--
+-- Name: voice_states voice_states_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.voice_states
+    ADD CONSTRAINT voice_states_pkey PRIMARY KEY (user_id, guild_id);
+
+
+--
+-- Name: bank_access_id_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX bank_access_id_mkey ON public.bank_access USING btree (id);
+
+
+--
+-- Name: bank_access_user_id_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX bank_access_user_id_mkey ON public.bank_access USING btree (user_id);
+
+
+--
+-- Name: channels_guild_id_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX channels_guild_id_mkey ON public.channels USING btree (guild_id);
+
+
+--
+-- Name: transactions_target_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX transactions_target_mkey ON public.transactions USING btree (target);
+
+
+--
+-- Name: transactions_user_id_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX transactions_user_id_mkey ON public.transactions USING btree (user_id);
+
+
+--
+-- Name: voice_states_gid_mkey; Type: INDEX; Schema: public; Owner: amanda
+--
+
+CREATE INDEX voice_states_gid_mkey ON public.voice_states USING btree (guild_id);
+
+
+--
+-- PostgreSQL database dump complete
+--
+

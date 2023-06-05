@@ -67,10 +67,6 @@ With everything installed and running, you now have to configure it.
 Open `config.sample.js` in the bot repo and fill in the details. You
 must fill in everything. Rename the file to just `config.js`
 
-Then, open `constants.js` in the bot repo and fill in some more
-details. You must fill in `baseURL` and all details under
-`lavalinkNodes`.
-
 ## Lavalink config
 
 Again, use the `application.yml` file from this repo.
@@ -82,27 +78,8 @@ Restart Lavalink to apply changes.
 
 ## Database setup
 
-Make sure the database is set to use UTF-8.
+Ensure a user with the name amanda is created. The password can be whatever you chose earlier when setting up the bot config
 
-Remake the schema you can find in Amanda's ORM utility file (I'm too lazy to export the postgres config. I'm sorry ;w;)
+You can import the Postgres schema you can find in the pgsql.dmp
 
-Add your bot's ID and prefixes to `account_prefixes`. Set `status` to `1`
-if that prefix should be displayed in the bot's status. Only one row can
-have `status = 1`, all other rows must be `status = 0`.
-
-Add your user ID to `user_permissions` and set all options to `1` to
-allow them.
-
-# Start
-
-Everything is now set up.
-
-To start Amanda, follow these steps:
-
-1. Make sure all the services are running.
-1. Open a terminal and change to the base directory of the cloned bot repo.
-1. Run `npm run website` to start the web process, which also doubles as
-   a cluster coordinator.
-1. Open another terminals, and again change to the base directory of the
-   repo for each and run the command below.
-1. Run `npm run start`
+It does contain some legacy tables that are no longer used at the moment that you can safely delete.
