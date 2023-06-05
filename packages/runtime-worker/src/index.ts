@@ -23,7 +23,7 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
-])
+], console.error)
 passthrough.client = new Amanda(new SnowTransfer(passthrough.confprovider.config.current_token))
 passthrough.webconnector = new WebsiteConnector(passthrough.confprovider, "/internal")
 
@@ -53,7 +53,7 @@ passthrough.webconnector = new WebsiteConnector(passthrough.confprovider, "/inte
 
 		const parsed = JSON.parse(single.toString())
 
-		if (parsed.t === "INTERACTION_CREATE") passthrough.commands.handle(parsed.d, passthrough.client.snow)
+		if (parsed.t === "INTERACTION_CREATE") passthrough.commands.handle(parsed.d, passthrough.confprovider.config.is_dev ? passthrough.client.snow : void 0)
 	})
 
 	const replfunctions: typeof import("./replfunctions") = passthrough.sync.require("./replfunctions")

@@ -24,7 +24,7 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
-])
+], console.error)
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
 
 ;(async () => {
