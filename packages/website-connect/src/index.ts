@@ -30,21 +30,18 @@ class Connector extends EventEmitter {
 
 	public constructor(public confprovider: ConfigProvider, path: "/internal" | "/gateway") {
 		super()
-		const protocol = confprovider.config.website_protocol === "https"
-			? "wss://"
-			: "ws://"
 
-		this._createWS(protocol, path)
+		this._createWS(path)
 		this.on("close", () => {
 			this.ws.removeAllListeners()
 			setTimeout(() => {
-				this._createWS(protocol, path)
+				this._createWS(path)
 			}, 5000)
 		})
 	}
 
-	private _createWS(protocol: "wss://" | "ws://", path: "/internal" | "/gateway"): void {
-		this.ws = new WebSocket(`${protocol}${this.confprovider.config.ipc_bind}${path}`, {
+	private _createWS(path: "/internal" | "/gateway"): void {
+		this.ws = new WebSocket(`${this.confprovider.config.ipc_protocol}${this.confprovider.config.ipc_bind}${path}`, {
 			headers: {
 				Authorization: this.confprovider.config.current_token,
 				"X-Cluster-Id": this.confprovider.config.cluster_id

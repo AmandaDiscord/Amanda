@@ -25,6 +25,7 @@ const config = {
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	chewey_api_url: "https://api.chewey-bot.top",
+	ipc_protocol: "ws",
 	ipc_bind: "localhost:10400",
 
 	// this cluster
