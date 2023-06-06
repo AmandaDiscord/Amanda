@@ -32,5 +32,6 @@ export = {
 	commandWorkers: new Array(),
 	gatewayWorkers: {},
 	voiceStates: new Map(),
+	guildStatesIndex: new Map(),
 	guildCount: 0
 } as Passthrough
