@@ -338,7 +338,7 @@ export async function onGatewayMessage(
 			voiceStates.set(s.user_id, {
 				user_id: s.user_id,
 				channel_id: s.channel_id,
-				guild_id: s.guild_id
+				guild_id: parsed.d.id
 			})
 			if (!set.has(s.user_id)) set.add(s.user_id)
 		})
