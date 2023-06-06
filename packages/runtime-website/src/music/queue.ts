@@ -13,7 +13,7 @@ import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
 import passthrough = require("../passthrough")
-const { sync, queues, confprovider, snow, lavalink, sql, sessions } = passthrough
+const { sync, queues, confprovider, snow, lavalink, sql, sessions, voiceStates, guildStatesIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -29,7 +29,8 @@ export class Queue {
 	public player: Player | undefined
 	public menu: Array<InstanceType<typeof BetterComponent>> = []
 	public playHasBeenCalled = false
-	public listeners = new Map<string, APIUser>()
+	public listeners = new Set<string>()
+	public listenerCache = new Map<string, APIUser>()
 
 	public loop = false
 
@@ -60,13 +61,23 @@ export class Queue {
 	}
 
 	public toJSON() {
+		const members = Array.from(this.listeners.values())
+			.map(id => {
+				const cache = this.listenerCache.get(id)
+				return {
+					id,
+					tag: cache
+						? cache.discriminator === "0"
+							? cache.username
+							: `${cache.username}#${cache.discriminator}`
+						: "Unknown User",
+					avatar: cache?.avatar ?? null,
+					isAmanda: id === confprovider.config.client_id
+				}
+			})
+
 		return {
-			members: (Array.from(this.listeners.values())).map(m => ({
-				id: m.id,
-				tag: `${m.username}#${m.discriminator}`,
-				avatar: m.avatar,
-				isAmanda: m.id === confprovider.config.client_id
-			})),
+			members: members,
 			tracks: this.tracks.map(s => s.toObject()),
 			playing: !this.paused,
 			voiceChannel: {
@@ -229,8 +240,8 @@ export class Queue {
 			const sqlString = `SELECT * FROM connections WHERE type = $1 AND user_id IN (${usersAsPrepared})`
 			const prepared = ["lastfm"]
 
-			for (const user of this.listeners.values()) {
-				prepared.push(user.id)
+			for (const user of this.listeners) {
+				prepared.push(user)
 			}
 
 			const connections = await sql.all(sqlString, prepared)
@@ -335,7 +346,7 @@ export class Queue {
 				{ h: "playPause" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
-				if (!this.listeners.get(user.id)) return
+				if (!this.listeners.has(user.id)) return
 
 				this.paused = !this.paused
 			}),
@@ -344,7 +355,7 @@ export class Queue {
 				{ h: "skip" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
-				if (!this.listeners.get(user.id)) return
+				if (!this.listeners.has(user.id)) return
 
 				this.skip()
 			}),
@@ -353,7 +364,7 @@ export class Queue {
 				{ h: "stop" }
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
-				if (!this.listeners.get(user.id)) return
+				if (!this.listeners.has(user.id)) return
 
 				this.destroy()
 			})
@@ -581,18 +592,13 @@ export class Queue {
 		}
 	}
 
-	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
+	public voiceStateUpdate(packet: GatewayVoiceState): void {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
-			const [clientUser, states] = await Promise.all([
-				sharedUtils.getUser(confprovider.config.client_id, confprovider, sql, snow),
-				sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
-			])
-
-			if (clientUser) this.listeners.set(clientUser.id, clientUser)
+			const states = Array.from(guildStatesIndex.get(this.guildID)?.values() ?? []).map(i => voiceStates.get(i)!)
 
 			for (const state of states) {
-				const user = await sharedUtils.getUser(state.user_id, confprovider, sql, snow)
-				if (user && !user.bot) this.listeners.set(user.id, user)
+				this.listeners.add(state.user_id)
+				if (state.user) this.listenerCache.set(state.user_id, state.user)
 			}
 
 			this._lastFMSetTrack()
@@ -602,21 +608,25 @@ export class Queue {
 		}
 
 		// moving voice channels does not set the channel_id as null and then update
-		if (!packet.channel_id && this.voiceChannelID && packet.user_id === confprovider.config.client_id) return this.destroy()
+		if (!packet.channel_id && this.voiceChannelID && packet.user_id === confprovider.config.client_id) return void this.destroy()
 
 		if (packet.channel_id !== this.voiceChannelID && this.listeners.has(packet.user_id)) {
 			this.listeners.delete(packet.user_id)
-			if (this.listeners.size <= 1) this._onAllUsersLeave() // just Amanda
+			this.listenerCache.delete(packet.user_id)
+			if (this.listenerCache.size <= 1) this._onAllUsersLeave() // just Amanda
 		}
 
 		if (packet.channel_id === this.voiceChannelID && packet.user_id !== confprovider.config.client_id) {
 			if (!packet.member?.user || packet.member.user.bot) return
 			this.leaveTimeout.clear()
+
 			if (this.leavingSoonID && this.interaction) {
 				snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
 			}
+
 			this.leavingSoonID = undefined
-			this.listeners.set(packet.member.user.id, packet.member.user)
+			this.listeners.add(packet.user_id)
+			this.listenerCache.set(packet.member.user.id, packet.member.user)
 		}
 
 		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.toJSON().members))

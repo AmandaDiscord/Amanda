@@ -28,16 +28,9 @@ const models = {
 	premium: new Model<{ user_id: string, state: number }>(["user_id"]),
 	songs: new Model<{ video_id: string, name: string, length: number }>(["video_id"]),
 	stat_logs: new Model<{ time: number, id: string, ram_usage_kb: number, users: number, guilds: number, channels: number, voice_connections: number, uptime: number, shard: number }>(["time", "id", "shard"]),
-	status_messages: new Model<{ id: number, dates: string, users: string, message: string, type: number, demote: number }>(["id"]),
-	status_ranges: new Model<{ label: string, start_month: number, start_day: number, end_month: number, end_day: number }>(["label"]),
-	status_users: new Model<{ label: string, user_id: string }>(["label", "user_id"]),
 	transactions: new Model<{ id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>(["id"]),
-	user_permissions: new Model<{ user_id: string, eval: number, owner: number }>(["user_id"]),
 	users: new Model<{ id: string, tag: string, avatar: string | null, bot: number, added_by: string }>(["id"], { useBuffer: true }),
-	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id", "guild_id"], { useBuffer: true, bufferSize: 300 }),
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"]),
-	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
-	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"]),
 	connections: new Model<{ user_id: string, type: "lastfm", access: string }>(["user_id", "type"])
 }
 
