@@ -366,9 +366,9 @@ export async function onGatewayMessage(
 				user: parsed.d.member?.user
 			})
 
-			const existing = guildStatesIndex.get(parsed.d.id)
+			const existing = guildStatesIndex.get(parsed.d.guild_id)
 			const set = existing ? existing : new Set<string>()
-			if (!existing) guildStatesIndex.set(parsed.d.id, set)
+			if (!existing) guildStatesIndex.set(parsed.d.guild_id, set)
 
 			if (!set.has(parsed.d.user_id)) set.add(parsed.d.user_id)
 		} else {
