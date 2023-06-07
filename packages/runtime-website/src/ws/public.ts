@@ -47,6 +47,7 @@ export class Session {
 	public guild: string | null = null
 	public user: string | null = null
 	public shards: Array<number> = []
+	private closed = false
 
 	public constructor(public ws: WebSocket<unknown>) {
 		sessions.push(this)
@@ -57,11 +58,14 @@ export class Session {
 	}
 
 	public send(data: Packet<unknown>): void {
+		if (this.closed) return
 		const d = JSON.stringify(data)
 		this.ws.send(d)
 	}
 
 	public onClose(): void {
+		this.closed = true
+		this.loggedin = false
 		console.log(`WebSocket disconnected: ${this.user ?? "Unauthenticated"}`)
 		const index = sessions.indexOf(this)
 		sessions.splice(index, 1)
@@ -100,6 +104,7 @@ export class Session {
 	}
 
 	public cleanClose(): void {
+		if (this.closed) return
 		this.send({ op: opcodes.STATE, nonce: null, d: null })
 		this.ws.close()
 	}

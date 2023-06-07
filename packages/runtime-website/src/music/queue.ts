@@ -63,7 +63,9 @@ export class Queue {
 		return {
 			members: (Array.from(this.listeners.values())).map(m => ({
 				id: m.id,
-				tag: `${m.username}#${m.discriminator}`,
+				tag: m.discriminator === "0"
+					? m.username
+					: `${m.username}#${m.discriminator}`,
 				avatar: m.avatar,
 				isAmanda: m.id === confprovider.config.client_id
 			})),
