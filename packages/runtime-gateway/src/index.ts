@@ -25,7 +25,8 @@ const client = new Client(confprovider.config.current_token, {
 })
 
 ;(async () => {
-	void new REPLProvider({ client, webconnector, confprovider })
+	await sql.connect()
+	void new REPLProvider({ client, webconnector, confprovider, sql })
 	client.on("debug", console.log)
 	client.on("error", console.error)
 	client.on("event", async packet => {
