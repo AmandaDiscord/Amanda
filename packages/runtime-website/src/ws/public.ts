@@ -1,5 +1,5 @@
 import passthrough = require("../passthrough")
-const { sync, server, queues, sessions, voiceStates } = passthrough
+const { sync, server, confprovider, sql, queues, sessions } = passthrough
 
 import type { Queue } from "../music/queue"
 import type { Track } from "../music/tracktypes"
@@ -76,8 +76,9 @@ export class Session {
 			const cookies = utils.getCookies(data.d.cookie)
 			const session = await utils.getSession(cookies)
 			if (!session) return
-			const state = voiceStates.get(session.user_id)
-			if (!state || state.channel_id !== data.d.channel_id) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
+			if (!confprovider.config.db_enabled) return
+			const state = await sql.orm.get("voice_states", { channel_id: data.d.channel_id, user_id: session.user_id })
+			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true

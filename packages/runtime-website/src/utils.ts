@@ -8,19 +8,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
 import passthrough = require("./passthrough")
-const {
-	rootFolder,
-	sql,
-	confprovider,
-	lavalink,
-	commands,
-	snow,
-	commandWorkers,
-	queues,
-	voiceStates,
-	guildStatesIndex,
-	sessions
-} = passthrough
+const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
@@ -326,76 +314,19 @@ export async function onGatewayMessage(
 	parsed.cluster_id = wsData.clusterID
 
 	if (parsed.t === "SHARD_LIST") wsData.worker.shards = parsed.d
-	else if (parsed.t === "USER_INIT") passthrough.clientUser = parsed.d ?? passthrough.clientUser
-	else if (parsed.t === "PARTIAL_GUILD_CREATE") {
-		passthrough.guildCount += 1
-
-		const existing = guildStatesIndex.get(parsed.d.id)
-		const set = existing ? existing : new Set<string>()
-		if (parsed.d.voice_states.length && !existing) guildStatesIndex.set(parsed.d.id, set)
-
-		parsed.d.voice_states.forEach(s => {
-			voiceStates.set(s.user_id, {
-				user_id: s.user_id,
-				channel_id: s.channel_id,
-				guild_id: parsed.d.id
-			})
-			if (!set.has(s.user_id)) set.add(s.user_id)
-		})
-	} else if (parsed.t === "GUILD_DELETE") {
-		if (parsed.d.unavailable) return
-
-		passthrough.guildCount -= 1
-
-		const index = guildStatesIndex.get(parsed.d.id)
-		if (index) {
-			guildStatesIndex.delete(parsed.d.id)
-			for (const entry of index) {
-				voiceStates.delete(entry)
-			}
-		}
-	} else if (parsed.t === "VOICE_STATE_UPDATE") {
+	else if (parsed.t === "VOICE_STATE_UPDATE") {
 		if (!parsed.d.guild_id) return
 		lavalink.voiceStateUpdate(parsed.d)
-
-		if (parsed.d.channel_id !== null) {
-			voiceStates.set(parsed.d.user_id, {
-				user_id: parsed.d.user_id,
-				channel_id: parsed.d.channel_id,
-				guild_id: parsed.d.guild_id,
-				user: parsed.d.member?.user
-			})
-
-			const existing = guildStatesIndex.get(parsed.d.guild_id)
-			const set = existing ? existing : new Set<string>()
-			if (!existing) guildStatesIndex.set(parsed.d.guild_id, set)
-
-			if (!set.has(parsed.d.user_id)) set.add(parsed.d.user_id)
-		} else {
-			voiceStates.delete(parsed.d.user_id)
-			const existing = guildStatesIndex.get(parsed.d.guild_id)
-			existing?.delete(parsed.d.user_id)
-			if (existing?.size === 0) guildStatesIndex.delete(parsed.d.guild_id)
-		}
-
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
+		if (parsed.d.channel_id === null) sql.orm.delete("voice_states", { user_id: parsed.d.user_id, guild_id: parsed.d.guild_id })
+		else sql.orm.upsert("voice_states", { guild_id: parsed.d.guild_id, user_id: parsed.d.user_id, channel_id: parsed.d.channel_id || undefined }, { useBuffer: false })
 	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
 	else if (parsed.t === "INTERACTION_CREATE") {
 		if (parsed.d.type === 2) {
 			let commandHandled = false
-
 			if (commands.handle(parsed.d, snow)) {
 				commandHandled = true
-
-				const queue = queues.get(parsed.d.guild_id)
-				const author = parsed.d.user ?? parsed.d.member.user
-
-				if (queue?.listeners.has(author.id) && !queue.listenerCache.has(author.id)) {
-					queue.listenerCache.set(author.id, author)
-					sessions.filter(s => s.guild === queue.guildID).forEach(s => s.onListenersUpdate(queue.toJSON().members))
-				}
 			}
-
 			if (!commandHandled && !commandWorkers.length) return console.warn("No command workers to handle interaction")
 			if (!commandHandled) {
 				const worker = sharedUtils.arrayRandom(commandWorkers)

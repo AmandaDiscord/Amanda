@@ -2,7 +2,7 @@ import fs = require("fs")
 import path = require("path")
 
 import passthrough = require("../passthrough");
-const { server, sync, rootFolder, sql, confprovider, voiceStates } = passthrough
+const { server, sync, rootFolder, sql, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -82,9 +82,11 @@ server.get("/dash", async (res, req) => {
 
 	if (!res.continue) return
 
-	if (session) {
-		const user = voiceStates.get(session.user_id)
-		const html = await fs.promises.readFile(path.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
+	if (session && confprovider.config.db_enabled) {
+		const [user, html] = await Promise.all([
+			sql.orm.get("voice_states", { user_id: session.user_id }),
+			fs.promises.readFile(path.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
+		])
 
 		if (!res.continue) return
 
@@ -178,11 +180,11 @@ server.get("/channels/:channelID", async (res, req) => {
 			false,
 			[400, "NO_SESSION"]
 		).do(
-			() => {
-				const state = voiceStates.get(session!.user_id)
-				if (!state || state.channel_id !== channelID) return undefined
-				return state
-			},
+			() => confprovider.config.db_enabled
+				? sql.orm.get("voice_states", {
+					user_id: session!.user_id,
+					channel_id: channelID
+				}) : undefined,
 			v => !!v,
 			[400, "USER_NOT_IN_CHANNEL"]
 		)

@@ -2,7 +2,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import passthrough = require("../passthrough")
-const { snow, commands, sync, queues, sql, confprovider, voiceStates } = passthrough
+const { snow, commands, sync, queues, sql, confprovider } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
@@ -544,9 +544,12 @@ commands.assign([
 
 				let queue = queues.get(cmd.guild_id!) ?? null
 
-				const userVoiceState = voiceStates.get(cmd.author.id)
+				const userVoiceState = await sql.orm.get("voice_states", {
+					user_id: cmd.author.id,
+					guild_id: cmd.guild_id!
+				})
 
-				if (!userVoiceState || userVoiceState.guild_id !== cmd.guild_id) {
+				if (!userVoiceState) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
 					})

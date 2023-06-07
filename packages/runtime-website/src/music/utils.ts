@@ -15,7 +15,7 @@ import type { Player } from "lavacord"
 import type { TrackInfo } from "@lavalink/encoding"
 
 import passthrough = require("../passthrough")
-const { sync, confprovider, lavalink, snow, queues, voiceStates } = passthrough
+const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
 
 
 const selectTimeout = 1000 * 60
@@ -206,8 +206,6 @@ const common = {
 			const queueFile: typeof import("./queue") = sync.require("./queue")
 
 			const queue = new queueFile.Queue(cmd.guild_id!, channel)
-			queue.listeners.add(confprovider.config.client_id)
-			if (passthrough.clientUser) queue.listenerCache.set(passthrough.clientUser.id, passthrough.clientUser)
 
 			queue.lang = cmd.guild_locale ? sharedUtils.getLang(cmd.guild_locale) : lang
 			queue.interaction = cmd
@@ -256,9 +254,12 @@ const common = {
 		}> {
 			let queue = queues.get(cmd.guild_id!) ?? null
 
-			const userVoiceState = voiceStates.get(cmd.author.id)
+			const userVoiceState = await sql.orm.get("voice_states", {
+				user_id: cmd.author.id,
+				guild_id: cmd.guild_id!
+			})
 
-			if (!userVoiceState || userVoiceState.guild_id !== cmd.guild_id) {
+			if (!userVoiceState) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
 				})

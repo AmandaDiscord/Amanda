@@ -2,8 +2,6 @@
 
 import path = require("path")
 
-import type { APIUser } from "discord-api-types/v10"
-
 type Passthrough = {
 	server: import("uWebSockets.js").TemplatedApp
 	sync: import("heatsync")
@@ -11,16 +9,12 @@ type Passthrough = {
 	confprovider: import("@amanda/config")
 	sql: import("@amanda/sql")
 	commands: import("@amanda/commands").CommandManager<import("@amanda/shared-types").CommandManagerParams>
-	queues: Map<string, import("./music/queue").Queue>
+	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer
 	lavalink: import("lavacord").Manager
 	sessions: Array<import("./ws/public").Session>
 	commandWorkers: Array<import("./ws/internal").CommandWorker>
 	gatewayWorkers: { [cluster_id: string]: import("./ws/gateway").GatewayWorker }
-	voiceStates: Map<string, { user_id: string; channel_id: string; guild_id: string; user?: APIUser }>
-	guildStatesIndex: Map<string, Set<string>>
-	guildCount: number
-	clientUser: APIUser | undefined
 }
 
 export = {
@@ -30,8 +24,5 @@ export = {
 	// your guess is as good as mine
 	sessions: new Array(),
 	commandWorkers: new Array(),
-	gatewayWorkers: {},
-	voiceStates: new Map(),
-	guildStatesIndex: new Map(),
-	guildCount: 0
+	gatewayWorkers: {}
 } as Passthrough
