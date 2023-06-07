@@ -1,3 +1,5 @@
+import { BetterTimeout } from "@amanda/shared-utils"
+
 import type { QueryResult, QueryResultRow } from "pg"
 
 import type { AcceptablePrepared } from "./types"
@@ -10,7 +12,7 @@ interface Provider {
 
 type StatementBuffer = {
 	timeouts: {
-		insert: NodeJS.Timeout | null
+		insert: BetterTimeout | null
 	}
 	bufferValues: {
 		insert: Array<Record<string, unknown>>
@@ -77,17 +79,17 @@ export class Database<M extends Record<string, Model<any>>> {
 				const model = this.tables[table]
 				if (this.buffers[table as string].bufferValues.insert.length === model.options.bufferSize) {
 					const timeout = this.buffers[table as string].timeouts.insert
-					if (timeout) clearTimeout(timeout)
+					if (timeout) timeout.clear()
 					this.buffers[table as string].timeouts.insert = null
 					res = this._buildStatement(method, table, properties, { useBuffer: true })
 				} else {
 					this.buffers[table as string].bufferValues.insert.push(properties)
 					if (!this.buffers[table as string].timeouts.insert) {
-						this.buffers[table as string].timeouts.insert = setTimeout(() => {
+						this.buffers[table as string].timeouts.insert = new BetterTimeout().setCallback(() => {
 							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
 							this.provider.raw<R>(res2.statement, res2.prepared).then(r).catch(rej)
 							this.buffers[table as string].timeouts.insert = null
-						}, model.options.bufferTimeout)
+						}).setDelay(model.options.bufferTimeout).run()
 					}
 					return
 				}
@@ -141,6 +143,11 @@ export class Database<M extends Record<string, Model<any>>> {
 	): Promise<QueryResult<R> | null> {
 		const res = this._buildStatement("delete", table, where)
 		return this.provider.raw<R>(res.statement, res.prepared)
+	}
+
+	public triggerBufferWrite<T extends keyof M>(table: T) {
+		const timeout = this.buffers[table as string].timeouts.insert
+		timeout?.triggerNow()
 	}
 
 	private _buildStatement<T extends keyof M>(

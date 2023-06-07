@@ -47,6 +47,18 @@ const client = new Client(confprovider.config.current_token, {
 				}
 			}
 
+		} else if (packet.t === "GUILD_CREATE") {
+			for (const state of packet.d.voice_states ?? []) {
+				sql.orm.upsert("voice_states", {
+					guild_id: packet.d.id,
+					channel_id: state.channel_id,
+					user_id: state.user_id
+				}, { useBuffer: true })
+			}
+			sql.orm.triggerBufferWrite("voice_states")
+		} else if (packet.t === "GUILD_DELETE") {
+			if (packet.d.unavailable) return
+			sql.orm.delete("voice_states", { guild_id: packet.d.id })
 		}
 
 		webconnector.send(JSON.stringify(packet))
