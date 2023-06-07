@@ -24,7 +24,7 @@ export class GatewayWorker {
 }
 
 server.ws("/gateway", {
-	maxPayloadLength: Infinity,
+	maxPayloadLength: 1024 * 1024,
 
 	upgrade(res, req, context) {
 		const secWebSocketKey = req.getHeader("sec-websocket-key")
