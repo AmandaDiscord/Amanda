@@ -67,7 +67,7 @@ function addRanking(r: number | string, p: { ranking: string }) {
 }
 
 async function getAuthor(u: string, lang: Lang) {
-	const user = await sharedUtils.getUser(u, confprovider, sql, snow)
+	const user = await sharedUtils.getUser(u, snow)
 	if (user) {
 		let username = user.username || lang.GLOBAL.HEADER_UNKNOWN
 		if (username.length > 14) username = `${username.slice(0, 13)}…`
@@ -198,7 +198,6 @@ commands.assign([
 						])
 						, ["left", "right", "right", "right", "none"]
 						, 2000
-						, confprovider
 						, snow
 					)
 				} else if (optionInfo !== null) {
@@ -215,7 +214,7 @@ commands.assign([
 
 					const authorDetails: Array<string> = []
 
-					const user = await sharedUtils.getUser(playlistRow.author, confprovider, sql, snow)
+					const user = await sharedUtils.getUser(playlistRow.author, snow)
 
 					if (user) authorDetails.push(`${user.username}#${user.discriminator} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, true) + "?size=32")
 					else authorDetails.push(optionInfo)

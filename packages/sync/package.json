@@ -1,0 +1,12 @@
+{
+  "name": "@amanda/sync",
+  "version": "1.0.0",
+  "description": "A HeatSync provider for AmandaDiscord",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "scripts": {
+    "lint": "eslint . --ext .js"
+  },
+  "author": "PapiOphidian",
+  "license": "MIT"
+}

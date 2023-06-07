@@ -131,6 +131,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@amanda/sync@workspace:packages/sync":
+  version: 0.0.0-use.local
+  resolution: "@amanda/sync@workspace:packages/sync"
+  languageName: unknown
+  linkType: soft
+
 "@amanda/web-internal@1.0.0, @amanda/web-internal@workspace:packages/website-connect":
   version: 0.0.0-use.local
   resolution: "@amanda/web-internal@workspace:packages/website-connect"

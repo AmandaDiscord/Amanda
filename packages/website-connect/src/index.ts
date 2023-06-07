@@ -4,7 +4,7 @@ import { EventEmitter } from "events"
 
 import { WebSocket } from "ws"
 
-import type ConfigProvider = require("@amanda/config")
+import confprovider = require("@amanda/config")
 
 type BufferLike =
 	| string
@@ -28,7 +28,7 @@ class Connector extends EventEmitter {
 	private ws: WebSocket
 	private queue: Array<{ res: (() => void), data: BufferLike }> = []
 
-	public constructor(public confprovider: ConfigProvider, path: "/internal" | "/gateway") {
+	public constructor(path: "/internal" | "/gateway") {
 		super()
 
 		this._createWS(path)
@@ -41,10 +41,10 @@ class Connector extends EventEmitter {
 	}
 
 	private _createWS(path: "/internal" | "/gateway"): void {
-		this.ws = new WebSocket(`${this.confprovider.config.ipc_protocol}://${this.confprovider.config.ipc_bind}${path}`, {
+		this.ws = new WebSocket(`${confprovider.config.ipc_protocol}://${confprovider.config.ipc_bind}${path}`, {
 			headers: {
-				Authorization: this.confprovider.config.current_token,
-				"X-Cluster-Id": this.confprovider.config.cluster_id
+				Authorization: confprovider.config.current_token,
+				"X-Cluster-Id": confprovider.config.cluster_id
 			}
 		})
 

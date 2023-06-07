@@ -5,10 +5,10 @@ import util = require("util")
 import Lang = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
 import buttons = require("@amanda/buttons")
+import confprovider = require("@amanda/config")
+import sql = require("@amanda/sql")
 
 import type { APIUser } from "discord-api-types/v10"
-import type ConfigProvider = require("@amanda/config")
-import type SQLProvider = require("@amanda/sql")
 import type { ChatInputCommand } from "@amanda/commands"
 import type { SnowTransfer } from "snowtransfer"
 
@@ -488,7 +488,7 @@ export function substr(text: string, from: number, length?: number): string {
 	return text.repeat(Math.ceil(length / (from + text.length))).slice(from, from + length)
 }
 
-export async function getUser(id: string, confprovider: ConfigProvider, sql: SQLProvider, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
+export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
 		const cached = await sql.orm.get("users", { id: id })
@@ -522,7 +522,7 @@ export function displayAvatarURL(user: APIUser, dynamic?: boolean): string {
 	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
 }
 
-export function createPagination(cmd: ChatInputCommand, lang: Lang.Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, confprovider: ConfigProvider, snow: SnowTransfer): void {
+export function createPagination(cmd: ChatInputCommand, lang: Lang.Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
 	let alignedRows = tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(alignedRowsRegex, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)

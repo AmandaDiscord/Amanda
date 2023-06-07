@@ -1,13 +1,12 @@
 import "@amanda/logger"
 
-import Sync = require("heatsync")
 import uWS = require("uWebSockets.js")
 import { SnowTransfer } from "snowtransfer"
 import { Manager } from "lavacord"
 
-
-import ConfigProvider = require("@amanda/config")
-import SQLProvider = require("@amanda/sql")
+import sync = require("@amanda/sync")
+import confprovider = require("@amanda/config")
+import sql = require("@amanda/sql")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
@@ -17,9 +16,9 @@ import type { CommandManagerParams } from "@amanda/shared-types"
 import passthrough = require("./passthrough")
 
 passthrough.server = uWS.App()
-passthrough.sync = new Sync()
-passthrough.confprovider = new ConfigProvider(passthrough.sync)
-passthrough.sql = new SQLProvider(passthrough.confprovider)
+passthrough.sync = sync
+passthrough.confprovider = confprovider
+passthrough.sql = sql
 passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),

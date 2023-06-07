@@ -1,40 +1,39 @@
 import path = require("path")
 
-import type Sync = require("heatsync")
+import sync = require("@amanda/sync")
+
 import type Config = require("../config")
 
 class ConfigProvider {
-	public config: typeof Config
+	public static config: typeof Config
 
-	private changeCallbacks: Array<() => unknown> = []
+	public static changeCallbacks: Array<() => unknown> = []
 
-	public constructor(sync: Sync) {
-		let config: typeof Config
-		let realLoaded = false
-		try {
-			config = sync.require("../../../config")
-			realLoaded = true
-		} catch {
-			config = require("../../../config.example")
-		}
-		if (realLoaded) {
-			sync.events.on(path.join(__dirname, "../../../config.js"), () => {
-				for (const cb of this.changeCallbacks) cb()
-			})
-		}
-		this.config = config
+	public static addCallback(callback: () => unknown): ConfigProvider {
+		ConfigProvider.changeCallbacks.push(callback)
+		return ConfigProvider
 	}
 
-	public addCallback(callback: () => unknown): this {
-		this.changeCallbacks.push(callback)
-		return this
-	}
-
-	public removeCallback(callback: () => unknown): this {
-		const index = this.changeCallbacks.findIndex(c => c === callback)
-		if (index !== -1) this.changeCallbacks.splice(index, 1)
-		return this
+	public static removeCallback(callback: () => unknown): ConfigProvider {
+		const index = ConfigProvider.changeCallbacks.findIndex(c => c === callback)
+		if (index !== -1) ConfigProvider.changeCallbacks.splice(index, 1)
+		return ConfigProvider
 	}
 }
+
+let config: typeof Config
+let realLoaded = false
+try {
+	config = sync.require("../../../config")
+	realLoaded = true
+} catch {
+	config = require("../../../config.example")
+}
+if (realLoaded) {
+	sync.events.on(path.join(__dirname, "../../../config.js"), () => {
+		for (const cb of ConfigProvider.changeCallbacks) cb()
+	})
+}
+ConfigProvider.config = config
 
 export = ConfigProvider

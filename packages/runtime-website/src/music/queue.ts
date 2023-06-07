@@ -584,14 +584,14 @@ export class Queue {
 	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
 			const [clientUser, states] = await Promise.all([
-				sharedUtils.getUser(confprovider.config.client_id, confprovider, sql, snow),
+				sharedUtils.getUser(confprovider.config.client_id, snow),
 				sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
 			])
 
 			if (clientUser) this.listeners.set(clientUser.id, clientUser)
 
 			for (const state of states) {
-				const user = await sharedUtils.getUser(state.user_id, confprovider, sql, snow)
+				const user = await sharedUtils.getUser(state.user_id, snow)
 				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
 

@@ -3,7 +3,7 @@ import util = require("util")
 import { Pool } from "pg"
 import type { PoolClient, QueryResult, QueryResultRow } from "pg"
 
-import type ConfigProvider = require("@amanda/config")
+import confprovider = require("@amanda/config")
 
 import { Database, Model } from "./orm"
 
@@ -42,26 +42,21 @@ const models = {
 }
 
 class SQLProvider {
-	public pool: Pool | null = null
-	public poolClient: PoolClient | null = null
-	public orm: Database<typeof models>
+	public static pool: Pool | null = null
+	public static poolClient: PoolClient | null = null
+	public static orm = new Database(models, SQLProvider)
 
-	public constructor(public confprovider: ConfigProvider) {
-		this.orm = new Database(models, this)
-		confprovider.addCallback(this.onConfigChange.bind(this))
-	}
-
-	public async all<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<Array<T>> {
-		const result = await this.raw<T>(statement, prepared)
+	public static async all<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<Array<T>> {
+		const result = await SQLProvider.raw<T>(statement, prepared)
 		return result?.rows ?? []
 	}
 
-	public async get<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<T | null> {
-		const result = await this.raw<T>(statement, prepared)
+	public static async get<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<T | null> {
+		const result = await SQLProvider.raw<T>(statement, prepared)
 		return result?.rows?.[0] ?? null
 	}
 
-	public raw<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>, attempts = 2): Promise<QueryResult<T> | null> {
+	public static raw<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>, attempts = 2): Promise<QueryResult<T> | null> {
 		let prep: Array<AcceptablePrepared>
 
 		if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
@@ -73,29 +68,29 @@ class SQLProvider {
 			}
 
 			const query = { text: statement, values: prep }
-			if (!this.poolClient || !this.confprovider.config.db_enabled) return resolve(null)
-			this.poolClient.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
+			if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return resolve(null)
+			SQLProvider.poolClient.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
 				console.error(err)
 				attempts--
 				console.warn(`${statement}\n${String(prepared)}`)
-				if (attempts) this.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
+				if (attempts) SQLProvider.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
 				else reject(err)
 			})
 		})
 	}
 
-	private onConfigChange(): void {
-		if (this.confprovider.config.db_enabled && !this.pool) this.connect().catch(console.error)
-		else if (!this.confprovider.config.db_enabled && this.pool) this.disconnect().catch(console.error)
+	public static onConfigChange(): void {
+		if (confprovider.config.db_enabled && !SQLProvider.pool) SQLProvider.connect().catch(console.error)
+		else if (!confprovider.config.db_enabled && SQLProvider.pool) SQLProvider.disconnect().catch(console.error)
 	}
 
-	public async connect(): Promise<void> {
-		if (!this.confprovider.config.db_enabled) return
+	public static async connect(): Promise<void> {
+		if (!confprovider.config.db_enabled) return
 
 		const pool = new Pool({
-			host: this.confprovider.config.sql_domain,
-			user: this.confprovider.config.sql_user,
-			password: this.confprovider.config.sql_password,
+			host: confprovider.config.sql_domain,
+			user: confprovider.config.sql_user,
+			password: confprovider.config.sql_password,
 			database: "main",
 			max: 2
 		})
@@ -111,18 +106,20 @@ class SQLProvider {
 		}
 
 		console.log("Connected to database")
-		this.pool = pool
-		this.poolClient = db
+		SQLProvider.pool = pool
+		SQLProvider.poolClient = db
 	}
 
-	public async disconnect(): Promise<void> {
-		if (!this.pool) return
-		await this.pool.end()
+	public static async disconnect(): Promise<void> {
+		if (!SQLProvider.pool) return
+		await SQLProvider.pool.end()
 			.then(() => console.warn("Database disabled"))
 			.catch(console.error)
-		this.pool = null
-		this.poolClient = null
+		SQLProvider.pool = null
+		SQLProvider.poolClient = null
 	}
 }
+
+confprovider.addCallback(SQLProvider.onConfigChange.bind(SQLProvider))
 
 export = SQLProvider

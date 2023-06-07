@@ -1,10 +1,10 @@
 import "@amanda/logger"
 
-import Sync = require("heatsync")
 import { SnowTransfer } from "snowtransfer"
 
-import ConfigProvider = require("@amanda/config")
-import SQLProvider = require("@amanda/sql")
+import sync = require("@amanda/sync")
+import confprovider = require("@amanda/config")
+import sql = require("@amanda/sql")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
@@ -16,24 +16,22 @@ import passthrough = require("./passthrough")
 
 import Amanda = require("./Amanda")
 
-passthrough.sync = new Sync()
-passthrough.confprovider = new ConfigProvider(passthrough.sync)
-passthrough.sql = new SQLProvider(passthrough.confprovider)
+passthrough.sync = sync
+passthrough.confprovider = confprovider
+passthrough.sql = sql
 passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 ], console.error)
 passthrough.client = new Amanda(new SnowTransfer(passthrough.confprovider.config.current_token))
-passthrough.webconnector = new WebsiteConnector(passthrough.confprovider, "/internal")
+passthrough.webconnector = new WebsiteConnector("/internal")
 
 ;(async () => {
 	await passthrough.sql.connect().catch(console.error)
 
 	const user = await sharedUtils.getUser(
 		passthrough.confprovider.config.client_id,
-		passthrough.confprovider,
-		passthrough.sql,
 		passthrough.client.snow)
 
 	if (user) passthrough.client.user = user

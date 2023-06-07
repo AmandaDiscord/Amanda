@@ -1,15 +1,13 @@
 import "@amanda/logger"
 
 import { Client } from "cloudstorm"
-import Sync = require("heatsync")
 
-import ConfigProvider = require("@amanda/config")
+import sync = require("@amanda/sync")
+import confprovider = require("@amanda/config")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 
-const sync = new Sync()
-const confprovider = new ConfigProvider(sync)
-const webconnector = new WebsiteConnector(confprovider, "/gateway")
+const webconnector = new WebsiteConnector("/gateway")
 const client = new Client(confprovider.config.current_token, {
 	shards: confprovider.config.shards,
 	totalShards: confprovider.config.total_shards,
@@ -25,7 +23,16 @@ const client = new Client(confprovider.config.current_token, {
 	void new REPLProvider({ client, webconnector, sync, confprovider })
 	client.on("debug", console.log)
 	client.on("error", console.error)
-	client.on("event", packet => webconnector.send(JSON.stringify(packet)))
+	client.on("event", packet => {
+		if (packet.t === "VOICE_STATE_UPDATE") {
+			if (packet.d.guild_id) {
+				if (packet.d.channel_id === null) sql.orm.delete("voice_states", { user_id: parsed.d.user_id, guild_id: parsed.d.guild_id })
+				else sql.orm.upsert("voice_states", { guild_id: parsed.d.guild_id, user_id: parsed.d.user_id, channel_id: parsed.d.channel_id || undefined }, { useBuffer: false })
+			}
+		}
+
+		webconnector.send(JSON.stringify(packet))
+	})
 	webconnector.send(JSON.stringify({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards })).catch(console.error)
 
 	await client.connect()

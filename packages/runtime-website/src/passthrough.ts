@@ -6,8 +6,8 @@ type Passthrough = {
 	server: import("uWebSockets.js").TemplatedApp
 	sync: import("heatsync")
 	rootFolder: string
-	confprovider: import("@amanda/config")
-	sql: import("@amanda/sql")
+	confprovider: typeof import("@amanda/config")
+	sql: typeof import("@amanda/sql")
 	commands: import("@amanda/commands").CommandManager<import("@amanda/shared-types").CommandManagerParams>
 	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer
