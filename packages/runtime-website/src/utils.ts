@@ -318,8 +318,6 @@ export async function onGatewayMessage(
 		if (!parsed.d.guild_id) return
 		lavalink.voiceStateUpdate(parsed.d)
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
-		if (parsed.d.channel_id === null) sql.orm.delete("voice_states", { user_id: parsed.d.user_id, guild_id: parsed.d.guild_id })
-		else sql.orm.upsert("voice_states", { guild_id: parsed.d.guild_id, user_id: parsed.d.user_id, channel_id: parsed.d.channel_id || undefined }, { useBuffer: false })
 	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
 	else if (parsed.t === "INTERACTION_CREATE") {
 		if (parsed.d.type === 2) {
