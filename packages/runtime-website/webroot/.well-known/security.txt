@@ -1,0 +1,5 @@
+# If you would like to report a security issue
+# you may report it either to my Discord (PapiOphidian#0110) or via email
+Contact: mailto:amandevsdiscord@gmail.com
+Expires: 2025-01-01T07:00:00.000Z
+Preferred-Languages: en
