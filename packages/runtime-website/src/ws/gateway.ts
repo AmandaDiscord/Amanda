@@ -24,6 +24,8 @@ export class GatewayWorker {
 }
 
 server.ws("/gateway", {
+	maxPayloadLength: Infinity,
+
 	upgrade(res, req, context) {
 		const secWebSocketKey = req.getHeader("sec-websocket-key")
 		const secWebSocketProtocol = req.getHeader("sec-websocket-protocol")
@@ -44,7 +46,8 @@ server.ws("/gateway", {
 		const worker = new GatewayWorker(ws, data.clusterID)
 		data.worker = worker
 	},
-	close(ws) {
+	close(ws, code, message) {
+		console.log(code, Buffer.from(message).toString("utf8"))
 		ws.getUserData().worker.onClose()
 	},
 	message(ws, message, isBinary) {

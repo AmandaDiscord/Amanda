@@ -21,6 +21,8 @@ export class CommandWorker {
 }
 
 server.ws("/internal", {
+	maxPayloadLength: Infinity,
+
 	upgrade(res, req, context) {
 		const secWebSocketKey = req.getHeader("sec-websocket-key")
 		const secWebSocketProtocol = req.getHeader("sec-websocket-protocol")
@@ -41,7 +43,8 @@ server.ws("/internal", {
 		const worker = new CommandWorker(ws, data.clusterID)
 		data.worker = worker
 	},
-	close(ws) {
+	close(ws, code, message) {
+		console.log(code, Buffer.from(message).toString("utf8"))
 		ws.getUserData().worker.onClose()
 	}
 } as WebSocketBehavior<{ worker: CommandWorker, clusterID: string }>)
