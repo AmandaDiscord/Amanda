@@ -6,7 +6,6 @@ import Lang = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
 import buttons = require("@amanda/buttons")
 import confprovider = require("@amanda/config")
-import sql = require("@amanda/sql")
 
 import type { APIUser } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
@@ -489,6 +488,7 @@ export function substr(text: string, from: number, length?: number): string {
 }
 
 export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
+	const sql: typeof import("@amanda/sql") = require("@amanda/sql")
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
 		const cached = await sql.orm.get("users", { id: id })
