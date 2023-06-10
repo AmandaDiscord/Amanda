@@ -105,7 +105,10 @@ const client = new Client(confprovider.config.current_token, {
 			? Buffer.concat(data)
 			: Buffer.from(data)
 
-		const parsed = JSON.parse(single.toString())
+		const str = single.toString()
+		console.log(str)
+
+		const parsed = JSON.parse(str)
 
 		if (parsed.t === "SEND_MESSAGE" && parsed.d && typeof parsed.d.shard_id === "number") {
 			const shard = Object.entries(client.shardManager.shards).find(e => e[0] == parsed.d.shard_id)?.[1]

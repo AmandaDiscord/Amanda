@@ -6,10 +6,17 @@ const outDir = path.join(__dirname)
 const en_us = require("./localizations/en-us.json")
 
 const langs = fs.readdirSync(path.join(__dirname, "./localizations"))
+const langNames = langs.map(i => i.replace(/\.json$/, "").replace("-", "_"))
 
-const totalString = `${langs.map(i => `export const ${i.replace(/\.json$/, "").replace("-", "_")}: Lang`).join("\n")}`
+const totalDTSString = langNames.map(i => `export const ${i}: Lang`).join("\n")
 	+ `\n\nexport type Lang = ${JSON.stringify(en_us, null, "\t")}\n`
 
-fs.writeFileSync(`${outDir}/index.d.ts`, totalString, { encoding: "utf8" })
+fs.writeFileSync(`${outDir}/index.d.ts`, totalDTSString, { encoding: "utf8" })
+
+const totalIndexString = "module.exports = {\n"
+	+ langNames.map((i, ind) => `\t${i}: require("./localizations/${langs[ind]}")`).join(",\n")
+	+ "\n}\n"
+
+fs.writeFileSync(`${outDir}/index.js`, totalIndexString, { encoding: "utf8" })
 
 console.log("Generated lang docs")
