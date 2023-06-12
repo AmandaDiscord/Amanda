@@ -14,7 +14,11 @@ export class GatewayWorker {
 	}
 
 	public send(data: object): void {
-		this.ws.send(JSON.stringify(data))
+		const str = JSON.stringify(data)
+		const result = this.ws.send(str)
+		if (result === 2) console.error("message dropped due to backpressure limit")
+		else if (result === 0) console.warn("message was added to a queue that will drain over time due to backpressure")
+		else if (result === 1) console.log("[GW =>]", str)
 	}
 
 	public onClose(): void {

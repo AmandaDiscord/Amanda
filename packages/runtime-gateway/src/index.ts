@@ -25,6 +25,10 @@ const client = new Client(confprovider.config.current_token, {
 })
 
 ;(async () => {
+	webconnector.on("open", () => {
+		webconnector.send(JSON.stringify({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards })).catch(console.error)
+	})
+
 	await sql.connect()
 	void new REPLProvider({ client, webconnector, confprovider, sql })
 	client.on("debug", console.log)
@@ -63,8 +67,6 @@ const client = new Client(confprovider.config.current_token, {
 
 		webconnector.send(JSON.stringify(packet))
 	})
-
-	webconnector.send(JSON.stringify({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards })).catch(console.error)
 
 	let stats: fs.Stats | undefined = undefined
 	try {
