@@ -12,6 +12,11 @@ import REPLProvider = require("@amanda/repl")
 
 const toSessionsJSON = path.join(__dirname, "../sessions.json")
 
+let shardInfoChanged = false
+let alreadyWrote = false
+const _oldShards = confprovider.config.shards
+const _oldTotalShards = confprovider.config.total_shards
+
 const webconnector = new WebsiteConnector("/gateway")
 const client = new Client(confprovider.config.current_token, {
 	shards: confprovider.config.shards,
@@ -22,6 +27,11 @@ const client = new Client(confprovider.config.current_token, {
 		compress: false,
 		encoding: "json"
 	}
+})
+
+confprovider.addCallback(() => {
+	if (!confprovider.config.shards.every((item, index) => _oldShards[index] === item)) shardInfoChanged = true
+	if (confprovider.config.total_shards !== _oldTotalShards) shardInfoChanged = true
 })
 
 ;(async () => {
@@ -125,6 +135,18 @@ const client = new Client(confprovider.config.current_token, {
 process.stdin.resume()
 
 function exitHandler(...params: Array<unknown>) {
+	if (shardInfoChanged) {
+		try {
+			fs.unlinkSync(toSessionsJSON)
+		} catch {
+			void 0
+		}
+		console.warn(...params)
+		return
+	}
+	if (alreadyWrote) return
+	alreadyWrote = true
+
 	console.warn(...params)
 	const data = {}
 	for (const shard of Object.values(client.shardManager.shards)) {
