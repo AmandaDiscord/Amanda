@@ -39,8 +39,14 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 	})
 
 	passthrough.confprovider.config.lavalink_nodes.push(...lavalinkNodes)
+	const oldLLNodes = passthrough.confprovider.config.lavalink_nodes
 
-	passthrough.lavalink = new Manager(passthrough.confprovider.config.lavalink_nodes.filter(n => n.enabled), {
+	passthrough.confprovider.addCallback(() => {
+		passthrough.confprovider.config.lavalink_nodes.length = 0
+		passthrough.confprovider.config.lavalink_nodes.push(...oldLLNodes)
+	})
+
+	passthrough.lavalink = new Manager(oldLLNodes.filter(n => n.enabled), {
 		user: passthrough.confprovider.config.client_id,
 		send: packet => {
 			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
