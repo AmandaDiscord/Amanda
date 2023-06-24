@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "node ../../scripts/delete.js dist && tsup",
     "lint": "eslint . --ext .ts"
   },
   "author": "PapiOphidian",
