@@ -22,7 +22,7 @@
     "lavacord": "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a",
     "marked": "5.1.0",
     "mime-types": "2.1.35",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.25.0"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.30.0"
   },
   "devDependencies": {
     "@types/marked": "5.0.0",

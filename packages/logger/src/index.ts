@@ -1,4 +1,5 @@
 import { BackTracker } from "backtracker"
+import util = require("util")
 
 const oldLog = console.log
 const oldWarn = console.warn
@@ -35,3 +36,8 @@ function post(type: "info" | "warn" | "error", ...data: Array<unknown>): void {
 console.log = post.bind(null, "info")
 console.warn = post.bind(null, "warn")
 console.error = post.bind(null, "error")
+
+const errorHandler = (reason: unknown) => post("error", util.inspect(reason, false, 5, true))
+
+process.on("unhandledRejection", errorHandler)
+process.on("uncaughtException", errorHandler)
