@@ -1,3 +1,5 @@
+import util = require("util")
+
 import type {
 	APIUser,
 	APIInteractionGuildMember,
@@ -18,6 +20,7 @@ import type {
 
 import type { SnowTransfer } from "snowtransfer"
 import { getLang } from "@amanda/shared-utils"
+import confprovider = require("@amanda/config")
 
 export class ChatInputCommand {
 	public author: APIUser
@@ -147,6 +150,38 @@ export class CommandManager<Params extends Array<unknown>> {
 				if (snow) {
 					const userLang = getLang(command.locale)
 					snow.interaction.createFollowupMessage(command.application_id, command.token, { content: userLang.GLOBAL.COMMAND_ERROR }).catch(() => void 0)
+					if (confprovider.config.error_log_channel_id?.length) {
+						const user = (command.member?.user ?? command.user!)
+						const userString = user.discriminator === "0" || !user.discriminator
+							? user.username
+							: `${user.username}#${user.discriminator}`
+
+						const undef = "undefined"
+						const details = [
+							["Tree", confprovider.config.cluster_id],
+							["Guild ID", command.guild_id ?? undef],
+							["Text Channel", `${command.channel.name ?? undef} (${command.channel.id})`],
+							["User ID", user.id],
+							["User Tag", userString]
+						]
+						const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
+						const detailsString = details.map(row =>
+							`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+						).join("\n")
+
+						snow.channel.createMessage(confprovider.config.error_log_channel_id, {
+							embeds: [
+								{
+									color: 0xdd2d2d,
+									title: "Command error occurred.",
+									fields: [
+										{ name: "Details", value: detailsString },
+										{ name: "Exception", value: util.inspect(e, false, 5, false) }
+									]
+								}
+							]
+						})
+					}
 				}
 				this.errorHandler?.(e)
 			}

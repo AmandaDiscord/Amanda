@@ -105,7 +105,7 @@ const common = {
 				["User", userString],
 				["User ID", cmd.author.id],
 				["Guild ID", cmd.guild_id ?? undef],
-				["Text channel", cmd.channel.id],
+				["Text Channel", cmd.channel.id],
 				["Input", resource]
 			]
 

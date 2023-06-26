@@ -517,11 +517,11 @@ export class Queue {
 			const details = [
 				["Tree", confprovider.config.cluster_id],
 				["Guild ID", this.interaction?.guild_id ?? undef],
-				["Text channel", this.interaction?.channel.id ?? undef],
-				["Voice channel", this.voiceChannelID || undef],
+				["Text Channel", this.interaction?.channel.id ?? undef],
+				["Voice Channel", this.voiceChannelID || undef],
 				["Using Invidious", String(node?.search_with_invidious ? true : false)],
-				["Invidious origin", `\`${node?.invidious_origin ?? "NONE"}\``],
-				["Queue node", this.node ?? "UNNAMED"]
+				["Invidious Origin", `\`${node?.invidious_origin ?? "NONE"}\``],
+				["Queue Node", this.node ?? "UNNAMED"]
 			]
 			if (track) {
 				const userString = track.requester.discriminator === "0" || !track.requester.discriminator
@@ -531,8 +531,8 @@ export class Queue {
 				details.push(...[
 					["Track", track.id],
 					["Input", track.input],
-					["Requester id", track.requester.id],
-					["Requester tag", userString]
+					["Requester ID", track.requester.id],
+					["Requester Tag", userString]
 				])
 			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
