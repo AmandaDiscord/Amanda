@@ -323,7 +323,7 @@
 		"description": "Parar la lista de reproducción"
 	},
 	"queue": {
-		"name": "lista",
+		"name": "queue",
 		"description": "Mostrar la lista para realizar acciones",
 		"options": [
 			{
