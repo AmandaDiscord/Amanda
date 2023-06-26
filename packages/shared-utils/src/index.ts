@@ -2,14 +2,14 @@
 
 import util = require("util")
 
-import Lang = require("@amanda/lang")
+import language = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
 import buttons = require("@amanda/buttons")
 import confprovider = require("@amanda/config")
 
 import type { APIUser } from "discord-api-types/v10"
-import type { ChatInputCommand } from "@amanda/commands"
 import type { SnowTransfer } from "snowtransfer"
+import type { Lang } from "@amanda/lang"
 
 const commaRegex = /,/g
 const spaceRegex = / /g
@@ -467,9 +467,9 @@ export function prettySeconds(seconds: number): string {
 	return output.join(":")
 }
 
-export function getLang(id: string): Lang.Lang {
+export function getLang(id: string): Lang {
 	const code = id.toLowerCase().replace(dashRegex, "_")
-	return Lang[code] || Lang.en_us
+	return language[code] || language.en_us
 }
 
 // TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability
@@ -488,7 +488,7 @@ export function substr(text: string, from: number, length?: number): string {
 }
 
 export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
-	const sql: typeof import("@amanda/sql") = require("@amanda/sql")
+	const sql: typeof import("@amanda/sql/src/index") = require("@amanda/sql")
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
 		const cached = await sql.orm.get("users", { id: id })
@@ -522,7 +522,7 @@ export function displayAvatarURL(user: APIUser, dynamic?: boolean): string {
 	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
 }
 
-export function createPagination(cmd: ChatInputCommand, lang: Lang.Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
+export function createPagination(cmd: import("@amanda/commands/src/index").ChatInputCommand, lang: Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
 	let alignedRows = tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(alignedRowsRegex, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)

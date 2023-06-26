@@ -5,8 +5,12 @@
 			"dependsOn": [],
 			"outputs": []
 		},
+		"clean": {
+			"dependsOn": [],
+			"outputs": []
+		},
 		"build": {
-			"dependsOn": ["lint"],
+			"dependsOn": ["clean", "lint"],
 			"outputs": []
 		},
 

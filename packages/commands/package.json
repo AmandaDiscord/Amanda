@@ -5,9 +5,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "node ../../scripts/delete.js dist && tsc -p .",
+    "clean": "node ../../scripts/delete.js dist",
+    "build": "tsc -p .",
     "lint": "eslint . --ext .ts"
   },
   "author": "PapiOphidian",
-  "license": "SEE LICENSE IN LICENSE"
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "@amanda/shared-utils": "1.0.0"
+  }
 }

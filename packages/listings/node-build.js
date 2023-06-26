@@ -2,7 +2,7 @@ const fs = require("fs")
 const path = require("path")
 const sass = require("node-sass")
 
-const outputDir = "build"
+const outputDir = "dist"
 const commonDir = "common"
 
 const mdDir = `${commonDir}/template.md`

@@ -9,6 +9,9 @@ if (!toObject) {
 
 const abs = path.join(process.cwd(), toObject)
 
-fs.rmSync(abs, { recursive: true })
-
-console.log(`Removed ${abs}`)
+try {
+	fs.rmSync(abs, { recursive: true })
+	console.log(`Removed ${abs}`)
+} catch {
+	console.warn(`${toObject} already didn't exist`)
+}
