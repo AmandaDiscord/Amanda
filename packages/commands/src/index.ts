@@ -17,6 +17,7 @@ import type {
 } from "discord-api-types/v10"
 
 import type { SnowTransfer } from "snowtransfer"
+import { getLang } from "@amanda/shared-utils"
 
 export class ChatInputCommand {
 	public author: APIUser
@@ -143,6 +144,10 @@ export class CommandManager<Params extends Array<unknown>> {
 				if (snow) await snow.interaction.createInteractionResponse(command.id, command.token, { type: 5 })
 				returnValue = this.commands.get(command.data.name)!.process(...params)
 			} catch (e) {
+				if (snow) {
+					const userLang = getLang(command.locale)
+					snow.interaction.createFollowupMessage(command.application_id, command.token, { content: userLang.GLOBAL.COMMAND_ERROR }).catch(() => void 0)
+				}
 				this.errorHandler?.(e)
 			}
 			if (returnValue instanceof Promise) returnValue.catch(reason => this.errorHandler?.(reason))

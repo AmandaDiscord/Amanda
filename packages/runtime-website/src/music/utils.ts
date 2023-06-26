@@ -89,7 +89,7 @@ const common = {
 
 		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 		try {
-			tracks = await common.loadtracks(resource, node)
+			tracks = await common.loadtracks(resource, lang, node)
 		} catch (er) {
 			const e: LoadTracksError = er
 			const reportTarget = confprovider.config.error_log_channel_id
@@ -189,7 +189,7 @@ const common = {
 		]
 	},
 
-	async loadtracks(input: string, nodeID?: string): Promise<TrackLoadingResult> {
+	async loadtracks(input: string, lang: Lang, nodeID?: string): Promise<TrackLoadingResult> {
 		const node = nodeID
 			? common.nodes.byID(nodeID) ?? common.nodes.byIdeal() ?? common.nodes.random()
 			: common.nodes.byIdeal() ?? common.nodes.random()
@@ -200,7 +200,7 @@ const common = {
 		if (!startsWithHTTP.test(input) && !searchShortRegex.test(input)) input = `${confprovider.config.lavalink_default_search_prefix}${input}`
 
 		const data = await Rest.load(llnode, input)
-		if (data.exception) throw new LoadTracksError(data.exception.message ?? "There was an exception somewhere", node.id)
+		if (data.exception) throw new LoadTracksError(data.exception.message ?? lang.GLOBAL.UNKNOWN_TRACK_EXCEPTION, node.id)
 
 		return data
 	},

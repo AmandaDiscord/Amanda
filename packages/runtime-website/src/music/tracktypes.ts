@@ -257,7 +257,7 @@ export class RequiresSearchTrack extends Track {
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
 			try {
-				tracks = await common.loadtracks(this.searchString, this.queue?.node)
+				tracks = await common.loadtracks(this.searchString, this.lang, this.queue?.node)
 			} catch (e) {
 				this.error = e.message
 				return
@@ -317,7 +317,7 @@ export class ExternalTrack extends Track {
 		if (this.track !== "!") return
 		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"] | undefined = undefined
 		try {
-			const data = await common.loadtracks(this.uri!, this.queue?.node)
+			const data = await common.loadtracks(this.uri!, this.lang, this.queue?.node)
 			info = data.tracks
 		} catch (e) {
 			this.error = e

@@ -4,82 +4,72 @@
 		"GUILD_ONLY": "Solo puedes usar este comando en un servidor.",
 		"MUSIC_INVALID_ACTION": "%username, esa no es una acción válida. Si quieres escuchar algo, ¡Intenta usar `%prefixplay track:<song>`.\nUsa `%prefixhelp category:audio` y `%prefixhelp command:playlists` para ver que otras cosas puedes hacer!",
 		"ONE_ACTION": "Solo puedes hacer una acción al mismo tiempo.",
-		"NOTHING_PLAYING": "%username, no hay nada reproduciéndose.",
-		"MUSIC_SEE_OTHER": "La sesión de música actual está en %channel. ¡Ve a mirar que cosas se está reproduciendo!",
+		"NOTHING_PLAYING": "%username, no hay nada reproduciéndose actualmente.",
+		"MUSIC_SEE_OTHER": "La sesión de música actual está en %channel. ¡Ve a mirar que canciones se están reproduciendo!",
 		"VC_REQUIRED": "%username, tienes que unirte a un canal de voz para hacer eso.",
 		"NOW_PLAYING": "Reproduciendo ahora: %song",
 		"VC_NOT_JOINABLE": "%username, No tengo permisos para unirme a tu canal de voz.",
 		"NO_RESULTS": "Sin resultados.",
-		"QUEUE_STOPPED": "Fila detenida por %username.",
+		"QUEUE_STOPPED": "Lista de reproducción detenida por %username.",
 		"LOOP_ON": "Bucle activado.",
 		"LOOP_OFF": "Bucle desactivado.",
-		"NO_LYRICS": "Hubo un error buscando la letra o no simplemente no existe.",
-		"QUEUE_PAUSED": "La fila ha sido pausada.",
-		"QUEUE_UNPAUSED": "La fila ha sido despauseada.",
+		"NO_LYRICS": "Hubo un error buscando la letra o simplemente no existe",
+		"QUEUE_PAUSED": "La lista de reproducción ha sido pausada.",
+		"QUEUE_UNPAUSED": "La lista de reproducción ha sido reanudada.",
 		"TOTAL_LENGTH": "Duración total: %length",
-		"QUEUE_FOR": "Fila de este servidor",
-		"TOO_MANY_SKIPS": "¡No puedes saltar más canciones de las que existen en la fila!",
-		"SKIPPED_ALL": "Todas las canciones de la fila han sido saltadas y la fila ha sido destruida.",
+		"QUEUE_FOR": "Lista de reproducción de este servidor",
+		"TOO_MANY_SKIPS": "¡No puedes saltar más canciones de las que existen en la lista de reproducción!",
+		"SKIPPED_ALL": "Todas las canciones en espera han sido saltadas y la lista de reproducción ha sido destruida.",
 		"SKIPPED_AMOUNT": "%amount canciones saltadas.",
-		"SHUFFLED": "La fila ha sido mezclada.",
+		"SHUFFLED": "La lista de reproducción ha sido mezclada.",
 		"TOKENS_DELETED": "Todos tus tokens han sido eliminados. Usa `%prefixmusictoken action:new` para generar uno nuevo.",
 		"TOKENS_NEW": "Tu token existente ha sido eliminado, y uno nuevo ha sido creado.\nNo compartas este token con nadie. Si lo compartes accidentalmente, puedes usar `%prefixmusictoken action:delete` para borrarlo y mantenerte a salvo.\nAhora puedes ingresar a %website",
-		"TOKENS_PREVIOUS": "Aquí está el token que has generado anteriormente:\nPuedes usar `%prefixmusictoken action:delete` para borrarlo, y `%prefixmusictoken action:new` para regenerarlo.",
+		"TOKENS_PREVIOUS": "Aquí está el token que has generado anteriormente:\nPuedes usar `%prefixmusictoken action:delete` para eliminarlo, y `%prefixmusictoken action:new` para crear uno nuevo.",
 		"TOKENS_NONE": "Actualmente no tienes ningún token. Usa `%prefixmusictoken action:new` para generar uno nuevo.",
 		"HEADER_UNKNOWN": "Desconocido",
-		"HEADER_PLAYLIST": "Playlist",
+		"HEADER_PLAYLIST": "Lista de reproducción",
 		"HEADER_SONGS": "Pistas",
 		"HEADER_LENGTH": "Duración",
-		"HEADER_PLAY_COUNT": "Vistas",
+		"HEADER_PLAY_COUNT": "Reproducciones",
 		"HEADER_AUTHOR": "Autor",
-		"EVERYONE_LEFT": "Todos se fueron, al igual que yo.",
-		"NEWER_NOW_PLAYING": "Hay un nuevo mensaje donde dice que estoy reproduciendo actualmente",
+		"EVERYONE_LEFT": "Todos se fueron, así que yo también me iré.",
+		"NEWER_NOW_PLAYING": "Existe un nuevo mensaje donde dice lo que estoy reproduciendo actualmente",
 		"SONG_ERROR_EXCLAIMATION": "El identificador interno de la canción era el símbolo `!`\nEsto es un bug.",
 		"SONG_ERROR_NULL": "El identificador interno de la canción era `null` o `undefined`\nEsto es un bug.",
-		"QUEUE_ENDED": "Parece que esta fila terminó.",
-		"SONG_STUCK": "La canción se atoró mientras cargaba.",
-		"UNKNOWN_TRACK_EXCEPTION": "Hubo una excepción cuando trataba de reproducir esa pista. Eso es todo lo que sé.",
+		"QUEUE_ENDED": "Parece que esta lista de reproducción terminó.",
+		"SONG_STUCK": "La canción se ha trabado mientras cargaba.",
+		"UNKNOWN_TRACK_EXCEPTION": "Ha ocurrido un error cuando trataba de reproducir esa pista. Eso es todo lo que sé.",
 		"NO_USERS_IN_VC": "No hay nadie más en mi canal de voz. Dejaré de reproducir música en %time si nadie se vuelve a unir.",
 		"SONG_NOT_PLAYABLE": "No pude reproducir esta canción",
 		"SONG_NOT_OBJECT": "La canción no es un objeto %song",
-		"ERROR_OCCURRED": "Encontramos un problema",
-		"TOO_MANY_ERRORS": "¡Muchos errores!",
+		"ERROR_OCCURRED": "Hemos incurrido en un problema",
+		"TOO_MANY_ERRORS": "¡Se han dado muchos errores!",
 		"ERRORS_SUPPRESSED": "Errores posteriores de esta fila serán silenciados.\nSi otra canción falla, será saltada sin aviso.\nPara reportar un bug, únete a nuestro servidor: https://discord.gg/YMkZDsK",
 		"HEADER_PAUSED": "PAUSADO",
 		"MISSING_TRACK": "Pista faltante para %id",
-		"INVIDIOUS_NO_DATA": "Invidious no regresó datos válidos\n%api\n%link\n%yt",
 		"HEADER_LIVE": "EN VIVO",
 		"CANNOT_PAUSE_LIVE": "No puedes pausar una reproducción en vivo.",
 		"SONG_INFO_FETCH_FAIL": "Desafortunadamente, no pudimos recuperar información sobre la canción actual.",
-		"HEADER_DETAILS": "Detalles",
-		"HEADER_EPISODE": "Episodios",
-		"HEADER_SHOW": "Show",
-		"HEADER_GENRE": "Tema",
-		"HEADER_STATION": "Estación",
-		"HEADER_SCHEDULE": "Horario",
-		"HEADER_TRACK_LIST": "Lista de pistas",
-		"UNKNOWN_TRACK": "Pista desconocida",
+		"UNKNOWN_TRACK": "Canción desconocida",
 		"HEADER_LOADING": "CARGANDO",
 		"HEADER_SONG_SELECTION": "Selección de canciones",
 		"SONG_SELECTION_FOOTER": "Escoge una de las opciones abajo en el menú de selección para reproducir. Expira dentro de %timeout.",
 		"IMAGE_FETCH_FAILED": "Hubo un error al conseguir la imagen.",
-		"HEADER_IMAGE_ERROR": "Oh oh.",
-		"NEKOS_LIFE_OFFLINE": "Parece que la API de nekos.life no se encuentra disponible.\nNo podemos conseguir nuevas imagenes en este momento.\nToma una chica gato durmiendo mientras esperamos a que esté disponible.",
 		"INTERACTION_RESPONSE_1": "Eso no es para nada raro...",
-		"INTERACTION_RESPONSE_2": "P-Pero? Por qué?",
+		"INTERACTION_RESPONSE_2": "Q-Qué? Por qué?",
 		"INTERACTION_RESPONSE_3": "Me parece extraño que hayas intentado hacer eso...",
 		"INTERACTION_RESPONSE_4": "Bien entonces...",
 		"INTERACTION_RESPONSE_5": "No estoy segura de entender...",
 		"INTERACTION_RESPONSE_6": "Vamos... No te hagas ver como un idiota...",
-		"INTERACTION_RESPONSE_7": "Por qué intentar?",
+		"INTERACTION_RESPONSE_7": "Por qué siquiera intentar?",
 		"INTERACTION_RESPONSE_8": "No estoy segura de entenderte...",
-		"INTERACTION_RESPONSE_9": "Eres muy raro...",
+		"INTERACTION_RESPONSE_9": "Eres tan raro...",
 		"CANNOT_SELF_SHIP": "%username, no puedes shipear a alguien con uno mismo, tonto",
 		"SHIP_ALREADY_COUPLE_SELF": "No creo que tenga que calificar a ti y a %other si ustedes dos ya están casados. Ustedes son una linda pareja %emoji",
 		"SHIP_ALREADY_COUPLE_OTHER": "No creo que tenga que calificar a %user1 y a %other si ellos ya están casados. Ellos son una linda pareja %emoji",
 		"AVATAR_FETCH_FAILED": "Hubo un error consiguiendo las fotos de perfil de los usuarios",
 		"SHIP_RATING": "Que Bonito. Le doy a %display1 y a %display2 %percentage% de estar juntos.",
-		"NO_U": "No u",
+		"NO_U": "No, tu",
 		"CANNOT_SELF_BEAN": "%username, no puedes banearte a ti mismo, tonto",
 		"BEANED": "¡%tag ha sido baneado!",
 		"HUG_AMANDA": "**le devuelve el abrazo a %username** :heart:",
@@ -91,7 +81,7 @@
 		"BOOP_AMANDA": "No me toques ; ^ ;",
 		"PAT_AMANDA": "≥ w ≤",
 		"HUG_OTHER": "%user abraza a %mention",
-		"NOM_OTHER": "%user se come a %mention",
+		"NOM_OTHER": "%user muerde a %mention",
 		"KISS_OTHER": "%user besa a %mention",
 		"CUDDLE_OTHER": "%user acaricia a %mention",
 		"POKE_OTHER": "%user toca a %mention",
@@ -103,7 +93,7 @@
 		"HEADER_UPTIME": "Tiempo de actividad",
 		"HEADER_MEMORY": "Memoria",
 		"HEADER_SHARDS": "Shards",
-		"HEADER_SONGS_QUEUED": "Canciones en fila",
+		"HEADER_SONGS_QUEUED": "Canciones en espera",
 		"HEADER_USERS_LISTENING": "Usuarios escuchando",
 		"HEADER_NODE_USAGE": "Uso por nodo",
 		"NO_NODES": "Sin nodos",
@@ -120,15 +110,14 @@
 		"GIT_FILES_CHANGED": "%amount archivos cambiados",
 		"GIT_FILE_CHANGED": "1 archivo cambiado",
 		"GIT_INSERTIONS": "%amount agregados",
-		"GIT_INSERTION": "1 agregados",
+		"GIT_INSERTION": "1 agregado",
 		"GIT_DELETIONS": "%amount eliminados",
-		"GIT_DELETION": "1 eliminados",
+		"GIT_DELETION": "1 eliminado",
 		"HEADER_STATUS": "Estado",
 		"HEADER_GIT_INFO": "Información de Git",
-		"GIT_STATUS": "En rama %branch, ultimo commit %hash",
-		"GIT_COMMITS": "Commits (últimos %amount entradas)",
+		"GIT_STATUS": "En rama %branch, últimos cambios %hash",
+		"GIT_COMMITS": "Cambios (últimas %amount modificaciones)",
 		"FOOTER_HELP": "<> = obligatorio, [] = opcional, | = o. No incluir <>, [] o | en tu mensaje.",
-		"HELP_COMMAND_BODY_LIST": "%description\n*Argumentos*: %args",
 		"HELP_COMMAND_BODY": "%description\nArgumentos: %args\nCategoría: %category",
 		"HEADER_COMMAND_CATEGORY": "Categoría de comando: %category",
 		"FOOTER_HELP_MAIN": "Escribe `%prefixhelp [command:comando]` para saber más de un comando",
@@ -137,20 +126,18 @@
 		"HELP_SEE_ALL": "Escribe `%prefixhelp [category:categoria]` para ver todos los comandos en esa categoría.\nEscribe `%prefixhelp [command:comando]` para saber más de un comando.",
 		"HELP_INFO": "Escribe `%prefixinfo` para ver información general acerca de Amanda.\nPara más, únete a su servidor de soporte: %link",
 		"TIMED_OUT": "Se acabó el tiempo",
-		"DATABASE_OFFLINE": "La base de datos no esta conectada actualmente. Ya se está creando un arreglo para este problema.",
+		"DATABASE_OFFLINE": "La base de datos no esta conectada actualmente. Ya se está solucionando este problema.",
 		"NEGATIVE_1_INDEX_IN_RADIO": "-1 índice en radio",
-		"INVALID_RADIO_NAMESPACE": "Nombre de estación de radio inválido",
 		"PAGE_X_OF_Y": "Página %current de %total",
 		"PAGE_LENGTH": "Longitud de la página: %time",
 		"VOLUME_SET": "Volumen de la fila en %volume%",
 		"CANNOT_SEEK_LIVE": "No puedes retroceder audio en vivo",
-		"SEEK_GREATER_THAN_SONG_LENGTH": "El tiempo que mencionaste es más largo que la duración de la pista",
-		"SEEK_ERROR": "Hubo un error al ir a esa posición. Tu duración fue analizado correctamente como %parsed milisegundos, pero Lavalink no lo pudo encontrar. Esto es un bug. Please reporta esto: %server",
+		"SEEK_GREATER_THAN_SONG_LENGTH": "El tiempo que mencionaste es más largo que la duración de la canción",
+		"SEEK_ERROR": "Hubo un error al ir a esa posición. La duración fue analizada correctamente como %parsed milisegundos, pero Lavalink no la pudo encontrar. Esto es un bug. Por favor reporta esto: %server",
 		"SEEKING": "Buscando %time. Por favor aguarda",
-		"FILTERS_ERROR": "Hubo un error aplicando los filtros. ¿La conexión con el nodo de Lavalink puede que se haya caído?",
+		"FILTERS_ERROR": "Hubo un error aplicando los filtros. ¿Puede haberse caído la conexión con el nodo de Lavalink?",
 		"FILTERS_APPLIED": "Los filtros que especificaste se están aplicando. Por favor aguarda",
 		"INVALID_PLAYLIST_NAME": "Nombre de playlist inválido. El nombre de una playlist no debe contener un link o tener más de 24 carácteres",
-		"DATABASE_FIXED": "La base de datos estaba fuera de servicio pero ha sido arreglada. Si ves este mensaje, por favor reportalo",
 		"PLAYLIST_EMPTY": "La playlist está vacía",
 		"PLAYLIST_NOT_EXIST": "Esa playlist no existe",
 		"PLAYLIST_ALREADY_EXISTS": "Esa playlist ya existe",
@@ -159,13 +146,12 @@
 		"PLAYLIST_DELETED": "Playlist eliminada",
 		"PLAYLIST_DUPLICATE_SONG": "Trataste de añadir una pista duplicada a tu playlist",
 		"PLAYLIST_SONG_ADDED": "%title añadido",
-		"OUT_OF_BOUNDS": "Index fuera del límite",
+		"OUT_OF_BOUNDS": "Número correspondiente al índice fuera del límite permitido",
 		"SONG_REMOVED": "%title removido",
-		"PLAYLIST_INDEXES_EQUAL": "El desde y hasta no pueden ser iguales",
+		"PLAYLIST_INDEXES_EQUAL": "El número de índice de origen y destino no pueden ser iguales",
 		"PLAYLIST_SONG_MOVED": "Pista movida",
 		"TITLE_JOIN_SERVER": "Haz click el título para unirte a nuestro servidor de soporte",
 		"SONG_INFO_GENERIC": "Trata de conseguir información de esta pista de la página web donde la encontraste",
-		"SONG_STARTED_AND_REMAINING": "Inició hace %ago, falta %remaining (%percent%)",
 		"SONG_SELECTION_CANCELLED": "Selección de pista cancelada",
 		"NONE": "Ninguno",
 		"COMMAND_ERROR": "Hubo un error con el comando %name. Los desarrolladores han sido notificados. Si usted usa este comando otra vez y ve este mensaje, por favor espera una cantidad razonable de tiempo para que pueda esto ser arreglado. Reporta esto si vuelve a ocurrir: %server",
@@ -173,8 +159,8 @@
 		"DM_ONLY": "Este comando sólo puede ser utilizado en DMs"
 	},
 	"sit": {
-		"name": "sentar",
-		"description": "estado de ámino"
+		"name": "sentarse",
+		"description": "Mi estado de ánimo"
 	},
 	"image": {
 		"name": "imagen",
@@ -201,7 +187,7 @@
 		]
 	},
 	"bean": {
-		"name": "bean",
+		"name": "ban",
 		"description": "Banea a un usuario",
 		"options": [
 			{
@@ -222,11 +208,11 @@
 	},
 	"nom": {
 		"name": "nom",
-		"description": "Come a alguien",
+		"description": "Muerde a alguien",
 		"options": [
 			{
 				"name": "usuario",
-				"description": "el usuario a comer"
+				"description": "el usuario a morder"
 			}
 		]
 	},
@@ -241,7 +227,7 @@
 		]
 	},
 	"cuddle": {
-		"name": "acaricia",
+		"name": "caricia",
 		"description": "Acaricia a alguien",
 		"options": [
 			{
@@ -299,8 +285,8 @@
 				"description": "La pista que te gustaria reproducir"
 			},
 			{
-				"name": "posición",
-				"description": "Canción desde la cual empezaría a añadir"
+				"name": "iniciar",
+				"description": "Canción después de la cual se empezaría a añadir"
 			}
 		]
 	},
@@ -314,7 +300,7 @@
 			},
 			{
 				"name": "posición",
-				"description": "Canción desde la cual empezaría a añadir"
+				"description": "Canción después de la cual se empezaría a añadir"
 			}
 		]
 	},
@@ -323,7 +309,7 @@
 		"description": "Saltar canciones de la fila",
 		"options": [
 			{
-				"name": "empiezo",
+				"name": "inicio",
 				"description": "Canción desde la cual empezaría a saltar"
 			},
 			{
@@ -334,11 +320,11 @@
 	},
 	"stop": {
 		"name": "parar",
-		"description": "Parar la fila"
+		"description": "Parar la lista de reproducción"
 	},
 	"queue": {
-		"name": "fila",
-		"description": "Mostrar la fila para realizar acciones",
+		"name": "lista",
+		"description": "Mostrar la lista para realizar acciones",
 		"options": [
 			{
 				"name": "página",
@@ -346,15 +332,15 @@
 			},
 			{
 				"name": "volumen",
-				"description": "Configurar el volumen % de la fila"
+				"description": "Configurar el volumen % de la lista de reproducción"
 			},
 			{
 				"name": "bucle",
-				"description": "Configurar el bucle de la fila"
+				"description": "Configurar el bucle de la lista de reproducción"
 			},
 			{
 				"name": "pausa",
-				"description": "Pausar la fila"
+				"description": "Pausar la lista de reproducción"
 			}
 		]
 	},
@@ -364,53 +350,53 @@
 	},
 	"trackinfo": {
 		"name": "trackinfo",
-		"description": "Muestra información de la pista actual"
+		"description": "Muestra información de la canción actual"
 	},
 	"lyrics": {
 		"name": "letra",
-		"description": "Muestra la letra de la pista actual"
+		"description": "Muestra la letra de la canción actual"
 	},
 	"seek": {
 		"name": "búsqueda",
-		"description": "Ir a determinado tiempo en la pista actual",
+		"description": "Ir a determinado tiempo en la canción actual",
 		"options": [
 			{
 				"name": "tiempo",
-				"description": "El tiempo en segundos en la pista actual"
+				"description": "El tiempo en segundos en la canción actual"
 			}
 		]
 	},
 	"filters": {
 		"name": "filtros",
-		"description": "Aplicar filtros a la fila",
+		"description": "Aplicar filtros a la lista de reproducción",
 		"options": [
 			{
 				"name": "tono",
-				"description": "Configura el tono de la fila en semitonos"
+				"description": "Configura el tono de la lista de reproducción en semitonos"
 			},
 			{
 				"name": "velocidad",
-				"description": "Configura la velocidad % de la fila"
+				"description": "Configura la velocidad % de la lista de reproducción"
 			}
 		]
 	},
 	"shuffle": {
-		"name": "desordenada",
-		"description": "Desordena la fila"
+		"name": "aleatorizar",
+		"description": "El orden de la lista de reproducción se vuelve aleatorio"
 	},
 	"remove": {
 		"name": "eliminar",
-		"description": "Eliminar una pista de la fila",
+		"description": "Eliminar una pista de la lista de reproducción",
 		"options": [
 			{
-				"name": "index",
-				"description": "La pista a eliminar (índice 1)"
+				"name": "Índice",
+				"description": "El número del índice de la pista a eliminar"
 			}
 		]
 	},
 	"musictoken": {
 		"name": "musictoken",
-		"description": "Obtén un token para el login del web dashboard",
+		"description": "Obtén un token para loguearte en la página web",
 		"options": [
 			{
 				"name": "acción",
@@ -517,8 +503,8 @@
 						"description": "Si la playlist deberia empezar desordenada"
 					},
 					{
-						"name": "start",
-						"description": "Pista a iniciar (índice 1). Si la playlist esta desordenada solo una porción es seleccionada y luego mezclada"
+						"name": "iniciar",
+						"description": "Pista a iniciar (índice 1). Si la playlist esta aleatorizada, solo una porción es seleccionada y luego aleatorizada."
 					}
 				]
 			}

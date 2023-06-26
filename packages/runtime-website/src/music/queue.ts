@@ -92,7 +92,7 @@ export class Queue {
 			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
 				embeds: [{
 					color: confprovider.config.standard_embed_color,
-					description: "There's a newer now playing message"
+					description: this.lang.GLOBAL.NEWER_NOW_PLAYING
 				}],
 				components: []
 			})

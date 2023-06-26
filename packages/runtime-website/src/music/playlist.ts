@@ -349,7 +349,7 @@ commands.assign([
 
 				let result: UnpackArray<Awaited<ReturnType<typeof common.loadtracks>>["tracks"]>["info"] | undefined = undefined
 				try {
-					result = await common.loadtracks(`${optionTrack}`)
+					result = await common.loadtracks(`${optionTrack}`, lang)
 						.then(d => d.tracks[0]?.info)
 				} catch (e) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

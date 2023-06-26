@@ -187,7 +187,7 @@ commands.assign([
 							"args": info.options?.map(o => o.name).join(", ") || lang.GLOBAL.NONE,
 							"category": c.category
 						}),
-						footer: { text: lang.GLOBAL.FOOTER_HELP },
+						footer: { text: `${langReplace(lang.GLOBAL.FOOTER_HELP_MAIN, { "prefix": "/" })}\n\n${lang.GLOBAL.FOOTER_HELP}` },
 						color: confprovider.config.standard_embed_color
 					}
 
