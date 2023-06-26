@@ -295,7 +295,7 @@ function update() {
 		else type = choice.type
 
 		const data = {
-			name: `${choice.message} | /}help | ${confprovider.config.cluster_id}`,
+			name: `${choice.message} | /help | ${confprovider.config.cluster_id}`,
 			type: type,
 			url: "https://www.twitch.tv/papiophidian/"
 		}
