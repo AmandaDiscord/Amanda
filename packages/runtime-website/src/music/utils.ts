@@ -94,11 +94,15 @@ const common = {
 			const e: LoadTracksError = er
 			const reportTarget = confprovider.config.error_log_channel_id
 			const undef = "undefined"
+			const userString = cmd.author.discriminator === "0" || !cmd.author.discriminator
+				? cmd.author.username
+				: `${cmd.author.username}#${cmd.author.discriminator}`
+
 			const details = [
 				["Tree", confprovider.config.cluster_id],
 				["Branch", "music"],
 				["Node", e.node],
-				["User", `${cmd.author.username}#${cmd.author.discriminator}`],
+				["User", userString],
 				["User ID", cmd.author.id],
 				["Guild ID", cmd.guild_id ?? undef],
 				["Text channel", cmd.channel.id],

@@ -498,7 +498,7 @@ export async function getUser(id: string, snow: SnowTransfer, client?: { user: A
 	if (fetched && confprovider.config.db_enabled) {
 		sql.orm.upsert("users", {
 			id,
-			tag: `${fetched.username}#${fetched.discriminator}`,
+			tag: `${fetched.username}#${fetched.discriminator ?? 0}`,
 			avatar: fetched.avatar,
 			bot: fetched.bot ? 1 : 0,
 			added_by: confprovider.config.cluster_id
@@ -518,7 +518,7 @@ export function convertCachedUser(user: { id: string; tag: string; bot: number; 
 }
 
 export function displayAvatarURL(user: APIUser, dynamic?: boolean): string {
-	if (!user.avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(user.discriminator) % 5}.png`
+	if (!user.avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> BigInt(22)) % 5}.png`
 	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
 }
 

@@ -216,8 +216,13 @@ commands.assign([
 
 					const user = await sharedUtils.getUser(playlistRow.author, snow)
 
-					if (user) authorDetails.push(`${user.username}#${user.discriminator} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, true) + "?size=32")
-					else authorDetails.push(optionInfo)
+					if (user) {
+						const userString = user.discriminator === "0" || !user.discriminator
+							? user.username
+							: `${user.username}#${user.discriminator}`
+
+						authorDetails.push(`${userString} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, true) + "?size=32")
+					} else authorDetails.push(optionInfo)
 
 					const a: APIEmbedAuthor = { name: authorDetails[0] }
 					if (authorDetails[1]) a.url = authorDetails[1]

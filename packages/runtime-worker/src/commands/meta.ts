@@ -22,7 +22,11 @@ commands.assign([
 		description: "Show detailed statistics",
 		category: "meta",
 		process(cmd, lang, shardID) {
-			const leadingIdentity = `${client.user.username}#${client.user.discriminator} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
+			const userString = client.user.discriminator === "0" || !client.user.discriminator
+				? client.user.username
+				: `${client.user.username}#${client.user.discriminator}`
+
+			const leadingIdentity = `${userString} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
 			// eslint-disable-next-line no-irregular-whitespace
 			// const leadingSpace = `${emojis.bl}\n​`
 			const ram = process.memoryUsage()
@@ -223,8 +227,11 @@ commands.assign([
 
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else {
+					const userString = cmd.author.discriminator === "0" || !cmd.author.discriminator
+						? cmd.author.username
+						: `${cmd.author.username}#${cmd.author.discriminator}`
 					embed = {
-						description: langReplace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": `${cmd.author.username}#${cmd.author.discriminator}` }),
+						description: langReplace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": userString }),
 						color: 0xB60000
 					}
 

@@ -42,8 +42,12 @@ const cmds = [
 				})
 			}
 
+			const userString = user.discriminator === "0" || !user.discriminator
+				? user.username
+				: `${user.username}#${user.discriminator}`
+
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${user.username}#${user.discriminator}**` })
+				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${userString}**` })
 			})
 		}
 	}

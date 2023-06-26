@@ -177,8 +177,12 @@ commands.assign([
 
 			queue.destroy()
 
+			const userString = cmd.author.discriminator === "0" || !cmd.author.discriminator
+				? cmd.author.username
+				: `${cmd.author.username}#${cmd.author.discriminator}`
+
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.QUEUE_STOPPED, { "username": `${cmd.author.username}#${cmd.author.discriminator}` })
+				content: langReplace(lang.GLOBAL.QUEUE_STOPPED, { "username": userString })
 			})
 		}
 	},

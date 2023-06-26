@@ -19,10 +19,10 @@ type StatementBuffer = {
 	}
 }
 
-type InferModelDef<M extends Model<Record<string, unknown>>> = M extends Model<infer D> ? D : unknown
+export type InferModelDef<M> = M extends Model<infer D> ? D : unknown
 
 
-export class Model<D extends Record<string, unknown>> {
+export class Model<D> {
 	public options: { useBuffer: boolean; bufferSize: number; bufferTimeout: number }
 
 	public constructor(public primaryKey: Array<keyof D> = [], options: { useBuffer?: boolean; bufferSize?: number; bufferTimeout?: number } = {}) {

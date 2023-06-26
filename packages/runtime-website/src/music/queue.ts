@@ -63,7 +63,7 @@ export class Queue {
 		return {
 			members: (Array.from(this.listeners.values())).map(m => ({
 				id: m.id,
-				tag: m.discriminator === "0"
+				tag: m.discriminator === "0" || !m.discriminator
 					? m.username
 					: `${m.username}#${m.discriminator}`,
 				avatar: m.avatar,
@@ -524,11 +524,15 @@ export class Queue {
 				["Queue node", this.node ?? "UNNAMED"]
 			]
 			if (track) {
+				const userString = track.requester.discriminator === "0" || !track.requester.discriminator
+					? track.requester.username
+					: `${track.requester.username}#${track.requester.discriminator}`
+
 				details.push(...[
 					["Track", track.id],
 					["Input", track.input],
 					["Requester id", track.requester.id],
-					["Requester tag", `${track.requester.username}#${track.requester.discriminator}`]
+					["Requester tag", userString]
 				])
 			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
