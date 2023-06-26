@@ -389,7 +389,7 @@
 		"description": "Eliminar una pista de la lista de reproducción",
 		"options": [
 			{
-				"name": "Índice",
+				"name": "índice",
 				"description": "El número del índice de la pista a eliminar"
 			}
 		]
