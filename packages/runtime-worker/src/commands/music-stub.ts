@@ -187,6 +187,21 @@ commands.assign([
 		process() { void 0 }
 	},
 	{
+		name: "remove",
+		description: "Removes a track from the queue",
+		category: "audio",
+		options: [
+			{
+				name: "index",
+				type: 4,
+				description: "1 based index to start removing tracks from",
+				required: true,
+				min_value: 2
+			}
+		],
+		process() { void 0 }
+	},
+	{
 		name: "musictoken",
 		description: "Obtain a web dashboard login token",
 		category: "audio",
