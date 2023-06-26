@@ -49,11 +49,13 @@ server.get("/blogs", async (res) => {
 
 	const template2 = template.replace(bodyRegex, htmlData)
 
-	res
-		.writeStatus("200")
-		.writeHeader("Content-Type", "text/html")
-		.writeHeader("Content-Length", String(Buffer.byteLength(template2)))
-		.end(template2)
+	res.cork(() => {
+		res
+			.writeStatus("200")
+			.writeHeader("Content-Type", "text/html")
+			.writeHeader("Content-Length", String(Buffer.byteLength(template2)))
+			.end(template2)
+	})
 })
 
 server.get("/blog/:blogID", async (res, req) => {
@@ -89,9 +91,11 @@ server.get("/blog/:blogID", async (res, req) => {
 		.replace(bodyShortRegex, short)
 		.replace(bodyRegex, rendered)
 
-	res
-		.writeStatus("200")
-		.writeHeader("Content-Type", "text/html")
-		.writeHeader("Content-Length", String(Buffer.byteLength(html)))
-		.end(html)
+	res.cork(() => {
+		res
+			.writeStatus("200")
+			.writeHeader("Content-Type", "text/html")
+			.writeHeader("Content-Length", String(Buffer.byteLength(html)))
+			.end(html)
+	})
 })

@@ -20,11 +20,13 @@ server.get("/login", async (res) => {
 
 	const csrftoken = utils.generateCSRF()
 	html = html.replace(csrftokenRegex, csrftoken)
-	res
-		.writeStatus("200")
-		.writeHeader("Content-Type", "text/html")
-		.writeHeader("Content-Length", String(Buffer.byteLength(html)))
-		.end(html)
+	res.cork(() => {
+		res
+			.writeStatus("200")
+			.writeHeader("Content-Type", "text/html")
+			.writeHeader("Content-Length", String(Buffer.byteLength(html)))
+			.end(html)
+	})
 })
 
 server.post("/logout", async (res, req) => {
@@ -40,12 +42,12 @@ server.post("/logout", async (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer
+	let body: Buffer | undefined = undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.writeStatus("408").endWithoutBody()
+		return void res.cork(() => res.writeStatus("408").endWithoutBody())
 	}
 
 	if (!res.continue) return
@@ -58,17 +60,18 @@ server.post("/logout", async (res, req) => {
 		.then(() => {
 			if (!res.continue) return
 
-			res.writeHeader("Set-Cookie", `token=; path=/; expires=${new Date(0).toUTCString()}`)
+			res.cork(() => res.writeHeader("Set-Cookie", `token=; path=/; expires=${new Date(0).toUTCString()}`))
 			utils.redirect(res, "/login")
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
-
-			res
-				.writeStatus(String(errorValue[0]))
-				.writeHeader("Content-Type", "text/plain")
-				.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
-				.end(errorValue[1])
+			res.cork(() => {
+				res
+					.writeStatus(String(errorValue[0]))
+					.writeHeader("Content-Type", "text/plain")
+					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
+					.end(errorValue[1])
+			})
 		})
 })
 
@@ -99,11 +102,13 @@ server.get("/dash", async (res, req) => {
 			: "The dashboard is temporarily disabled. Please check back later"
 
 		const html2 = html.replace(bodyRegex, body).replace(csrftokenRegex, csrftoken)
-		res
-			.writeStatus("200")
-			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(html2)))
-			.end(html2)
+		res.cork(() => {
+			res
+				.writeStatus("200")
+				.writeHeader("Content-Type", "text/html")
+				.writeHeader("Content-Length", String(Buffer.byteLength(html2)))
+				.end(html2)
+		})
 	} else utils.redirect(res, "/login")
 })
 
@@ -114,18 +119,18 @@ server.post("/dash", async (res, req) => {
 	const reqReferrer = req.getHeader("referrer")
 	const reqHost = req.getHeader("host")
 
-	if (!reqLength || isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
-	if (Number(reqLength) > 130) return void res.writeStatus("413").endWithoutBody()
-	if (reqType !== "application/x-www-form-urlencoded") return void res.writeStatus("415").endWithoutBody()
+	if (!reqLength || isNaN(Number(reqLength))) return void res.cork(() => res.writeStatus("411").endWithoutBody())
+	if (Number(reqLength) > 130) return void res.cork(() => res.writeStatus("413").endWithoutBody())
+	if (reqType !== "application/x-www-form-urlencoded") return void res.cork(() => res.writeStatus("415").endWithoutBody())
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer
+	let body: Buffer | undefined = undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.writeStatus("408").endWithoutBody()
+		return void res.cork(() => res.writeStatus("408").endWithoutBody())
 	}
 
 	if (!res.continue) return
@@ -145,17 +150,18 @@ server.post("/dash", async (res, req) => {
 
 			const token = state.params.get("token")
 			const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toUTCString()
-			res.writeHeader("Set-Cookie", `token=${token}; path=/; expires=${expires}`)
+			res.cork(() => res.writeHeader("Set-Cookie", `token=${token}; path=/; expires=${expires}`))
 			utils.redirect(res, "/dash")
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
-
-			res
-				.writeStatus(String(errorValue[0]))
-				.writeHeader("Content-Type", "text/plain")
-				.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
-				.end(errorValue[1])
+			res.cork(() => {
+				res
+					.writeStatus(String(errorValue[0]))
+					.writeHeader("Content-Type", "text/plain")
+					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
+					.end(errorValue[1])
+			})
 		})
 })
 
@@ -205,11 +211,13 @@ server.get("/channels/:channelID", async (res, req) => {
 				.replace(channelIDRegex, channelID)
 				.replace(timestampRegex, Date.now().toString())
 
-			res
-				.writeStatus("200")
-				.writeHeader("Content-Type", "text/html")
-				.writeHeader("Content-Length", String(Buffer.byteLength(html)))
-				.end(html)
+			res.cork(() => {
+				res
+					.writeStatus("200")
+					.writeHeader("Content-Type", "text/html")
+					.writeHeader("Content-Length", String(Buffer.byteLength(html)))
+					.end(html)
+			})
 		})
 		.catch(() => {
 			if (!res.continue) return

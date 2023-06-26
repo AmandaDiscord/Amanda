@@ -40,25 +40,28 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 		readStream.on("data", chunk => {
 			const ab = toArrayBuffer(chunk)
 			const lastOffset = res.getWriteOffset()
-			const [ok, done] = res.tryEnd(ab, totalSize)
 
-			if (done) {
-				onAbortedOrFinishedResponseStream(res, readStream)
-				resolve(void 0)
-			} else if (!ok) {
-				readStream.pause()
-				res.ab = ab
-				res.abOffset = lastOffset
+			res.cork(() => {
+				const [ok, done] = res.tryEnd(ab, totalSize)
 
-				res.onWritable(offset => {
-					const [ok2, done2] = res.tryEnd(res.ab.slice(offset - res.abOffset), totalSize)
-					if (done2) {
-						onAbortedOrFinishedResponseStream(res, readStream)
-						resolve(void 0)
-					} else if (ok2) readStream.resume()
-					return ok2
-				})
-			}
+				if (done) {
+					onAbortedOrFinishedResponseStream(res, readStream)
+					resolve(void 0)
+				} else if (!ok) {
+					readStream.pause()
+					res.ab = ab
+					res.abOffset = lastOffset
+
+					res.onWritable(offset => {
+						const [ok2, done2] = res.tryEnd(res.ab.slice(offset - res.abOffset), totalSize)
+						if (done2) {
+							onAbortedOrFinishedResponseStream(res, readStream)
+							resolve(void 0)
+						} else if (ok2) readStream.resume()
+						return ok2
+					})
+				}
+			})
 
 		}).once("error", e => {
 			readStream.destroy()
@@ -84,15 +87,15 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 		console.log(`404 ${path}`)
 		if (!res.continue) return
 		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else return void res.writeStatus("404").endWithoutBody()
+		else return void res.cork(() => res.writeStatus("404").endWithoutBody())
 	}
 
 	if (!stats.isFile()) {
 		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else return void res.writeStatus("404").endWithoutBody()
+		else return void res.cork(() => res.writeStatus("404").endWithoutBody())
 	}
 
-	if (stats.size === 0) return void res.writeStatus("204").endWithoutBody()
+	if (stats.size === 0) return void res.cork(() => res.writeStatus("204").endWithoutBody())
 
 	const type = mime.lookup(path) || "application/octet-stream"
 
@@ -108,7 +111,7 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 		if (vWithoutQ[1] !== "*" && resType !== vWithoutQ[1]) return false
 		return true
 	})
-	if (!canAccept) return void res.writeStatus("406").endWithoutBody()
+	if (!canAccept) return void res.cork(() => res.writeStatus("406").endWithoutBody())
 	if (!cameFrom404 && ifModifiedSinceHeader) { // check modified header(s)
 		if (sharedUtils.checkDateHeader(ifModifiedSinceHeader)) {
 			const expecting = new Date(ifModifiedSinceHeader)
@@ -118,25 +121,29 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 			}
 		}
 	}
-	res.writeStatus(String(status))
-	res.writeHeader("Content-Length", String(stats.size))
-	res.writeHeader("Content-Type", type)
-	res.writeHeader("Last-Modified", stats.mtime.toUTCString())
-	res.writeHeader("Cache-Control", "no-cache")
+	res.cork(() => {
+		res.writeStatus(String(status))
+		res.writeHeader("Content-Length", String(stats.size))
+		res.writeHeader("Content-Type", type)
+		res.writeHeader("Last-Modified", stats.mtime.toUTCString())
+		res.writeHeader("Cache-Control", "no-cache")
+	})
 
-	if (headersOnly) return void res.endWithoutBody()
+	if (headersOnly) return void res.cork(() => res.endWithoutBody())
 	const stream = fs.createReadStream(joined)
 	await streamResponse(res, stream, stats.size)
 }
 
 export function redirect(res: HttpResponse, location: string) {
 	const bod = `Redirecting to <a href="${location}">${location}</a>...`
-	res
-		.writeStatus("303")
-		.writeHeader("Location", location)
-		.writeHeader("Content-Type", "text/html")
-		.writeHeader("Content-Length", String(Buffer.byteLength(bod)))
-		.end(bod)
+	res.cork(() => {
+		res
+			.writeStatus("303")
+			.writeHeader("Location", location)
+			.writeHeader("Content-Type", "text/html")
+			.writeHeader("Content-Length", String(Buffer.byteLength(bod)))
+			.end(bod)
+	})
 }
 
 export function generateCSRF(loginToken: string | null = null) {

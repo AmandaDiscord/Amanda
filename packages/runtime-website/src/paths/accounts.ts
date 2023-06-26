@@ -48,11 +48,13 @@ server.get("/link", async (res, req) => {
 			.replace(lastfmCallback, encodeURIComponent(`${baseWebsiteCallback}&type=lastfm`))
 			.replace(connectionsRegex, connectionsString)
 
-		res
-			.writeStatus("200")
-			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(html)))
-			.end(html)
+		res.cork(() => {
+			res
+				.writeStatus("200")
+				.writeHeader("Content-Type", "text/html")
+				.writeHeader("Content-Length", String(Buffer.byteLength(html)))
+				.end(html)
+		})
 	} else {
 		if (!res.continue) return
 		utils.redirect(res, "/login")
@@ -78,14 +80,15 @@ server.post("/unlink", async (res, req) => {
 
 	if (!res.continue) return
 
-	if (!session) return void res.writeStatus("401").endWithoutBody()
+	if (!session) return void res.cork(() => res.writeStatus("401").endWithoutBody())
+
 
 	let body: Buffer | undefined = undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.writeStatus("408").endWithoutBody()
+		return void res.cork(() => res.writeStatus("408").endWithoutBody())
 	}
 
 	if (!res.continue) return
@@ -113,19 +116,23 @@ server.post("/unlink", async (res, req) => {
 				type: state.params.get("type") as unknown as undefined
 			}).catch(console.error)
 
-			res
-				.writeStatus("200")
-				.writeHeader("Content-Type", "text/plain")
-				.end("Logged out successfully")
+			res.cork(() => {
+				res
+					.writeStatus("200")
+					.writeHeader("Content-Type", "text/plain")
+					.end("Logged out successfully")
+			})
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
 
-			res
-				.writeStatus(String(errorValue[0]))
-				.writeHeader("Content-Type", "text/plain")
-				.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
-				.end(errorValue[1])
+			res.cork(() => {
+				res
+					.writeStatus(String(errorValue[0]))
+					.writeHeader("Content-Type", "text/plain")
+					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
+					.end(errorValue[1])
+			})
 		})
 })
 
@@ -194,11 +201,12 @@ server.get("/flow", (res, req) => {
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
-
-			res
-				.writeStatus(String(errorValue[0]))
-				.writeHeader("Content-Type", "text/plain")
-				.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
-				.end(errorValue[1])
+			res.cork(() => {
+				res
+					.writeStatus(String(errorValue[0]))
+					.writeHeader("Content-Type", "text/plain")
+					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
+					.end(errorValue[1])
+			})
 		})
 })
