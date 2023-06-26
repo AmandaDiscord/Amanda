@@ -386,7 +386,7 @@
 	},
 	"remove": {
 		"name": "usuń",
-		"description": "Usuwa ścieżkę z playlisty",
+		"description": "Usuwa ścieżkę z kolejki",
 		"options": [
 			{
 				"name": "index",
