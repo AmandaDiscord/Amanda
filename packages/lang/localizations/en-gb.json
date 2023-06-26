@@ -160,7 +160,7 @@
 		"PLAYLIST_DUPLICATE_SONG": "You tried to add a duplicate track to your playlist",
 		"PLAYLIST_SONG_ADDED": "%title added",
 		"OUT_OF_BOUNDS": "Index out of bounds",
-		"PLAYLIST_SONG_REMOVED": "%title removed",
+		"SONG_REMOVED": "%title removed",
 		"PLAYLIST_INDEXES_EQUAL": "The from and to indexes cannot be equal",
 		"PLAYLIST_SONG_MOVED": "Track moved",
 		"TITLE_JOIN_SERVER": "Click the title to join our support server",
@@ -169,7 +169,8 @@
 		"SONG_SELECTION_CANCELLED": "Track selection cancelled",
 		"NONE": "None",
 		"COMMAND_ERROR": "There was an error with the command %name. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed. Report this if it occurs again: %server",
-		"UNKNOWN_AUTHOR": "Unknown author"
+		"UNKNOWN_AUTHOR": "Unknown author",
+		"DM_ONLY": "This command can only be used in DMs"
 	},
 	"sit": {
 		"name": "sit",
@@ -396,6 +397,16 @@
 	"shuffle": {
 		"name": "shuffle",
 		"description": "Shuffle the queue"
+	},
+	"remove": {
+		"name": "remove",
+		"description": "Removes a track from the queue",
+		"options": [
+			{
+				"name": "index",
+				"description": "The 1 based index of the track to remove"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "musictoken",

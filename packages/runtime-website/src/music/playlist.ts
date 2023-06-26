@@ -424,7 +424,7 @@ commands.assign([
 				])
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.PLAYLIST_SONG_REMOVED, { "title": toRemove.name })
+					content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": toRemove.name })
 				})
 			} else if (optionMove !== null) {
 

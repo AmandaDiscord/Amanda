@@ -484,6 +484,50 @@ commands.assign([
 		}
 	},
 	{
+		name: "remove",
+		description: "Removes a track from the queue",
+		category: "audio",
+		options: [
+			{
+				name: "index",
+				type: 4,
+				description: "1 based index to start removing tracks from",
+				required: true,
+				min_value: 2
+			}
+		],
+		async process(cmd, lang) {
+			if (!common.queues.doChecks(cmd, lang)) return
+
+			const queue = common.queues.getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+
+			const indexOption = cmd.data.options.get("index")!.asNumber()!
+
+			const track = queue.tracks[indexOption - 1]
+			const result = await queue.removeTrack(indexOption - 1)
+
+			if (result === 1) {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.OUT_OF_BOUNDS
+				})
+			} else if (result === 2) {
+				console.error("Was in Array but isn't anymore in the same tick. Did the queue tracks array somehow turn into a proxy?")
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.ERROR_OCCURRED
+				})
+			} else if (result === 0) {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": track.title })
+				})
+			} else {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.ERROR_OCCURRED
+				})
+			}
+		}
+	},
+	{
 		name: "musictoken",
 		description: "Obtain a web dashboard login token",
 		category: "audio",
@@ -514,7 +558,7 @@ commands.assign([
 
 			if (cmd.guild_id) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "DM only"
+					content: lang.GLOBAL.DM_ONLY
 				})
 			}
 

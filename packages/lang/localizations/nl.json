@@ -165,7 +165,7 @@
 	"PLAYLIST_DUPLICATE_SONG": "Je probeerde een duplicaat toe te voegen aan je playlist",
 	"PLAYLIST_SONG_ADDED": "%title toegevoegd",
 	"OUT_OF_BOUNDS": "Index buiten bereik",
-	"PLAYLIST_SONG_REMOVED": "%title verwijderd",
+	"SONG_REMOVED": "%title verwijderd",
 	"PLAYLIST_INDEXES_EQUAL": "De van en tot indices kunnen niet gelijk zijn",
 	"PLAYLIST_SONG_MOVED": "Muzieknummer verplaatst",
 	"TITLE_JOIN_SERVER": "Klik op de titel om deel te nemen aan onze ondersteuningsserver",
@@ -174,7 +174,8 @@
 	"SONG_SELECTION_CANCELLED": "Muziekselectie geannuleerd",
 	"NONE": "Geen",
 	"COMMAND_ERROR": "Er is iets misgegaan bij het commando %name. De ontwikkelaars zijn op de hoogte gebracht. Als je opnieuw dit commando gebruikt en dit bericht ziet, sta dan een redelijke periode toe zodat het probleem verholpen kan worden. Meld dit probleem als het opnieuw voorkomt: %server",
-	"UNKNOWN_AUTHOR": "Onbekende auteur"
+	"UNKNOWN_AUTHOR": "Onbekende auteur",
+	"DM_ONLY": "This command can only be used in DMs"
 	},
 	"sit": {
 	"name": "zit",
@@ -401,6 +402,16 @@
 	"shuffle": {
 		"name": "shuffle",
 		"description": "Shuffelt de wachtrij"
+	},
+	"remove": {
+		"name": "verwijder",
+		"description": "Verwijdert een muzieknummer van een wachtrij",
+		"options": [
+			{
+			"name": "index",
+			"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "muziektoken",

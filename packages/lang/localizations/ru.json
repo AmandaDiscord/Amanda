@@ -160,7 +160,7 @@
 		"PLAYLIST_DUPLICATE_SONG": "Ты попытался добавить один и тот же трек дважды в один плейлист.",
 		"PLAYLIST_SONG_ADDED": "Добавлен %title",
 		"OUT_OF_BOUNDS": "Индекс за пределами",
-		"PLAYLIST_SONG_REMOVED": "Убран %title",
+		"SONG_REMOVED": "Убран %title",
 		"PLAYLIST_INDEXES_EQUAL": "Начальный и конечный индексы не могут быть равны.",
 		"PLAYLIST_SONG_MOVED": "Трек передвинут",
 		"TITLE_JOIN_SERVER": "Нажми на заголовок, чтобы зайти на сервер",
@@ -169,7 +169,8 @@
 		"SONG_SELECTION_CANCELLED": "Выбор трека отменен",
 		"NONE": "Нет",
 		"COMMAND_ERROR": "Произошла неизвестная ошибка при использовании команды %name. Разработчикам были уведомлены. Если ты снова используешь команду и увидишь это сообщение, пожалуйста, подожди какое-то время. Расскажи об этом, если снова повторится: %server",
-		"UNKNOWN_AUTHOR": "Неизвестный автор"
+		"UNKNOWN_AUTHOR": "Неизвестный автор",
+		"DM_ONLY": "This command can only be used in DMs"
 	},
 	"sit": {
 		"name": "сидеть",
@@ -396,6 +397,16 @@
 	"shuffle": {
 		"name": "shuffle",
 		"description": "Перемешивает песни в очереди"
+	},
+	"remove": {
+		"name": "remove",
+		"description": "Удаляет трек из плейлиста",
+		"options": [
+			{
+				"name": "index",
+				"description": "Номер трека, который нужно удалить (начиная с 1)"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "musictoken",

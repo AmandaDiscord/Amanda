@@ -10,18 +10,18 @@
 		"NOW_PLAYING": "Jetzt läuft: %song",
 		"VC_NOT_JOINABLE": "%username, Ich habe keine Erlaubnis in deinen Sprach-Channel zu gehen.",
 		"NO_RESULTS": "Kein Ergebnis.",
-		"QUEUE_STOPPED": "%username hat die Warteschlange gestoppt.",
+		"QUEUE_STOPPED": "%username hat die Playlist gestoppt.",
 		"LOOP_ON": "Wiederholung wurde angeschalten.",
 		"LOOP_OFF": "Wiederholung wurde abgeschalten.",
 		"NO_LYRICS": "Beim anfordern der Lyrik ist ein Fehler aufgetreten, oder es gibt keine.",
-		"QUEUE_PAUSED": "Die Warteschlange wurde pausiert.",
-		"QUEUE_UNPAUSED": "Die Warteschlange wurde fortgesetzt.",
+		"QUEUE_PAUSED": "Die Playlist wurde pausiert.",
+		"QUEUE_UNPAUSED": "Die Playlist wurde fortgesetzt.",
 		"TOTAL_LENGTH": "Gesamtlänge: %length",
-		"QUEUE_FOR": "Warteschlange für diesen Server",
+		"QUEUE_FOR": "Playlist für diesen Server",
 		"TOO_MANY_SKIPS": "Du kannst nicht mehr Lieder als vorhanden überspringen!",
-		"SKIPPED_ALL": "Alle Lieder in der Warteschlange wurden übersprungen und die Warteschlange wurde zerstört.",
+		"SKIPPED_ALL": "Alle Lieder in der Playlist wurden übersprungen und die Playlist wurde zerstört.",
 		"SKIPPED_AMOUNT": "%amount Lieder übersprungen.",
-		"SHUFFLED": "Die Warteschlange wurde gemischt.",
+		"SHUFFLED": "Die Playlist wurde gemischt.",
 		"TOKENS_DELETED": "Alle Token wurden gelöscht. Benutze `%prefixmusictoken action:new` um einen neuen zu erstellen.",
 		"TOKENS_NEW": "Deine existierenden Token wurden gelöscht, und ein neuer wurde erstellt.\nTeile diesen Token mit niemanden. Solltest du ihn ausversehen teilen, dann kannst du `%prefixmusictoken action:delete` benutzen um ihn zu löschen und dich selbst zu schützen.\nDu kannst dich nun auf %website anmelden.",
 		"TOKENS_PREVIOUS": "Token den du zuvor erstellt hast:\nDu kannst `%prefixmusictoken action:delete` benutzen um ihn zu löschen, und `%prefixmusictoken action:new` um ihn neu zu erstellen.",
@@ -36,7 +36,7 @@
 		"NEWER_NOW_PLAYING": "Es gibt eine neue 'Jetzt läuft' Nachricht.",
 		"SONG_ERROR_EXCLAIMATION": "Der interne Identifikator des Liedes hatte den Platzhalter Wert `!`.\nDies ist ein Bug.",
 		"SONG_ERROR_NULL": "Der interne Identifikator des Liedes war `null` oder `undefined`\nDies ist ein Bug.",
-		"QUEUE_ENDED": "Es sieht aus als wäre die Warteschlange zuende.",
+		"QUEUE_ENDED": "Es sieht aus als wäre die Playlist zuende.",
 		"SONG_STUCK": "Das Lied hat sich beim Laden festgehangen.",
 		"UNKNOWN_TRACK_EXCEPTION": "Es gab ein Fehler bei der Wiedergabe des Liedes. Das ist alles was Ich weiß.",
 		"NO_USERS_IN_VC": "Niemand anderes ist in meinem Sprachchannel. In %time Sekunden werde ich aufhören Musik abzuspielen, sollte niemand wiederkommen.",
@@ -44,7 +44,7 @@
 		"SONG_NOT_OBJECT": "Lied ist kein Objekt %song",
 		"ERROR_OCCURRED": "Wir stießen auf einen Fehler",
 		"TOO_MANY_ERRORS": "Zu viele Fehler!",
-		"ERRORS_SUPPRESSED": "Zukünftige Fehler dieser Warteschlange werden stummgeschaltet.\nSollten weitere Lieder fehlerhaft sein, werden sie ohne Nachricht übersprungen..\nUm einen Bug zu melden, Joine unseren Server: https://discord.gg/YMkZDsK",
+		"ERRORS_SUPPRESSED": "Zukünftige Fehler dieser Playlist werden stummgeschaltet.\nSollten weitere Lieder fehlerhaft sein, werden sie ohne Nachricht übersprungen..\nUm einen Bug zu melden, Joine unseren Server: https://discord.gg/YMkZDsK",
 		"HEADER_PAUSED": "PAUSIERT",
 		"MISSING_TRACK": "Fehlender Track für %id",
 		"INVIDIOUS_NO_DATA": "Invidious hat keine gültigen Daten zurückgegeben\n%api\n%link\n%yt",
@@ -108,7 +108,7 @@
 		"HEADER_UPTIME": "Uptime",
 		"HEADER_MEMORY": "Memory",
 		"HEADER_SHARDS": "Shards",
-		"HEADER_SONGS_QUEUED": "Lieder in Warteschlange",
+		"HEADER_SONGS_QUEUED": "Lieder in Playlist",
 		"HEADER_USERS_LISTENING": "Nutzer die zuhören",
 		"HEADER_NODE_USAGE": "Node Nutzung",
 		"NO_NODES": "Keine Nodes",
@@ -147,7 +147,7 @@
 		"INVALID_RADIO_NAMESPACE": "Ungültiger Radiosender Namespace",
 		"PAGE_X_OF_Y": "Seite %current von %total",
 		"PAGE_LENGTH": "Seitenlänge: %time",
-		"VOLUME_SET": "Warteschlangen Lautstärke auf %volume% gesetzt",
+		"VOLUME_SET": "Playlist Lautstärke auf %volume% gesetzt",
 		"CANNOT_SEEK_LIVE": "Du kannst seek nicht bei Live Audio benutzen",
 		"SEEK_GREATER_THAN_SONG_LENGTH": "Die angegebene Zeit war länger als die Länge des Tracks",
 		"SEEK_ERROR": "Beim Springen auf die angegebene Stelle ist ein Fehler aufgetreten. Deine Dauer wurde ordentlich als %parsed Millisekunden geparst, aber LavaLink ist nicht gesprungen. Dies ist ein Bug. Bitte melde es hier: %server",
@@ -165,7 +165,7 @@
 		"PLAYLIST_DUPLICATE_SONG": "Du hast versucht ein Duplikat zur Playlist hinzuzufügen.",
 		"PLAYLIST_SONG_ADDED": "%title hinzugefügt",
 		"OUT_OF_BOUNDS": "Index out of bounds",
-		"PLAYLIST_SONG_REMOVED": "%title entfernt",
+		"SONG_REMOVED": "%title entfernt",
 		"PLAYLIST_INDEXES_EQUAL": "Die von und zu Indizen dürfen nicht identisch sein.",
 		"PLAYLIST_SONG_MOVED": "Track verschoben",
 		"TITLE_JOIN_SERVER": "Klicke auf den Titel um unseren Support Server beizutreten.",
@@ -174,7 +174,8 @@
 		"SONG_SELECTION_CANCELLED": "Track Auswahl abgebrochen",
 		"NONE": "None",
 		"COMMAND_ERROR": "Ein Fehler mit dem Befehl %name ist aufgetreten. Die Entwickler wurden benachrichtigt. Wenn du diesen Befehl erneut benutzt und diese Nachricht siehst, bitte gebe uns eine angemessene Zeit um das Problem zu beheben. Melde dies, sollte es erneut auftreten: %server",
-		"UNKNOWN_AUTHOR": "Unbekannter Author"
+		"UNKNOWN_AUTHOR": "Unbekannter Author",
+		"DM_ONLY": "Dieser Befehl kann nur in DMs verwendet werden"
 	},
 	"sit": {
 		"name": "sit",
@@ -324,7 +325,7 @@
 	},
 	"skip": {
 		"name": "skip",
-		"description": "Tracks in der Warteschlange überspringen",
+		"description": "Tracks in der Playlist überspringen",
 		"options": [
 			{
 				"name": "start",
@@ -338,11 +339,11 @@
 	},
 	"stop": {
 		"name": "stop",
-		"description": "Stoppt die Warteschlange"
+		"description": "Stoppt die Playlist"
 	},
 	"queue": {
 		"name": "queue",
-		"description": "Zeige die Warteschlange und führe Aktionen aus",
+		"description": "Zeige die Playlist und führe Aktionen aus",
 		"options": [
 			{
 				"name": "page",
@@ -354,11 +355,11 @@
 			},
 			{
 				"name": "loop",
-				"description": "Soll die Warteschlange in einer Schleife abgespielt werden"
+				"description": "Soll die Playlist in einer Schleife abgespielt werden"
 			},
 			{
 				"name": "pause",
-				"description": "Soll die Warteschlange pausiert werden"
+				"description": "Soll die Playlist pausiert werden"
 			}
 		]
 	},
@@ -386,21 +387,31 @@
 	},
 	"filters": {
 		"name": "filters",
-		"description": "Füge Filter zur Warteschlange hinzu",
+		"description": "Füge Filter zur Playlist hinzu",
 		"options": [
 			{
 				"name": "pitch",
-				"description": "Setze die Tonhöhe der Warteschlange in Halbtöne"
+				"description": "Setze die Tonhöhe der Wiedergabe in Halbtöne"
 			},
 			{
 				"name": "speed",
-				"description": "Setze die Geschwindigkeit der Warteschlange auf X%"
+				"description": "Setze die Geschwindigkeit der Wiedergabe auf X%"
 			}
 		]
 	},
 	"shuffle": {
 		"name": "shuffle",
-		"description": "Mische die Warteschlange"
+		"description": "Mische die Playlist"
+	},
+	"remove": {
+		"name": "remove",
+		"description": "Entferne einen Track von einer Playlist",
+		"options": [
+			{
+				"name": "index",
+				"description": "Der Index des Tracks in der Playlist (beginnend bei 1)"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "musictoken",
@@ -454,7 +465,7 @@
 			},
 			{
 				"name": "remove",
-				"description": "Entfernen einen Track von einer Playlist",
+				"description": "Entferne einen Track von einer Playlist",
 				"options": [
 					{
 						"name": "playlist",

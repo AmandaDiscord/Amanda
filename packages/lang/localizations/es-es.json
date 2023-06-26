@@ -10,18 +10,18 @@
 		"NOW_PLAYING": "Reproduciendo ahora: %song",
 		"VC_NOT_JOINABLE": "%username, No tengo permisos para unirme a tu canal de voz.",
 		"NO_RESULTS": "Sin resultados.",
-		"QUEUE_STOPPED": "Cola detenida por %username.",
+		"QUEUE_STOPPED": "Fila detenida por %username.",
 		"LOOP_ON": "Bucle activado.",
 		"LOOP_OFF": "Bucle desactivado.",
 		"NO_LYRICS": "Hubo un error buscando la letra o no simplemente no existe.",
-		"QUEUE_PAUSED": "La cola ha sido pausada.",
-		"QUEUE_UNPAUSED": "La cola ha sido despauseada.",
+		"QUEUE_PAUSED": "La fila ha sido pausada.",
+		"QUEUE_UNPAUSED": "La fila ha sido despauseada.",
 		"TOTAL_LENGTH": "Duración total: %length",
-		"QUEUE_FOR": "Cola de este servidor",
-		"TOO_MANY_SKIPS": "¡No puedes saltar más canciones de las que existen en la cola!",
-		"SKIPPED_ALL": "Todas las canciones de la cola han sido saltadas y la cola ha sido destruida.",
+		"QUEUE_FOR": "Fila de este servidor",
+		"TOO_MANY_SKIPS": "¡No puedes saltar más canciones de las que existen en la fila!",
+		"SKIPPED_ALL": "Todas las canciones de la fila han sido saltadas y la fila ha sido destruida.",
 		"SKIPPED_AMOUNT": "%amount canciones saltadas.",
-		"SHUFFLED": "La cola ha sido mezclada.",
+		"SHUFFLED": "La fila ha sido mezclada.",
 		"TOKENS_DELETED": "Todos tus tokens han sido eliminados. Usa `%prefixmusictoken action:new` para generar uno nuevo.",
 		"TOKENS_NEW": "Tu token existente ha sido eliminado, y uno nuevo ha sido creado.\nNo compartas este token con nadie. Si lo compartes accidentalmente, puedes usar `%prefixmusictoken action:delete` para borrarlo y mantenerte a salvo.\nAhora puedes ingresar a %website",
 		"TOKENS_PREVIOUS": "Aquí está el token que has generado anteriormente:\nPuedes usar `%prefixmusictoken action:delete` para borrarlo, y `%prefixmusictoken action:new` para regenerarlo.",
@@ -36,7 +36,7 @@
 		"NEWER_NOW_PLAYING": "Hay un nuevo mensaje donde dice que estoy reproduciendo actualmente",
 		"SONG_ERROR_EXCLAIMATION": "El identificador interno de la canción era el símbolo `!`\nEsto es un bug.",
 		"SONG_ERROR_NULL": "El identificador interno de la canción era `null` o `undefined`\nEsto es un bug.",
-		"QUEUE_ENDED": "Parece que esta cola terminó.",
+		"QUEUE_ENDED": "Parece que esta fila terminó.",
 		"SONG_STUCK": "La canción se atoró mientras cargaba.",
 		"UNKNOWN_TRACK_EXCEPTION": "Hubo una excepción cuando trataba de reproducir esa pista. Eso es todo lo que sé.",
 		"NO_USERS_IN_VC": "No hay nadie más en mi canal de voz. Dejaré de reproducir música en %time si nadie se vuelve a unir.",
@@ -44,7 +44,7 @@
 		"SONG_NOT_OBJECT": "La canción no es un objeto %song",
 		"ERROR_OCCURRED": "Encontramos un problema",
 		"TOO_MANY_ERRORS": "¡Muchos errores!",
-		"ERRORS_SUPPRESSED": "Errores posteriores de esta cola serán silenciados.\nSi otra canción falla, será saltada sin aviso.\nPara reportar un bug, únete a nuestro servidor: https://discord.gg/YMkZDsK",
+		"ERRORS_SUPPRESSED": "Errores posteriores de esta fila serán silenciados.\nSi otra canción falla, será saltada sin aviso.\nPara reportar un bug, únete a nuestro servidor: https://discord.gg/YMkZDsK",
 		"HEADER_PAUSED": "PAUSADO",
 		"MISSING_TRACK": "Pista faltante para %id",
 		"INVIDIOUS_NO_DATA": "Invidious no regresó datos válidos\n%api\n%link\n%yt",
@@ -103,7 +103,7 @@
 		"HEADER_UPTIME": "Tiempo de actividad",
 		"HEADER_MEMORY": "Memoria",
 		"HEADER_SHARDS": "Shards",
-		"HEADER_SONGS_QUEUED": "Canciones en cola",
+		"HEADER_SONGS_QUEUED": "Canciones en fila",
 		"HEADER_USERS_LISTENING": "Usuarios escuchando",
 		"HEADER_NODE_USAGE": "Uso por nodo",
 		"NO_NODES": "Sin nodos",
@@ -142,7 +142,7 @@
 		"INVALID_RADIO_NAMESPACE": "Nombre de estación de radio inválido",
 		"PAGE_X_OF_Y": "Página %current de %total",
 		"PAGE_LENGTH": "Longitud de la página: %time",
-		"VOLUME_SET": "Volumen de la cola en %volume%",
+		"VOLUME_SET": "Volumen de la fila en %volume%",
 		"CANNOT_SEEK_LIVE": "No puedes retroceder audio en vivo",
 		"SEEK_GREATER_THAN_SONG_LENGTH": "El tiempo que mencionaste es más largo que la duración de la pista",
 		"SEEK_ERROR": "Hubo un error al ir a esa posición. Tu duración fue analizado correctamente como %parsed milisegundos, pero Lavalink no lo pudo encontrar. Esto es un bug. Please reporta esto: %server",
@@ -160,7 +160,7 @@
 		"PLAYLIST_DUPLICATE_SONG": "Trataste de añadir una pista duplicada a tu playlist",
 		"PLAYLIST_SONG_ADDED": "%title añadido",
 		"OUT_OF_BOUNDS": "Index fuera del límite",
-		"PLAYLIST_SONG_REMOVED": "%title removido",
+		"SONG_REMOVED": "%title removido",
 		"PLAYLIST_INDEXES_EQUAL": "El desde y hasta no pueden ser iguales",
 		"PLAYLIST_SONG_MOVED": "Pista movida",
 		"TITLE_JOIN_SERVER": "Haz click el título para unirte a nuestro servidor de soporte",
@@ -169,7 +169,8 @@
 		"SONG_SELECTION_CANCELLED": "Selección de pista cancelada",
 		"NONE": "Ninguno",
 		"COMMAND_ERROR": "Hubo un error con el comando %name. Los desarrolladores han sido notificados. Si usted usa este comando otra vez y ve este mensaje, por favor espera una cantidad razonable de tiempo para que pueda esto ser arreglado. Reporta esto si vuelve a ocurrir: %server",
-		"UNKNOWN_AUTHOR": "Autor desconocido"
+		"UNKNOWN_AUTHOR": "Autor desconocido",
+		"DM_ONLY": "Este comando sólo puede ser utilizado en DMs"
 	},
 	"sit": {
 		"name": "sentar",
@@ -319,7 +320,7 @@
 	},
 	"skip": {
 		"name": "saltar",
-		"description": "Saltar canciones de la cola",
+		"description": "Saltar canciones de la fila",
 		"options": [
 			{
 				"name": "empiezo",
@@ -333,11 +334,11 @@
 	},
 	"stop": {
 		"name": "parar",
-		"description": "Parar la cola"
+		"description": "Parar la fila"
 	},
 	"queue": {
-		"name": "cola",
-		"description": "Mostrar la cola para realizar acciones",
+		"name": "fila",
+		"description": "Mostrar la fila para realizar acciones",
 		"options": [
 			{
 				"name": "página",
@@ -345,15 +346,15 @@
 			},
 			{
 				"name": "volumen",
-				"description": "Configurar el volumen % de la cola"
+				"description": "Configurar el volumen % de la fila"
 			},
 			{
 				"name": "bucle",
-				"description": "Configurar el bucle de la cola"
+				"description": "Configurar el bucle de la fila"
 			},
 			{
 				"name": "pausa",
-				"description": "Pausar la cola"
+				"description": "Pausar la fila"
 			}
 		]
 	},
@@ -381,21 +382,31 @@
 	},
 	"filters": {
 		"name": "filtros",
-		"description": "Aplicar filtros a la cola",
+		"description": "Aplicar filtros a la fila",
 		"options": [
 			{
 				"name": "tono",
-				"description": "Configura el tono de la cola en semitonos"
+				"description": "Configura el tono de la fila en semitonos"
 			},
 			{
 				"name": "velocidad",
-				"description": "Configura la velocidad % de la cola"
+				"description": "Configura la velocidad % de la fila"
 			}
 		]
 	},
 	"shuffle": {
 		"name": "desordenada",
-		"description": "Desordena la cola"
+		"description": "Desordena la fila"
+	},
+	"remove": {
+		"name": "eliminar",
+		"description": "Eliminar una pista de la fila",
+		"options": [
+			{
+				"name": "index",
+				"description": "La pista a eliminar (índice 1)"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "musictoken",

@@ -160,7 +160,7 @@
 		"PLAYLIST_DUPLICATE_SONG": "Próbowałeś/aś zduplikować ścieżkę w swojej playliście",
 		"PLAYLIST_SONG_ADDED": "%title dodany",
 		"OUT_OF_BOUNDS": "Index poza zasięgiem",
-		"PLAYLIST_SONG_REMOVED": "%title usunięty",
+		"SONG_REMOVED": "%title usunięty",
 		"PLAYLIST_INDEXES_EQUAL": "Wartości indeksu dla 'z' i 'do' nie mogą być równe",
 		"PLAYLIST_SONG_MOVED": "Ścieżka przeniesiona",
 		"TITLE_JOIN_SERVER": "Kliknij tytuł by dołączyć do naszego serwera wsparcia",
@@ -169,7 +169,8 @@
 		"SONG_SELECTION_CANCELLED": "Wybór ścieżki anulowany",
 		"NONE": "Brak",
 		"COMMAND_ERROR": "Wystapił problem z komendą %name. Deweloperzy zostali powiadomieni. Jeśli użyjesz tej komendy jeszcze raz i zobaczysz tą wiadomość, proszę poczekaj aż usterka zostanie naprawiona. Zgłoś to jeśli wystapi ona jeszcze raz: %server",
-		"UNKNOWN_AUTHOR": "Nieznany autor"
+		"UNKNOWN_AUTHOR": "Nieznany autor",
+		"DM_ONLY": "This command can only be used in DMs"
 	},
 	"sit": {
 		"name": "siad",
@@ -396,6 +397,16 @@
 	"shuffle": {
 		"name": "przetasowanie",
 		"description": "Przetasowuje kolejkę"
+	},
+	"remove": {
+		"name": "usuń",
+		"description": "Usuwa ścieżkę z playlisty",
+		"options": [
+			{
+				"name": "index",
+				"description": "Numer ścieżki do usunięcia (indeks zaczynający się od 1)"
+			}
+		]
 	},
 	"musictoken": {
 		"name": "tokenmuzyczny",
