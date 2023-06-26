@@ -40,8 +40,8 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",
-		"./commands/meta",
-		"./commands/music-stub"
+		"./commands/music-stub",
+		"./commands/meta"
 	])
 
 	passthrough.webconnector.on("message", data => {
