@@ -5,7 +5,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "clean": "node ../../scripts/delete.js dist",
     "build": "tsup",
     "lint": "eslint . --ext .ts"
   },

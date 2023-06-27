@@ -488,7 +488,7 @@ export function substr(text: string, from: number, length?: number): string {
 }
 
 export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
-	const sql: typeof import("@amanda/sql/src/index") = require("@amanda/sql")
+	const sql = require("@amanda/sql")
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
 		const cached = await sql.orm.get("users", { id: id })
@@ -522,7 +522,12 @@ export function displayAvatarURL(user: APIUser, dynamic?: boolean): string {
 	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
 }
 
-export function createPagination(cmd: import("@amanda/commands/src/index").ChatInputCommand, lang: Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
+type ChatInputCommand = {
+	application_id: string;
+	token: string;
+}
+
+export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
 	let alignedRows = tableifyRows([title].concat(rows), align, () => "`")
 	const formattedTitle = alignedRows[0].replace(alignedRowsRegex, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)

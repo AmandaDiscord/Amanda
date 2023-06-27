@@ -1,6 +1,6 @@
 {
 	"extends": "../../tsconfig.json",
-	"include": ["./src/**/*.ts"],
+	"include": ["src/**/*.ts"],
 	"compilerOptions": {
 		"resolveJsonModule": false,
 		"outDir": "../runtime-website/webroot/scripts",
