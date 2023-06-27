@@ -17,6 +17,6 @@
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "@amanda/web-internal": "1.0.0",
-    "simple-git": "^3.19.0"
+    "simple-git": "^3.19.1"
   }
 }
