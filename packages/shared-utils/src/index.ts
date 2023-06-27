@@ -488,23 +488,28 @@ export function substr(text: string, from: number, length?: number): string {
 }
 
 export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
-	const sql = require("@amanda/sql")
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
+		const sql = require("@amanda/sql")
 		const cached = await sql.orm.get("users", { id: id })
 		if (cached) return convertCachedUser(cached)
 	}
 	const fetched = await snow.user.getUser(id).catch(() => null)
-	if (fetched && confprovider.config.db_enabled) {
+	if (fetched && confprovider.config.db_enabled) updateUser(fetched)
+	return fetched
+}
+
+export function updateUser(user?: APIUser) {
+	if (user && confprovider.config.db_enabled) {
+		const sql = require("@amanda/sql")
 		sql.orm.upsert("users", {
-			id,
-			tag: `${fetched.username}#${fetched.discriminator ?? 0}`,
-			avatar: fetched.avatar,
-			bot: fetched.bot ? 1 : 0,
+			id: user.id,
+			tag: `${user.username}#${user.discriminator ?? 0}`,
+			avatar: user.avatar,
+			bot: user.bot ? 1 : 0,
 			added_by: confprovider.config.cluster_id
 		})
 	}
-	return fetched
 }
 
 export function convertCachedUser(user: { id: string; tag: string; bot: number; avatar: string | null; }): APIUser {

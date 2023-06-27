@@ -327,6 +327,8 @@ export async function onGatewayMessage(
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
 	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
 	else if (parsed.t === "INTERACTION_CREATE") {
+		const user = parsed.d.member?.user ?? parsed.d.user
+		sharedUtils.updateUser(user)
 		if (parsed.d.type === 2) {
 			let commandHandled = false
 			if (commands.handle(parsed.d, snow)) {

@@ -40,6 +40,9 @@ server.post("/interaction", async (res, req) => {
 	let rt = "{}"
 	let commandHandled = false
 
+	const user = payload.member?.user ?? payload.user
+	sharedUtils.updateUser(user)
+
 	// Pings to verify
 	if (payload.type === 1) rt = "{\"type\":1}"
 	else if (payload.type === 2) { // Commands
