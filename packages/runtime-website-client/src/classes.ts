@@ -224,7 +224,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		this.disable()
 		this.queue.session.send({
 			op: opcodes.TRACK_REMOVE,
-			d: { index: index }
+			d: { index: index + 1 }
 		})
 	}
 
