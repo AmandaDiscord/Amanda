@@ -13,7 +13,7 @@
   "dependencies": {
     "@amanda/config": "1.0.0",
     "@amanda/shared-utils": "1.0.0",
-    "pg": "^8.11.0"
+    "pg": "^8.11.1"
   },
   "devDependencies": {
     "@types/pg": "8.10.2"
