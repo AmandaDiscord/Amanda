@@ -21,7 +21,8 @@ const opcodes = {
 	STOP: 11,
 	ATTRIBUTES_CHANGE: 12,
 	CLEAR_QUEUE: 13,
-	LISTENERS_UPDATE: 14
+	LISTENERS_UPDATE: 14,
+	TRACK_PLAY_NOW: 15
 }
 
 type Packet<T> = {
@@ -30,7 +31,7 @@ type Packet<T> = {
 	nonce?: number | null;
 }
 
-const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove">([
+const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove" | "requestPlayNow">([
 	[opcodes.IDENTIFY, "identify"],
 	[opcodes.STATE, "sendState"],
 	[opcodes.TOGGLE_PLAYBACK, "togglePlayback"],
@@ -38,7 +39,8 @@ const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayba
 	[opcodes.STOP, "requestStop"],
 	[opcodes.ATTRIBUTES_CHANGE, "requestAttributesChange"],
 	[opcodes.CLEAR_QUEUE, "requestClearQueue"],
-	[opcodes.TRACK_REMOVE, "requestTrackRemove"]
+	[opcodes.TRACK_REMOVE, "requestTrackRemove"],
+	[opcodes.TRACK_PLAY_NOW, "requestPlayNow"]
 ])
 
 
@@ -201,6 +203,20 @@ export class Session {
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		if (typeof data?.d?.index === "number") q.removeTrack(data.d.index)
+	}
+
+	public requestPlayNow(data: Packet<{ index: number }>) {
+		const allowed = this.allowedToAction()
+		if (!allowed) return
+		const q = queues.get(this.guild!)
+		if (!q) return this.cleanClose()
+		if (typeof data?.d?.index === "number") {
+			if (data.d.index === 0) return
+			if (!q.tracks[data.d.index]) return
+			const tracks = q.tracks.splice(data.d.index, 1)
+			q.tracks.splice(1, 0, ...tracks)
+			q.skip()
+		}
 	}
 }
 

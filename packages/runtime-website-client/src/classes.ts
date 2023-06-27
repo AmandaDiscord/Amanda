@@ -219,6 +219,15 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		if (this.data.thumbnail.src.length) imageStore.add(this.data.thumbnail.src)
 	}
 
+	public play(): void {
+		const index = this.queue.children.indexOf(this)
+		this.disable()
+		this.queue.session.send({
+			op: opcodes.TRACK_PLAY_NOW,
+			d: { index: index + 1 }
+		})
+	}
+
 	public remove(): void {
 		const index = this.queue.children.indexOf(this)
 		this.disable()
