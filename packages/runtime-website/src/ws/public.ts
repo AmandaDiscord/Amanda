@@ -216,6 +216,7 @@ export class Session {
 			const tracks = q.tracks.splice(data.d.index, 1)
 			q.tracks.splice(1, 0, ...tracks)
 			q.skip()
+			this.sendState()
 		}
 	}
 }
