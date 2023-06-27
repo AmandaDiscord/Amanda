@@ -12,7 +12,7 @@ commands.assign([
 					{
 						color: confprovider.config.standard_embed_color,
 						image: {
-							url: "https://cdn.discordapp.com/attachments/608456955660468224/777735506703810560/chibiv3.png"
+							url: "https://cdn.discordapp.com/attachments/1123048509470429365/1123048642882842665/chibiv3.png"
 						}
 					}
 				]
