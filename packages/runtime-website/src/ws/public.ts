@@ -195,6 +195,7 @@ export class Session {
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		q.tracks.splice(1, q.tracks.length - 1)
+		this.onClearQueue()
 	}
 
 	public requestTrackRemove(data: Packet<{ index: number }>) {
