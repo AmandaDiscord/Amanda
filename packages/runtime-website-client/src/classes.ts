@@ -192,6 +192,11 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		super("div")
 		this.class("queue-item")
 
+		;["play", "remove"].forEach(icon => {
+			const child = new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this[icon]())
+			this.parts.controls.child(child)
+		})
+
 		this.updateData(data)
 	}
 
