@@ -1,8 +1,14 @@
+import path = require("path")
+import fs = require("fs")
+
+import Canvas = require("canvas")
+import CanvasCover = require("canvas-image-cover")
+
 import sG = require("simple-git")
 const simpleGit = sG.simpleGit(__dirname)
 
 import passthrough = require("../passthrough")
-const { client, confprovider, commands/* , sync, sql*/ } = passthrough
+const { client, confprovider, commands, sql, sync } = passthrough
 
 // const emojis: typeof import("../emojis") = sync.require("../emojis")
 
@@ -15,6 +21,57 @@ import type { Lang } from "@amanda/lang"
 function bToMB(number: number) {
 	return `${((number / 1024) / 1024).toFixed(2)}MB`
 }
+
+const imageCacheDirectory = path.join("../../image-cache")
+const numberVerifyRegex = /^[\d,]+$/g
+
+async function updateCache() {
+	const backgroundRows = await sql.orm.select("settings", { key: "profilebackground" }, { select: ["user_id", "value"] })
+	const mineRows = await sql.orm.select("background_sync", { machine_id: confprovider.config.cluster_id }, { select: ["user_id", "url"] })
+	const mineMap = new Map(mineRows.map(r => [r.user_id, r.url]))
+
+	await Promise.all(backgroundRows.map(async row => {
+		const mine = mineMap.get(row.user_id)
+		if (!mine || mine !== row.value) {
+			let image: Canvas.Image | undefined = undefined
+
+			try {
+				image = await Canvas.loadImage(row.value)
+			} catch {
+				return console.log(`Image cache update for ${row.user_id} failed.`)
+			}
+
+			const canvas = Canvas.createCanvas(800, 500).getContext("2d")
+
+			CanvasCover(image, 0, 0, 800, 500).render(canvas)
+			const buf = canvas.canvas.toBuffer("image/png")
+
+			try {
+				await fs.promises.stat(imageCacheDirectory)
+			} catch {
+				await fs.promises.mkdir(imageCacheDirectory, { recursive: true })
+			}
+
+			await fs.promises.writeFile(path.join(imageCacheDirectory, `${row.user_id}.png`), buf)
+			sql.orm.upsert("background_sync", { machine_id: confprovider.config.cluster_id, user_id: row.user_id, url: row.value })
+
+			console.log(`Saved background for ${row.user_id}`)
+		}
+	}))
+}
+
+let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+updateCache()
+
+function cacheUpdateTimeoutFunction() {
+	updateCache()
+	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
+}
+
+sync.events.once(__filename, () => {
+	clearTimeout(cacheUpdateTimeout)
+	console.log("cleared old cache update timeout")
+})
 
 commands.assign([
 	{
@@ -252,6 +309,172 @@ commands.assign([
 				}
 
 				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+			}
+		}
+	},
+	{
+		name: "settings",
+		description: "Modify settings for Amanda to use",
+		category: "meta",
+		options: [
+			{
+				name: "setting",
+				type: 3,
+				description: "The setting you want to modify/view",
+				required: true,
+				choices: [
+					{
+						name: "profilebackground",
+						value: "profilebackground"
+					},
+					{
+						name: "profiletheme",
+						value: "profiletheme"
+					},
+					{
+						name: "profilestyle",
+						value: "profilestyle"
+					}
+				]
+			},
+			{
+				name: "modify",
+				type: 3,
+				description: "What to modify the setting value to"
+			}
+		],
+		async process(cmd, lang) {
+			if (!confprovider.config.db_enabled) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.DATABASE_OFFLINE
+				})
+			}
+
+			type Setting = {
+				type: "string" | "boolean" | "number"
+				defaultValue: string
+				nullable?: boolean
+				allowedValues?: Array<unknown>
+				allowDonorArbitrary?: boolean,
+			}
+
+			const settings = {
+				"profilebackground": {
+					type: "string",
+					nullable: true,
+					allowedValues: ["default", "vicinity", "sakura"],
+					allowDonorArbitrary: true,
+					defaultValue: "default"
+				} as Setting,
+				"profiletheme": {
+					type: "string",
+					allowedValues: ["dark", "light"],
+					defaultValue: "dark"
+				} as Setting,
+				"profilestyle": {
+					type: "string",
+					allowedValues: ["old", "new"],
+					defaultValue: "new"
+				} as Setting
+			}
+
+			const setting = cmd.data.options.get("setting")!.asString()! as keyof typeof settings
+			const modify = cmd.data.options.get("modify")?.asString() ?? null
+
+			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
+
+			// basic validation
+			const info = settings[setting]
+			if (!info) throw new Error("NO_SETTING_INFO")
+
+			let invalid = false
+
+			if (modify) {
+				if (!info.nullable && modify === "null") invalid = true
+
+				if (info.type === "boolean") {
+					if (modify !== "true" && modify !== "false" && modify !== "null") invalid = true
+				} else if (info.type === "number") {
+					if (modify !== "null" && !numberVerifyRegex.test(modify)) invalid = true
+
+					const bi = sharedUtils.parseBigInt(modify)
+					if (bi) {
+						const num = Number(bi)
+						if (info.allowedValues && !info.allowedValues.includes(num)) invalid = true
+					}
+
+				} else if (info.type === "string") {
+					if (!modify.length) invalid = true
+					if (modify !== "null" && info.allowedValues && !info.allowedValues.includes(modify) && !isPremium?.state) invalid = true
+				}
+
+				if (invalid) {
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: langReplace(info.allowDonorArbitrary ? lang.GLOBAL.INVALID_DATA_TYPE_YES_DONOR_ARBITRARY : lang.GLOBAL.INVALID_DATA_TYPE_NO_DONOR_ARBITRARY, {
+							"link": `<${confprovider.config.patreon_url}>`,
+							"acceptable": info.type === "boolean"
+								? "true, false"
+								: info.type === "number"
+									? info.allowedValues
+										? info.allowedValues.join(", ")
+										: "any number"
+									: info.type === "string"
+										? info.allowedValues
+											? info.allowedValues.join(", ")
+											: "any string"
+										: "unknown"
+
+										+ info.nullable
+											? ", null"
+											: ""
+						})
+					})
+				}
+
+				if (info.nullable && modify === "null") {
+					sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: lang.GLOBAL.SETTING_UPDATED
+					})
+				} else {
+					sql.orm.upsert("settings", { user_id: cmd.author.id, key: setting, value: modify, type: info.type })
+					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: lang.GLOBAL.SETTING_UPDATED
+					})
+				}
+
+				if (setting === "profilebackground") {
+					if (isPremium?.state && modify.startsWith("http")) {
+						let response: Response | undefined = undefined
+
+						try {
+							response = await fetch(modify, { method: "HEAD" })
+						} catch {
+							sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+							return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+								content: lang.GLOBAL.ERROR_OCCURRED
+							})
+						}
+
+						const allowedMimes = ["image/png", "image/jpeg", "image/bmp", "image/tiff"]
+						const mime = response.headers.get("content-type")
+						if (!mime || !allowedMimes.includes(mime)) {
+							sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+							return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+								content: lang.GLOBAL.ERROR_OCCURRED
+							})
+						}
+
+						updateCache()
+					}
+				}
+
+
+			} else {
+				const existing = await sql.orm.get("settings", { user_id: cmd.author.id, key: setting })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: `${setting} (${info.type}): ${existing?.value ?? info.defaultValue}`
+				})
 			}
 		}
 	}

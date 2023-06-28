@@ -175,7 +175,10 @@
 		"COUPLE_CARD": "Couple card",
 		"TRANSACTIONS": "Transactions",
 		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
-		"GIVEN_TO_OTHER": "You have given %amount to %user"
+		"GIVEN_TO_OTHER": "You have given %amount to %user",
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
+		"SETTING_UPDATED": "That setting was updated"
 	},
 	"sit": {
 		"name": "sit",
@@ -638,6 +641,20 @@
 			{
 				"name": "light",
 				"description": "If light mode should be force used (default false)"
+			}
+		]
+	},
+	"settings": {
+		"name": "settings",
+		"description": "Modify settings for Amanda to use",
+		"options": [
+			{
+				"name": "setting",
+				"description": "The setting you want to modify/view"
+			},
+			{
+				"name": "modify",
+				"description": "What to modify the setting value to"
 			}
 		]
 	}

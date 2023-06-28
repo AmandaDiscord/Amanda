@@ -18,6 +18,7 @@
     "@amanda/sql": "1.0.0",
     "@amanda/web-internal": "1.0.0",
     "canvas": "2.11.2",
+    "canvas-image-cover": "2.0.2",
     "gifencoder": "2.0.1",
     "simple-git": "^3.19.1"
   }

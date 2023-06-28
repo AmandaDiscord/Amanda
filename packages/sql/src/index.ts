@@ -11,6 +11,7 @@ import { Database, Model } from "./orm"
 import type { AcceptablePrepared } from "./types"
 
 const models = {
+	background_sync: new Model<{ machine_id: string, user_id: string, url: string }>(["machine_id", "user_id"]),
 	bank_access: new Model<{ id: string, user_id: string }>(),
 	bank_accounts: new Model<{ id: string, amount: string, type: number }>(["id"]),
 	bans: new Model<{ user_id: string, temporary: number, expires: number }>(["user_id"]),
@@ -29,7 +30,7 @@ const models = {
 	playlist_songs: new Model<{ playlist_id: number, video_id: string, next: string | null }>(["playlist_id", "video_id"]),
 	playlists: new Model<{ playlist_id: number, author: string, name: string, play_count: number }>(["playlist_id"]),
 	premium: new Model<{ user_id: string, state: number }>(["user_id"]),
-	settings: new Model<{ user_id: string, key: string; value: string; type: "string" | "boolean" | "number" }>(["user_id"]),
+	settings: new Model<{ user_id: string, key: string; value: string; type: "string" | "boolean" | "number" }>(["user_id", "key"]),
 	songs: new Model<{ video_id: string, name: string, length: number }>(["video_id"]),
 	stat_logs: new Model<{ time: number, id: string, ram_usage_kb: number, users: number, guilds: number, channels: number, voice_connections: number, uptime: number, shard: number }>(["time", "id", "shard"]),
 	status_messages: new Model<{ id: number, dates: string, users: string, message: string, type: number, demote: number }>(["id"]),

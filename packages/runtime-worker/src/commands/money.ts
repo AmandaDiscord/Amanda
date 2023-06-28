@@ -21,7 +21,7 @@ const giverTier2 = BigInt(1000000) // 1,000,000
 const giverTier3 = BigInt(10000000) // 10,000,000
 const giverTier4 = BigInt(100000000) // 100,000,000
 
-const imageCacheDirectory = path.join("../../../image-cache")
+const imageCacheDirectory = path.join("../../image-cache")
 
 function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width?: number, height?: number): Canvas.Canvas {
 	const canvas = Canvas.createCanvas(width ?? base.width, height ?? base.height).getContext("2d")
@@ -513,7 +513,7 @@ commands.assign([
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
 			let cooldownInfo: { max: number, min: number, step: number, regen: { amount: number, time: number, } }
 			// avg % assumes 5 fruits + heart, heart payouts [0, 1.25, 4, 20], triple fruit payout 5
-			if (isPremium) {
+			if (isPremium?.state) {
 				cooldownInfo = {
 					max: 190, // avg +6.2% per roll
 					min: 172, // avg -4.8% per roll
@@ -665,7 +665,7 @@ commands.assign([
 
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
 			let cooldownInfo: CooldownInfo = {} as CooldownInfo // VSCode highlighting breaks if you type cast without an initializer
-			if (isPremium) {
+			if (isPremium?.state) {
 				cooldownInfo = {
 					max: 48,
 					min: 40,
@@ -1010,7 +1010,7 @@ commands.assign([
 
 			const badge = user.id === "320067006521147393"
 				? "badge-developer" as const
-				: isPremium
+				: isPremium?.state
 					? "badge-donator" as const
 					: null
 

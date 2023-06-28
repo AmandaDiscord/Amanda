@@ -56,6 +56,7 @@ __metadata:
     "@amanda/sql": 1.0.0
     "@amanda/web-internal": 1.0.0
     canvas: 2.11.2
+    canvas-image-cover: 2.0.2
     gifencoder: 2.0.1
     simple-git: ^3.19.1
   languageName: unknown
@@ -1229,6 +1230,13 @@ __metadata:
   version: 5.3.1
   resolution: "camelcase@npm:5.3.1"
   checksum: e6effce26b9404e3c0f301498184f243811c30dfe6d0b9051863bd8e4034d09c8c2923794f280d6827e5aa055f6c434115ff97864a16a963366fb35fd673024b
+  languageName: node
+  linkType: hard
+
+"canvas-image-cover@npm:2.0.2":
+  version: 2.0.2
+  resolution: "canvas-image-cover@npm:2.0.2"
+  checksum: cc7c1462da655e406dcf0b6f4097c0044eaea4ed0ebb9d0cf7fd669584145fedd5758eae5b95db7b1b9ec882e1857e8a0d7e06809f906fcc87e4bd95ffa7aa02
   languageName: node
   linkType: hard
 

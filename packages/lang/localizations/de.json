@@ -156,31 +156,34 @@
 		"PLAYLIST_INDEXES_EQUAL": "Die von und zu Indizen dürfen nicht identisch sein.",
 		"PLAYLIST_SONG_MOVED": "Track verschoben",
 		"TITLE_JOIN_SERVER": "Klicke auf den Titel um unseren Support Server beizutreten.",
-		"SONG_INFO_GENERIC": "Try getting this track's info on the website you found it on Versuche die Infos des Tracks auf der Webseite, wo du ihn gefunden hast, zu finden",
+		"SONG_INFO_GENERIC": "Versuche die Infos des Tracks auf der Webseite, wo du ihn gefunden hast, zu finden",
 		"SONG_SELECTION_CANCELLED": "Track Auswahl abgebrochen",
 		"NONE": "None",
 		"COMMAND_ERROR": "Ein Fehler mit dem Befehl %name ist aufgetreten. Die Entwickler wurden benachrichtigt. Wenn du diesen Befehl erneut benutzt und diese Nachricht siehst, bitte gebe uns eine angemessene Zeit um das Problem zu beheben. Melde dies, sollte es erneut auftreten: %server",
 		"UNKNOWN_AUTHOR": "Unbekannter Author",
 		"DM_ONLY": "Dieser Befehl kann nur in DMs verwendet werden",
-		"NOT_ENOUGH_MONEY": "You don't have enough money for that",
-		"THREE_HEARTS": "WOAH! 3 hearts!",
-		"TWO_HEARTS": "Double hearts :heart:",
-		"ONE_HEART": "1 heart",
-		"TRIPLE_PIECES": "Triple pieces",
-		"LOST": "You lost",
-		"FLIP_AMANDA_CHOSE_HEADS_WON": "Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_TAILS_WON": "Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Since you didn't choose a side, I chose heads for you and you lost %amount",
-		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Since you didn't choose a side, I chose tails for you and you lost %amount",
-		"FLIP_HEADS_WON": "You guessed heads and won %amount (+33%)",
-		"FLIP_TAILS_WON": "You guessed tails and won %amount (+33%)",
-		"FLIP_HEADS_LOST": "You guessed heads and lost %amount",
-		"FLIP_TAILS_LOST": "You guessed tails and lost %amount",
-		"PRIVATE_CARD": "Private card",
-		"COUPLE_CARD": "Couple card",
-		"TRANSACTIONS": "Transactions",
-		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
-		"GIVEN_TO_OTHER": "You have given %amount to %user"
+		"NOT_ENOUGH_MONEY": "Du hast dafür nicht genug Geld!",
+		"THREE_HEARTS": "WOAH! 3 Herzen!",
+		"TWO_HEARTS": "Doppelherz :heart:",
+		"ONE_HEART": "1 Herz",
+		"TRIPLE_PIECES": "Jackpot!",
+		"LOST": "Du hast verloren",
+		"FLIP_AMANDA_CHOSE_HEADS_WON": "Da du keine Seite ausgewählt hast, habe ich für dich Kopf gewählt und du hast %amount (+33%) gewonnen.",
+		"FLIP_AMANDA_CHOSE_TAILS_WON": "Da du keine Seite ausgewählt hast, habe ich für dich Zahl gewählt und du hast %amount (+33%) gewonnen.",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Da du keine Seite ausgewählt hast, habe ich für dich Kopf gewählt und du hast %amount verloren.",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Da du keine Seite ausgewählt hast, habe ich für dich Zahl gewählt und du hast %amount verloren.",
+		"FLIP_HEADS_WON": "Du hast Kopf geraten und %amount (+33%) gewonnen.",
+		"FLIP_TAILS_WON": " Du hast Zahl geraten und %amount (+33%) gewonnen.",
+		"FLIP_HEADS_LOST": "Du hast Kopf geraten und %amount verloren.",
+		"FLIP_TAILS_LOST": "Du hast Zahl geraten und %amount verloren.",
+		"PRIVATE_CARD": "Private Karte",
+		"COUPLE_CARD": "Pärchen Karte",
+		"TRANSACTIONS": "Transaktionen",
+		"CANNOT_GIVE_SELF": "Du kannst dir selbst kein Geld geben!",
+		"GIVEN_TO_OTHER": "Du hast %user %amount gegeben.",
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
+		"SETTING_UPDATED": "That setting was updated"
 	},
 	"sit": {
 		"name": "sit",
@@ -568,81 +571,95 @@
 	},
 	"slots": {
 		"name": "slots",
-		"description": "Run the slot machine",
+		"description": "Startet die Lotmaschine",
 		"options": [
 			{
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "menge",
+				"description": "Die Menge an Geld zum einsetzen"
 			}
 		]
 	},
 	"flip": {
 		"name": "flip",
-		"description": "Flips a coin",
+		"description": "Wirf eine Münze",
 		"options": [
 			{
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "menge",
+				"description": "Die Menge an Geld zum einsetzen"
 			},
 			{
-				"name": "side",
-				"description": "The side to bet on"
+				"name": "seite",
+				"description": "Auf welche Seite möchtest du Setzen?"
 			}
 		]
 	},
 	"money": {
-		"name": "money",
-		"description": "Shows how much money you, another person, or a couple has",
+		"name": "geld",
+		"description": "Zeigt dir wieviel Geld Du, eine andere Person, oder ein Paar hat",
 		"options": [
 			{
 				"name": "user",
-				"description": "The user to check their bank info"
+				"description": "Nutzer dessen Bankinfo angezeigt werden soll"
 			},
 			{
 				"name": "couple",
-				"description": "Whether to show the couple balance"
+				"description": "Ob der Kontostand des Paares angezeigt werden soll"
 			}
 		]
 	},
 	"leaderboard": {
-		"name": "leaderboard",
-		"description": "Shows the leaderboard for the top users of money"
+		"name": "bestenliste",
+		"description": "Zeigt die Liste der Nutzer mit dem meisten Geld"
 	},
 	"give": {
 		"name": "give",
-		"description": "Gives another user money",
+		"description": "Gibt einem anderen Nutzer Geld",
 		"options": [
 			{
-				"name": "amount",
-				"description": "The amount of money to give"
+				"name": "menge",
+				"description": "Die Menge an Geld die gesendet werden soll"
 			},
 			{
-				"name": "user",
-				"description": "The user to give money to"
+				"name": "nutzer",
+				"description": "Der Nutzer dem das Geld zugesendet werden soll"
 			}
 		]
 	},
 	"wheel": {
-		"name": "wheel",
-		"description": "Spin the wheel of (mis)fortune",
+		"name": "rad",
+		"description": "Drehe das (Un)-Glücksrad",
 		"options": [
 			{
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "menge",
+				"description": "Die Menge an Geld die gesendet werden soll"
 			}
 		]
 	},
 	"profile": {
-		"name": "profile",
-		"description": "Get a user's Amanda profile",
+		"name": "profil",
+		"description": "Stelle das Amanda Profil eines Nutzers dar",
 		"options": [
 			{
-				"name": "user",
-				"description": "The user's profile to get'"
+				"name": "nutzer",
+				"description": "Der Nutzer dessen Profil dargestellt werden soll"
 			},
 			{
-				"name": "light",
-				"description": "If light mode should be force used (default false)"
+				"name": "hell",
+				"description": "Ob der helle Modus zwangsmäßig genutzt werden soll (Standartmäßig aus)"
+			}
+		]
+	},
+	"settings": {
+		"name": "settings",
+		"description": "Modify settings for Amanda to use",
+		"options": [
+			{
+				"name": "setting",
+				"description": "The setting you want to modify/view"
+			},
+			{
+				"name": "modify",
+				"description": "What to modify the setting value to"
 			}
 		]
 	}

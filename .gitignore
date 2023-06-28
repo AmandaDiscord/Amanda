@@ -1,4 +1,5 @@
 /node_modules
+/image-cache
 config.js
 *.sqlite
 dist/
