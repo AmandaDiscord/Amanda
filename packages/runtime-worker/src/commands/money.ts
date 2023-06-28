@@ -480,7 +480,8 @@ async function buildPage2(
 	base.drawImage(cards[0].canvas, 42, 150 + cardOffset)
 	base.fillStyle = "#FFFFFF"
 	setFontSize(24, base)
-	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, 170, 525)
+	base.textAlign = "center"
+	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, Math.floor(base.canvas.width / 2), 525)
 
 	await printTransactions(base, couple.id, fakeCouple, transactionOffset)
 
