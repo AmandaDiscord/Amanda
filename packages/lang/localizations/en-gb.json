@@ -156,7 +156,26 @@
 		"NONE": "None",
 		"COMMAND_ERROR": "There was an error with the command %name. The developers have been notified. If you use this command again and you see this message, please allow a reasonable time frame for this to be fixed. Report this if it occurs again: %server",
 		"UNKNOWN_AUTHOR": "Unknown author",
-		"DM_ONLY": "This command can only be used in DMs"
+		"DM_ONLY": "This command can only be used in DMs",
+		"NOT_ENOUGH_MONEY": "You don't have enough money for that",
+		"THREE_HEARTS": "WOAH! 3 hearts!",
+		"TWO_HEARTS": "Double hearts :heart:",
+		"ONE_HEART": "1 heart",
+		"TRIPLE_PIECES": "Triple pieces",
+		"LOST": "You lost",
+		"FLIP_AMANDA_CHOSE_HEADS_WON": "Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_TAILS_WON": "Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Since you didn't choose a side, I chose heads for you and you lost %amount",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Since you didn't choose a side, I chose tails for you and you lost %amount",
+		"FLIP_HEADS_WON": "You guessed heads and won %amount (+33%)",
+		"FLIP_TAILS_WON": "You guessed tails and won %amount (+33%)",
+		"FLIP_HEADS_LOST": "You guessed heads and lost %amount",
+		"FLIP_TAILS_LOST": "You guessed tails and lost %amount",
+		"PRIVATE_CARD": "Private card",
+		"COUPLE_CARD": "Couple card",
+		"TRANSACTIONS": "Transactions",
+		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
+		"GIVEN_TO_OTHER": "You have given %amount to %user"
 	},
 	"sit": {
 		"name": "sit",
@@ -539,6 +558,86 @@
 			{
 				"name": "command",
 				"description": "The command to get help with"
+			}
+		]
+	},
+	"slots": {
+		"name": "slots",
+		"description": "Run the slot machine",
+		"options": [
+			{
+				"name": "amount",
+				"description": "The amount of money to bet"
+			}
+		]
+	},
+	"flip": {
+		"name": "flip",
+		"description": "Flips a coin",
+		"options": [
+			{
+				"name": "amount",
+				"description": "The amount of money to bet"
+			},
+			{
+				"name": "side",
+				"description": "The side to bet on"
+			}
+		]
+	},
+	"money": {
+		"name": "money",
+		"description": "Shows how much money you, another person, or a couple has",
+		"options": [
+			{
+				"name": "user",
+				"description": "The user to check their bank info"
+			},
+			{
+				"name": "couple",
+				"description": "Whether to show the couple balance"
+			}
+		]
+	},
+	"leaderboard": {
+		"name": "leaderboard",
+		"description": "Shows the leaderboard for the top users of money"
+	},
+	"give": {
+		"name": "give",
+		"description": "Gives another user money",
+		"options": [
+			{
+				"name": "amount",
+				"description": "The amount of money to give"
+			},
+			{
+				"name": "user",
+				"description": "The user to give money to"
+			}
+		]
+	},
+	"wheel": {
+		"name": "wheel",
+		"description": "Spin the wheel of (mis)fortune",
+		"options": [
+			{
+				"name": "amount",
+				"description": "The amount of money to bet"
+			}
+		]
+	},
+	"profile": {
+		"name": "profile",
+		"description": "Get a user's Amanda profile",
+		"options": [
+			{
+				"name": "user",
+				"description": "The user's profile to get'"
+			},
+			{
+				"name": "light",
+				"description": "If light mode should be force used (default false)"
 			}
 		]
 	}

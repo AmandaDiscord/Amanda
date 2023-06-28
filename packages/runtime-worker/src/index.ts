@@ -40,6 +40,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",
+		"./commands/money",
 		"./commands/music-stub",
 		"./commands/meta"
 	])

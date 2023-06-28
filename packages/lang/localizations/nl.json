@@ -1,550 +1,649 @@
 {
-	"GLOBAL": {
-	"MUSIC_DISABLED": "Muziek is momenteel uitgeschakeld in verband met problemen. Er wordt gewerkt aan een oplossing.",
-	"GUILD_ONLY": "Je kan dit commando alleen in een server gebruiken.",
-	"MUSIC_INVALID_ACTION": "%username, dat is geen geldige handeling. Als je iets wilt afspelen, probeer dan `%prefixplay track:<song>`.\nBekijk `%prefixhelp category:audio` en `%prefixhelp command:playlists` voor meer dingen die je kan doen!",
-	"ONE_ACTION": "Je kan maar 1 handeling tegelijk uitvoeren.",
-	"NOTHING_PLAYING": "%username, er wordt momenteel geen muziek afgespeeld.",
-	"MUSIC_SEE_OTHER": "De huidige muzieksessie is in %channel. Je kan daar zien welke muziek wordt afgespeeld!",
-	"VC_REQUIRED": "%username, je moet in een spraakkanaal zitten om dat te doen.",
-	"NOW_PLAYING": "Nu aan het afspelen: %song",
-	"VC_NOT_JOINABLE": "%username, ik heb geen machtigingen om deel te nemen aan je spraakkanaal.",
-	"NO_RESULTS": "Geen resultaten.",
-	"QUEUE_STOPPED": "De wachtrij is gestopt door %username.",
-	"LOOP_ON": "Herhalen is ingeschakeld.",
-	"LOOP_OFF": "Herhalen is uitgeschakeld.",
-	"NO_LYRICS": "Er is iets misgegaan bij het ophalen van de songtekst, of er is überhaupt geen songtekst.",
-	"QUEUE_PAUSED": "De wachtrij is gepauzeerd.",
-	"QUEUE_UNPAUSED": "De wachtrij is ongepauzeerd.",
-	"TOTAL_LENGTH": "Totale lengte: %length",
-	"QUEUE_FOR": "De wachtrij voor deze server",
-	"TOO_MANY_SKIPS": "Je kan niet meer nummers overslaan dan er in de wachtrij staan!",
-	"SKIPPED_ALL": "Alle nummers in de wachtrij zijn overgeslagen en de wachtrij is daarom weggehaald.",
-	"SKIPPED_AMOUNT": "%amount nummers overgeslagen.",
-	"SHUFFLED": "De wachtrij is geshuffeld.",
-	"TOKENS_DELETED": "Al je tokens zijn verwijderd. Gebruik `%prefixmusictoken action:new` om een nieuwe aan te maken.",
-	"TOKENS_NEW": "Je bestaande tokens zijn verwijderd en een nieuwe is aangemaakt.\nDeel deze token met niemand. Als je hem toch per ongeluk deelt, gebruik dan `%prefixmusictoken action:delete` om hem te verwijderen en je veilig te houden.\nJe kan nu bij %website inloggen.",
-	"TOKENS_PREVIOUS": "Hier is de token die je eerder had aangemaakt:\nJe kan `%prefixmusictoken action:delete` gebruiken om hem te verwijderen en `%prefixmusictoken action:new` om een nieuwe aan te maken.",
-	"TOKENS_NONE": "Je hebt momenteel geen tokens. Gebruik `%prefixmusictoken action:new` om een nieuwe aan te maken.",
-	"HEADER_UNKNOWN": "Onbekend",
-	"HEADER_PLAYLIST": "Playlist",
-	"HEADER_SONGS": "Muzieknummers",
-	"HEADER_LENGTH": "Lengte",
-	"HEADER_PLAY_COUNT": "Afspeelbeurten",
-	"HEADER_AUTHOR": "Auteur",
-	"EVERYONE_LEFT": "Iedereen is weggegaan, dus ik nu ook.",
-	"NEWER_NOW_PLAYING": "Er is een nieuw bericht over wat nu aan het afspelen is.",
-	"SONG_ERROR_EXCLAIMATION": "De interne identificator voor het nummer was de plaatsvervangerwaarde `!`\nDit is een bug.",
-	"SONG_ERROR_NULL": "De interne identificator voor het nummer was `null` of `undefined`\nDit is een bug.",
-	"QUEUE_ENDED": "Het ziet eruit alsof de wachtrij is geëindigd.",
-	"SONG_STUCK": "Het nummer is vastgelopen tijdens het laden.",
-	"UNKNOWN_TRACK_EXCEPTION": "Er is iets misgegaan bij het spelen van dat nummer. Dat is alles wat ik weet.",
-	"NO_USERS_IN_VC": "Er is niemand anders in mijn spraakkanaal. Ik zal na %time seconden stoppen met muziek afspelen als niemand terugkomt.",
-	"SONG_NOT_PLAYABLE": "We konden dat nummer niet afspelen",
-	"SONG_NOT_OBJECT": "Het nummer is geen object %song",
-	"ERROR_OCCURRED": "We zijn een storing tegengekomen",
-	"TOO_MANY_ERRORS": "Te veel storingen!",
-	"ERRORS_SUPPRESSED": "Toekomstige storingen van deze wachtrij zullen niet meer worden aangekondigd\nAls meer nummers niet werken, zullen ze zonder aankondiging worden overgeslagen.\nAls je een bug wilt melden, neem dan deel onze server: https://discord.gg/YMkZDsK",
-	"HEADER_PAUSED": "GEPAUZEERD",
-	"MISSING_TRACK": "Het muzieknummer voor %id ontbreekt",
-	"HEADER_LIVE": "LIVE",
-	"CANNOT_PAUSE_LIVE": "Je kan een livestream niet pauzeren.",
-	"SONG_INFO_FETCH_FAIL": "We konden helaas geen informatie ophalen over het huidige muzieknummer.",
-	"UNKNOWN_TRACK": "Onbekend nummer",
-	"HEADER_LOADING": "AAN HET LADEN",
-	"CANNOT_EXTRACT_NEWGROUNDS": "We konden niet de muziekgegevens ophalen van Newgrounds.",
-	"TWITTER_NO_VIDEO": "Die Twitter link heeft geen video.",
-	"TWITTER_NO_MP4": "Die Twitter link heeft geen mp4-video.",
-	"ITUNES_NOT_ALBUM": "Die iTunes link behoort niet tot een album.",
-	"CANNOT_EXTRACT_ITUNES": "We konden niet de muziekgegevens ophalen van iTunes.",
-	"HEADER_SONG_SELECTION": "Muziekselectie",
-	"SONG_SELECTION_FOOTER": "Kies één van de onderstaande opties in het selectiemenu om af te spelen. Het verloopt na %timeout.",
-	"IMAGE_FETCH_FAILED": "Er is iets misgegaan bij het ophalen van de afbeelding.",
-	"INTERACTION_RESPONSE_1": "Dat is totaal niet raar...",
-	"INTERACTION_RESPONSE_2": "W-Wat? Waarom?",
-	"INTERACTION_RESPONSE_3": "Ik vind het best raar dat je dat probeerde te doen...",
-	"INTERACTION_RESPONSE_4": "Oké dan...",
-	"INTERACTION_RESPONSE_5": "Ik denk niet dat ik het begrijp...",
-	"INTERACTION_RESPONSE_6": "Kom op... Laat het niet lijken alsof je een idioot bent...",
-	"INTERACTION_RESPONSE_7": "Waarom zou je dat überhaupt proberen?",
-	"INTERACTION_RESPONSE_8": "Ik denk niet dat ik je begrijp...",
-	"INTERACTION_RESPONSE_9": "Jij bent echt raar...",
-	"CANNOT_SELF_SHIP": "%username, iemand kan geen verkering met zichzelf hebben, hè",
-	"SHIP_ALREADY_COUPLE_SELF": "Ik denk niet dat ik jou en %other moet beoordelen aangezien jullie al getrouwd zijn. Jullie zijn een leuk koppel %emoji",
-	"SHIP_ALREADY_COUPLE_OTHER": "Ik denk niet dat ik %user1 en %other moet beoordelen aangezien ze al getrouwd zijn. Ze zijn een leuk koppel %emoji",
-	"AVATAR_FETCH_FAILED": "Er is iets misgegaan bij het ophalen van een van de profielfoto's",
-	"SHIP_RATING": "Ik zou %display1 en %display2 een beoordeling van %percentage% geven als koppel",
-	"NO_U": "Nee, jij",
-	"CANNOT_SELF_BEAN": "%username, je kan jezelf niet verbonen, hè",
-	"BEANED": "%tag is verbannen!",
-	"HUG_AMANDA": "**Knuffelt %username terug** :heart:",
-	"NOM_AMANDA": "auwie",
-	"KISS_AMANDA": "**Zoent %username terug** :heart:",
-	"CUDDLE_AMANDA": "**Snoezelt %username terug** :heart:",
-	"POKE_AMANDA": "Prik me niet ; ^ ;",
-	"SLAP_AMANDA": "**Slaat %username terug** Dat deed pijn ; ^ ;",
-	"BOOP_AMANDA": "Boop me niet ; ^ ;",
-	"PAT_AMANDA": "≥ w ≤",
-	"HUG_OTHER": "%user knuffelde %mention",
-	"NOM_OTHER": "%user nomde %mention",
-	"KISS_OTHER": "%user zoende %mention",
-	"CUDDLE_OTHER": "%user snoezelde %mention",
-	"POKE_OTHER": "%user prikte %mention",
-	"SLAP_OTHER": "%user sloeg %mention",
-	"BOOP_OTHER": "%user boopte %mention",
-	"PAT_OTHER": "%user aaide %mention",
-	"HEADER_HEARTBEAT": "Hartslag",
-	"HEADER_LATENCY": "Vertraging",
-	"HEADER_UPTIME": "Beschikbaarheid",
-	"HEADER_MEMORY": "Memory",
-	"HEADER_SHARDS": "Shards",
-	"HEADER_SONGS_QUEUED": "Wachtrijnummers",
-	"HEADER_USERS_LISTENING": "Luisterende gebruikers",
-	"HEADER_NODE_USAGE": "Node-gebruik",
-	"NO_NODES": "Geen nodes",
-	"SHARD_NUMBER": "Shard %shard",
-	"HEADER_USER_COUNT": "Gebruikersaantal",
-	"HEADER_GUILD_COUNT": "Serveraantal",
-	"HEADER_CHANNEL_COUNT": "Kanaalaantal",
-	"HEADER_VOICE_CONNECTIONS": "Spraakconnecties",
-	"HEADER_CREATORS": "Makers",
-	"HEADER_CODE": "Code",
-	"HEADER_LINKS": "Links",
-	"INFO_THANKS": "Bedankt voor het kiezen van mij als gezelschap! :heart:\nHier is wat informatie over mij...",
-	"INFO_LINKS": "Bezoek Amanda's [website](%website) of haar [ondersteuningsserver](%server)\nWil je doneren? Bekijk haar [Patreon](%patreon) of maak een eenmalige donatie via [PayPal](%paypal).\nWil je Amanda's groei zien in de loop van de tijd? Dat kan [hier](%stats)\nPrivacybeleid: %privacy\nTodo-bord: %todo",
-	"GIT_FILES_CHANGED": "%amount bestanden veranderd",
-	"GIT_FILE_CHANGED": "1 bestand veranderd",
-	"GIT_INSERTIONS": "%amount invoegingen",
-	"GIT_INSERTION": "1 invoeging",
-	"GIT_DELETIONS": "%amount verwijderingen",
-	"GIT_DELETION": "1 verwijdering",
-	"HEADER_STATUS": "Status",
-	"HEADER_GIT_INFO": "Git info",
-	"GIT_STATUS": "Op branch %branch, meest recente commit %hash",
-	"GIT_COMMITS": "Commits (laatste %amount resultaten)",
-	"FOOTER_HELP": "<> = verplicht, [] = optioneel, | = of. Gebruik geen <>, [] of | in je invoer.",
-	"HELP_COMMAND_BODY": "%description\nArgumenten: %args\nCategorie: %category",
-	"HEADER_COMMAND_CATEGORY": "Commando Categorie: %category",
-	"FOOTER_HELP_MAIN": "Typ `%prefixhelp [command:command]` om meer informatie te zien over een commando",
-	"HELP_INVALID_COMMAND": "**%tag**, ik kon niet het hulppaneel voor dat commando vinden",
-	"HEADER_COMMAND_CATEGORIES": "Commando Categoriën",
-	"HELP_SEE_ALL": "Typ `%prefixhelp [category:category]` om alle commando's in die categorie te zien.\nTyp `%prefixhelp [command:command]` om meer informatie te zien over een commando.",
-	"HELP_INFO": "Typ `%prefixinfo` om algemene informatie te zien over Amanda.\nAls je nog meer wilt weten, neem dan deel aan onze ondersteuningsserver: %link",
-	"TIMED_OUT": "Verlopen",
-	"DATABASE_OFFLINE": "De database is momenteel niet verbonden. Dit probleem is bekend en er wordt aan gewerkt",
-	"NEGATIVE_1_INDEX_IN_RADIO": "-1 index in radio",
-	"PAGE_X_OF_Y": "Pagina %current van de %total",
-	"PAGE_LENGTH": "Paginalengte: %time",
-	"VOLUME_SET": "Wachtrijvolume ingesteld op %volume%",
-	"CANNOT_SEEK_LIVE": "Je kan niet de afspeelpositie veranderen bij live audio",
-	"SEEK_GREATER_THAN_SONG_LENGTH": "De tijd die je aangaf is langer dan de lengte van het muzieknummer",
-	"SEEK_ERROR": "Er is iets misgegaan bij het instellen van de afspeelpositie op de aangegeven positie. Je tijdsduur was correct geparseerd als %parsed milliseconden, maar LavaLink heeft de afspeelpositie niet veranderd. Dit is een bug. Meld deze alsjeblieft: %server",
-	"SEEKING": "De afspeelpositie wordt ingesteld op %time. Wacht alsjeblieft eventjes",
-	"FILTERS_ERROR": "Er is iets misgegaan bij het toepassen van de filters. De verbinding met de LavaLink node zal misschien weggevallen zijn?",
-	"FILTERS_APPLIED": "De filters die je aangaf worden nu toegepast. Wacht alsjeblieft eventjes",
-	"INVALID_PLAYLIST_NAME": "Ongeldige playlistnaam. Playlistnamen mogen geen links bevatten en ze mogen niet langer dan 24 karakters zijn",
-	"PLAYLIST_EMPTY": "Die playlist is leeg",
-	"PLAYLIST_NOT_EXIST": "Die playlist bestaat niet",
-	"PLAYLIST_ALREADY_EXISTS": "Die playlist bestaat al",
-	"PLAYLIST_CREATED": "Playlist aangemaakt",
-	"PLAYLIST_CANNOT_MANAGE": "Je bent niet toegestaan om deze playlist te beheren",
-	"PLAYLIST_DELETED": "Playlist verwijderd",
-	"PLAYLIST_DUPLICATE_SONG": "Je probeerde een duplicaat toe te voegen aan je playlist",
-	"PLAYLIST_SONG_ADDED": "%title toegevoegd",
-	"OUT_OF_BOUNDS": "Index buiten bereik",
-	"SONG_REMOVED": "%title verwijderd",
-	"PLAYLIST_INDEXES_EQUAL": "De van en tot indices kunnen niet gelijk zijn",
-	"PLAYLIST_SONG_MOVED": "Muzieknummer verplaatst",
-	"TITLE_JOIN_SERVER": "Klik op de titel om deel te nemen aan onze ondersteuningsserver",
-	"SONG_INFO_GENERIC": "Probeer informatie over dit nummer te vinden op de website waarop je hem vond",
-	"SONG_SELECTION_CANCELLED": "Muziekselectie geannuleerd",
-	"NONE": "Geen",
-	"COMMAND_ERROR": "Er is iets misgegaan bij het commando %name. De ontwikkelaars zijn op de hoogte gebracht. Als je opnieuw dit commando gebruikt en dit bericht ziet, sta dan een redelijke periode toe zodat het probleem verholpen kan worden. Meld dit probleem als het opnieuw voorkomt: %server",
-	"UNKNOWN_AUTHOR": "Onbekende auteur",
-	"DM_ONLY": "This command can only be used in DMs"
+	"GLOBAL":{
+		"MUSIC_DISABLED":"Muziek is momenteel uitgeschakeld in verband met problemen. Er wordt gewerkt aan een oplossing.",
+		"GUILD_ONLY":"Je kan dit commando alleen in een server gebruiken.",
+		"MUSIC_INVALID_ACTION":"%username, dat is geen geldige handeling. Als je iets wilt afspelen, probeer dan `%prefixplay track:<song>`.\nBekijk `%prefixhelp category:audio` en `%prefixhelp command:playlists` voor meer dingen die je kan doen!",
+		"ONE_ACTION":"Je kan maar 1 handeling tegelijk uitvoeren.",
+		"NOTHING_PLAYING":"%username, er wordt momenteel geen muziek afgespeeld.",
+		"MUSIC_SEE_OTHER":"De huidige muzieksessie is in %channel. Je kan daar zien welke muziek wordt afgespeeld!",
+		"VC_REQUIRED":"%username, je moet in een spraakkanaal zitten om dat te doen.",
+		"NOW_PLAYING":"Nu aan het afspelen: %song",
+		"VC_NOT_JOINABLE":"%username, ik heb geen machtigingen om deel te nemen aan je spraakkanaal.",
+		"NO_RESULTS":"Geen resultaten.",
+		"QUEUE_STOPPED":"De wachtrij is gestopt door %username.",
+		"LOOP_ON":"Herhalen is ingeschakeld.",
+		"LOOP_OFF":"Herhalen is uitgeschakeld.",
+		"NO_LYRICS":"Er is iets misgegaan bij het ophalen van de songtekst, of er is überhaupt geen songtekst.",
+		"QUEUE_PAUSED":"De wachtrij is gepauzeerd.",
+		"QUEUE_UNPAUSED":"De wachtrij is ongepauzeerd.",
+		"TOTAL_LENGTH":"Totale lengte: %length",
+		"QUEUE_FOR":"De wachtrij voor deze server",
+		"TOO_MANY_SKIPS":"Je kan niet meer nummers overslaan dan er in de wachtrij staan!",
+		"SKIPPED_ALL":"Alle nummers in de wachtrij zijn overgeslagen en de wachtrij is daarom weggehaald.",
+		"SKIPPED_AMOUNT":"%amount nummers overgeslagen.",
+		"SHUFFLED":"De wachtrij is geshuffeld.",
+		"TOKENS_DELETED":"Al je tokens zijn verwijderd. Gebruik `%prefixmusictoken action:new` om een nieuwe aan te maken.",
+		"TOKENS_NEW":"Je bestaande tokens zijn verwijderd en een nieuwe is aangemaakt.\nDeel deze token met niemand. Als je hem toch per ongeluk deelt, gebruik dan `%prefixmusictoken action:delete` om hem te verwijderen en je veilig te houden.\nJe kan nu bij %website inloggen.",
+		"TOKENS_PREVIOUS":"Hier is de token die je eerder had aangemaakt:\nJe kan `%prefixmusictoken action:delete` gebruiken om hem te verwijderen en `%prefixmusictoken action:new` om een nieuwe aan te maken.",
+		"TOKENS_NONE":"Je hebt momenteel geen tokens. Gebruik `%prefixmusictoken action:new` om een nieuwe aan te maken.",
+		"HEADER_UNKNOWN":"Onbekend",
+		"HEADER_PLAYLIST":"Playlist",
+		"HEADER_SONGS":"Muzieknummers",
+		"HEADER_LENGTH":"Lengte",
+		"HEADER_PLAY_COUNT":"Afspeelbeurten",
+		"HEADER_AUTHOR":"Auteur",
+		"EVERYONE_LEFT":"Iedereen is weggegaan, dus ik nu ook.",
+		"NEWER_NOW_PLAYING":"Er is een nieuw bericht over wat nu aan het afspelen is.",
+		"SONG_ERROR_EXCLAIMATION":"De interne identificator voor het nummer was de plaatsvervangerwaarde `!`\nDit is een bug.",
+		"SONG_ERROR_NULL":"De interne identificator voor het nummer was `null` of `undefined`\nDit is een bug.",
+		"QUEUE_ENDED":"Het ziet eruit alsof de wachtrij is geëindigd.",
+		"SONG_STUCK":"Het nummer is vastgelopen tijdens het laden.",
+		"UNKNOWN_TRACK_EXCEPTION":"Er is iets misgegaan bij het spelen van dat nummer. Dat is alles wat ik weet.",
+		"NO_USERS_IN_VC":"Er is niemand anders in mijn spraakkanaal. Ik zal na %time seconden stoppen met muziek afspelen als niemand terugkomt.",
+		"SONG_NOT_PLAYABLE":"We konden dat nummer niet afspelen",
+		"SONG_NOT_OBJECT":"Het nummer is geen object %song",
+		"ERROR_OCCURRED":"We zijn een storing tegengekomen",
+		"TOO_MANY_ERRORS":"Te veel storingen!",
+		"ERRORS_SUPPRESSED":"Toekomstige storingen van deze wachtrij zullen niet meer worden aangekondigd\nAls meer nummers niet werken, zullen ze zonder aankondiging worden overgeslagen.\nAls je een bug wilt melden, neem dan deel onze server: https://discord.gg/YMkZDsK",
+		"HEADER_PAUSED":"GEPAUZEERD",
+		"MISSING_TRACK":"Het muzieknummer voor %id ontbreekt",
+		"HEADER_LIVE":"LIVE",
+		"CANNOT_PAUSE_LIVE":"Je kan een livestream niet pauzeren.",
+		"SONG_INFO_FETCH_FAIL":"We konden helaas geen informatie ophalen over het huidige muzieknummer.",
+		"UNKNOWN_TRACK":"Onbekend nummer",
+		"HEADER_LOADING":"AAN HET LADEN",
+		"CANNOT_EXTRACT_NEWGROUNDS":"We konden niet de muziekgegevens ophalen van Newgrounds.",
+		"TWITTER_NO_VIDEO":"Die Twitter link heeft geen video.",
+		"TWITTER_NO_MP4":"Die Twitter link heeft geen mp4-video.",
+		"ITUNES_NOT_ALBUM":"Die iTunes link behoort niet tot een album.",
+		"CANNOT_EXTRACT_ITUNES":"We konden niet de muziekgegevens ophalen van iTunes.",
+		"HEADER_SONG_SELECTION":"Muziekselectie",
+		"SONG_SELECTION_FOOTER":"Kies één van de onderstaande opties in het selectiemenu om af te spelen. Het verloopt na %timeout.",
+		"IMAGE_FETCH_FAILED":"Er is iets misgegaan bij het ophalen van de afbeelding.",
+		"INTERACTION_RESPONSE_1":"Dat is totaal niet raar...",
+		"INTERACTION_RESPONSE_2":"W-Wat? Waarom?",
+		"INTERACTION_RESPONSE_3":"Ik vind het best raar dat je dat probeerde te doen...",
+		"INTERACTION_RESPONSE_4":"Oké dan...",
+		"INTERACTION_RESPONSE_5":"Ik denk niet dat ik het begrijp...",
+		"INTERACTION_RESPONSE_6":"Kom op... Laat het niet lijken alsof je een idioot bent...",
+		"INTERACTION_RESPONSE_7":"Waarom zou je dat überhaupt proberen?",
+		"INTERACTION_RESPONSE_8":"Ik denk niet dat ik je begrijp...",
+		"INTERACTION_RESPONSE_9":"Jij bent echt raar...",
+		"CANNOT_SELF_SHIP":"%username, iemand kan geen verkering met zichzelf hebben, hè",
+		"SHIP_ALREADY_COUPLE_SELF":"Ik denk niet dat ik jou en %other moet beoordelen aangezien jullie al getrouwd zijn. Jullie zijn een leuk koppel %emoji",
+		"SHIP_ALREADY_COUPLE_OTHER":"Ik denk niet dat ik %user1 en %other moet beoordelen aangezien ze al getrouwd zijn. Ze zijn een leuk koppel %emoji",
+		"AVATAR_FETCH_FAILED":"Er is iets misgegaan bij het ophalen van een van de profielfoto's",
+		"SHIP_RATING":"Ik zou %display1 en %display2 een beoordeling van %percentage% geven als koppel",
+		"NO_U":"Nee, jij",
+		"CANNOT_SELF_BEAN":"%username, je kan jezelf niet verbonen, hè",
+		"BEANED":"%tag is verbannen!",
+		"HUG_AMANDA":"**Knuffelt %username terug** :heart:",
+		"NOM_AMANDA":"auwie",
+		"KISS_AMANDA":"**Zoent %username terug** :heart:",
+		"CUDDLE_AMANDA":"**Snoezelt %username terug** :heart:",
+		"POKE_AMANDA":"Prik me niet ; ^ ;",
+		"SLAP_AMANDA":"**Slaat %username terug** Dat deed pijn ; ^ ;",
+		"BOOP_AMANDA":"Boop me niet ; ^ ;",
+		"PAT_AMANDA":"≥ w ≤",
+		"HUG_OTHER":"%user knuffelde %mention",
+		"NOM_OTHER":"%user nomde %mention",
+		"KISS_OTHER":"%user zoende %mention",
+		"CUDDLE_OTHER":"%user snoezelde %mention",
+		"POKE_OTHER":"%user prikte %mention",
+		"SLAP_OTHER":"%user sloeg %mention",
+		"BOOP_OTHER":"%user boopte %mention",
+		"PAT_OTHER":"%user aaide %mention",
+		"HEADER_HEARTBEAT":"Hartslag",
+		"HEADER_LATENCY":"Vertraging",
+		"HEADER_UPTIME":"Beschikbaarheid",
+		"HEADER_MEMORY":"Memory",
+		"HEADER_SHARDS":"Shards",
+		"HEADER_SONGS_QUEUED":"Wachtrijnummers",
+		"HEADER_USERS_LISTENING":"Luisterende gebruikers",
+		"HEADER_NODE_USAGE":"Node-gebruik",
+		"NO_NODES":"Geen nodes",
+		"SHARD_NUMBER":"Shard %shard",
+		"HEADER_USER_COUNT":"Gebruikersaantal",
+		"HEADER_GUILD_COUNT":"Serveraantal",
+		"HEADER_CHANNEL_COUNT":"Kanaalaantal",
+		"HEADER_VOICE_CONNECTIONS":"Spraakconnecties",
+		"HEADER_CREATORS":"Makers",
+		"HEADER_CODE":"Code",
+		"HEADER_LINKS":"Links",
+		"INFO_THANKS":"Bedankt voor het kiezen van mij als gezelschap! :heart:\nHier is wat informatie over mij...",
+		"INFO_LINKS":"Bezoek Amanda's [website](%website) of haar [ondersteuningsserver](%server)\nWil je doneren? Bekijk haar [Patreon](%patreon) of maak een eenmalige donatie via [PayPal](%paypal).\nWil je Amanda's groei zien in de loop van de tijd? Dat kan [hier](%stats)\nPrivacybeleid: %privacy\nTodo-bord: %todo",
+		"GIT_FILES_CHANGED":"%amount bestanden veranderd",
+		"GIT_FILE_CHANGED":"1 bestand veranderd",
+		"GIT_INSERTIONS":"%amount invoegingen",
+		"GIT_INSERTION":"1 invoeging",
+		"GIT_DELETIONS":"%amount verwijderingen",
+		"GIT_DELETION":"1 verwijdering",
+		"HEADER_STATUS":"Status",
+		"HEADER_GIT_INFO":"Git info",
+		"GIT_STATUS":"Op branch %branch, meest recente commit %hash",
+		"GIT_COMMITS":"Commits (laatste %amount resultaten)",
+		"FOOTER_HELP":"<> = verplicht, [] = optioneel, | = of. Gebruik geen <>, [] of | in je invoer.",
+		"HELP_COMMAND_BODY":"%description\nArgumenten: %args\nCategorie: %category",
+		"HEADER_COMMAND_CATEGORY":"Commando Categorie: %category",
+		"FOOTER_HELP_MAIN":"Typ `%prefixhelp [command:command]` om meer informatie te zien over een commando",
+		"HELP_INVALID_COMMAND":"**%tag**, ik kon niet het hulppaneel voor dat commando vinden",
+		"HEADER_COMMAND_CATEGORIES":"Commando Categoriën",
+		"HELP_SEE_ALL":"Typ `%prefixhelp [category:category]` om alle commando's in die categorie te zien.\nTyp `%prefixhelp [command:command]` om meer informatie te zien over een commando.",
+		"HELP_INFO":"Typ `%prefixinfo` om algemene informatie te zien over Amanda.\nAls je nog meer wilt weten, neem dan deel aan onze ondersteuningsserver: %link",
+		"TIMED_OUT":"Verlopen",
+		"DATABASE_OFFLINE":"De database is momenteel niet verbonden. Dit probleem is bekend en er wordt aan gewerkt",
+		"NEGATIVE_1_INDEX_IN_RADIO":"-1 index in radio",
+		"PAGE_X_OF_Y":"Pagina %current van de %total",
+		"PAGE_LENGTH":"Paginalengte: %time",
+		"VOLUME_SET":"Wachtrijvolume ingesteld op %volume%",
+		"CANNOT_SEEK_LIVE":"Je kan niet de afspeelpositie veranderen bij live audio",
+		"SEEK_GREATER_THAN_SONG_LENGTH":"De tijd die je aangaf is langer dan de lengte van het muzieknummer",
+		"SEEK_ERROR":"Er is iets misgegaan bij het instellen van de afspeelpositie op de aangegeven positie. Je tijdsduur was correct geparseerd als %parsed milliseconden, maar LavaLink heeft de afspeelpositie niet veranderd. Dit is een bug. Meld deze alsjeblieft: %server",
+		"SEEKING":"De afspeelpositie wordt ingesteld op %time. Wacht alsjeblieft eventjes",
+		"FILTERS_ERROR":"Er is iets misgegaan bij het toepassen van de filters. De verbinding met de LavaLink node zal misschien weggevallen zijn?",
+		"FILTERS_APPLIED":"De filters die je aangaf worden nu toegepast. Wacht alsjeblieft eventjes",
+		"INVALID_PLAYLIST_NAME":"Ongeldige playlistnaam. Playlistnamen mogen geen links bevatten en ze mogen niet langer dan 24 karakters zijn",
+		"PLAYLIST_EMPTY":"Die playlist is leeg",
+		"PLAYLIST_NOT_EXIST":"Die playlist bestaat niet",
+		"PLAYLIST_ALREADY_EXISTS":"Die playlist bestaat al",
+		"PLAYLIST_CREATED":"Playlist aangemaakt",
+		"PLAYLIST_CANNOT_MANAGE":"Je bent niet toegestaan om deze playlist te beheren",
+		"PLAYLIST_DELETED":"Playlist verwijderd",
+		"PLAYLIST_DUPLICATE_SONG":"Je probeerde een duplicaat toe te voegen aan je playlist",
+		"PLAYLIST_SONG_ADDED":"%title toegevoegd",
+		"OUT_OF_BOUNDS":"Index buiten bereik",
+		"SONG_REMOVED":"%title verwijderd",
+		"PLAYLIST_INDEXES_EQUAL":"De van en tot indices kunnen niet gelijk zijn",
+		"PLAYLIST_SONG_MOVED":"Muzieknummer verplaatst",
+		"TITLE_JOIN_SERVER":"Klik op de titel om deel te nemen aan onze ondersteuningsserver",
+		"SONG_INFO_GENERIC":"Probeer informatie over dit nummer te vinden op de website waarop je hem vond",
+		"SONG_SELECTION_CANCELLED":"Muziekselectie geannuleerd",
+		"NONE":"Geen",
+		"COMMAND_ERROR":"Er is iets misgegaan bij het commando %name. De ontwikkelaars zijn op de hoogte gebracht. Als je opnieuw dit commando gebruikt en dit bericht ziet, sta dan een redelijke periode toe zodat het probleem verholpen kan worden. Meld dit probleem als het opnieuw voorkomt: %server",
+		"UNKNOWN_AUTHOR":"Onbekende auteur",
+		"DM_ONLY":"This command can only be used in DMs",
+		"NOT_ENOUGH_MONEY":"You don't have enough money for that",
+		"THREE_HEARTS":"WOAH! 3 hearts!",
+		"TWO_HEARTS":"Double hearts :heart:",
+		"ONE_HEART":"1 heart",
+		"TRIPLE_PIECES":"Triple pieces",
+		"LOST":"You lost",
+		"FLIP_AMANDA_CHOSE_HEADS_WON":"Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_TAILS_WON":"Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST":"Since you didn't choose a side, I chose heads for you and you lost %amount",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST":"Since you didn't choose a side, I chose tails for you and you lost %amount",
+		"FLIP_HEADS_WON":"You guessed heads and won %amount (+33%)",
+		"FLIP_TAILS_WON":"You guessed tails and won %amount (+33%)",
+		"FLIP_HEADS_LOST":"You guessed heads and lost %amount",
+		"FLIP_TAILS_LOST":"You guessed tails and lost %amount",
+		"PRIVATE_CARD":"Private card",
+		"COUPLE_CARD":"Couple card",
+		"TRANSACTIONS":"Transactions",
+		"CANNOT_GIVE_SELF":"You cannot give money to yourself",
+		"GIVEN_TO_OTHER":"You have given %amount to %user"
 	},
-	"sit": {
-	"name": "zit",
-	"description": "mood"
+	"sit":{
+		"name":"zit",
+		"description":"mood"
 	},
-	"image": {
-	"name": "afbeelding",
-	"description": "Stuurt een afbeelding ergens van",
-	"options": [
-		{
-		"name": "type",
-		"description": "Het type afbeelding"
-		}
-	]
-	},
-	"ship": {
-	"name": "verkering",
-	"description": "Laat twee mensen verkering hebben",
-	"options": [
-		{
-		"name": "gebruiker2",
-		"description": "De tweede gebruiker om verkering te laten hebben"
-		},
-		{
-		"name": "gebruiker1",
-		"description": "De gebruiker waarmee gebruiker2 verkering moet hebben, afgezien van jezelf"
-		}
-	]
-	},
-	"bean": {
-	"name": "verboon",
-	"description": "Verboont een gebruiker",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te verbonen"
-		}
-	]
-	},
-	"hug": {
-	"name": "knuffel",
-	"description": "Knuffelt iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te knuffelen"
-		}
-	]
-	},
-	"nom": {
-	"name": "nom",
-	"description": "Nomt iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te nommen"
-		}
-	]
-	},
-	"kiss": {
-	"name": "zoen",
-	"description": "zoent iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te zoenen"
-		}
-	]
-	},
-	"cuddle": {
-	"name": "snoezel",
-	"description": "Snoezelt met iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om mee te snoezelen"
-		}
-	]
-	},
-	"poke": {
-	"name": "prik",
-	"description": "Prikt iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te prikken"
-		}
-	]
-	},
-	"slap": {
-	"name": "sla",
-	"description": "Slaat iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te slaan"
-		}
-	]
-	},
-	"boop": {
-	"name": "boop",
-	"description": "Boopt iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te boopen"
-		}
-	]
-	},
-	"pat": {
-	"name": "aai",
-	"description": "Aait iemand",
-	"options": [
-		{
-		"name": "gebruiker",
-		"description": "De gebruiker om te aaien"
-		}
-	]
-	},
-	"play": {
-	"name": "speel",
-	"description": "Speel muziek van meerdere bronnen af",
-	"options": [
-		{
-		"name": "muzieknummer",
-		"description": "Het nummer dat je wilt afspleen"
-		},
-		{
-		"name": "positie",
-		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-		}
-	]
-	},
-	"radio": {
-	"name": "radio",
-	"description": "Speel radiostations af",
-	"options": [
-		{
-		"name": "station",
-		"description": "Het station om af te spelen"
-		},
-		{
-		"name": "positie",
-		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-		}
-	]
-	},
-	"skip": {
-	"name": "overslaan",
-	"description": "Sla nummers in de wachtrij over",
-	"options": [
-		{
-		"name": "start",
-		"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
-		},
-		{
-		"name": "aantal",
-		"description": "Het aantal nummers om over te slaan in de wachtrij"
-		}
-	]
-	},
-	"stop": {
-	"name": "stop",
-	"description": "Stopt de wachtrij"
-	},
-	"queue": {
-	"name": "wachtrij",
-	"description": "Toon de wachtrij en voer acties uit",
-	"options": [
-		{
-		"name": "pagina",
-		"description": "Kies welke pagina in de wachtrij je wilt tonen"
-		},
-		{
-		"name": "volume",
-		"description": "Stel het volume % in van de wachtrij"
-		},
-		{
-		"name": "herhaling",
-		"description": "Stel de herhalingsstand van de wachtrij in"
-		},
-		{
-		"name": "pauzeer",
-		"description": "Stelt de pauzestand van de wachtrij in"
-		}
-	]
-	},
-	"nowplaying": {
-	"name": "aanhetspelen",
-	"description": "Toon het bericht over het nummer dat aan het afspelen is"
-	},
-	"trackinfo": {
-	"name": "nummerinfo",
-	"description": "Toont informatie over het nummer dat momenteel wordt afgespeeld"
-	},
-	"lyrics": {
-	"name": "songtekst",
-	"description": "Toont de songtekst van het nummer dat momenteel wordt afgespeeld"
-	},
-	"seek": {
-	"name": "afspeelpositie",
-	"description": "Stel de afspeelpositie op een bepaalde tijd in bij het nummer dat momenteel wordt afgespeeld",
-	"options": [
-		{
-		"name": "tijd",
-		"description": "De tijd in seconden waar de afspeelpositie op ingesteld moet worden"
-		}
-	]
-	},
-	"filters": {
-		"name": "filters",
-		"description": "Pas filters toe op de wachtrij",
-		"options": [
+	"image":{
+		"name":"afbeelding",
+		"description":"Stuurt een afbeelding ergens van",
+		"options":[
 			{
-				"name": "toonhoogte",
-				"description": "Stelt de toonhoogte van de wachtrij in halve tonen in"
-			},
-			{
-				"name": "snelheid",
-				"description": "Stelt de % snelheid in van de wachtrij"
+				"name":"type",
+				"description":"Het type afbeelding"
 			}
 		]
 	},
-	"shuffle": {
-		"name": "shuffle",
-		"description": "Shuffelt de wachtrij"
-	},
-	"remove": {
-		"name": "verwijder",
-		"description": "Verwijdert een muzieknummer van een wachtrij",
-		"options": [
+	"ship":{
+		"name":"verkering",
+		"description":"Laat twee mensen verkering hebben",
+		"options":[
 			{
-			"name": "index",
-			"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
+				"name":"gebruiker2",
+				"description":"De tweede gebruiker om verkering te laten hebben"
+			},
+			{
+				"name":"gebruiker1",
+				"description":"De gebruiker waarmee gebruiker2 verkering moet hebben, afgezien van jezelf"
 			}
 		]
 	},
-	"musictoken": {
-		"name": "muziektoken",
-		"description": "Verkrijg een web dashboard inlogtoken",
-		"options": [
+	"bean":{
+		"name":"verboon",
+		"description":"Verboont een gebruiker",
+		"options":[
 			{
-			"name": "actie",
-			"description": "Wat er gedaan moet worden"
+				"name":"gebruiker",
+				"description":"De gebruiker om te verbonen"
 			}
 		]
 	},
-	"playlists": {
-	"name": "playlists",
-	"description": "Beheer en speel Amanda playlists af",
-	"options": [
-		{
-		"name": "meta",
-		"description": "Metadata commando's",
-		"options": [
+	"hug":{
+		"name":"knuffel",
+		"description":"Knuffelt iemand",
+		"options":[
 			{
-			"name": "toon",
-			"description": "Toont alle Amanda playlists. Kies true om alleen jezelf te laten zien"
-			},
-			{
-			"name": "info",
-			"description": "Toont informatie over een playlist"
-			},
-			{
-			"name": "aanmaken",
-			"description": "Maakt een playlist aan"
-			},
-			{
-			"name": "verwijder",
-			"description": "Verwijdert een playlist"
+				"name":"gebruiker",
+				"description":"De gebruiker om te knuffelen"
 			}
 		]
-		},
-		{
-		"name": "toevoegen",
-		"description": "Voegt een nummer toe aan een playlist",
-		"options": [
-			{
-			"name": "playlist",
-			"description": "De naam van de playlist"
-			},
-			{
-			"name": "muzieknummer",
-			"description": "Een bruikbaar muzieknummer (link, naam, id)"
-			}
-		]
-		},
-		{
-		"name": "verwijder",
-		"description": "Verwijdert een muzieknummer van een playlist",
-		"options": [
-			{
-			"name": "playlist",
-			"description": "De naam van de playlist"
-			},
-			{
-			"name": "index",
-			"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
-			}
-		]
-		},
-		{
-		"name": "verplaats",
-		"description": "Verplaatst een muzieknummer in een playlist van één index naar een andere",
-		"options": [
-			{
-			"name": "playlist",
-			"description": "De naam van de playlist"
-			},
-			{
-			"name": "van",
-			"description": "1-gebaseerde index van het muzieknummer om te verplaatsen"
-			},
-			{
-			"name": "tot",
-			"description": "1-gebaseerde index van de plek waar het muzieknummer moet verschijnen"
-			}
-		]
-		},
-		{
-		"name": "zoek",
-		"description": "Filtreert nummers in een playlist",
-		"options": [
-			{
-			"name": "playlist",
-			"description": "De naam van de playlist"
-			},
-			{
-			"name": "zoekopdracht",
-			"description": "De zoekterm waarvoor je resultaten wilt filtreren"
-			}
-		]
-		},
-		{
-		"name": "speel",
-		"description": "Speelt een playlist af",
-		"options": [
-			{
-			"name": "playlist",
-			"description": "De naam van de playlist"
-			},
-			{
-			"name": "shuffle",
-			"description": "Of de playlist geshuffeld moet starten"
-			},
-			{
-			"name": "begin",
-			"description": "1-gebaseerde index waarvandaan wordt begonnen. Wanneer er wordt geshuffeld, wordt er maar een deel geselecteerd en geshuffeld"
-			}
-		]
-		}
-	]
 	},
-	"stats": {
-	"name": "statistieken",
-	"description": "Toont gedetailleerde statistieken",
-	"options": [
-		{
-		"name": "venster",
-		"description": "Het type statistiek om te laten zien"
-		}
-	]
+	"nom":{
+		"name":"nom",
+		"description":"Nomt iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te nommen"
+			}
+		]
 	},
-	"info": {
-	"name": "info",
-	"description": "Verkrijgt informatie over Amanda"
+	"kiss":{
+		"name":"zoen",
+		"description":"zoent iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te zoenen"
+			}
+		]
 	},
-	"git": {
-	"name": "git",
-	"description": "Verkrijgt de laatste git commits van Amanda"
+	"cuddle":{
+		"name":"snoezel",
+		"description":"Snoezelt met iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om mee te snoezelen"
+			}
+		]
 	},
-	"help": {
-	"name": "help",
-	"description": "Een normaal hulpcommando",
-	"options": [
-		{
-		"name": "categorie",
-		"description": "De categorie om hulp mee te krijgen"
-		},
-		{
-		"name": "commando",
-		"description": "Het commando om hulp mee te krijgen"
-		}
-	]
+	"poke":{
+		"name":"prik",
+		"description":"Prikt iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te prikken"
+			}
+		]
+	},
+	"slap":{
+		"name":"sla",
+		"description":"Slaat iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te slaan"
+			}
+		]
+	},
+	"boop":{
+		"name":"boop",
+		"description":"Boopt iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te boopen"
+			}
+		]
+	},
+	"pat":{
+		"name":"aai",
+		"description":"Aait iemand",
+		"options":[
+			{
+				"name":"gebruiker",
+				"description":"De gebruiker om te aaien"
+			}
+		]
+	},
+	"play":{
+		"name":"speel",
+		"description":"Speel muziek van meerdere bronnen af",
+		"options":[
+			{
+				"name":"muzieknummer",
+				"description":"Het nummer dat je wilt afspleen"
+			},
+			{
+				"name":"positie",
+				"description":"1-gebaseerde index waarvandaan je nummers toevoegt"
+			}
+		]
+	},
+	"radio":{
+		"name":"radio",
+		"description":"Speel radiostations af",
+		"options":[
+			{
+				"name":"station",
+				"description":"Het station om af te spelen"
+			},
+			{
+				"name":"positie",
+				"description":"1-gebaseerde index waarvandaan je nummers toevoegt"
+			}
+		]
+	},
+	"skip":{
+		"name":"overslaan",
+		"description":"Sla nummers in de wachtrij over",
+		"options":[
+			{
+				"name":"start",
+				"description":"1-gebaseerde index waarvandaan je nummers toevoegt"
+			},
+			{
+				"name":"aantal",
+				"description":"Het aantal nummers om over te slaan in de wachtrij"
+			}
+		]
+	},
+	"stop":{
+		"name":"stop",
+		"description":"Stopt de wachtrij"
+	},
+	"queue":{
+		"name":"wachtrij",
+		"description":"Toon de wachtrij en voer acties uit",
+		"options":[
+			{
+				"name":"pagina",
+				"description":"Kies welke pagina in de wachtrij je wilt tonen"
+			},
+			{
+				"name":"volume",
+				"description":"Stel het volume % in van de wachtrij"
+			},
+			{
+				"name":"herhaling",
+				"description":"Stel de herhalingsstand van de wachtrij in"
+			},
+			{
+				"name":"pauzeer",
+				"description":"Stelt de pauzestand van de wachtrij in"
+			}
+		]
+	},
+	"nowplaying":{
+		"name":"aanhetspelen",
+		"description":"Toon het bericht over het nummer dat aan het afspelen is"
+	},
+	"trackinfo":{
+		"name":"nummerinfo",
+		"description":"Toont informatie over het nummer dat momenteel wordt afgespeeld"
+	},
+	"lyrics":{
+		"name":"songtekst",
+		"description":"Toont de songtekst van het nummer dat momenteel wordt afgespeeld"
+	},
+	"seek":{
+		"name":"afspeelpositie",
+		"description":"Stel de afspeelpositie op een bepaalde tijd in bij het nummer dat momenteel wordt afgespeeld",
+		"options":[
+			{
+				"name":"tijd",
+				"description":"De tijd in seconden waar de afspeelpositie op ingesteld moet worden"
+			}
+		]
+	},
+	"filters":{
+		"name":"filters",
+		"description":"Pas filters toe op de wachtrij",
+		"options":[
+			{
+				"name":"toonhoogte",
+				"description":"Stelt de toonhoogte van de wachtrij in halve tonen in"
+			},
+			{
+				"name":"snelheid",
+				"description":"Stelt de % snelheid in van de wachtrij"
+			}
+		]
+	},
+	"shuffle":{
+		"name":"shuffle",
+		"description":"Shuffelt de wachtrij"
+	},
+	"remove":{
+		"name":"verwijder",
+		"description":"Verwijdert een muzieknummer van een wachtrij",
+		"options":[
+			{
+				"name":"index",
+				"description":"1-gebaseerde index van het muzieknummer om te verwijderen"
+			}
+		]
+	},
+	"musictoken":{
+		"name":"muziektoken",
+		"description":"Verkrijg een web dashboard inlogtoken",
+		"options":[
+			{
+				"name":"actie",
+				"description":"Wat er gedaan moet worden"
+			}
+		]
+	},
+	"playlists":{
+		"name":"playlists",
+		"description":"Beheer en speel Amanda playlists af",
+		"options":[
+			{
+				"name":"meta",
+				"description":"Metadata commando's",
+				"options":[
+					{
+						"name":"toon",
+						"description":"Toont alle Amanda playlists. Kies true om alleen jezelf te laten zien"
+					},
+					{
+						"name":"info",
+						"description":"Toont informatie over een playlist"
+					},
+					{
+						"name":"aanmaken",
+						"description":"Maakt een playlist aan"
+					},
+					{
+						"name":"verwijder",
+						"description":"Verwijdert een playlist"
+					}
+				]
+			},
+			{
+				"name":"toevoegen",
+				"description":"Voegt een nummer toe aan een playlist",
+				"options":[
+					{
+						"name":"playlist",
+						"description":"De naam van de playlist"
+					},
+					{
+						"name":"muzieknummer",
+						"description":"Een bruikbaar muzieknummer (link, naam, id)"
+					}
+				]
+			},
+			{
+				"name":"verwijder",
+				"description":"Verwijdert een muzieknummer van een playlist",
+				"options":[
+					{
+						"name":"playlist",
+						"description":"De naam van de playlist"
+					},
+					{
+						"name":"index",
+						"description":"1-gebaseerde index van het muzieknummer om te verwijderen"
+					}
+				]
+			},
+			{
+				"name":"verplaats",
+				"description":"Verplaatst een muzieknummer in een playlist van één index naar een andere",
+				"options":[
+					{
+						"name":"playlist",
+						"description":"De naam van de playlist"
+					},
+					{
+						"name":"van",
+						"description":"1-gebaseerde index van het muzieknummer om te verplaatsen"
+					},
+					{
+						"name":"tot",
+						"description":"1-gebaseerde index van de plek waar het muzieknummer moet verschijnen"
+					}
+				]
+			},
+			{
+				"name":"zoek",
+				"description":"Filtreert nummers in een playlist",
+				"options":[
+					{
+						"name":"playlist",
+						"description":"De naam van de playlist"
+					},
+					{
+						"name":"zoekopdracht",
+						"description":"De zoekterm waarvoor je resultaten wilt filtreren"
+					}
+				]
+			},
+			{
+				"name":"speel",
+				"description":"Speelt een playlist af",
+				"options":[
+					{
+						"name":"playlist",
+						"description":"De naam van de playlist"
+					},
+					{
+						"name":"shuffle",
+						"description":"Of de playlist geshuffeld moet starten"
+					},
+					{
+						"name":"begin",
+						"description":"1-gebaseerde index waarvandaan wordt begonnen. Wanneer er wordt geshuffeld, wordt er maar een deel geselecteerd en geshuffeld"
+					}
+				]
+			}
+		]
+	},
+	"stats":{
+		"name":"statistieken",
+		"description":"Toont gedetailleerde statistieken",
+		"options":[
+			{
+				"name":"venster",
+				"description":"Het type statistiek om te laten zien"
+			}
+		]
+	},
+	"info":{
+		"name":"info",
+		"description":"Verkrijgt informatie over Amanda"
+	},
+	"git":{
+		"name":"git",
+		"description":"Verkrijgt de laatste git commits van Amanda"
+	},
+	"help":{
+		"name":"help",
+		"description":"Een normaal hulpcommando",
+		"options":[
+			{
+				"name":"categorie",
+				"description":"De categorie om hulp mee te krijgen"
+			},
+			{
+				"name":"commando",
+				"description":"Het commando om hulp mee te krijgen"
+			}
+		]
+	},
+	"slots":{
+		"name":"slots",
+		"description":"Run the slot machine",
+		"options":[
+			{
+				"name":"amount",
+				"description":"The amount of money to bet"
+			}
+		]
+	},
+	"flip":{
+		"name":"flip",
+		"description":"Flips a coin",
+		"options":[
+			{
+				"name":"amount",
+				"description":"The amount of money to bet"
+			},
+			{
+				"name":"side",
+				"description":"The side to bet on"
+			}
+		]
+	},
+	"money":{
+		"name":"money",
+		"description":"Shows how much money you, another person, or a couple has",
+		"options":[
+			{
+				"name":"user",
+				"description":"The user to check their bank info"
+			},
+			{
+				"name":"couple",
+				"description":"Whether to show the couple balance"
+			}
+		]
+	},
+	"leaderboard":{
+		"name":"leaderboard",
+		"description":"Shows the leaderboard for the top users of money"
+	},
+	"give":{
+		"name":"give",
+		"description":"Gives another user money",
+		"options":[
+			{
+				"name":"amount",
+				"description":"The amount of money to give"
+			},
+			{
+				"name":"user",
+				"description":"The user to give money to"
+			}
+		]
+	},
+	"wheel":{
+		"name":"wheel",
+		"description":"Spin the wheel of (mis)fortune",
+		"options":[
+			{
+				"name":"amount",
+				"description":"The amount of money to bet"
+			}
+		]
+	},
+	"profile":{
+		"name":"profile",
+		"description":"Get a user's Amanda profile",
+		"options":[
+			{
+				"name":"user",
+				"description":"The user's profile to get'"
+			},
+			{
+				"name":"light",
+				"description":"If light mode should be force used (default false)"
+			}
+		]
 	}
 }

@@ -14,9 +14,12 @@ const models = {
 	bank_access: new Model<{ id: string, user_id: string }>(),
 	bank_accounts: new Model<{ id: string, amount: string, type: number }>(["id"]),
 	bans: new Model<{ user_id: string, temporary: number, expires: number }>(["user_id"]),
+	connections: new Model<{ user_id: string, type: "lastfm", access: string }>(["user_id", "type"]),
 	couples: new Model<{ user1: string, user2: string, married_at: string, balance: number }>(),
 	csrf_tokens: new Model<{ token: string, login_token: string, expires: number }>(["token"]),
 	daily_cooldown: new Model<{ user_id: string, last_claim: number }>(["user_id"]),
+	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"]),
+	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
 	interaction_gifs: new Model<{ type: string, url: string }>(),
 	lavalink_node_regions: new Model<{ host: string, region: string }>(["host", "region"]),
 	lavalink_nodes: new Model<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>(["host"]),
@@ -26,6 +29,7 @@ const models = {
 	playlist_songs: new Model<{ playlist_id: number, video_id: string, next: string | null }>(["playlist_id", "video_id"]),
 	playlists: new Model<{ playlist_id: number, author: string, name: string, play_count: number }>(["playlist_id"]),
 	premium: new Model<{ user_id: string, state: number }>(["user_id"]),
+	settings: new Model<{ user_id: string, key: string; value: string; type: "string" | "boolean" | "number" }>(["user_id"]),
 	songs: new Model<{ video_id: string, name: string, length: number }>(["video_id"]),
 	stat_logs: new Model<{ time: number, id: string, ram_usage_kb: number, users: number, guilds: number, channels: number, voice_connections: number, uptime: number, shard: number }>(["time", "id", "shard"]),
 	status_messages: new Model<{ id: number, dates: string, users: string, message: string, type: number, demote: number }>(["id"]),
@@ -35,10 +39,7 @@ const models = {
 	user_permissions: new Model<{ user_id: string, eval: number, owner: number }>(["user_id"]),
 	users: new Model<{ id: string, tag: string, avatar: string | null, bot: number, added_by: string }>(["id"], { useBuffer: true }),
 	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id", "guild_id"], { useBuffer: true, bufferSize: 300 }),
-	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"]),
-	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
-	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"]),
-	connections: new Model<{ user_id: string, type: "lastfm", access: string }>(["user_id", "type"])
+	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"])
 }
 
 class SQLProvider {

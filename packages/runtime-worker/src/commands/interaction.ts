@@ -1,12 +1,20 @@
+import crypto = require("crypto")
+
+import Canvas = require("canvas")
+
 import passthrough = require("../passthrough")
 const { client, commands, confprovider, sql } = passthrough
 
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
+import imageCache = require("../ImageCache")
+
 import type { APIEmbed } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
+
+const nameRegex = /[^a-zA-Z0-9_-]+/g
 
 const cmds = [
 	{
@@ -48,6 +56,72 @@ const cmds = [
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${userString}**` })
+			})
+		}
+	},
+	{
+		name: "ship",
+		description: "Ships two people",
+		category: "interaction",
+		options: [
+			{
+				name: "user2",
+				type: 6,
+				description: "The second user to ship",
+				required: true
+			},
+			{
+				name: "user1",
+				type: 6,
+				description: "The user to ship user2 with other than yourself",
+				required: false
+			}
+		],
+		async process(cmd, lang) {
+			const user1 = cmd.data.users.get(cmd.data.options.get("user1")?.asString() ?? "") ?? cmd.author
+			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
+			if (user1.id == user2.id) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
+				})
+			}
+
+			const canvas = Canvas.createCanvas(300, 100)
+			const ctx = canvas.getContext("2d")
+			const [pfp1, pfp2, heart] = await Promise.all([
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user1)),
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user2)),
+				imageCache.get("heart")
+			]).catch(() => [undefined, undefined, undefined])
+
+			if (!pfp1 || !pfp2 || !heart) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.AVATAR_FETCH_FAILED })
+
+			ctx.drawImage(pfp1, 0, 0, 100, 100)
+			ctx.drawImage(heart, 110, 10, 80, 80)
+			ctx.drawImage(pfp2, 200, 0, 100, 100)
+
+			const buffer = ctx.canvas.toBuffer("image/png")
+			const strings = [user1.id, user2.id].sort((a, b) => Number(a) - Number(b)).join(" ")
+
+			const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
+			const percentage = Number(`0x${hash}`) % 101
+
+			const user1String = user1.discriminator === "0" || !user1.discriminator
+				? user1.username
+				: `${user1.username}#${user1.discriminator}`
+
+			const user2String = user2.discriminator === "0" || !user2.discriminator
+				? user2.username
+				: `${user2.username}#${user2.discriminator}`
+
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: langReplace(lang.GLOBAL.SHIP_RATING, { "display1": user1String, "display2": user2String, "percentage": percentage }),
+				files: [
+					{
+						name: `ship_${user1.username}_${user2.username}`.replace(nameRegex, "") + ".png",
+						file: buffer
+					}
+				]
 			})
 		}
 	}
