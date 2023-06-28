@@ -37,6 +37,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 	if (user) passthrough.client.user = user
 
 	passthrough.sync.require([
+		"./commands/couples",
 		"./commands/hidden",
 		"./commands/images",
 		"./commands/interaction",

@@ -19,7 +19,7 @@ import type {
 } from "discord-api-types/v10"
 
 import type { SnowTransfer } from "snowtransfer"
-import { getLang } from "@amanda/shared-utils"
+import { getLang, userString } from "@amanda/shared-utils"
 import confprovider = require("@amanda/config")
 
 export class ChatInputCommand {
@@ -152,9 +152,6 @@ export class CommandManager<Params extends Array<unknown>> {
 					snow.interaction.createFollowupMessage(command.application_id, command.token, { content: userLang.GLOBAL.COMMAND_ERROR }).catch(() => void 0)
 					if (confprovider.config.error_log_channel_id?.length) {
 						const user = (command.member?.user ?? command.user!)
-						const userString = user.discriminator === "0" || !user.discriminator
-							? user.username
-							: `${user.username}#${user.discriminator}`
 
 						const undef = "undefined"
 						const details = [
@@ -162,7 +159,7 @@ export class CommandManager<Params extends Array<unknown>> {
 							["Guild ID", command.guild_id ?? undef],
 							["Text Channel", `${command.channel.name ?? undef} (${command.channel.id})`],
 							["User ID", user.id],
-							["User Tag", userString]
+							["User Tag", userString(user)]
 						]
 						const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 						const detailsString = details.map(row =>

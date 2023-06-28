@@ -5,7 +5,7 @@ import type { PoolClient, QueryResult, QueryResultRow } from "pg"
 
 import confprovider = require("@amanda/config")
 
-import { Database, Model } from "./orm"
+import { Database, Model, InferModelDef } from "./orm"
 
 
 import type { AcceptablePrepared } from "./types"
@@ -48,17 +48,26 @@ class SQLProvider {
 	public static poolClient: PoolClient | null = null
 	public static orm = new Database(models, SQLProvider)
 
-	public static async all<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<Array<T>> {
+	public static async all<T extends QueryResultRow | keyof typeof models>(
+		statement: string,
+		prepared?: Array<AcceptablePrepared>
+	): Promise<Array<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T>> {
 		const result = await SQLProvider.raw<T>(statement, prepared)
 		return result?.rows ?? []
 	}
 
-	public static async get<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<T | null> {
+	public static async get<T extends QueryResultRow | keyof typeof models>(
+		statement: string,
+		prepared?: Array<AcceptablePrepared>): Promise<(T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T) | null> {
 		const result = await SQLProvider.raw<T>(statement, prepared)
 		return result?.rows?.[0] ?? null
 	}
 
-	public static raw<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>, attempts = 2): Promise<QueryResult<T> | null> {
+	public static raw<T extends QueryResultRow | keyof typeof models>(
+		statement: string,
+		prepared?: Array<AcceptablePrepared>,
+		attempts = 2
+	): Promise<QueryResult<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T> | null> {
 		let prep: Array<AcceptablePrepared>
 
 		if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]

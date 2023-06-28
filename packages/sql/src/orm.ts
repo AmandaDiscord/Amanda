@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { BetterTimeout } from "@amanda/shared-utils"
 
 import type { QueryResult, QueryResultRow } from "pg"
@@ -5,9 +7,9 @@ import type { QueryResult, QueryResultRow } from "pg"
 import type { AcceptablePrepared } from "./types"
 
 interface Provider {
-	all<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<Array<T>>
-	get<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<T | null>
-	raw<T extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<QueryResult<T> | null>
+	all(statement: string, prepared?: Array<AcceptablePrepared>): Promise<Array<any>>
+	get(statement: string, prepared?: Array<AcceptablePrepared>): Promise<any | null>
+	raw(statement: string, prepared?: Array<AcceptablePrepared>): Promise<QueryResult<any> | null>
 }
 
 type StatementBuffer = {
@@ -87,14 +89,14 @@ export class Database<M extends Record<string, Model<any>>> {
 					if (!this.buffers[table as string].timeouts.insert) {
 						this.buffers[table as string].timeouts.insert = new BetterTimeout().setCallback(() => {
 							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
-							this.provider.raw<R>(res2.statement, res2.prepared).then(r).catch(rej)
+							this.provider.raw(res2.statement, res2.prepared).then(r).catch(rej)
 							this.buffers[table as string].timeouts.insert = null
 						}).setDelay(model.options.bufferTimeout).run()
 					}
 					return
 				}
 			} else res = this._buildStatement(method, table, properties)
-			this.provider.raw<R>(res.statement, res.prepared).then(r).catch(rej)
+			this.provider.raw(res.statement, res.prepared).then(r).catch(rej)
 		})
 	}
 
@@ -106,7 +108,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		const options = {}
 		if (where) Object.assign(options, { where: where })
 		const res = this._buildStatement("update", table, set, options)
-		return this.provider.raw<R>(res.statement, res.prepared)
+		return this.provider.raw(res.statement, res.prepared)
 	}
 
 	public select<T extends keyof M>(
@@ -120,7 +122,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		} = {}
 	): Promise<Array<InferModelDef<M[T]>>> {
 		const res = this._buildStatement("select", table, where, options)
-		return this.provider.all<InferModelDef<M[T]>>(res.statement, res.prepared)
+		return this.provider.all(res.statement, res.prepared)
 	}
 
 	public get<T extends keyof M>(
@@ -134,7 +136,7 @@ export class Database<M extends Record<string, Model<any>>> {
 	): Promise<InferModelDef<M[T]> | null> {
 		const opts = Object.assign(options, { limit: 1 })
 		const res = this._buildStatement("select", table, where, opts)
-		return this.provider.get<InferModelDef<M[T]>>(res.statement, res.prepared)
+		return this.provider.get(res.statement, res.prepared)
 	}
 
 	public delete<T extends keyof M, R extends QueryResultRow>(
@@ -142,7 +144,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		where: Partial<InferModelDef<M[T]>> | undefined = undefined
 	): Promise<QueryResult<R> | null> {
 		const res = this._buildStatement("delete", table, where)
-		return this.provider.raw<R>(res.statement, res.prepared)
+		return this.provider.raw(res.statement, res.prepared)
 	}
 
 	public triggerBufferWrite<T extends keyof M>(table: T) {

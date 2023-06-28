@@ -34,7 +34,7 @@ const unbreakDatabase = async (tracks: Array<QueryResultRow>) => {
 }
 
 const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCommand, lang: Lang) => {
-	const tracks = await sql.all(
+	const tracks = await sql.all<{ next: string, video_id: string, name: string, length: number, playlist_id: number }>(
 		"SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1",
 		[playlistRow.playlist_id]
 	)
@@ -217,11 +217,8 @@ commands.assign([
 					const user = await sharedUtils.getUser(playlistRow.author, snow)
 
 					if (user) {
-						const userString = user.discriminator === "0" || !user.discriminator
-							? user.username
-							: `${user.username}#${user.discriminator}`
 
-						authorDetails.push(`${userString} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, true) + "?size=32")
+						authorDetails.push(`${sharedUtils.userString(user)} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, true) + "?size=32")
 					} else authorDetails.push(optionInfo)
 
 					const a: APIEmbedAuthor = { name: authorDetails[0] }

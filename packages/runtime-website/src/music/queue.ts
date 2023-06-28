@@ -63,9 +63,7 @@ export class Queue {
 		return {
 			members: (Array.from(this.listeners.values())).map(m => ({
 				id: m.id,
-				tag: m.discriminator === "0" || !m.discriminator
-					? m.username
-					: `${m.username}#${m.discriminator}`,
+				tag: sharedUtils.userString(m),
 				avatar: m.avatar,
 				isAmanda: m.id === confprovider.config.client_id
 			})),
@@ -235,7 +233,7 @@ export class Queue {
 				prepared.push(user.id)
 			}
 
-			const connections = await sql.all(sqlString, prepared)
+			const connections = await sql.all<"connections">(sqlString, prepared)
 
 			for (const row of connections ?? []) {
 				const params = new URLSearchParams({
@@ -524,15 +522,11 @@ export class Queue {
 				["Queue Node", this.node ?? "UNNAMED"]
 			]
 			if (track) {
-				const userString = track.requester.discriminator === "0" || !track.requester.discriminator
-					? track.requester.username
-					: `${track.requester.username}#${track.requester.discriminator}`
-
 				details.push(...[
 					["Track", track.id],
 					["Input", track.input],
 					["Requester ID", track.requester.id],
-					["Requester Tag", userString]
+					["Requester Tag", sharedUtils.userString(track.requester)]
 				])
 			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)

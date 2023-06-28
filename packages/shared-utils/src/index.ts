@@ -584,3 +584,9 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 		callback(page, component)
 	} else callback(page, null)
 }
+
+export function userString(user: APIUser) {
+	return user.discriminator === "0" || !user.discriminator
+		? user.username
+		: `${user.username}#${user.discriminator}`
+}

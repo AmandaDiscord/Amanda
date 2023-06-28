@@ -4,7 +4,7 @@ import fs = require("fs")
 import Canvas = require("canvas")
 
 import passthrough = require("../passthrough")
-const { client, confprovider, commands, sql } = passthrough
+const { client, confprovider, commands, sql, sync } = passthrough
 
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
@@ -15,13 +15,15 @@ import type { APIUser } from "discord-api-types/v10"
 import type { UnpackArray } from "@amanda/shared-types"
 import type { Lang } from "@amanda/lang"
 
-const startingCoins = 5000
 const giverTier1 = BigInt(100000) // 100,000
 const giverTier2 = BigInt(1000000) // 1,000,000
 const giverTier3 = BigInt(10000000) // 10,000,000
 const giverTier4 = BigInt(100000000) // 100,000,000
 
 const imageCacheDirectory = path.join("../../image-cache")
+
+const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
+import type { CooldownInfo } from "../money-manager"
 
 function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width?: number, height?: number): Canvas.Canvas {
 	const canvas = Canvas.createCanvas(width ?? base.width, height ?? base.height).getContext("2d")
@@ -33,119 +35,7 @@ function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width
 	return canvas.canvas
 }
 
-async function getPersonalRow(userID: string) {
-	const row = await sql.get<{ id: string, amount: string }>(
-		"SELECT bank_accounts.id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_access.user_id = $1 AND bank_accounts.type = 0",
-		[userID]
-	)
-
-	if (row) return row
-	else {
-		const newRow = await sql.get<{ id: string }>(
-			"INSERT INTO bank_accounts (amount) VALUES ($1) RETURNING id",
-			[startingCoins]
-		) // default type is 0 which is personal acc. No need to specify
-
-		if (!newRow) throw new Error("NO_CREATE_BANK_ACCOUNT_ID")
-
-		await sql.orm.insert("bank_access", { id: newRow.id, user_id: userID })
-
-		return { id: newRow.id, amount: String(startingCoins) }
-	}
-}
-
-async function getCoupleRow(userID: string) {
-	const row = await sql.get<{ id: string, amount: string }>(
-		"SELECT bank_accounts.id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_access.user_id = $1 AND bank_accounts.type = 1",
-		[userID]
-	)
-
-	if (!row) return null
-
-	const inCoupleBank = await sql.orm.select("bank_access", { id: row.id }, { select: ["user_id"] })
-		.then(rs => rs.map(r => r.user_id))
-
-	return { id: row.id, amount: row.amount, users: inCoupleBank }
-}
-
-async function awardAmount(userID: string, value: bigint, reason: string): Promise<void> {
-	const row = await getPersonalRow(userID)
-	await Promise.all([
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(row.amount) + value).toString()
-		}, { id: row.id }),
-		sql.orm.insert("transactions", {
-			user_id: client.user.id,
-			amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(),
-			mode: value < BigInt(0) ? 1 : 0,
-			description: reason,
-			target: row.id
-		})
-	])
-}
-
-async function transact(from: string, to: string, amount: bigint): Promise<void> {
-	const fromRow = await getPersonalRow(from)
-	const toRow = await getPersonalRow(to)
-
-	await Promise.all([
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(toRow.amount) + amount).toString()
-		}, { id: toRow.id }),
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(fromRow.amount) - amount).toString()
-		}, { id: fromRow.id }),
-		sql.orm.insert("transactions", {
-			user_id: from,
-			amount: amount.toString(),
-			mode: 0,
-			description: `transfer to ${to}`,
-			target: toRow.id
-		}), // Mode 0 is send. 1 is receive.
-		sql.orm.insert("transactions", {
-			user_id: to,
-			amount: amount.toString(),
-			mode: 1,
-			description: `transfer from ${from}`,
-			target: fromRow.id
-		})
-	])
-}
-
-type CooldownInfo = { max: number, min: number, step: number, regen: { amount: number, time: number, } }
-
-async function updateCooldown(userID: string, command: string, info: CooldownInfo): Promise<number> {
-	let winChance = info.max
-	const uidcmdpl = { user_id: userID, command: command }
-	const cooldown = await sql.orm.get("money_cooldown", uidcmdpl)
-
-	if (cooldown) {
-		winChance = Math.max(
-			info.min,
-			Math.min(
-				info.max,
-				Number(cooldown.value) + Math.floor((Date.now() - Number(cooldown.date)) / info.regen.time) * info.regen.amount
-			)
-		)
-
-		const newValue = winChance - info.step
-
-		sql.orm.update("money_cooldown", {
-			date: Date.now(),
-			value: newValue
-		}, uidcmdpl)
-	} else {
-		sql.orm.insert("money_cooldown", {
-			user_id: userID,
-			command: command,
-			date: Date.now(),
-			value: info.max - info.step
-		})
-	}
-	return winChance
-}
-
-function getHeartType(user: APIUser, otherid: string): "full" | "broken" {
+function getHeartType(user: APIUser, otherid: string | null): "full" | "broken" {
 	// Full hearts for Amanda! Amanda loves everyone.
 	if (user.id == client.user.id) return "full"
 	// User doesn't love anyone. Sad.
@@ -237,9 +127,7 @@ function buildOldProfile(
 	else if (badgeImage && giverImage) canvas.drawImage(giverImage, 289, 120)
 
 	const otherTag = other
-		? other.discriminator === "0" || !other.discriminator
-			? other.username
-			: `${other.username}#${other.discriminator}`
+		? sharedUtils.userString(other)
 		: null
 
 	const useDiscrim = user.discriminator && user.discriminator !== "0"
@@ -287,9 +175,7 @@ function buildNewProfile(
 	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 508, 124)
 
 	const otherTag = other
-		? other.discriminator === "0" || !other.discriminator
-			? other.username
-			: `${other.username}#${other.discriminator}`
+		? sharedUtils.userString(other)
 		: null
 
 	canvas.drawImage(discoin, 508, 156)
@@ -536,8 +422,8 @@ commands.assign([
 			}
 
 			const [money, winChance, images] = await Promise.all([
-				getPersonalRow(cmd.author.id),
-				updateCooldown(cmd.author.id, "slot", cooldownInfo),
+				moneyManager.getPersonalRow(cmd.author.id),
+				moneyManager.updateCooldown(cmd.author.id, "slot", cooldownInfo),
 				imageCache.getAll([
 					"slot-background",
 					"apple",
@@ -603,7 +489,7 @@ commands.assign([
 				result = lang.GLOBAL.LOST
 			}
 
-			await awardAmount(cmd.author.id, winning - bet, "NEKO Casino slot machine")
+			await moneyManager.awardAmount(cmd.author.id, winning - bet, "NEKO Casino slot machine")
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: result, files: [{
 					name: "slot.png",
@@ -649,7 +535,7 @@ commands.assign([
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: flip })
 			}
 
-			const money = await getPersonalRow(cmd.author.id)
+			const money = await moneyManager.getPersonalRow(cmd.author.id)
 			const bet = BigInt(amount)
 			if (bet > BigInt(money.amount)) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -664,7 +550,7 @@ commands.assign([
 			}
 
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
-			let cooldownInfo: CooldownInfo = {} as CooldownInfo // VSCode highlighting breaks if you type cast without an initializer
+			let cooldownInfo = {} as CooldownInfo // VSCode highlighting breaks if you type cast without an initializer
 			if (isPremium?.state) {
 				cooldownInfo = {
 					max: 48,
@@ -687,10 +573,10 @@ commands.assign([
 				}
 			}
 
-			const winChance = await updateCooldown(cmd.author.id, "bf", cooldownInfo)
+			const winChance = await moneyManager.updateCooldown(cmd.author.id, "bf", cooldownInfo)
 			if (Math.random() < winChance / 100) {
 				const winnings = bet + (bet / BigInt(3))
-				await awardAmount(cmd.author.id, winnings, "NEKO Casino coin flip")
+				await moneyManager.awardAmount(cmd.author.id, winnings, "NEKO Casino coin flip")
 
 				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace((selfChosenSide
@@ -706,7 +592,7 @@ commands.assign([
 					})
 				})
 			} else {
-				await awardAmount(cmd.author.id, -bet, "NEKO Casino coin flip")
+				await moneyManager.awardAmount(cmd.author.id, -bet, "NEKO Casino coin flip")
 
 				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace((selfChosenSide
@@ -752,8 +638,8 @@ commands.assign([
 			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
 			const showCouple = cmd.data.options.get("couple")?.asBoolean() ?? false
 
-			const money = await getPersonalRow(user.id)
-			const couple = await getCoupleRow(user.id)
+			const money = await moneyManager.getPersonalRow(user.id)
+			const couple = await moneyManager.getCoupleRow(user.id)
 
 			const [images, avatar] = await Promise.all([
 				// jimpStores.fonts.getAll(["arial-16", "arial-24", "bahnschrift-22", "bahnschrift-22-red", "bahnschrift-22-green"]),
@@ -781,14 +667,10 @@ commands.assign([
 			const circleOverlap = images.get("circle-overlap-mask")!
 			const neko = images.get("neko")!
 
-			const userText = user.discriminator === "0" || !user.discriminator
-				? user.username
-				: `${user.username}#${user.discriminator}`
-
 			setFontSize(24, canvas)
 			canvas.textAlign = "center"
 			canvas.fillStyle = "#FFFFFF"
-			canvas.fillText(userText, Math.floor(bg.width / 2), 70)
+			canvas.fillText(sharedUtils.userString(user), Math.floor(bg.width / 2), 70)
 
 			const avatarSize = 50
 			const avatarStartX = 21
@@ -829,9 +711,7 @@ commands.assign([
 			const displayRows = await Promise.all(rows.map(async ({ user_id, amount }, index) => {
 				const tag = await sharedUtils.getUser(user_id, client.snow, client)
 					.then(user => user
-						? user.discriminator === "0" || !user.discriminator
-							? user.username
-							: `${user.username}#${user.discriminator}`
+						? sharedUtils.userString(user)
 						: user_id)
 					.catch(() => user_id)
 
@@ -887,20 +767,16 @@ commands.assign([
 				})
 			}
 
-			const authorCoins = await getPersonalRow(cmd.author.id)
+			const authorCoins = await moneyManager.getPersonalRow(cmd.author.id)
 			if (amount > BigInt(authorCoins.amount)) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.NOT_ENOUGH_MONEY
 				})
 			}
 
-			const userText = user.discriminator === "0" || !user.discriminator
-				? user.username
-				: `${user.username}#${user.discriminator}`
-
-			transact(cmd.author.id, user.id, amount)
+			moneyManager.transact(cmd.author.id, user.id, amount)
 			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.GIVEN_TO_OTHER, { "amount": sharedUtils.numberComma(amount), "user": userText })
+				content: langReplace(lang.GLOBAL.GIVEN_TO_OTHER, { "amount": sharedUtils.numberComma(amount), "user": sharedUtils.userString(user) })
 			})
 		}
 	},
@@ -924,7 +800,7 @@ commands.assign([
 				})
 			}
 
-			const money = await getPersonalRow(cmd.author.id)
+			const money = await moneyManager.getPersonalRow(cmd.author.id)
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 
 			if (amount > BigInt(money.amount)) {
@@ -939,7 +815,7 @@ commands.assign([
 			const image = await fs.promises.readFile(path.join(__dirname, `../../images/precalculated/${choice[0]}.png`))
 
 			const award = (amount * BigInt(choice[1])) - amount
-			await awardAmount(cmd.author.id, award, `Wheel Of ${award <= BigInt(0) ? "Misf" : "F"}ortune`)
+			await moneyManager.awardAmount(cmd.author.id, award, `Wheel Of ${award <= BigInt(0) ? "Misf" : "F"}ortune`)
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: sharedUtils.numberComma(award), files: [{ name: "wheel.png", file: image }] })
 		}
 	},
@@ -976,8 +852,8 @@ commands.assign([
 
 			const [isPremium, money, info, avatar, images] = await Promise.all([
 				sql.orm.get("premium", { user_id: user.id }),
-				getPersonalRow(user.id),
-				sql.get("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
+				moneyManager.getPersonalRow(user.id),
+				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
 				Canvas.loadImage(sharedUtils.displayAvatarURL(user)),
 				imageCache.getAll([
 					"defaultbg",

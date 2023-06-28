@@ -50,12 +50,8 @@ const cmds = [
 				})
 			}
 
-			const userString = user.discriminator === "0" || !user.discriminator
-				? user.username
-				: `${user.username}#${user.discriminator}`
-
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${userString}**` })
+				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${sharedUtils.userString(user)}**` })
 			})
 		}
 	},
@@ -106,16 +102,12 @@ const cmds = [
 			const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 			const percentage = Number(`0x${hash}`) % 101
 
-			const user1String = user1.discriminator === "0" || !user1.discriminator
-				? user1.username
-				: `${user1.username}#${user1.discriminator}`
-
-			const user2String = user2.discriminator === "0" || !user2.discriminator
-				? user2.username
-				: `${user2.username}#${user2.discriminator}`
-
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.SHIP_RATING, { "display1": user1String, "display2": user2String, "percentage": percentage }),
+				content: langReplace(lang.GLOBAL.SHIP_RATING, {
+					"display1": sharedUtils.userString(user1),
+					"display2": sharedUtils.userString(user2),
+					"percentage": percentage
+				}),
 				files: [
 					{
 						name: `ship_${user1.username}_${user2.username}`.replace(nameRegex, "") + ".png",
@@ -267,7 +259,7 @@ function doInteraction(
 
 async function getGif(type: string): Promise<string> {
 	if (!confprovider.config.db_enabled) throw new Error("DATABASE_NOT_ENABLED")
-	const gif = await sql.get("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RANDOM() LIMIT 1", [type])
+	const gif = await sql.get<"interaction_gifs">("SELECT url FROM interaction_gifs WHERE type = $1 ORDER BY RANDOM() LIMIT 1", [type])
 	if (!gif) throw new Error("NO_GIF")
 	return gif.url as string
 }
