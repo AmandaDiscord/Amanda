@@ -35,11 +35,11 @@ function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width
 	return canvas.canvas
 }
 
-function getHeartType(user: APIUser, otherid: string | null): "full" | "broken" {
+function getHeartType(user: APIUser, married?: boolean): "full" | "broken" {
 	// Full hearts for Amanda! Amanda loves everyone.
 	if (user.id == client.user.id) return "full"
 	// User doesn't love anyone. Sad.
-	if (!otherid) return "broken"
+	if (!married) return "broken"
 	// If we get here, then the user is in a relationship
 	return "full"
 }
@@ -107,7 +107,7 @@ const DiscordsProfile = {
 function buildOldProfile(
 	canvas: Canvas.CanvasRenderingContext2D,
 	user: APIUser,
-	other: APIUser | null,
+	others: Array<APIUser> | null,
 	money: bigint,
 	background: Canvas.Image,
 	job: Awaited<ReturnType<typeof getOverlay>>,
@@ -126,8 +126,8 @@ function buildOldProfile(
 	if (!badgeImage && giverImage) canvas.drawImage(giverImage, 219, 120)
 	else if (badgeImage && giverImage) canvas.drawImage(giverImage, 289, 120)
 
-	const otherTag = other
-		? sharedUtils.userString(other)
+	const otherTags = others
+		? others.map(o => sharedUtils.userString(o)).join("\n")
 		: null
 
 	const useDiscrim = user.discriminator && user.discriminator !== "0"
@@ -139,7 +139,7 @@ function buildOldProfile(
 	canvas.fillText(sharedUtils.numberComma(money), 106, 242)
 	canvas.drawImage(heart, 62, 259)
 	canvas.fillText(
-		user.id == client.user.id ? "You <3" : otherTag ?? "Nobody, yet",
+		user.id == client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
 		106,
 		285
 	)
@@ -148,7 +148,7 @@ function buildOldProfile(
 function buildNewProfile(
 	canvas: Canvas.CanvasRenderingContext2D,
 	user: APIUser,
-	other: APIUser | null,
+	others: Array<APIUser> | null,
 	money: bigint,
 	background: Canvas.Image,
 	bgmask: Canvas.Image,
@@ -174,15 +174,15 @@ function buildNewProfile(
 	setFontSize(20, canvas)
 	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 508, 124)
 
-	const otherTag = other
-		? sharedUtils.userString(other)
+	const otherTags = others
+		? others.map(o => sharedUtils.userString(o)).join("\n")
 		: null
 
 	canvas.drawImage(discoin, 508, 156)
 	canvas.fillText(sharedUtils.numberComma(money), 550, 183)
 	canvas.drawImage(heart, 508, 207)
 	canvas.fillText(
-		user.id == client.user.id ? "You <3" : otherTag ?? "Nobody, yet",
+		user.id == client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
 		550,
 		233
 	)
@@ -853,7 +853,7 @@ commands.assign([
 			const [isPremium, money, info, avatar, images] = await Promise.all([
 				sql.orm.get("premium", { user_id: user.id }),
 				moneyManager.getPersonalRow(user.id),
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
+				moneyManager.getCoupleRow(user.id),
 				Canvas.loadImage(sharedUtils.displayAvatarURL(user)),
 				imageCache.getAll([
 					"defaultbg",
@@ -877,11 +877,7 @@ commands.assign([
 				])
 			])
 
-			const otherid = info ? (info.user1 === user.id ? info.user2 : info.user1) : null
-			let other: APIUser | null = null
-			if (otherid) other = await sharedUtils.getUser(otherid, client.snow, client)
-
-			const heartType = getHeartType(user, otherid)
+			const heartType = getHeartType(user, !!info)
 			const heart = images.get(`heart-${heartType}`)!
 
 			const badge = user.id === "320067006521147393"
@@ -922,8 +918,11 @@ commands.assign([
 			if (themeoverlay === "profile") ctx.fillStyle = "#ffffff"
 			else ctx.fillStyle = "#000000"
 
-			if (job.style == "old") buildOldProfile(ctx, user, other, amandollars, bgimg, job, avatar, images.get("discoin")!, heart, badgeImage, giverImage)
-			else buildNewProfile(ctx, user, other, amandollars, bgimg, images.get("profile-background-mask")!, job, avatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
+			let others: Array<APIUser> | null = null
+			if (info) others = await Promise.all(info.users.map(u => sharedUtils.getUser(u, client.snow, client)))
+
+			if (job.style == "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, avatar, images.get("discoin")!, heart, badgeImage, giverImage)
+			else buildNewProfile(ctx, user, others, amandollars, bgimg, images.get("profile-background-mask")!, job, avatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
 
 			const buffer = c.toBuffer("image/png")
 

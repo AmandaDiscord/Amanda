@@ -20,7 +20,10 @@ export async function getPersonalRow(userID: string) {
 
 		await sql.orm.insert("bank_access", { id: newRow.id, user_id: userID })
 
-		return { id: newRow.id, amount: String(startingCoins) }
+		return {
+			id: newRow.id,
+			amount: String(startingCoins)
+		}
 	}
 }
 
@@ -35,7 +38,11 @@ export async function getCoupleRow(userID: string) {
 	const inCoupleBank = await sql.orm.select("bank_access", { id: row.id }, { select: ["user_id"] })
 		.then(rs => rs.map(r => r.user_id))
 
-	return { id: row.id, amount: row.amount, users: inCoupleBank }
+	return {
+		id: row.id,
+		amount: row.amount,
+		users: inCoupleBank
+	}
 }
 
 export async function awardAmount(userID: string, value: bigint, reason: string): Promise<void> {
@@ -82,11 +89,22 @@ export async function transact(from: string, to: string, amount: bigint): Promis
 	])
 }
 
-export type CooldownInfo = { max: number, min: number, step: number, regen: { amount: number, time: number, } }
+export type CooldownInfo = {
+	max: number
+	min: number
+	step: number
+	regen: {
+		amount: number
+		time: number
+	}
+}
 
 export async function updateCooldown(userID: string, command: string, info: CooldownInfo): Promise<number> {
 	let winChance = info.max
-	const uidcmdpl = { user_id: userID, command: command }
+	const uidcmdpl = {
+		user_id: userID,
+		command: command
+	}
 	const cooldown = await sql.orm.get("money_cooldown", uidcmdpl)
 
 	if (cooldown) {
@@ -112,5 +130,6 @@ export async function updateCooldown(userID: string, command: string, info: Cool
 			value: info.max - info.step
 		})
 	}
+
 	return winChance
 }

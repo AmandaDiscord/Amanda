@@ -40,10 +40,8 @@ commands.assign([
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
 					{
-						author: {
-							name: `${users.slice(0, -1).map(sharedUtils.userString).join(", ")} & ${sharedUtils.userString(users.slice(-1)[0])}`
-						},
-						description: `${sharedUtils.numberComma(info.amount)} ${emojis.discoin}`,
+						description: `${users.slice(0, -1).map(sharedUtils.userString).join(", ")} & ${sharedUtils.userString(users.slice(-1)[0])}`
+						+ `\n\n${sharedUtils.numberComma(info.amount)} ${emojis.discoin}`,
 						color: confprovider.config.standard_embed_color
 					}
 				]
@@ -77,21 +75,14 @@ commands.assign([
 				})
 			}
 
-			const [authorrel, userrel, proposed] = await Promise.all([
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [cmd.author.id]),
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
-				sql.get<"pending_relations">("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id])
+			const [self, proposed] = await Promise.all([
+				moneyManager.getCoupleRow(cmd.author.id),
+				sql.orm.get("pending_relations", { user1: cmd.author.id, user2: user.id })
 			])
 
-			if (authorrel) {
+			if (self) { // The user can't already be in a marriage. How would you join the relationships?
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You are already married"
-				})
-			}
-
-			if (userrel) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${sharedUtils.userString(user)} is already married`
+					content: "You're already married"
 				})
 			}
 
@@ -135,10 +126,10 @@ commands.assign([
 				})
 			}
 
-			const [authorrel, userrel, pending] = await Promise.all([
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [cmd.author.id]),
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
-				sql.get<"pending_relations">("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id])
+			const [userrel, selfrel, pending] = await Promise.all([
+				moneyManager.getCoupleRow(user.id),
+				moneyManager.getCoupleRow(cmd.author.id),
+				sql.orm.get("pending_relations", { user1: user.id, user2: cmd.author.id })
 			])
 
 			if (!pending) {
@@ -147,43 +138,34 @@ commands.assign([
 				})
 			}
 
-			if (pending.user1 === cmd.author.id) {
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "How did you propose to yourself???"
-				})
-			}
-
-			let del = false
-			if (authorrel) {
-				del = true
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You are already married"
-				})
-			}
-
 			if (userrel) {
-				del = true
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${sharedUtils.userString(user)} is already married`
 				})
 			}
 
-			if (del) {
-				return sql.raw("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id])
+			if (pending.user1 === cmd.author.id) {
+				sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: "How did you propose to yourself???"
+				})
 			}
 
-			await Promise.all([
-				sql.raw("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id]),
-				sql.raw("INSERT INTO couples (user1, user2) VALUES ($1, $2)", [cmd.author.id, user.id])
-			])
+			sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
-			const bank = await sql.get<{ id: number }>("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [1])
+			if (!selfrel) {
+				const bank = await sql.get<{ id: number }>("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [1])
+				if (!bank?.id) throw new Error("USER_MARRIED_NO_BANK_CREATED_FUCK_FUCK_FUCK")
 
-			if (!bank?.id) throw new Error("USER_MARRIED_NO_BANK_CREATED_FUCK_FUCK_FUCK")
+				sql.raw("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, cmd.author.id, user.id])
+			} else {
+				sql.orm.insert("bank_access", { id: selfrel.id, user_id: user.id })
+			}
 
-			await sql.raw("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, cmd.author.id, user.id])
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `${sharedUtils.userString(cmd.author)} is now married to ${sharedUtils.userString(user)}`
+				content: `${sharedUtils.userString(user)} is now married to ${sharedUtils.userString(cmd.author)}`
+				+ (selfrel ? ` and ${selfrel.users.length - 1} other(s)` : "")
 			})
 		}
 	},
@@ -214,11 +196,7 @@ commands.assign([
 				})
 			}
 
-			const [authorrel, userrel, pending] = await Promise.all([
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [cmd.author.id]),
-				sql.get<"couples">("SELECT * FROM couples WHERE user1 = $1 OR user2 = $1", [user.id]),
-				sql.get<"pending_relations">("SELECT * FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id])
-			])
+			const pending = await sql.orm.get("pending_relations", { user1: user.id, user2: cmd.author.id })
 
 			if (!pending) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -227,34 +205,13 @@ commands.assign([
 			}
 
 			if (pending.user1 === cmd.author.id) {
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: "How did you propose to yourself???"
 				})
 			}
 
-			let del = false
-			if (authorrel) {
-				del = true
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You are already married"
-				})
-			}
-
-			if (userrel) {
-				del = true
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${sharedUtils.userString(user)} is already married`
-				})
-			}
-
-			if (del) {
-				return sql.raw("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id])
-			}
-
-			await Promise.all([
-				sql.raw("DELETE FROM pending_relations WHERE (user1 = $1 OR user2 = $1) AND (user1 = $2 OR user2 = $2)", [cmd.author.id, user.id]),
-				sql.raw("DELETE FROM couples WHERE user1 = $1 OR user2 = $2", [cmd.author.id, user.id])
-			])
+			await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: `You declined ${sharedUtils.userString(user)}'s proposal`
@@ -265,6 +222,14 @@ commands.assign([
 		name: "divorce",
 		description: "Divorces your significant other(s)",
 		category: "couples",
+		options: [
+			{
+				name: "user",
+				type: 6,
+				description: "The user to remove from the marriage",
+				required: false
+			}
+		],
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -272,32 +237,60 @@ commands.assign([
 				})
 			}
 
-			const married = await moneyManager.getCoupleRow(cmd.author.id)
-			if (!married) {
+			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
+
+			const selfinfo = await moneyManager.getCoupleRow(cmd.author.id)
+
+			if (!selfinfo) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.NONE
 				})
 			}
 
-			const otherids = married.users.filter(id => id !== cmd.author.id)
+			if (user.id !== cmd.author.id) {
+				const userinfo = await moneyManager.getCoupleRow(user.id)
 
-			const [partners] = await Promise.all([
-				Promise.all(otherids.map(u => sharedUtils.getUser(u, client.snow, client))),
-				sql.raw("DELETE FROM couples WHERE user1 = $1 OR user2 = $1", [cmd.author.id]),
-				sql.orm.delete("bank_accounts", { id: married.id }),
-				sql.orm.delete("bank_access", { id: married.id })
-			])
+				if (!userinfo) {
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: `${sharedUtils.userString(user)} isn't married`
+					})
+				}
 
-			for (const otherid of otherids) {
-				const amount = BigInt(married.amount)
-				const length = BigInt(otherids.length) // ensure each user would get AT LEAST 1
-				if (amount > (length - BigInt(1))) {
-					await moneyManager.awardAmount(otherid, amount / length, "Divorce inheritance")
-				} else break
+				if (selfinfo.id !== userinfo.id) {
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: `${sharedUtils.userString(user)} isn't married to you`
+					})
+				}
+
+				sql.orm.delete("bank_access", { id: selfinfo.id, user_id: user.id })
+
+				if (selfinfo.users.length === 2) { // now the only one left is the author. Give all to user and delete row
+					moneyManager.awardAmount(user.id, BigInt(selfinfo.amount), "Divorce inheritance")
+					sql.orm.delete("bank_access", { id: selfinfo.id })
+					sql.orm.delete("bank_accounts", { id: selfinfo.id })
+				}
+
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: selfinfo.users.length === 2
+						? `You divorced from ${sharedUtils.userString(user)}`
+						: `You removed ${sharedUtils.userString(user)} from the marriage`
+				})
+			}
+
+			const otherids = selfinfo.users.filter(id => id !== cmd.author.id)
+
+			sql.orm.delete("bank_access", { id: selfinfo.id, user_id: cmd.author.id })
+
+			if (selfinfo.users.length === 2) {
+				moneyManager.awardAmount(otherids[0], BigInt(selfinfo.amount), "Divorce inheritance")
+				sql.orm.delete("bank_access", { id: selfinfo.id })
+				sql.orm.delete("bank_accounts", { id: selfinfo.id })
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `You divorced from ${partners.map(p => sharedUtils.userString(p)).join(", ")}`
+				content: selfinfo.users.length === 2
+					? `You divorced from ${sharedUtils.userString(await sharedUtils.getUser(otherids[0], client.snow, client))}`
+					: "You left the marriage"
 			})
 		}
 	},
