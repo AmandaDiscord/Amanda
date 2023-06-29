@@ -26,14 +26,17 @@ const imageCacheDirectory = path.join("../../image-cache")
 const numberVerifyRegex = /^[\d,]+$/g
 
 async function updateCache() {
-	const backgroundRows = await sql.orm.select("settings", { key: "profilebackground" }, { select: ["user_id", "value"] })
-	const mineRows = await sql.orm.select("background_sync", { machine_id: confprovider.config.cluster_id }, { select: ["user_id", "url"] })
+	const [backgroundRows, mineRows] = await Promise.all([
+		sql.orm.select("settings", { key: "profilebackground" }, { select: ["user_id", "value"] }).then(rs => rs.filter(r => r.value.startsWith("http"))),
+		sql.orm.select("background_sync", { machine_id: confprovider.config.cluster_id }, { select: ["user_id", "url"] })
+	])
+
 	const mineMap = new Map(mineRows.map(r => [r.user_id, r.url]))
 
 	await Promise.all(backgroundRows.map(async row => {
 		const mine = mineMap.get(row.user_id)
 		if (!mine || mine !== row.value) {
-			let image: Canvas.Image | undefined = undefined
+			let image: Canvas.Image | undefined = void 0
 
 			try {
 				image = await Canvas.loadImage(row.value)
@@ -52,8 +55,10 @@ async function updateCache() {
 				await fs.promises.mkdir(imageCacheDirectory, { recursive: true })
 			}
 
-			await fs.promises.writeFile(path.join(imageCacheDirectory, `${row.user_id}.png`), buf)
-			sql.orm.upsert("background_sync", { machine_id: confprovider.config.cluster_id, user_id: row.user_id, url: row.value })
+			await Promise.all([
+				fs.promises.writeFile(path.join(imageCacheDirectory, `${row.user_id}.png`), buf),
+				sql.orm.upsert("background_sync", { machine_id: confprovider.config.cluster_id, user_id: row.user_id, url: row.value })
+			])
 
 			console.log(`Saved background for ${row.user_id}`)
 		}
@@ -152,38 +157,54 @@ commands.assign([
 		category: "meta",
 		async process(cmd, lang) {
 			const limit = 5
+
 			const authorNameMap = {
 				"Cadence Ember": "Cadence",
 				"Papa": "PapiOphidian"
 			}
-			const status = await simpleGit.status()
-			const log = await simpleGit.log({ "--no-decorate": null })
-			const diffs = await Promise.all(Array(limit).fill(undefined).map((_, i) => simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash])))
-			const res = { branch: status.current!, latestCommitHash: log.latest!.hash.slice(0, 7), logString:
-				log.all.slice(0, limit).map((line, index) => {
-					const date = new Date(line.date)
-					const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
 
-					const filesChanged = diffs[index].files.length > 1
-						? langReplace(lang.GLOBAL.GIT_FILES_CHANGED, { "amount": diffs[index].files.length })
-						: lang.GLOBAL.GIT_FILE_CHANGED
+			const [status, log] = await Promise.all([
+				simpleGit.status(),
+				simpleGit.log({ "--no-decorate": null })
+			])
 
-					const insertions = diffs[index].insertions > 1
-						? langReplace(lang.GLOBAL.GIT_INSERTIONS, { "amount": diffs[index].insertions })
-						: lang.GLOBAL.GIT_INSERTION
+			const diffs = await Promise.all(
+				Array(limit)
+					.fill(void 0)
+					.map((_, i) => simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash]))
+			)
 
-					const deletions = diffs[index].deletions > 1
-						? langReplace(lang.GLOBAL.GIT_DELETIONS, { "amount": diffs[index].deletions })
-						: lang.GLOBAL.GIT_DELETION
+			const res = {
+				branch: status.current!,
+				latestCommitHash: log.latest!.hash.slice(0, 7),
+				logString: log.all
+					.slice(0, limit)
+					.map((line, index) => {
+						const date = new Date(line.date)
+						const dateString = `${date.toDateString()} @ ${date.toTimeString().split(":").slice(0, 2).join(":")}`
 
-					const diff =
-						filesChanged +
-						insertions +
-						deletions
+						const filesChanged = diffs[index].files.length > 1
+							? langReplace(lang.GLOBAL.GIT_FILES_CHANGED, { "amount": diffs[index].files.length })
+							: lang.GLOBAL.GIT_FILE_CHANGED
 
-					return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
-									`\`» ${diff}\`\n${line.message}`
-				}).join("\n\n") }
+						const insertions = diffs[index].insertions > 1
+							? langReplace(lang.GLOBAL.GIT_INSERTIONS, { "amount": diffs[index].insertions })
+							: lang.GLOBAL.GIT_INSERTION
+
+						const deletions = diffs[index].deletions > 1
+							? langReplace(lang.GLOBAL.GIT_DELETIONS, { "amount": diffs[index].deletions })
+							: lang.GLOBAL.GIT_DELETION
+
+						const diff =
+							filesChanged +
+							insertions +
+							deletions
+
+						return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
+										`\`» ${diff}\`\n${line.message}`
+					})
+					.join("\n\n")
+			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
@@ -228,6 +249,7 @@ commands.assign([
 			let embed: APIEmbed
 			const category = cmd.data.options.get("category")?.asString()
 			const command = cmd.data.options.get("command")?.asString()
+
 			if (category || command) {
 				if (command && commands.commands.has(command)) {
 					const c = commands.commands.get(command)!
@@ -244,21 +266,22 @@ commands.assign([
 						color: confprovider.config.standard_embed_color
 					}
 
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else if (category && category != "hidden" && commands.categories.has(category)) {
 					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
+
 					embed = {
 						author: { name: langReplace(lang.GLOBAL.HEADER_COMMAND_CATEGORY, { "category": category }) },
 						description: cat.sort((a, b) => {
 							const cmda = commands.commands.get(a)!
 							const cmdb = commands.commands.get(b)!
 
-							if (cmda.order !== undefined && cmdb.order !== undefined) { // both are numbers, sort based on that, lowest first
+							if (cmda.order !== void 0 && cmdb.order !== void 0) { // both are numbers, sort based on that, lowest first
 								return cmda.order - cmdb.order
-							} else if (cmda.order !== undefined) { // a is defined, sort a first
+							} else if (cmda.order !== void 0) { // a is defined, sort a first
 								return -1
-							} else if (cmdb.order !== undefined) { // b is defined, sort b first
+							} else if (cmdb.order !== void 0) { // b is defined, sort b first
 								return 1
 							} else { // we don't care
 								return 0
@@ -278,14 +301,14 @@ commands.assign([
 						color: confprovider.config.standard_embed_color
 					}
 
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else {
 					embed = {
 						description: langReplace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": sharedUtils.userString(cmd.author) }),
 						color: 0xB60000
 					}
 
-					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				}
 			} else {
 				const categories = Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")
@@ -301,7 +324,7 @@ commands.assign([
 					color: confprovider.config.standard_embed_color
 				}
 
-				client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 			}
 		}
 	},
@@ -425,12 +448,12 @@ commands.assign([
 				}
 
 				if (info.nullable && modify === "null") {
-					sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+					await sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.SETTING_UPDATED
 					})
 				} else {
-					sql.orm.upsert("settings", { user_id: cmd.author.id, key: setting, value: modify, type: info.type })
+					await sql.orm.upsert("settings", { user_id: cmd.author.id, key: setting, value: modify, type: info.type })
 					client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.SETTING_UPDATED
 					})
@@ -438,12 +461,12 @@ commands.assign([
 
 				if (setting === "profilebackground") {
 					if (isPremium?.state && modify.startsWith("http")) {
-						let response: Response | undefined = undefined
+						let response: Response | undefined = void 0
 
 						try {
 							response = await fetch(modify, { method: "HEAD" })
 						} catch {
-							sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+							await sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
 							return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 								content: lang.GLOBAL.ERROR_OCCURRED
 							})
@@ -452,13 +475,20 @@ commands.assign([
 						const allowedMimes = ["image/png", "image/jpeg", "image/bmp", "image/tiff"]
 						const mime = response.headers.get("content-type")
 						if (!mime || !allowedMimes.includes(mime)) {
-							sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
+							await sql.orm.delete("settings", { user_id: cmd.author.id, key: setting })
 							return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 								content: lang.GLOBAL.ERROR_OCCURRED
 							})
 						}
 
 						updateCache()
+					} else {
+						if (isPremium) {
+							await Promise.all([
+								fs.promises.unlink(path.join(imageCacheDirectory, cmd.author.id)).catch(() => void 0),
+								sql.orm.delete("background_sync", { user_id: cmd.author.id })
+							])
+						}
 					}
 				}
 

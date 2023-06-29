@@ -76,6 +76,7 @@ const cmds = [
 		async process(cmd, lang) {
 			const user1 = cmd.data.users.get(cmd.data.options.get("user1")?.asString() ?? "") ?? cmd.author
 			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
+
 			if (user1.id == user2.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
@@ -84,13 +85,12 @@ const cmds = [
 
 			const canvas = Canvas.createCanvas(300, 100)
 			const ctx = canvas.getContext("2d")
+
 			const [pfp1, pfp2, heart] = await Promise.all([
 				Canvas.loadImage(sharedUtils.displayAvatarURL(user1)),
 				Canvas.loadImage(sharedUtils.displayAvatarURL(user2)),
 				imageCache.get("heart")
-			]).catch(() => [undefined, undefined, undefined])
-
-			if (!pfp1 || !pfp2 || !heart) return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.AVATAR_FETCH_FAILED })
+			])
 
 			ctx.drawImage(pfp1, 0, 0, 100, 100)
 			ctx.drawImage(heart, 110, 10, 80, 80)
@@ -209,6 +209,7 @@ function doInteraction(
 			lang.GLOBAL.INTERACTION_RESPONSE_9,
 			"<:NotLikeCat:411364955493761044>"
 		]
+
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 			content: sharedUtils.arrayRandom(responses)
 		})
@@ -220,7 +221,7 @@ function doInteraction(
 		})
 	}
 
-	let fetched: Promise<string> | undefined = undefined
+	let fetched: Promise<string> | undefined = void 0
 	let footer: string
 
 	if (shortcut == "weeb.sh") {
@@ -231,7 +232,7 @@ function doInteraction(
 			}
 		}).then(d => d.json()
 			.then(j => j.url))
-			.catch(() => "https://cdn.discordapp.com/attachments/608456955660468224/1076558288604364830/helloamanda.png")
+			.catch(() => "https://cdn.discordapp.com/attachments/1123048509470429365/1124107984528740392/helloamanda.png")
 	} else if (shortcut == "durl") fetched = url!()
 	else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 

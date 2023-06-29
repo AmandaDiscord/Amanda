@@ -903,7 +903,7 @@ commands.assign([
 
 			const c = Canvas.createCanvas(800, 500)
 			const ctx = c.getContext("2d")
-			let bgimg: Canvas.Image | undefined = undefined
+			let bgimg: Canvas.Image | undefined = void 0
 			if (user.id === "320067006521147393" || isPremium) {
 				try {
 					bgimg = await Canvas.loadImage(path.join(imageCacheDirectory, `${user.id}.png`))

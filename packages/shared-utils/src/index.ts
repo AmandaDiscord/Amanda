@@ -24,7 +24,7 @@ export class AsyncValueCache<T> {
 	public promise: Promise<T> | null = null
 	public cache: T | null = null
 
-	public constructor(public getter: () => Promise<T>, public lifetime: number | undefined = undefined) {}
+	public constructor(public getter: () => Promise<T>, public lifetime: number | undefined = void 0) {}
 
 	public clear(): void {
 		if (this.lifetimeTimeout) clearTimeout(this.lifetimeTimeout)
@@ -296,7 +296,7 @@ export function createPages(rows: Array<string>, maxLength: number, itemsPerPage
 
 export async function stringify(data: unknown, depth = 0, returnRaw = false): Promise<string> {
 	let result = ""
-	if (data === undefined) result = "(undefined)"
+	if (data === void 0) result = "(undefined)"
 	else if (data === null) result = "(null)"
 	else if (typeof (data) === "function") result = "(function)"
 	else if (typeof (data) === "string") result = `"${data}"`

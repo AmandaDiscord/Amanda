@@ -88,7 +88,7 @@ export class Database<M extends Record<string, Model<any>>> {
 					this.buffers[table as string].bufferValues.insert.push(properties)
 					if (!this.buffers[table as string].timeouts.insert) {
 						this.buffers[table as string].timeouts.insert = new BetterTimeout().setCallback(() => {
-							const res2 = this._buildStatement(method, table, undefined, { useBuffer: true })
+							const res2 = this._buildStatement(method, table, void 0, { useBuffer: true })
 							this.provider.raw(res2.statement, res2.prepared).then(r).catch(rej)
 							this.buffers[table as string].timeouts.insert = null
 						}).setDelay(model.options.bufferTimeout).run()
@@ -103,7 +103,7 @@ export class Database<M extends Record<string, Model<any>>> {
 	public update<T extends keyof M, R extends QueryResultRow>(
 		table: T,
 		set: Partial<InferModelDef<M[T]>>,
-		where: Partial<InferModelDef<M[T]>> | undefined = undefined
+		where: Partial<InferModelDef<M[T]>> | undefined = void 0
 	): Promise<QueryResult<R> | null> {
 		const options = {}
 		if (where) Object.assign(options, { where: where })
@@ -113,7 +113,7 @@ export class Database<M extends Record<string, Model<any>>> {
 
 	public select<T extends keyof M>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = undefined,
+		where: Partial<InferModelDef<M[T]>> | undefined = void 0,
 		options: {
 			select?: Array<keyof InferModelDef<M[T]>>;
 			limit?: number;
@@ -127,7 +127,7 @@ export class Database<M extends Record<string, Model<any>>> {
 
 	public get<T extends keyof M>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = undefined,
+		where: Partial<InferModelDef<M[T]>> | undefined = void 0,
 		options: {
 			select?: Array<keyof InferModelDef<M[T]>>;
 			order?: keyof InferModelDef<M[T]>;
@@ -141,7 +141,7 @@ export class Database<M extends Record<string, Model<any>>> {
 
 	public delete<T extends keyof M, R extends QueryResultRow>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = undefined
+		where: Partial<InferModelDef<M[T]>> | undefined = void 0
 	): Promise<QueryResult<R> | null> {
 		const res = this._buildStatement("delete", table, where)
 		return this.provider.raw(res.statement, res.prepared)
@@ -155,7 +155,7 @@ export class Database<M extends Record<string, Model<any>>> {
 	private _buildStatement<T extends keyof M>(
 		method: "select" | "upsert" | "insert" | "update" | "delete",
 		table: T,
-		properties: Partial<InferModelDef<M[T]>> | undefined = undefined,
+		properties: Partial<InferModelDef<M[T]>> | undefined = void 0,
 		options: {
 			select?: Array<keyof Partial<InferModelDef<M[T]>> | "*">;
 			limit?: number;
@@ -188,9 +188,9 @@ export class Database<M extends Record<string, Model<any>>> {
 				statement += mapped.join(" AND ")
 			}
 
-			if (options.order !== undefined) statement += ` ORDER BY ${String(options.order)}`
+			if (options.order !== void 0) statement += ` ORDER BY ${String(options.order)}`
 			if (options.orderDescending) statement += " DESC"
-			if (options.limit !== undefined && options.limit !== 0) statement += ` LIMIT ${options.limit}`
+			if (options.limit !== void 0 && options.limit !== 0) statement += ` LIMIT ${options.limit}`
 
 		} else if (method === "update") {
 			statement += `UPDATE ${String(table)} SET `

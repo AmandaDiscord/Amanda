@@ -62,8 +62,10 @@ export async function awardAmount(userID: string, value: bigint, reason: string)
 }
 
 export async function transact(from: string, to: string, amount: bigint): Promise<void> {
-	const fromRow = await getPersonalRow(from)
-	const toRow = await getPersonalRow(to)
+	const [fromRow, toRow] = await Promise.all([
+		getPersonalRow(from),
+		getPersonalRow(to)
+	])
 
 	await Promise.all([
 		sql.orm.update("bank_accounts", {

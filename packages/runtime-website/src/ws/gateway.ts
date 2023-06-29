@@ -43,7 +43,7 @@ server.ws("/gateway", {
 		}
 
 		res.writeStatus("101 Switching Protocols")
-		res.upgrade({ worker: undefined, clusterID }, secWebSocketKey, secWebSocketProtocol, secWebSocketExtensions, context)
+		res.upgrade({ worker: void 0, clusterID }, secWebSocketKey, secWebSocketProtocol, secWebSocketExtensions, context)
 	},
 	open(ws) {
 		const data = ws.getUserData()

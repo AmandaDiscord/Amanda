@@ -61,7 +61,7 @@ confprovider.addCallback(() => {
 					await sql.orm.upsert("voice_states", {
 						guild_id: packet.d.guild_id,
 						user_id: packet.d.user_id,
-						channel_id: packet.d.channel_id || undefined
+						channel_id: packet.d.channel_id
 					}, { useBuffer: false })
 				}
 			}
@@ -70,7 +70,7 @@ confprovider.addCallback(() => {
 			for (const state of packet.d.voice_states ?? []) {
 				sql.orm.upsert("voice_states", {
 					guild_id: packet.d.id,
-					channel_id: state.channel_id,
+					channel_id: state.channel_id!,
 					user_id: state.user_id
 				}, { useBuffer: true })
 			}
@@ -92,11 +92,11 @@ confprovider.addCallback(() => {
 		webconnector.send(JSON.stringify(packet))
 	})
 
-	let stats: fs.Stats | undefined = undefined
+	let stats: fs.Stats | undefined = void 0
 	try {
 		stats = await fs.promises.stat(toSessionsJSON)
 	} catch {
-		stats = undefined
+		stats = void 0
 	}
 
 	await client.fetchConnectInfo()
@@ -184,7 +184,7 @@ let messages: Array<import("@amanda/sql/src/orm").InferModelDef<SQL["orm"]["tabl
 	users: Array<import("@amanda/sql/src/orm").InferModelDef<SQL["orm"]["tables"]["status_users"]>>,
 	updateInterval: NodeJS.Timeout | undefined
 
-let enqueued: NodeJS.Timeout | undefined = undefined
+let enqueued: NodeJS.Timeout | undefined = void 0
 
 const activities = {
 	"PLAYING": 0 as const,
@@ -198,8 +198,8 @@ function startAnnouncement(duration: number, message: string) {
 	if (updateInterval) clearInterval(updateInterval)
 	if (enqueued) clearTimeout(enqueued)
 
-	updateInterval = undefined
-	enqueued = undefined
+	updateInterval = void 0
+	enqueued = void 0
 
 	const data = {
 		name: message,
@@ -219,9 +219,9 @@ function startAnnouncement(duration: number, message: string) {
 
 async function refresh() {
 	const [_messages, _ranges, _users] = await Promise.all([
-		sql.orm.select("status_messages", undefined, { select: ["id", "dates", "users", "message", "type", "demote"] }),
-		sql.orm.select("status_ranges", undefined, { select: ["label", "start_month", "start_day", "end_month", "end_day"] }),
-		sql.orm.select("status_users", undefined, { select: ["label", "user_id"] })
+		sql.orm.select("status_messages", void 0, { select: ["id", "dates", "users", "message", "type", "demote"] }),
+		sql.orm.select("status_ranges", void 0, { select: ["label", "start_month", "start_day", "end_month", "end_day"] }),
+		sql.orm.select("status_users", void 0, { select: ["label", "user_id"] })
 	])
 
 	messages = _messages

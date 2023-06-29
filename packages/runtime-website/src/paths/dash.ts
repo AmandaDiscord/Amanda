@@ -42,7 +42,7 @@ server.post("/logout", async (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer | undefined = undefined
+	let body: Buffer | undefined = void 0
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -125,7 +125,7 @@ server.post("/dash", async (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer | undefined = undefined
+	let body: Buffer | undefined = void 0
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -140,8 +140,8 @@ server.post("/dash", async (res, req) => {
 		.ensureParams(["token", "csrftoken"])
 		.useCSRF()
 		.do(
-			state => confprovider.config.db_enabled ? sql.orm.get("web_tokens", { token: state.params.get("token")! }) : undefined,
-			v => v !== undefined,
+			state => confprovider.config.db_enabled ? sql.orm.get("web_tokens", { token: state.params.get("token")! }) : void 0,
+			v => v !== void 0,
 			[400, "Invalid token"]
 		)
 		.go()
@@ -190,7 +190,7 @@ server.get("/channels/:channelID", async (res, req) => {
 				? sql.orm.get("voice_states", {
 					user_id: session!.user_id,
 					channel_id: channelID
-				}) : undefined,
+				}) : void 0,
 			v => !!v,
 			[400, "USER_NOT_IN_CHANNEL"]
 		)

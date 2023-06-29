@@ -83,7 +83,7 @@ server.post("/unlink", async (res, req) => {
 	if (!session) return void res.cork(() => res.writeStatus("401").endWithoutBody())
 
 
-	let body: Buffer | undefined = undefined
+	let body: Buffer | undefined = void 0
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -103,8 +103,8 @@ server.post("/unlink", async (res, req) => {
 					user_id: session.user_id,
 					type: state.params.get("type") as unknown as undefined
 				})
-				: undefined,
-			v => v !== undefined,
+				: void 0,
+			v => v !== void 0,
 			[400, "Connection not linked"]
 		)
 		.go()
@@ -137,7 +137,7 @@ server.post("/unlink", async (res, req) => {
 })
 
 server.get("/flow", (res, req) => {
-	let searchParams: URLSearchParams | undefined = undefined
+	let searchParams: URLSearchParams | undefined = void 0
 	try {
 		searchParams = new URLSearchParams(req.getQuery())
 	} catch {

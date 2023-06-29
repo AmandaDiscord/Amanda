@@ -3,7 +3,7 @@ class ImageStore {
 
 	private _create(url: string): HTMLImageElement {
 		const e = document.createElement("img")
-		const host = typeof url === "string" ? new URL(url).host : undefined
+		const host = typeof url === "string" ? new URL(url).host : void 0
 		if (!["i.ytimg.com", "media.friskyradio.com"].includes(host!)) e.crossOrigin = "anonymous"
 		e.src = url
 		return e

@@ -100,7 +100,7 @@ export class Queue {
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
 
-		if (value != undefined) {
+		if (value !== void 0) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
 			this.createNPMenu()
@@ -461,7 +461,7 @@ export class Queue {
 	}
 
 	private async _updateMessage(): Promise<void> {
-		if (this._interactionExpired) this.interaction = undefined
+		if (this._interactionExpired) this.interaction = void 0
 		if (!this.interaction) return
 
 		const track = this.tracks[0]
@@ -510,7 +510,7 @@ export class Queue {
 			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = confprovider.config.error_log_channel_id
-			const node = this.node ? common.nodes.byID(this.node) : undefined
+			const node = this.node ? common.nodes.byID(this.node) : void 0
 			const undef = "undefined"
 			const details = [
 				["Tree", confprovider.config.cluster_id],
@@ -616,7 +616,7 @@ export class Queue {
 			if (this.leavingSoonID && this.interaction) {
 				snow.interaction.deleteFollowupMessage(this.interaction.application_id, this.interaction.token, this.leavingSoonID)
 			}
-			this.leavingSoonID = undefined
+			this.leavingSoonID = void 0
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
 

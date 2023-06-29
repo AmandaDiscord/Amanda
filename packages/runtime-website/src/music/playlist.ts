@@ -53,7 +53,7 @@ const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCom
 	while (track) {
 		orderedTracks.push(track!)
 		if (track.next) track = tracks.find(row => row.video_id == track!.next)
-		else track = undefined
+		else track = void 0
 		if (orderedTracks.includes(track!)) await unbreakDatabase(tracks)
 	}
 
@@ -344,7 +344,7 @@ commands.assign([
 					})
 				}
 
-				let result: UnpackArray<Awaited<ReturnType<typeof common.loadtracks>>["tracks"]>["info"] | undefined = undefined
+				let result: UnpackArray<Awaited<ReturnType<typeof common.loadtracks>>["tracks"]>["info"] | undefined = void 0
 				try {
 					result = await common.loadtracks(`${optionTrack}`, lang)
 						.then(d => d.tracks[0]?.info)

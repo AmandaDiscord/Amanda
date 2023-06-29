@@ -140,28 +140,28 @@ commands.assign([
 			}
 
 			if (userrel) {
-				sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
+				await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${sharedUtils.userString(user)} is already married`
 				})
 			}
 
 			if (pending.user1 === cmd.author.id) {
-				sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
+				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: "How did you propose to yourself???"
 				})
 			}
 
-			sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
+			await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
 			if (!selfrel) {
 				const bank = await sql.get<{ id: number }>("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [1])
 				if (!bank?.id) throw new Error("USER_MARRIED_NO_BANK_CREATED_FUCK_FUCK_FUCK")
 
-				sql.raw("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, cmd.author.id, user.id])
+				await sql.raw("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, cmd.author.id, user.id])
 			} else {
-				sql.orm.insert("bank_access", { id: selfrel.id, user_id: user.id })
+				await sql.orm.insert("bank_access", { id: selfrel.id, user_id: user.id })
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -206,7 +206,7 @@ commands.assign([
 			}
 
 			if (pending.user1 === cmd.author.id) {
-				sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
+				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: "How did you propose to yourself???"
 				})
@@ -263,12 +263,13 @@ commands.assign([
 					})
 				}
 
-				sql.orm.delete("bank_access", { id: selfinfo.id, user_id: user.id })
-
-				if (selfinfo.users.length === 2) { // now the only one left is the author. Give all to user and delete row
-					moneyManager.awardAmount(user.id, BigInt(selfinfo.amount), "Divorce inheritance")
-					sql.orm.delete("bank_access", { id: selfinfo.id })
-					sql.orm.delete("bank_accounts", { id: selfinfo.id })
+				if (selfinfo.users.length !== 2) await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: user.id })
+				else { // now the only one left is the author. Give all to user and delete row
+					await Promise.all([
+						moneyManager.awardAmount(user.id, BigInt(selfinfo.amount), "Divorce inheritance"),
+						sql.orm.delete("bank_access", { id: selfinfo.id }),
+						sql.orm.delete("bank_accounts", { id: selfinfo.id })
+					])
 				}
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -280,12 +281,13 @@ commands.assign([
 
 			const otherids = selfinfo.users.filter(id => id !== cmd.author.id)
 
-			sql.orm.delete("bank_access", { id: selfinfo.id, user_id: cmd.author.id })
-
-			if (selfinfo.users.length === 2) {
-				moneyManager.awardAmount(otherids[0], BigInt(selfinfo.amount), "Divorce inheritance")
-				sql.orm.delete("bank_access", { id: selfinfo.id })
-				sql.orm.delete("bank_accounts", { id: selfinfo.id })
+			if (selfinfo.users.length !== 2) await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: cmd.author.id })
+			else {
+				await Promise.all([
+					moneyManager.awardAmount(otherids[0], BigInt(selfinfo.amount), "Divorce inheritance"),
+					sql.orm.delete("bank_access", { id: selfinfo.id }),
+					sql.orm.delete("bank_accounts", { id: selfinfo.id })
+				])
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -339,7 +341,7 @@ commands.assign([
 				sql.orm.update("bank_accounts", { amount: (money - amount).toString() }, { id: married.id }),
 				sql.orm.insert("transactions", { user_id: cmd.author.id, amount: amount.toString(), mode: 1, description: `Withdrawl by ${cmd.author.id}`, target: married.id }),
 				moneyManager.awardAmount(cmd.author.id, amount, "Withdrawl from shared account")
-			]).catch(console.error)
+			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: `Successfully transacted ${sharedUtils.numberComma(amount)}`
@@ -368,8 +370,11 @@ commands.assign([
 
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 
-			const married = await moneyManager.getCoupleRow(cmd.author.id)
-			const self = await moneyManager.getPersonalRow(cmd.author.id)
+			const [married, self] = await Promise.all([
+				moneyManager.getCoupleRow(cmd.author.id),
+				moneyManager.getPersonalRow(cmd.author.id)
+			])
+
 			if (!married) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.NONE
@@ -389,7 +394,7 @@ commands.assign([
 				sql.orm.update("bank_accounts", { amount: (money + amount).toString() }, { id: married.id }),
 				sql.orm.insert("transactions", { user_id: cmd.author.id, amount: amount.toString(), mode: 0, description: `Deposit by ${cmd.author.id}`, target: married.id }),
 				moneyManager.awardAmount(cmd.author.id, amount * BigInt(-1), "Deposit to shared account")
-			]).catch(console.error)
+			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: `Successfully transacted ${sharedUtils.numberComma(amount)}`

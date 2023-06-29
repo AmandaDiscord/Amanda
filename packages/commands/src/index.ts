@@ -142,7 +142,7 @@ export class CommandManager<Params extends Array<unknown>> {
 
 		setImmediate(async () => {
 			const params = this.paramGetter(command)
-			let returnValue: unknown = undefined
+			let returnValue: unknown = void 0
 			try {
 				if (snow) await snow.interaction.createInteractionResponse(command.id, command.token, { type: 5 })
 				returnValue = this.commands.get(command.data.name)!.process(...params)

@@ -59,7 +59,7 @@ const common = {
 	},
 
 	genius: {
-		getLyrics(title: string, artist: string | undefined = undefined): Promise<string | null> {
+		getLyrics(title: string, artist: string | undefined = void 0): Promise<string | null> {
 			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`)
 				.then(d => d.json())
 				.then(j => j.lyrics ?? j.error ?? null)
@@ -87,7 +87,7 @@ const common = {
 	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
-		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = undefined
+		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
 		try {
 			tracks = await common.loadtracks(resource, lang, node)
 		} catch (er) {

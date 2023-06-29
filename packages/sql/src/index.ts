@@ -70,11 +70,11 @@ class SQLProvider {
 	): Promise<QueryResult<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T> | null> {
 		let prep: Array<AcceptablePrepared>
 
-		if (prepared !== undefined && typeof (prepared) != "object") prep = [prepared]
-		else if (prepared !== undefined && Array.isArray(prepared)) prep = prepared
+		if (prepared !== void 0 && typeof (prepared) != "object") prep = [prepared]
+		else if (prepared !== void 0 && Array.isArray(prepared)) prep = prepared
 
 		return new Promise((resolve, reject) => {
-			if (Array.isArray(prepared) && (prepared as unknown as Array<undefined>).includes(undefined)) {
+			if (Array.isArray(prepared) && (prepared as unknown as Array<undefined>).includes(void 0)) {
 				return reject(new Error(`Prepared statement includes undefined\n	Query: ${statement}\n	Prepared: ${util.inspect(prepared)}`))
 			}
 

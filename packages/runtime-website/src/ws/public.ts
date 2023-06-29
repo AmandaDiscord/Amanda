@@ -229,7 +229,7 @@ server.ws("/public", {
 		const secWebSocketExtensions = req.getHeader("sec-websocket-extensions")
 
 		res.writeStatus("101 Switching Protocols")
-		res.upgrade({ session: undefined }, secWebSocketKey, secWebSocketProtocol, secWebSocketExtensions, context)
+		res.upgrade({ session: void 0 }, secWebSocketKey, secWebSocketProtocol, secWebSocketExtensions, context)
 	},
 	open(ws) {
 		const session = new Session(ws)

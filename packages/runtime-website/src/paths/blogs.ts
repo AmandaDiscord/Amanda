@@ -68,7 +68,7 @@ server.get("/blog/:blogID", async (res, req) => {
 
 	if (!stat) {
 		if (!res.continue) return
-		return utils.streamFile("404.html", res, undefined, undefined, false, 404)
+		return utils.streamFile("404.html", res, void 0, void 0, false, 404)
 	}
 
 	if (!res.continue) return

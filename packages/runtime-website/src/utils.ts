@@ -202,7 +202,7 @@ export class Validator<S extends State, P> {
 	public previousValue: P
 	public operations: Array<{ expected: unknown, assign: string | undefined, errorValue: [number, string] | undefined, code: (state: S, previousValue: P) => unknown }> = []
 	public stage = 0
-	public promise: Promise<S> | undefined = undefined
+	public promise: Promise<S> | undefined = void 0
 
 	public do<C extends (state: S, previousValue: P) => unknown, A extends undefined>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | undefined, assign?: A): Validator<S, Awaited<ReturnType<C>>>
 	public do<C extends (state: S, previousValue: P) => unknown, A extends string>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | undefined, assign?: A): Validator<S & { [K in A]: Awaited<ReturnType<C>> }, Awaited<ReturnType<C>>>
@@ -232,7 +232,7 @@ export class Validator<S extends State, P> {
 		}
 
 		const processError = () => {
-			if (input.errorValue !== undefined) reject(input.errorValue)
+			if (input.errorValue !== void 0) reject(input.errorValue)
 			else reject([500, `Unlabelled error in validator stage ${this.stage}`])
 		}
 
@@ -275,11 +275,11 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 			[400, "Content-Type must be application/x-www-form-urlencoded"]
 		).do(
 			() => body.toString("ascii"),
-			undefined,
+			void 0,
 			[400, "Failed to convert body to a string"]
 		).do(
 			(_, bod) => new URLSearchParams(bod),
-			undefined,
+			void 0,
 			[400, "Failed to convert body to URLSearchParams"],
 			"params"
 		)

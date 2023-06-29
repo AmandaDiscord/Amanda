@@ -21,7 +21,7 @@ class REPLProvider<C> {
 			input = input.slice(depthOverwrite.length + 1)
 		}
 
-		let result: unknown = undefined
+		let result: unknown = void 0
 		try {
 			result = await eval(input)
 			const output = util.inspect(result, false, depth, true)
