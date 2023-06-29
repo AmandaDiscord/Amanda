@@ -36,7 +36,7 @@ __metadata:
     "@lavalink/encoding": 0.1.2
     "@types/marked": 5.0.0
     "@types/mime-types": 2.1.1
-    discord-verify: 1.1.0
+    discord-verify: 1.2.0
     lavacord: "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a"
     marked: 5.1.0
     mime-types: 2.1.35
@@ -1518,12 +1518,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-verify@npm:1.1.0":
-  version: 1.1.0
-  resolution: "discord-verify@npm:1.1.0"
+"discord-verify@npm:1.2.0":
+  version: 1.2.0
+  resolution: "discord-verify@npm:1.2.0"
   dependencies:
     "@types/express": ^4.17.17
-  checksum: 47fc24ac5d49311aa123967908cce31a5e4b33ffac1cdad5e5d941e4414d039d1c096ae9f602e1944084dbaf46119d5910979106badf3e33aefda390fd6c2812
+  checksum: 4224950737f9ed86b0cb8b8910639fca51da5d33702ac8ebbe5bd00ca9ca239d1642ded4b2e3e894c6aca79afa1df44a234031c59eeccd167265221d144f4516
   languageName: node
   linkType: hard
 
