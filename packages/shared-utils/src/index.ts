@@ -487,7 +487,7 @@ export function substr(text: string, from: number, length?: number): string {
 	return text.repeat(Math.ceil(length / (from + text.length))).slice(from, from + length)
 }
 
-export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser> {
+export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }): Promise<APIUser | null> {
 	if (id === client?.user.id) return client.user
 	if (confprovider.config.db_enabled) {
 		const sql = require("@amanda/sql")

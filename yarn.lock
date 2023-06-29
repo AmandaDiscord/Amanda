@@ -12,7 +12,7 @@ __metadata:
     "@amanda/config": 1.0.0
     "@amanda/repl": 1.0.0
     "@amanda/web-internal": 1.0.0
-    cloudstorm: 0.7.3
+    cloudstorm: 0.7.4
   languageName: unknown
   linkType: soft
 
@@ -36,7 +36,7 @@ __metadata:
     "@lavalink/encoding": 0.1.2
     "@types/marked": 5.0.0
     "@types/mime-types": 2.1.1
-    discord-verify: 1.1.0
+    discord-verify: 1.2.0
     lavacord: "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a"
     marked: 5.1.0
     mime-types: 2.1.35
@@ -955,10 +955,10 @@ __metadata:
     discord-api-types: 0.37.46
     eslint: ^8.43.0
     heatsync: ^2.4.1
-    snowtransfer: ^0.7.1
+    snowtransfer: ^0.7.2
     tsup: ^7.1.0
     turbo: ^1.10.6
-    typescript: ^5.1.3
+    typescript: ^5.1.6
   languageName: unknown
   linkType: soft
 
@@ -1324,12 +1324,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:0.7.3":
-  version: 0.7.3
-  resolution: "cloudstorm@npm:0.7.3"
+"cloudstorm@npm:0.7.4":
+  version: 0.7.4
+  resolution: "cloudstorm@npm:0.7.4"
   dependencies:
-    snowtransfer: 0.7.1
-  checksum: 962a2e287b58e1b0315ed3aacfaea2cbdb3fcb11b594020f91d2abff0158fb993d7dd89426b92eb3b8fe2e4047036522a322a26e1751285bf7b686fcc0f39c29
+    snowtransfer: 0.7.2
+  checksum: 1cfc2c7bd62456996c0d92e6429c10fd4573bec3b41761a57d0b73d71c0ebe706c0b3f8d10b84141053c1fba9aaac8a232fa4cfb681074bd325e18784f623acb
   languageName: node
   linkType: hard
 
@@ -1504,26 +1504,19 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.46":
+"discord-api-types@npm:0.37.46, discord-api-types@npm:^0.37.46":
   version: 0.37.46
   resolution: "discord-api-types@npm:0.37.46"
   checksum: 86da1a4ed1d57164fa7bbda10bc6126c72685e55b6ed8b30299406fc8cace721e78d3aebe0fe1b35039fad37be4d52a208c9e53f2abfde1bfc3d1aa034f8d264
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:^0.37.42":
-  version: 0.37.42
-  resolution: "discord-api-types@npm:0.37.42"
-  checksum: 3c4f78beae6e18ee8afbaf9e911ccc4ad6b0658c18ea5b95e35f0dc7e56f2cd32b69c16062ab014cce093140ba98d95172e83039cd197fe618873e72a4d26a8b
-  languageName: node
-  linkType: hard
-
-"discord-verify@npm:1.1.0":
-  version: 1.1.0
-  resolution: "discord-verify@npm:1.1.0"
+"discord-verify@npm:1.2.0":
+  version: 1.2.0
+  resolution: "discord-verify@npm:1.2.0"
   dependencies:
     "@types/express": ^4.17.17
-  checksum: 47fc24ac5d49311aa123967908cce31a5e4b33ffac1cdad5e5d941e4414d039d1c096ae9f602e1944084dbaf46119d5910979106badf3e33aefda390fd6c2812
+  checksum: 4224950737f9ed86b0cb8b8910639fca51da5d33702ac8ebbe5bd00ca9ca239d1642ded4b2e3e894c6aca79afa1df44a234031c59eeccd167265221d144f4516
   languageName: node
   linkType: hard
 
@@ -3862,14 +3855,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:0.7.1, snowtransfer@npm:^0.7.1":
-  version: 0.7.1
-  resolution: "snowtransfer@npm:0.7.1"
+"snowtransfer@npm:0.7.2, snowtransfer@npm:^0.7.2":
+  version: 0.7.2
+  resolution: "snowtransfer@npm:0.7.2"
   dependencies:
     centra: ^2.6.0
-    discord-api-types: ^0.37.42
+    discord-api-types: ^0.37.46
     form-data: ^4.0.0
-  checksum: 7646118c244ece850b3afe8f066d80b79edcb52d8e5b85313123e0c4934057a6c3a36bdf09c4166731addd342db0c86a499d9ae772a1090922b129f9bcfe1af4
+  checksum: 7a967ec811786f29d6b6b370c6b1e21a41438b9dac718f1b19f51145d0c1b6774e6a25a78ca54483b830154fab39537d6592c8c4b21865a01c22db47b0ccda01
   languageName: node
   linkType: hard
 
@@ -4356,23 +4349,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:^5.1.3":
-  version: 5.1.3
-  resolution: "typescript@npm:5.1.3"
+"typescript@npm:^5.1.6":
+  version: 5.1.6
+  resolution: "typescript@npm:5.1.6"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: d9d51862d98efa46534f2800a1071a613751b1585dc78884807d0c179bcd93d6e9d4012a508e276742f5f33c480adefc52ffcafaf9e0e00ab641a14cde9a31c7
+  checksum: b2f2c35096035fe1f5facd1e38922ccb8558996331405eb00a5111cc948b2e733163cc22fab5db46992aba7dd520fff637f2c1df4996ff0e134e77d3249a7350
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@^5.1.3#~builtin<compat/typescript>":
-  version: 5.1.3
-  resolution: "typescript@patch:typescript@npm%3A5.1.3#~builtin<compat/typescript>::version=5.1.3&hash=d73830"
+"typescript@patch:typescript@^5.1.6#~builtin<compat/typescript>":
+  version: 5.1.6
+  resolution: "typescript@patch:typescript@npm%3A5.1.6#~builtin<compat/typescript>::version=5.1.6&hash=d73830"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 32a25b2e128a4616f999d4ee502aabb1525d5647bc8955e6edf05d7fbc53af8aa98252e2f6ba80bcedfc0260c982b885f3c09cfac8bb65d2924f3133ad1e1e62
+  checksum: 21e88b0a0c0226f9cb9fd25b9626fb05b4c0f3fddac521844a13e1f30beb8f14e90bd409a9ac43c812c5946d714d6e0dee12d5d02dfc1c562c5aacfa1f49b606
   languageName: node
   linkType: hard
 

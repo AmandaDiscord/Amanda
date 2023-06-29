@@ -35,7 +35,7 @@ commands.assign([
 				})
 			}
 
-			const users = [user, ...(await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client))))]
+			const users = [user, ...(await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u)]
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
@@ -288,9 +288,7 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: selfinfo.users.length === 2
-					? `You divorced from ${sharedUtils.userString(await sharedUtils.getUser(otherids[0], client.snow, client))}`
-					: "You left the marriage"
+				content: "You left the marriage"
 			})
 		}
 	},
