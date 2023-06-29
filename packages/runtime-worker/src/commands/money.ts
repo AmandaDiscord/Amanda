@@ -919,7 +919,7 @@ commands.assign([
 			else ctx.fillStyle = "#000000"
 
 			let others: Array<APIUser> | null = null
-			if (info) others = await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))
+			if (info) others = (await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u) as Array<APIUser>
 
 			if (job.style == "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, avatar, images.get("discoin")!, heart, badgeImage, giverImage)
 			else buildNewProfile(ctx, user, others, amandollars, bgimg, images.get("profile-background-mask")!, job, avatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
