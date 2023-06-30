@@ -1,7 +1,15 @@
+import buttons = require("@amanda/buttons")
+
 import passthrough = require("../passthrough")
-const { server, confprovider, commandWorkers } = passthrough
+const { server, confprovider, commandWorkers, sync } = passthrough
+
+const utils: typeof import("../utils") = sync.require("../utils")
 
 import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
+
+const handlers = {} as Parameters<typeof buttons["setHandlers"]>["1"]
+
+buttons.setHandlers(btn => buttons.decode(btn.custom_id, "object").cluster, handlers)
 
 export class CommandWorker {
 	public constructor(public ws: WebSocket<unknown>, public clusterID: string) {
@@ -41,11 +49,14 @@ server.ws("/internal", {
 	open(ws) {
 		const data = ws.getUserData()
 		const worker = new CommandWorker(ws, data.clusterID)
+		handlers[data.clusterID] = (btn, user) => worker.send({ op: 0, t: "INTERACTION_CREATE", d: utils.buttonHandlerParamsToInteraction(btn, user) })
 		data.worker = worker
 	},
 	close(ws, code, message) {
 		console.log(code, Buffer.from(message).toString("utf8"))
-		ws.getUserData().worker.onClose()
+		const worker = ws.getUserData().worker
+		delete handlers[worker.clusterID]
+		worker.onClose()
 	}
 } as WebSocketBehavior<{ worker: CommandWorker, clusterID: string }>)
 

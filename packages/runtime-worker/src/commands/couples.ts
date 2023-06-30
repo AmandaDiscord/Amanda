@@ -3,6 +3,7 @@ import passthrough = require("../passthrough")
 const { commands, sql, confprovider, client, sync } = passthrough
 
 import sharedUtils = require("@amanda/shared-utils")
+import langReplace = require("@amanda/lang/replace")
 
 const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
 const emojis: typeof import("../emojis") = sync.require("../emojis")
@@ -400,82 +401,73 @@ commands.assign([
 				content: `Successfully transacted ${sharedUtils.numberComma(amount)}`
 			})
 		}
-	}/* ,
+	},
 	{
 		name: "coupleleaderboard",
-		description: "Displays the leaderboard of the richest couples",
-		aliases: ["coupleleaderboard", "couplelb"],
+		description: "Shows the leaderboard for top couples of money",
 		category: "couples",
-		examples: ["couplelb 2"],
-		async process(msg, suffix, lang, prefixes) {
-			const maxPages = 20
+		async process(cmd, lang) {
+			if (!confprovider.config.db_enabled) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.DATABASE_OFFLINE
+				})
+			}
+
 			const itemsPerPage = 10
 
-			const args = suffix.split(" ")
+			const count = await sql.get<{ count: number }>("SELECT COUNT(*) AS count FROM bank_accounts WHERE type = 1").then(r => Math.ceil((r?.count ?? 0) / itemsPerPage))
 
-			// Set up local
-			const isLocal = ["local", "guild", "server"].includes(args[0])
-			if (isLocal) {
-				args.shift() // if it exists, page number will now definitely be in args[0]
-				if (msg.channel.type === "dm") return msg.channel.send(utils.replace(lang.gambling.coins.prompts.guildOnly, { "username": msg.author.username }))
+			if (count === 0) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NONE
+				})
 			}
 
-			// Set up page number
-			let pageNumber = +args[0]
-			if (!isNaN(pageNumber)) {
-				pageNumber = Math.max(Math.floor(pageNumber), 1)
-			} else {
-				pageNumber = 1
-			}
+			return sharedUtils.paginate(count, async (page, btn) => {
+				const offset = page * itemsPerPage
+				const thisRows = await sql.all<{ id: string, amount: string }>(`SELECT bank_accounts.id, bank_accounts.amount FROM (SELECT DISTINCT ON (bank_access.id) bank_access.id FROM bank_access) temp INNER JOIN bank_accounts ON bank_accounts.id = temp.id WHERE bank_accounts.type = 1 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
 
-			if (pageNumber > maxPages) {
-				return msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": maxPages }))
-			}
+				const usersToResolve = new Set<string>()
+				const userTagMap = new Map<string, string>()
+				const usersMap = new Map<string, Array<string>>()
 
-			// Get all the rows
-			let rows = null
-			let availableRowCount = null
-			const offset = (pageNumber - 1) * itemsPerPage
-			if (isLocal) {
-				rows = await utils.sql.all(`SELECT bank_accounts.id, bank_accounts.amount FROM (SELECT DISTINCT ON (bank_access.id) bank_access.id FROM bank_access INNER JOIN members ON bank_access.user_id = members.id WHERE members.guild_id = $1) temp INNER JOIN bank_accounts ON bank_accounts.id = temp.id WHERE bank_accounts.type = 1 ORDER BY bank_accounts.amount DESC LIMIT ${maxPages * itemsPerPage}`, msg.guild.id)
-				availableRowCount = rows.length
-			} else {
-				rows = await utils.sql.all(`SELECT bank_accounts.id, bank_accounts.amount FROM (SELECT DISTINCT ON (bank_access.id) bank_access.id FROM bank_access) temp INNER JOIN bank_accounts ON bank_accounts.id = temp.id WHERE bank_accounts.type = 1 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
-				availableRowCount = (await utils.sql.get("SELECT COUNT(*) AS count FROM bank_accounts WHERE type = 1")).count
-			}
-
-			const lastAvailablePage = Math.min(Math.ceil(availableRowCount / itemsPerPage), maxPages)
-			const title = isLocal ? "Local Couple Leaderboard" : "Couple Leaderboard"
-			const footerHelp = `${prefixes.main}coupleleaderboard ${lang.couples.coupleleaderboard.help.usage}`
-
-			if (rows.length) {
-				const usersToResolve = new Set()
-				const userTagMap = new Map()
-				const usersMap = new Map()
-				for (const row of rows) {
-					const users = await utils.orm.db.select("bank_access", { id: row.id }, { select: ["user_id"] }).then(rs => rs.map(r => r.user_id))
+				await Promise.all(thisRows.map(async row => {
+					const users = await sql.orm.select("bank_access", { id: row.id }, { select: ["user_id"] }).then(rs => rs.map(r => r.user_id))
 					users.forEach(u => usersToResolve.add(u))
 					usersMap.set(row.id, users)
-				}
+				}))
+
 				await Promise.all([...usersToResolve].map(userID =>
-					utils.cacheManager.users.get(userID, true, true)
-						// @ts-ignore
-						.then(user => user.tag)
+					sharedUtils.getUser(userID, client.snow, client)
+						.then(user => user ? sharedUtils.userString(user) : userID)
 						.catch(() => userID) // fall back to userID if user no longer exists
 						.then(display => userTagMap.set(userID, display))
 				))
-				const displayRows = rows.map((row, index) => {
-					const ranking = itemsPerPage * (pageNumber - 1) + index + 1
-					const users = usersMap.get(row.id)
-					return `${ranking}. ${users.slice(0, -1).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.slice(-1)[0])} :: ${utils.numberComma(row.amount)} ${emojis.discoin}`
+
+				const thisDisplayRows = thisRows.map((row, index) => {
+					const ranking = itemsPerPage * page + index + 1
+					const users = usersMap.get(row.id)!
+					return [`${ranking}. ${sharedUtils.numberComma(row.amount)}`, `${users.slice(0, -1).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.slice(-1)[0])}`]
 				})
-				const embed = new Discord.MessageEmbed()
-					.setTitle(title)
-					.setDescription(displayRows.join("\n"))
-					.setFooter(utils.replace(lang.couples.coupleleaderboard.returns.pageCurrent, { "current": pageNumber, "total": lastAvailablePage }) + ` |${footerHelp}`) // SC: U+2002 EN SPACE
-					.setColor(constants.money_embed_color)
-				return msg.channel.send(await utils.contentify(msg.channel, embed))
-			} else msg.channel.send(utils.replace(lang.gambling.leaderboard.prompts.pageLimit, { "username": msg.author.username, "maxPages": lastAvailablePage }))
+
+				const thisTable = sharedUtils.tableifyRows(thisDisplayRows, ["left", "left"], () => "`")
+
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					embeds: [
+						{
+							author: { name: "Couple Leaderboard" },
+							description: thisTable.join("\n"),
+							color: confprovider.config.standard_embed_color,
+							footer: {
+								text: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
+							}
+						}
+					],
+					components: btn
+						? [{ type: 1, components: [btn.component] }]
+						: []
+				})
+			})
 		}
-	}*/
+	}
 ])

@@ -9,6 +9,7 @@ import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
+import buttons = require("@amanda/buttons")
 
 import type { CommandManagerParams } from "@amanda/shared-types"
 
@@ -53,7 +54,10 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 
 		const parsed = JSON.parse(single.toString())
 
-		if (parsed.t === "INTERACTION_CREATE") passthrough.commands.handle(parsed.d, passthrough.confprovider.config.is_dev ? passthrough.client.snow : void 0)
+		if (parsed.t === "INTERACTION_CREATE") {
+			if (parsed.d.type === 2) passthrough.commands.handle(parsed.d, passthrough.confprovider.config.is_dev ? passthrough.client.snow : void 0)
+			else if (parsed.d.type === 3) buttons.handle(parsed.d)
+		}
 	})
 
 	const replfunctions: typeof import("./replfunctions") = passthrough.sync.require("./replfunctions")

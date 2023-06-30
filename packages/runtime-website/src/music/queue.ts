@@ -332,7 +332,7 @@ export class Queue {
 		const newMenu: Queue["menu"] = [
 			new BetterComponent(
 				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
-				{ h: "playPause" }
+				{}
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
@@ -341,7 +341,7 @@ export class Queue {
 			}),
 			new BetterComponent(
 				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
-				{ h: "skip" }
+				{}
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return
@@ -350,7 +350,7 @@ export class Queue {
 			}),
 			new BetterComponent(
 				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
-				{ h: "stop" }
+				{}
 			).setCallback(interaction => {
 				const user = interaction.user ? interaction.user : interaction.member!.user
 				if (!this.listeners.get(user.id)) return

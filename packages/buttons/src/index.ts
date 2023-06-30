@@ -145,6 +145,7 @@ const cc = {
 			const decoded = cc.decode(interaction.data.custom_id, "object")
 			const btn = components.get(decoded?.mid ?? interaction.data.custom_id)
 			btn?.callback?.(interaction, btn)
+			return
 		}
 
 		const route = routeHandler(interaction.data, interaction.user ? interaction.user : interaction.member!.user)

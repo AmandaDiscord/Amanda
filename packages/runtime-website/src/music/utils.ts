@@ -332,8 +332,8 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
 		min_values: 1,
 		max_values: 1,
-		options: trackss.map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
-	} as import("discord-api-types/v10").APISelectMenuComponent, { h: "trackSelect" })
+		options: trackss.slice(0, 24).map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
+	} as import("discord-api-types/v10").APISelectMenuComponent, {})
 
 	return new Promise(res => {
 		const timer = setTimeout(() => {

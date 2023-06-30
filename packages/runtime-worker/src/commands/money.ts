@@ -704,31 +704,48 @@ commands.assign([
 				})
 			}
 
-			const itemsPerPage = 15
+			const itemsPerPage = 10
 
-			const rows = await sql.all<{ user_id: string, amount: string }>(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage}`)
+			const count = await sql.get<{ count: number }>("SELECT COUNT(*) AS count FROM bank_accounts WHERE type = 0").then(r => Math.ceil((r?.count ?? 0) / itemsPerPage))
 
-			const displayRows = await Promise.all(rows.map(async ({ user_id, amount }, index) => {
-				const tag = await sharedUtils.getUser(user_id, client.snow, client)
-					.then(user => user
-						? sharedUtils.userString(user)
-						: user_id)
-					.catch(() => user_id)
+			if (count === 0) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NONE
+				})
+			}
 
-				const ranking = index + 1
-				return [`${ranking}. ${sharedUtils.numberComma(amount)}`, tag]
-			}))
+			return sharedUtils.paginate(count, async (page, btn) => {
+				const offset = page * itemsPerPage
+				const thisRows = await sql.all<{ user_id: string, amount: string }>(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
 
-			const table = sharedUtils.tableifyRows(displayRows, ["left", "left"], () => "`")
+				const thisDisplayRows = await Promise.all(thisRows.map(async ({ user_id, amount }, index) => {
+					const tag = await sharedUtils.getUser(user_id, client.snow, client)
+						.then(user => user
+							? sharedUtils.userString(user)
+							: user_id)
+						.catch(() => user_id)
 
-			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
-					{
-						author: { name: "Leaderboard" },
-						description: table.join("\n"),
-						color: confprovider.config.standard_embed_color
-					}
-				]
+					const ranking = itemsPerPage * page + index + 1
+					return [`${ranking}. ${sharedUtils.numberComma(amount)}`, tag]
+				}))
+
+				const thisTable = sharedUtils.tableifyRows(thisDisplayRows, ["left", "left"], () => "`")
+
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					embeds: [
+						{
+							author: { name: "Leaderboard" },
+							description: thisTable.join("\n"),
+							color: confprovider.config.standard_embed_color,
+							footer: {
+								text: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
+							}
+						}
+					],
+					components: btn
+						? [{ type: 1, components: [btn.component] }]
+						: []
+				})
 			})
 		}
 	},

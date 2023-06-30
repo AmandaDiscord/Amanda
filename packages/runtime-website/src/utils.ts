@@ -12,6 +12,7 @@ const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers,
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
+import type { APIUser, APIMessageComponentInteractionData, APIMessageComponentInteraction } from "discord-api-types/v10"
 
 const commaRegex = /,/g
 const slashSingleRegex = /\//
@@ -342,6 +343,47 @@ export async function onGatewayMessage(
 		} else if (parsed.d.type === 3) {
 			await snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: 6 })
 			buttons.handle(parsed.d)
+		}
+	}
+}
+
+export function buttonHandlerParamsToInteraction(data: APIMessageComponentInteractionData, user: APIUser): APIMessageComponentInteraction {
+	return {
+		id: "",
+		application_id: confprovider.config.client_id,
+		type: 3,
+		token: "",
+		version: 1,
+		locale: "en-US",
+		channel: {
+			type: 0,
+			id: ""
+		},
+		user,
+		channel_id: "",
+		data,
+		app_permissions: "0",
+		message: {
+			id: "",
+			channel_id: "",
+			author: {
+				id: confprovider.config.client_id,
+				username: "amanda_internal_user",
+				discriminator: "0",
+				avatar: null,
+				global_name: "Amanda"
+			},
+			content: "",
+			timestamp: "",
+			edited_timestamp: null,
+			tts: false,
+			mention_everyone: false,
+			mentions: [],
+			mention_roles: [],
+			attachments: [],
+			embeds: [],
+			pinned: false,
+			type: 0
 		}
 	}
 }

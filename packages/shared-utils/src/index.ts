@@ -10,6 +10,7 @@ import confprovider = require("@amanda/config")
 import type { APIUser } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 import type { Lang } from "@amanda/lang"
+import type { BetterComponent } from "@amanda/buttons"
 
 const commaRegex = /,/g
 const spaceRegex = / /g
@@ -554,18 +555,18 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 	})
 }
 
-export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof buttons.BetterComponent> | null) => unknown): void {
+export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
 	let page = 0
 	if (pageCount > 1) {
 		let menuExpires: NodeJS.Timeout
-		const options = Array(pageCount).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
+		const options = Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
 		const component = new buttons.BetterComponent({
 			type: 3,
 			placeholder: "Select page",
 			max_values: 1,
 			min_values: 1,
 			options
-		} as import("discord-api-types/v10").APISelectMenuComponent, { h: "page" })
+		} as import("discord-api-types/v10").APISelectMenuComponent, { cluster: confprovider.config.cluster_id })
 
 		component.setCallback(interaction => {
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
