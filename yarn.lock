@@ -58,6 +58,7 @@ __metadata:
     canvas: 2.11.2
     canvas-image-cover: 2.0.2
     gifencoder: 2.0.1
+    gifuct-js: ^2.1.2
     simple-git: ^3.19.1
   languageName: unknown
   linkType: soft
@@ -2032,6 +2033,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"gifuct-js@npm:^2.1.2":
+  version: 2.1.2
+  resolution: "gifuct-js@npm:2.1.2"
+  dependencies:
+    js-binary-schema-parser: ^2.0.3
+  checksum: 050983087dd7ed119d37130a75393de2b83a85411fcf721b2dcbcc2aee1e351d91cb5c352b9dac00d210f46ad12d0199144817c1566f4f484c400704835e4359
+  languageName: node
+  linkType: hard
+
 "glob-parent@npm:^5.1.2, glob-parent@npm:~5.1.2":
   version: 5.1.2
   resolution: "glob-parent@npm:5.1.2"
@@ -2456,6 +2466,13 @@ __metadata:
   version: 2.6.4
   resolution: "js-base64@npm:2.6.4"
   checksum: 5f4084078d6c46f8529741d110df84b14fac3276b903760c21fa8cc8521370d607325dfe1c1a9fbbeaae1ff8e602665aaeef1362427d8fef704f9e3659472ce8
+  languageName: node
+  linkType: hard
+
+"js-binary-schema-parser@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "js-binary-schema-parser@npm:2.0.3"
+  checksum: 0223c1fecb11c2883258db3e56fb0eeb23e9114336116f355c147181c72e72675a96abbc5433cd3ce9b27a78b47ee914cc81c6be644762bc76f3917702b688b4
   languageName: node
   linkType: hard
 

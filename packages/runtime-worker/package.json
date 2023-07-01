@@ -20,6 +20,7 @@
     "canvas": "2.11.2",
     "canvas-image-cover": "2.0.2",
     "gifencoder": "2.0.1",
+    "gifuct-js": "^2.1.2",
     "simple-git": "^3.19.1"
   }
 }

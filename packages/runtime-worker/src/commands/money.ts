@@ -2,6 +2,8 @@ import path = require("path")
 import fs = require("fs")
 
 import Canvas = require("canvas")
+import gifencoder = require("gifencoder")
+import gifdecoder = require("gifuct-js")
 
 import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
@@ -867,11 +869,10 @@ commands.assign([
 				if (themedata?.value == "light") themeoverlay = "profile-light"
 			}
 
-			const [isPremium, money, info, avatar, images] = await Promise.all([
+			const [isPremium, money, info, images] = await Promise.all([
 				sql.orm.get("premium", { user_id: user.id }),
 				moneyManager.getPersonalRow(user.id),
 				moneyManager.getCoupleRow(user.id),
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user)),
 				imageCache.getAll([
 					"defaultbg",
 					"vicinity",
@@ -918,8 +919,25 @@ commands.assign([
 
 			const job = await getOverlay(user, images, themeoverlay)
 
+			let avatarAsStatic: Canvas.Image | undefined = undefined
+			let avatarAsGif: Array<gifdecoder.ParsedFrame> | undefined = undefined
+			let encoder
+
+			if (isPremium?.state && user.avatar?.startsWith("a_")) {
+				try {
+					const response = await fetch(sharedUtils.displayAvatarURL(user, true))
+					const buf = await response.arrayBuffer()
+					const parsed = gifdecoder.parseGIF(buf)
+					avatarAsGif = gifdecoder.decompressFrames(parsed, true)
+					encoder = new gifencoder(800, 500)
+				} catch {
+					avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+				}
+			} else avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+
 			const c = Canvas.createCanvas(800, 500)
 			const ctx = c.getContext("2d")
+
 			let bgimg: Canvas.Image | undefined = void 0
 			if (user.id === "320067006521147393" || isPremium) {
 				try {
@@ -938,15 +956,55 @@ commands.assign([
 			let others: Array<APIUser> | null = null
 			if (info) others = (await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u) as Array<APIUser>
 
-			if (job.style == "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, avatar, images.get("discoin")!, heart, badgeImage, giverImage)
-			else buildNewProfile(ctx, user, others, amandollars, bgimg, images.get("profile-background-mask")!, job, avatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
+			let prom: Promise<Buffer> | undefined = undefined
+			if (encoder) {
+				encoder.start()
+				encoder.setQuality(2)
+				encoder.setRepeat(0)
+				let resolve
+				prom = new Promise(res => {
+					resolve = res
+				})
+				const stream = encoder.createReadStream()
+				const acc = new sharedUtils.BufferAccumulator()
+				const onData = (data: Buffer) => acc.add(data)
 
-			const buffer = c.toBuffer("image/png")
+				stream.on("data", onData)
+				stream.once("end", () => {
+					stream.removeListener("data", onData)
+					resolve(acc.concat()!)
+				})
+			}
+
+			for (const frame of avatarAsGif ?? [avatarAsStatic!]) {
+				let imageToPassAsAvatar: Canvas.Image
+
+				if (avatarAsGif) {
+					const f = frame as gifdecoder.ParsedFrame
+					encoder.setDelay(f.delay)
+					const imgData = new Canvas.ImageData(f.patch, f.dims.width, f.dims.height)
+					const temp = Canvas.createCanvas(f.dims.width, f.dims.height)
+					const tempCtx = temp.getContext("2d")
+					tempCtx.putImageData(imgData, 0, 0)
+					const img = new Canvas.Image()
+					img.src = temp.toDataURL()
+					imageToPassAsAvatar = img
+				} else imageToPassAsAvatar = avatarAsStatic!
+
+				if (job.style == "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, imageToPassAsAvatar, images.get("discoin")!, heart, badgeImage, giverImage)
+				else buildNewProfile(ctx, user, others, amandollars, bgimg, images.get("profile-background-mask")!, job, imageToPassAsAvatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
+
+				encoder?.addFrame(ctx)
+			}
+
+			encoder?.finish()
+
+			const buffer = prom ? await prom : c.toBuffer("image/png")
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				files: [
 					{
-						name: "profile.png",
+						name: encoder ? "profile.gif" : "profile.png",
 						file: buffer
 					}
 				]
