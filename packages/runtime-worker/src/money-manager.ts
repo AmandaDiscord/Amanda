@@ -29,7 +29,8 @@ let autoPayTimeout: NodeJS.Timeout | undefined = undefined
 if (confprovider.config.donor_payments_enabled_on_this_cluster) autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 
 
-async function autoPayTimeoutFunction() {
+export async function autoPayTimeoutFunction() {
+	clearTimeout(autoPayTimeout)
 	const donors = await sql.orm.select("premium").then(rows => rows.map(r => r.user_id))
 
 	for (const ID of donors) {
