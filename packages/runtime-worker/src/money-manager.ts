@@ -1,7 +1,52 @@
 import passthrough = require("./passthrough")
-const { client, sql } = passthrough
+const { client, sql, confprovider, sync } = passthrough
+
+import sharedUtils = require("@amanda/shared-utils")
 
 export const startingCoins = 5000
+
+// Auto donor payment
+function getTimeoutDuration(): number {
+	const dayInMS = 1000 * 60 * 60 * 24
+	const currently = new Date()
+	const day = currently.getDay()
+	const remainingToday = 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24))
+
+	if (day == 0) return dayInMS + remainingToday // Sunday
+	else if (day == 1) return remainingToday // Monday
+	else if (day == 2) return dayInMS * 6 + remainingToday // Tuesday
+	else if (day == 3) return dayInMS * 5 + remainingToday // Wednesday
+	else if (day == 4) return dayInMS * 4 + remainingToday // Thursday
+	else if (day == 5) return dayInMS * 3 + remainingToday // Friday
+	else if (day == 6) return dayInMS * 2 + remainingToday // Saturday
+	else {
+		console.log("Uh oh. Date.getDay did a fucky wucky")
+		return remainingToday
+	}
+}
+
+let autoPayTimeout: NodeJS.Timeout | undefined = undefined
+if (confprovider.config.donor_payments_enabled_on_this_cluster) autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+
+
+async function autoPayTimeoutFunction() {
+	const donors = await sql.orm.select("premium").then(rows => rows.map(r => r.user_id))
+
+	for (const ID of donors) {
+		await awardAmount(ID, BigInt(10000), "Beneficiary deposit")
+	}
+
+	const time = getTimeoutDuration()
+	console.log(`Donor payments completed. Set a timeout for ${sharedUtils.shortTime(time, "ms")}`)
+	autoPayTimeout = setTimeout(autoPayTimeoutFunction, time)
+}
+
+sync.events.once(__filename, () => {
+	if (autoPayTimeout) {
+		clearTimeout(autoPayTimeout)
+		console.log("cleared old donor pay timeout")
+	}
+})
 
 export async function getPersonalRow(userID: string) {
 	const row = await sql.get<{ id: string, amount: string }>(

@@ -53,6 +53,7 @@ const config = {
 	}],
 	standard_embed_color: 0x2f3136,
 	error_log_channel_id: "",
+	donor_payments_enabled_on_this_cluster: false,
 
 	// constants
 	patreon_url: "",
