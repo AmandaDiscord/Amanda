@@ -13,6 +13,6 @@
     "@amanda/config": "1.0.0",
     "@amanda/repl": "1.0.0",
     "@amanda/web-internal": "1.0.0",
-    "cloudstorm": "0.7.4"
+    "cloudstorm": "0.8.0"
   }
 }

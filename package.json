@@ -12,18 +12,18 @@
         "build": "turbo run build"
     },
     "devDependencies": {
-        "@types/node": "^20.3.2",
+        "@types/node": "^20.3.3",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
         "@typescript-eslint/parser": "^5.60.1",
-        "discord-api-types": "0.37.46",
-        "eslint": "^8.43.0",
+        "discord-api-types": "0.37.47",
+        "eslint": "^8.44.0",
         "tsup": "^7.1.0",
-        "turbo": "^1.10.6",
+        "turbo": "^1.10.7",
         "typescript": "^5.1.6"
     },
     "packageManager": "yarn@3.3.0",
     "dependencies": {
         "heatsync": "^2.4.1",
-        "snowtransfer": "^0.7.2"
+        "snowtransfer": "^0.8.0"
     }
 }
