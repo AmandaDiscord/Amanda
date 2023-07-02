@@ -192,158 +192,158 @@
 	"image": {
 		"name": "afbeelding",
 		"description": "Stuurt een afbeelding ergens van",
-		"options": [
-			{
+		"options": {
+			"type": {
 				"name": "type",
 				"description": "Het type afbeelding"
 			}
-		]
+		}
 	},
 	"ship": {
 		"name": "verkering",
 		"description": "Laat twee mensen verkering hebben",
-		"options": [
-			{
+		"options": {
+			"user2": {
 				"name": "gebruiker2",
 				"description": "De tweede gebruiker om verkering te laten hebben"
 			},
-			{
+			"user1": {
 				"name": "gebruiker1",
 				"description": "De gebruiker waarmee gebruiker2 verkering moet hebben, afgezien van jezelf"
 			}
-		]
+		}
 	},
 	"bean": {
 		"name": "verboon",
 		"description": "Verboont een gebruiker",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te verbonen"
 			}
-		]
+		}
 	},
 	"hug": {
 		"name": "knuffel",
 		"description": "Knuffelt iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te knuffelen"
 			}
-		]
+		}
 	},
 	"nom": {
 		"name": "nom",
 		"description": "Nomt iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te nommen"
 			}
-		]
+		}
 	},
 	"kiss": {
 		"name": "zoen",
 		"description": "zoent iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te zoenen"
 			}
-		]
+		}
 	},
 	"cuddle": {
 		"name": "snoezel",
 		"description": "Snoezelt met iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om mee te snoezelen"
 			}
-		]
+		}
 	},
 	"poke": {
 		"name": "prik",
 		"description": "Prikt iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te prikken"
 			}
-		]
+		}
 	},
 	"slap": {
 		"name": "sla",
 		"description": "Slaat iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te slaan"
 			}
-		]
+		}
 	},
 	"boop": {
 		"name": "boop",
 		"description": "Boopt iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te boopen"
 			}
-		]
+		}
 	},
 	"pat": {
 		"name": "aai",
 		"description": "Aait iemand",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "gebruiker",
 				"description": "De gebruiker om te aaien"
 			}
-		]
+		}
 	},
 	"play": {
 		"name": "speel",
 		"description": "Speel muziek van meerdere bronnen af",
-		"options": [
-			{
+		"options": {
+			"track": {
 				"name": "muzieknummer",
 				"description": "Het nummer dat je wilt afspleen"
 			},
-			{
+			"position": {
 				"name": "positie",
 				"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
 			}
-		]
+		}
 	},
 	"radio": {
 		"name": "radio",
 		"description": "Speel radiostations af",
-		"options": [
-			{
+		"options": {
+			"station": {
 				"name": "station",
 				"description": "Het station om af te spelen"
 			},
-			{
+			"position": {
 				"name": "positie",
 				"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
 			}
-		]
+		}
 	},
 	"skip": {
 		"name": "overslaan",
 		"description": "Sla nummers in de wachtrij over",
-		"options": [
-			{
+		"options": {
+			"start": {
 				"name": "start",
 				"description": "1-gebaseerde index waarvandaan je nummers toevoegt"
 			},
-			{
+			"amount": {
 				"name": "aantal",
 				"description": "Het aantal nummers om over te slaan in de wachtrij"
 			}
-		]
+		}
 	},
 	"stop": {
 		"name": "stop",
@@ -352,24 +352,24 @@
 	"queue": {
 		"name": "wachtrij",
 		"description": "Toon de wachtrij en voer acties uit",
-		"options": [
-			{
+		"options": {
+			"page": {
 				"name": "pagina",
 				"description": "Kies welke pagina in de wachtrij je wilt tonen"
 			},
-			{
+			"volume": {
 				"name": "volume",
 				"description": "Stel het volume % in van de wachtrij"
 			},
-			{
+			"loop": {
 				"name": "herhaling",
 				"description": "Stel de herhalingsstand van de wachtrij in"
 			},
-			{
+			"pause": {
 				"name": "pauzeer",
 				"description": "Stelt de pauzestand van de wachtrij in"
 			}
-		]
+		}
 	},
 	"nowplaying": {
 		"name": "aanhetspelen",
@@ -386,26 +386,26 @@
 	"seek": {
 		"name": "afspeelpositie",
 		"description": "Stel de afspeelpositie op een bepaalde tijd in bij het nummer dat momenteel wordt afgespeeld",
-		"options": [
-			{
+		"options": {
+			"time": {
 				"name": "tijd",
 				"description": "De tijd in seconden waar de afspeelpositie op ingesteld moet worden"
 			}
-		]
+		}
 	},
 	"filters": {
 		"name": "filters",
 		"description": "Pas filters toe op de wachtrij",
-		"options": [
-			{
+		"options": {
+			"pitch": {
 				"name": "toonhoogte",
 				"description": "Stelt de toonhoogte van de wachtrij in halve tonen in"
 			},
-			{
+			"speed": {
 				"name": "snelheid",
 				"description": "Stelt de % snelheid in van de wachtrij"
 			}
-		]
+		}
 	},
 	"shuffle": {
 		"name": "shuffle",
@@ -414,138 +414,138 @@
 	"remove": {
 		"name": "verwijder",
 		"description": "Verwijdert een muzieknummer van een wachtrij",
-		"options": [
-			{
+		"options": {
+			"index": {
 				"name": "index",
 				"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
 			}
-		]
+		}
 	},
 	"musictoken": {
 		"name": "muziektoken",
 		"description": "Verkrijg een web dashboard inlogtoken",
-		"options": [
-			{
+		"options": {
+			"action": {
 				"name": "actie",
 				"description": "Wat er gedaan moet worden"
 			}
-		]
+		}
 	},
 	"playlists": {
 		"name": "playlists",
 		"description": "Beheer en speel Amanda playlists af",
-		"options": [
-			{
+		"options": {
+			"meta": {
 				"name": "meta",
 				"description": "Metadata commando's",
-				"options": [
-					{
+				"options": {
+					"show": {
 						"name": "toon",
 						"description": "Toont alle Amanda playlists. Kies true om alleen jezelf te laten zien"
 					},
-					{
+					"info": {
 						"name": "info",
 						"description": "Toont informatie over een playlist"
 					},
-					{
+					"create": {
 						"name": "aanmaken",
 						"description": "Maakt een playlist aan"
 					},
-					{
+					"delete": {
 						"name": "verwijder",
 						"description": "Verwijdert een playlist"
 					}
-				]
+				}
 			},
-			{
+			"add": {
 				"name": "toevoegen",
 				"description": "Voegt een nummer toe aan een playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "De naam van de playlist"
 					},
-					{
+					"track": {
 						"name": "muzieknummer",
 						"description": "Een bruikbaar muzieknummer (link, naam, id)"
 					}
-				]
+				}
 			},
-			{
+			"remove": {
 				"name": "verwijder",
 				"description": "Verwijdert een muzieknummer van een playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "De naam van de playlist"
 					},
-					{
+					"index": {
 						"name": "index",
 						"description": "1-gebaseerde index van het muzieknummer om te verwijderen"
 					}
-				]
+				}
 			},
-			{
+			"move": {
 				"name": "verplaats",
 				"description": "Verplaatst een muzieknummer in een playlist van één index naar een andere",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "De naam van de playlist"
 					},
-					{
+					"from": {
 						"name": "van",
 						"description": "1-gebaseerde index van het muzieknummer om te verplaatsen"
 					},
-					{
+					"to": {
 						"name": "tot",
 						"description": "1-gebaseerde index van de plek waar het muzieknummer moet verschijnen"
 					}
-				]
+				}
 			},
-			{
+			"search": {
 				"name": "zoek",
 				"description": "Filtreert nummers in een playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "De naam van de playlist"
 					},
-					{
+					"query": {
 						"name": "zoekopdracht",
 						"description": "De zoekterm waarvoor je resultaten wilt filtreren"
 					}
-				]
+				}
 			},
-			{
+			"play": {
 				"name": "speel",
 				"description": "Speelt een playlist af",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "De naam van de playlist"
 					},
-					{
+					"shuffle": {
 						"name": "shuffle",
 						"description": "Of de playlist geshuffeld moet starten"
 					},
-					{
+					"start": {
 						"name": "begin",
 						"description": "1-gebaseerde index waarvandaan wordt begonnen. Wanneer er wordt geshuffeld, wordt er maar een deel geselecteerd en geshuffeld"
 					}
-				]
+				}
 			}
-		]
+		}
 	},
 	"stats": {
 		"name": "statistieken",
 		"description": "Toont gedetailleerde statistieken",
-		"options": [
-			{
+		"options": {
+			"window": {
 				"name": "venster",
 				"description": "Het type statistiek om te laten zien"
 			}
-		]
+		}
 	},
 	"info": {
 		"name": "info",
@@ -558,54 +558,54 @@
 	"help": {
 		"name": "help",
 		"description": "Een normaal hulpcommando",
-		"options": [
-			{
+		"options": {
+			"category": {
 				"name": "categorie",
 				"description": "De categorie om hulp mee te krijgen"
 			},
-			{
+			"command": {
 				"name": "commando",
 				"description": "Het commando om hulp mee te krijgen"
 			}
-		]
+		}
 	},
 	"slots": {
 		"name": "slots",
 		"description": "Run the slot machine",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"flip": {
 		"name": "flip",
 		"description": "Flips a coin",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			},
-			{
+			"side": {
 				"name": "side",
 				"description": "The side to bet on"
 			}
-		]
+		}
 	},
 	"money": {
 		"name": "money",
 		"description": "Shows how much money you, another person, or a couple has",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to check their bank info"
 			},
-			{
+			"couple": {
 				"name": "couple",
 				"description": "Whether to show the couple balance"
 			}
-		]
+		}
 	},
 	"leaderboard": {
 		"name": "leaderboard",
@@ -614,53 +614,53 @@
 	"give": {
 		"name": "give",
 		"description": "Gives another user money",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to give"
 			},
-			{
+			"user": {
 				"name": "user",
 				"description": "The user to give money to"
 			}
-		]
+		}
 	},
 	"wheel": {
 		"name": "wheel",
 		"description": "Spin the wheel of (mis)fortune",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"profile": {
 		"name": "profile",
 		"description": "Get a user's Amanda profile",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user's profile to get'"
 			},
-			{
+			"light": {
 				"name": "light",
 				"description": "If light mode should be force used (default false)"
 			}
-		]
+		}
 	},
 	"settings": {
 		"name": "settings",
 		"description": "Modify settings for Amanda to use",
-		"options": [
-			{
+		"options": {
+			"setting": {
 				"name": "setting",
 				"description": "The setting you want to modify/view"
 			},
-			{
+			"modify": {
 				"name": "modify",
 				"description": "What to modify the setting value to"
 			}
-		]
+		}
 	}
 }

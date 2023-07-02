@@ -187,158 +187,158 @@
 	"image": {
 		"name": "image",
 		"description": "Send an image of something",
-		"options": [
-			{
+		"options": {
+			"type": {
 				"name": "type",
 				"description": "The type of image"
 			}
-		]
+		}
 	},
 	"ship": {
 		"name": "ship",
 		"description": "Ships two people",
-		"options": [
-			{
+		"options": {
+			"user2": {
 				"name": "user2",
 				"description": "The second user to ship"
 			},
-			{
+			"user1": {
 				"name": "user1",
 				"description": "The user to ship user2 with other than yourself"
 			}
-		]
+		}
 	},
 	"bean": {
 		"name": "bean",
 		"description": "Beans a user",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to bean"
 			}
-		]
+		}
 	},
 	"hug": {
 		"name": "hug",
 		"description": "Hugs someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to hug"
 			}
-		]
+		}
 	},
 	"nom": {
 		"name": "nom",
 		"description": "Noms someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to nom"
 			}
-		]
+		}
 	},
 	"kiss": {
 		"name": "kiss",
 		"description": "Kisses someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to kiss"
 			}
-		]
+		}
 	},
 	"cuddle": {
 		"name": "cuddle",
 		"description": "Cuddles someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to cuddle"
 			}
-		]
+		}
 	},
 	"poke": {
 		"name": "poke",
 		"description": "Pokes someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to poke"
 			}
-		]
+		}
 	},
 	"slap": {
 		"name": "slap",
 		"description": "Slaps someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to slap"
 			}
-		]
+		}
 	},
 	"boop": {
 		"name": "boop",
 		"description": "Boops someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to boop"
 			}
-		]
+		}
 	},
 	"pat": {
 		"name": "pat",
 		"description": "Pats someone",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to pat"
 			}
-		]
+		}
 	},
 	"play": {
 		"name": "play",
 		"description": "Play music from multiple sources",
-		"options": [
-			{
+		"options": {
+			"track": {
 				"name": "track",
 				"description": "The track you'd like to play"
 			},
-			{
+			"position": {
 				"name": "position",
 				"description": "1 based index to start adding tracks from"
 			}
-		]
+		}
 	},
 	"radio": {
 		"name": "radio",
 		"description": "Play from radio stations",
-		"options": [
-			{
+		"options": {
+			"station": {
 				"name": "station",
 				"description": "The station to play from"
 			},
-			{
+			"position": {
 				"name": "position",
 				"description": "1 based index to start adding tracks from"
 			}
-		]
+		}
 	},
 	"skip": {
 		"name": "skip",
 		"description": "Skip tracks in the queue",
-		"options": [
-			{
+		"options": {
+			"start": {
 				"name": "start",
 				"description": "1 based index to start skipping tracks from"
 			},
-			{
+			"amount": {
 				"name": "amount",
 				"description": "The amount of tracks to skip in the queue"
 			}
-		]
+		}
 	},
 	"stop": {
 		"name": "stop",
@@ -347,24 +347,24 @@
 	"queue": {
 		"name": "queue",
 		"description": "Show the queue and do actions",
-		"options": [
-			{
+		"options": {
+			"page": {
 				"name": "page",
 				"description": "Choose what page in the queue to show"
 			},
-			{
+			"volume": {
 				"name": "volume",
 				"description": "Set the volume % of the queue"
 			},
-			{
+			"loop": {
 				"name": "loop",
 				"description": "Set the state of loop mode for the queue"
 			},
-			{
+			"pause": {
 				"name": "pause",
 				"description": "Sets the paused state of the queue"
 			}
-		]
+		}
 	},
 	"nowplaying": {
 		"name": "nowplaying",
@@ -381,26 +381,26 @@
 	"seek": {
 		"name": "seek",
 		"description": "Seek to a time in the currently playing track",
-		"options": [
-			{
+		"options": {
+			"time": {
 				"name": "time",
 				"description": "The time in seconds to seek in the track"
 			}
-		]
+		}
 	},
 	"filters": {
 		"name": "filters",
 		"description": "Apply filters to the queue",
-		"options": [
-			{
+		"options": {
+			"pitch": {
 				"name": "pitch",
 				"description": "Sets the pitch of the queue in semitones"
 			},
-			{
+			"speed": {
 				"name": "speed",
 				"description": "Sets the speed % of the queue"
 			}
-		]
+		}
 	},
 	"shuffle": {
 		"name": "shuffle",
@@ -409,138 +409,138 @@
 	"remove": {
 		"name": "remove",
 		"description": "Removes a track from the queue",
-		"options": [
-			{
+		"options": {
+			"index": {
 				"name": "index",
 				"description": "The 1 based index of the track to remove"
 			}
-		]
+		}
 	},
 	"musictoken": {
 		"name": "musictoken",
 		"description": "Obtain a web dashboard login token",
-		"options": [
-			{
+		"options": {
+			"action": {
 				"name": "action",
 				"description": "What to do"
 			}
-		]
+		}
 	},
 	"playlists": {
 		"name": "playlists",
 		"description": "Manage and play Amanda playlists",
-		"options": [
-			{
+		"options": {
+			"meta": {
 				"name": "meta",
 				"description": "Metadata commands",
-				"options": [
-					{
+				"options": {
+					"show": {
 						"name": "show",
 						"description": "Shows all Amanda playlists. True to only show yourself"
 					},
-					{
+					"info": {
 						"name": "info",
 						"description": "Shows info for a playlist"
 					},
-					{
+					"create": {
 						"name": "create",
 						"description": "Creates a playlist"
 					},
-					{
+					"delete": {
 						"name": "delete",
 						"description": "Deletes a playlist"
 					}
-				]
+				}
 			},
-			{
+			"add": {
 				"name": "add",
 				"description": "Adds a track to a playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "The name of the playlist"
 					},
-					{
+					"track": {
 						"name": "track",
 						"description": "A resolvable track (link, name, id)"
 					}
-				]
+				}
 			},
-			{
+			"remove": {
 				"name": "remove",
 				"description": "Removes a track from a playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "The name of the playlist"
 					},
-					{
+					"index": {
 						"name": "index",
 						"description": "The 1 based index of the track to remove"
 					}
-				]
+				}
 			},
-			{
+			"move": {
 				"name": "move",
 				"description": "Moves a track in a playlist from one index to another",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "The name of the playlist"
 					},
-					{
+					"from": {
 						"name": "from",
 						"description": "The 1 based index of the track to move"
 					},
-					{
+					"to": {
 						"name": "to",
 						"description": "The 1 based index the track should appear at"
 					}
-				]
+				}
 			},
-			{
+			"search": {
 				"name": "search",
 				"description": "Filters tracks in a playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "The name of the playlist"
 					},
-					{
+					"query": {
 						"name": "query",
 						"description": "The search term to filter by"
 					}
-				]
+				}
 			},
-			{
+			"play": {
 				"name": "play",
 				"description": "Plays a playlist",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "The name of the playlist"
 					},
-					{
+					"shuffle": {
 						"name": "shuffle",
 						"description": "If the playlist should start shuffled"
 					},
-					{
+					"start": {
 						"name": "start",
 						"description": "The 1 based index to start from. When shuffling, only a portion is selected and then shuffled"
 					}
-				]
+				}
 			}
-		]
+		}
 	},
 	"stats": {
 		"name": "stats",
 		"description": "Show detailed statistics",
-		"options": [
-			{
+		"options": {
+			"window": {
 				"name": "window",
 				"description": "The type of stats to show"
 			}
-		]
+		}
 	},
 	"info": {
 		"name": "info",
@@ -553,54 +553,54 @@
 	"help": {
 		"name": "help",
 		"description": "Your average help command",
-		"options": [
-			{
+		"options": {
+			"category": {
 				"name": "category",
 				"description": "The category to get help with"
 			},
-			{
+			"command": {
 				"name": "command",
 				"description": "The command to get help with"
 			}
-		]
+		}
 	},
 	"slots": {
 		"name": "slots",
 		"description": "Run the slot machine",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"flip": {
 		"name": "flip",
 		"description": "Flips a coin",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			},
-			{
+			"side": {
 				"name": "side",
 				"description": "The side to bet on"
 			}
-		]
+		}
 	},
 	"money": {
 		"name": "money",
 		"description": "Shows how much money you, another person, or a couple has",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to check their bank info"
 			},
-			{
+			"couple": {
 				"name": "couple",
 				"description": "Whether to show the couple balance"
 			}
-		]
+		}
 	},
 	"leaderboard": {
 		"name": "leaderboard",
@@ -609,53 +609,53 @@
 	"give": {
 		"name": "give",
 		"description": "Gives another user money",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to give"
 			},
-			{
+			"user": {
 				"name": "user",
 				"description": "The user to give money to"
 			}
-		]
+		}
 	},
 	"wheel": {
 		"name": "wheel",
 		"description": "Spin the wheel of (mis)fortune",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"profile": {
 		"name": "profile",
 		"description": "Get a user's Amanda profile",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user's profile to get'"
 			},
-			{
+			"light": {
 				"name": "light",
 				"description": "If light mode should be force used (default false)"
 			}
-		]
+		}
 	},
 	"settings": {
 		"name": "settings",
 		"description": "Modify settings for Amanda to use",
-		"options": [
-			{
+		"options": {
+			"setting": {
 				"name": "setting",
 				"description": "The setting you want to modify/view"
 			},
-			{
+			"modify": {
 				"name": "modify",
 				"description": "What to modify the setting value to"
 			}
-		]
+		}
 	}
 }

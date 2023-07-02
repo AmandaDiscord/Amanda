@@ -187,158 +187,158 @@
 	"image": {
 		"name": "картинку",
 		"description": "Прислать картинку чего-то",
-		"options": [
-			{
+		"options": {
+			"type": {
 				"name": "тип",
 				"description": "Тип изображения"
 			}
-		]
+		}
 	},
 	"ship": {
 		"name": "ship",
 		"description": "Шипперит двух людей",
-		"options": [
-			{
+		"options": {
+			"user2": {
 				"name": "человек2",
 				"description": "Второй пользователь для шиппа"
 			},
-			{
+			"user1": {
 				"name": "человек1",
 				"description": "Человек, которого нужно зашипперить со вторым, кроме себя."
 			}
-		]
+		}
 	},
 	"bean": {
 		"name": "бан",
 		"description": "Банит пользователя",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Человек, которого нужно забанить"
 			}
-		]
+		}
 	},
 	"hug": {
 		"name": "обнять",
 		"description": "Обнять кого-то",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Человек, которого хочется обнять"
 			}
-		]
+		}
 	},
 	"nom": {
 		"name": "укусить",
 		"description": "Укусить кого-то",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Человек, которого хочется укусить"
 			}
-		]
+		}
 	},
 	"kiss": {
 		"name": "поцеловать",
 		"description": "Кого-то поцеловать",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Тот, кого хочется поцеловать"
 			}
-		]
+		}
 	},
 	"cuddle": {
 		"name": "прижаться",
 		"description": "Прижаться к кому-то",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Тот, к кому хочется прижаться"
 			}
-		]
+		}
 	},
 	"poke": {
 		"name": "тыкнуть",
 		"description": "Тыкнуть в кого-то",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Тот, в кого хочется тыкнуть"
 			}
-		]
+		}
 	},
 	"slap": {
 		"name": "пощечину",
 		"description": "Дать кому-то пощечину",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Человек, которому хочется дать пощечину"
 			}
-		]
+		}
 	},
 	"boop": {
 		"name": "boop",
 		"description": "Когда тыкнуть хочется именно в нос.",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Тот, кому хочется тыкнуть в нос"
 			}
-		]
+		}
 	},
 	"pat": {
 		"name": "pat",
 		"description": "Гладит кого-то по голове",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "человек",
 				"description": "Тот, кого хочется погладить"
 			}
-		]
+		}
 	},
 	"play": {
 		"name": "play",
 		"description": "Играет музыку из различных источников",
-		"options": [
-			{
+		"options": {
+			"track": {
 				"name": "track",
 				"description": "Трек, который хочется включить"
 			},
-			{
+			"position": {
 				"name": "position",
 				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
 			}
-		]
+		}
 	},
 	"radio": {
 		"name": "radio",
 		"description": "Играть музыку с радиостанций",
-		"options": [
-			{
+		"options": {
+			"station": {
 				"name": "station",
 				"description": "Станция, с которой надо включить музыку"
 			},
-			{
+			"position": {
 				"name": "position",
 				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
 			}
-		]
+		}
 	},
 	"skip": {
 		"name": "skip",
 		"description": "Пропускает трек в очереди",
-		"options": [
-			{
+		"options": {
+			"start": {
 				"name": "start",
 				"description": "Номер, с которого нужно пропускать треки (начиная с 1)"
 			},
-			{
+			"amount": {
 				"name": "amount",
 				"description": "Количество треков, которые нужно пропустить"
 			}
-		]
+		}
 	},
 	"stop": {
 		"name": "stop",
@@ -347,24 +347,24 @@
 	"queue": {
 		"name": "queue",
 		"description": "Показать очередь и действия",
-		"options": [
-			{
+		"options": {
+			"page": {
 				"name": "page",
 				"description": "Выбрать, какую страницу очереди показать"
 			},
-			{
+			"volume": {
 				"name": "volume",
 				"description": "Нужная громкость музыки (в %)"
 			},
-			{
+			"loop": {
 				"name": "loop",
 				"description": "Включить повторение очереди"
 			},
-			{
+			"pause": {
 				"name": "pause",
 				"description": "Останавливает очередь"
 			}
-		]
+		}
 	},
 	"nowplaying": {
 		"name": "nowplaying",
@@ -381,26 +381,26 @@
 	"seek": {
 		"name": "seek",
 		"description": "Перемотать трек на нужное время",
-		"options": [
-			{
+		"options": {
+			"time": {
 				"name": "time",
 				"description": "Время в секундах, на которое нужно перемотать."
 			}
-		]
+		}
 	},
 	"filters": {
 		"name": "filters",
 		"description": "Применить фильтры к очереди",
-		"options": [
-			{
+		"options": {
+			"pitch": {
 				"name": "pitch",
 				"description": "Изменить высоту звука в очереди"
 			},
-			{
+			"speed": {
 				"name": "speed",
 				"description": "Устанавливает скорость (в %) в очереди"
 			}
-		]
+		}
 	},
 	"shuffle": {
 		"name": "shuffle",
@@ -409,138 +409,138 @@
 	"remove": {
 		"name": "remove",
 		"description": "Удаляет трек из плейлиста",
-		"options": [
-			{
+		"options": {
+			"index": {
 				"name": "index",
 				"description": "Номер трека, который нужно удалить (начиная с 1)"
 			}
-		]
+		}
 	},
 	"musictoken": {
 		"name": "musictoken",
 		"description": "Получить токен ",
-		"options": [
-			{
+		"options": {
+			"action": {
 				"name": "действия",
 				"description": "То, что нужно сделать"
 			}
-		]
+		}
 	},
 	"playlists": {
 		"name": "playlists",
 		"description": "Изменять и проигрывать плейлисты",
-		"options": [
-			{
+		"options": {
+			"meta": {
 				"name": "meta",
 				"description": "Команды для метаданных",
-				"options": [
-					{
+				"options": {
+					"show": {
 						"name": "show",
 						"description": "Показывает все плейлисты."
 					},
-					{
+					"info": {
 						"name": "info",
 						"description": "Показывает информацию о плейлисте"
 					},
-					{
+					"create": {
 						"name": "create",
 						"description": "Создает плейлист"
 					},
-					{
+					"delete": {
 						"name": "delete",
 						"description": "Удаляет плейлист"
 					}
-				]
+				}
 			},
-			{
+			"add": {
 				"name": "add",
 				"description": "Добавляет трек в плейлист",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "Имя плейлиста"
 					},
-					{
+					"track": {
 						"name": "track",
 						"description": "Трек (ссылка, название, id)"
 					}
-				]
+				}
 			},
-			{
+			"remove": {
 				"name": "remove",
 				"description": "Удаляет трек из плейлиста",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "Имя плейлиста"
 					},
-					{
+					"index": {
 						"name": "index",
 						"description": "Номер трека, который нужно удалить (начиная с 1)"
 					}
-				]
+				}
 			},
-			{
+			"move": {
 				"name": "move",
 				"description": "Двигает трек в плейлисте с одной позиции на другую",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "Имя плейлиста"
 					},
-					{
+					"from": {
 						"name": "from",
 						"description": "Номер трека, который нужно передвинуть (начиная с 1)"
 					},
-					{
+					"to": {
 						"name": "to",
 						"description": "Номер, на который нужно передвинуть трек (начиная с 1)"
 					}
-				]
+				}
 			},
-			{
+			"search": {
 				"name": "search",
 				"description": "Фильтрует треки в плейлисте",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "Имя плейлиста"
 					},
-					{
+					"query": {
 						"name": "query",
 						"description": "Слово, по которому нужно фильтровать"
 					}
-				]
+				}
 			},
-			{
+			"play": {
 				"name": "play",
 				"description": "Проигрывает плейлист",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlist",
 						"description": "Имя плейлиста"
 					},
-					{
+					"shuffle": {
 						"name": "shuffle",
 						"description": "Должен ли плейлист перемешаться"
 					},
-					{
+					"start": {
 						"name": "start",
 						"description": "Номер, с которого нужно начать (начиная с 1). При перемешивании выбирается лишь часть и перемешивается"
 					}
-				]
+				}
 			}
-		]
+		}
 	},
 	"stats": {
 		"name": "stats",
 		"description": "Показывает детальную статистику",
-		"options": [
-			{
+		"options": {
+			"window": {
 				"name": "window",
 				"description": "Какую статистику нужно показать"
 			}
-		]
+		}
 	},
 	"info": {
 		"name": "info",
@@ -553,54 +553,54 @@
 	"help": {
 		"name": "help",
 		"description": "Самая обыкновенная команда с помощью.",
-		"options": [
-			{
+		"options": {
+			"category": {
 				"name": "category",
 				"description": "Категория, с которой нужна помощь"
 			},
-			{
+			"command": {
 				"name": "command",
 				"description": "Команда, с которой нужна помощь"
 			}
-		]
+		}
 	},
 	"slots": {
 		"name": "slots",
 		"description": "Run the slot machine",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"flip": {
 		"name": "flip",
 		"description": "Flips a coin",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			},
-			{
+			"side": {
 				"name": "side",
 				"description": "The side to bet on"
 			}
-		]
+		}
 	},
 	"money": {
 		"name": "money",
 		"description": "Shows how much money you, another person, or a couple has",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to check their bank info"
 			},
-			{
+			"couple": {
 				"name": "couple",
 				"description": "Whether to show the couple balance"
 			}
-		]
+		}
 	},
 	"leaderboard": {
 		"name": "leaderboard",
@@ -609,53 +609,53 @@
 	"give": {
 		"name": "give",
 		"description": "Gives another user money",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to give"
 			},
-			{
+			"user": {
 				"name": "user",
 				"description": "The user to give money to"
 			}
-		]
+		}
 	},
 	"wheel": {
 		"name": "wheel",
 		"description": "Spin the wheel of (mis)fortune",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"profile": {
 		"name": "profile",
 		"description": "Get a user's Amanda profile",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user's profile to get'"
 			},
-			{
+			"light": {
 				"name": "light",
 				"description": "If light mode should be force used (default false)"
 			}
-		]
+		}
 	},
 	"settings": {
 		"name": "settings",
 		"description": "Modify settings for Amanda to use",
-		"options": [
-			{
+		"options": {
+			"setting": {
 				"name": "setting",
 				"description": "The setting you want to modify/view"
 			},
-			{
+			"modify": {
 				"name": "modify",
 				"description": "What to modify the setting value to"
 			}
-		]
+		}
 	}
 }

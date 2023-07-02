@@ -15,7 +15,7 @@ const { client, confprovider, commands, sql, sync } = passthrough
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
-import type { APIEmbed } from "discord-api-types/v10"
+import type { APIApplicationCommandOption, APIEmbed } from "discord-api-types/v10"
 import type { Lang } from "@amanda/lang"
 
 function bToMB(number: number) {
@@ -507,14 +507,14 @@ function getDocs(c: import("@amanda/shared-types").UnpackArray<Parameters<typeof
 	let info = {
 		name: c.name,
 		description: c.description,
-		options: c.options as Array<{ name: string; description: string; options?: Array<{ name: string; description: string; }> }>
+		options: c.options
 	}
 
 	if (lang[c.name]) {
 		info = {
 			name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].name,
 			description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].description,
-			options: lang[c.name as "image"].options
+			options: Object.values(lang[c.name as "image"].options) as Array<APIApplicationCommandOption>
 		}
 	}
 

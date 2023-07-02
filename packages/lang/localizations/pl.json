@@ -187,158 +187,158 @@
 	"image": {
 		"name": "obrazek",
 		"description": "Wyślij obraz czegoś",
-		"options": [
-			{
+		"options": {
+			"type": {
 				"name": "typ",
 				"description": "Typ obrazu"
 			}
-		]
+		}
 	},
 	"ship": {
 		"name": "shipuj",
 		"description": "Shipuj dwie osoby",
-		"options": [
-			{
+		"options": {
+			"user2": {
 				"name": "użytkownik2",
 				"description": "Drugi użytkownik do shipowania"
 			},
-			{
+			"user1": {
 				"name": "użytkownik1",
 				"description": "Użytkownik1 shipujący użytkownika2, innego niż Ty"
 			}
-		]
+		}
 	},
 	"bean": {
 		"name": "bean",
 		"description": "Banuje użytkownika",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do zbanowania"
 			}
-		]
+		}
 	},
 	"hug": {
 		"name": "przytulas",
 		"description": "Przytula kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do przytulenia"
 			}
-		]
+		}
 	},
 	"nom": {
 		"name": "nom",
 		"description": "Podgryza kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do 'podgryzania'"
 			}
-		]
+		}
 	},
 	"kiss": {
 		"name": "całus",
 		"description": "Całuje kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do całowania"
 			}
-		]
+		}
 	},
 	"cuddle": {
 		"name": "cuddle",
 		"description": "Wtula się w kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do wtulenia się"
 			}
-		]
+		}
 	},
 	"poke": {
 		"name": "szturch",
 		"description": "Szturcha kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do szturchnięcia"
 			}
-		]
+		}
 	},
 	"slap": {
 		"name": "policzek",
 		"description": "Uderza kogoś",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do uderzenia"
 			}
-		]
+		}
 	},
 	"boop": {
 		"name": "boop",
 		"description": "Dotyka czyjegoś noska",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do dotknięcia"
 			}
-		]
+		}
 	},
 	"pat": {
 		"name": "pat",
 		"description": "Głaszcze kogoś po głowie",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "użytkownik",
 				"description": "Użytkownik do pogłaskania"
 			}
-		]
+		}
 	},
 	"play": {
 		"name": "play",
 		"description": "Gra muzykę z różnych źródeł",
-		"options": [
-			{
+		"options": {
+			"track": {
 				"name": "ścieżka",
 				"description": "Ścieżka jaką chciałbyś/aś odtworzyć"
 			},
-			{
+			"position": {
 				"name": "pozycja",
 				"description": "Miejsce, w którym chcesz wstawić ścieżkę (indeks zaczynający się od 1)"
 			}
-		]
+		}
 	},
 	"radio": {
 		"name": "radio",
 		"description": "Gra muzykę ze stacji radiowych",
-		"options": [
-			{
+		"options": {
+			"station": {
 				"name": "stacja",
 				"description": "Stacja, z której chcesz odtwarzać"
 			},
-			{
+			"position": {
 				"name": "pozycja",
 				"description": "Miejsce w kolejce, w których chcesz dodać ścieżkę (indeks zaczynający się od 1)"
 			}
-		]
+		}
 	},
 	"skip": {
 		"name": "skip",
 		"description": "Pomija piosenki w kolejce",
-		"options": [
-			{
+		"options": {
+			"start": {
 				"name": "start",
 				"description": "Miejsce w kolejce, które chcesz pominąć (indeks zaczynający się od 1)"
 			},
-			{
+			"amount": {
 				"name": "ilość",
 				"description": "Ilość piosenek w kolejce do pominięcia"
 			}
-		]
+		}
 	},
 	"stop": {
 		"name": "stop",
@@ -347,24 +347,24 @@
 	"queue": {
 		"name": "kolejka",
 		"description": "Pokazuje kolejkę i dostępne akcje",
-		"options": [
-			{
+		"options": {
+			"page": {
 				"name": "strona",
 				"description": "Wskazuje, którą stronę z kolejki pokazać"
 			},
-			{
+			"volume": {
 				"name": "głośność",
 				"description": "Ustala głośność dla kolejki w %"
 			},
-			{
+			"loop": {
 				"name": "pętla",
 				"description": "Ustawia stan zapętlania dla kolejki"
 			},
-			{
+			"pause": {
 				"name": "pauza",
 				"description": "Ustawia status pauzy dla kolejki"
 			}
-		]
+		}
 	},
 	"nowplaying": {
 		"name": "terazgramy",
@@ -381,26 +381,26 @@
 	"seek": {
 		"name": "przewiń",
 		"description": "Przewija do konkretnego momentu w grającej piosence",
-		"options": [
-			{
+		"options": {
+			"time": {
 				"name": "czas",
 				"description": "Czas do którego piosenka ma być przewinięta, w sekundach"
 			}
-		]
+		}
 	},
 	"filters": {
 		"name": "filtry",
 		"description": "Ustaw filtry dla kolejki",
-		"options": [
-			{
+		"options": {
+			"pitch": {
 				"name": "ton",
 				"description": "Ustawia wysokość tomu dla kolejki w półtony"
 			},
-			{
+			"speed": {
 				"name": "prędkość",
 				"description": "Ustawia prędkość kolejki w %"
 			}
-		]
+		}
 	},
 	"shuffle": {
 		"name": "przetasowanie",
@@ -409,138 +409,138 @@
 	"remove": {
 		"name": "usuń",
 		"description": "Usuwa ścieżkę z kolejki",
-		"options": [
-			{
+		"options": {
+			"index": {
 				"name": "index",
 				"description": "Numer ścieżki do usunięcia (indeks zaczynający się od 1)"
 			}
-		]
+		}
 	},
 	"musictoken": {
 		"name": "tokenmuzyczny",
 		"description": "Otrzymaj token do logowania się na panelu użytkownika",
-		"options": [
-			{
+		"options": {
+			"action": {
 				"name": "akcja",
 				"description": "Co ma zrobić"
 			}
-		]
+		}
 	},
 	"playlists": {
 		"name": "playlisty",
 		"description": "Zarządza i odtwarza playlisty Amandy",
-		"options": [
-			{
+		"options": {
+			"meta": {
 				"name": "meta",
 				"description": "Komendy Metadata",
-				"options": [
-					{
+				"options": {
+					"show": {
 						"name": "pokaż",
 						"description": "Pokazuje wszystkie playlisty Amandy. Ustaw 'true' by pokazywać tylko sobie"
 					},
-					{
+					"info": {
 						"name": "info",
 						"description": "Pokazuje informacje dla playlisty"
 					},
-					{
+					"create": {
 						"name": "stwórz",
 						"description": "Tworzy playlistę"
 					},
-					{
+					"delete": {
 						"name": "usuń",
 						"description": "Usuwa playlistę"
 					}
-				]
+				}
 			},
-			{
+			"add": {
 				"name": "dodaj",
 				"description": "Dodaje ścieżkę do playlisty",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlista",
 						"description": "Nazwa playlisty"
 					},
-					{
+					"track": {
 						"name": "ścieżka",
 						"description": "Rozpoznawalna ścieżka (link, nazwa, id)"
 					}
-				]
+				}
 			},
-			{
+			"remove": {
 				"name": "usuń",
 				"description": "Usuwa ścieżkę z playlisty",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlista",
 						"description": "Nazwa playlisty"
 					},
-					{
+					"index": {
 						"name": "index",
 						"description": "Numer ścieżki do usunięcia (indeks zaczynający się od 1)"
 					}
-				]
+				}
 			},
-			{
+			"move": {
 				"name": "przesuń",
 				"description": "Przenosi scieżkę w playliście z jednego indeksu do drugiego",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlista",
 						"description": "Nazwa playlisty"
 					},
-					{
+					"from": {
 						"name": "z",
 						"description": "Numer ścieżki do przesunięcia (indeks zaczynający się od 1)"
 					},
-					{
+					"to": {
 						"name": "do",
 						"description": "Indeks w którym powinna pojawić się ścieżka (indeks zaczynający się od 1)"
 					}
-				]
+				}
 			},
-			{
+			"search": {
 				"name": "szukaj",
 				"description": "Filtruje ścieżki w playliście",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlista",
 						"description": "Nazwa playlisty"
 					},
-					{
+					"query": {
 						"name": "query",
 						"description": "Fraza, po której ma być dodane filtrowanie"
 					}
-				]
+				}
 			},
-			{
+			"play": {
 				"name": "play",
 				"description": "Odtwarza playlistę",
-				"options": [
-					{
+				"options": {
+					"playlist": {
 						"name": "playlista",
 						"description": "Nazwa playlisty"
 					},
-					{
+					"shuffle": {
 						"name": "przetasowanie",
 						"description": "Czy kolejka powinna wystartować przetasowana"
 					},
-					{
+					"start": {
 						"name": "start",
 						"description": "Indeks, od którego ma wystartować playlista. W przypadku przetasowania, tylko część jest wybierana, a potem mieszana (indeks zaczynający się od 1)"
 					}
-				]
+				}
 			}
-		]
+		}
 	},
 	"stats": {
 		"name": "statystyki",
 		"description": "Pokazuje szczegółowe statystyki",
-		"options": [
-			{
+		"options": {
+			"window": {
 				"name": "okno",
 				"description": "Typ statystyk do pokazania"
 			}
-		]
+		}
 	},
 	"info": {
 		"name": "info",
@@ -553,54 +553,54 @@
 	"help": {
 		"name": "pomoc",
 		"description": "Twoja typowa komenda pomocy",
-		"options": [
-			{
+		"options": {
+			"category": {
 				"name": "kategoria",
 				"description": "Kategoria, która wymaga pomocy"
 			},
-			{
+			"command": {
 				"name": "komenda",
 				"description": "Komenda, która wymaga pomocy"
 			}
-		]
+		}
 	},
 	"slots": {
 		"name": "slots",
 		"description": "Run the slot machine",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"flip": {
 		"name": "flip",
 		"description": "Flips a coin",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			},
-			{
+			"side": {
 				"name": "side",
 				"description": "The side to bet on"
 			}
-		]
+		}
 	},
 	"money": {
 		"name": "money",
 		"description": "Shows how much money you, another person, or a couple has",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user to check their bank info"
 			},
-			{
+			"couple": {
 				"name": "couple",
 				"description": "Whether to show the couple balance"
 			}
-		]
+		}
 	},
 	"leaderboard": {
 		"name": "leaderboard",
@@ -609,53 +609,53 @@
 	"give": {
 		"name": "give",
 		"description": "Gives another user money",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to give"
 			},
-			{
+			"user": {
 				"name": "user",
 				"description": "The user to give money to"
 			}
-		]
+		}
 	},
 	"wheel": {
 		"name": "wheel",
 		"description": "Spin the wheel of (mis)fortune",
-		"options": [
-			{
+		"options": {
+			"amount": {
 				"name": "amount",
 				"description": "The amount of money to bet"
 			}
-		]
+		}
 	},
 	"profile": {
 		"name": "profile",
 		"description": "Get a user's Amanda profile",
-		"options": [
-			{
+		"options": {
+			"user": {
 				"name": "user",
 				"description": "The user's profile to get'"
 			},
-			{
+			"light": {
 				"name": "light",
 				"description": "If light mode should be force used (default false)"
 			}
-		]
+		}
 	},
 	"settings": {
 		"name": "settings",
 		"description": "Modify settings for Amanda to use",
-		"options": [
-			{
+		"options": {
+			"setting": {
 				"name": "setting",
 				"description": "The setting you want to modify/view"
 			},
-			{
+			"modify": {
 				"name": "modify",
 				"description": "What to modify the setting value to"
 			}
-		]
+		}
 	}
 }

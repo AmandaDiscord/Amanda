@@ -19,7 +19,7 @@ __metadata:
     "@amanda/config": 1.0.0
     "@amanda/repl": 1.0.0
     "@amanda/web-internal": 1.0.0
-    cloudstorm: 0.8.0
+    cloudstorm: 0.8.1
   languageName: unknown
   linkType: soft
 
@@ -994,7 +994,7 @@ __metadata:
     discord-api-types: 0.37.47
     eslint: ^8.44.0
     heatsync: ^2.4.1
-    snowtransfer: ^0.8.0
+    snowtransfer: ^0.8.1
     tsup: ^7.1.0
     turbo: ^1.10.7
     typescript: ^5.1.6
@@ -1390,12 +1390,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:0.8.0":
-  version: 0.8.0
-  resolution: "cloudstorm@npm:0.8.0"
+"cloudstorm@npm:0.8.1":
+  version: 0.8.1
+  resolution: "cloudstorm@npm:0.8.1"
   dependencies:
-    snowtransfer: 0.8.0
-  checksum: b03ec5bfd7d4e48144fda24549f9c2f0792f29d45b292b6825a72bbd9dd4906a19c7fb993b4193ec237da97b858df24aaae53dc9dcc52f65931f4d4f7c28e0e7
+    snowtransfer: 0.8.1
+  checksum: 66cf91a2e85c3b6c37bdec4e957b782f72caa02f6c345b9e0cc14b6a49064cafc51f512919161c9c81d6af7db365eec0f4b8438ce167339ca3638a8d46bf31cd
   languageName: node
   linkType: hard
 
@@ -4084,14 +4084,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:0.8.0, snowtransfer@npm:^0.8.0":
-  version: 0.8.0
-  resolution: "snowtransfer@npm:0.8.0"
+"snowtransfer@npm:0.8.1, snowtransfer@npm:^0.8.1":
+  version: 0.8.1
+  resolution: "snowtransfer@npm:0.8.1"
   dependencies:
     discord-api-types: ^0.37.47
     form-data: ^4.0.0
     undici: ^5.22.1
-  checksum: 99628fbe2ec1c22977fa0276280123937791834547d81674212dea339a793d7096ffcb8958819dcf257cafc73be865280dfac9ff8e01b075ac51652792ce9f99
+  checksum: 0ea2da236d849119d60e079ad2a146216f14dd5e428e3fd163090f656d58a95aca8d98529c812cb359b1dee851fdd8b65367de28484dd8c11f05507b55c07d8c
   languageName: node
   linkType: hard
 
