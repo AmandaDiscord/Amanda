@@ -19,7 +19,7 @@ __metadata:
     "@amanda/config": 1.0.0
     "@amanda/repl": 1.0.0
     "@amanda/web-internal": 1.0.0
-    cloudstorm: 0.8.2
+    cloudstorm: 0.8.3
   languageName: unknown
   linkType: soft
 
@@ -44,7 +44,7 @@ __metadata:
     "@types/marked": 5.0.0
     "@types/mime-types": 2.1.1
     discord-verify: 1.2.0
-    lavacord: ^2.0.3
+    lavacord: ^2.0.4
     marked: 5.1.0
     mime-types: 2.1.35
     uWebSockets.js: "uNetworking/uWebSockets.js#v20.30.0"
@@ -1133,7 +1133,7 @@ __metadata:
     discord-api-types: 0.37.47
     eslint: ^8.44.0
     heatsync: ^2.4.1
-    snowtransfer: ^0.8.2
+    snowtransfer: ^0.8.3
     tsup: ^7.1.0
     turbo: ^1.10.7
     typescript: ^5.1.6
@@ -1529,12 +1529,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:0.8.2, cloudstorm@npm:0.8.x":
-  version: 0.8.2
-  resolution: "cloudstorm@npm:0.8.2"
+"cloudstorm@npm:0.8.3, cloudstorm@npm:0.8.x":
+  version: 0.8.3
+  resolution: "cloudstorm@npm:0.8.3"
   dependencies:
-    snowtransfer: ^0.8.2
-  checksum: c724bb714e33c52e4a7cf91f74126217048b7f9600fa1ebd36edd28dde37060e390c5605962b0772022a0db7e28238927ba2a7b48e54904651bc48ee2856a50c
+    snowtransfer: ^0.8.3
+  checksum: acf0d12ccf3e82c8f902a3b1b14d76a08b069688a2034bcdc82a9b268dd6a1bfd42b46757a5c77a041881791053aed2899d91d29ac45f9ecd5be2c49df6984ad
   languageName: node
   linkType: hard
 
@@ -2941,9 +2941,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lavacord@npm:^2.0.3":
-  version: 2.0.3
-  resolution: "lavacord@npm:2.0.3"
+"lavacord@npm:^2.0.4":
+  version: 2.0.4
+  resolution: "lavacord@npm:2.0.4"
   dependencies:
     cloudstorm: 0.8.x
     detritus-client: 0.16.x
@@ -2964,7 +2964,7 @@ __metadata:
       optional: true
     oceanic.js:
       optional: true
-  checksum: 981cd7621057015ac0d1050a829f3aa2c15734d5a54f6f6e149b48193f0aa54a0f24d4da20c2b779dc850e37d236f88046414517cfc6be24b35cc8ccf172cf36
+  checksum: ea897293ebdd5c7c10eb8c5625b27bb2444da9e61e309bfbc46458ee497a929ce100be2db546b840c1032886d0840012a76f3a217533bb60a6d2853910cc6d6b
   languageName: node
   linkType: hard
 
@@ -4452,14 +4452,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:^0.8.2":
-  version: 0.8.2
-  resolution: "snowtransfer@npm:0.8.2"
+"snowtransfer@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "snowtransfer@npm:0.8.3"
   dependencies:
     discord-api-types: ^0.37.47
     form-data: ^4.0.0
     undici: ^5.22.1
-  checksum: ef9a3b09ab16bd0e42b9ce4fd893802f22bf3c068796e5f4d4ff45b88c6dcd2154281c8f2d462881b5904d8059c2e55ef908a50829cc1fe168940cba092d5a57
+  checksum: 59f40c673c7b8bb62ed3044003b93776deaacaf0b20b46c8426df510dae98bbf25afa774d0ded1767c0b0776b8ec9adc007311a824297f60d400b600a7b450e0
   languageName: node
   linkType: hard
 

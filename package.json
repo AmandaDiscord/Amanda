@@ -24,6 +24,6 @@
     "packageManager": "yarn@3.6.1",
     "dependencies": {
         "heatsync": "^2.4.1",
-        "snowtransfer": "^0.8.2"
+        "snowtransfer": "^0.8.3"
     }
 }
