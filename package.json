@@ -14,7 +14,7 @@
     "devDependencies": {
         "@types/node": "^20.3.3",
         "@typescript-eslint/eslint-plugin": "^5.60.1",
-        "@typescript-eslint/parser": "^5.60.1",
+        "@typescript-eslint/parser": "^5.61.0",
         "discord-api-types": "0.37.47",
         "eslint": "^8.44.0",
         "tsup": "^7.1.0",
