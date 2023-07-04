@@ -19,7 +19,7 @@
     "@amanda/sql": "1.0.0",
     "@lavalink/encoding": "0.1.2",
     "discord-verify": "1.2.0",
-    "lavacord": "github:AmandaDiscord/Lavacord#79b9c8018f1ebe9f815f681aab98faa48279662a",
+    "lavacord": "^2.0.2",
     "marked": "5.1.0",
     "mime-types": "2.1.35",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.30.0"

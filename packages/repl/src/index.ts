@@ -6,7 +6,7 @@ class REPLProvider<C> {
 
 	public constructor(public context: C) {
 		const cli = repl.start({ prompt: "", eval: this.customEval, writer: s => s })
-		Object.assign(cli.context, { extraContext: context })
+		Object.assign(cli.context, context)
 		this.repl = cli
 	}
 

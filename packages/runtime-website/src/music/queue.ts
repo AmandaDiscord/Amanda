@@ -425,7 +425,7 @@ export class Queue {
 
 	private _onPlayerUpdate(data: { state: PlayerState }): void {
 		if (this.player && !this.paused) {
-			const newTrackStartTime = (Number(data.state.time) ?? 0) - (data.state.position ?? 0)
+			const newTrackStartTime = (Number(data.state.time ?? 0)) - (data.state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
 
