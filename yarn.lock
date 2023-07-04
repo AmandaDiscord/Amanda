@@ -44,7 +44,7 @@ __metadata:
     "@types/marked": 5.0.0
     "@types/mime-types": 2.1.1
     discord-verify: 1.2.0
-    lavacord: ^2.0.2
+    lavacord: ^2.0.3
     marked: 5.1.0
     mime-types: 2.1.35
     uWebSockets.js: "uNetworking/uWebSockets.js#v20.30.0"
@@ -2941,9 +2941,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lavacord@npm:^2.0.2":
-  version: 2.0.2
-  resolution: "lavacord@npm:2.0.2"
+"lavacord@npm:^2.0.3":
+  version: 2.0.3
+  resolution: "lavacord@npm:2.0.3"
   dependencies:
     cloudstorm: 0.8.x
     detritus-client: 0.16.x
@@ -2964,7 +2964,7 @@ __metadata:
       optional: true
     oceanic.js:
       optional: true
-  checksum: fea7f6315a23a66db807b7f792d9827e147e30981ca0eb3a43351260a075622e02a7d000b068f29e309d1a95821bcc9ec10d3744fccd0164bf4866657da312b3
+  checksum: 981cd7621057015ac0d1050a829f3aa2c15734d5a54f6f6e149b48193f0aa54a0f24d4da20c2b779dc850e37d236f88046414517cfc6be24b35cc8ccf172cf36
   languageName: node
   linkType: hard
 
