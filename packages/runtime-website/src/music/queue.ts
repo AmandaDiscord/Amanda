@@ -213,7 +213,10 @@ export class Queue {
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
 			this._startNPUpdates()
-			this._lastFMSetTrack()
+			const percent40 = Math.floor((track.lengthSeconds * 1000) * 0.4)
+			setTimeout(() => {
+				if (this.tracks[0] === track) this._lastFMSetTrack()
+			}, percent40 < 10000 ? percent40 : 10000)
 		}
 	}
 
