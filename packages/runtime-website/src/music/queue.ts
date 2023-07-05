@@ -251,7 +251,7 @@ export class Queue {
 				})
 
 				const orderedParams = Array.from(params.keys())
-					.sort()
+					.sort((a, b) => a.localeCompare(b))
 					.map(param => `${param}${params.get(param)!}`)
 					.join("")
 
