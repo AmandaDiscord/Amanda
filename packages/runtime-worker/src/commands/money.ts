@@ -961,6 +961,7 @@ commands.assign([
 				encoder.start()
 				encoder.setQuality(2)
 				encoder.setRepeat(0)
+				encoder.setTransparent("#000000")
 				let resolve
 				prom = new Promise(res => {
 					resolve = res
