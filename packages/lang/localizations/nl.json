@@ -662,5 +662,79 @@
 				"description": "What to modify the setting value to"
 			}
 		}
+	},
+	"couple": {
+		"name": "couple",
+		"description": "Get couple information about a user",
+		"options": {
+			"user": {
+				"name": "user",
+				"description": "The user to get info on"
+			}
+		}
+	},
+	"propose": {
+		"name": "propose",
+		"description": "Propose to a user",
+		"options": {
+			"user": {
+				"name": "user",
+				"description": "The user to propose to"
+			}
+		}
+	},
+	"marry": {
+		"name": "marry",
+		"description": "Accepts a proposal from a user",
+		"options": {
+			"user": {
+				"name": "user",
+				"description": "The user to marry"
+			}
+		}
+	},
+	"reject": {
+		"name": "reject",
+		"description": "Rejects a proposal from a user",
+		"options": {
+			"user": {
+				"name": "user",
+				"description": "The user to reject"
+			}
+		}
+	},
+	"divorce": {
+		"name": "divorce",
+		"description": "Divorces your significant other(s)",
+		"options": {
+			"user": {
+				"name": "user",
+				"description": "The user to remove from the marriage"
+			}
+		}
+	},
+	"withdraw": {
+		"name": "withdraw",
+		"description": "Withdraw money from your couple balance",
+		"options": {
+			"amount": {
+				"name": "amount",
+				"description": "The amount of money to withdraw"
+			}
+		}
+	},
+	"deposit": {
+		"name": "withdraw",
+		"description": "Deposit money to your couple balance",
+		"options": {
+			"amount": {
+				"name": "amount",
+				"description": "The amount of money to deposit"
+			}
+		}
+	},
+	"coupleleaderboard": {
+		"name": "coupleleaderboard",
+		"description": "Shows the leaderboard for top couples of money"
 	}
 }
