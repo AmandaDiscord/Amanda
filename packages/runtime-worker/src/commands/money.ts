@@ -657,7 +657,7 @@ commands.assign([
 					"add-circle",
 					"neko"
 				]),
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user, member, cmd.guild_id))
 			])
 
 			const canvas = Canvas.createCanvas(485, 1050).getContext("2d")
@@ -929,15 +929,15 @@ commands.assign([
 
 			if (isPremium?.state && user.avatar?.startsWith("a_")) {
 				try {
-					const response = await fetch(sharedUtils.displayAvatarURL(user, member, true))
+					const response = await fetch(sharedUtils.displayAvatarURL(user, member, cmd.guild_id, true))
 					const buf = await response.arrayBuffer()
 					const parsed = gifdecoder.parseGIF(buf)
 					avatarAsGif = gifdecoder.decompressFrames(parsed, true)
 					encoder = new gifencoder(800, 500)
 				} catch {
-					avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
+					avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member, cmd.guild_id))
 				}
-			} else avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
+			} else avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member, cmd.guild_id))
 
 			const c = Canvas.createCanvas(800, 500)
 			const ctx = c.getContext("2d")

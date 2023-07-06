@@ -218,7 +218,7 @@ commands.assign([
 
 					if (user) {
 
-						authorDetails.push(`${sharedUtils.userString(user)} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : undefined, true) + "?size=32")
+						authorDetails.push(`${sharedUtils.userString(user)} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : undefined, user.id === cmd.author.id ? cmd.guild_id : undefined, true) + "?size=32")
 					} else authorDetails.push(optionInfo)
 
 					const a: APIEmbedAuthor = { name: authorDetails[0] }

@@ -523,9 +523,14 @@ export function convertCachedUser(user: { id: string; tag: string; bot: number; 
 	})
 }
 
-export function displayAvatarURL(user: APIUser, member?: APIGuildMember | APIInteractionDataResolvedGuildMember | APIInteractionGuildMember | null, dynamic?: boolean): string {
+export function displayAvatarURL(user: APIUser, member?: APIGuildMember | APIInteractionDataResolvedGuildMember | APIInteractionGuildMember | null, guildID?: string | null, dynamic?: boolean): string {
 	const avatar = member?.avatar ?? user.avatar
+	const isMemberAvatar = !!member?.avatar
+	const useDefault = isMemberAvatar && !guildID
+
 	if (!avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> BigInt(22)) % 5}.png`
+	else if (isMemberAvatar && !useDefault) return `https://cdn.discordapp.com/guilds/${guildID}/users/${user.id}/avatars/${avatar}.${dynamic && avatar.startsWith("a_") ? "gif" : "png"}`
+
 	return `https://cdn.discordapp.com/avatars/${user.id}/${avatar}.${dynamic && avatar.startsWith("a_") ? "gif" : "png"}`
 }
 

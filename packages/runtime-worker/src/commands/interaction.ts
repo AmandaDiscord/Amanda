@@ -90,8 +90,8 @@ const cmds = [
 			const ctx = canvas.getContext("2d")
 
 			const [pfp1, pfp2, heart] = await Promise.all([
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user1, member1)),
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user2, member2)),
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user1, member1, cmd.guild_id)),
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user2, member2, cmd.guild_id)),
 				imageCache.get("heart")
 			])
 
