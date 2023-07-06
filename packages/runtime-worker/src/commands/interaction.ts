@@ -77,6 +77,9 @@ const cmds = [
 			const user1 = cmd.data.users.get(cmd.data.options.get("user1")?.asString() ?? "") ?? cmd.author
 			const user2 = cmd.data.users.get(cmd.data.options.get("user2")!.asString()!)!
 
+			const member1 = cmd.data.members.get(cmd.data.options.get("user1")?.asString() ?? "")
+			const member2 = cmd.data.members.get(cmd.data.options.get("user2")!.asString()!)
+
 			if (user1.id == user2.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
@@ -87,8 +90,8 @@ const cmds = [
 			const ctx = canvas.getContext("2d")
 
 			const [pfp1, pfp2, heart] = await Promise.all([
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user1)),
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user2)),
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user1, member1)),
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user2, member2)),
 				imageCache.get("heart")
 			])
 

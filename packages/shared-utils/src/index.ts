@@ -7,7 +7,7 @@ import langReplace = require("@amanda/lang/replace")
 import buttons = require("@amanda/buttons")
 import confprovider = require("@amanda/config")
 
-import type { APIUser } from "discord-api-types/v10"
+import type { APIUser, APIGuildMember, APIInteractionDataResolvedGuildMember, APIInteractionGuildMember } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 import type { Lang } from "@amanda/lang"
 import type { BetterComponent } from "@amanda/buttons"
@@ -523,9 +523,10 @@ export function convertCachedUser(user: { id: string; tag: string; bot: number; 
 	})
 }
 
-export function displayAvatarURL(user: APIUser, dynamic?: boolean): string {
-	if (!user.avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> BigInt(22)) % 5}.png`
-	return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${dynamic && user.avatar.startsWith("a_") ? "gif" : "png"}`
+export function displayAvatarURL(user: APIUser, member?: APIGuildMember | APIInteractionDataResolvedGuildMember | APIInteractionGuildMember | null, dynamic?: boolean): string {
+	const avatar = member?.avatar ?? user.avatar
+	if (!avatar) return `https://cdn.discordapp.com/embed/avatars/${Number(BigInt(user.id) >> BigInt(22)) % 5}.png`
+	return `https://cdn.discordapp.com/avatars/${user.id}/${avatar}.${dynamic && avatar.startsWith("a_") ? "gif" : "png"}`
 }
 
 type ChatInputCommand = {

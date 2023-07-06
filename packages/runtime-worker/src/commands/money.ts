@@ -637,7 +637,9 @@ commands.assign([
 				})
 			}
 
-			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
+			const userOption = cmd.data.options.get("user")
+			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? undefined : cmd.member
 			const showCouple = cmd.data.options.get("couple")?.asBoolean() ?? false
 
 			const money = await moneyManager.getPersonalRow(user.id)
@@ -655,7 +657,7 @@ commands.assign([
 					"add-circle",
 					"neko"
 				]),
-				Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+				Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
 			])
 
 			const canvas = Canvas.createCanvas(485, 1050).getContext("2d")
@@ -857,7 +859,9 @@ commands.assign([
 			}
 		],
 		async process(cmd) {
-			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
+			const userOption = cmd.data.options.get("user")
+			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? undefined : cmd.member // for cases of in DMs
 			const light = cmd.data.options.get("light")?.asBoolean() ?? false
 			const lightSpecified = !!cmd.data.options.get("light")
 
@@ -925,15 +929,15 @@ commands.assign([
 
 			if (isPremium?.state && user.avatar?.startsWith("a_")) {
 				try {
-					const response = await fetch(sharedUtils.displayAvatarURL(user, true))
+					const response = await fetch(sharedUtils.displayAvatarURL(user, member, true))
 					const buf = await response.arrayBuffer()
 					const parsed = gifdecoder.parseGIF(buf)
 					avatarAsGif = gifdecoder.decompressFrames(parsed, true)
 					encoder = new gifencoder(800, 500)
 				} catch {
-					avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+					avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
 				}
-			} else avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+			} else avatarAsStatic = await Canvas.loadImage(sharedUtils.displayAvatarURL(user, member))
 
 			const c = Canvas.createCanvas(800, 500)
 			const ctx = c.getContext("2d")
