@@ -12,7 +12,6 @@
   "dependencies": {
     "@amanda/config": "1.0.0",
     "@amanda/repl": "1.0.0",
-    "@amanda/web-internal": "1.0.0",
-    "cloudstorm": "0.8.3"
+    "@amanda/web-internal": "1.0.0"
   }
 }

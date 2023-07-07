@@ -12,7 +12,9 @@ const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers,
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
-import type { APIUser, APIMessageComponentInteractionData, APIMessageComponentInteraction } from "discord-api-types/v10"
+import type { IGatewayMessage } from "cloudstorm"
+import type { APIUser, APIMessageComponentInteractionData, APIMessageComponentInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
+import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
 
 const commaRegex = /,/g
 const slashSingleRegex = /\//
@@ -317,22 +319,23 @@ export async function onGatewayMessage(
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	isBinary: boolean
 ) {
-	const parsed = JSON.parse(Buffer.from(message).toString())
+	const parsed: IGatewayMessage & { cluster_id: string } = JSON.parse(Buffer.from(message).toString())
 	const wsData = ws.getUserData()
 	parsed.cluster_id = wsData.clusterID
 
+	// @ts-expect-error Custom Event
 	if (parsed.t === "SHARD_LIST") wsData.worker.shards = parsed.d
 	else if (parsed.t === "VOICE_STATE_UPDATE") {
 		if (!parsed.d.guild_id) return
-		lavalink.voiceStateUpdate(parsed.d)
+		lavalink.voiceStateUpdate(parsed.d as VoiceStateUpdate)
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
-	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d)
+	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d as VoiceServerUpdate)
 	else if (parsed.t === "INTERACTION_CREATE") {
 		const user = parsed.d.member?.user ?? parsed.d.user
 		sharedUtils.updateUser(user)
 		if (parsed.d.type === 2) {
 			let commandHandled = false
-			if (commands.handle(parsed.d, snow)) {
+			if (commands.handle(parsed.d as APIChatInputApplicationCommandInteraction, snow)) {
 				commandHandled = true
 			}
 			if (!commandHandled && !commandWorkers.length) return console.warn("No command workers to handle interaction")

@@ -927,7 +927,7 @@ commands.assign([
 			let avatarAsGif: Array<gifdecoder.ParsedFrame> | undefined = undefined
 			let encoder
 
-			if (isPremium?.state && user.avatar?.startsWith("a_")) {
+			if (isPremium?.state && ((member?.avatar ?? user.avatar)?.startsWith("a_"))) {
 				try {
 					const response = await fetch(sharedUtils.displayAvatarURL(user, member, cmd.guild_id, true))
 					const buf = await response.arrayBuffer()

@@ -19,7 +19,6 @@ __metadata:
     "@amanda/config": 1.0.0
     "@amanda/repl": 1.0.0
     "@amanda/web-internal": 1.0.0
-    cloudstorm: 0.8.3
   languageName: unknown
   linkType: soft
 
@@ -1130,6 +1129,7 @@ __metadata:
     "@types/node": ^20.3.3
     "@typescript-eslint/eslint-plugin": ^5.61.0
     "@typescript-eslint/parser": ^5.61.0
+    cloudstorm: 0.8.3
     discord-api-types: 0.37.47
     eslint: ^8.44.0
     heatsync: ^2.4.1
