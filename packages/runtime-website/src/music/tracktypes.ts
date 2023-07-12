@@ -242,7 +242,7 @@ export class Track {
 
 export class RequiresSearchTrack extends Track {
 	public prepareCache: sharedUtils.AsyncValueCache<void>
-	private searchString: string
+	public searchString: string
 
 	public constructor(
 		track: string | null = null,
@@ -324,7 +324,7 @@ export class ExternalTrack extends Track {
 	}
 }
 
-export class RadioTrack extends ExternalTrack {
+export class RadioTrack extends RequiresSearchTrack {
 	public thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
 	public stationData: UnpackRecord<InferMap<typeof radioStations>["value"]>
 
@@ -356,6 +356,7 @@ export class RadioTrack extends ExternalTrack {
 		this.stationData = stationData
 		this.queueLine = `**${this.stationData.title}** (${this.lang.GLOBAL.HEADER_LIVE})`
 		this.noPauseReason = this.live ? this.lang.GLOBAL.CANNOT_PAUSE_LIVE : this.noPauseReason
+		this.searchString = stationData.url
 	}
 
 	public showLink() {
