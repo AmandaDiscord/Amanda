@@ -58,13 +58,13 @@ const radioStations = new Map<string, {
 		"japanese": {
 			title: "Listen.moe: Japanese",
 			author: "Delivering the best JPOP and KPOP music around!",
-			url: "https://listen.moe/opus",
+			url: "https://listen.moe/stream",
 			viewURL: "https://listen.moe"
 		},
 		"korean": {
 			title: "Listen.moe: Korean",
 			author: "Delivering the best JPOP and KPOP music around!",
-			url: "https://listen.moe/kpop/opus",
+			url: "https://listen.moe/kpop/stream",
 			viewURL: "https://listen.moe"
 		}
 	}],
