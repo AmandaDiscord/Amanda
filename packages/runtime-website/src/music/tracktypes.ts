@@ -324,7 +324,7 @@ export class ExternalTrack extends Track {
 	}
 }
 
-export class RadioTrack extends RequiresSearchTrack {
+export class RadioTrack extends ExternalTrack {
 	public thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
 	public stationData: UnpackRecord<InferMap<typeof radioStations>["value"]>
 
