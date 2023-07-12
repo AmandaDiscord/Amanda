@@ -1,4 +1,3 @@
-import encoding = require("@lavalink/encoding")
 import { Rest } from "lavacord"
 
 import buttons = require("@amanda/buttons")
@@ -9,17 +8,15 @@ import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { Track } from "./tracktypes"
 import type { APIEmbed, APIUser } from "discord-api-types/v10"
-import type { TrackLoadingResult } from "lavalink-types"
+import type { TrackLoadingResult, TrackInfo } from "lavalink-types/v4"
 import type { Queue } from "./queue"
-import type { Player } from "lavacord"
-import type { TrackInfo } from "@lavalink/encoding"
 
 import passthrough = require("../passthrough")
 const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
 
 
 const selectTimeout = 1000 * 60
-const waitForClientVCJoinTimeout = 10000
+const waitForClientVCJoinTimeout = 5000
 
 const trackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const hiddenEmbedRegex = /(^<|>$)/g
@@ -129,7 +126,7 @@ const common = {
 			return null
 		}
 
-		if (!tracks?.tracks.length) {
+		if (tracks.loadType === "empty" || tracks.loadType === "error") {
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: lang.GLOBAL.NO_RESULTS,
 				embeds: []
@@ -137,22 +134,20 @@ const common = {
 
 			return null
 		}
-
-		const decoded = tracks.tracks.map(t => encoding.decode(t.encoded))
-		if (decoded.length === 1 || tracks.loadType === "TRACK_LOADED") {
+		if (tracks.loadType === "track") {
 			return [
 				decodedToTrack(
-					tracks.tracks[0].encoded,
-					decoded[0],
+					tracks.data.encoded,
+					tracks.data.info,
 					resource,
 					cmd.author,
 					sharedUtils.getLang(cmd.guild_locale!)
 				)
 			]
-		} else if (tracks.loadType === "PLAYLIST_LOADED") {
-			return decoded.map((i, ind) => decodedToTrack(
-				tracks!.tracks[ind].encoded,
-				i,
+		} else if (tracks.loadType === "playlist") {
+			return tracks.data.tracks.map(track => decodedToTrack(
+				track.encoded,
+				track.info,
 				resource,
 				cmd.author,
 				sharedUtils.getLang(cmd.guild_locale!)
@@ -162,8 +157,8 @@ const common = {
 		const chosen = await trackSelection(
 			cmd,
 			lang,
-			decoded,
-			i => `${i.author} - ${i.title} (${sharedUtils.prettySeconds(Math.round(Number(i.length) / 1000))})`
+			tracks.data,
+			i => `${i.info.author} - ${i.info.title} (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
 		)
 
 		if (!chosen) {
@@ -177,8 +172,8 @@ const common = {
 
 		return [
 			decodedToTrack(
-				tracks.tracks[decoded.indexOf(chosen)].encoded,
-				chosen,
+				chosen.encoded,
+				chosen.info,
 				resource,
 				cmd.author,
 				sharedUtils.getLang(cmd.guild_locale!)
@@ -197,7 +192,7 @@ const common = {
 		if (!startsWithHTTP.test(input) && !searchShortRegex.test(input)) input = `${confprovider.config.lavalink_default_search_prefix}${input}`
 
 		const data = await Rest.load(llnode, input)
-		if (data.exception) throw new LoadTracksError(data.exception.message ?? lang.GLOBAL.UNKNOWN_TRACK_EXCEPTION, node.id)
+		if (data.loadType === "error") throw new LoadTracksError(data.data.message ?? lang.GLOBAL.UNKNOWN_TRACK_EXCEPTION, node.id)
 
 		return data
 	},
@@ -223,15 +218,19 @@ const common = {
 			})
 
 			try {
-				let reject: (error?: unknown) => unknown
-				const timer = setTimeout(() => reject(lang.GLOBAL.TIMED_OUT), waitForClientVCJoinTimeout)
+				const player = await lavalink!.join({ channel: channel, guild: cmd.guild_id!, node })
+				// wait to create timer so that we know for a fact the message was sent
 
-				const player = await new Promise<Player | undefined>((resolve, rej) => {
-					reject = rej
-					lavalink!.join({ channel: channel, guild: cmd.guild_id!, node }).then(p => {
-						resolve(p)
+				await new Promise<void>((res, rej) => {
+					const timer = setTimeout(() => {
+						queue.createResolveCallback = undefined
+						rej(lang.GLOBAL.TIMED_OUT)
+					}, waitForClientVCJoinTimeout)
+
+					queue.createResolveCallback = () => {
 						clearTimeout(timer)
-					})
+						res()
+					}
 				})
 
 				queue!.node = node
@@ -393,8 +392,8 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 
 function decodedToTrack(track: string, info: TrackInfo, input: string, requester: APIUser, lang: Lang): Track {
 	const trackTypes = require("./tracktypes") as Omit<typeof import("./tracktypes"), "RadioTrack">
-	const type = sourceMap.get(info.source)
-	const TrackConstructor = (type ? trackTypes[type] : trackTypes["Track"])
+	const type = sourceMap.get(info.sourceName)
+	const TrackConstructor: typeof trackTypes["Track"] = (type ? trackTypes[type] : trackTypes["Track"])
 	return new TrackConstructor(track, info, input, requester, lang)
 }
 

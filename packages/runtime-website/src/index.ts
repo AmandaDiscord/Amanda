@@ -33,7 +33,9 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 	const lavalinkNodes = lavalinkNodeData.map(node => {
 		const newData = {
 			password: passthrough.confprovider.config.lavalink_password,
-			id: node.name.toLowerCase()
+			id: node.name.toLowerCase(),
+			resuming: true,
+			resumeTimeout: 25
 		}
 		return Object.assign(newData, node)
 	})

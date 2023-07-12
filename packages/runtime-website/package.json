@@ -17,10 +17,9 @@
     "@amanda/repl": "1.0.0",
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
-    "@lavalink/encoding": "0.1.2",
     "discord-verify": "1.2.0",
-    "lavacord": "^2.0.4",
-    "marked": "5.1.0",
+    "lavacord": "^2.1.0-v4",
+    "marked": "5.1.1",
     "mime-types": "2.1.35",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.30.0"
   },

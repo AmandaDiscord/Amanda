@@ -2,15 +2,15 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import passthrough = require("../passthrough")
-const { sync, confprovider } = passthrough
+const { sync, confprovider, sessions } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
 import type { APIEmbed, APIUser } from "discord-api-types/v10"
 import type { Queue } from "./queue"
-import type { TrackInfo } from "@lavalink/encoding"
 import type { Lang } from "@amanda/lang"
 import type { UnpackRecord, InferMap } from "@amanda/shared-types"
+import type { TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 
 const feelingFrisky = "Feeling Frisky?"
 const friskyLyrics = "[Intro]\nFeeling frisky?\n\n[Verse ∞]\nFrisky...\n\n[Chorus]\n<other lyrics and bloops>\n\n"
@@ -161,9 +161,10 @@ export class Track {
 		this.lengthSeconds = Math.round(Number(info.length ?? 0) / 1000)
 		this.id = info.identifier ?? "!"
 		this.live = info.isStream ?? false
-		this.source = info.source ?? lang.GLOBAL.HEADER_UNKNOWN
+		this.source = info.sourceName ?? lang.GLOBAL.HEADER_UNKNOWN
 		this.uri = info.uri ?? null
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
+		if (info.artworkUrl) this.thumbnail.src = info.artworkUrl
 	}
 
 	public showLink(): Promise<string> {
@@ -262,10 +263,19 @@ export class RequiresSearchTrack extends Track {
 				this.error = e.message
 				return
 			}
-			if (tracks?.tracks?.[0].encoded) {
-				this.track = tracks.tracks[0].encoded
-				if (tracks.tracks[0].info && this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = tracks.tracks[0].info.author
-			} else if (tracks.tracks[0] && !tracks.tracks[0].encoded) this.error = langReplace((this.queue?.lang ?? this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
+
+			let chosen: LLTrack | undefined = undefined
+			if (tracks.loadType === "track") chosen = tracks.data
+			else if (tracks.loadType === "playlist") chosen = tracks.data.tracks[0]
+			else if (tracks.loadType === "search") chosen = tracks.data[0]
+
+			if (chosen?.encoded) {
+				this.track = chosen.encoded
+				if (this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = chosen.info.author
+				if (chosen.info.artworkUrl) this.thumbnail.src = chosen.info.artworkUrl
+
+				if (this.queue) sessions.filter(s => s.guild === this.queue!.guildID).forEach(s => s.onTrackUpdate(this, this.queue!.tracks.indexOf(this)))
+			} else if (chosen && !chosen.encoded) this.error = langReplace((this.queue?.lang ?? this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
 			else this.error = (this.queue?.lang ?? this.lang).GLOBAL.NO_RESULTS
 		})
 	}
@@ -312,29 +322,6 @@ export class ExternalTrack extends Track {
 	public showLink(): Promise<string> {
 		return this.uri ? Promise.resolve(this.uri) : super.showLink()
 	}
-
-	public async prepare() {
-		if (this.track !== "!") return
-		let info: Awaited<ReturnType<typeof common.loadtracks>>["tracks"] | undefined = void 0
-		try {
-			const data = await common.loadtracks(this.uri!, this.lang, this.queue?.node)
-			info = data.tracks
-		} catch (e) {
-			this.error = e
-			return
-		}
-
-		if (!Array.isArray(info) || !info || !info[0] || !info[0].encoded) this.error = langReplace((this.queue?.lang ?? this.lang).GLOBAL.MISSING_TRACK, { "id": this.title })
-		else {
-			this.track = info[0].encoded
-			if (info[0].info.isSeekable) {
-				this.live = false
-				this.lengthSeconds = Math.round(info[0].info.length / 1000)
-				this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
-				this.noPauseReason = ""
-			}
-		}
-	}
 }
 
 export class RadioTrack extends RequiresSearchTrack {
@@ -351,16 +338,16 @@ export class RadioTrack extends RequiresSearchTrack {
 		if (!stationData) throw new Error("Invalid radio station")
 
 		const info = {
-			flags: 0,
-			source: "http",
+			sourceName: "http",
 			identifier: stationData.url,
-			length: BigInt(0),
+			length: 0,
 			isStream: true,
-			position: BigInt(0),
+			position: 0,
 			title: stationData.url,
 			uri: stationData.url,
-			version: 1
-		}
+			isSeekable: false,
+			author: stationData.author
+		} as TrackInfo
 
 		super("!", info, station, requester, lang)
 

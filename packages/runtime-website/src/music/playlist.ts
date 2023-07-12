@@ -11,7 +11,7 @@ import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
 import type { APIEmbedAuthor } from "discord-api-types/v10"
-import type { UnpackArray } from "@amanda/shared-types"
+import type { TrackInfo } from "lavalink-types/v4"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
 const checkPlaylistName = (playlistName: string, cmd: ChatInputCommand, lang: Lang) => {
@@ -344,10 +344,13 @@ commands.assign([
 					})
 				}
 
-				let result: UnpackArray<Awaited<ReturnType<typeof common.loadtracks>>["tracks"]>["info"] | undefined = void 0
+				let result: TrackInfo | undefined = void 0
 				try {
-					result = await common.loadtracks(`${optionTrack}`, lang)
-						.then(d => d.tracks[0]?.info)
+					const res = await common.loadtracks(optionTrack, lang)
+
+					if (res.loadType === "track") result = res.data.info
+					else if (res.loadType === "playlist") result = res.data.tracks[0]?.info
+					else if (res.loadType === "search") result = res.data[0]?.info
 				} catch (e) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: e.message
@@ -579,7 +582,7 @@ commands.assign([
 						"!",
 						{
 							title: row.name,
-							length: BigInt(row.length * 1000),
+							length: row.length * 1000,
 							identifier: row.video_id
 						},
 						row.video_id,

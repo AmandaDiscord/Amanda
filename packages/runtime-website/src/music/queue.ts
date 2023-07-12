@@ -8,7 +8,7 @@ import langReplace = require("@amanda/lang/replace")
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
-import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState } from "lavalink-types"
+import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
@@ -45,6 +45,8 @@ export class Queue {
 		}
 		this.destroy()
 	}).setDelay(queueDestroyAfter)
+
+	public createResolveCallback: (() => unknown) | undefined
 
 	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
@@ -412,7 +414,7 @@ export class Queue {
 	}
 
 	private _onEnd(event: TrackEndEvent | TrackStuckEvent): void {
-		if (event.type === "TrackEndEvent" && event.reason == "REPLACED") return
+		if (event.type === "TrackEndEvent" && event.reason === "replaced") return
 
 		if (event.type === "TrackStuckEvent") {
 			// this.audit.push({ action: "Queue Skip (Track got stuck)", platform: "System", user: "Amanda" })
@@ -586,6 +588,13 @@ export class Queue {
 
 	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
+			if (!this.createResolveCallback) {
+				console.error("Amanda joined the VC before a callback was set. Likely a race condition with rejection or new Queue is being called elsewhere")
+				return
+			}
+
+			this.createResolveCallback()
+
 			const [clientUser, states] = await Promise.all([
 				sharedUtils.getUser(confprovider.config.client_id, snow),
 				sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
