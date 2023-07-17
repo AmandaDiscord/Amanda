@@ -24,7 +24,7 @@
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.30.0"
   },
   "devDependencies": {
-    "@types/marked": "5.0.0",
+    "@types/marked": "5.0.1",
     "@types/mime-types": "2.1.1"
   }
 }
