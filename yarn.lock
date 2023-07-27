@@ -1135,7 +1135,7 @@ __metadata:
     "@types/node": ^20.4.5
     "@typescript-eslint/eslint-plugin": ^6.2.0
     "@typescript-eslint/parser": ^6.2.0
-    cloudstorm: 0.8.3
+    cloudstorm: 0.8.4
     discord-api-types: 0.37.50
     eslint: ^8.45.0
     heatsync: ^2.4.1
@@ -1528,7 +1528,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:0.8.3, cloudstorm@npm:0.8.x":
+"cloudstorm@npm:0.8.4":
+  version: 0.8.4
+  resolution: "cloudstorm@npm:0.8.4"
+  dependencies:
+    snowtransfer: ^0.8.4
+  checksum: 1bebcd79b7b450f1d3e93338cf8d10f8817b49de7cf1c6bab8503a4d41599485b1ea61c8cf925312a0f07380b03ba46609cbe8aa3a7a6de18bd3706c2a838a5e
+  languageName: node
+  linkType: hard
+
+"cloudstorm@npm:0.8.x":
   version: 0.8.3
   resolution: "cloudstorm@npm:0.8.3"
   dependencies:
@@ -1795,7 +1804,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.50":
+"discord-api-types@npm:0.37.50, discord-api-types@npm:^0.37.50":
   version: 0.37.50
   resolution: "discord-api-types@npm:0.37.50"
   checksum: 08dc5145dbefda5f52b479cd42d96ac2b8110300861855e1f92cc8a0a6525a4059e32724cd5237490c286f5afd86797a86823238cd5eee016198560bb36f6d43
@@ -4458,6 +4467,17 @@ __metadata:
     form-data: ^4.0.0
     undici: ^5.22.1
   checksum: 59f40c673c7b8bb62ed3044003b93776deaacaf0b20b46c8426df510dae98bbf25afa774d0ded1767c0b0776b8ec9adc007311a824297f60d400b600a7b450e0
+  languageName: node
+  linkType: hard
+
+"snowtransfer@npm:^0.8.4":
+  version: 0.8.4
+  resolution: "snowtransfer@npm:0.8.4"
+  dependencies:
+    discord-api-types: ^0.37.50
+    form-data: ^4.0.0
+    undici: ^5.22.1
+  checksum: 9e28f154f96e4f369c488ad93767a1bc4048ae5af6198cc73d077af8838d6bd290f7db4e6d2caeda55868832b25545376889d7ee838cfc11cdaba216ab8ab4a7
   languageName: node
   linkType: hard
 
