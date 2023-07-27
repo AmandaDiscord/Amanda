@@ -45,7 +45,7 @@ __metadata:
     lavacord: ^2.1.0-v4
     marked: 5.1.2
     mime-types: 2.1.35
-    uWebSockets.js: "uNetworking/uWebSockets.js#v20.30.0"
+    uWebSockets.js: "uNetworking/uWebSockets.js#v20.31.0"
   languageName: unknown
   linkType: soft
 
@@ -1135,11 +1135,11 @@ __metadata:
     "@types/node": ^20.4.5
     "@typescript-eslint/eslint-plugin": ^6.2.0
     "@typescript-eslint/parser": ^6.2.0
-    cloudstorm: 0.8.3
+    cloudstorm: 0.8.4
     discord-api-types: 0.37.50
     eslint: ^8.45.0
-    heatsync: ^2.4.1
-    snowtransfer: ^0.8.3
+    heatsync: ^2.4.2
+    snowtransfer: ^0.8.4
     tsup: ^7.1.0
     turbo: ^1.10.12
     typescript: ^5.1.6
@@ -1528,7 +1528,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:0.8.3, cloudstorm@npm:0.8.x":
+"cloudstorm@npm:0.8.4":
+  version: 0.8.4
+  resolution: "cloudstorm@npm:0.8.4"
+  dependencies:
+    snowtransfer: ^0.8.4
+  checksum: 1bebcd79b7b450f1d3e93338cf8d10f8817b49de7cf1c6bab8503a4d41599485b1ea61c8cf925312a0f07380b03ba46609cbe8aa3a7a6de18bd3706c2a838a5e
+  languageName: node
+  linkType: hard
+
+"cloudstorm@npm:0.8.x":
   version: 0.8.3
   resolution: "cloudstorm@npm:0.8.3"
   dependencies:
@@ -1795,7 +1804,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.50":
+"discord-api-types@npm:0.37.50, discord-api-types@npm:^0.37.50":
   version: 0.37.50
   resolution: "discord-api-types@npm:0.37.50"
   checksum: 08dc5145dbefda5f52b479cd42d96ac2b8110300861855e1f92cc8a0a6525a4059e32724cd5237490c286f5afd86797a86823238cd5eee016198560bb36f6d43
@@ -2593,12 +2602,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"heatsync@npm:^2.4.1":
-  version: 2.4.1
-  resolution: "heatsync@npm:2.4.1"
+"heatsync@npm:^2.4.2":
+  version: 2.4.2
+  resolution: "heatsync@npm:2.4.2"
   dependencies:
     backtracker: 3.3.2
-  checksum: 2cfe09d68a1ececf9ed9d7b0e55d3577418895525431589e129af089fc03a55adaa46035b0e311cc4324e19240c9fd3c26ab7fd9dc7adb969ee625c256d892ec
+  checksum: c0a146b3088a90872cf98e122e6ee0576d9729b78966aa132a3b5a7a66a65af4ae9517fdaeb8831c564aa65e53d9f0b05e95f6e8cee38ba6d75baf7090cf3874
   languageName: node
   linkType: hard
 
@@ -4461,6 +4470,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"snowtransfer@npm:^0.8.4":
+  version: 0.8.4
+  resolution: "snowtransfer@npm:0.8.4"
+  dependencies:
+    discord-api-types: ^0.37.50
+    form-data: ^4.0.0
+    undici: ^5.22.1
+  checksum: 9e28f154f96e4f369c488ad93767a1bc4048ae5af6198cc73d077af8838d6bd290f7db4e6d2caeda55868832b25545376889d7ee838cfc11cdaba216ab8ab4a7
+  languageName: node
+  linkType: hard
+
 "socks-proxy-agent@npm:^6.0.0":
   version: 6.2.1
   resolution: "socks-proxy-agent@npm:6.2.1"
@@ -5025,10 +5045,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"uWebSockets.js@uNetworking/uWebSockets.js#v20.30.0":
-  version: 20.30.0
-  resolution: "uWebSockets.js@https://github.com/uNetworking/uWebSockets.js.git#commit=d39d4181daf5b670d44cbc1b18f8c28c85fd4142"
-  checksum: e8584a9aa00ea378647fe4530631ad10240d61bb7fa70aff4f44cab3b066432e404358d4d80a77c5c56e25029ae6dc6f4de13673da89c38cb4d8228acde74187
+"uWebSockets.js@uNetworking/uWebSockets.js#v20.31.0":
+  version: 20.31.0
+  resolution: "uWebSockets.js@https://github.com/uNetworking/uWebSockets.js.git#commit=809b99d2d7d12e2cbf89b7135041e9b41ff84084"
+  checksum: 2c5c52b55440c6358cdd555a418cb023dc45a40ca9b70815e00b396e2a88a6bc4a11d1d52e4bac0d284f50dea15589ed9c6b1805454dca058ce0d9da956ac56a
   languageName: node
   linkType: hard
 
