@@ -25,6 +25,6 @@
     "dependencies": {
         "cloudstorm": "0.8.3",
         "heatsync": "^2.4.1",
-        "snowtransfer": "^0.8.3"
+        "snowtransfer": "^0.8.4"
     }
 }
