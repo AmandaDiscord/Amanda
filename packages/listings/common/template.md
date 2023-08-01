@@ -1,4 +1,4 @@
-![Amanda's avatar, a red-haired catgirl, sitting at a desk in front of a computer.](https://cdn.discordapp.com/attachments/608456955660468224/960449965354811432/Amanda_Banner.png)
+![Amanda's avatar, a red-haired catgirl, sitting at a desk in front of a computer.](https://cdn.discordapp.com/attachments/1123048509470429365/1129528746190315660/Amanda_Banner.png)
 
 # A qt music bot made for qts
 
@@ -18,7 +18,7 @@ You will **never** have to pay or vote on any website to be able to play any of 
 
 She has a website that lets you see and manage what songs are playing in real time. It's been designed from the ground up for performance and security, insuring you have a no compromises experience.
 
-![A screenshot of a website displaying a list of songs and playback controls.](https://cdn.discordapp.com/attachments/608456955660468224/608457010102665226/525fac.png)
+![A screenshot of a website displaying a list of songs and playback controls.](https://cdn.discordapp.com/attachments/1123048509470429365/1135790951844024340/image.png)
 
 Amanda is updated regularly with lots of ❤️ to deliver upon what is promised, which is quality and stability.
 
