@@ -1,3 +1,5 @@
+import util = require("util")
+
 import { Rest } from "lavacord"
 
 import buttons = require("@amanda/buttons")
@@ -243,6 +245,9 @@ const common = {
 
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
+				})
+				snow.channel.createMessage(confprovider.config.error_log_channel_id, {
+					content: `Unable to join voice channel ${channel} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}`
 				})
 				return null
 			}
