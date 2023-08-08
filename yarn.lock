@@ -1129,7 +1129,7 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^6.2.1
     "@typescript-eslint/parser": ^6.2.1
     cloudstorm: 0.8.4
-    discord-api-types: 0.37.51
+    discord-api-types: 0.37.52
     eslint: ^8.46.0
     heatsync: ^2.4.2
     snowtransfer: ^0.8.4
@@ -1797,10 +1797,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.51":
-  version: 0.37.51
-  resolution: "discord-api-types@npm:0.37.51"
-  checksum: 0f6c8a5c316896e333ffb7c95ad31eff51053848cff23a9e47849e27b1f92a342df3e90eb304bf1d1410981b64d7d07a327f883722ffe75c064ae096dd3e9721
+"discord-api-types@npm:0.37.52":
+  version: 0.37.52
+  resolution: "discord-api-types@npm:0.37.52"
+  checksum: ecd62d054bac7517e58c3229f4f126e88fc228acfadd42cd4121702ae0c60fab809955f195aa49efd381a00e6e99a9c1b86d90157a2cf04d632bf5b6ab5d4d94
   languageName: node
   linkType: hard
 
