@@ -191,6 +191,7 @@ const activities = {
 	"STREAMING": 1 as const,
 	"LISTENING": 2 as const,
 	"WATCHING": 3 as const,
+	"CUSTOM": 4 as const,
 	"COMPETING": 5 as const
 }
 
@@ -202,8 +203,9 @@ function startAnnouncement(duration: number, message: string) {
 	enqueued = void 0
 
 	const data = {
-		name: message,
-		type: 0,
+		name: "",
+		status: message,
+		type: 4,
 		url: "https://www.twitch.tv/papiophidian/"
 	}
 
@@ -294,8 +296,11 @@ function update() {
 		if (typeof choice.type === "string") type = activities[choice.type]
 		else type = choice.type
 
+		const message = `${choice.message} | /help | ${confprovider.config.cluster_id}`
+
 		const data = {
-			name: `${choice.message} | /help | ${confprovider.config.cluster_id}`,
+			name: type === 4 ? "" : message,
+			status: type === 4 ? "message" : "",
 			type: type,
 			url: "https://www.twitch.tv/papiophidian/"
 		}
