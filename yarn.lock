@@ -43,7 +43,7 @@ __metadata:
     "@types/mime-types": 2.1.1
     discord-verify: 1.2.0
     lavacord: ^2.1.0-v4
-    marked: 7.0.3
+    marked: 7.0.5
     mime-types: 2.1.35
     uWebSockets.js: "uNetworking/uWebSockets.js#v20.31.0"
   languageName: unknown
@@ -3175,12 +3175,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"marked@npm:7.0.3":
-  version: 7.0.3
-  resolution: "marked@npm:7.0.3"
+"marked@npm:7.0.5":
+  version: 7.0.5
+  resolution: "marked@npm:7.0.5"
   bin:
     marked: bin/marked.js
-  checksum: 423a0bd75a6bc072d1e3bcdb888c0838dcd8468c1d2e6fc9b9e45e0f6bf39ecbfe01a32758e33b3ef8dffc9328ee63de5f4471476cfa563fc4e368d164b8eb9a
+  checksum: e136ab58cffae78e9e661136e8ba51c221aed1a4b7e60dcb9ae7d7241e87869e972b3d352ca3b9b7f56dba85709f848414d33060c4d0e88b3b80e01a3509e2ed
   languageName: node
   linkType: hard
 

@@ -19,7 +19,7 @@
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
     "lavacord": "^2.1.0-v4",
-    "marked": "7.0.3",
+    "marked": "7.0.5",
     "mime-types": "2.1.35",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.31.0"
   },
