@@ -202,15 +202,13 @@ function startAnnouncement(duration: number, message: string) {
 	updateInterval = void 0
 	enqueued = void 0
 
-	const data = {
-		name: "",
-		status: message,
-		type: 4,
-		url: "https://www.twitch.tv/papiophidian/"
-	}
-
 	client.shardManager.presenceUpdate({
-		activities: [data]
+		activities: [{
+			name: "Announcement",
+			state: message,
+			type: 4,
+			url: "https://www.twitch.tv/papiophidian/"
+		}]
 	})
 
 	enqueued = setTimeout(() => {
@@ -298,15 +296,13 @@ function update() {
 
 		const message = `${choice.message} | /help | ${confprovider.config.cluster_id}`
 
-		const data = {
-			name: type === 4 ? "" : message,
-			status: type === 4 ? "message" : "",
-			type: type,
-			url: "https://www.twitch.tv/papiophidian/"
-		}
-
 		client.shardManager.presenceUpdate({
-			activities: [data]
+			activities: [{
+				name: type === 4 ? "Custom" : message,
+				state: type === 4 ? message : undefined,
+				type: type,
+				url: "https://www.twitch.tv/papiophidian/"
+			}]
 		})
 	} else console.error("Warning: no status messages available!")
 }
