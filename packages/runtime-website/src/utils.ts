@@ -8,7 +8,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
 import passthrough = require("./passthrough")
-const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues } = passthrough
+const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
@@ -335,9 +335,7 @@ export async function onGatewayMessage(
 		sharedUtils.updateUser(user)
 		if (parsed.d.type === 2) {
 			let commandHandled = false
-			if (commands.handle(parsed.d as APIChatInputApplicationCommandInteraction, snow)) {
-				commandHandled = true
-			}
+			if (commands.handle(parsed.d as APIChatInputApplicationCommandInteraction, snow)) commandHandled = true
 			if (!commandHandled && !commandWorkers.length) return console.warn("No command workers to handle interaction")
 			if (!commandHandled) {
 				const worker = sharedUtils.arrayRandom(commandWorkers)
@@ -346,6 +344,12 @@ export async function onGatewayMessage(
 		} else if (parsed.d.type === 3) {
 			await snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: 6 })
 			buttons.handle(parsed.d)
+		}
+	} else if (parsed.t === "USER_UPDATE") {
+		sharedUtils.updateUser(parsed.d)
+		for (const q of queues.values()) {
+			q.listeners.set(parsed.d.id, parsed.d)
+			sessions.filter(s => s.guild === q.guildID).forEach(s => s.onListenersUpdate(q.toJSON().members))
 		}
 	}
 }

@@ -168,11 +168,11 @@ export class Track {
 	}
 
 	public showLink(): Promise<string> {
-		return Promise.resolve("https://amanda.moe")
+		return Promise.resolve(this.uri ?? "https://amanda.moe")
 	}
 
 	public showInfo(): Promise<string | APIEmbed> {
-		return Promise.resolve((this.queue?.lang ?? this.lang).GLOBAL.SONG_INFO_GENERIC)
+		return Promise.resolve(this.uri ?? (this.queue?.lang ?? this.lang).GLOBAL.SONG_INFO_GENERIC)
 	}
 
 	public prepare(): Promise<unknown> {
