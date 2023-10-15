@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { BetterTimeout } from "@amanda/shared-utils"
 
 import type { QueryResult, QueryResultRow } from "pg"
@@ -28,16 +26,15 @@ export class Model<D> {
 	public options: { useBuffer: boolean; bufferSize: number; bufferTimeout: number }
 
 	public constructor(public primaryKey: Array<keyof D> = [], options: { useBuffer?: boolean; bufferSize?: number; bufferTimeout?: number } = {}) {
-		this.options = Object.assign({
+		this.options = {
 			useBuffer: false,
 			bufferSize: 50,
-			bufferTimeout: 5000
-		}, options)
+			bufferTimeout: 5000,
+			...options
+		}
 	}
 }
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export class Database<M extends Record<string, Model<any>>> {
 	public buffers: Record<string, StatementBuffer> = {}
 
@@ -56,7 +53,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		properties: Partial<InferModelDef<M[T]>>,
 		options: { useBuffer?: boolean } = {}
 	): Promise<QueryResult<R> | null> {
-		const opts = Object.assign({ useBuffer: this.tables[table].options.useBuffer }, options)
+		const opts = { useBuffer: this.tables[table].options.useBuffer, ...options }
 		return this._in(table, properties, opts, "upsert")
 	}
 
@@ -65,7 +62,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		properties: Partial<InferModelDef<M[T]>>,
 		options: { useBuffer?: boolean } = {}
 	): Promise<QueryResult<R> | null> {
-		const opts = Object.assign({ useBuffer: this.tables[table].options.useBuffer }, options)
+		const opts = { useBuffer: this.tables[table].options.useBuffer, ...options }
 		return this._in(table, properties, opts, "insert")
 	}
 
@@ -165,7 +162,7 @@ export class Database<M extends Record<string, Model<any>>> {
 			orderDescending?: boolean;
 		} = {}
 	): { statement: string; prepared: Array<AcceptablePrepared> } {
-		options = Object.assign({ select: ["*"], limit: 0, useBuffer: false, where: {} }, options)
+		options = { select: ["*"], limit: 0, useBuffer: false, where: {}, ...options }
 		const model = this.tables[table] as unknown as Model<InferModelDef<M[T]>>
 		let statement = ""
 		let preparedAmount = 1

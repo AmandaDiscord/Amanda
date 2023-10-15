@@ -201,7 +201,7 @@ export class Track {
 		}
 	}
 
-	public getProgress(time: number, paused: boolean) {
+	public getProgress(time: number, paused: boolean): string {
 		const lang = this.queue?.lang ?? this.lang
 		if (!this.live) {
 			const max = this.lengthSeconds
@@ -280,7 +280,7 @@ export class RequiresSearchTrack extends Track {
 		})
 	}
 
-	public prepare() {
+	public prepare(): Promise<void> {
 		return this.prepareCache.get()
 	}
 }
@@ -359,15 +359,15 @@ export class RadioTrack extends RequiresSearchTrack {
 		this.searchString = stationData.url
 	}
 
-	public showLink() {
+	public showLink(): Promise<string> {
 		return Promise.resolve(this.stationData.viewURL)
 	}
 
-	public async showInfo() {
+	public async showInfo(): Promise<string> {
 		return `Try finding more radio stations like this one on ${await this.showLink()}`
 	}
 
-	public getLyrics() {
+	public getLyrics(): Promise<string | null> {
 		return Promise.resolve(this.stationData.lyrics ?? null)
 	}
 

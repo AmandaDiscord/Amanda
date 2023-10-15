@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import type {
 	APIMessageComponentInteractionData,
 	APIUser,
@@ -154,16 +152,15 @@ const cc = {
 
 	BetterComponent: class BetterComponent {
 		public callback: ((interaction: APIMessageComponentInteraction, component: BetterComponent) => unknown) | null = null
-		public id: string
+		public id: string = BetterComponent.#nextID
 		public component: APIButtonComponentWithCustomId | APISelectMenuComponent
 
 		public constructor(
 			public info: Omit<APIButtonComponentWithCustomId | APISelectMenuComponent, "custom_id">,
 			extraEncodedInfo: Record<string, any>
 		) {
-			this.id = BetterComponent.#nextID
 			components.set(this.id, this)
-			this.component = Object.assign({ custom_id: cc.encode({ mid: this.id, ...(extraEncodedInfo || {}) }) }, this.info) as BetterComponent["component"]
+			this.component = { custom_id: cc.encode({ mid: this.id, ...(extraEncodedInfo || {}) }), ...this.info } as BetterComponent["component"]
 		}
 
 		static get #nextID(): string {

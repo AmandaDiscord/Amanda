@@ -8,7 +8,7 @@ import langReplace = require("@amanda/lang/replace")
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
-import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState } from "lavalink-types/v4"
+import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, UpdatePlayerData } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
@@ -181,7 +181,7 @@ export class Queue {
 		return this.tracks.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)
 	}
 
-	public applyFilters() {
+	public applyFilters(): Promise<UpdatePlayerData> | undefined {
 		return this.player?.filters(this.player!.state.filters)
 	}
 
@@ -222,7 +222,7 @@ export class Queue {
 		}
 	}
 
-	private async _lastFMSetTrack() {
+	private async _lastFMSetTrack(): Promise<void> {
 		if (this._lastFMSent) return
 
 		if (this.listeners.size > 1) {
@@ -522,7 +522,7 @@ export class Queue {
 				["Guild ID", this.interaction?.guild_id ?? undef],
 				["Text Channel", this.interaction?.channel.id ?? undef],
 				["Voice Channel", this.voiceChannelID || undef],
-				["Using Invidious", String(node?.search_with_invidious ? true : false)],
+				["Using Invidious", String(!!node?.search_with_invidious)],
 				["Invidious Origin", `\`${node?.invidious_origin ?? "NONE"}\``],
 				["Queue Node", this.node ?? "UNNAMED"]
 			]

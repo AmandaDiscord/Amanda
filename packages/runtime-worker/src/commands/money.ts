@@ -552,26 +552,15 @@ commands.assign([
 			}
 
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
-			let cooldownInfo = {} as CooldownInfo // VSCode highlighting breaks if you type cast without an initializer
-			if (isPremium?.state) {
-				cooldownInfo = {
-					max: 48,
-					min: 40,
-					step: 2,
-					regen: {
-						amount: 1,
-						time: 1.5 * 60 * 1000
-					}
-				}
-			} else {
-				cooldownInfo = {
-					max: 48,
-					min: 40,
-					step: 2,
-					regen: {
-						amount: 1,
-						time: 2 * 60 * 1000
-					}
+			const cooldownInfo: CooldownInfo = {
+				max: 48,
+				min: 40,
+				step: 2,
+				regen: {
+					amount: 1,
+					time: isPremium?.state
+						? 1.5 * 60 * 1000
+						: 2 * 60 * 1000
 				}
 			}
 

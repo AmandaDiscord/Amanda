@@ -55,8 +55,8 @@ server.ws("/gateway", {
 		console.log(code, Buffer.from(message).toString("utf8"))
 		ws.getUserData().worker.onClose()
 	},
-	message(ws, message, isBinary) {
-		utils.onGatewayMessage(ws, message, isBinary)
+	message(ws, message) {
+		utils.onGatewayMessage(ws, message)
 	}
 } as WebSocketBehavior<{ worker: GatewayWorker, clusterID: string }>)
 

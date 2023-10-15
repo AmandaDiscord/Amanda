@@ -1,5 +1,3 @@
-/* eslint-disable no-empty-function */
-
 import util = require("util")
 
 import language = require("@amanda/lang")
@@ -25,7 +23,7 @@ export class AsyncValueCache<T> {
 	public promise: Promise<T> | null = null
 	public cache: T | null = null
 
-	public constructor(public getter: () => Promise<T>, public lifetime: number | undefined = void 0) {}
+	public constructor(public getter: () => Promise<T>, public lifetime: number | undefined = void 0) { void 0 }
 
 	public clear(): void {
 		if (this.lifetimeTimeout) clearTimeout(this.lifetimeTimeout)
@@ -93,7 +91,7 @@ export class FrequencyUpdater {
 	public timeout: NodeJS.Timeout | null = null
 	public interval: NodeJS.Timeout | null = null
 
-	public constructor(public callback: () => unknown) {}
+	public constructor(public callback: () => unknown) { void 0 }
 
 	public start(frequency: number, trigger: boolean, delay = frequency): void {
 		this.stop(false)
@@ -320,12 +318,9 @@ export function progressBar(length: number, value: number, max: number, text?: s
 	let result = ""
 
 	for (let i = 1; i <= length; i++) {
-		if (i >= textPosition && i < textPosition + text.length) {
-			result += text[i - textPosition]
-		} else {
-			if (value / max * length >= i) result += "="
-			else result += " ​" // space + zwsp to prevent shrinking
-		}
+		if (i >= textPosition && i < textPosition + text.length) result += text[i - textPosition]
+		else if (value / max * length >= i) result += "="
+		else result += " ​" // space + zwsp to prevent shrinking
 	}
 
 	return `​${result}` // zwsp + result
@@ -580,13 +575,13 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 			callback(page, component)
 		})
 
-		// eslint-disable-next-line no-inner-declarations
-		function makeTimeout() {
+		const makeTimeout = () => {
 			clearTimeout(menuExpires)
 			menuExpires = setTimeout(() => {
 				component.destroy()
 			}, 10 * 60 * 1000)
 		}
+
 		makeTimeout()
 		callback(page, component)
 	} else callback(page, null)

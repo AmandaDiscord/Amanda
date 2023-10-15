@@ -85,7 +85,6 @@ commands.assign([
 		category: "meta",
 		process(cmd, lang, shardID) {
 			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
-			// eslint-disable-next-line no-irregular-whitespace
 			// const leadingSpace = `${emojis.bl}\n​`
 			const ram = process.memoryUsage()
 
@@ -259,7 +258,7 @@ commands.assign([
 						author: { name: c.name },
 						description: langReplace(lang.GLOBAL.HELP_COMMAND_BODY, {
 							"description": info.description,
-							"args": info.options?.map(o => o.name).join(", ") || lang.GLOBAL.NONE,
+							"args": info.options?.map(o => o.name).join(", ") ?? lang.GLOBAL.NONE,
 							"category": c.category
 						}),
 						footer: { text: `${langReplace(lang.GLOBAL.FOOTER_HELP_MAIN, { "prefix": "/" })}\n\n${lang.GLOBAL.FOOTER_HELP}` },
@@ -482,13 +481,11 @@ commands.assign([
 						}
 
 						updateCache()
-					} else {
-						if (isPremium) {
-							await Promise.all([
-								fs.promises.unlink(path.join(imageCacheDirectory, cmd.author.id)).catch(() => void 0),
-								sql.orm.delete("background_sync", { user_id: cmd.author.id })
-							])
-						}
+					} else if (isPremium) {
+						await Promise.all([
+							fs.promises.unlink(path.join(imageCacheDirectory, cmd.author.id)).catch(() => void 0),
+							sql.orm.delete("background_sync", { user_id: cmd.author.id })
+						])
 					}
 				}
 

@@ -108,12 +108,9 @@ export class CommandManager<Params extends Array<unknown>> {
 	public constructor(
 		public paramGetter: (command: APIChatInputApplicationCommandInteraction) => Params,
 		public errorHandler?: (error: unknown) => unknown
-	) {
-		this.paramGetter = paramGetter
-		this.errorHandler = errorHandler
-	}
+	) { void 0 }
 
-	public assign(properties: Array<Command<Params>>) {
+	public assign(properties: Array<Command<Params>>): void {
 		properties.forEach(i => {
 			if (this.commands.get(i.name)) this.commands.delete(i.name)
 			this.commands.set(i.name, i)
@@ -126,7 +123,7 @@ export class CommandManager<Params extends Array<unknown>> {
 		})
 	}
 
-	public remove(commands: Array<string>) {
+	public remove(commands: Array<string>): void {
 		for (const command of commands) {
 			if (this.commands.get(command)) {
 				this.commands.delete(command)

@@ -136,7 +136,7 @@ export class Session {
 		this.send({ op: opcodes.LISTENERS_UPDATE, d: { members: members } })
 	}
 
-	public onAttributesChange(queue: Queue) {
+	public onAttributesChange(queue: Queue): void {
 		this.send({ op: opcodes.ATTRIBUTES_CHANGE, d: { loop: queue.loop } })
 	}
 
@@ -181,7 +181,7 @@ export class Session {
 		q.destroy(true)
 	}
 
-	public requestAttributesChange(data: Packet<{ loop?: boolean }>) {
+	public requestAttributesChange(data: Packet<{ loop?: boolean }>): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		const q = queues.get(this.guild!)
@@ -189,7 +189,7 @@ export class Session {
 		if (typeof data?.d?.loop === "boolean") q.loop = data.d.loop
 	}
 
-	public requestClearQueue() {
+	public requestClearQueue(): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		const q = queues.get(this.guild!)
@@ -198,7 +198,7 @@ export class Session {
 		this.onClearQueue()
 	}
 
-	public requestTrackRemove(data: Packet<{ index: number }>) {
+	public requestTrackRemove(data: Packet<{ index: number }>): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		const q = queues.get(this.guild!)
@@ -206,7 +206,7 @@ export class Session {
 		if (typeof data?.d?.index === "number") q.removeTrack(data.d.index)
 	}
 
-	public requestPlayNow(data: Packet<{ index: number }>) {
+	public requestPlayNow(data: Packet<{ index: number }>): void {
 		const allowed = this.allowedToAction()
 		if (!allowed) return
 		const q = queues.get(this.guild!)
@@ -239,7 +239,6 @@ server.ws("/public", {
 		const msg = Buffer.from(message).toString()
 		const session = ws.getUserData().session
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const data = JSON.parse(msg) as Packet<any>
 			const method = opcodeMethodMap.get(data.op!)
 			if (method) await session[method](data)

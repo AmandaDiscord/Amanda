@@ -219,7 +219,7 @@ export class Validator<S extends State, P> {
 		return this.promise
 	}
 
-	private async _next(resolve: (value: S | PromiseLike<S>) => void, reject: (reason?: [number, string]) => void) {
+	private async _next(resolve: (value: S | PromiseLike<S>) => void, reject: (reason?: [number, string]) => void): Promise<void> {
 		if (this.operations.length == 0) return resolve(this.state)
 
 		this.stage++
@@ -289,7 +289,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 		return this as unknown as FormValidator<S & { params: URLSearchParams }, URLSearchParams>
 	}
 
-	public ensureParams(list: Array<string>, matchMode: "get" | "has" = "get") {
+	public ensureParams(list: Array<string>, matchMode: "get" | "has" = "get"): this {
 		if (!(list instanceof Array)) list = [list]
 		list.forEach(item => {
 			// @ts-expect-error TypeScript doesn't know what it's talking about
@@ -302,7 +302,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 		return this
 	}
 
-	public useCSRF(loginToken?: string) {
+	public useCSRF(loginToken?: string): this {
 		// @ts-expect-error TypeScript doesn't know what it's talking about
 		this.do<(state: S & { params: URLSearchParams }, previousValue: P) => boolean, undefined>(
 			state => checkCSRF(state.params.get("csrftoken")!, loginToken, true),
@@ -315,9 +315,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 
 export async function onGatewayMessage(
 	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
-	message: ArrayBuffer,
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	isBinary: boolean
+	message: ArrayBuffer
 ) {
 	const parsed: IGatewayMessage & { cluster_id: string } = JSON.parse(Buffer.from(message).toString())
 	const wsData = ws.getUserData()

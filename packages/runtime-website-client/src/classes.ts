@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { imageStore } from "./imagestore"
 import { prettySeconds, opcodes } from "./utilities.js"
 
@@ -14,13 +12,12 @@ const serverTimeDiff = _serverTimeDiff
 
 export class ElemJS<E extends HTMLElement = HTMLElement> {
 	public parent: ElemJS<HTMLElement>
-	public children: Array<ElemJS<HTMLElement>>
+	public children: Array<ElemJS<HTMLElement>> = []
 	public element: E
 
 	public constructor(type: keyof HTMLElementTagNameMap | E) {
 		if (type instanceof HTMLElement) this.bind(type)
 		else this.bind(document.createElement(type) as E)
-		this.children = []
 	}
 
 	public bind(element: E): this {
@@ -54,12 +51,12 @@ export class ElemJS<E extends HTMLElement = HTMLElement> {
 		return this
 	}
 
-	public text(name: string) {
+	public text(name: string): this {
 		this.element.innerText = name
 		return this
 	}
 
-	public html(name: string) {
+	public html(name: string): this {
 		this.element.innerHTML = name
 		return this
 	}
@@ -169,7 +166,7 @@ export class Queue<E extends HTMLElement = HTMLElement> extends ElemJS<E> {
 		if (removed) removed.animateShift()
 	}
 
-	public replaceItems(data: Array<Parameters<Queue["addItem"]>["0"]>) {
+	public replaceItems(data: Array<Parameters<Queue["addItem"]>["0"]>): void {
 		this.clearChildren()
 		data.forEach(item => this.addItem(item))
 	}
@@ -434,19 +431,17 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 					this.parts.controls
 				)
 			)
+		} else if (this.trackSet) {
+			this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Nothing playing"))
 		} else {
-			if (this.trackSet) {
-				this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Nothing playing"))
-			} else {
-				this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Connecting..."))
-			}
+			this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Connecting..."))
 		}
 	}
 }
 
 export class PlayerTime extends ElemJS<HTMLDivElement> {
 	public animation: Animation | null = null
-	public interval: NodeJS.Timer | null = null
+	public interval: NodeJS.Timeout | null = null
 	public state = {
 		playing: false,
 		trackStartTime: 0,
@@ -534,7 +529,6 @@ abstract class SideControl extends ElemJS<HTMLButtonElement> {
 
 	public constructor(public sideControls: SideControls<HTMLElement>, name: string, image: string) {
 		super("button")
-		this.disabled = false
 		this.class("control")
 		this.child(new ElemJS("img").class("icon").attribute("src", `/images/${image}.svg`))
 		this.child(new ElemJS("span").class("name").text(name))
@@ -548,9 +542,10 @@ abstract class SideControl extends ElemJS<HTMLButtonElement> {
 }
 
 class AddTrackControl extends SideControl {
+	public disabled = true
+
 	public constructor(sideControls: SideControls<HTMLElement>) {
 		super(sideControls, "Add track", "add-shaped")
-		this.disabled = true
 		// this.element.addEventListener("click", event => this.onClick(event))
 	}
 
@@ -560,13 +555,14 @@ class AddTrackControl extends SideControl {
 }
 
 class TrackInfoControl extends SideControl {
+	public disabled = true
+
 	public constructor(sideControls: SideControls<HTMLElement>) {
 		super(sideControls, "Track information", "information-shaped")
 	}
 
 	public render(): void {
 		// this.disabled = !this.sideControls.session.state
-		this.disabled = true // because it's not implemented.
 		super.render()
 	}
 }
@@ -575,7 +571,6 @@ class ClearQueueControl extends SideControl {
 	public constructor(sideControls: SideControls<HTMLElement>) {
 		super(sideControls, "Clear queue", "remove-shaped")
 		this.element.addEventListener("click", () => this.onClick())
-		this.disabled = true
 	}
 
 	public onClick(): void {
@@ -710,20 +705,15 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 
 export class VoiceMember extends ElemJS<HTMLDivElement> {
 	public avatarSize = 40
-	public parts: {
-		avatar: AnonImage;
-		name: ElemJS<HTMLElement>
+	public parts = {
+		avatar: this.getAvatar(),
+		name: this.getName()
 	}
 	public isNew = true
 	public leaving = false
 
 	public constructor(public props: UnpackArray<ReturnType<WebQueue["toJSON"]>["members"]>) {
 		super("div")
-
-		this.parts = {
-			avatar: this.getAvatar(),
-			name: this.getName()
-		}
 	}
 
 	public join(voiceInfo: VoiceInfo<HTMLElement>): Promise<void> {

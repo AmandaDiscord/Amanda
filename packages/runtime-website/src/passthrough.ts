@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-array-constructor */
-
 import path = require("path")
 
 type Passthrough = {

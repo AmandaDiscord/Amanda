@@ -21,6 +21,8 @@
 		"BigInt": true
 	},
 	"rules": {
+		"@typescript-eslint/no-array-constructor": "off",
+		"@typescript-eslint/no-explicit-any": "off",
 		"@typescript-eslint/no-non-null-assertion": "off",
 		"@typescript-eslint/no-var-requires": "off",
 		"brace-style": ["error", "1tbs", { "allowSingleLine": true }],
@@ -36,7 +38,7 @@
 		"no-control-regex": "off",
 		"no-empty-function": "error",
 		"no-floating-decimal": "error",
-		"no-irregular-whitespace": ["error", { "skipTemplates": true }],
+		"no-irregular-whitespace": "off",
 		"no-multi-spaces": "error",
 		"no-multiple-empty-lines": ["error", { "max": 2, "maxEOF": 1, "maxBOF": 0 }],
 		"no-new-wrappers": "error",

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // From HTML
 const channelID = _channelID
 let serverTimeDiff = _serverTimeDiff
@@ -13,19 +11,13 @@ import type { Track as WebTrack } from "../../runtime-website/src/music/tracktyp
 
 export class Session {
 	public state: ReturnType<WebQueue["toJSON"]> | null = null
-	public player: Player<HTMLElement>
-	public queue: Queue<HTMLElement>
-	public voiceInfo: VoiceInfo<HTMLElement>
-	public sideControls: SideControls<HTMLElement>
-	public listenManager: ListenManager
+	public player: Player<HTMLElement> = new Player(q("#player-container")!, this)
+	public queue: Queue<HTMLElement> = new Queue(q("#queue-container")!, this)
+	public voiceInfo: VoiceInfo<HTMLElement> = new VoiceInfo(q("#voice-info")!)
+	public sideControls: SideControls<HTMLElement> = new SideControls(q("#side-controls")!, this)
+	public listenManager: ListenManager = new ListenManager()
 
 	public constructor(public ws: WebSocket) {
-		this.player = new Player(q("#player-container")!, this)
-		this.queue = new Queue(q("#queue-container")!, this)
-		this.voiceInfo = new VoiceInfo(q("#voice-info")!)
-		this.sideControls = new SideControls(q("#side-controls")!, this)
-		this.listenManager = new ListenManager()
-
 		const opcodeMethodMap = new Map<typeof opcodes[keyof typeof opcodes], string>([
 			[opcodes.ACKNOWLEDGE, "acknowledge"],
 			[opcodes.STATE, "updateState"],
@@ -50,7 +42,7 @@ export class Session {
 		})
 	}
 
-	public send(data): void {
+	public send(data: any): void {
 		if (!data.nonce) data.nonce = generateNonce()
 		const message = JSON.stringify(data)
 		console.log("%c[WS →]", "color: #c00000", message)
@@ -193,7 +185,7 @@ export class Session {
 		})
 	}
 
-	public stop() {
+	public stop(): void {
 		this.send({
 			op: opcodes.STOP
 		})
