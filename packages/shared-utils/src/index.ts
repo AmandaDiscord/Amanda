@@ -560,7 +560,7 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 	let page = 0
 	if (pageCount > 1) {
 		let menuExpires: NodeJS.Timeout
-		const options = Array(Math.min(pageCount, 24)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
+		const options = Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
 		const component = new buttons.BetterComponent({
 			type: 3,
 			placeholder: "Select page",
