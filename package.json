@@ -12,7 +12,7 @@
         "build": "turbo run build"
     },
     "devDependencies": {
-        "@types/node": "^20.8.6",
+        "@types/node": "^20.8.7",
         "@typescript-eslint/eslint-plugin": "^6.8.0",
         "@typescript-eslint/parser": "^6.8.0",
         "discord-api-types": "0.37.60",
