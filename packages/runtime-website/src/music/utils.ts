@@ -20,7 +20,7 @@ const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
 const selectTimeout = 1000 * 60
 const waitForClientVCJoinTimeout = 5000
 
-const trackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+const trackNameRegex = /([^|[\]]+?) ?(?:[-–—|:]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const knownGoodArtistRegex = /(.+?)(?:\b - Topic\b|VEVO)/
 const hiddenEmbedRegex = /(^<|>$)/g
 const searchShortRegex = /^\w+?search:/
