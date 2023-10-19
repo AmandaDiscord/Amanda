@@ -21,9 +21,11 @@ const selectTimeout = 1000 * 60
 const waitForClientVCJoinTimeout = 5000
 
 const trackNameRegex = /([^|[\]]+?) ?(?:[-–—]|\bby\b) ?([^()[\],]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+const knownGoodArtistRegex = /(.+?)(?:\b - Topic\b|VEVO)/
 const hiddenEmbedRegex = /(^<|>$)/g
 const searchShortRegex = /^\w+?search:/
 const startsWithHTTP = /^https?:\/\//
+const replaceExtraneousRegex = / ?\([^)]+\) ?/g
 
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
@@ -66,12 +68,20 @@ const common = {
 		},
 
 		pickApart(track: import("./tracktypes").Track) {
-			let title = "", artist: string | undefined
+			let title = "", artist: string | undefined = undefined
+			let confidence = 0
 
-			const match = trackNameRegex.exec(track.title)
-			if (match) {
-				title = match[2]
-				artist = match[1]
+			const authorNameMatch = knownGoodArtistRegex.exec(track.author)
+			const trackNameMatch = trackNameRegex.exec(track.title)
+
+			if (authorNameMatch) {
+				title = track.title.replace(replaceExtraneousRegex, "").trim()
+				artist = authorNameMatch[1].trim()
+				confidence = 2
+			} else if (trackNameMatch) {
+				title = trackNameMatch[2].trim()
+				artist = trackNameMatch[1].trim()
+				confidence = 1 // mostly confident. Could just flip around
 			}
 
 			if (!title || !artist) {
@@ -79,7 +89,7 @@ const common = {
 				artist = track.author
 			}
 
-			return { title, artist }
+			return { title, artist, confidence }
 		}
 	},
 

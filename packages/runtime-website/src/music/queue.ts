@@ -240,11 +240,13 @@ export class Queue {
 
 			const connections = await sql.all<"connections">(sqlString, prepared)
 
+			const pickedApart = common.genius.pickApart(track)
+
 			for (const row of connections ?? []) {
 				const params = new URLSearchParams({
 					method: "track.scrobble",
-					"artist[0]": track.author,
-					"track[0]": track.title,
+					"artist[0]": pickedApart.confidence === 2 ? pickedApart.artist : track.author,
+					"track[0]": pickedApart.confidence === 2 ? pickedApart.title : track.title,
 					"timestamp[0]": String(Math.floor(Date.now() / 1000)),
 					"duration[0]": String(track.lengthSeconds),
 					"chosenByUser[0]": track.requester.id === row.user_id ? "1" : "0",
