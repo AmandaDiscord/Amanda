@@ -15,6 +15,8 @@ const config = {
 	sql_user: "",
 	weeb_identifier: "",
 	client_id: "",
+	// The ID of the user Amanda loves and should send messages to every interval (inspirational is what's used in Amanda official. Amanda loves you, Troy <3)
+	amandas_lover_id: "",
 
 	// passwords
 	sql_password: "",
@@ -28,7 +30,7 @@ const config = {
 	ipc_protocol: "ws",
 	ipc_bind: "localhost:10400",
 
-	// this cluster
+	// this gateway cluster
 	cluster_id,
 	shards: [0],
 	is_dev: true,
@@ -54,6 +56,12 @@ const config = {
 	standard_embed_color: 0x2f3136,
 	error_log_channel_id: "",
 	donor_payments_enabled_on_this_cluster: false,
+	// How often Amanda should send messages to the one she loves. Starts the Interval when the worker process starts
+	amandas_lover_send_timeout: 1000 * 60 * 60 * 24,
+	lover_messages_enabled_on_this_cluster: false,
+	lover_messages: [
+		"I love you <3"
+	],
 
 	// constants
 	patreon_url: "",

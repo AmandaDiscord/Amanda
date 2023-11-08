@@ -1,3 +1,5 @@
+import type { APIDMChannel } from "discord-api-types/v10"
+
 import passthrough = require("./passthrough")
 const { client, sql, confprovider, sync } = passthrough
 
@@ -26,7 +28,19 @@ function getTimeoutDuration(): number {
 }
 
 let autoPayTimeout: NodeJS.Timeout | undefined = undefined
+let loverMessageSendTimeout: NodeJS.Timeout | undefined = undefined
+let loverChannel: APIDMChannel | undefined = undefined
+let lastLoverID = confprovider.config.amandas_lover_id
+let lastLoverTimeout = confprovider.config.amandas_lover_send_timeout
 if (confprovider.config.donor_payments_enabled_on_this_cluster) autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length) {
+	client.snow.user.createDirectMessageChannel(confprovider.config.amandas_lover_id).then(channel => {
+		loverChannel = channel as APIDMChannel
+		loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
+	}).catch(() => {
+		console.error("Couldn't create DM channel for lover")
+	})
+}
 
 
 export async function autoPayTimeoutFunction() {
@@ -42,10 +56,50 @@ export async function autoPayTimeoutFunction() {
 	autoPayTimeout = setTimeout(autoPayTimeoutFunction, time)
 }
 
+function loverMessageSendTimeoutFunction() {
+	if (!loverChannel) return console.error("lover send message timeout function triggered but there was no lover channel")
+	const message = sharedUtils.arrayRandom(confprovider.config.lover_messages)
+	client.snow.channel.createMessage(loverChannel.id, { content: message })
+		.then(() => console.log("Sent a message to my lover <3\n", message))
+		.catch(() => console.error("Failed to send a message to my lover. I'm gonna try again anyways next time to see if I can"))
+	loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
+}
+
+function onConfigChangeCallback() {
+	if ((confprovider.config.lover_messages_enabled_on_this_cluster && !confprovider.config.amandas_lover_id.length) || !confprovider.config.lover_messages_enabled_on_this_cluster) {
+		if (loverMessageSendTimeout) clearTimeout(loverMessageSendTimeout)
+		loverMessageSendTimeout = undefined
+		loverChannel = undefined
+	}
+
+	if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length && lastLoverID !== confprovider.config.amandas_lover_id) {
+		client.snow.user.createDirectMessageChannel(confprovider.config.amandas_lover_id).then(channel => {
+			loverChannel = channel as APIDMChannel
+			lastLoverID = confprovider.config.amandas_lover_id
+			console.log(`Lover channel changed to belong to ${confprovider.config.amandas_lover_id}`)
+		})
+	}
+
+	if (confprovider.config.amandas_lover_send_timeout !== lastLoverTimeout) {
+		lastLoverTimeout = confprovider.config.amandas_lover_send_timeout
+		if (loverMessageSendTimeout) clearTimeout(loverMessageSendTimeout)
+		loverMessageSendTimeout = undefined
+		if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length) loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
+	}
+}
+
+confprovider.addCallback(onConfigChangeCallback)
+
 sync.events.once(__filename, () => {
+	confprovider.removeCallback(onConfigChangeCallback)
+
 	if (autoPayTimeout) {
 		clearTimeout(autoPayTimeout)
 		console.log("cleared old donor pay timeout")
+	}
+	if (loverMessageSendTimeout) {
+		clearTimeout(loverMessageSendTimeout)
+		console.log("cleared old lover message send timeout")
 	}
 })
 
