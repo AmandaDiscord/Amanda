@@ -389,6 +389,7 @@ export function buttonHandlerParamsToInteraction(data: APIMessageComponentIntera
 			embeds: [],
 			pinned: false,
 			type: 0
-		}
+		},
+		entitlements: []
 	}
 }

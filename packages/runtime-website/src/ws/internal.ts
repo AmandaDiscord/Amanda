@@ -1,4 +1,5 @@
 import buttons = require("@amanda/buttons")
+import encoding = require("@amanda/encoding")
 
 import passthrough = require("../passthrough")
 const { server, confprovider, commandWorkers, sync } = passthrough
@@ -9,7 +10,7 @@ import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 
 const handlers = {} as Parameters<typeof buttons["setHandlers"]>["1"]
 
-buttons.setHandlers(btn => buttons.decode(btn.custom_id, "object").cluster, handlers)
+buttons.setHandlers(btn => encoding.decode(btn.custom_id).cluster, handlers)
 
 export class CommandWorker {
 	public constructor(public ws: WebSocket<unknown>, public clusterID: string) {

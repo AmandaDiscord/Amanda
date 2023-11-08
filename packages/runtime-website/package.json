@@ -13,18 +13,19 @@
     "@amanda/buttons": "1.0.0",
     "@amanda/commands": "1.0.0",
     "@amanda/config": "1.0.0",
+    "@amanda/encoding": "1.0.0",
     "@amanda/lang": "1.0.0",
     "@amanda/repl": "1.0.0",
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
     "lavacord": "^2.1.0-v4",
-    "marked": "9.1.2",
+    "marked": "9.1.5",
     "mime-types": "2.1.35",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.32.0"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.33.0"
   },
   "devDependencies": {
     "@types/marked": "6.0.0",
-    "@types/mime-types": "2.1.3"
+    "@types/mime-types": "2.1.4"
   }
 }

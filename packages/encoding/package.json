@@ -1,7 +1,7 @@
 {
-  "name": "@amanda/buttons",
+  "name": "@amanda/encoding",
   "version": "1.0.0",
-  "description": "A button package for AmandaDiscord",
+  "description": "An extension-of-sorts of JSON made to be space efficient and support for some types not in JSON",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,8 +9,5 @@
     "lint": "eslint . --ext .ts"
   },
   "author": "PapiOphidian",
-  "license": "MIT",
-  "dependencies": {
-    "@amanda/encoding": "1.0.0"
-  }
+  "license": "MIT"
 }
