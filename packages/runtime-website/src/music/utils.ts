@@ -30,8 +30,6 @@ const replaceExtraneousRegex = / ?\([^)]+\) ?/g
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
 const sourceMap = new Map<string, Key>([
-	["itunes", "RequiresSearchTrack"],
-	["spotify", "RequiresSearchTrack"],
 	["http", "ExternalTrack"]
 ])
 
