@@ -88,6 +88,7 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 	import("./ws/public")
 
 	passthrough.sync.require([
+		"./lover",
 		"./music/music",
 		"./music/playlist"
 	])

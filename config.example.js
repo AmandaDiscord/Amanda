@@ -56,7 +56,7 @@ const config = {
 	standard_embed_color: 0x2f3136,
 	error_log_channel_id: "",
 	donor_payments_enabled_on_this_cluster: false,
-	// How often Amanda should send messages to the one she loves. Starts the Interval when the worker process starts
+	// How often Amanda should send messages to the one she loves. Starts the Interval when the website process starts or when the lover file is reloaded
 	amandas_lover_send_timeout: 1000 * 60 * 60 * 24,
 	lover_messages_enabled_on_this_cluster: false,
 	lover_messages: [
