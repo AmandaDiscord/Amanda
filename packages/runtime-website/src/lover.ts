@@ -30,6 +30,8 @@ class Lover {
 
 if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length) {
 	lastLover = new Lover(confprovider.config.amandas_lover_id)
+	loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
+	console.log("Lover messages have been enabled")
 }
 
 function loverMessageSendTimeoutFunction() {
