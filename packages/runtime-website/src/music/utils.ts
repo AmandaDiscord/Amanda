@@ -75,12 +75,12 @@ const common = {
 			const trackNameMatch = trackNameRegex.exec(track.title)
 
 			if (authorNameMatch) {
-				title = track.title.replace(replaceExtraneousRegex, "").trim()
-				artist = authorNameMatch[1].trim()
+				title = track.title?.replace(replaceExtraneousRegex, "")?.trim()
+				artist = authorNameMatch[1]?.trim()
 				confidence = 2
 			} else if (trackNameMatch) {
-				title = trackNameMatch[2].trim()
-				artist = trackNameMatch[1].trim()
+				title = trackNameMatch[2]?.trim()
+				artist = trackNameMatch[1]?.trim()
 				confidence = 1 // mostly confident. Could just flip around
 			}
 
