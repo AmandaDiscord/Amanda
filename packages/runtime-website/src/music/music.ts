@@ -366,7 +366,8 @@ commands.assign([
 				name: "time",
 				type: 4,
 				description: "The time in seconds to seek in the track",
-				required: true
+				required: true,
+				min_value: 0
 			}
 		],
 		async process(cmd, lang) {

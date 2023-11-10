@@ -1,5 +1,8 @@
 import util = require("util")
 
+import { getLang, userString } from "@amanda/shared-utils"
+import confprovider = require("@amanda/config")
+
 import type {
 	APIUser,
 	APIInteractionGuildMember,
@@ -17,10 +20,7 @@ import type {
 	APIApplicationCommandInteractionDataSubcommandGroupOption,
 	APIApplicationCommandOption
 } from "discord-api-types/v10"
-
 import type { SnowTransfer } from "snowtransfer"
-import { getLang, userString } from "@amanda/shared-utils"
-import confprovider = require("@amanda/config")
 
 export class ChatInputCommand {
 	public author: APIUser

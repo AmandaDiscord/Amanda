@@ -1,5 +1,6 @@
-import { BackTracker } from "backtracker"
 import util = require("util")
+
+import { BackTracker } from "backtracker"
 
 const oldLog = console.log
 const oldWarn = console.warn

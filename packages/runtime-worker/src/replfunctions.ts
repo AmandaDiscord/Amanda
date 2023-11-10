@@ -1,6 +1,3 @@
-import path = require("path")
-import fs = require("fs")
-
 import Lang = require("@amanda/lang")
 
 import type { APIApplicationCommandOption, LocaleString } from "discord-api-types/v10"
@@ -14,9 +11,9 @@ type NameAndDesc = { name: string; description: string; }
 const extraContext = {
 	underscoreToEndRegex: /_\w+$/,
 	nameRegex: /^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u,
-	buildCommandLanguageObject(cmd: string) {
+	buildCommandLanguageObject(command: { name: string }): { name_localizations: LocaledObject; description_localizations: LocaledObject } {
 		const localizations = Object.entries(Lang).map(([k, l]) => ({
-			lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {}
+			lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] || {}
 		})) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 		return {
@@ -36,12 +33,11 @@ const extraContext = {
 			description_localizations: localizations.reduce((acc, cur) => { acc[cur.lang] = cur.cmd.description; return acc }, {})
 		}
 	},
-	buildCommandLanguageOptions(cmd: string) {
-		const command = commands.commands.get(cmd)
-		if (!command?.options) return void 0
-		const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[cmd] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Record<string, NameAndDesc & { options?: Record<string, NameAndDesc> }> } }>
+	buildCommandLanguageOptions(command: { name: string, options?: Array<APIApplicationCommandOption> }): Array<APIApplicationCommandOption> | undefined {
+		if (!command.options) return void 0
+		const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Record<string, NameAndDesc & { options?: Record<string, NameAndDesc> }> } }>
 
-		return command.options.map(cur => Object.assign({
+		return command.options.map(cur => ({
 			name_localizations: localizations.reduce((acc, desc) => {
 				const toMatch = desc.cmd.options?.[cur.name].name
 				const match = toMatch?.match(extraContext.nameRegex)
@@ -56,7 +52,7 @@ const extraContext = {
 			}, {}) as LocaledObject,
 			description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options?.[cur.name].description; return acc }, {}) as LocaledObject,
 			options: cur.type === 1 && cur.options
-				? cur.options.map(cur2 => Object.assign({
+				? cur.options.map(cur2 => ({
 					name_localizations: localizations.reduce((acc, desc) => {
 						const toMatch = desc.cmd.options![cur.name].options![cur2.name].name
 						const match = extraContext.nameRegex.exec(toMatch)
@@ -69,15 +65,25 @@ const extraContext = {
 						acc[desc.lang] = final
 						return acc
 					}, {}) as LocaledObject,
-					description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![cur.name].options![cur2.name].description; return acc }, {}) as LocaledObject
-				}, cur2))
-				: void 0
-		}, cur))
+					description_localizations: localizations.reduce((acc, desc) => { acc[desc.lang] = desc.cmd.options![cur.name].options![cur2.name].description; return acc }, {}) as LocaledObject,
+					...cur2
+				}))
+				: void 0,
+			...cur
+		}) as APIApplicationCommandOption)
 	},
-	async refreshcommands() {
-		const payload = Array.from(commands.commands.values()).map(c => {
-			const obj = extraContext.buildCommandLanguageObject(c.name)
-			const options = extraContext.buildCommandLanguageOptions(c.name)
+	async refreshcommands(): Promise<void> {
+		let webcommands: Array<{ name: string; description: string; options?: Array<APIApplicationCommandOption> }> = []
+		try {
+			webcommands = await fetch(`${confprovider.config.website_protocol}://${confprovider.config.website_domain}/commands.json`).then(r => r.json())
+		} catch (e) {
+			console.error("There was an error getting the website's commands", e)
+			webcommands = []
+		}
+
+		const payload = [...webcommands, ...Array.from(commands.commands.values())].map(c => {
+			const obj = extraContext.buildCommandLanguageObject(c)
+			const options = extraContext.buildCommandLanguageOptions(c)
 			return {
 				name: c.name,
 				description: c.description,
@@ -87,22 +93,10 @@ const extraContext = {
 				default_member_permissions: null
 			}
 		})
+
 		// Amanda is a "new" account which doesn't have a different ID from the application
 		const response = await client.snow.interaction.bulkOverwriteApplicationCommands(confprovider.config.client_id, payload).catch(console.error)
 		console.log(response)
-	},
-	generatedocs() {
-		const cmds = Array.from(commands.commands.values()).map(c => {
-			const value: NameAndDesc & { options?: Array<NameAndDesc>; } = {
-				name: c.name,
-				description: c.description
-			}
-			if (c.options) value.options = c.options.map(extraContext.assignOptions)
-			return [c.name, value] as [string, typeof value]
-		})
-		const v = {} as { [name: string]: import("@amanda/shared-types").UnpackArray<typeof cmds>["1"] }
-		for (const [name, value] of cmds) v[name] = value
-		fs.promises.writeFile(path.join(__dirname, "../../runtime-website/webroot/commands.json"), JSON.stringify(v))
 	},
 	assignOptions(option: APIApplicationCommandOption): NameAndDesc & { options?: Array<NameAndDesc> } {
 		const rt: ReturnType<typeof extraContext.assignOptions> = {

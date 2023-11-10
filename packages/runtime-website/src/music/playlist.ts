@@ -80,6 +80,153 @@ commands.assign([
 		name: "playlists",
 		description: "Manage and play Amanda playlists",
 		category: "audio",
+		options: [
+			{
+				name: "meta",
+				description: "Metadata commands",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "show",
+						description: "Shows all Amanda playlists. True to only show yourself",
+						type: 5,
+						required: false
+					},
+					{
+						name: "info",
+						description: "Shows info for a playlist",
+						type: 3,
+						required: false
+					},
+					{
+						name: "create",
+						description: "Creates a playlist",
+						type: 3,
+						required: false
+					},
+					{
+						name: "delete",
+						description: "Deletes a playlist",
+						type: 3,
+						required: false
+					}
+				]
+			},
+			{
+				name: "add",
+				description: "Adds a track to a playlist",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "playlist",
+						description: "The name of the playlist",
+						type: 3,
+						required: true
+					},
+					{
+						name: "track",
+						description: "A resolveable track (link, name, id)",
+						type: 3,
+						required: true
+					}
+				]
+			},
+			{
+				name: "remove",
+				description: "Removes a track from a playlist",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "playlist",
+						description: "The name of the playlist",
+						type: 3,
+						required: true
+					},
+					{
+						name: "index",
+						description: "The 1 based index of the track to remove",
+						type: 4,
+						required: true
+					}
+				]
+			},
+			{
+				name: "move",
+				description: "Moves a track in a playlist from one index to another",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "playlist",
+						description: "The name of the playlist",
+						type: 3,
+						required: true
+					},
+					{
+						name: "from",
+						description: "The 1 based index of the track to move",
+						type: 4,
+						required: true
+					},
+					{
+						name: "to",
+						description: "The 1 based index the track should appear at",
+						type: 4,
+						required: true
+					}
+				]
+			},
+			{
+				name: "search",
+				description: "Filters tracks in a playlist",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "playlist",
+						description: "The name of the playlist",
+						type: 3,
+						required: true
+					},
+					{
+						name: "query",
+						description: "The search term to filter by",
+						type: 3,
+						required: true
+					}
+				]
+			},
+			{
+				name: "play",
+				description: "Plays a playlist",
+				type: 1,
+				required: false,
+				options: [
+					{
+						name: "playlist",
+						description: "The name of the playlist",
+						type: 3,
+						required: true
+					},
+					{
+						name: "shuffle",
+						description: "If the playlist should start shuffled",
+						type: 5,
+						required: false
+					},
+					{
+						name: "start",
+						description: "The 1 based index to start from. When shuffling, only a portion is selected and then shuffled",
+						type: 4,
+						required: false,
+						min_value: 1
+					}
+				]
+			}
+		],
 		async process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

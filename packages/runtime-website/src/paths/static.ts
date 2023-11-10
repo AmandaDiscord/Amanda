@@ -1,5 +1,5 @@
 import passthrough = require("../passthrough");
-const { server, sync } = passthrough
+const { server, sync, commands } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -23,5 +23,19 @@ server.get("/.well-known/traffic-advice", res => {
 		.writeStatus("200")
 		.writeHeader("Content-Type", "application/trafficadvice+json") // done because of fancy Content-Type
 		.writeHeader("Content-Length", String(Buffer.byteLength(payload)))
+		.end(payload)
+})
+
+server.get("/commands.json", res => {
+	const data = Array.from(commands.commands.values()).map(cmd => ({
+		name: cmd.name,
+		description: cmd.description,
+		options: cmd.options
+	}))
+	const payload = JSON.stringify(data)
+
+	res
+		.writeStatus("200")
+		.writeHeader("Content-Type", "application/json")
 		.end(payload)
 })

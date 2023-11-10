@@ -21,16 +21,20 @@ class ConfigProvider {
 	}
 }
 
+const toConfig = path.join(__dirname, "../../../config.js")
+
 let config: typeof Config
 let realLoaded = false
+
 try {
-	config = sync.require("../../../config")
+	config = sync.require(toConfig)
 	realLoaded = true
 } catch {
 	config = require("../../../config.example")
 }
+
 if (realLoaded) {
-	sync.events.on(path.join(__dirname, "../../../config.js"), () => {
+	sync.events.on(toConfig, () => {
 		for (const cb of ConfigProvider.changeCallbacks) cb()
 	})
 }

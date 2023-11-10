@@ -4,27 +4,9 @@ import { WebSocket } from "ws"
 
 import confprovider = require("@amanda/config")
 
-type BufferLike =
-	| string
-	| Buffer
-	| DataView
-	| number
-	| ArrayBufferView
-	| Uint8Array
-	| ArrayBuffer
-	| SharedArrayBuffer
-	| ReadonlyArray<any>
-	| ReadonlyArray<number>
-	| { valueOf(): ArrayBuffer }
-	| { valueOf(): SharedArrayBuffer }
-	| { valueOf(): Uint8Array }
-	| { valueOf(): ReadonlyArray<number> }
-	| { valueOf(): string }
-	| { [Symbol.toPrimitive](hint: string): string };
-
 class Connector extends EventEmitter {
 	private ws: WebSocket
-	private queue: Array<{ res: (() => void), data: BufferLike }> = []
+	private queue: Array<{ res: (() => void), data: Parameters<WebSocket["send"]>["0"] }> = []
 
 	public constructor(path: "/internal" | "/gateway") {
 		super()
@@ -52,7 +34,7 @@ class Connector extends EventEmitter {
 		this.ws.on("error", e => (e as unknown as { code: string }).code === "ECONNREFUSED" ? void 0 : console.error(e))
 	}
 
-	public send(data: BufferLike): Promise<void> {
+	public send(data: Parameters<WebSocket["send"]>["0"]): Promise<void> {
 		return new Promise(res => {
 			if (this.ws.readyState === WebSocket.OPEN) this.ws.send(data, () => res())
 			else this.queue.push({ res, data })
