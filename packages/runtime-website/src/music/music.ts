@@ -439,7 +439,7 @@ commands.assign([
 
 			if (typeof pitchOption !== "number" && typeof speedOption !== "number") {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${lang.filters.options.pitch.name}: ${Math.ceil(Math.log(2) / Math.log(queue.pitch)) * 12}\n${lang.filters.options.speed.name}: ${queue.speed * 100}%`
+					content: `${lang.filters.options.pitch.name}: ${Math.ceil(Math.log(queue.pitch) * 12 / Math.log(2))}\n${lang.filters.options.speed.name}: ${queue.speed * 100}%`
 				})
 			}
 
