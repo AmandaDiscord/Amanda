@@ -421,10 +421,10 @@ commands.assign([
 			},
 			{
 				name: "speed",
-				type: 4,
+				type: 10,
 				description: "Sets the speed % of the queue",
-				min_value: 1,
-				max_value: 500,
+				min_value: 0.1,
+				max_value: 5.0,
 				required: false
 			}
 		],
@@ -436,7 +436,14 @@ commands.assign([
 
 			const pitchOption = cmd.data.options.get("pitch")?.asNumber()
 			const speedOption = cmd.data.options.get("speed")?.asNumber()
-			const pitch = pitchOption ? 2 ** (pitchOption / 12) : queue.pitch
+
+			if (typeof pitchOption !== "number" && typeof speedOption !== "number") {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: `${lang.filters.options.pitch.name}: ${Math.ceil(Math.log(2) / Math.log(queue.pitch)) * 12}\n${lang.filters.options.speed.name}: ${queue.speed * 100}%`
+				})
+			}
+
+			const pitch = typeof pitchOption === "number" ? 2 ** (pitchOption / 12) : queue.pitch
 			const speed = speedOption ?? queue.speed
 
 			queue.pitch = pitch
