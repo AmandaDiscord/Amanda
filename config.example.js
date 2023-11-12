@@ -42,6 +42,10 @@ const config = {
 	db_enabled: true,
 	add_url_for_web_redirect: "",
 	lavalink_default_search_prefix: "scsearch:",
+	search_extra_source_options: [{
+		name: "Soundcloud",
+		value: "sc"
+	}],
 	website_port: 10400,
 	lavalink_nodes: [{
 		host: "localhost",

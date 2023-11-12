@@ -601,5 +601,116 @@ commands.assign([
 				}
 			}
 		}
+	},
+	{
+		name: "move",
+		description: "Move a track in the queue to a new position",
+		category: "audio",
+		options: [
+			{
+				name: "from",
+				type: 4,
+				description: "1 based index of the track to move",
+				required: true,
+				min_value: 2
+			},
+			{
+				name: "to",
+				type: 4,
+				description: "1 based index to move the track to",
+				required: true,
+				min_value: 2
+			}
+		],
+		async process(cmd, lang) {
+			if (!common.queues.doChecks(cmd, lang)) return
+
+			const queue = common.queues.getQueueWithRequiredPresence(cmd, lang)
+			if (!queue) return
+
+			const fromOption = cmd.data.options.get("from")!.asNumber()!
+			const toOption = cmd.data.options.get("to")!.asNumber()!
+
+			const track = queue.tracks[fromOption - 1]
+
+			if (fromOption > queue.tracks.length || toOption > queue.tracks.length || !track) {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.OUT_OF_BOUNDS
+				})
+			}
+
+			await queue.removeTrack(fromOption - 1)
+			queue.addTrack(track, toOption - 1)
+			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: langReplace(lang.GLOBAL.SONG_MOVED, { "title": track.title })
+			})
+		}
+	},
+	{
+		name: "search",
+		description: "Search for a track from multiple sources",
+		category: "audio",
+		options: [
+			{
+				name: "input",
+				type: 3,
+				description: "What to search for",
+				required: true
+			},
+			{
+				name: "source",
+				type: 3,
+				description: "The website to use to search for the track",
+				required: false,
+				choices: [
+					{
+						name: "Spotify",
+						value: "sp"
+					},
+					{
+						name: "Apple Music",
+						value: "am"
+					},
+					...confprovider.config.search_extra_source_options
+				]
+			}
+		],
+		async process(cmd, lang) {
+			if (!common.queues.doChecks(cmd, lang)) return
+
+			const queue = queues.get(cmd.guild_id!)
+
+			const input = cmd.data.options.get("input")!.asString()!
+			const source = cmd.data.options.get("source")?.asString()
+
+			const prefix = source ? `${source}search:` : confprovider.config.lavalink_default_search_prefix
+
+			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
+			try {
+				tracks = await common.loadtracks(`${prefix}${input}`, lang, queue?.node)
+			} catch (e) {
+				return common.handleTrackLoadError(cmd, e, input)
+			}
+
+			const mapped = common.handleTrackLoadsToArray(tracks)
+
+			if (!mapped) {
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NO_RESULTS,
+					embeds: []
+				})
+			}
+
+			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				embeds: [
+					{
+						color: confprovider.config.standard_embed_color,
+						description: mapped
+							.map(track => `[${track.info.author} - ${track.info.title}](${track.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(track.info.length) / 1000))})`)
+							.join("\n").slice(0, 1998)
+					}
+				]
+			})
+		}
 	}
 ])

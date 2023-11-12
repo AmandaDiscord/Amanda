@@ -178,7 +178,8 @@
 		"GIVEN_TO_OTHER": "You have given %amount to %user",
 		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
 		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
-		"SETTING_UPDATED": "That setting was updated"
+		"SETTING_UPDATED": "That setting was updated",
+		"SONG_MOVED": "%title moved"
 	},
 	"sit": {
 		"name": "siad",
@@ -731,5 +732,33 @@
 	"coupleleaderboard": {
 		"name": "coupleleaderboard",
 		"description": "Shows the leaderboard for top couples of money"
+	},
+	"move": {
+		"name": "move",
+		"description": "Move a track in the queue to a new position",
+		"options": {
+			"from": {
+				"name": "from",
+				"description": "1 based index of the track to move"
+			},
+			"to": {
+				"name": "to",
+				"description": "1 based index to move the track to"
+			}
+		}
+	},
+	"search": {
+		"name": "search",
+		"description": "Search for a track from multiple sources",
+		"options": {
+			"input": {
+				"name": "input",
+				"description": "What to search for"
+			},
+			"source": {
+				"name": "source",
+				"description": "The website to use to search for the track"
+			}
+		}
 	}
 }

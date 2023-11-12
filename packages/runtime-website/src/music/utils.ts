@@ -10,7 +10,7 @@ import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { Track } from "./tracktypes"
 import type { APIEmbed, APIUser } from "discord-api-types/v10"
-import type { TrackLoadingResult, TrackInfo } from "lavalink-types/v4"
+import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
 
 import passthrough = require("../passthrough")
@@ -30,7 +30,7 @@ const replaceExtraneousRegex = / ?\([^)]+\) ?/g
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
 
 const sourceMap = new Map<string, Key>([
-	["itunes", "RequiresSearchTrack"],
+	["applemusic", "RequiresSearchTrack"],
 	["spotify", "RequiresSearchTrack"],
 	["http", "ExternalTrack"]
 ])
@@ -70,18 +70,28 @@ const common = {
 		pickApart(track: import("./tracktypes").Track) {
 			let title = "", artist: string | undefined = undefined
 			let confidence = 0
+			let skip = false
 
-			const authorNameMatch = knownGoodArtistRegex.exec(track.author)
-			const trackNameMatch = trackNameRegex.exec(track.title)
-
-			if (authorNameMatch) {
-				title = track.title?.replace(replaceExtraneousRegex, "")?.trim()
-				artist = authorNameMatch[1]?.trim()
+			if (track.source === "spotify" || track.source === "applemusic") {
 				confidence = 2
-			} else if (trackNameMatch) {
-				title = trackNameMatch[2]?.trim()
-				artist = trackNameMatch[1]?.trim()
-				confidence = 1 // mostly confident. Could just flip around
+				title = track.title
+				artist = track.author
+				skip = true
+			}
+
+			if (!skip) {
+				const authorNameMatch = knownGoodArtistRegex.exec(track.author)
+				const trackNameMatch = trackNameRegex.exec(track.title)
+
+				if (authorNameMatch) {
+					title = track.title?.replace(replaceExtraneousRegex, "")?.trim()
+					artist = authorNameMatch[1]?.trim()
+					confidence = 2
+				} else if (trackNameMatch) {
+					title = trackNameMatch[2]?.trim()
+					artist = trackNameMatch[1]?.trim()
+					confidence = 1 // mostly confident. Could just flip around
+				}
 			}
 
 			if (!title || !artist) {
@@ -93,52 +103,65 @@ const common = {
 		}
 	},
 
+	handleTrackLoadError(cmd: ChatInputCommand, error: LoadTracksError, input: string) {
+		const reportTarget = confprovider.config.error_log_channel_id
+		const undef = "undefined"
+
+		const details = [
+			["Tree", confprovider.config.cluster_id],
+			["Branch", "music"],
+			["Node", error.node],
+			["User", sharedUtils.userString(cmd.author)],
+			["User ID", cmd.author.id],
+			["Guild ID", cmd.guild_id ?? undef],
+			["Text Channel", cmd.channel.id],
+			["Input", input]
+		]
+
+		const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
+		const detailsString = details.map(row =>
+			`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
+		).join("\n")
+
+		const embed: APIEmbed = {
+			title: "LavaLink loadtracks exception",
+			color: 0xdd2d2d,
+			fields: [
+				{ name: "Details", value: detailsString },
+				{ name: "Exception", value: error.message || undef }
+			]
+		}
+
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			content: error.message ?? "A load tracks exception occured, but no error message was provided",
+			embeds: []
+		})
+
+		snow.channel.createMessage(reportTarget, { embeds: [embed] })
+	},
+
+	handleTrackLoadsToArray(tracks: TrackLoadingResult): Array<LLTrack> | null {
+		if (tracks.loadType === "empty" || tracks.loadType === "error") return null
+
+		if (tracks.loadType === "track") return [tracks.data]
+		else if (tracks.loadType === "playlist") return tracks.data.tracks
+		else return tracks.data
+	},
+
 	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
 		try {
 			tracks = await common.loadtracks(resource, lang, node)
-		} catch (er) {
-			const e: LoadTracksError = er
-			const reportTarget = confprovider.config.error_log_channel_id
-			const undef = "undefined"
-
-			const details = [
-				["Tree", confprovider.config.cluster_id],
-				["Branch", "music"],
-				["Node", e.node],
-				["User", sharedUtils.userString(cmd.author)],
-				["User ID", cmd.author.id],
-				["Guild ID", cmd.guild_id ?? undef],
-				["Text Channel", cmd.channel.id],
-				["Input", resource]
-			]
-
-			const maxLength = details.reduce((page, c) => Math.max(page, c[0].length), 0)
-			const detailsString = details.map(row =>
-				`\`${row[0]}${" ​".repeat(maxLength - row[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
-			).join("\n")
-
-			const embed: APIEmbed = {
-				title: "LavaLink loadtracks exception",
-				color: 0xdd2d2d,
-				fields: [
-					{ name: "Details", value: detailsString },
-					{ name: "Exception", value: e.message || undef }
-				]
-			}
-
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: e.message ?? "A load tracks exception occured, but no error message was provided",
-				embeds: []
-			})
-
-			snow.channel.createMessage(reportTarget, { embeds: [embed] })
+		} catch (e) {
+			common.handleTrackLoadError(cmd, e, resource)
 			return null
 		}
 
-		if (tracks.loadType === "empty" || tracks.loadType === "error") {
+		const mapped = common.handleTrackLoadsToArray(tracks)
+
+		if (!mapped) {
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: lang.GLOBAL.NO_RESULTS,
 				embeds: []
@@ -146,18 +169,9 @@ const common = {
 
 			return null
 		}
-		if (tracks.loadType === "track") {
-			return [
-				decodedToTrack(
-					tracks.data.encoded,
-					tracks.data.info,
-					resource,
-					cmd.author,
-					sharedUtils.getLang(cmd.guild_locale!)
-				)
-			]
-		} else if (tracks.loadType === "playlist") {
-			return tracks.data.tracks.map(track => decodedToTrack(
+
+		if (tracks.loadType !== "search") {
+			return mapped.map(track => decodedToTrack(
 				track.encoded,
 				track.info,
 				resource,
@@ -170,7 +184,7 @@ const common = {
 			cmd,
 			lang,
 			tracks.data,
-			i => `${i.info.author} - ${i.info.title} (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
+			i => `[${i.info.author} - ${i.info.title}](${i.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
 		)
 
 		if (!chosen) {
