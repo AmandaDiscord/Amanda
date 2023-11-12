@@ -46,7 +46,8 @@ confprovider.addCallback(() => {
 
 	await sql.connect()
 	void new REPLProvider({ client, webconnector, confprovider, sql, startAnnouncement })
-	client.on("error", console.error)
+	client.on("debug", d => console.log(d))
+	client.on("error", e => console.error(e))
 	client.on("event", async packet => {
 		if (packet.t === "VOICE_STATE_UPDATE") {
 
