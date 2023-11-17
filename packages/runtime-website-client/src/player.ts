@@ -9,8 +9,11 @@ import { ListenManager } from "./wrappers/ListenManager.js"
 import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
 import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
 
+type WebQueueJSON = ReturnType<WebQueue["toJSON"]>
+type WebTrackJSON = ReturnType<WebTrack["toObject"]>
+
 export class Session {
-	public state: ReturnType<WebQueue["toJSON"]> | null = null
+	public state: WebQueueJSON | null = null
 	public player: Player<HTMLElement> = new Player(q("#player-container")!, this)
 	public queue: Queue<HTMLElement> = new Queue(q("#queue-container")!, this)
 	public voiceInfo: VoiceInfo<HTMLElement> = new VoiceInfo(q("#voice-info")!)
@@ -72,7 +75,7 @@ export class Session {
 		this.sideControls.render()
 	}
 
-	public updateState(data: { d: ReturnType<WebQueue["toJSON"]> }): void {
+	public updateState(data: { d: WebQueueJSON }): void {
 		const oldState = this.state
 		this.state = data.d || null
 		if (this.state === null) {
@@ -97,7 +100,7 @@ export class Session {
 		this.listenersUpdate(data)
 	}
 
-	public listenersUpdate(data: { d: ReturnType<WebQueue["toJSON"]> }): void {
+	public listenersUpdate(data: { d: WebQueueJSON }): void {
 		if (data && this.state) {
 			this.state.members = data.d.members
 			this.voiceInfo.setMembers(this.state.members)
@@ -106,7 +109,7 @@ export class Session {
 		}
 	}
 
-	public trackAdd(data: { d: { position: number; track: ReturnType<WebTrack["toObject"]> } }): void {
+	public trackAdd(data: { d: { position: number; track: WebTrackJSON } }): void {
 		if (!this.state) return
 		this.state.tracks.splice(data.d.position, 0, data.d.track)
 		if (this.state.tracks.length == 1) {
@@ -138,7 +141,7 @@ export class Session {
 		this.listenManager.next(this.state.tracks[0])
 	}
 
-	public trackUpdate(data: { d: { index: number; track: ReturnType<WebTrack["toObject"]> } }): void {
+	public trackUpdate(data: { d: { index: number; track: WebTrackJSON } }): void {
 		if (!this.state) return
 		const track = data.d.track
 		const index = data.d.index

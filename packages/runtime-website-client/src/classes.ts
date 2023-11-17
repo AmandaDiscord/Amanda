@@ -10,6 +10,9 @@ import type { UnpackArray } from "../../shared-types/index"
 // From HTML
 const serverTimeDiff = _serverTimeDiff
 
+type WebQueueMembers = ReturnType<WebQueue["toJSON"]>["members"]
+type WebTrackJSON = ReturnType<WebTrack["toObject"]>
+
 export class ElemJS<E extends HTMLElement = HTMLElement> {
 	public parent: ElemJS<HTMLElement>
 	public children: Array<ElemJS<HTMLElement>> = []
@@ -132,7 +135,7 @@ export class Queue<E extends HTMLElement = HTMLElement> extends ElemJS<E> {
 		super(container)
 	}
 
-	public addItem(data: ReturnType<WebTrack["toObject"]>, position?: number): void {
+	public addItem(data: WebTrackJSON, position?: number): void {
 		const shouldAnimate = this.addingCount < this.animateMax
 		const e = new QueueItem(data, this)
 		if (shouldAnimate) {
@@ -180,12 +183,12 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		length: ejs`div.song-length` as ElemJS<HTMLDivElement>,
 		controls: ejs`div.song-management` as ElemJS<HTMLDivElement>
 	}
-	public data: ReturnType<WebTrack["toObject"]> = {} as ReturnType<WebTrack["toObject"]>
+	public data: WebTrackJSON = {} as WebTrackJSON
 	public shifting = false
 
 	declare public parent: Q
 
-	public constructor(data: ReturnType<WebTrack["toObject"]>, public queue: Q) {
+	public constructor(data: WebTrackJSON, public queue: Q) {
 		super("div")
 		this.class("queue-item")
 
@@ -197,7 +200,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		this.updateData(data)
 	}
 
-	public updateData(data: ReturnType<WebTrack["toObject"]>): void {
+	public updateData(data: WebTrackJSON): void {
 		Object.assign(this.data, data)
 		this.render()
 		this.preloadThumbnail()
@@ -362,7 +365,7 @@ class AttributeButton extends ElemJS<HTMLImageElement> {
 }
 
 export class Player<E extends HTMLElement> extends ElemJS<E> {
-	public track: ReturnType<WebTrack["toObject"]> | null = null
+	public track: WebTrackJSON | null = null
 	public thumbnailDisplayHeight = 94
 	public attributes = {
 		loop: false
@@ -388,13 +391,13 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 		this.render()
 	}
 
-	public setTrack(track: ReturnType<WebTrack["toObject"]> | null): void {
+	public setTrack(track: WebTrackJSON | null): void {
 		this.trackSet = true
 		this.track = track
 		this.render()
 	}
 
-	public updateData(data: ReturnType<WebTrack["toObject"]>): void {
+	public updateData(data: WebTrackJSON): void {
 		this.trackSet = true
 		Object.assign(this.track!, data)
 		this.render()
@@ -650,7 +653,7 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 		this.render()
 	}
 
-	public setMembers(members: ReturnType<WebQueue["toJSON"]>["members"]): void {
+	public setMembers(members: WebQueueMembers): void {
 		members.forEach(member => {
 			if (!this.memberStore.has(member.id)) {
 				this.memberStore.set(member.id, new VoiceMember(member))
@@ -712,7 +715,7 @@ export class VoiceMember extends ElemJS<HTMLDivElement> {
 	public isNew = true
 	public leaving = false
 
-	public constructor(public props: UnpackArray<ReturnType<WebQueue["toJSON"]>["members"]>) {
+	public constructor(public props: UnpackArray<WebQueueMembers>) {
 		super("div")
 	}
 

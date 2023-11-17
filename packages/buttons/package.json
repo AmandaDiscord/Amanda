@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p .",
+    "build": "tsup && node ../../scripts/fixup-dts.js",
     "lint": "eslint . --ext .ts"
   },
   "author": "PapiOphidian",
