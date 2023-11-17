@@ -378,9 +378,10 @@ export class Queue {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
 
-		if (!this.playHasBeenCalled) this.play()
-
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackAdd(track, position))
+		if (!this.playHasBeenCalled) {
+			this.play()
+			sessions.filter(s => s.guild === this.guildID).forEach(s => s.sendState())
+		} else sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackAdd(track, position))
 	}
 
 	public async removeTrack(index: number): Promise<0 | 1 | 2> {
