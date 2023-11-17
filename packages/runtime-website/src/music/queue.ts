@@ -245,8 +245,8 @@ export class Queue {
 			for (const row of connections ?? []) {
 				const params = new URLSearchParams({
 					method: "track.scrobble",
-					"artist[0]": pickedApart.confidence === 2 ? pickedApart.artist : track.author,
-					"track[0]": pickedApart.confidence === 2 ? pickedApart.title : track.title,
+					"artist[0]": pickedApart.artist,
+					"track[0]": pickedApart.title,
 					"timestamp[0]": String(Math.floor(Date.now() / 1000)),
 					"duration[0]": String(track.lengthSeconds),
 					"chosenByUser[0]": track.requester.id === row.user_id ? "1" : "0",

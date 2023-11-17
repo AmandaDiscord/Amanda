@@ -232,7 +232,7 @@ export class Track {
 
 		try {
 			lyrics = await common.genius.getLyrics(picked.title, picked.artist)
-			if (!lyrics && picked.confidence === 1) lyrics = await common.genius.getLyrics(picked.artist, picked.title)
+			if (!lyrics && picked.artist && picked.confidence === 1) lyrics = await common.genius.getLyrics(picked.artist, picked.title)
 		} catch {
 			lyrics = null
 		}

@@ -61,7 +61,7 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = void 0): Promise<string | null> {
-			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(`${artist} - ${title}`)}`)
+			return fetch(`https://some-random-api.ml/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`)
 				.then(d => d.json())
 				.then(j => j.lyrics ?? j.error ?? null)
 				.catch(() => null)
