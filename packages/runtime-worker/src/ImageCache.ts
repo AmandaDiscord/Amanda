@@ -20,16 +20,16 @@ const images = {
 	"badge-giver3": "badges/GivingHandTier3_50x50.png",
 	"badge-giver4": "badges/GivingHandTier4_50x50.png",
 
-	"apple": "emojis/apple.png",
-	"cherries": "emojis/cherries.png",
+	"apple": "emojis/apple-warped.png",
+	"cherries": "emojis/cherries-warped.png",
 	"discoin": "emojis/discoin.png",
-	"heart": "emojis/heart.png",
+	"heart": "emojis/heart-warped.png",
 	"heart-broken": "emojis/pixel_heart_broken.png",
 	"heart-full": "emojis/pixel_heart.png",
-	"pear": "emojis/pear.png",
-	"strawberry": "emojis/strawberry.png",
+	"pear": "emojis/pear-warped.png",
+	"strawberry": "emojis/strawberry-warped.png",
 	"triangle": "emojis/triangle.png",
-	"watermelon": "emojis/watermelon.png",
+	"watermelon": "emojis/watermelon-warped.png",
 
 	"add-circle": "icons/add_circle.png",
 	"neko": "icons/NEKO.png",
@@ -42,7 +42,10 @@ const images = {
 	"profile-light": "overlays/profile_light.png",
 	"old-profile-light": "overlays/profile_old_light.png",
 	"old-profile": "overlays/profile_old.png",
-	"profile": "overlays/profile.png"
+	"profile": "overlays/profile.png",
+	"slot-jackpot": "overlays/JACKPOT.png",
+	"slot-win": "overlays/YOUWIN.png",
+	"slot-lost": "overlays/YOULOST.png"
 }
 
 import type { UnpackArray } from "@amanda/shared-types"

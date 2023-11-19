@@ -399,27 +399,14 @@ commands.assign([
 
 			const fruits = ["apple" as const, "cherries" as const, "watermelon" as const, "pear" as const, "strawberry" as const] // plus heart, which is chosen seperately
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
-			let cooldownInfo: { max: number, min: number, step: number, regen: { amount: number, time: number, } }
 			// avg % assumes 5 fruits + heart, heart payouts [0, 1.25, 4, 20], triple fruit payout 5
-			if (isPremium?.state) {
-				cooldownInfo = {
-					max: 190, // avg +6.2% per roll
-					min: 172, // avg -4.8% per roll
-					step: 6, // 4 rolls to hit the bottom
-					regen: {
-						amount: 1,
-						time: 20 * 1000 // 2 minutes to recover by 1 roll
-					}
-				}
-			} else {
-				cooldownInfo = {
-					max: 186, // avg +3.6% per roll
-					min: 164, // avg -9.4% per roll
-					step: 7, // 4.6 rolls to hit the bottom
-					regen: {
-						amount: 1,
-						time: 30 * 1000 // 3.5 minutes to recover by 1 roll
-					}
+			const cooldownInfo = {
+				max: isPremium?.state ? 190 : 186,
+				min: isPremium?.state ? 172 : 164,
+				step: isPremium?.state ? 6 : 7,
+				regen: {
+					amount: 1,
+					time: (isPremium?.state ? 20 : 30) * 1000
 				}
 			}
 
@@ -433,7 +420,10 @@ commands.assign([
 					"heart",
 					"pear",
 					"strawberry",
-					"watermelon"
+					"watermelon",
+					"slot-jackpot",
+					"slot-win",
+					"slot-lost"
 				])
 			])
 
@@ -443,16 +433,24 @@ commands.assign([
 				else slots[i] = sharedUtils.arrayRandom(fruits)
 			}
 
-			const canvas = Canvas.createCanvas(600, 800).getContext("2d")
+			const canvas = Canvas.createCanvas(1200, 1600).getContext("2d")
 			const bg = images.get("slot-background")!
 			canvas.drawImage(bg, 0, 0)
 
 			const pieces: Array<Canvas.Image> = []
 			slots.forEach(i => pieces.push(images.get(i)!/* .resize(85, 85)*/))
 
-			canvas.drawImage(pieces[0], 100, 560, 85, 85)
-			canvas.drawImage(pieces[1], 258, 560, 85, 85)
-			canvas.drawImage(pieces[2], 412, 560, 85, 85)
+			canvas.drawImage(pieces[0], 200, 814, 100, 100)
+			canvas.drawImage(pieces[1], 400, 785, 110, 110)
+			canvas.drawImage(pieces[2], 632, 753, 120, 120)
+
+			const text = slots.every(s => s === "heart")
+				? images.get("slot-jackpot")!
+				: slots.includes("heart") || slots.slice(1).every(s => s === slots[0])
+					? images.get("slot-win")!
+					: images.get("slot-lost")!
+
+			canvas.drawImage(text, 283, 1108)
 
 			const amount = cmd.data.options.get("amount")?.asNumber()
 
@@ -474,16 +472,16 @@ commands.assign([
 
 			let result = ""
 			let winning = BigInt(0)
-			if (slots.every(s => s == "heart")) {
+			if (slots.every(s => s === "heart")) {
 				winning = bet * BigInt(20)
 				result = lang.GLOBAL.THREE_HEARTS
-			} else if (slots.filter(s => s == "heart").length == 2) {
+			} else if (slots.filter(s => s === "heart").length === 2) {
 				winning = bet * BigInt(4)
 				result = lang.GLOBAL.TWO_HEARTS
-			} else if (slots.filter(s => s == "heart").length == 1) {
+			} else if (slots.filter(s => s === "heart").length === 1) {
 				winning = bet + (bet / BigInt(3))
 				result = lang.GLOBAL.ONE_HEART
-			} else if (slots.slice(1).every(s => s == slots[0])) {
+			} else if (slots.slice(1).every(s => s === slots[0])) {
 				winning = bet * BigInt(5)
 				result = lang.GLOBAL.TRIPLE_PIECES
 			} else {

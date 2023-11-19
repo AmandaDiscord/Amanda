@@ -950,12 +950,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^20.9.1":
-  version: 20.9.1
-  resolution: "@types/node@npm:20.9.1"
+"@types/node@npm:^20.9.2":
+  version: 20.9.2
+  resolution: "@types/node@npm:20.9.2"
   dependencies:
     undici-types: ~5.26.4
-  checksum: bb893c6790733dac32818c1ca170fa466622dec39a0ade4639463e1358cb811771e242accbd065e7a1bfe59adc989c0ee59be65e462d3a0ab49043426f0b7637
+  checksum: 5bbb8fb2248fc5c5c4071d9809fb9af85997677c07124d65665202b53283a3b7bdff26fb844e9ee407e3847dfce6399c2b01e3329ea44a4b720647b1b987c678
   languageName: node
   linkType: hard
 
@@ -1244,7 +1244,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "amanda@workspace:."
   dependencies:
-    "@types/node": ^20.9.1
+    "@types/node": ^20.9.2
     "@typescript-eslint/eslint-plugin": ^6.11.0
     "@typescript-eslint/parser": ^6.11.0
     cloudstorm: ^0.9.5
@@ -1252,7 +1252,7 @@ __metadata:
     eslint: ^8.54.0
     heatsync: ^2.4.2
     snowtransfer: ^0.9.0
-    tsup: ^7.3.0
+    tsup: ^8.0.0
     turbo: ^1.10.16
     typescript: ^5.2.2
   languageName: unknown
@@ -5014,9 +5014,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tsup@npm:^7.3.0":
-  version: 7.3.0
-  resolution: "tsup@npm:7.3.0"
+"tsup@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "tsup@npm:8.0.0"
   dependencies:
     bundle-require: ^4.0.0
     cac: ^6.7.12
@@ -5033,10 +5033,13 @@ __metadata:
     sucrase: ^3.20.3
     tree-kill: ^1.2.2
   peerDependencies:
+    "@microsoft/api-extractor": ^7.36.0
     "@swc/core": ^1
     postcss: ^8.4.12
     typescript: ">=4.5.0"
   peerDependenciesMeta:
+    "@microsoft/api-extractor":
+      optional: true
     "@swc/core":
       optional: true
     postcss:
@@ -5046,7 +5049,7 @@ __metadata:
   bin:
     tsup: dist/cli-default.js
     tsup-node: dist/cli-node.js
-  checksum: 9d66196cffc1a54bce6002c2a89caad9337a88d9bf01882f8abf5eb28ccbf845a777da558dc625df1bc4844362db14557e1578a06cf7e5d2fe1ff1b06bd1941a
+  checksum: c39d7f484e1745ab14f38672b925cf1d713bec9f94d50c31aaf8c828a8500efa1f219e6518cdf9e06d74a146872be4591d98ef9aead103909b89d2b07a2f961a
   languageName: node
   linkType: hard
 
