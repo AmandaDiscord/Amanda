@@ -305,7 +305,7 @@ export class ExternalTrack extends Track {
 		const to = new URL(info.uri!)
 		let name = ""
 
-		if (!info.title) {
+		if (!info.title || info.title === "Unknown title") {
 			const match = pathnamereg.exec(to.pathname)
 			if (!match) name = lang.GLOBAL.UNKNOWN_TRACK
 			else name = match[1]
