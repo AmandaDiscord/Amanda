@@ -20,7 +20,7 @@ const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
 const selectTimeout = 1000 * 60
 const waitForClientVCJoinTimeout = 5000
 
-const trackNameRegex = /(?:\w+ ? \| ?)?([^|[\]]+?) ?(?:[-–—|:]|\bby\b) ?([^()[\],|]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
+const trackNameRegex = /(?:\w+ ? \| ?)?([^|[\]]+?) ?([-–—|:]|\bby\b) ?([^()[\],|]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
 const knownGoodArtistRegex = /(.+?)(?:\b - Topic\b|VEVO)/
 const hiddenEmbedRegex = /(^<|>$)/g
 const searchShortRegex = /^\w+?search:/
@@ -88,8 +88,13 @@ const common = {
 					artist = authorNameMatch[1]?.trim()
 					confidence = 2
 				} else if (trackNameMatch) {
-					title = trackNameMatch[2]?.trim()
-					artist = trackNameMatch[1]?.trim()
+					if (trackNameMatch[2] === "by") {
+						title = trackNameMatch[1]?.trim()
+						artist = trackNameMatch[3]?.trim()
+					} else {
+						title = trackNameMatch[3]?.trim()
+						artist = trackNameMatch[1]?.trim()
+					}
 					confidence = 1 // mostly confident. Could just flip around
 				}
 			}
