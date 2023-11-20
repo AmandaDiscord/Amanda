@@ -124,7 +124,7 @@ commands.assign([
 						fields: [
 							{
 								name: lang.GLOBAL.HEADER_CREATORS,
-								value: "PapiOphidian#0110 <:bravery:479939311593324557> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl3:582555022508687370>"
+								value: "papiophidian <:bravery:479939311593324557> <:ActiveDeveloper:1047367962153197609> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl9:678713116598468669>"
 							},
 							{
 								name: lang.GLOBAL.HEADER_CODE,
