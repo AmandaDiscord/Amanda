@@ -444,7 +444,7 @@ commands.assign([
 			}
 
 			const pitch = typeof pitchOption === "number" ? 2 ** (pitchOption / 12) : queue.pitch
-			const speed = speedOption ?? queue.speed
+			const speed = speedOption ? speedOption / 100 : queue.speed
 
 			queue.pitch = pitch
 			queue.speed = speed
