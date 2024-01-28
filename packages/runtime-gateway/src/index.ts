@@ -49,8 +49,10 @@ confprovider.addCallback(() => {
 	client.on("debug", d => console.log(d))
 	client.on("error", e => console.error(e))
 	client.on("event", async packet => {
-		if (packet.t === "VOICE_STATE_UPDATE") {
 
+		switch (packet.t) {
+
+		case "VOICE_STATE_UPDATE":
 			if (packet.d.guild_id) {
 				if (packet.d.channel_id === null) {
 					await sql.orm.delete("voice_states", {
@@ -65,8 +67,9 @@ confprovider.addCallback(() => {
 					}, { useBuffer: false })
 				}
 			}
+			break
 
-		} else if (packet.t === "GUILD_CREATE") {
+		case "GUILD_CREATE":
 			for (const state of packet.d.voice_states ?? []) {
 				sql.orm.upsert("voice_states", {
 					guild_id: packet.d.id,
@@ -75,10 +78,15 @@ confprovider.addCallback(() => {
 				}, { useBuffer: true })
 			}
 			sql.orm.triggerBufferWrite("voice_states")
-		} else if (packet.t === "GUILD_DELETE") {
+			break
+
+		case "GUILD_DELETE":
 			if (packet.d.unavailable) return
 			sql.orm.delete("voice_states", { guild_id: packet.d.id })
-		} else if (packet.t === "READY" || packet.t === "RESUMED") {
+			break
+
+		case "READY":
+		case "RESUMED":
 			if (!alreadyStartedUpdates) {
 				alreadyStartedUpdates = true
 				await refresh()

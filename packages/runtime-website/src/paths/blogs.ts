@@ -80,7 +80,9 @@ server.get("/blog/:blogID", async (res, req) => {
 
 	if (!res.continue) return
 
-	const rendered = marked.marked(data)
+	const rendered = await marked.marked(data)
+
+	if (!res.continue) return
 
 	const sliced = data.slice(0, 60)
 	const short = data.length > 60 ? `${sliced}...` : sliced

@@ -592,3 +592,8 @@ export function userString(user: APIUser) {
 		? user.username
 		: `${user.username}#${user.discriminator}`
 }
+
+export function getMSUntilStepped(timeAsMS: number, offset?: number) {
+	const remaining = timeAsMS - (Date.now() % timeAsMS)
+	return (timeAsMS * (offset ?? 0)) + remaining
+}

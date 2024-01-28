@@ -1,7 +1,6 @@
 import util = require("util")
 
-import { Pool } from "pg"
-import type { PoolClient, QueryResult, QueryResultRow } from "pg"
+import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg"
 
 import confprovider = require("@amanda/config")
 

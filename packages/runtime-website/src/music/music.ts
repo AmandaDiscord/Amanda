@@ -380,26 +380,31 @@ commands.assign([
 
 			const result = await queue.seek(timeOpt * 1000)
 
-			if (result === 1) {
+			switch (result) {
+			case 1:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username })
 				})
-			} else if (result === 2) {
+
+			case 2:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.CANNOT_SEEK_LIVE
 				})
-			} else if (result === 3) {
+
+			case 3:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.SEEK_GREATER_THAN_SONG_LENGTH
 				})
-			} else if (result === 4) {
+
+			case 4:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.SEEK_ERROR, {
 						"parsed": sharedUtils.numberComma(timeOpt * 1000),
 						"server": `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/to/server`
 					})
 				})
-			} else {
+
+			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(timeOpt, "sec") })
 				})
@@ -511,20 +516,21 @@ commands.assign([
 			const track = queue.tracks[indexOption - 1]
 			const result = await queue.removeTrack(indexOption - 1)
 
-			if (result === 1) {
+			switch (result) {
+			case 1:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.OUT_OF_BOUNDS
 				})
-			} else if (result === 2) {
+			case 2:
 				console.error("Was in Array but isn't anymore in the same tick. Did the queue tracks array somehow turn into a proxy?")
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.ERROR_OCCURRED
 				})
-			} else if (result === 0) {
+			case 0:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": track.title })
 				})
-			} else {
+			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.ERROR_OCCURRED
 				})
@@ -568,13 +574,15 @@ commands.assign([
 
 			const action = cmd.data.options.get("action")?.asString() ?? null
 
-			if (action === "d") {
+			switch (action) {
+			case "d":
 				await sql.orm.delete("web_tokens", { user_id: cmd.author.id })
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" })
 				})
-			} else if (action === "n") {
+
+			case "n": {
 				await sql.orm.delete("web_tokens", { user_id: cmd.author.id })
 
 				const hash = crypto.randomBytes(24).toString("base64").replace(notWordRegex, "_")
@@ -587,7 +595,9 @@ commands.assign([
 					})
 					+ `\n${hash}`
 				})
-			} else {
+			}
+
+			default: {
 				const existing = await sql.orm.get("web_tokens", { user_id: cmd.author.id })
 
 				if (existing) {
@@ -599,6 +609,7 @@ commands.assign([
 						content: langReplace(lang.GLOBAL.TOKENS_NONE, { "prefix": "/" })
 					})
 				}
+			}
 			}
 		}
 	},

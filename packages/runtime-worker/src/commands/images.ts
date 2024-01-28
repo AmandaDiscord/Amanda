@@ -63,11 +63,17 @@ commands.assign([
 		process(cmd, lang) {
 			const type = cmd.data.options.get("type")!.asString()
 			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.IMAGE_FETCH_FAILED })
-			if (type === "cat") return sendImage("chewey", "cat", cmd, poweredbychewey).catch(onFail)
-			else if (type === "dog") return sendImage("chewey", "dog", cmd, poweredbychewey).catch(onFail)
-			else if (type === "space") return sendImage("chewey", "space", cmd, poweredbychewey).catch(onFail)
-			else if (type === "snake") return sendImage("chewey", "snake", cmd, poweredbychewey).catch(onFail)
-			else if (type === "bird") return sendImage("chewey", "birb", cmd, poweredbychewey).catch(onFail)
+
+			switch (type) {
+			case "cat":
+			case "dog":
+			case "space":
+			case "snake":
+				return sendImage("chewey", type, cmd, poweredbychewey).catch(onFail)
+			case "bird":
+				return sendImage("chewey", "birb", cmd, poweredbychewey).catch(onFail)
+			default: break
+			}
 		}
 	}
 ])

@@ -62,7 +62,23 @@ export class Session {
 	public send(data: Packet<unknown>): void {
 		if (this.closed) return
 		const d = JSON.stringify(data)
-		this.ws.send(d)
+		const result = this.ws.send(d)
+
+		switch (result) {
+		case 0:
+			console.warn("message was added to a queue that will drain over time due to backpressure")
+			break
+
+		case 1:
+			console.warn("NOTHING HAPPENED???")
+			break
+
+		case 2:
+			console.error("message dropped due to backpressure limit")
+			break
+
+		default: break
+		}
 	}
 
 	public onClose(): void {

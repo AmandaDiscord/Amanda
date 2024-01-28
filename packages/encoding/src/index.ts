@@ -17,12 +17,20 @@ function isObject<T>(item: T): T extends Record<any, any> ? true : false {
 /** Transforms supported non Record and Array data types to a string to be appended to the encoding result */
 function encodePrimitive(item: any): string {
 	if (item === null) return "n" // nil
-	else if (typeof item === "bigint") return `b${item}` // bigint
-	else if (typeof item === "undefined") return "v" // void
-	else if (typeof item === "string") return `"${item.replace(unescapedDelimiterRegex, `\\${delimiter}`).replace(escapedForwardSlashAtEndRegex, "")}` // strings
-	else if (typeof item === "boolean") return item ? "t" : "f" // booleans
-	else if (typeof item === "number") return String(item)
-	else throw new Error(`Don't know how to encode ${typeof item}: ${require("util").inspect(item)}`)
+	switch (typeof "item") {
+	case "bigint":
+		return `b${item}` // bigint
+	case "undefined":
+		return "v" // void
+	case "string":
+		return `"${item.replace(unescapedDelimiterRegex, `\\${delimiter}`).replace(escapedForwardSlashAtEndRegex, "")}` // strings
+	case "boolean":
+		return item ? "t" : "f" // booleans
+	case "number":
+		return String(item)
+	default:
+		throw new Error(`Don't know how to encode ${typeof item}: ${require("util").inspect(item)}`)
+	}
 }
 
 /** Actually encodes items to their string formats */
@@ -103,13 +111,30 @@ function indexOfNextUnescapedItem(str: string, item: string): number {
 function decodePrimitive(val: string): any {
 	let actualValue: unknown = void 0
 
-	if (val[0] === "t") actualValue = true
-	else if (val[0] === "f") actualValue = false
-	else if (val[0] === "v") actualValue = void 0
-	else if (val[0] === "n") actualValue = null
-	else if (val[0] === "b") actualValue = BigInt(val.slice(1))
-	else if (val[0] === "\"") actualValue = val.slice(1).replace(escapedDelimiterRegex, delimiter)
-	else actualValue = Number(val)
+	switch (val[0]) {
+	case "t":
+		actualValue = true
+		break
+	case "f":
+		actualValue = false
+		break
+	case "v":
+		actualValue = void 0
+		break
+	case "n":
+		actualValue = null
+		break
+	case "b":
+		actualValue = BigInt(val.slice(1))
+		break
+	case "\"":
+		actualValue = val.slice(1).replace(escapedDelimiterRegex, delimiter)
+		break
+	default:
+		actualValue = Number(val)
+		break
+	}
+
 	return actualValue
 }
 
@@ -132,33 +157,44 @@ function decodeStep(str: string): any {
 		const endToUse = nextDelimiter === -1 ? text.length : nextDelimiter
 
 		let actualValue: unknown = void 0
-		if (text[0] === "{") {
+		switch (text[0]) {
+		case "{": {
 			const closingIndex = findClosing(text, 0, "}")
 			actualValue = decodeStep(text.slice(1, closingIndex))
 			text = text.slice(closingIndex + 1)
-		} else if (text[0] === "[") {
+
+			break
+		}
+		case "[": {
 			const closingIndex = findClosing(text, 0, "]")
 			let text2 = text.slice(1, closingIndex)
 			const holder: Array<any> = []
 
 			while (text2.length) {
-				if (text2[0] === "{") {
+				switch (text2[0]) {
+				case "{": {
 					const closingIndex2 = findClosing(text2, 0, "}")
 					const toPush = decodeStep(text2.slice(1, closingIndex2))
 					holder.push(toPush)
 					text2 = text2.slice(closingIndex2 + 1)
-				} else if (text2[0] === "[") {
+					break
+				}
+				case "[": {
 					const closingIndex2 = findClosing(text2, 0, "]")
 					const toPush = decodeStep(text2.slice(0, closingIndex2 + 1))
 					holder.push(toPush)
 					text2 = text2.slice(closingIndex2 + 2) // will always be a delimiter after otherwise if end of string, will clamp to end
-				} else {
+					break
+				}
+				default: {
 					const nextDelimiter2 = indexOfNextUnescapedItem(text2, delimiter)
 					const endToUse2 = nextDelimiter2 === -1 ? text2.length : nextDelimiter2
 					const sliced = text2.slice(0, endToUse2)
 					const toPush = decodePrimitive(sliced)
 					holder.push(toPush)
 					text2 = text2.slice(endToUse2 + 1)
+					break
+				}
 				}
 			}
 
@@ -167,9 +203,13 @@ function decodeStep(str: string): any {
 				rt = holder
 				ignore = true
 			} else actualValue = holder
-		} else {
+
+			break
+		}
+		default:
 			actualValue = decodePrimitive(text.slice(0, endToUse))
 			text = text.slice(endToUse + 1)
+			break
 		}
 
 		if (ignore) continue

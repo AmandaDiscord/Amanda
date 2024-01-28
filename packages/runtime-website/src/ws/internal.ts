@@ -19,7 +19,23 @@ export class CommandWorker {
 	}
 
 	public send(data: object): void {
-		this.ws.send(JSON.stringify(data))
+		const result = this.ws.send(JSON.stringify(data))
+
+		switch (result) {
+		case 0:
+			console.warn("message was added to a queue that will drain over time due to backpressure")
+			break
+
+		case 1:
+			console.warn("NOTHING HAPPENED???")
+			break
+
+		case 2:
+			console.error("message dropped due to backpressure limit")
+			break
+
+		default: break
+		}
 	}
 
 	public onClose(): void {

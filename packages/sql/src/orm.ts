@@ -178,7 +178,8 @@ export class Database<M extends Record<string, Model<any>>> {
 			return `${key} = $${index}`
 		}) : []
 
-		if (method === "select") {
+		switch (method) {
+		case "select":
 			statement += `SELECT ${options.select?.join(", ") ?? "*"} FROM ${String(table)}`
 			if (properties) {
 				statement += " WHERE "
@@ -188,8 +189,9 @@ export class Database<M extends Record<string, Model<any>>> {
 			if (options.order !== void 0) statement += ` ORDER BY ${String(options.order)}`
 			if (options.orderDescending) statement += " DESC"
 			if (options.limit !== void 0 && options.limit !== 0) statement += ` LIMIT ${options.limit}`
+			break
 
-		} else if (method === "update") {
+		case "update":
 			statement += `UPDATE ${String(table)} SET `
 			statement += mapped.join(", ")
 			if (options.where) {
@@ -204,8 +206,10 @@ export class Database<M extends Record<string, Model<any>>> {
 				if (where.length) statement += ` WHERE ${where.join(" AND ")}`
 				else throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
 			} else throw new Error("Potentially destructive UPDATE statement. Use raw sql instead")
+			break
 
-		} else if (method === "insert" || method === "upsert") {
+		case "insert":
+		case "upsert":
 			statement += `INSERT INTO ${String(table)}`
 			if (options.useBuffer) {
 				const name = table as string
@@ -255,10 +259,14 @@ export class Database<M extends Record<string, Model<any>>> {
 				const nonPrimaryColumns = props2.filter(column => !model.primaryKey.includes(column))
 				statement += ` ON CONFLICT (${model.primaryKey.join(", ")}) DO ${nonPrimaryColumns.length ? `UPDATE SET ${nonPrimaryColumns.map(column => `${column} = excluded.${column}`).join(", ")}` : "NOTHING"}`
 			}
+			break
 
-		} else if (method === "delete") {
+		case "delete":
 			statement += `DELETE FROM ${String(table)}`
 			if (properties) statement += ` WHERE ${mapped.join(" AND ")}`
+			break
+
+		default: break
 		}
 
 		return { statement: statement, prepared: prepared as Array<AcceptablePrepared> }

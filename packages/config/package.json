@@ -8,6 +8,9 @@
     "build": "node ./generate.js && tsc -p .",
     "lint": "eslint ."
   },
+  "dependencies": {
+    "@amanda/sync": "1.0.0"
+  },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE"
 }

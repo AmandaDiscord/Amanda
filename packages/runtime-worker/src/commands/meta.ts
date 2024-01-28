@@ -407,9 +407,12 @@ commands.assign([
 			if (modify) {
 				if (!info.nullable && modify === "null") invalid = true
 
-				if (info.type === "boolean") {
+				switch (info.type) {
+				case "boolean":
 					if (modify !== "true" && modify !== "false" && modify !== "null") invalid = true
-				} else if (info.type === "number") {
+					break
+
+				case "number": {
 					if (modify !== "null" && !numberVerifyRegex.test(modify)) invalid = true
 
 					const bi = sharedUtils.parseBigInt(modify)
@@ -417,10 +420,15 @@ commands.assign([
 						const num = Number(bi)
 						if (info.allowedValues && !info.allowedValues.includes(num)) invalid = true
 					}
+					break
+				}
 
-				} else if (info.type === "string") {
+				case "string":
 					if (!modify.length) invalid = true
 					if (modify !== "null" && info.allowedValues && !info.allowedValues.includes(modify) && !isPremium?.state) invalid = true
+					break
+
+				default: break
 				}
 
 				if (invalid) {

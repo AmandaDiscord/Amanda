@@ -16,9 +16,22 @@ export class GatewayWorker {
 	public send(data: object): void {
 		const str = JSON.stringify(data)
 		const result = this.ws.send(str)
-		if (result === 2) console.error("message dropped due to backpressure limit")
-		else if (result === 0) console.warn("message was added to a queue that will drain over time due to backpressure")
-		else if (result !== 1) console.warn("NOTHING HAPPENED???")
+
+		switch (result) {
+		case 0:
+			console.warn("message was added to a queue that will drain over time due to backpressure")
+			break
+
+		case 1:
+			console.warn("NOTHING HAPPENED???")
+			break
+
+		case 2:
+			console.error("message dropped due to backpressure limit")
+			break
+
+		default: break
+		}
 	}
 
 	public onClose(): void {

@@ -43,15 +43,25 @@ server.post("/interaction", async (res, req) => {
 	const user = payload.member?.user ?? payload.user
 	sharedUtils.updateUser(user)
 
-	// Pings to verify
-	if (payload.type === 1) rt = "{\"type\":1}"
-	else if (payload.type === 2) { // Commands
+	switch (payload.type) {
+	case 1: // Pings to verify
+		rt = "{\"type\":1}"
+		break
+
+	case 2: // Commands
 		rt = "{\"type\":5}"
 		if (commands.handle(payload as APIChatInputApplicationCommandInteraction)) commandHandled = true
-	} else if (payload.type === 3) { // Buttons
+		break
+
+	case 3: // Buttons
 		rt = "{\"type\":6}"
 		buttons.handle(payload)
-	} else console.error(`Unknown payload type ${payload.type}\n`, payload)
+		break
+
+	default:
+		console.error(`Unknown payload type ${payload.type}\n`, payload)
+		break
+	}
 
 	if (!commandHandled) {
 		if (!commandWorkers.length) {

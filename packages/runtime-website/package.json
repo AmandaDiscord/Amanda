@@ -20,10 +20,10 @@
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
-    "lavacord": "^2.1.1-v4",
-    "marked": "10.0.0",
+    "lavacord": "^2.1.2-v4",
+    "marked": "11.2.0",
     "mime-types": "2.1.35",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.34.0"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.41.0"
   },
   "devDependencies": {
     "@types/marked": "6.0.0",

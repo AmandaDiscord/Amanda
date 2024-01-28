@@ -27,11 +27,9 @@ const searchShortRegex = /^\w+?search:/
 const startsWithHTTP = /^https?:\/\//
 const replaceExtraneousRegex = / ?\([^)]+\) ?/g
 
-type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "default">
+type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "RadioTrack" | "default">
 
 const sourceMap = new Map<string, Key>([
-	["applemusic", "RequiresSearchTrack"],
-	["spotify", "RequiresSearchTrack"],
 	["http", "ExternalTrack"]
 ])
 
@@ -146,11 +144,20 @@ const common = {
 	},
 
 	handleTrackLoadsToArray(tracks: TrackLoadingResult): Array<LLTrack> | null {
-		if (tracks.loadType === "empty" || tracks.loadType === "error") return null
+		switch (tracks.loadType) {
+		case "empty":
+		case "error":
+			return null
 
-		if (tracks.loadType === "track") return [tracks.data]
-		else if (tracks.loadType === "playlist") return tracks.data.tracks
-		else return tracks.data
+		case "track":
+			return [tracks.data]
+
+		case "playlist":
+			return tracks.data.tracks
+
+		default:
+			return tracks.data
+		}
 	},
 
 	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {

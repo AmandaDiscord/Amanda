@@ -321,14 +321,24 @@ export async function onGatewayMessage(
 	const wsData = ws.getUserData()
 	parsed.cluster_id = wsData.clusterID
 
+	switch (parsed.t) {
 	// @ts-expect-error Custom Event
-	if (parsed.t === "SHARD_LIST") wsData.worker.shards = parsed.d
-	else if (parsed.t === "VOICE_STATE_UPDATE") {
+	case "SHARD_LIST":
+		// @ts-expect-error Custom Event
+		wsData.worker.shards = parsed.d
+		break
+
+	case "VOICE_STATE_UPDATE":
 		if (!parsed.d.guild_id) return
 		lavalink.voiceStateUpdate(parsed.d as VoiceStateUpdate)
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
-	} else if (parsed.t === "VOICE_SERVER_UPDATE") lavalink.voiceServerUpdate(parsed.d as VoiceServerUpdate)
-	else if (parsed.t === "INTERACTION_CREATE") {
+		break
+
+	case "VOICE_SERVER_UPDATE":
+		lavalink.voiceServerUpdate(parsed.d as VoiceServerUpdate)
+		break
+
+	case "INTERACTION_CREATE": {
 		const user = parsed.d.member?.user ?? parsed.d.user
 		sharedUtils.updateUser(user)
 		if (parsed.d.type === 2) {
@@ -343,12 +353,16 @@ export async function onGatewayMessage(
 			await snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: 6 })
 			buttons.handle(parsed.d)
 		}
-	} else if (parsed.t === "USER_UPDATE") {
+		break
+	}
+
+	case "USER_UPDATE":
 		sharedUtils.updateUser(parsed.d)
 		for (const q of queues.values()) {
 			q.listeners.set(parsed.d.id, parsed.d)
 			sessions.filter(s => s.guild === q.guildID).forEach(s => s.onListenersUpdate(q.toJSON().members))
 		}
+		break
 	}
 }
 

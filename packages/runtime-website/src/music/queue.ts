@@ -8,7 +8,7 @@ import langReplace = require("@amanda/lang/replace")
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
-import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, UpdatePlayerData } from "lavalink-types/v4"
+import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
@@ -181,7 +181,7 @@ export class Queue {
 		return this.tracks.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)
 	}
 
-	public applyFilters(): Promise<UpdatePlayerData> | undefined {
+	public applyFilters(): Promise<LLPlayer> | undefined {
 		return this.player?.filters(this.player!.state.filters)
 	}
 
