@@ -69,15 +69,15 @@ export class Session {
 			console.warn("message was added to a queue that will drain over time due to backpressure")
 			break
 
-		case 1:
-			console.warn("NOTHING HAPPENED???")
-			break
+		case 1: break
 
 		case 2:
 			console.error("message dropped due to backpressure limit")
 			break
 
-		default: break
+		default:
+			console.warn("NOTHING HAPPENED???")
+			break
 		}
 	}
 
