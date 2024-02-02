@@ -10,10 +10,6 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@amanda/config": "1.0.0",
-    "ws": "^8.16.0"
-  },
-  "devDependencies": {
-    "@types/ws": "8.5.10"
+    "@amanda/config": "1.0.0"
   }
 }

@@ -41,7 +41,7 @@ confprovider.addCallback(() => {
 
 ;(async () => {
 	webconnector.on("open", () => {
-		webconnector.send(JSON.stringify({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards })).catch(console.error)
+		webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
 	})
 
 	await sql.connect()
@@ -97,7 +97,7 @@ confprovider.addCallback(() => {
 			}
 		}
 
-		webconnector.send(JSON.stringify(packet))
+		webconnector.send(packet)
 	})
 
 	let stats: fs.Stats | undefined = void 0
@@ -135,13 +135,7 @@ confprovider.addCallback(() => {
 	} else await client.connect()
 
 	webconnector.on("message", data => {
-		const single = Array.isArray(data)
-			? Buffer.concat(data)
-			: Buffer.from(data)
-
-		const str = single.toString()
-
-		const parsed = JSON.parse(str)
+		const parsed = data
 
 		if (parsed.t === "SEND_MESSAGE" && parsed.d && typeof parsed.d.shard_id === "number") {
 			const shard = Object.entries(client.shardManager.shards).find(e => e[0] == parsed.d.shard_id)?.[1]
@@ -297,9 +291,7 @@ function update() {
 	const choice = sharedUtils.arrayRandom(choices)
 
 	if (choice) {
-		let type: typeof activities[keyof typeof activities] = 0
-		if (typeof choice.type === "string") type = activities[choice.type]
-		else type = choice.type
+		const type: number = activities[choice.type] ?? choice.type ?? 0
 
 		const message = `${choice.message} | /help | ${confprovider.config.cluster_id}`
 

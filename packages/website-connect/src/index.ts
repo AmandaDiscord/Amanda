@@ -1,52 +1,55 @@
 import { EventEmitter } from "events"
 
-import { WebSocket } from "ws"
+import { BetterWs } from "cloudstorm"
 
 import confprovider = require("@amanda/config")
 
 class Connector extends EventEmitter {
-	private ws: WebSocket
-	private queue: Array<{ res: (() => void), data: Parameters<WebSocket["send"]>["0"] }> = []
+	private ws: BetterWs
+	private queue: Array<{ res: (() => void), data: any }> = []
 
 	public constructor(path: "/internal" | "/gateway") {
 		super()
 
-		this._createWS(path)
-		this.on("close", () => {
-			this.ws.removeAllListeners()
-			setTimeout(() => {
-				this._createWS(path)
-			}, 5000)
-		})
-	}
-
-	private _createWS(path: "/internal" | "/gateway"): void {
-		this.ws = new WebSocket(`${confprovider.config.ipc_protocol}://${confprovider.config.ipc_bind}${path}`, {
+		this.ws = new BetterWs(`${confprovider.config.ipc_protocol}://${confprovider.config.ipc_bind}${path}`, {
 			headers: {
 				Authorization: confprovider.config.current_token,
 				"X-Cluster-Id": confprovider.config.cluster_id
-			}
+			},
+			bypassBuckets: true
 		})
 
-		this.ws.on("message", (data, isBinary) => this.emit("message", data, isBinary))
-		this.ws.once("open", () => void this.onOpen())
-		this.ws.once("close", (code, reason) => this.emit("close", code, reason))
-		this.ws.on("error", e => (e as unknown as { code: string }).code === "ECONNREFUSED" ? void 0 : console.error(e))
+		this.ws.on("ws_receive", data => this.emit("message", data))
+		this.ws.once("ws_open", () => void this.onOpen())
+		this.ws.once("ws_close", (code, reason) => this.emit("close", code, reason))
+		this.ws.on("debug", console.error)
+		this.on("close", () => {
+			setTimeout(() => this._connect(), 5000)
+		})
+		this._connect()
 	}
 
-	public send(data: Parameters<WebSocket["send"]>["0"]): Promise<void> {
+	private _connect() {
+		this.ws.connect().catch(() => {
+			setTimeout(() => this._connect(), 5000)
+		})
+	}
+
+	public send(data: any): Promise<void> {
 		return new Promise(res => {
-			if (this.ws.readyState === WebSocket.OPEN) this.ws.send(data, () => res())
+			if (this.ws.status === 1) this.ws.sendMessage(data).then(res)
 			else this.queue.push({ res, data })
 		})
 	}
 
 	private async onOpen(): Promise<void> {
 		this.emit("open")
-		for (const item of this.queue) {
-			if (this.ws.readyState !== WebSocket.OPEN) return
+		let item = this.queue.shift()
+		while (item) {
+			if (this.ws.status !== WebSocket.OPEN) return
 			await this.send(item.data)
 			item.res()
+			item = this.queue.shift()
 		}
 	}
 }

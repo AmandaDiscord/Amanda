@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p .",
     "lint": "eslint . --ext .ts",
-    "start": "node --optimize-for-size --enable-source-maps ."
+    "start": "node --optimize-for-size ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
@@ -26,7 +26,6 @@
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.41.0"
   },
   "devDependencies": {
-    "@types/marked": "6.0.0",
     "@types/mime-types": "2.1.4"
   }
 }

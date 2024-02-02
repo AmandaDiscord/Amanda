@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsup",
     "lint": "eslint . --ext .ts",
-    "start": "node --optimize-for-size --enable-source-maps ."
+    "start": "node --optimize-for-size ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
