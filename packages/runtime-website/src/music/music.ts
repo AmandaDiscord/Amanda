@@ -28,7 +28,7 @@ commands.assign([
 				type: 4,
 				description: "1 based index to start adding tracks from",
 				required: false,
-				min_value: 2
+				min_value: 1
 			}
 		],
 		async process(cmd, lang) {
@@ -89,7 +89,7 @@ commands.assign([
 				type: 4,
 				description: "1 based index to start adding tracks from",
 				required: false,
-				min_value: 2
+				min_value: 1
 			}
 		],
 		async process(cmd, lang) {
