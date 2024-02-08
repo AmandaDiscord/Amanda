@@ -46,7 +46,7 @@ class Connector extends EventEmitter {
 		this.emit("open")
 		let item = this.queue.shift()
 		while (item) {
-			if (this.ws.status !== WebSocket.OPEN) return
+			if (this.ws.status !== 1) return
 			await this.send(item.data)
 			item.res()
 			item = this.queue.shift()
