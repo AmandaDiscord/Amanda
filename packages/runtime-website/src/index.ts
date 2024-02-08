@@ -52,7 +52,7 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 		user: passthrough.confprovider.config.client_id,
 		send: packet => {
 			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
-			const worker = Object.values(passthrough.gatewayWorkers).find(w => w.shards.includes(shardID))
+			const worker = passthrough.gatewayWorkers.get(passthrough.gatewayShardIndex.get(shardID)!)
 
 			if (!worker) {
 				console.error(`No gateway worker available to send a message for shard ${shardID}`)

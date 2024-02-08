@@ -359,17 +359,16 @@ commands.assign([
 						})
 					}
 
-					const authorDetails: Array<string> = []
-
 					const user = await sharedUtils.getUser(playlistRow.author, snow)
+					const authorText = user
+						? `${sharedUtils.userString(user)} — ${optionInfo}`
+						: optionInfo
+					const authorIcon = user
+						? sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : undefined, user.id === cmd.author.id ? cmd.guild_id : undefined, true) + "?size=32"
+						: void 0
 
-					if (user) {
-
-						authorDetails.push(`${sharedUtils.userString(user)} — ${optionInfo}`, sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : undefined, user.id === cmd.author.id ? cmd.guild_id : undefined, true) + "?size=32")
-					} else authorDetails.push(optionInfo)
-
-					const a: APIEmbedAuthor = { name: authorDetails[0] }
-					if (authorDetails[1]) a.url = authorDetails[1]
+					const a: APIEmbedAuthor = { name: authorText }
+					if (authorIcon) a.url = authorIcon
 
 					const orderedTracks = await getTracks(playlistRow, cmd, lang)
 

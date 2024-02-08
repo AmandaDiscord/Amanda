@@ -6,11 +6,11 @@ import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 const utils: typeof import("../utils") = sync.require("../utils")
 
 export class GatewayWorker {
-	public shards: Array<number> = []
+	public shards = new Set<number>()
 
 	public constructor(public ws: WebSocket<unknown>, public clusterID: string) {
-		gatewayWorkers[clusterID] = this
-		console.log(`${clusterID} gateway cluster identified. ${Object.keys(gatewayWorkers).length} total clusters`)
+		gatewayWorkers.set(clusterID, this)
+		console.log(`${clusterID} gateway cluster identified. ${gatewayWorkers.size} total clusters`)
 	}
 
 	public send(data: object): void {
@@ -35,8 +35,8 @@ export class GatewayWorker {
 	}
 
 	public onClose(): void {
-		delete gatewayWorkers[this.clusterID]
-		console.log(`${this.clusterID} gateway cluster disconnected. ${Object.keys(gatewayWorkers).length} total clusters`)
+		gatewayWorkers.delete(this.clusterID)
+		console.log(`${this.clusterID} gateway cluster disconnected. ${gatewayWorkers.size} total clusters`)
 	}
 }
 

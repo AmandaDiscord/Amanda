@@ -8,7 +8,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
 import passthrough = require("./passthrough")
-const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions } = passthrough
+const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions, sessionGuildIndex, gatewayShardIndex } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
@@ -324,8 +324,15 @@ export async function onGatewayMessage(
 	switch (parsed.t) {
 	// @ts-expect-error Custom Event
 	case "SHARD_LIST":
+		wsData.worker.shards.forEach(s => {
+			gatewayShardIndex.delete(s)
+			wsData.worker.shards.delete(s)
+		})
 		// @ts-expect-error Custom Event
-		wsData.worker.shards = parsed.d
+		parsed.d.forEach((sid: number) => {
+			gatewayShardIndex.set(sid, wsData.worker.clusterID)
+			wsData.worker.shards.add(sid)
+		})
 		break
 
 	case "VOICE_STATE_UPDATE":
@@ -360,7 +367,8 @@ export async function onGatewayMessage(
 		sharedUtils.updateUser(parsed.d)
 		for (const q of queues.values()) {
 			q.listeners.set(parsed.d.id, parsed.d)
-			sessions.filter(s => s.guild === q.guildID).forEach(s => s.onListenersUpdate(q.toJSON().members))
+			const inGuild = sessionGuildIndex.get(q.guildID)
+			inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(q.toJSON().members))
 		}
 		break
 	}

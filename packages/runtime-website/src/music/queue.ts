@@ -13,7 +13,7 @@ import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
 import passthrough = require("../passthrough")
-const { sync, queues, confprovider, snow, lavalink, sql, sessions } = passthrough
+const { sync, queues, confprovider, snow, lavalink, sql, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -292,7 +292,8 @@ export class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onStop())
+		const inGuild = sessionGuildIndex.get(this.guildID)
+		inGuild?.forEach(s => sessions.get(s)!.onStop())
 
 		if (!this._interactionExpired && this.interaction && editInteraction) {
 			await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
@@ -326,7 +327,8 @@ export class Queue {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
-			sessions.filter(s => s.guild === this.guildID).forEach(s => s.onNext())
+			const inGuild = sessionGuildIndex.get(this.guildID)
+			inGuild?.forEach(s => sessions.get(s)!.onNext())
 
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
@@ -378,10 +380,12 @@ export class Queue {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
 
+		const inGuild = sessionGuildIndex.get(this.guildID)
+
 		if (!this.playHasBeenCalled) {
 			this.play()
-			sessions.filter(s => s.guild === this.guildID).forEach(s => s.sendState())
-		} else sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackAdd(track, position))
+			inGuild?.forEach(s => sessions.get(s)!.sendState())
+		} else inGuild?.forEach(s => sessions.get(s)!.onTrackAdd(track, position))
 	}
 
 	public async removeTrack(index: number): Promise<0 | 1 | 2> {
@@ -399,7 +403,8 @@ export class Queue {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTrackRemove(index))
+		const inGuild = sessionGuildIndex.get(this.guildID)
+		inGuild?.forEach(s => sessions.get(s)!.onTrackRemove(index))
 
 		return 0
 	}
@@ -437,7 +442,8 @@ export class Queue {
 			this.trackStartTime = newTrackStartTime
 		}
 
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onTimeUpdate({ trackStartTime: this.trackStartTime, pausedAt: this.pausedAt ?? 0, playing: !this.paused }))
+		const inGuild = sessionGuildIndex.get(this.guildID)
+		inGuild?.forEach(s => sessions.get(s)!.onTimeUpdate({ trackStartTime: this.trackStartTime, pausedAt: this.pausedAt ?? 0, playing: !this.paused }))
 	}
 
 	private _onPlayerError(details: Extract<EventOP, { type: "TrackExceptionEvent" | "WebSocketClosedEvent" }>): void {
@@ -613,7 +619,8 @@ export class Queue {
 
 			this._lastFMSetTrack()
 
-			sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.toJSON().members))
+			const inGuild = sessionGuildIndex.get(this.guildID)
+			inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(this.toJSON().members))
 			return
 		}
 
@@ -635,6 +642,7 @@ export class Queue {
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
 
-		sessions.filter(s => s.guild === this.guildID).forEach(s => s.onListenersUpdate(this.toJSON().members))
+		const inGuild = sessionGuildIndex.get(this.guildID)
+		inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(this.toJSON().members))
 	}
 }

@@ -20,8 +20,8 @@ class Connector extends EventEmitter {
 		})
 
 		this.ws.on("ws_receive", data => this.emit("message", data))
-		this.ws.once("ws_open", () => void this.onOpen())
-		this.ws.once("ws_close", (code, reason) => this.emit("close", code, reason))
+		this.ws.on("ws_open", () => void this.onOpen())
+		this.ws.on("ws_close", (code, reason) => this.emit("close", code, reason))
 		this.ws.on("debug", console.error)
 		this.on("close", () => {
 			setTimeout(() => this._connect(), 5000)

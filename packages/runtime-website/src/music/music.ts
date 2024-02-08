@@ -4,7 +4,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import passthrough = require("../passthrough")
-const { snow, commands, sync, queues, confprovider, sql, sessions } = passthrough
+const { snow, commands, sync, queues, confprovider, sql, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
@@ -270,7 +270,8 @@ commands.assign([
 
 			if (loop !== null && userIsListening) {
 				queue.loop = loop
-				sessions.filter(s => s.guild === queue.guildID).forEach(s => s.onAttributesChange(queue))
+				const inGuild = sessionGuildIndex.get(queue.guildID)
+				inGuild?.forEach(s => sessions.get(s)!.onAttributesChange(queue))
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"]
 				})
@@ -479,7 +480,8 @@ commands.assign([
 			const toShuffle = queue.tracks.slice(1) // Do not shuffle the first track since it's already playing
 			queue.tracks.length = 1
 
-			sessions.filter(s => s.guild === queue.guildID).forEach(s => s.onClearQueue())
+			const inGuild = sessionGuildIndex.get(queue.guildID)
+			inGuild?.forEach(s => sessions.get(s)!.onClearQueue())
 
 			const shuffled = sharedUtils.arrayShuffle(toShuffle)
 

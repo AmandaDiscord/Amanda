@@ -7,16 +7,15 @@ import type Config = require("../config")
 class ConfigProvider {
 	public static config: typeof Config
 
-	public static changeCallbacks: Array<() => unknown> = []
+	public static readonly changeCallbacks = new Set<() => unknown>()
 
 	public static addCallback(callback: () => unknown): ConfigProvider {
-		ConfigProvider.changeCallbacks.push(callback)
+		ConfigProvider.changeCallbacks.add(callback)
 		return ConfigProvider
 	}
 
 	public static removeCallback(callback: () => unknown): ConfigProvider {
-		const index = ConfigProvider.changeCallbacks.findIndex(c => c === callback)
-		if (index !== -1) ConfigProvider.changeCallbacks.splice(index, 1)
+		ConfigProvider.changeCallbacks.delete(callback)
 		return ConfigProvider
 	}
 }

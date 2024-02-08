@@ -41,6 +41,7 @@ confprovider.addCallback(() => {
 
 ;(async () => {
 	webconnector.on("open", () => {
+		console.log("Sent shard list to website")
 		webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
 	})
 

@@ -2,7 +2,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import passthrough = require("../passthrough")
-const { sync, confprovider, sessions } = passthrough
+const { sync, confprovider, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -275,7 +275,11 @@ export class RequiresSearchTrack extends Track {
 				if (this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = chosen.info.author
 				if (chosen.info.artworkUrl) this.thumbnail.src = chosen.info.artworkUrl
 
-				if (this.queue) sessions.filter(s => s.guild === this.queue!.guildID).forEach(s => s.onTrackUpdate(this, this.queue!.tracks.indexOf(this)))
+				if (this.queue) {
+					const inGuild = sessionGuildIndex.get(this.queue.guildID)
+					const index = this.queue.tracks.indexOf(this)
+					inGuild?.forEach(s => sessions.get(s)!.onTrackUpdate(this, index))
+				}
 			} else if (chosen && !chosen.encoded) this.error = langReplace((this.queue?.lang ?? this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
 			else this.error = (this.queue?.lang ?? this.lang).GLOBAL.NO_RESULTS
 		})

@@ -10,9 +10,11 @@ type Passthrough = {
 	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer
 	lavalink: import("lavacord").Manager
-	sessions: Array<import("./ws/public").Session>
+	sessions: Map<string, import("./ws/public").Session>
+	sessionGuildIndex: Map<string, Set<string>>
 	commandWorkers: Array<import("./ws/internal").CommandWorker>
-	gatewayWorkers: { [cluster_id: string]: import("./ws/gateway").GatewayWorker }
+	gatewayWorkers: Map<string, import("./ws/gateway").GatewayWorker>
+	gatewayShardIndex: Map<number, string>
 }
 
 export = {
@@ -20,7 +22,9 @@ export = {
 	queues: new Map(),
 	// Ignored otherwise TypeScript complains that this export isn't assignable to type Passthrough for whatever reason
 	// your guess is as good as mine
-	sessions: new Array(),
+	sessions: new Map(),
+	sessionGuildIndex: new Map(),
 	commandWorkers: new Array(),
-	gatewayWorkers: {}
+	gatewayWorkers: new Map(),
+	gatewayShardIndex: new Map()
 } as Passthrough

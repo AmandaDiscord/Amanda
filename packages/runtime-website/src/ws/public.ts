@@ -1,5 +1,5 @@
 import passthrough = require("../passthrough")
-const { sync, server, confprovider, sql, queues, sessions } = passthrough
+const { sync, server, confprovider, sql, queues, sessions, sessionGuildIndex } = passthrough
 
 import type { Queue } from "../music/queue"
 import type { Track } from "../music/tracktypes"
@@ -48,12 +48,9 @@ export class Session {
 	public loggedin = false
 	public guild: string | null = null
 	public user: string | null = null
-	public shards: Array<number> = []
 	private closed = false
 
 	public constructor(public ws: WebSocket<unknown>) {
-		sessions.push(this)
-
 		setTimeout(() => {
 			if (!this.loggedin) this.cleanClose()
 		}, 5000)
@@ -85,9 +82,12 @@ export class Session {
 		this.closed = true
 		this.loggedin = false
 		console.log(`WebSocket disconnected: ${this.user ?? "Unauthenticated"}`)
-		const index = sessions.indexOf(this)
-		sessions.splice(index, 1)
-		console.log(`${sessions.length} sessions in memory`)
+		if (this.user) sessions.delete(this.user)
+		if (this.user && this.guild) {
+			sessionGuildIndex.get(this.guild)?.delete(this.user)
+			if (!sessionGuildIndex.get(this.guild)?.size) sessionGuildIndex.delete(this.guild)
+		}
+		console.log(`${sessions.size} sessions in memory`)
 	}
 
 	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
@@ -101,13 +101,18 @@ export class Session {
 			if (!confprovider.config.db_enabled) return
 			const state = await sql.orm.get("voice_states", { channel_id: data.d.channel_id, user_id: session.user_id })
 			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
+			if (sessions.has(session.user_id)) return console.warn(`User tried to identify multiple times:\n${require("util").inspect(session)}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
 			this.guild = state.guild_id
 			this.user = session.user_id
+			sessions.set(this.user, this)
+			const existing = sessionGuildIndex.get(this.guild) ?? new Set()
+			existing.add(this.user)
+			sessionGuildIndex.set(this.guild, existing)
 			console.log(`WebSocket identified: ${this.user}`)
-			console.log(`${sessions.length} sessions in memory`)
+			console.log(`${sessions.size} sessions in memory`)
 			this.send({ op: opcodes.ACKNOWLEDGE, nonce: data.nonce ?? null, d: { serverTimeDiff } })
 			this.sendState()
 		}
