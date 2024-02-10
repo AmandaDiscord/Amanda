@@ -16,7 +16,8 @@ class Connector extends EventEmitter {
 				Authorization: confprovider.config.current_token,
 				"X-Cluster-Id": confprovider.config.cluster_id
 			},
-			bypassBuckets: true
+			bypassBuckets: true,
+			encoding: "json"
 		})
 
 		this.ws.on("ws_receive", data => this.emit("message", data))
