@@ -962,7 +962,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*, @types/node@npm:^20.11.16":
+"@types/node@npm:*":
   version: 20.11.16
   resolution: "@types/node@npm:20.11.16"
   dependencies:
@@ -975,6 +975,15 @@ __metadata:
   version: 14.18.63
   resolution: "@types/node@npm:14.18.63"
   checksum: be909061a54931778c71c49dc562586c32f909c4b6197e3d71e6dac726d8bd9fccb9f599c0df99f52742b68153712b5097c0f00cac4e279fa894b0ea6719a8fd
+  languageName: node
+  linkType: hard
+
+"@types/node@npm:^20.11.17":
+  version: 20.11.17
+  resolution: "@types/node@npm:20.11.17"
+  dependencies:
+    undici-types: ~5.26.4
+  checksum: 59c0dde187120adc97da30063c86511664b24b50fe777abfe1f557c217d0a0b84a68aaab5ef8ac44f5c2986b3f9cd605a15fa6e4f31195e594da96bbe9617c20
   languageName: node
   linkType: hard
 
@@ -1278,11 +1287,11 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "amanda@workspace:."
   dependencies:
-    "@types/node": ^20.11.16
+    "@types/node": ^20.11.17
     "@typescript-eslint/eslint-plugin": ^6.21.0
     "@typescript-eslint/parser": ^6.21.0
-    cloudstorm: ^0.10.6
-    discord-api-types: 0.37.68
+    cloudstorm: ^0.10.7
+    discord-api-types: 0.37.69
     eslint: ^8.56.0
     heatsync: ^2.4.2
     snowtransfer: ^0.10.4
@@ -1674,13 +1683,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:^0.10.6":
-  version: 0.10.6
-  resolution: "cloudstorm@npm:0.10.6"
+"cloudstorm@npm:^0.10.7":
+  version: 0.10.7
+  resolution: "cloudstorm@npm:0.10.7"
   dependencies:
-    discord-api-types: ^0.37.67
+    discord-api-types: ^0.37.69
     snowtransfer: ^0.10.4
-  checksum: 0cddab7d2b37719f9d7317071ef9fc4d123d3aaf7e03fc3867c6596fc12d4e50e7c927ae277688e39e2387bbd62445b447f5384e6a2ab7f0dc97e497ddc3aff4
+  checksum: f67a85c27ea3e8a867b71268ffe40fdb9de4d87a9c3622e0afc19ec114269ec4ddcd47c69308249a2f3fef1ee089031d0a814bd3f807bf0793cb6b47557c5161
   languageName: node
   linkType: hard
 
@@ -1935,10 +1944,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.68":
-  version: 0.37.68
-  resolution: "discord-api-types@npm:0.37.68"
-  checksum: d514bd27140ef0dc39b635cc7d914164640e83023a084a33322c9d70de9a174e01488416c10a76d88c7c3c602662f7799e8eaaec48cdd2747de511cb85faff16
+"discord-api-types@npm:0.37.69":
+  version: 0.37.69
+  resolution: "discord-api-types@npm:0.37.69"
+  checksum: 128dc38f52ab39e22e7b2d69b756cbf1638a641c54bc59ef8ff37bb14d887fe53bcf9f0f8f5a8a35c6228f9a2aea1e62bbadf71582f2a2d2a241a5d788e317a2
   languageName: node
   linkType: hard
 
