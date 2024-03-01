@@ -23,7 +23,7 @@
     "lavacord": "^2.1.3-v4",
     "marked": "12.0.0",
     "mime-types": "2.1.35",
-    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.41.0"
+    "uWebSockets.js": "uNetworking/uWebSockets.js#v20.42.0"
   },
   "devDependencies": {
     "@types/mime-types": "2.1.4"

@@ -339,7 +339,16 @@ export class Queue {
 
 	public createNPMenu(assign = true): Queue["menu"] {
 		const newMenu: Queue["menu"] = [
-			new BetterComponent(
+			new BetterComponent( // rewind
+				{ emoji: { name: "⏪" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
+				{}
+			).setCallback(interaction => {
+				const user = interaction.user ? interaction.user : interaction.member!.user
+				if (!this.listeners.get(user.id)) return
+
+				this.seek(0)
+			}),
+			new BetterComponent( // play/pause
 				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
@@ -348,7 +357,7 @@ export class Queue {
 
 				this.paused = !this.paused
 			}),
-			new BetterComponent(
+			new BetterComponent( // skip
 				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
@@ -357,7 +366,7 @@ export class Queue {
 
 				this.skip()
 			}),
-			new BetterComponent(
+			new BetterComponent( // stop
 				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
