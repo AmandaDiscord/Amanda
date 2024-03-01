@@ -176,6 +176,13 @@ export class Session {
 		})
 	}
 
+	public rewind(): void {
+		this.send({
+			op: opcodes.SEEK,
+			d: { time: 0 }
+		})
+	}
+
 	public togglePlayback(): void {
 		this.send({
 			op: opcodes.TOGGLE_PLAYBACK

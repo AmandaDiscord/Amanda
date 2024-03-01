@@ -22,7 +22,8 @@ const opcodes = {
 	ATTRIBUTES_CHANGE: 12,
 	CLEAR_QUEUE: 13,
 	LISTENERS_UPDATE: 14,
-	TRACK_PLAY_NOW: 15
+	TRACK_PLAY_NOW: 15,
+	SEEK: 16
 }
 
 type Packet<T> = {
@@ -31,7 +32,7 @@ type Packet<T> = {
 	nonce?: number | null;
 }
 
-const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove" | "requestPlayNow">([
+const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayback" | "requestSkip" | "requestStop" | "requestAttributesChange" | "requestClearQueue" | "requestTrackRemove" | "requestPlayNow" | "requestSeek">([
 	[opcodes.IDENTIFY, "identify"],
 	[opcodes.STATE, "sendState"],
 	[opcodes.TOGGLE_PLAYBACK, "togglePlayback"],
@@ -40,7 +41,8 @@ const opcodeMethodMap = new Map<number, "identify" | "sendState" | "togglePlayba
 	[opcodes.ATTRIBUTES_CHANGE, "requestAttributesChange"],
 	[opcodes.CLEAR_QUEUE, "requestClearQueue"],
 	[opcodes.TRACK_REMOVE, "requestTrackRemove"],
-	[opcodes.TRACK_PLAY_NOW, "requestPlayNow"]
+	[opcodes.TRACK_PLAY_NOW, "requestPlayNow"],
+	[opcodes.SEEK, "requestSeek"]
 ])
 
 
@@ -239,6 +241,17 @@ export class Session {
 			q.tracks.splice(1, 0, ...tracks)
 			q.skip()
 			this.sendState()
+		}
+	}
+
+	public async requestSeek(data: Packet<{ time: 0 }>): Promise<void> {
+		const allowed = this.allowedToAction()
+		if (!allowed) return
+		const q = queues.get(this.guild!)
+		if (!q) return this.cleanClose()
+		if (typeof data?.d?.time === "number") {
+			const result = await q.seek(data.d.time)
+			if (result === 3) this.cleanClose()
 		}
 	}
 }

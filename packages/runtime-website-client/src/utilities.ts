@@ -21,7 +21,8 @@ export const opcodes = {
 	ATTRIBUTES_CHANGE: 12,
 	CLEAR_QUEUE: 13,
 	LISTENERS_UPDATE: 14,
-	TRACK_PLAY_NOW: 15
+	TRACK_PLAY_NOW: 15,
+	SEEK: 16
 }
 
 function* generator() {

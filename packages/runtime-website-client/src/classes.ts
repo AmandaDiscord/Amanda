@@ -384,7 +384,7 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 	public constructor(container: E, public session: Session) {
 		super(container)
 
-		;["togglePlayback", "skip", "stop"].forEach(icon => {
+		;(["rewind" as const, "togglePlayback" as const, "skip" as const, "stop" as const]).forEach(icon => {
 			this.parts.controls.child(new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this.session[icon]()))
 		})
 		this.parts.controls.child(this.parts.loopButton)
