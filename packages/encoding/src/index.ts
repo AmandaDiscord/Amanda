@@ -1,4 +1,4 @@
-const delimiter = "�"
+const delimiter = "\uFFFD" // eslint complains about the file appearing to be binary if the character is pasted in
 const forbiddenRecordKeys = ["__proto__", "prototype"]
 
 const unescapedColonRegex = /(?<!\\):/g
