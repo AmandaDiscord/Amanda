@@ -33,7 +33,7 @@ commands.assign([
 
 			if (!info) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NONE
+					content: user.id === cmd.author.id ? lang.GLOBAL.SELF_NOT_IN_COUPLE : lang.GLOBAL.USER_NOT_IN_COUPLE
 				})
 			}
 
@@ -73,7 +73,7 @@ commands.assign([
 
 			if (user.id === cmd.author.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You can't marry yourself"
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -84,20 +84,20 @@ commands.assign([
 
 			if (self) { // The user can't already be in a marriage. How would you join the relationships?
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You're already married"
+					content: lang.GLOBAL.ALREADY_IN_COUPLE_SELF
 				})
 			}
 
 			if (proposed) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `You have already proposed to ${sharedUtils.userString(user)}`
+					content: langReplace(lang.GLOBAL.ALREADY_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			await sql.orm.insert("pending_relations", { user1: cmd.author.id, user2: user.id })
 
 			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `You have proposed to ${sharedUtils.userString(user)}. They must accept for you two to become married`
+				content: langReplace(lang.GLOBAL.PROPOSED, { user: sharedUtils.userString(user) })
 			})
 		}
 	},
@@ -124,7 +124,7 @@ commands.assign([
 
 			if (cmd.author.id === user.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You can't marry yourself"
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -136,21 +136,21 @@ commands.assign([
 
 			if (!pending) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${sharedUtils.userString(user)} hasn't propsed to you yet`
+					content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (userrel) {
 				await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${sharedUtils.userString(user)} is already married`
+					content: langReplace(lang.GLOBAL.ALREADY_IN_COUPLE_OTHER, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (pending.user1 === cmd.author.id) {
 				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "How did you propose to yourself???"
+					content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF
 				})
 			}
 
@@ -166,8 +166,9 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `${sharedUtils.userString(user)} is now married to ${sharedUtils.userString(cmd.author)}`
-				+ (selfrel ? ` and ${selfrel.users.length - 1} other(s)` : "")
+				content: selfrel
+					? langReplace(lang.GLOBAL.MARRIED_MULTIPLE_OTHERS, { user1: sharedUtils.userString(user), user2: sharedUtils.userString(cmd.author), amount: selfrel.users.length - 1 })
+					: langReplace(lang.GLOBAL.MARRIED_ONE_OTHER, { user1: sharedUtils.userString(user), user2: sharedUtils.userString(cmd.author) })
 			})
 		}
 	},
@@ -194,7 +195,7 @@ commands.assign([
 
 			if (cmd.author.id === user.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You can't marry yourself"
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -202,21 +203,21 @@ commands.assign([
 
 			if (!pending) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${sharedUtils.userString(user)} hasn't propsed to you yet`
+					content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (pending.user1 === cmd.author.id) {
 				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "How did you propose to yourself???"
+					content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF
 				})
 			}
 
 			await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `You declined ${sharedUtils.userString(user)}'s proposal`
+				content: langReplace(lang.GLOBAL.REJECTED, { user: sharedUtils.userString(user) })
 			})
 		}
 	},
@@ -245,7 +246,7 @@ commands.assign([
 
 			if (!selfinfo) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NONE
+					content: lang.GLOBAL.SELF_NOT_IN_COUPLE
 				})
 			}
 
@@ -254,13 +255,13 @@ commands.assign([
 
 				if (!userinfo) {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: `${sharedUtils.userString(user)} isn't married`
+						content: lang.GLOBAL.USER_NOT_IN_COUPLE
 					})
 				}
 
 				if (selfinfo.id !== userinfo.id) {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: `${sharedUtils.userString(user)} isn't married to you`
+						content: lang.GLOBAL.USER_NOT_IN_COUPLE_WITH_YOU
 					})
 				}
 
@@ -275,8 +276,8 @@ commands.assign([
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: selfinfo.users.length === 2
-						? `You divorced from ${sharedUtils.userString(user)}`
-						: `You removed ${sharedUtils.userString(user)} from the marriage`
+						? langReplace(lang.GLOBAL.DIVORCED_ONE_OTHER, { user: sharedUtils.userString(user) })
+						: langReplace(lang.GLOBAL.DIVORCED_MULTIPLE_OTHERS, { user: sharedUtils.userString(user) })
 				})
 			}
 
@@ -292,7 +293,7 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: "You left the marriage"
+				content: lang.GLOBAL.DIVORCED_LEFT
 			})
 		}
 	},
@@ -321,20 +322,20 @@ commands.assign([
 			const married = await moneyManager.getCoupleRow(cmd.author.id)
 			if (!married) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NONE
+					content: lang.GLOBAL.SELF_NOT_IN_COUPLE
 				})
 			}
 
 			const money = BigInt(married.amount)
 			if (money === BigInt(0)) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "There is no money to withdraw"
+					content: lang.GLOBAL.NONE_WITHDRAW
 				})
 			}
 
 			if (amount > money) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You can't withdraw more than what is in the account"
+					content: lang.GLOBAL.CANNOT_WITHDRAW_MORE
 				})
 			}
 
@@ -345,7 +346,7 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `Successfully transacted ${sharedUtils.numberComma(amount)}`
+				content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) })
 			})
 		}
 	},
@@ -387,7 +388,7 @@ commands.assign([
 
 			if (amount > selfMoney) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: "You can't withdraw more than what is in the account"
+					content: lang.GLOBAL.CANNOT_WITHDRAW_MORE
 				})
 			}
 
@@ -398,7 +399,7 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: `Successfully transacted ${sharedUtils.numberComma(amount)}`
+				content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) })
 			})
 		}
 	},
