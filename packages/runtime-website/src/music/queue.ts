@@ -202,8 +202,8 @@ export class Queue {
 		await track.prepare()
 
 		if (!track.error) {
-			if (track.track == "!") track.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
-			else if (track.track == null) track.error = this.lang.GLOBAL.SONG_ERROR_NULL
+			if (track.track === "!") track.error = this.lang.GLOBAL.SONG_ERROR_EXCLAIMATION
+			else if (track.track === null) track.error = this.lang.GLOBAL.SONG_ERROR_NULL
 		}
 
 		if (track.error) {
@@ -212,6 +212,7 @@ export class Queue {
 			this._nextTrack()
 		} else {
 			await this.player!.play(track.track)
+			if (track.error) return // From Error call B. Already calls _nextTrack
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
 			this._startNPUpdates()

@@ -112,7 +112,7 @@ export class Session {
 	public trackAdd(data: { d: { position: number; track: WebTrackJSON } }): void {
 		if (!this.state) return
 		this.state.tracks.splice(data.d.position, 0, data.d.track)
-		if (this.state.tracks.length == 1) {
+		if (this.state.tracks.length === 1) {
 			this.player.setTrack(data.d.track)
 			this.updatePlayerTime()
 			this.listenManager.next(data.d.track)
@@ -146,7 +146,7 @@ export class Session {
 		const track = data.d.track
 		const index = data.d.index
 		Object.assign(this.state.tracks[index], track)
-		if (index == 0) this.player.updateData(track)
+		if (index === 0) this.player.updateData(track)
 		else this.queue.children[index - 1].updateData(track)
 	}
 

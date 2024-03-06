@@ -80,7 +80,7 @@ const cmds = [
 			const member1 = cmd.data.members.get(cmd.data.options.get("user1")?.asString() ?? "")
 			const member2 = cmd.data.members.get(cmd.data.options.get("user2")!.asString()!)
 
-			if (user1.id == user2.id) {
+			if (user1.id === user2.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
 				})
@@ -199,7 +199,7 @@ function doInteraction(
 	const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 	const keyAmanda = `${source.toUpperCase()}_AMANDA` as `${Uppercase<typeof source>}_AMANDA`
 
-	if (user.id == cmd.author.id) {
+	if (user.id === cmd.author.id) {
 		const responses = [
 			lang.GLOBAL.INTERACTION_RESPONSE_1,
 			lang.GLOBAL.INTERACTION_RESPONSE_2,
@@ -227,7 +227,7 @@ function doInteraction(
 	let fetched: Promise<string> | undefined = void 0
 	let footer: string
 
-	if (shortcut == "weeb.sh") {
+	if (shortcut === "weeb.sh") {
 		footer = "Powered by weeb.sh"
 		fetched = fetch(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, {
 			headers: {
@@ -236,7 +236,7 @@ function doInteraction(
 		}).then(d => d.json()
 			.then(j => j.url))
 			.catch(() => "https://cdn.discordapp.com/attachments/1123048509470429365/1124107984528740392/helloamanda.png")
-	} else if (shortcut == "durl") fetched = url!()
+	} else if (shortcut === "durl") fetched = url!()
 	else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 
 	fetched.then(u => {

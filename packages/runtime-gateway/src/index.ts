@@ -232,7 +232,7 @@ async function refresh() {
 }
 
 function getCurrentGroups(): Array<string> {
-	return users.filter(o => o.user_id == clientID).map(o => o.label)
+	return users.filter(o => o.user_id === clientID).map(o => o.label)
 }
 
 function getCurrentRanges() {
@@ -245,8 +245,8 @@ function getCurrentRanges() {
 		// 2. If months specified and dates not, check month within range
 		// 3. If dates specified and months not, check dates within range
 		// 4. If nothing specified, date is always within range.
-		const monthSpecified = !(range.start_month == null || range.end_month == null)
-		const dateSpecified = !(range.start_day == null || range.end_day == null)
+		const monthSpecified = !(range.start_month === null || range.end_month === null)
+		const dateSpecified = !(range.start_day === null || range.end_day === null)
 		if (monthSpecified && dateSpecified) {
 			// Case 1
 			const startDate = new Date()
@@ -282,7 +282,7 @@ function getMatchingMessages() {
 		if (message.dates) regional.push(message) // this is regional, it already matched, so it gets priority
 		if (!message.dates) constant.push(message) // this isn't regional, so it doesn't get priority
 	})
-	if (regional.length) constant = constant.filter(message => message.demote == 0) // if regional statuses are available, filter out demotable non-regional. (demote has no effect on regional)
+	if (regional.length) constant = constant.filter(message => message.demote === 0) // if regional statuses are available, filter out demotable non-regional. (demote has no effect on regional)
 	return regional.concat(constant)
 }
 

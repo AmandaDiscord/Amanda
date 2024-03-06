@@ -39,7 +39,7 @@ function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width
 
 function getHeartType(user: APIUser, married?: boolean): "full" | "broken" {
 	// Full hearts for Amanda! Amanda loves everyone.
-	if (user.id == client.user.id) return "full"
+	if (user.id === client.user.id) return "full"
 	// User doesn't love anyone. Sad.
 	if (!married) return "broken"
 	// If we get here, then the user is in a relationship
@@ -141,7 +141,7 @@ function buildOldProfile(
 	canvas.fillText(sharedUtils.numberComma(money), 106, 242)
 	canvas.drawImage(heart, 62, 259)
 	canvas.fillText(
-		user.id == client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
+		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
 		106,
 		285
 	)
@@ -184,7 +184,7 @@ function buildNewProfile(
 	canvas.fillText(sharedUtils.numberComma(money), 550, 183)
 	canvas.drawImage(heart, 508, 207)
 	canvas.fillText(
-		user.id == client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
+		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
 		550,
 		233
 	)
@@ -769,7 +769,7 @@ commands.assign([
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 
-			if (user.id == cmd.author.id) {
+			if (user.id === cmd.author.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.CANNOT_GIVE_SELF
 				})
@@ -857,7 +857,7 @@ commands.assign([
 				themeoverlay = light ? "profile-light" : "profile"
 			} else {
 				const themedata = await sql.orm.get("settings", { user_id: user.id, key: "profiletheme" })
-				if (themedata?.value == "light") themeoverlay = "profile-light"
+				if (themedata?.value === "light") themeoverlay = "profile-light"
 			}
 
 			const [isPremium, money, info, images] = await Promise.all([
@@ -983,7 +983,7 @@ commands.assign([
 					imageToPassAsAvatar = img
 				} else imageToPassAsAvatar = avatarAsStatic!
 
-				if (job.style == "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, imageToPassAsAvatar, images.get("discoin")!, heart, badgeImage, giverImage)
+				if (job.style === "old") buildOldProfile(ctx, user, others, amandollars, bgimg, job, imageToPassAsAvatar, images.get("discoin")!, heart, badgeImage, giverImage)
 				else buildNewProfile(ctx, user, others, amandollars, bgimg, images.get("profile-background-mask")!, job, imageToPassAsAvatar, images.get("circle-mask")!, images.get("discoin")!, heart, badgeImage, giverImage)
 
 				encoder?.addFrame(ctx)

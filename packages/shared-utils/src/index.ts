@@ -219,13 +219,13 @@ export function tableifyRows(rows: Array<Array<string>>, align: Array<"left" | "
 	for (let i = 0; i < rows.length; i++) {
 		let line = ""
 		for (let j = 0; j < rows[0].length; j++) {
-			if (align[j] == "left" || align[j] == "right") {
+			if (align[j] === "left" || align[j] === "right") {
 				line += surround(i)
-				if (align[j] == "left") {
+				if (align[j] === "left") {
 					const pad = " ​"
 					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
 					line += rows[i][j] + padding
-				} else if (align[j] == "right") {
+				} else if (align[j] === "right") {
 					const pad = "​ "
 					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
 					line += padding + rows[i][j]
@@ -262,7 +262,7 @@ export function removeMiddleRows(rows: Array<string>, maxLength = 2000, joinLeng
 	while (currentItems < rows.length) {
 		const direction = getNextDirection()
 		let row: string
-		if (direction == "left") row = rows[leftOffset++]
+		if (direction === "left") row = rows[leftOffset++]
 		else row = rows[rows.length - 1 - rightOffset++]
 		if (currentItems >= maxItems || currentLength + row.length + joinLength + middleString.length > maxLength) {
 			return reconstruction.get("left")!.concat([middleString], reconstruction.get("right")!.reverse())
@@ -346,13 +346,13 @@ export function position(pos: number | bigint): string {
 	let value = pos.toString()
 
 	if (value.endsWith("1")) {
-		if (value.slice(value.length - 2, value.length) == "11") value += "th"
+		if (value.slice(value.length - 2, value.length) === "11") value += "th"
 		else value += "st"
 	} else if (value.endsWith("2")) {
-		if (value.slice(value.length - 2, value.length) == "12") value += "th"
+		if (value.slice(value.length - 2, value.length) === "12") value += "th"
 		else value += "nd"
 	} else if (value.endsWith("3")) {
-		if (value.slice(value.length - 2, value.length) == "13") value += "th"
+		if (value.slice(value.length - 2, value.length) === "13") value += "th"
 		else value += "rd"
 	} else if (["0", "4", "5", "6", "7", "8", "9"].find(e => value.endsWith(e))) value += "th"
 
@@ -395,8 +395,8 @@ export function shortTime(number: number, scale: "ms" | "sec", precision: Readon
 	if (isNaN(number)) throw new TypeError("Input provided is NaN")
 	if (!scale) throw new RangeError("Missing scale")
 
-	if (scale.toLowerCase() == "ms") number = Math.floor(number)
-	else if (scale.toLowerCase() == "sec") number = Math.floor(number * 1000)
+	if (scale.toLowerCase() === "ms") number = Math.floor(number)
+	else if (scale.toLowerCase() === "sec") number = Math.floor(number * 1000)
 	else throw new TypeError("Invalid scale provided")
 
 	const days = Math.floor(number / 1000 / 60 / 60 / 24)
@@ -424,7 +424,7 @@ export function parseDuration(input?: string): number | null {
 
 	for (const frame of individual) {
 		const test = durationFrameRegex.exec(frame)
-		if (test == null) return null
+		if (test === null) return null
 		if (!test[1]) return null
 		const [duration, identifier] = [test[1], test[2]]
 		const num = Number(parseBigInt(duration))

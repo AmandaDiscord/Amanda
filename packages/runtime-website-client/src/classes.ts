@@ -65,10 +65,10 @@ export class ElemJS<E extends HTMLElement = HTMLElement> {
 	}
 
 	public child(toAdd?: ElemJS<HTMLElement>, position?: number): this {
-		if (typeof (toAdd) == "object") {
+		if (typeof (toAdd) === "object") {
 			toAdd.parent = this
 
-			if (typeof (position) == "number" && position >= 0) {
+			if (typeof (position) === "number" && position >= 0) {
 				this.element.insertBefore(toAdd.element, this.element.children[position])
 				this.children.splice(position, 0, toAdd)
 			} else {
@@ -481,7 +481,7 @@ export class PlayerTime extends ElemJS<HTMLDivElement> {
 	}
 
 	public getTransform(): `scaleX(${number})` {
-		if (this.state.maxTime == 0 || this.state.live) {
+		if (this.state.maxTime === 0 || this.state.live) {
 			if (this.state.playing) return "scaleX(1)"
 			else return "scaleX(0)"
 		} else {
@@ -496,7 +496,7 @@ export class PlayerTime extends ElemJS<HTMLDivElement> {
 		this.renderCurrentTime()
 		this.children[2].text(this.state.live ? "LIVE" : prettySeconds(this.state.maxTime))
 		this.children[0].element.style.transform = this.getTransform()
-		if (this.state.trackStartTime == 0) {
+		if (this.state.trackStartTime === 0) {
 			this.children[0].element.style.transform = "scaleX(0)"
 		} else if (this.state.playing) {
 			if (this.getMSRemaining()) {
@@ -518,7 +518,7 @@ export class PlayerTime extends ElemJS<HTMLDivElement> {
 
 	public renderCurrentTime(): void {
 		let time: number | undefined = void 0
-		if (this.state.trackStartTime == 0) time = 0
+		if (this.state.trackStartTime === 0) time = 0
 		else time = this.getTime()
 
 		if (time < 0) time = 0

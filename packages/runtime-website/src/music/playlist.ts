@@ -48,11 +48,11 @@ const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCom
 	}
 
 	const orderedTracks: typeof tracks = []
-	let track = tracks.find(row => !tracks.some(r => r.next == row.video_id))
+	let track = tracks.find(row => !tracks.some(r => r.next === row.video_id))
 
 	while (track) {
 		orderedTracks.push(track!)
-		if (track.next) track = tracks.find(row => row.video_id == track!.next)
+		if (track.next) track = tracks.find(row => row.video_id === track!.next)
 		else track = void 0
 		if (orderedTracks.includes(track!)) await unbreakDatabase(tracks)
 	}
@@ -318,9 +318,9 @@ commands.assign([
 					playlists = playlists.map(p => {
 						p.ranking = "" // higher ascii value is better
 
-						if (p.author == cmd.author.id) addRanking(1, p)
+						if (p.author === cmd.author.id) addRanking(1, p)
 						else addRanking(0, p)
-						if (p.count == 0) addRanking(0, p)
+						if (p.count === 0) addRanking(0, p)
 						else addRanking(1, p)
 						addRanking(p.play_count.toString().padStart(8, "0"), p)
 
@@ -510,7 +510,7 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
-				if (orderedTracks.some(row => row.video_id == result!.identifier)) {
+				if (orderedTracks.some(row => row.video_id === result!.identifier)) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG
 					})

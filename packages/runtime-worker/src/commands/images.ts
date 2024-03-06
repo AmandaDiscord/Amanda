@@ -7,7 +7,7 @@ const poweredbychewey = `Powered by ${confprovider.config.chewey_api_url}`.repla
 
 async function sendImage(host: string, path: string, cmd: ChatInputCommand, footer: string) {
 	let url = ""
-	if (host == "chewey") url = `${confprovider.config.chewey_api_url}/${path}?auth=${confprovider.config.chewey_token}`
+	if (host === "chewey") url = `${confprovider.config.chewey_api_url}/${path}?auth=${confprovider.config.chewey_token}`
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

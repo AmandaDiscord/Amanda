@@ -220,7 +220,7 @@ export class Validator<S extends State, P> {
 	}
 
 	private async _next(resolve: (value: S | PromiseLike<S>) => void, reject: (reason?: [number, string]) => void): Promise<void> {
-		if (this.operations.length == 0) return resolve(this.state)
+		if (this.operations.length === 0) return resolve(this.state)
 
 		this.stage++
 		const input = this.operations.shift()
