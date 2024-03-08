@@ -1,6 +1,6 @@
 import util = require("util")
 
-import { BackTracker } from "backtracker"
+import { getStack } from "backtracker"
 
 const oldLog = console.log
 const oldWarn = console.warn
@@ -12,9 +12,9 @@ const T = /T/
 const Z = /Z/
 
 function getPrefix(type: "warn" | "info" | "error") {
-	const stack = BackTracker.stack
+	const stack = getStack()!
 	const first = stack[1]
-	const scope = `${first.srcFilename}:${first.srcLine}:${first.srcColumn}`
+	const scope = `${first.srcBasename}:${first.srcLine}:${first.srcColumn}`
 	const color = type === "warn" ? "\x1b[93m" : type === "error" ? "\x1b[91m" : "\x1b[92m"
 
 	const datePart = new Date().toISOString().replace(T, " ").replace(Z, "")

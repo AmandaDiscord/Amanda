@@ -15,7 +15,7 @@
         "@types/node": "^20.11.25",
         "@typescript-eslint/eslint-plugin": "^7.1.1",
         "@typescript-eslint/parser": "^7.1.1",
-        "discord-api-types": "0.37.71",
+        "discord-api-types": "0.37.73",
         "eslint": "^8.57.0",
         "heapdump": "^0.3.15",
         "tsup": "^8.0.2",
@@ -25,11 +25,11 @@
     "packageManager": "yarn@3.6.1",
     "dependencies": {
         "cloudstorm": "^0.10.8",
-        "heatsync": "^2.4.2",
+        "heatsync": "^2.5.0",
         "snowtransfer": "^0.10.5"
     },
     "resolutions": {
-        "discord-api-types": "0.37.71",
+        "discord-api-types": "0.37.73",
         "undici": "6.6.2"
     }
 }

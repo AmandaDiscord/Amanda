@@ -1291,10 +1291,10 @@ __metadata:
     "@typescript-eslint/eslint-plugin": ^7.1.1
     "@typescript-eslint/parser": ^7.1.1
     cloudstorm: ^0.10.8
-    discord-api-types: 0.37.71
+    discord-api-types: 0.37.73
     eslint: ^8.57.0
     heapdump: ^0.3.15
-    heatsync: ^2.4.2
+    heatsync: ^2.5.0
     snowtransfer: ^0.10.5
     tsup: ^8.0.2
     turbo: ^1.12.5
@@ -1420,10 +1420,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"backtracker@npm:3.3.2":
-  version: 3.3.2
-  resolution: "backtracker@npm:3.3.2"
-  checksum: 7e5cf23225ffe2463c3becce85593dcf717507cd82e63b2b769388690423cc9976a5c90628984c81bce9940ca1bf1b0519520d496cda8b2ba2567271f28c9d35
+"backtracker@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "backtracker@npm:4.0.0"
+  checksum: bf058df58373a189ff6a7d79ce95465a95554e300c466094e31ee3a5487e46a84d9a94a52c729d97c5ad3465cd1cb90c3a12db16676bdf77cb9c94090d99aa74
   languageName: node
   linkType: hard
 
@@ -1946,10 +1946,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"discord-api-types@npm:0.37.71":
-  version: 0.37.71
-  resolution: "discord-api-types@npm:0.37.71"
-  checksum: e4a4bca5df3d3fe97b93e492e496ae5a6156360372cc7d2c7eda314226734de565b1a5196e5e4327ea172f1b5f3a900878a6b9a57d6004c7ff03eec6e6580ade
+"discord-api-types@npm:0.37.73":
+  version: 0.37.73
+  resolution: "discord-api-types@npm:0.37.73"
+  checksum: f8c627ba63aa8defa51a7c69a31d75ecc9d62d3c556229e4b81c3474c499a08787a6d57e24bd7460e57a9021b864d1368cb679718d48c6cc480ac353d3cd14ce
   languageName: node
   linkType: hard
 
@@ -2727,12 +2727,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"heatsync@npm:^2.4.2":
-  version: 2.4.2
-  resolution: "heatsync@npm:2.4.2"
+"heatsync@npm:^2.5.0":
+  version: 2.5.0
+  resolution: "heatsync@npm:2.5.0"
   dependencies:
-    backtracker: 3.3.2
-  checksum: c0a146b3088a90872cf98e122e6ee0576d9729b78966aa132a3b5a7a66a65af4ae9517fdaeb8831c564aa65e53d9f0b05e95f6e8cee38ba6d75baf7090cf3874
+    backtracker: ^4.0.0
+  checksum: f9f364ff4183cf6e3936f44a30131d3b840e40867dee7dc8fadc9d2997f7b0f61f60851763838d627a22ba9e11eff1ef414a7e5f06df9bcf1a2568f72e6f2242
   languageName: node
   linkType: hard
 
