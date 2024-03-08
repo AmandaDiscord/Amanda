@@ -25,7 +25,7 @@
     "packageManager": "yarn@3.6.1",
     "dependencies": {
         "cloudstorm": "^0.10.8",
-        "heatsync": "^2.5.0",
+        "heatsync": "^2.5.1",
         "snowtransfer": "^0.10.5"
     },
     "resolutions": {

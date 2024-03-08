@@ -1294,7 +1294,7 @@ __metadata:
     discord-api-types: 0.37.73
     eslint: ^8.57.0
     heapdump: ^0.3.15
-    heatsync: ^2.5.0
+    heatsync: ^2.5.1
     snowtransfer: ^0.10.5
     tsup: ^8.0.2
     turbo: ^1.12.5
@@ -2727,12 +2727,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"heatsync@npm:^2.5.0":
-  version: 2.5.0
-  resolution: "heatsync@npm:2.5.0"
+"heatsync@npm:^2.5.1":
+  version: 2.5.1
+  resolution: "heatsync@npm:2.5.1"
   dependencies:
     backtracker: ^4.0.0
-  checksum: f9f364ff4183cf6e3936f44a30131d3b840e40867dee7dc8fadc9d2997f7b0f61f60851763838d627a22ba9e11eff1ef414a7e5f06df9bcf1a2568f72e6f2242
+  checksum: 573318b34ed3401f0a8f9d82cb8c36b577a52ebed8b46a56758fb96d13eb28470aafff866ac7e671ac3be5017fa65a49efdfd2333ac88b93e8cf4e415990152b
   languageName: node
   linkType: hard
 
