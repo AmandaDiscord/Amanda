@@ -239,7 +239,7 @@ const common = {
 		async createQueue(cmd: ChatInputCommand, lang: Lang, channel: string, node: string): Promise<Queue | null> {
 			const queueFile: typeof import("./queue") = sync.require("./queue")
 
-			const queue = new queueFile.Queue(cmd.guild_id!, channel)
+			const queue = new queueFile.Queue(cmd.guild_id!, channel, cmd.channel.id)
 
 			queue.lang = cmd.guild_locale ? sharedUtils.getLang(cmd.guild_locale) : lang
 			queue.interaction = cmd

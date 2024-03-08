@@ -57,7 +57,7 @@ export class Queue {
 	private _destroyed = false
 	private _lastFMSent = false
 
-	public constructor(public guildID: string, public voiceChannelID: string) {
+	public constructor(public guildID: string, public voiceChannelID: string, public textChannelID: string) {
 		queues.set(guildID, this)
 	}
 
@@ -88,6 +88,7 @@ export class Queue {
 	}
 
 	public set interaction(value) {
+		if (value && value.channel.id !== this.textChannelID) return
 		if (!this._interactionExpired && this._interaction) {
 			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
 				embeds: [{
