@@ -10,6 +10,9 @@ import sql = require("@amanda/sql")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 import sharedUtils = require("@amanda/shared-utils")
+import redis = require("@amanda/redis")
+
+import type { GatewayVoiceState } from "discord-api-types/v10"
 
 const toSessionsJSON = path.join(__dirname, "../sessions.json")
 
@@ -39,13 +42,27 @@ confprovider.addCallback(() => {
 	if (confprovider.config.total_shards !== _oldTotalShards) shardInfoChanged = true
 })
 
-;(async () => {
+async function updateVoiceState(state: GatewayVoiceState, modifyIndex = true) {
+	if (!state.guild_id) return
+	let promise: Promise<void>
+	if (state.channel_id === null) {
+		const old = await redis.GET<GatewayVoiceState>("voice", state.user_id)
+		promise = redis.DEL("voice", state.user_id, old?.channel_id && modifyIndex ? `vcs.${old.channel_id}` : undefined)
+	} else promise = redis.SET("voice", state.user_id, state, modifyIndex ? `vcs.${state.channel_id}` : undefined)
+	Promise.all([
+		promise,
+		state.channel_id ? redis.SADD(`${state.guild_id}.channels`, state.channel_id) : Promise.resolve(void 0)
+	])
+}
+
+(async () => {
 	webconnector.on("open", () => {
 		console.log("Sent shard list to website")
 		webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
 	})
 
 	await sql.connect()
+	await redis.connect()
 	void new REPLProvider({ client, webconnector, confprovider, sql, startAnnouncement })
 	client.on("debug", d => console.log(d))
 	client.on("error", e => console.error(e))
@@ -54,37 +71,53 @@ confprovider.addCallback(() => {
 		switch (packet.t) {
 
 		case "VOICE_STATE_UPDATE":
-			if (packet.d.guild_id) {
-				if (packet.d.channel_id === null) {
-					await sql.orm.delete("voice_states", {
-						user_id: packet.d.user_id,
-						guild_id: packet.d.guild_id
-					})
-				} else {
-					await sql.orm.upsert("voice_states", {
-						guild_id: packet.d.guild_id,
-						user_id: packet.d.user_id,
-						channel_id: packet.d.channel_id
-					}, { useBuffer: false })
-				}
-			}
+			await updateVoiceState(packet.d)
 			break
 
 		case "GUILD_CREATE":
-			for (const state of packet.d.voice_states ?? []) {
-				sql.orm.upsert("voice_states", {
-					guild_id: packet.d.id,
-					channel_id: state.channel_id!,
-					user_id: state.user_id
-				}, { useBuffer: true })
-			}
-			sql.orm.triggerBufferWrite("voice_states")
-			break
+			redis.SMEMBERS(`${packet.d.id}.channels`).then(async vcs => {
+				await redis.SREM(`${packet.d.id}.channels`, vcs) // remove all old voice channels as new ones will be populated
+				Promise.all([
+					redis.SADD("guilds", packet.d.id), // Our SADD removes dupes
+					redis.SADD(`${packet.d.id}.channels`, packet.d.channels.filter(c => c.type === 2).map(c => c.id)), // add voice channels to index
+					...(packet.d.voice_states ?? []).map(state => updateVoiceState(state, false)) // add voice states but dont add to index sequentually. Add all from each vc in 1 command below
+				])
+
+				const uniqueActiveVCs = new Map<string, Array<string>>()
+				for (const state of packet.d.voice_states) {
+					if (!uniqueActiveVCs.has(state.channel_id!)) uniqueActiveVCs.set(state.channel_id!, [state.user_id])
+					else uniqueActiveVCs.get(state.channel_id!)!.push(state.user_id)
+				}
+				for (const [channel, users] of uniqueActiveVCs) redis.SADD(`vcs.${channel}`, users)
+			})
+			return // do not send this
 
 		case "GUILD_DELETE":
-			if (packet.d.unavailable) return
-			sql.orm.delete("voice_states", { guild_id: packet.d.id })
-			break
+			if (packet.d.unavailable) return // specifically do not send this event as it's not used by Amanda
+			Promise.all([
+				redis.SMEMBERS(`${packet.d.id}.channels`), // get all old vcs to delete states
+				redis.SREM("guilds", packet.d.id) // remove from guilds index
+			]).then(async ([vcs]) => {
+				redis.SREM(`${packet.d.id}.channels`, vcs, true) // we got all old vcs. Delete them from the index
+				const members = await Promise.all(vcs.map(vc => redis.SMEMBERS(`vcs.${vc}`))) // Get all voice states for each voice channel if any
+				for (let index = 0; index < members.length; index++) {
+					redis.SREM(`vcs.${vcs[index]}`, members[index], true) // remove members from voice state index and drop it for channel
+					for (const member of members[index]) redis.DEL("voice", member) // remove data
+				}
+			})
+			return // do not send this
+
+		case "CHANNEL_DELETE":
+			if (packet.d.type !== 2) return // do not send this
+			if (!packet.d.guild_id) return // do not send this
+			redis.SREM(`${packet.d.guild_id}.channels`, packet.d.id)
+			redis.SMEMBERS(`vcs.${packet.d.id}`).then(members => {
+				Promise.all([
+					redis.SREM(`vcs.${packet.d.id}`, members, true),
+					...members.map(m => redis.DEL("voice", m))
+				])
+			})
+			return // do not send this
 
 		case "READY":
 		case "RESUMED":
@@ -101,7 +134,7 @@ confprovider.addCallback(() => {
 		webconnector.send(packet)
 	})
 
-	let stats: fs.Stats | undefined = void 0
+	let stats: fs.Stats | undefined
 	try {
 		stats = await fs.promises.stat(toSessionsJSON)
 	} catch {
@@ -186,7 +219,7 @@ let messages: Array<import("@amanda/sql/src/orm").InferModelDef<SQL["orm"]["tabl
 	users: Array<import("@amanda/sql/src/orm").InferModelDef<SQL["orm"]["tables"]["status_users"]>>,
 	updateInterval: NodeJS.Timeout | undefined
 
-let enqueued: NodeJS.Timeout | undefined = void 0
+let enqueued: NodeJS.Timeout | undefined
 
 const activities = {
 	"PLAYING": 0 as const,

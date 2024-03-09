@@ -17,7 +17,6 @@
         "@typescript-eslint/parser": "^7.1.1",
         "discord-api-types": "0.37.73",
         "eslint": "^8.57.0",
-        "heapdump": "^0.3.15",
         "tsup": "^8.0.2",
         "turbo": "^1.12.5",
         "typescript": "^5.4.2"

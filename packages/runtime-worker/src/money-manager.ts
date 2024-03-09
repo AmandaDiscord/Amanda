@@ -25,7 +25,7 @@ function getTimeoutDuration(): number {
 	}
 }
 
-let autoPayTimeout: NodeJS.Timeout | undefined = undefined
+let autoPayTimeout: NodeJS.Timeout | undefined
 if (confprovider.config.donor_payments_enabled_on_this_cluster) autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 
 

@@ -1,8 +1,12 @@
 import fs = require("fs")
 import path = require("path")
 
+import sql = require("@amanda/sql")
+import redis = require("@amanda/redis")
+
 import passthrough = require("../passthrough");
-const { server, sync, rootFolder, sql, confprovider } = passthrough
+import type { GatewayVoiceState } from "discord-api-types/v10"
+const { server, sync, rootFolder, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -42,7 +46,7 @@ server.post("/logout", async (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer | undefined = void 0
+	let body: Buffer | undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -87,7 +91,7 @@ server.get("/dash", async (res, req) => {
 
 	if (session && confprovider.config.db_enabled) {
 		const [user, html] = await Promise.all([
-			sql.orm.get("voice_states", { user_id: session.user_id }),
+			redis.GET<GatewayVoiceState>("voice", session.user_id),
 			fs.promises.readFile(path.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 		])
 
@@ -125,7 +129,7 @@ server.post("/dash", async (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
-	let body: Buffer | undefined = void 0
+	let body: Buffer | undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -187,10 +191,7 @@ server.get("/channels/:channelID", async (res, req) => {
 			[400, "NO_SESSION"]
 		).do(
 			() => confprovider.config.db_enabled
-				? sql.orm.get("voice_states", {
-					user_id: session!.user_id,
-					channel_id: channelID
-				}) : void 0,
+				? redis.GET("voice", session!.user_id) : void 0,
 			v => !!v,
 			[400, "USER_NOT_IN_CHANNEL"]
 		)

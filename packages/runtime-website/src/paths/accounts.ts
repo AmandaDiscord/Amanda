@@ -2,8 +2,10 @@ import fs = require("fs")
 import path = require("path")
 import { createHash } from "crypto"
 
+import sql = require("@amanda/sql")
+
 import passthrough = require("../passthrough");
-const { server, sync, rootFolder, sql, confprovider } = passthrough
+const { server, sync, rootFolder, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -83,7 +85,7 @@ server.post("/unlink", async (res, req) => {
 	if (!session) return void res.cork(() => res.writeStatus("401").endWithoutBody())
 
 
-	let body: Buffer | undefined = void 0
+	let body: Buffer | undefined
 	try {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
@@ -137,7 +139,7 @@ server.post("/unlink", async (res, req) => {
 })
 
 server.get("/flow", (res, req) => {
-	let searchParams: URLSearchParams | undefined = void 0
+	let searchParams: URLSearchParams | undefined
 	try {
 		searchParams = new URLSearchParams(req.getQuery())
 	} catch {

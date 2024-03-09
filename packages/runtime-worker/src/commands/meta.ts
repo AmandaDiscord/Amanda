@@ -36,7 +36,7 @@ async function updateCache() {
 	await Promise.all(backgroundRows.map(async row => {
 		const mine = mineMap.get(row.user_id)
 		if (!mine || mine !== row.value) {
-			let image: Canvas.Image | undefined = void 0
+			let image: Canvas.Image | undefined
 
 			try {
 				image = await Canvas.loadImage(row.value)
@@ -468,7 +468,7 @@ commands.assign([
 
 				if (setting === "profilebackground") {
 					if (isPremium?.state && modify.startsWith("http")) {
-						let response: Response | undefined = void 0
+						let response: Response | undefined
 
 						try {
 							response = await fetch(modify, { method: "HEAD" })

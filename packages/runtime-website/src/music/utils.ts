@@ -5,16 +5,17 @@ import { Rest } from "lavacord"
 import buttons = require("@amanda/buttons")
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { Track } from "./tracktypes"
-import type { APIEmbed, APIUser } from "discord-api-types/v10"
+import type { APIEmbed, APIUser, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
 
 import passthrough = require("../passthrough")
-const { sync, confprovider, lavalink, snow, queues, sql } = passthrough
+const { sync, confprovider, lavalink, snow, queues } = passthrough
 
 
 const selectTimeout = 1000 * 60
@@ -163,7 +164,7 @@ const common = {
 	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
-		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
+		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 		try {
 			tracks = await common.loadtracks(resource, lang, node)
 		} catch (e) {
@@ -295,10 +296,7 @@ const common = {
 		}> {
 			let queue = queues.get(cmd.guild_id!) ?? null
 
-			const userVoiceState = await sql.orm.get("voice_states", {
-				user_id: cmd.author.id,
-				guild_id: cmd.guild_id!
-			})
+			const userVoiceState = await redis.GET<GatewayVoiceState>("voice", cmd.author.id)
 
 			if (!userVoiceState) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -317,7 +315,7 @@ const common = {
 			if (queue) return { queue, existed: true }
 			const node = common.nodes.byIdeal() ?? common.nodes.random()
 
-			queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id, node.id).catch(() => null)
+			queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id!, node.id).catch(() => null)
 			if (!queue) return { queue: null, existed: false }
 
 			return { queue, existed: false }

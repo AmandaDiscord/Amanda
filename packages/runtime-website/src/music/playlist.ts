@@ -1,8 +1,10 @@
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import sql = require("@amanda/sql")
+import redis = require("@amanda/redis")
 
 import passthrough = require("../passthrough")
-const { snow, commands, sync, queues, sql, confprovider } = passthrough
+const { snow, commands, sync, queues, confprovider } = passthrough
 
 const common: typeof import("./utils") = sync.require("./utils")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
@@ -10,7 +12,7 @@ const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor } from "discord-api-types/v10"
+import type { APIEmbedAuthor, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackInfo } from "lavalink-types/v4"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
@@ -490,7 +492,7 @@ commands.assign([
 					})
 				}
 
-				let result: TrackInfo | undefined = void 0
+				let result: TrackInfo | undefined
 				try {
 					const res = await common.loadtracks(optionTrack, lang)
 
@@ -694,10 +696,7 @@ commands.assign([
 
 				let queue = queues.get(cmd.guild_id!) ?? null
 
-				const userVoiceState = await sql.orm.get("voice_states", {
-					user_id: cmd.author.id,
-					guild_id: cmd.guild_id!
-				})
+				const userVoiceState = await redis.GET<GatewayVoiceState>("voice", cmd.author.id)
 
 				if (!userVoiceState) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -716,7 +715,7 @@ commands.assign([
 					: common.nodes.byIdeal() ?? common.nodes.random()
 
 				if (!queue) {
-					queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id, node.id)
+					queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id!, node.id)
 					if (!queue) return
 				}
 

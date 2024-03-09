@@ -2,9 +2,10 @@ import crypto = require("crypto")
 
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import sql = require("@amanda/sql")
 
 import passthrough = require("../passthrough")
-const { snow, commands, sync, queues, confprovider, sql, sessions, sessionGuildIndex } = passthrough
+const { snow, commands, sync, queues, confprovider, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
@@ -698,7 +699,7 @@ commands.assign([
 
 			const prefix = source ? `${source}search:` : confprovider.config.lavalink_default_search_prefix
 
-			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
+			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 			try {
 				tracks = await common.loadtracks(`${prefix}${input}`, lang, queue?.node)
 			} catch (e) {

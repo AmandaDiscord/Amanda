@@ -5,8 +5,8 @@ import type { APIDMChannel } from "discord-api-types/v10"
 import passthrough = require("./passthrough")
 const { snow, confprovider, sync } = passthrough
 
-let lastLover: Lover | undefined = undefined
-let loverMessageSendTimeout: NodeJS.Timeout | undefined = undefined
+let lastLover: Lover | undefined
+let loverMessageSendTimeout: NodeJS.Timeout | undefined
 
 class Lover {
 	public channelGetter = new sharedUtils.AsyncValueCache<APIDMChannel | null>(

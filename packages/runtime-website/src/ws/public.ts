@@ -1,9 +1,12 @@
 import passthrough = require("../passthrough")
-const { sync, server, confprovider, sql, queues, sessions, sessionGuildIndex } = passthrough
+const { sync, server, confprovider, queues, sessions, sessionGuildIndex } = passthrough
+
+import redis = require("@amanda/redis")
 
 import type { Queue } from "../music/queue"
 import type { Track } from "../music/tracktypes"
 import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
+import { GatewayVoiceState } from "discord-api-types/v10"
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -101,17 +104,17 @@ export class Session {
 			const session = await utils.getSession(cookies)
 			if (!session) return
 			if (!confprovider.config.db_enabled) return
-			const state = await sql.orm.get("voice_states", { channel_id: data.d.channel_id, user_id: session.user_id })
+			const state = await redis.GET<GatewayVoiceState>("voice", session.user_id)
 			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
 			if (sessions.has(session.user_id)) return console.warn(`User tried to identify multiple times:\n${require("util").inspect(session)}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
-			this.guild = state.guild_id
+			this.guild = state.guild_id!
 			this.user = session.user_id
-			sessions.set(this.user, this)
+			sessions.set(this.user!, this)
 			const existing = sessionGuildIndex.get(this.guild) ?? new Set()
-			existing.add(this.user)
+			existing.add(this.user!)
 			sessionGuildIndex.set(this.guild, existing)
 			console.log(`WebSocket identified: ${this.user}`)
 			console.log(`${sessions.size} sessions in memory`)

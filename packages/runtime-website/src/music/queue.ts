@@ -4,6 +4,8 @@ import { createHash } from "crypto"
 import { BetterComponent } from "@amanda/buttons"
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import sql = require("@amanda/sql")
+import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
@@ -13,7 +15,7 @@ import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
 import passthrough = require("../passthrough")
-const { sync, queues, confprovider, snow, lavalink, sql, sessions, sessionGuildIndex } = passthrough
+const { sync, queues, confprovider, snow, lavalink, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -617,7 +619,7 @@ export class Queue {
 
 			const [clientUser, states] = await Promise.all([
 				sharedUtils.getUser(confprovider.config.client_id, snow),
-				sql.orm.select("voice_states", { channel_id: this.voiceChannelID }, { select: ["user_id"] })
+				redis.SMEMBERS(`vcs.${this.voiceChannelID}`).then(mems => Promise.all(mems.map(mem => redis.GET("voice", mem))))
 			])
 
 			if (clientUser) this.listeners.set(clientUser.id, clientUser)

@@ -7,6 +7,7 @@ import { Manager } from "lavacord"
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
 import sql = require("@amanda/sql")
+import redis = require("@amanda/redis")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
@@ -18,7 +19,6 @@ import passthrough = require("./passthrough")
 passthrough.server = uWS.App()
 passthrough.sync = sync
 passthrough.confprovider = confprovider
-passthrough.sql = sql
 passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	new ChatInputCommand(cmd),
 	sharedUtils.getLang(cmd.locale),
@@ -27,9 +27,9 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
 
 ;(async () => {
-	await passthrough.sql.connect().catch(console.error)
-
-	const lavalinkNodeData = await passthrough.sql.orm.select("lavalink_nodes")
+	await sql.connect().catch(console.error)
+	await redis.connect()
+	const lavalinkNodeData = await sql.orm.select("lavalink_nodes")
 	const lavalinkNodes = lavalinkNodeData.map(node => {
 		const newData = {
 			password: passthrough.confprovider.config.lavalink_password,

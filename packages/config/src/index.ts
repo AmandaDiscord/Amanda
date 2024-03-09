@@ -21,6 +21,7 @@ class ConfigProvider {
 }
 
 const toConfig = path.join(__dirname, "../../../config.js")
+const toExample = path.join(__dirname, "../../../config.example.js")
 
 let config: typeof Config
 let realLoaded = false
@@ -29,7 +30,7 @@ try {
 	config = sync.require(toConfig)
 	realLoaded = true
 } catch {
-	config = require("../../../config.example")
+	config = require(toExample)
 }
 
 if (realLoaded) {

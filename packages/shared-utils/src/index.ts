@@ -4,6 +4,7 @@ import language = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
 import buttons = require("@amanda/buttons")
 import confprovider = require("@amanda/config")
+import redis = require("@amanda/redis")
 
 import type { APIUser, APIGuildMember, APIInteractionDataResolvedGuildMember, APIInteractionGuildMember } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
@@ -483,39 +484,27 @@ export function substr(text: string, from: number, length?: number): string {
 	return text.repeat(Math.ceil(length / (from + text.length))).slice(from, from + length)
 }
 
-export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }, force = false): Promise<APIUser | null> {
-	if (id === client?.user.id && !force) return client.user
-	if (confprovider.config.db_enabled && !force) {
-		const sql = require("@amanda/sql")
-		const cached = await sql.orm.get("users", { id: id })
-		if (cached) return convertCachedUser(cached)
+export async function getUser(id: string, snow: SnowTransfer, client?: { user: APIUser }, force = false): Promise<APIUser & { amanda_expiry: string } | null> {
+	const currently = new Date()
+	currently.setDate(currently.getDate() + 7)
+	if (id === client?.user.id && !force) return { amanda_expiry: currently.toUTCString(), ...client.user }
+	if (confprovider.config.redis_enabled && !force) {
+
+		const cached = await redis.GET<APIUser & { amanda_expiry: string }>("user", id)
+		if (cached) return cached
 	}
 	const fetched = await snow.user.getUser(id).catch(() => null)
-	if (fetched && confprovider.config.db_enabled) updateUser(fetched)
-	return fetched
+	if (fetched && confprovider.config.redis_enabled) updateUser(fetched)
+	if (!fetched) return null
+	return { amanda_expiry: currently.toUTCString(), ...fetched }
 }
 
 export function updateUser(user?: APIUser) {
-	if (user && confprovider.config.db_enabled) {
-		const sql = require("@amanda/sql")
-		sql.orm.upsert("users", {
-			id: user.id,
-			tag: `${user.username}#${user.discriminator ?? 0}`,
-			avatar: user.avatar,
-			bot: user.bot ? 1 : 0,
-			added_by: confprovider.config.cluster_id
-		})
+	if (user && confprovider.config.redis_enabled) {
+		const currently = new Date()
+		currently.setDate(currently.getDate() + 7)
+		redis.SET("user", user.id, { amanda_expiry: currently.toUTCString(), ...user }, "user")
 	}
-}
-
-export function convertCachedUser(user: { id: string; tag: string; bot: number; avatar: string | null; }): APIUser {
-	const split = user.tag.split("#")
-	return Object.assign(user, {
-		username: split.slice(0, split.length - 1).join("#"),
-		discriminator: split[split.length - 1],
-		bot: !!user.bot,
-		avatar: typeof user.avatar === "string" && user.avatar.length === 0 ? null : user.avatar
-	})
 }
 
 export function displayAvatarURL(user: APIUser, member?: APIGuildMember | APIInteractionDataResolvedGuildMember | APIInteractionGuildMember | null, guildID?: string | null, dynamic?: boolean): string {
@@ -588,8 +577,8 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 }
 
 export function userString(user: APIUser) {
-	return user.discriminator === "0" || !user.discriminator
-		? user.username
+	return user.global_name
+		? user.global_name
 		: `${user.username}#${user.discriminator}`
 }
 

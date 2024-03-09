@@ -224,7 +224,7 @@ function doInteraction(
 		})
 	}
 
-	let fetched: Promise<string> | undefined = void 0
+	let fetched: Promise<string> | undefined
 	let footer: string
 
 	if (shortcut === "weeb.sh") {

@@ -13,6 +13,7 @@ const config = {
 
 	// usernames/identifiers
 	sql_user: "",
+	redis_user: "",
 	weeb_identifier: "",
 	client_id: "",
 	// The ID of the user Amanda loves and should send messages to every interval (inspirational is what's used in Amanda official. Amanda loves you, Troy <3)
@@ -20,10 +21,12 @@ const config = {
 
 	// passwords
 	sql_password: "",
+	redis_password: "",
 	lavalink_password: "youshallnotpass",
 
 	// service connections
 	sql_domain: "",
+	redis_domain: "",
 	website_protocol: "http",
 	website_domain: "localhost:10400",
 	chewey_api_url: "https://api.chewey-bot.top",
@@ -40,6 +43,7 @@ const config = {
 	dash_enabled: true,
 	music_enabled: true,
 	db_enabled: true,
+	redis_enabled: true,
 	add_url_for_web_redirect: "",
 	lavalink_default_search_prefix: "scsearch:",
 	search_extra_source_options: [{

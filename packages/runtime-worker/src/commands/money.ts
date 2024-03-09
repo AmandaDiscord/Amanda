@@ -132,9 +132,9 @@ function buildOldProfile(
 		? others.map(o => sharedUtils.userString(o)).join("\n")
 		: null
 
-	const useDiscrim = user.discriminator && user.discriminator !== "0"
+	const useDiscrim = !user.global_name
 	setFontSize(25, canvas)
-	canvas.fillText(user.username, 219, useDiscrim ? 78 : 98)
+	canvas.fillText(user.global_name ?? user.username, 219, useDiscrim ? 78 : 98)
 	setFontSize(20, canvas)
 	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 219, 90)
 	canvas.drawImage(discoin, 62, 215)
@@ -237,7 +237,7 @@ async function buildCard(
 	canvas.fillText(sharedUtils.abbreviateNumber(personal ? money.amount : couple!.amount), 25, 30)
 
 	if (!masked) {
-		let avatars: Array<Canvas.Canvas> = []
+		let avatars: Array<Canvas.Canvas>
 		if (!personal) {
 			avatars = await Promise.all(couple!.users.map(async u => {
 				const user = await sharedUtils.getUser(u, client.snow, client) ?? DiscordsProfile
@@ -910,8 +910,8 @@ commands.assign([
 
 			const job = await getOverlay(user, images, themeoverlay)
 
-			let avatarAsStatic: Canvas.Image | undefined = undefined
-			let avatarAsGif: Array<gifdecoder.ParsedFrame> | undefined = undefined
+			let avatarAsStatic: Canvas.Image | undefined
+			let avatarAsGif: Array<gifdecoder.ParsedFrame> | undefined
 			let encoder
 
 			if (isPremium?.state && ((member?.avatar ?? user.avatar)?.startsWith("a_"))) {
@@ -929,7 +929,7 @@ commands.assign([
 			const c = Canvas.createCanvas(800, 500)
 			const ctx = c.getContext("2d")
 
-			let bgimg: Canvas.Image | undefined = void 0
+			let bgimg: Canvas.Image | undefined
 			if (user.id === "320067006521147393" || isPremium) {
 				try {
 					bgimg = await Canvas.loadImage(path.join(imageCacheDirectory, `${user.id}.png`))
@@ -947,7 +947,7 @@ commands.assign([
 			let others: Array<APIUser> | null = null
 			if (info) others = (await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u) as Array<APIUser>
 
-			let prom: Promise<Buffer> | undefined = undefined
+			let prom: Promise<Buffer> | undefined
 			if (encoder) {
 				encoder.start()
 				encoder.setQuality(2)

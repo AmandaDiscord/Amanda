@@ -18,10 +18,7 @@ const models = {
 	couples: new Model<{ user1: string, user2: string, married_at: string, balance: number }>(),
 	csrf_tokens: new Model<{ token: string, login_token: string, expires: number }>(["token"]),
 	daily_cooldown: new Model<{ user_id: string, last_claim: number }>(["user_id"]),
-	gateway_clusters: new Model<{ cluster_id: string, url: string }>(["cluster_id"]),
-	guilds: new Model<{ guild_id: string, client_id: string, cluster_id: string, shard_id: number }>(["client_id", "guild_id"]),
 	interaction_gifs: new Model<{ type: string, url: string }>(),
-	lavalink_node_regions: new Model<{ host: string, region: string }>(["host", "region"]),
 	lavalink_nodes: new Model<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>(["host"]),
 	money: new Model<{ user_id: string, coins: string, won_coins: string, lost_coins: string, given_coins: string }>(["user_id"]),
 	money_cooldown: new Model<{ user_id: string, command: string, date: number, value: number }>(),
@@ -37,15 +34,13 @@ const models = {
 	status_users: new Model<{ label: string, user_id: string }>(["label", "user_id"]),
 	transactions: new Model<{ id: string, user_id: string, amount: string, mode: number, description: string, target: string, date: string }>(["id"]),
 	user_permissions: new Model<{ user_id: string, eval: number, owner: number }>(["user_id"]),
-	users: new Model<{ id: string, tag: string, avatar: string | null, bot: number, added_by: string }>(["id"], { useBuffer: true }),
-	voice_states: new Model<{ guild_id: string, channel_id: string, user_id: string }>(["user_id", "guild_id"], { useBuffer: true, bufferSize: 300 }),
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"])
 }
 
 class SQLProvider {
 	public static pool: Pool | null = null
 	public static poolClient: PoolClient | null = null
-	public static orm = new Database(models, SQLProvider)
+	public static readonly orm = new Database(models, SQLProvider)
 
 	public static async all<T extends QueryResultRow | keyof typeof models>(
 		statement: string,
@@ -130,6 +125,6 @@ class SQLProvider {
 	}
 }
 
-confprovider.addCallback(SQLProvider.onConfigChange.bind(SQLProvider))
+confprovider.addCallback(SQLProvider.onConfigChange)
 
 export = SQLProvider

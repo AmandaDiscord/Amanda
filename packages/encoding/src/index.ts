@@ -109,7 +109,7 @@ function indexOfNextUnescapedItem(str: string, item: string): number {
 
 /** Transforms supported encoded non Record and Array data types to their decoded types */
 function decodePrimitive(val: string): any {
-	let actualValue: unknown = void 0
+	let actualValue: unknown
 
 	switch (val[0]) {
 	case "t":
@@ -156,7 +156,7 @@ function decodeStep(str: string): any {
 		const nextDelimiter = indexOfNextUnescapedItem(text, delimiter)
 		const endToUse = nextDelimiter === -1 ? text.length : nextDelimiter
 
-		let actualValue: unknown = void 0
+		let actualValue: unknown
 		switch (text[0]) {
 		case "{": {
 			const closingIndex = findClosing(text, 0, "}")

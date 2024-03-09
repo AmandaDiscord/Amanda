@@ -5,7 +5,6 @@ type Passthrough = {
 	sync: import("heatsync")
 	rootFolder: string
 	confprovider: typeof import("@amanda/config")
-	sql: typeof import("@amanda/sql")
 	commands: import("@amanda/commands").CommandManager<import("@amanda/shared-types").CommandManagerParams>
 	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer

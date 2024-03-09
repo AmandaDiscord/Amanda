@@ -6,9 +6,10 @@ import mime = require("mime-types")
 
 import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
+import sql = require("@amanda/sql")
 
 import passthrough = require("./passthrough")
-const { rootFolder, sql, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions, sessionGuildIndex, gatewayShardIndex } = passthrough
+const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions, sessionGuildIndex, gatewayShardIndex } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"

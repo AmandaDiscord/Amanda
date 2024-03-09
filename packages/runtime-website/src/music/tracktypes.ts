@@ -228,7 +228,7 @@ export class Track {
 	public async getLyrics(): Promise<string | null> {
 		const picked = common.genius.pickApart(this)
 		if (!picked.artist || !picked.title) return null
-		let lyrics: string | null = null
+		let lyrics: string | null
 
 		try {
 			lyrics = await common.genius.getLyrics(picked.title, picked.artist)
@@ -257,7 +257,7 @@ export class RequiresSearchTrack extends Track {
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
-			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined = void 0
+			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 			try {
 				tracks = await common.loadtracks(this.searchString, this.lang, this.queue?.node)
 			} catch (e) {
@@ -265,7 +265,7 @@ export class RequiresSearchTrack extends Track {
 				return
 			}
 
-			let chosen: LLTrack | undefined = undefined
+			let chosen: LLTrack | undefined
 			if (tracks.loadType === "track") chosen = tracks.data
 			else if (tracks.loadType === "playlist") chosen = tracks.data.tracks[0]
 			else if (tracks.loadType === "search") chosen = tracks.data[0]

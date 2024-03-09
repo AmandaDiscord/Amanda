@@ -104,7 +104,7 @@ function ejs(string: string | TemplateStringsArray): ElemJS | undefined {
 	lines.forEach(line => {
 		const indent = spaceRegex.exec(line)![0].length
 		line = line.replace(spaceRegex, "")
-		let element: ElemJS | undefined = void 0
+		let element: ElemJS | undefined
 		let next: any = null
 
 		do {
@@ -517,7 +517,7 @@ export class PlayerTime extends ElemJS<HTMLDivElement> {
 	}
 
 	public renderCurrentTime(): void {
-		let time: number | undefined = void 0
+		let time: number | undefined
 		if (this.state.trackStartTime === 0) time = 0
 		else time = this.getTime()
 

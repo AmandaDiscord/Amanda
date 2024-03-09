@@ -1,18 +1,17 @@
 {
-  "name": "@amanda/shared-utils",
+  "name": "@amanda/redis",
   "version": "1.0.0",
-  "description": "Shared utilities for AmandaDiscord",
+  "description": "A redis provider for AmandaDiscord",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node ../../scripts/fixup-dts.js",
     "lint": "eslint . --ext .ts"
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@amanda/buttons": "1.0.0",
     "@amanda/config": "1.0.0",
-    "@amanda/redis": "1.0.0"
+    "redis": "^4.6.13"
   }
 }
