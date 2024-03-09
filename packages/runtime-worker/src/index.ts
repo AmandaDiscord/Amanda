@@ -5,6 +5,7 @@ import { SnowTransfer } from "snowtransfer"
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
 import sql = require("@amanda/sql")
+import redis = require("@amanda/redis")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
@@ -31,6 +32,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 
 ;(async () => {
 	await passthrough.sql.connect().catch(console.error)
+	await redis.connect()
 
 	const user = await sharedUtils.getUser(
 		passthrough.confprovider.config.client_id,
