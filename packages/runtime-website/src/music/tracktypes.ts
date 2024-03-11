@@ -253,7 +253,7 @@ export class RequiresSearchTrack extends Track {
 		lang: Lang
 	) {
 		super(track ?? "!", info, input, requester, lang)
-		this.searchString = info.uri ?? info.identifier ?? (info.author && info.title) ? `${info.author} - ${info.title}` : info.title ?? ""
+		this.searchString = info.uri ?? info.identifier ?? ((info.author && info.title) ? `${info.author} - ${info.title}` : info.title ?? "")
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
