@@ -250,7 +250,7 @@ commands.assign([
 
 			if (notNull.length === 0) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username })
+					content: langReplace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username, prefix: "/" })
 				})
 			}
 
@@ -274,11 +274,6 @@ commands.assign([
 				]
 
 				const notNull2 = array2.filter(i => i !== null)
-				if (notNull2.length === 0) {
-					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: langReplace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username })
-					})
-				}
 
 				if (notNull2.length > 1) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
