@@ -508,7 +508,7 @@ commands.assign([
 				await Promise.all([
 					sql.raw(
 						"INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)",
-						[result.identifier, result.title, Math.floor(result.length / 1000)]
+						[result.uri ?? result.identifier, result.title, Math.floor(result.length / 1000)]
 					),
 					sql.orm.insert("playlist_songs", {
 						playlist_id: playlistRow.playlist_id,
