@@ -489,7 +489,6 @@ export async function getUser(id: string, snow: SnowTransfer, client?: { user: A
 	currently.setDate(currently.getDate() + 7)
 	if (id === client?.user.id && !force) return { amanda_expiry: currently.toUTCString(), ...client.user }
 	if (confprovider.config.redis_enabled && !force) {
-
 		const cached = await redis.GET<APIUser & { amanda_expiry: string }>("user", id)
 		if (cached) return cached
 	}

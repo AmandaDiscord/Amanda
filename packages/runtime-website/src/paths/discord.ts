@@ -40,12 +40,14 @@ server.post("/interaction", async (res, req) => {
 	let rt = "{}"
 	let commandHandled = false
 
-	const user = payload.member?.user ?? payload.user
+	const user = payload.member?.user ?? payload.user!
 	sharedUtils.updateUser(user)
+	utils.updateUserInAllQueues(user)
 
 	switch (payload.type) {
 	case 1: // Pings to verify
 		rt = "{\"type\":1}"
+		commandHandled = true
 		break
 
 	case 2: // Commands
@@ -56,6 +58,7 @@ server.post("/interaction", async (res, req) => {
 	case 3: // Buttons
 		rt = "{\"type\":6}"
 		buttons.handle(payload)
+		commandHandled = true
 		break
 
 	default:

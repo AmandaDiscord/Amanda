@@ -12,6 +12,9 @@ class RedisProvider {
 		return JSON.parse(data)
 	}
 
+	/**
+	 * Adds data to a key and optionally, to a Set (index)
+	 */
 	public static async SET(namespace: string, id: string, data: Record<string | number | symbol, any>, index?: string): Promise<void> {
 		if (!RedisProvider.client) return
 		await Promise.all([
@@ -20,6 +23,9 @@ class RedisProvider {
 		])
 	}
 
+	/**
+	 * Removes data from a key and optionally, from a Set (index) and can drop it
+	 */
 	public static async DEL(namespace: string, id: string, index?: string, dropIndex?: boolean): Promise<void> {
 		if (!RedisProvider.client) return
 		await Promise.all([
@@ -28,6 +34,9 @@ class RedisProvider {
 		])
 	}
 
+	/**
+	 * Adds a member to a Set (index)
+	 */
 	public static async SADD(index: string, id: string | Array<string>): Promise<void> {
 		if (!RedisProvider.client) return
 		const client = RedisProvider.client
@@ -40,6 +49,9 @@ class RedisProvider {
 		await client.SADD(index, filtered)
 	}
 
+	/**
+	 * Removes a member from a Set (index) and optionally drops it
+	 */
 	public static async SREM(index: string, id: string | Array<string>, dropIndex?: boolean): Promise<void> {
 		if (!RedisProvider.client) return
 		await Promise.all([
@@ -48,14 +60,28 @@ class RedisProvider {
 		])
 	}
 
+	/**
+	 * Get all members within a Set (index)
+	 */
 	public static async SMEMBERS(index: string): Promise<Array<string>> {
 		const members = await RedisProvider.client?.SMEMBERS(index)
 		return members ?? []
 	}
 
+	/**
+	 * Determines if an ID is in a Set (index)
+	 */
 	public static async SISMEMBER(index: string, id: string): Promise<boolean> {
 		const is = await RedisProvider.client?.SISMEMBER(index, id)
 		return !!is
+	}
+
+	/**
+	 * Counts how many members are in a Set (index)
+	 */
+	public static async SCARD(index: string): Promise<number> {
+		const amount = await RedisProvider.client?.SCARD(index)
+		return amount ?? 0
 	}
 
 	public static onConfigChange(): void {
@@ -93,5 +119,7 @@ class RedisProvider {
 		console.error(...params)
 	}
 }
+
+confprovider.addCallback(RedisProvider.onConfigChange)
 
 export = RedisProvider

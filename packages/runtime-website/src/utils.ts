@@ -347,8 +347,9 @@ export async function onGatewayMessage(
 		break
 
 	case "INTERACTION_CREATE": {
-		const user = parsed.d.member?.user ?? parsed.d.user
+		const user = parsed.d.member?.user ?? parsed.d.user!
 		sharedUtils.updateUser(user)
+		updateUserInAllQueues(user)
 		if (parsed.d.type === 2) {
 			let commandHandled = false
 			if (commands.handle(parsed.d as APIChatInputApplicationCommandInteraction, snow)) commandHandled = true
@@ -366,12 +367,16 @@ export async function onGatewayMessage(
 
 	case "USER_UPDATE":
 		sharedUtils.updateUser(parsed.d)
-		for (const q of queues.values()) {
-			q.listeners.set(parsed.d.id, parsed.d)
-			const inGuild = sessionGuildIndex.get(q.guildID)
-			inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(q.toJSON().members))
-		}
+		updateUserInAllQueues(parsed.d)
 		break
+	}
+}
+
+export function updateUserInAllQueues(user: APIUser) {
+	for (const q of queues.values()) {
+		q.listeners.set(user.id, user)
+		const inGuild = sessionGuildIndex.get(q.guildID)
+		inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(q.toJSON().members))
 	}
 }
 

@@ -619,12 +619,13 @@ export class Queue {
 
 			const [clientUser, states] = await Promise.all([
 				sharedUtils.getUser(confprovider.config.client_id, snow),
-				redis.SMEMBERS(`vcs.${this.voiceChannelID}`).then(mems => Promise.all(mems.map(mem => redis.GET("voice", mem))))
+				redis.SMEMBERS(`vcs.${this.voiceChannelID}`).then(mems => Promise.all(mems.map(mem => redis.GET<GatewayVoiceState>("voice", mem))))
 			])
 
 			if (clientUser) this.listeners.set(clientUser.id, clientUser)
 
 			for (const state of states) {
+				if (!state) continue
 				if (this.listeners.has(state.user_id)) continue
 				const user = await sharedUtils.getUser(state.user_id, snow)
 				if (user && !user.bot) this.listeners.set(user.id, user)
