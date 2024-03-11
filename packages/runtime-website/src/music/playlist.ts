@@ -35,13 +35,13 @@ const unbreakDatabase = async (tracks: Array<QueryResultRow>) => {
 	})))
 }
 
-const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCommand, lang: Lang) => {
+const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCommand, lang: Lang, notifyNone = true) => {
 	const tracks = await sql.all<{ next: string, video_id: string, name: string, length: number, playlist_id: number }>(
 		"SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1",
 		[playlistRow.playlist_id]
 	)
 
-	if (tracks.length === 0) {
+	if (tracks.length === 0 && notifyNone) {
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 			content: lang.GLOBAL.PLAYLIST_EMPTY
 		})
@@ -498,7 +498,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				const orderedTracks = await getTracks(playlistRow, cmd, lang, false)
 				if (orderedTracks.some(row => row.video_id === result!.identifier)) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG
