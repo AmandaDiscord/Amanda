@@ -715,6 +715,7 @@ commands.assign([
 						{
 							title: row.name,
 							length: row.length * 1000,
+							uri: confprovider.config.playlists_uri_search_prefix.length ? `${confprovider.config.playlists_uri_search_prefix}${row.video_id}` : void 0,
 							identifier: row.video_id
 						},
 						row.video_id,
