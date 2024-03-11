@@ -33,7 +33,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!common.queues.doChecks(cmd, lang)) return
+			if (!common.queues.doChecks(cmd, lang, true)) return
 
 			const track = cmd.data.options.get("track")!.asString()!
 
@@ -94,7 +94,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!common.queues.doChecks(cmd, lang)) return
+			if (!common.queues.doChecks(cmd, lang, true)) return
 
 			const track = cmd.data.options.get("station")!.asString()!
 
@@ -217,7 +217,7 @@ commands.assign([
 			}
 		],
 		process(cmd, lang) {
-			if (!common.queues.doChecks(cmd, lang)) return
+			if (!common.queues.doChecks(cmd, lang, true)) return
 
 			const page = cmd.data.options.get("page")?.asNumber() ?? null
 			const volume = cmd.data.options.get("volume")?.asNumber() ?? null

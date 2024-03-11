@@ -321,13 +321,13 @@ const common = {
 			return { queue, existed: false }
 		},
 
-		doChecks(cmd: ChatInputCommand, lang: Lang): boolean {
-			if (!confprovider.config.db_enabled) {
+		doChecks(cmd: ChatInputCommand, lang: Lang, isAddTrack = false): boolean {
+			if (!confprovider.config.redis_enabled) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 				return false
 			}
 
-			if (!confprovider.config.music_enabled) {
+			if (!confprovider.config.music_enabled && isAddTrack) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED })
 				return false
 			}
