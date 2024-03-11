@@ -46,10 +46,6 @@ const config = {
 	redis_enabled: true,
 	add_url_for_web_redirect: "",
 	lavalink_default_search_prefix: "scsearch:",
-	// Playlists play searches by identifier unless this is present. This specifies the base host to search from and is done like
-	// `${config.playlists_uri_search_prefix}${row.video_id}` You must include the / at the end of the URL if it matters. Example:
-	// `${"https://soundcloud.com/"}${"desanctus/obitorin"}` -> will cause LavaLink to search for "https://soundcloud.com/desanctus/obitorin" (pretty good song btw)
-	playlists_uri_search_prefix: "",
 	search_extra_source_options: [{
 		name: "Soundcloud",
 		value: "sc"
