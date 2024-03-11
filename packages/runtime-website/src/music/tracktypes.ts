@@ -253,12 +253,13 @@ export class RequiresSearchTrack extends Track {
 		lang: Lang
 	) {
 		super(track ?? "!", info, input, requester, lang)
-		this.searchString = (info.author && info.title) ? `${info.author} - ${info.title}` : info.title ?? ""
+		this.searchString = info.identifier ?? (info.author && info.title) ? `${info.author} - ${info.title}` : info.title ?? ""
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 			try {
+				if (!this.searchString.length) throw new Error("Cannot search track by empty string")
 				tracks = await common.loadtracks(this.searchString, this.lang, this.queue?.node)
 			} catch (e) {
 				this.error = e.message
