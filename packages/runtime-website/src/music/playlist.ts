@@ -230,7 +230,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!common.queues.doChecks(cmd, lang)) {
+			if (!common.queues.doChecks(cmd, lang, true)) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.MUSIC_DISABLED
 				})
