@@ -450,14 +450,10 @@
 		"name": "playlists",
 		"description": "Manage and play Amanda playlists",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Metadata commands",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "show",
-						"description": "Shows all Amanda playlists. True to only show yourself"
-					},
 					"info": {
 						"name": "info",
 						"description": "Shows info for a playlist"

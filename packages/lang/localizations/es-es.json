@@ -450,14 +450,10 @@
 		"name": "playlists",
 		"description": "Interactuar y reproducir playlists de Amanda",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Comandos para Metadata",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "mostrar",
-						"description": "Mostrar todas las pistas de Amanada. True para mostrar las tuyas"
-					},
 					"info": {
 						"name": "info",
 						"description": "Muestra información de una playlist"

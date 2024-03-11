@@ -455,14 +455,10 @@
 		"name": "playlists",
 		"description": "Beheer en speel Amanda playlists af",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Metadata commando's",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "toon",
-						"description": "Toont alle Amanda playlists. Kies true om alleen jezelf te laten zien"
-					},
 					"info": {
 						"name": "info",
 						"description": "Toont informatie over een playlist"

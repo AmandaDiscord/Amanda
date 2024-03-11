@@ -450,14 +450,10 @@
 		"name": "playlists",
 		"description": "Изменять и проигрывать плейлисты",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Команды для метаданных",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "show",
-						"description": "Показывает все плейлисты."
-					},
 					"info": {
 						"name": "info",
 						"description": "Показывает информацию о плейлисте"

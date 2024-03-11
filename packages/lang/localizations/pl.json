@@ -450,14 +450,10 @@
 		"name": "playlisty",
 		"description": "Zarządza i odtwarza playlisty Amandy",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Komendy Metadata",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "pokaż",
-						"description": "Pokazuje wszystkie playlisty Amandy. Ustaw 'true' by pokazywać tylko sobie"
-					},
 					"info": {
 						"name": "info",
 						"description": "Pokazuje informacje dla playlisty"

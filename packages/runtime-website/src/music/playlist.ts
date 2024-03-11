@@ -84,17 +84,11 @@ commands.assign([
 		category: "audio",
 		options: [
 			{
-				name: "meta",
-				description: "Metadata commands",
+				name: "lists",
+				description: "View and create/delete playlists",
 				type: 1,
 				required: false,
 				options: [
-					{
-						name: "show",
-						description: "Shows all Amanda playlists. True to only show yourself",
-						type: 5,
-						required: false
-					},
 					{
 						name: "info",
 						description: "Shows info for a playlist",
@@ -236,7 +230,7 @@ commands.assign([
 				})
 			}
 
-			const optionMeta = cmd.data.options.get("meta") ?? null
+			const optionLists = cmd.data.options.get("lists") ?? null
 			const optionAdd = cmd.data.options.get("add") ?? null
 			const optionRemove = cmd.data.options.get("remove") ?? null
 			const optionMove = cmd.data.options.get("move") ?? null
@@ -244,7 +238,7 @@ commands.assign([
 			const optionPlay = cmd.data.options.get("play") ?? null
 
 			const array = [
-				optionMeta,
+				optionLists,
 				optionAdd,
 				optionRemove,
 				optionMove,
@@ -266,16 +260,14 @@ commands.assign([
 				})
 			}
 
-			if (optionMeta !== null) {
+			if (optionLists !== null) {
 
 
-				const optionShow = optionMeta.options.get("show")?.asBoolean() ?? null
-				const optionInfo = optionMeta.options.get("info")?.asString() ?? null
-				const optionCreate = optionMeta.options.get("create")?.asString() ?? null
-				const optionDelete = optionMeta.options.get("delete")?.asString() ?? null
+				const optionInfo = optionLists.options.get("info")?.asString() ?? null
+				const optionCreate = optionLists.options.get("create")?.asString() ?? null
+				const optionDelete = optionLists.options.get("delete")?.asString() ?? null
 
 				const array2 = [
-					optionShow,
 					optionInfo,
 					optionCreate,
 					optionDelete
@@ -294,7 +286,7 @@ commands.assign([
 					})
 				}
 
-				if (optionShow !== null) {
+				if (optionInfo === null && optionCreate === null && optionDelete === null) {
 					let playlists = await sql.all<{
 						playlist_id: string;
 						name: string;

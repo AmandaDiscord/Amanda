@@ -455,14 +455,10 @@
 		"name": "playlists",
 		"description": "Verwalte und Spiele Amanda Playlists ab",
 		"options": {
-			"meta": {
-				"name": "meta",
-				"description": "Metadata Befehle",
+			"lists": {
+				"name": "lists",
+				"description": "View and create/delete playlists",
 				"options": {
-					"show": {
-						"name": "show",
-						"description": "Zeige alle Amanda playlists. True um nur deine eigenen anzuzeigen"
-					},
 					"info": {
 						"name": "info",
 						"description": "Zeige Infos zu einer Playlist"
