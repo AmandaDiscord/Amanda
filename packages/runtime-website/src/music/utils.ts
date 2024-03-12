@@ -71,7 +71,7 @@ const common = {
 			let confidence = 0
 			let skip = false
 
-			if (track.source === "spotify" || track.source === "applemusic") {
+			if (track.source === "spotify" || track.source === "applemusic" || track.source === "soundcloud") {
 				confidence = 2
 				title = track.title
 				artist = track.author
