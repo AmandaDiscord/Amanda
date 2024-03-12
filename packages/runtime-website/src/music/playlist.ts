@@ -360,6 +360,7 @@ commands.assign([
 					if (authorIcon) a.url = authorIcon
 
 					const orderedTracks = await getTracks(playlistRow, cmd, lang)
+					if (orderedTracks.length === 0) return
 
 					const rows = orderedTracks.map((s, index) => `${index + 1}. **${s.name}** (${sharedUtils.prettySeconds(s.length)})`)
 					const totalLength = `\n${sharedUtils.prettySeconds(orderedTracks.reduce((acc, cur) => (acc + cur.length), 0))}`
@@ -560,6 +561,7 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				if (orderedTracks.length === 0) return
 				const toRemove = orderedTracks[optionIndex - 1]
 				if (!toRemove) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -598,6 +600,7 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				if (orderedTracks.length === 0) return
 				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.OUT_OF_BOUNDS
@@ -658,6 +661,7 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				if (orderedTracks.length === 0) return
 
 				let body = orderedTracks
 					.map((trackss, index) => `${index + 1}. **${trackss.name}** (${sharedUtils.prettySeconds(trackss.length)})`)
@@ -689,11 +693,7 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
-				if (orderedTracks.length === 0) {
-					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: lang.GLOBAL.PLAYLIST_EMPTY
-					})
-				}
+				if (orderedTracks.length === 0) return
 
 				let queue = queues.get(cmd.guild_id!) ?? null
 
