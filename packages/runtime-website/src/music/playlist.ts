@@ -357,7 +357,7 @@ commands.assign([
 						: void 0
 
 					const a: APIEmbedAuthor = { name: authorText }
-					if (authorIcon) a.url = authorIcon
+					if (authorIcon) a.icon_url = authorIcon
 
 					const orderedTracks = await getTracks(playlistRow, cmd, lang)
 					if (orderedTracks.length === 0) return
