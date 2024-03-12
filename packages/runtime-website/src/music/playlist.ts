@@ -531,7 +531,7 @@ commands.assign([
 					}),
 					sql.raw(
 						"UPDATE playlist_songs SET next = $1 WHERE playlist_id = $2 AND next IS NULL AND video_id != $1",
-						[result.identifier, playlistRow.playlist_id]
+						[toUse, playlistRow.playlist_id]
 					)
 				])
 
