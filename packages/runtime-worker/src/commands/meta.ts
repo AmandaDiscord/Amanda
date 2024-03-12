@@ -10,10 +10,11 @@ const simpleGit = sG.simpleGit(__dirname)
 import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
 
-// const emojis: typeof import("../emojis") = sync.require("../emojis")
+const emojis: typeof import("../emojis") = sync.require("../emojis")
 
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import redis = require("@amanda/redis")
 
 import type { APIApplicationCommandOption, APIEmbed } from "discord-api-types/v10"
 import type { Lang } from "@amanda/lang"
@@ -83,10 +84,15 @@ commands.assign([
 		name: "stats",
 		description: "Show detailed statistics",
 		category: "meta",
-		process(cmd, lang, shardID) {
+		async process(cmd, lang, shardID) {
 			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
-			// const leadingSpace = `${emojis.bl}\n​`
+			const leadingSpace = `${emojis.bl}\n​`
 			const ram = process.memoryUsage()
+
+			const [userCount, guildCount] = await Promise.all([
+				redis.SCARD("user"),
+				redis.SCARD("guilds")
+			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
@@ -96,16 +102,16 @@ commands.assign([
 							{
 								name: leadingIdentity,
 								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime(), "sec")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}\n`/* ,
-								inline: true*/
-							}/* ,
+									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}\n`,
+								inline: true
+							},
 							{
 								name: leadingSpace,
-								value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${text.numberComma(stats.users)}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${text.numberComma(stats.guilds)}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
+								value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${sharedUtils.numberComma(userCount)}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${sharedUtils.numberComma(guildCount)}`, // \n`
+								// + `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
 								inline: true
-							}*/
+							}
 						]
 					}
 				]
