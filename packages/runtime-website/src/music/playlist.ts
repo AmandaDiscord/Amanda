@@ -513,6 +513,12 @@ commands.assign([
 
 				const toUse = result.uri ? result.uri : result.identifier
 
+				if (toUse.length > 50) {
+					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: lang.GLOBAL.PLAYLIST_TRACK_TOO_LONG
+					})
+				}
+
 				await Promise.all([
 					sql.raw(
 						"INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)",

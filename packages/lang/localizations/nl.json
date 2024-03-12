@@ -204,7 +204,8 @@
 		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
 		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
 		"REJECTED": "You declined %user's proposal",
-		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists"
+		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
+		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters"
 	},
 	"sit": {
 		"name": "zit",
