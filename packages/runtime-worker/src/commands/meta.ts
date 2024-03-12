@@ -107,7 +107,7 @@ commands.assign([
 							},
 							{
 								name: leadingSpace,
-								value: `**${lang.GLOBAL.HEADER_USER_COUNT}:**\n${sharedUtils.numberComma(userCount)}\n`
+								value: `**❯ ${lang.GLOBAL.HEADER_USER_COUNT}:**\n${sharedUtils.numberComma(userCount)}\n`
 								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${sharedUtils.numberComma(guildCount)}`, // \n`
 								// + `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
 								inline: true
