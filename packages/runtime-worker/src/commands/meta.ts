@@ -10,7 +10,7 @@ const simpleGit = sG.simpleGit(__dirname)
 import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
 
-// const emojis: typeof import("../emojis") = sync.require("../emojis")
+const emojis: typeof import("../emojis") = sync.require("../emojis")
 
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
@@ -85,8 +85,8 @@ commands.assign([
 		description: "Show detailed statistics",
 		category: "meta",
 		async process(cmd, lang, shardID) {
-			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n`
-			const leadingSpace = `${confprovider.config.cluster_id} tree, branch ${shardID}\n​`
+			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
+			const leadingSpace = `${emojis.bl}\n​`
 			const ram = process.memoryUsage()
 
 			const [userCount, guildCount] = await Promise.all([
