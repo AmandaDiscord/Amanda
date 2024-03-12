@@ -742,7 +742,7 @@ commands.assign([
 
 				queue.interaction = cmd
 
-				sql.orm.update("playlists", { playlist_id: playlistRow.playlist_id, play_count: playlistRow.play_count + 1 })
+				sql.orm.update("playlists", { play_count: playlistRow.play_count + 1 }, { playlist_id: playlistRow.playlist_id })
 			}
 		}
 	}
