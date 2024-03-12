@@ -203,7 +203,8 @@
 		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOW DID YOU PROPOSE TO YOURSELF LOL???? PLEASE tell me how",
 		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
 		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
-		"REJECTED": "You declined %user's proposal"
+		"REJECTED": "You declined %user's proposal",
+		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists"
 	},
 	"sit": {
 		"name": "zit",

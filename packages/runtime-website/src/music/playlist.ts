@@ -505,14 +505,22 @@ commands.assign([
 					})
 				}
 
+				if (result.sourceName === "http") {
+					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						content: lang.GLOBAL.CANNOT_ADD_HTTP
+					})
+				}
+
+				const toUse = result.uri ? result.uri : result.identifier
+
 				await Promise.all([
 					sql.raw(
 						"INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)",
-						[result.uri ?? result.identifier, result.title, Math.floor(result.length / 1000)]
+						[toUse, result.title, Math.floor(result.length / 1000)]
 					),
 					sql.orm.insert("playlist_songs", {
 						playlist_id: playlistRow.playlist_id,
-						video_id: result.uri ?? result.identifier,
+						video_id: toUse,
 						next: null
 					}),
 					sql.raw(
