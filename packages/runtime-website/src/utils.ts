@@ -9,7 +9,7 @@ import buttons = require("@amanda/buttons")
 import sql = require("@amanda/sql")
 
 import passthrough = require("./passthrough")
-const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, sessions, sessionGuildIndex, gatewayShardIndex } = passthrough
+const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, gatewayShardIndex } = passthrough
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
@@ -375,8 +375,7 @@ export async function onGatewayMessage(
 export function updateUserInAllQueues(user: APIUser) {
 	for (const q of queues.values()) {
 		q.listeners.set(user.id, user)
-		const inGuild = sessionGuildIndex.get(q.guildID)
-		inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(q.toJSON().members))
+		q.sendToSubscribedSessions("onListenersUpdate", q.toJSON().members)
 	}
 }
 

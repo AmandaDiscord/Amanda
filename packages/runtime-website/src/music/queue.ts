@@ -14,6 +14,8 @@ import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LL
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
 
+import type { Session } from "../ws/public"
+
 import passthrough = require("../passthrough")
 const { sync, queues, confprovider, snow, lavalink, sessions, sessionGuildIndex } = passthrough
 
@@ -296,8 +298,7 @@ export class Queue {
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
 		this.messageUpdater.stop()
-		const inGuild = sessionGuildIndex.get(this.guildID)
-		inGuild?.forEach(s => sessions.get(s)!.onStop())
+		this.sendToSubscribedSessions("onStop")
 
 		if (!this._interactionExpired && this.interaction && editInteraction) {
 			await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
@@ -331,8 +332,7 @@ export class Queue {
 			// this.audit.push({ action: "Queue Destroy", platform: "System", user: "Amanda" })
 			this.destroy()
 		} else { // We have more tracks. Move on.
-			const inGuild = sessionGuildIndex.get(this.guildID)
-			inGuild?.forEach(s => sessions.get(s)!.onNext())
+			this.sendToSubscribedSessions("onNext")
 
 			const removed = this.tracks.shift()
 			// In loop mode, add the just played track back to the end of the queue.
@@ -393,12 +393,10 @@ export class Queue {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
 
-		const inGuild = sessionGuildIndex.get(this.guildID)
-
 		if (!this.playHasBeenCalled) {
 			this.play()
-			inGuild?.forEach(s => sessions.get(s)!.sendState())
-		} else inGuild?.forEach(s => sessions.get(s)!.onTrackAdd(track, position))
+			this.sendToSubscribedSessions("sendState")
+		} else this.sendToSubscribedSessions("onTrackAdd", track, position)
 	}
 
 	public async removeTrack(index: number): Promise<0 | 1 | 2> {
@@ -416,9 +414,7 @@ export class Queue {
 			console.error(`Track destroy error:\n${util.inspect(e, true, Infinity, true)}`)
 		}
 
-		const inGuild = sessionGuildIndex.get(this.guildID)
-		inGuild?.forEach(s => sessions.get(s)!.onTrackRemove(index))
-
+		this.sendToSubscribedSessions("onTrackRemove", index)
 		return 0
 	}
 
@@ -455,8 +451,7 @@ export class Queue {
 			this.trackStartTime = newTrackStartTime
 		}
 
-		const inGuild = sessionGuildIndex.get(this.guildID)
-		inGuild?.forEach(s => sessions.get(s)!.onTimeUpdate({ trackStartTime: this.trackStartTime, pausedAt: this.pausedAt ?? 0, playing: !this.paused }))
+		this.sendToSubscribedSessions("onTimeUpdate", { trackStartTime: this.trackStartTime, pausedAt: this.pausedAt ?? 0, playing: !this.paused })
 	}
 
 	private _onPlayerError(details: Extract<EventOP, { type: "TrackExceptionEvent" | "WebSocketClosedEvent" }>): void {
@@ -608,6 +603,16 @@ export class Queue {
 		}
 	}
 
+	public sendToSubscribedSessions<M extends
+	"onTrackAdd" | "onTrackRemove" | "onTrackUpdate"
+	| "onClearQueue" | "onNext" | "onListenersUpdate" | "onAttributesChange" | "onTimeUpdate" | "onStop"
+	| "sendState"
+	>(method: M, ...args: Parameters<Session[M]>): void {
+		const inGuild = sessionGuildIndex.get(this.guildID)
+		// @ts-expect-error The args are mapped correctly dw
+		inGuild?.forEach(s => sessions.get(s)![method](...args))
+	}
+
 	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
 			if (!this.createResolveCallback) {
@@ -633,8 +638,7 @@ export class Queue {
 
 			this._lastFMSetTrack()
 
-			const inGuild = sessionGuildIndex.get(this.guildID)
-			inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(this.toJSON().members))
+			this.sendToSubscribedSessions("onListenersUpdate", this.toJSON().members)
 			return
 		}
 
@@ -656,7 +660,6 @@ export class Queue {
 			this.listeners.set(packet.member.user.id, packet.member.user)
 		}
 
-		const inGuild = sessionGuildIndex.get(this.guildID)
-		inGuild?.forEach(s => sessions.get(s)!.onListenersUpdate(this.toJSON().members))
+		this.sendToSubscribedSessions("onListenersUpdate", this.toJSON().members)
 	}
 }
