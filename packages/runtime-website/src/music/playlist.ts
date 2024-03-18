@@ -82,6 +82,8 @@ commands.assign([
 		name: "playlists",
 		description: "Manage and play Amanda playlists",
 		category: "audio",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "lists",

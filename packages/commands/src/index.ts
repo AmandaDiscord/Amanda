@@ -188,6 +188,8 @@ export class CommandManager<Params extends Array<unknown>> {
 
 export type Command<Params extends Array<unknown>> = {
 	name: string;
+	integration_types?: Array<number>;
+	contexts?: Array<number>;
 	options?: Array<APIApplicationCommandOption>;
 	description: string;
 	category: string;

@@ -1,6 +1,8 @@
 import passthrough = require("../passthrough");
 const { server, sync } = passthrough
 
+import confprovider = require("@amanda/config")
+
 const utils: typeof import("../utils") = sync.require("../utils")
 
 const redirects = {
@@ -8,7 +10,7 @@ const redirects = {
 	patreon: "https://www.patreon.com/papiophidian",
 	paypal: "https://paypal.me/papiophidian",
 	server: "https://discord.gg/zhthQjH",
-	add: "https://discord.com/api/oauth2/authorize?client_id=1109360903096369153&permissions=0&scope=bot%20applications.commands",
+	add: confprovider.config.add_url_for_web_redirect,
 	todo: "https://github.com/AmandaDiscord/Amanda/projects",
 	github: "https://github.com/AmandaDiscord",
 	privacy: "https://github.com/AmandaDiscord/Amanda/blob/restart/PRIVACYPOLICY",

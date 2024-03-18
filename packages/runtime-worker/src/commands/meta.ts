@@ -84,6 +84,8 @@ commands.assign([
 		name: "stats",
 		description: "Show detailed statistics",
 		category: "meta",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		async process(cmd, lang, shardID) {
 			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
 			const leadingSpace = `${emojis.bl}\n​`
@@ -122,6 +124,8 @@ commands.assign([
 		name: "info",
 		description: "Gets info about Amanda",
 		category: "meta",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		process(cmd, lang) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [
@@ -160,6 +164,8 @@ commands.assign([
 		name: "git",
 		description: "Gets the latest git commits to Amanda",
 		category: "meta",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		async process(cmd, lang) {
 			const limit = 5
 
@@ -235,6 +241,8 @@ commands.assign([
 		name: "help",
 		description: "Your average help command",
 		category: "meta",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "category",
@@ -337,6 +345,8 @@ commands.assign([
 		name: "settings",
 		description: "Modify settings for Amanda to use",
 		category: "meta",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "setting",

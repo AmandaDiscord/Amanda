@@ -30,6 +30,8 @@ commands.assign([
 		name: "image",
 		description: "Send an image of something",
 		category: "images",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "type",

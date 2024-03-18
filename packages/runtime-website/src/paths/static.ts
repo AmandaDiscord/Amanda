@@ -30,6 +30,8 @@ server.get("/commands.json", res => {
 	const data = Array.from(commands.commands.values()).map(cmd => ({
 		name: cmd.name,
 		description: cmd.description,
+		integration_types: cmd.integration_types,
+		contexts: cmd.contexts,
 		options: cmd.options
 	}))
 	const payload = JSON.stringify(data)

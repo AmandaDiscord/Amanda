@@ -17,6 +17,8 @@ commands.assign([
 		name: "play",
 		description: "Play music from multiple sources",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "track",
@@ -61,6 +63,8 @@ commands.assign([
 		name: "radio",
 		description: "Play from radio stations",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "station",
@@ -119,6 +123,8 @@ commands.assign([
 		name: "skip",
 		description: "Skip tracks in the queue",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "start",
@@ -170,6 +176,8 @@ commands.assign([
 		name: "stop",
 		description: "Stops the queue",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) return
 
@@ -187,6 +195,8 @@ commands.assign([
 		name: "queue",
 		description: "Show the queue and do actions",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "page",
@@ -289,6 +299,8 @@ commands.assign([
 		name: "nowplaying",
 		description: "Show the queue now playing message",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) return
 
@@ -306,6 +318,8 @@ commands.assign([
 		name: "trackinfo",
 		description: "Shows info about the currently playing track",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		async process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) return
 
@@ -331,6 +345,8 @@ commands.assign([
 		name: "lyrics",
 		description: "Shows the lyrics of the currently playing track",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		async process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) return
 
@@ -362,6 +378,8 @@ commands.assign([
 		name: "seek",
 		description: "Seek to a time in the currently playing track",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "time",
@@ -416,6 +434,8 @@ commands.assign([
 		name: "filters",
 		description: "Apply filters to the queue",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "pitch",
@@ -471,6 +491,8 @@ commands.assign([
 		name: "shuffle",
 		description: "Shuffle the queue",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang)) return
 
@@ -497,6 +519,8 @@ commands.assign([
 		name: "remove",
 		description: "Removes a track from the queue",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "index",
@@ -542,6 +566,8 @@ commands.assign([
 		name: "musictoken",
 		description: "Obtain a web dashboard login token",
 		category: "audio",
+		integration_types: [1],
+		contexts: [1],
 		options: [
 			{
 				name: "action",
@@ -618,6 +644,8 @@ commands.assign([
 		name: "move",
 		description: "Move a track in the queue to a new position",
 		category: "audio",
+		integration_types: [0],
+		contexts: [0],
 		options: [
 			{
 				name: "from",
@@ -662,6 +690,8 @@ commands.assign([
 		name: "search",
 		description: "Search for a track from multiple sources",
 		category: "audio",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "input",

@@ -21,6 +21,8 @@ const cmds = [
 		name: "bean",
 		description: "Beans a user",
 		category: "interaction",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user",
@@ -59,6 +61,8 @@ const cmds = [
 		name: "ship",
 		description: "Ships two people",
 		category: "interaction",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user2",
@@ -122,7 +126,13 @@ const cmds = [
 	}
 ] as Parameters<typeof commands.assign>["0"]
 
-const interactionSources = [
+const interactionSources: Array<{
+	name: "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat";
+	description: string;
+	shortcut: "weeb.sh" | "durl";
+	traaOverride?: boolean;
+	url?: () => Promise<string>;
+}> = [
 	{
 		name: "hug", // Command object key and text filler
 		description: "Hugs someone", // Command description
@@ -132,8 +142,7 @@ const interactionSources = [
 	{
 		name: "nom",
 		description: "Noms someone",
-		shortcut: "weeb.sh",
-		aliases: ["bite"]
+		shortcut: "weeb.sh"
 	},
 	{
 		name: "kiss",
@@ -176,6 +185,8 @@ for (const source of interactionSources) {
 		name: source.name,
 		description: source.description,
 		category: "interaction",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user",
@@ -184,7 +195,7 @@ for (const source of interactionSources) {
 				required: true
 			}
 		],
-		process: (cmd, lang) => doInteraction(cmd, lang, source.name as Parameters<typeof doInteraction>["2"], source.shortcut, source.url)
+		process: (cmd, lang) => doInteraction(cmd, lang, source.name, source.shortcut, source.url)
 	}
 	cmds.push(newCommand)
 }

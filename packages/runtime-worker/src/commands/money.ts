@@ -381,6 +381,8 @@ commands.assign([
 		name: "slots",
 		description: "Run the slot machine",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "amount",
@@ -502,6 +504,8 @@ commands.assign([
 		name: "flip",
 		description: "Flips a coin",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "amount",
@@ -603,6 +607,8 @@ commands.assign([
 		name: "money",
 		description: "Shows how much money you/another person/the couple has",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "user",
@@ -688,6 +694,8 @@ commands.assign([
 		name: "leaderboard",
 		description: "Shows the leaderboard for top users of money",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -744,6 +752,8 @@ commands.assign([
 		name: "give",
 		description: "Gives another user money",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "amount",
@@ -792,6 +802,8 @@ commands.assign([
 		name: "wheel",
 		description: "Spin the wheel of (mis)fortune",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "amount",
@@ -831,6 +843,8 @@ commands.assign([
 		name: "profile",
 		description: "Gets a user's Amanda profile",
 		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "user",

@@ -73,7 +73,7 @@ const extraContext = {
 		}) as APIApplicationCommandOption)
 	},
 	async refreshcommands(): Promise<void> {
-		let webcommands: Array<{ name: string; description: string; options?: Array<APIApplicationCommandOption> }>
+		let webcommands: Array<{ name: string; description: string; integration_types?: Array<number>; contexts?: Array<number>; options?: Array<APIApplicationCommandOption> }>
 		try {
 			webcommands = await fetch(`${confprovider.config.website_protocol}://${confprovider.config.website_domain}/commands.json`).then(r => r.json())
 		} catch (e) {
@@ -87,6 +87,8 @@ const extraContext = {
 			return {
 				name: c.name,
 				description: c.description,
+				integration_types: c.integration_types,
+				contexts: c.contexts,
 				name_localizations: Object.keys(obj.name_localizations).length ? obj.name_localizations : void 0,
 				description_localizations: Object.keys(obj.description_localizations).length ? obj.description_localizations : void 0,
 				options: options,

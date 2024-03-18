@@ -6,6 +6,8 @@ commands.assign([
 		name: "sit",
 		description: "mood",
 		category: "hidden",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		process(cmd) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				embeds: [

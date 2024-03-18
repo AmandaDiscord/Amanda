@@ -13,6 +13,8 @@ commands.assign([
 		name: "couple",
 		description: "Get couple information about a user",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "user",
@@ -54,6 +56,8 @@ commands.assign([
 		name: "propose",
 		description: "Propose to a user",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user",
@@ -105,6 +109,8 @@ commands.assign([
 		name: "marry",
 		description: "Accepts a proposal from a user",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user",
@@ -176,6 +182,8 @@ commands.assign([
 		name: "reject",
 		description: "Rejects a proposal from a user",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 2],
 		options: [
 			{
 				name: "user",
@@ -225,6 +233,8 @@ commands.assign([
 		name: "divorce",
 		description: "Divorces your significant other(s)",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "user",
@@ -301,6 +311,8 @@ commands.assign([
 		name: "withdraw",
 		description: "Withdraw money from your couple balance",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "amount",
@@ -354,6 +366,8 @@ commands.assign([
 		name: "deposit",
 		description: "Deposit money to your couple balance",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		options: [
 			{
 				name: "amount",
@@ -407,6 +421,8 @@ commands.assign([
 		name: "coupleleaderboard",
 		description: "Shows the leaderboard for top couples of money",
 		category: "couples",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
