@@ -216,7 +216,7 @@ export class Queue {
 			this._reportError()
 			this._nextTrack()
 		} else {
-			await this.player!.play(track.track, { volume: this._volume })
+			await this.player!.play(track.track)
 			if (track.error) return // From Error call B. Already calls _nextTrack
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
@@ -389,12 +389,14 @@ export class Queue {
 		this.player?.stop()
 	}
 
-	public addTrack(track: Track, position = this.tracks.length): void {
+	public async addTrack(track: Track, position = this.tracks.length): Promise<void> {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
 
 		if (!this.playHasBeenCalled) {
-			this.play()
+			await this.play()
+			// already at 0.5, but it needs to trigger the update
+			this.volume = 0.5
 			this.sendToSubscribedSessions("sendState")
 		} else this.sendToSubscribedSessions("onTrackAdd", track, position)
 	}

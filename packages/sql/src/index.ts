@@ -1,6 +1,6 @@
 import util = require("util")
 
-import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from "pg"
+import { Pool, QueryConfig, type PoolClient, type QueryResult, type QueryResultRow } from "pg"
 
 import confprovider = require("@amanda/config")
 
@@ -72,7 +72,7 @@ class SQLProvider {
 				return reject(new Error(`Prepared statement includes undefined\n	Query: ${statement}\n	Prepared: ${util.inspect(prepared)}`))
 			}
 
-			const query = { text: statement, values: prep }
+			const query: QueryConfig = { text: statement, values: prep }
 			if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return resolve(null)
 			SQLProvider.poolClient.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
 				console.error(err)
