@@ -54,7 +54,7 @@ export class Queue {
 
 	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
-	private _volume = 1
+	private _volume = 0.5
 	private _interaction: ChatInputCommand | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
@@ -216,7 +216,7 @@ export class Queue {
 			this._reportError()
 			this._nextTrack()
 		} else {
-			await this.player!.play(track.track)
+			await this.player!.play(track.track, { volume: this._volume })
 			if (track.error) return // From Error call B. Already calls _nextTrack
 			this.trackStartTime = Date.now()
 			this.pausedAt = null
