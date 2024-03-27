@@ -347,7 +347,7 @@ export class Queue {
 				{ emoji: { name: "⏪" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
-				const user = interaction.user ? interaction.user : interaction.member!.user
+				const user = interaction.member?.user ?? interaction.user!
 				if (!this.listeners.get(user.id)) return
 
 				this.seek(0)
@@ -356,7 +356,7 @@ export class Queue {
 				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
-				const user = interaction.user ? interaction.user : interaction.member!.user
+				const user = interaction.member?.user ?? interaction.user!
 				if (!this.listeners.get(user.id)) return
 
 				this.paused = !this.paused
@@ -365,7 +365,7 @@ export class Queue {
 				{ emoji: { name: "⏭" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
-				const user = interaction.user ? interaction.user : interaction.member!.user
+				const user = interaction.member?.user ?? interaction.user!
 				if (!this.listeners.get(user.id)) return
 
 				this.skip()
@@ -374,14 +374,20 @@ export class Queue {
 				{ emoji: { name: "⏹" }, style: 4, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
-				const user = interaction.user ? interaction.user : interaction.member!.user
+				const user = interaction.member?.user ?? interaction.user!
 				if (!this.listeners.get(user.id)) return
 
 				this.destroy()
 			})
 		]
 
-		if (assign) this.menu = newMenu
+		if (assign) {
+			if (this.menu) {
+				this.menu.forEach(bn => bn.destroy())
+				this.menu.length = 0
+			}
+			this.menu = newMenu
+		}
 		return newMenu
 	}
 

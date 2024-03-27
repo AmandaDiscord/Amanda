@@ -36,7 +36,7 @@ export class ChatInputCommand {
 	public token: string
 
 	public constructor(interaction: APIChatInputApplicationCommandInteraction) {
-		this.author = interaction.user ? interaction.user : interaction.member!.user
+		this.author = interaction.member?.user ?? interaction.user!
 		this.member = interaction.member ?? null
 		this.guild_id = interaction.guild_id ?? null
 		this.channel = interaction.channel

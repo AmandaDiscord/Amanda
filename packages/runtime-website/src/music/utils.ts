@@ -392,7 +392,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		}, selectTimeout)
 
 		component.setCallback(async (interaction) => {
-			if ((interaction.user! ?? interaction.member!.user).id != cmd.author.id) return
+			if ((interaction.member?.user ?? interaction.user!).id != cmd.author.id) return
 
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			component.destroy()

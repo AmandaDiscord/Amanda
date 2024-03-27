@@ -2,6 +2,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
+import btn = require("@amanda/buttons")
 
 import passthrough = require("../passthrough")
 const { snow, commands, sync, queues, confprovider } = passthrough
@@ -9,10 +10,11 @@ const { snow, commands, sync, queues, confprovider } = passthrough
 const common: typeof import("./utils") = sync.require("./utils")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
+import type { Queue } from "./queue"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor, GatewayVoiceState } from "discord-api-types/v10"
+import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
 import type { TrackInfo } from "lavalink-types/v4"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
@@ -75,6 +77,50 @@ async function getAuthor(u: string, lang: Lang) {
 		if (username.length > 14) username = `${username.slice(0, 13)}…`
 		return `\`${username}\``
 	} else return "(?)"
+}
+
+async function getUserVoiceState(user: APIUser, appID: string, token: string, lang: Lang, followup = false): Promise<GatewayVoiceState | null> {
+	const userVoiceState = await redis.GET<GatewayVoiceState>("voice", user.id)
+
+	if (!userVoiceState) {
+		const method = followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse
+		method(appID, token, {
+			content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: sharedUtils.userString(user) })
+		})
+		return null
+	}
+
+	return userVoiceState
+}
+
+async function getExistingQueue(user: APIUser, guildID: string, appID: string, token: string, lang: Lang, followup = false): Promise<{ queue: Queue | null, state: GatewayVoiceState | null }> {
+	const userVoiceState = await getUserVoiceState(user, appID, token, lang, followup)
+	if (!userVoiceState) return { queue: null, state: null }
+
+	const queue = queues.get(guildID) ?? null
+
+	if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
+		const method = followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse
+		method(appID, token, {
+			content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
+		})
+		return { queue: null, state: userVoiceState }
+	}
+
+	return { queue, state: userVoiceState }
+}
+
+async function getOrCreateQueue(cmd: ChatInputCommand, lang: Lang): Promise<Queue | null> {
+	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang)
+	if (!data.state) return null
+
+	const node = data.queue?.node
+		? common.nodes.byID(data.queue.node) ?? common.nodes.byIdeal() ?? common.nodes.random()
+		: common.nodes.byIdeal() ?? common.nodes.random()
+
+	if (!data.queue) data.queue = await common.queues.createQueue(cmd, lang, data.state.channel_id!, node.id)
+
+	return data.queue
 }
 
 commands.assign([
@@ -401,6 +447,37 @@ commands.assign([
 
 						pages.push(currentPage)
 
+						let added = false
+
+						const playButton = new btn.BetterComponent({
+							emoji: { name: "▶️" },
+							style: 2,
+							type: 2
+						} as Omit<APIButtonComponentWithCustomId, "custom_id">, {}).setCallback(async interaction => {
+							if (added) return
+							const data = await getExistingQueue(interaction.member?.user ?? interaction.user!, interaction.guild_id!, interaction.application_id, interaction.token, lang, true)
+							if (!data.queue || !data.state) return
+
+							added = true
+							playButton.destroy()
+
+							const trackss = orderedTracks.map(row => new trackTypes.RequiresSearchTrack(
+								"!",
+								{
+									title: row.name,
+									length: row.length * 1000,
+									uri: row.video_id
+								},
+								row.video_id,
+								cmd.author,
+								sharedUtils.getLang(cmd.guild_locale!)
+							))
+
+							for (const track of trackss) {
+								data.queue.addTrack(track)
+							}
+						})
+
 						return sharedUtils.paginate(pages.length, (page, menu) => {
 							return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 								embeds: [
@@ -412,8 +489,8 @@ commands.assign([
 									}
 								],
 								components: menu
-									? [{ type: 1, components: [menu.component] }]
-									: []
+									? [{ type: 1, components: [menu.component] }, { type: 1, components: [playButton.component] }]
+									: [{ type: 1, components: [playButton.component] }]
 							})
 						})
 					}
@@ -697,30 +774,8 @@ commands.assign([
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 
-				let queue = queues.get(cmd.guild_id!) ?? null
-
-				const userVoiceState = await redis.GET<GatewayVoiceState>("voice", cmd.author.id)
-
-				if (!userVoiceState) {
-					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
-					})
-				}
-
-				if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
-					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
-					})
-				}
-
-				const node = queue?.node
-					? common.nodes.byID(queue.node) ?? common.nodes.byIdeal() ?? common.nodes.random()
-					: common.nodes.byIdeal() ?? common.nodes.random()
-
-				if (!queue) {
-					queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id!, node.id)
-					if (!queue) return
-				}
+				const queue = await getOrCreateQueue(cmd, lang)
+				if (!queue) return
 
 				const sliced = orderedTracks.slice(optionStart - 1)
 				const trackss = (optionShuffle

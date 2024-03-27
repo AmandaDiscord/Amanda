@@ -67,8 +67,8 @@ const cc = {
 			return
 		}
 
-		const route = routeHandler(interaction.data, interaction.user ? interaction.user : interaction.member!.user)
-		if (handlers[route]) handlers[route](interaction.data, interaction.user ? interaction.user : interaction.member!.user)
+		const route = routeHandler(interaction.data, interaction.member?.user ?? interaction.user!)
+		if (handlers[route]) handlers[route](interaction.data, interaction.member?.user ?? interaction.user!)
 	},
 
 	BetterComponent
