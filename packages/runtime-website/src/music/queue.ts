@@ -9,7 +9,7 @@ import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
-import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
+import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState, APIChatInputApplicationCommandInteraction, APIMessageComponentInteraction } from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
@@ -55,7 +55,7 @@ export class Queue {
 	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 0.5
-	private _interaction: ChatInputCommand | undefined
+	private _interaction: ChatInputCommand<APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction> | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 	private _destroyed = false

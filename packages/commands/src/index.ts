@@ -18,31 +18,32 @@ import type {
 	APIApplicationCommandInteractionDataBasicOption,
 	APIApplicationCommandInteractionDataSubcommandOption,
 	APIApplicationCommandInteractionDataSubcommandGroupOption,
-	APIApplicationCommandOption
+	APIApplicationCommandOption,
+	APIMessageComponentInteraction
 } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 
-export class ChatInputCommand {
+export class ChatInputCommand<T extends APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction = APIChatInputApplicationCommandInteraction> {
 	public author: APIUser
 	public member: APIInteractionGuildMember | null
 	public guild_id: string | null
 	public channel: APIChatInputApplicationCommandInteraction["channel"]
 	public locale: LocaleString
 	public guild_locale: LocaleString | null
-	public data: ChatInputCommandData
+	public data: T extends APIChatInputApplicationCommandInteraction ? ChatInputCommandData : never
 
 	public id: string
 	public application_id: string
 	public token: string
 
-	public constructor(interaction: APIChatInputApplicationCommandInteraction) {
+	public constructor(interaction: T) {
 		this.author = interaction.member?.user ?? interaction.user!
 		this.member = interaction.member ?? null
 		this.guild_id = interaction.guild_id ?? null
 		this.channel = interaction.channel
 		this.locale = interaction.locale
 		this.guild_locale = interaction.guild_locale ?? null
-		this.data = new ChatInputCommandData(interaction.data)
+		if (interaction.type === 2) this.data = new ChatInputCommandData(interaction.data) as T extends APIChatInputApplicationCommandInteraction ? ChatInputCommandData : never
 
 		this.id = interaction.id
 		this.application_id = interaction.application_id

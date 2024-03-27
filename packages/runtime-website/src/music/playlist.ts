@@ -3,6 +3,7 @@ import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
 import btn = require("@amanda/buttons")
+import { ChatInputCommand } from "@amanda/commands"
 
 import passthrough = require("../passthrough")
 const { snow, commands, sync, queues, confprovider } = passthrough
@@ -11,10 +12,9 @@ const common: typeof import("./utils") = sync.require("./utils")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
 import type { Queue } from "./queue"
-import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
+import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser, APIMessageComponentInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
 import type { TrackInfo } from "lavalink-types/v4"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
@@ -100,7 +100,7 @@ async function getExistingQueue(user: APIUser, guildID: string, appID: string, t
 	const queue = queues.get(guildID) ?? null
 
 	if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
-		const method = followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse
+		const method = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 		method(appID, token, {
 			content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 		})
@@ -110,8 +110,8 @@ async function getExistingQueue(user: APIUser, guildID: string, appID: string, t
 	return { queue, state: userVoiceState }
 }
 
-async function getOrCreateQueue(cmd: ChatInputCommand, lang: Lang): Promise<Queue | null> {
-	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang)
+async function getOrCreateQueue(cmd: ChatInputCommand<APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction>, lang: Lang, followup = false): Promise<Queue | null> {
+	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang, followup)
 	if (!data.state) return null
 
 	const node = data.queue?.node
@@ -413,6 +413,37 @@ commands.assign([
 					const rows = orderedTracks.map((s, index) => `${index + 1}. **${s.name}** (${sharedUtils.prettySeconds(s.length)})`)
 					const totalLength = `\n${sharedUtils.prettySeconds(orderedTracks.reduce((acc, cur) => (acc + cur.length), 0))}`
 
+					let added = false
+
+					const playButton = new btn.BetterComponent({
+						emoji: { name: "▶️" },
+						style: 2,
+						type: 2
+					} as Omit<APIButtonComponentWithCustomId, "custom_id">, {}).setCallback(async interaction => {
+						if (added) return
+						const queue = await getOrCreateQueue(new ChatInputCommand(interaction), lang, true)
+						if (!queue) return
+
+						added = true
+						playButton.destroy()
+
+						const trackss = orderedTracks.map(row => new trackTypes.RequiresSearchTrack(
+							"!",
+							{
+								title: row.name,
+								length: row.length * 1000,
+								uri: row.video_id
+							},
+							row.video_id,
+							cmd.author,
+							sharedUtils.getLang(cmd.guild_locale!)
+						))
+
+						for (const track of trackss) {
+							queue.addTrack(track)
+						}
+					})
+
 					if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 							embeds: [
@@ -421,7 +452,8 @@ commands.assign([
 									color: confprovider.config.standard_embed_color,
 									description: rows.join("\n") + totalLength
 								}
-							]
+							],
+							components: [{ type: 1, components: [playButton.component] }]
 						})
 					} else {
 						const pages: Array<Array<string>> = []
@@ -446,37 +478,6 @@ commands.assign([
 						}
 
 						pages.push(currentPage)
-
-						let added = false
-
-						const playButton = new btn.BetterComponent({
-							emoji: { name: "▶️" },
-							style: 2,
-							type: 2
-						} as Omit<APIButtonComponentWithCustomId, "custom_id">, {}).setCallback(async interaction => {
-							if (added) return
-							const data = await getExistingQueue(interaction.member?.user ?? interaction.user!, interaction.guild_id!, interaction.application_id, interaction.token, lang, true)
-							if (!data.queue || !data.state) return
-
-							added = true
-							playButton.destroy()
-
-							const trackss = orderedTracks.map(row => new trackTypes.RequiresSearchTrack(
-								"!",
-								{
-									title: row.name,
-									length: row.length * 1000,
-									uri: row.video_id
-								},
-								row.video_id,
-								cmd.author,
-								sharedUtils.getLang(cmd.guild_locale!)
-							))
-
-							for (const track of trackss) {
-								data.queue.addTrack(track)
-							}
-						})
 
 						return sharedUtils.paginate(pages.length, (page, menu) => {
 							return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
