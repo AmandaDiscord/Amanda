@@ -547,7 +547,6 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
 	let page = 0
 	if (pageCount > 1) {
-		let menuExpires: NodeJS.Timeout
 		const options = Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
 		const component = new buttons.BetterComponent({
 			type: 3,
@@ -557,20 +556,15 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 			options
 		} as import("discord-api-types/v10").APISelectMenuComponent, { cluster: confprovider.config.cluster_id })
 
+		const menuExpires = new BetterTimeout().setDelay(60 * 1000).setCallback(() => component.destroy()).run()
+
 		component.setCallback(interaction => {
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			page = Number(select.data.values[0] || 0)
+			menuExpires.clear().run()
 			callback(page, component)
 		})
 
-		const makeTimeout = () => {
-			clearTimeout(menuExpires)
-			menuExpires = setTimeout(() => {
-				component.destroy()
-			}, 10 * 60 * 1000)
-		}
-
-		makeTimeout()
 		callback(page, component)
 	} else callback(page, null)
 }

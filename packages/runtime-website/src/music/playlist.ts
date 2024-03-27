@@ -415,6 +415,8 @@ commands.assign([
 
 					let added = false
 
+					const destroyTimer = new sharedUtils.BetterTimeout().setDelay(60 * 1000)
+
 					const playButton = new btn.BetterComponent({
 						emoji: { name: "▶️" },
 						style: 2,
@@ -425,7 +427,7 @@ commands.assign([
 						if (!queue) return
 
 						added = true
-						playButton.destroy()
+						destroyTimer.triggerNow()
 
 						const trackss = orderedTracks.map(row => new trackTypes.RequiresSearchTrack(
 							"!",
@@ -443,6 +445,8 @@ commands.assign([
 							queue.addTrack(track)
 						}
 					})
+
+					destroyTimer.setCallback(() => playButton.destroy()).run()
 
 					if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

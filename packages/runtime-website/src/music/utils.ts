@@ -375,7 +375,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 	} as import("discord-api-types/v10").APISelectMenuComponent, {})
 
 	return new Promise(res => {
-		const timer = setTimeout(() => {
+		const timer = new sharedUtils.BetterTimeout().setDelay(selectTimeout).setCallback(() => {
 			component.destroy()
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -389,14 +389,14 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			})
 
 			return res(null)
-		}, selectTimeout)
+		}).run()
 
 		component.setCallback(async (interaction) => {
 			if ((interaction.member?.user ?? interaction.user!).id != cmd.author.id) return
 
 			const select = interaction as import("discord-api-types/v10").APIMessageComponentSelectMenuInteraction
 			component.destroy()
-			clearTimeout(timer)
+			timer.clear()
 
 			const selected = trackss[Number(select.data.values[0])]
 
