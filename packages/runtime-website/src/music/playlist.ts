@@ -83,7 +83,7 @@ async function getUserVoiceState(user: APIUser, appID: string, token: string, la
 	const userVoiceState = await redis.GET<GatewayVoiceState>("voice", user.id)
 
 	if (!userVoiceState) {
-		const method = followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse
+		const method = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 		method(appID, token, {
 			content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: sharedUtils.userString(user) })
 		})
