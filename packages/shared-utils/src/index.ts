@@ -523,7 +523,7 @@ type ChatInputCommand = {
 }
 
 export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array<string>, rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, maxLength: number, snow: SnowTransfer): void {
-	let alignedRows = tableifyRows([title].concat(rows), align, () => "`")
+	let alignedRows = tableifyRows([title].concat(rows), align, line => line === 0 ? "`" : "")
 	const formattedTitle = alignedRows[0].replace(alignedRowsRegex, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)
 	const pages = createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
