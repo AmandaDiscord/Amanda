@@ -380,7 +380,7 @@ commands.assign([
 							, p.play_count.toString()
 							, users[index]
 						])
-						, ["left", "right", "right", "right", "left"]
+						, ["left", "right", "right", "right", "none"]
 						, 2000
 						, snow
 					)
