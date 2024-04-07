@@ -4,7 +4,7 @@
   "description": "@AmandaDiscord's listing site styles",
   "scripts": {
     "build": "node node-build.js",
-    "lint": "eslint ."
+    "lint": "eslint . -c eslint.config.js"
   },
   "keywords": [
     "listings"

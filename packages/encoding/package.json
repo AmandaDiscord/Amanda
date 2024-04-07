@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",
   "license": "MIT"
