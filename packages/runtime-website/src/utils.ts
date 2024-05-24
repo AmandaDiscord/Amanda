@@ -374,6 +374,7 @@ export async function onGatewayMessage(
 
 export function updateUserInAllQueues(user: APIUser) {
 	for (const q of queues.values()) {
+		if (!q.listeners.has(user.id)) continue
 		q.listeners.set(user.id, user)
 		q.sendToSubscribedSessions("onListenersUpdate", q.toJSON().members)
 	}
