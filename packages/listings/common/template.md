@@ -1,4 +1,4 @@
-![Amanda's avatar, a red-haired catgirl, sitting at a desk in front of a computer.](https://cdn.discordapp.com/attachments/1123048509470429365/1129528746190315660/Amanda_Banner.png)
+![Amanda's avatar, a red-haired catgirl, sitting at a desk in front of a computer.](https://b.catgirlsare.sexy/rD4aNJB1X4KE.png)
 
 # A qt music bot made for qts
 
@@ -10,7 +10,7 @@ Amanda can:
 
 # A premium feel
 
-Her music player is designed to be functional and pleasing to look at. Amanda can play music from a very wide Array of mainstream sources and some not-so-mainstream sources, radio stations such as [Frisky Radio](https://www.friskyradio.com/), [listen.moe](https://listen.moe), and even your own audio files! Can your daily driver bot do all of that for free? Yup, Amanda is 100% free. Crazy that we're not in it for a cash grab. In case you're suspicious of our intents of being 100% free, check out our [privacy policy](https://amanda.moe/to/privacy) covering data and usage; Or, if you're tech savvy, you can read the [source code](https://amanda.moe/to/github) in its entirety to make sure we're not making things up.
+Her music player is designed to be functional and pleasing to look at. Amanda can play music from a very wide Array of mainstream sources and some not-so-mainstream sources, radio stations such as [Frisky Radio](https://www.friskyradio.com/), [listen.moe](https://listen.moe), and even your own audio files! Can your daily driver bot do all of that for free? Yup, Amanda is free and even open source. Crazy that we're not in it for a cash grab. In case you're suspicious of our intents of being free, check out our [privacy policy](https://amanda.moe/to/privacy) covering data and usage; Or, if you're tech savvy, you can read the [source code](https://amanda.moe/to/github) in its entirety to make sure we're not making things up.
 
 # You're in control
 
@@ -18,7 +18,7 @@ You will **never** have to pay or vote on any website to be able to play any of 
 
 She has a website that lets you see and manage what songs are playing in real time. It's been designed from the ground up for performance and security, insuring you have a no compromises experience.
 
-![A screenshot of a website displaying a list of songs and playback controls.](https://cdn.discordapp.com/attachments/1123048509470429365/1135790951844024340/image.png)
+![A screenshot of a website displaying a list of songs and playback controls.](https://b.catgirlsare.sexy/JsM7TnourH5F.png)
 
 Amanda is updated regularly with lots of ❤️ to deliver upon what is promised, which is quality and stability.
 
