@@ -1,18 +1,45 @@
 server: # REST and WS server
   port: 10402
-  address: "localhost"
+  address: "0.0.0.0"
 plugins:
-#  name: # Name of the plugin
-#    some_key: some_value # Some key-value pair for the plugin
-#    another_key: another_value
+  lavasrc:
+    providers: # Custom providers for track loading. This is the default
+      - "dzisrc:%ISRC%" # Deezer ISRC provider
+      # - "dzsearch:%QUERY%" # Deezer search provider
+      #  you can add multiple other fallback sources here
+    sources:
+      spotify: true # Enable Spotify source
+      applemusic: true # Enable Apple Music source
+      deezer: true # Enable Deezer source
+      yandexmusic: false # Enable Yandex Music source
+      flowerytts: false # Enable Flowery TTS source
+      youtube: false # Enable YouTube search source (https://github.com/topi314/LavaSearch)
+    lyrics-sources:
+      spotify: true # Enable Spotify lyrics source
+      deezer: true # Enable Deezer lyrics source
+    spotify:
+      clientId: ""
+      clientSecret: ""
+      countryCode: "US" # the country code you want to use for filtering the artists top tracks. See https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+      playlistLoadLimit: 3 # The number of pages at 100 tracks each
+      albumLoadLimit: 6 # The number of pages at 50 tracks each
+    applemusic:
+      countryCode: "US" # the country code you want to use for filtering the artists top tracks and language. See https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+      mediaAPIToken: "" # Can be used to bypass the auto token fetching which is likely to break again in the future
+      playlistLoadLimit: 1 # The number of pages at 300 tracks each
+      albumLoadLimit: 1 # The number of pages at 300 tracks each
+    deezer:
+      masterDecryptionKey: "" # the master key used for decrypting the deezer tracks. (yes this is not here you need to get it from somewhere else)
+    yandexmusic:
+      accessToken: "your access token" # the token used for accessing the yandex music api. See https://github.com/TopiSenpai/LavaSrc#yandex-music
 lavalink:
   plugins:
-#    - dependency: "group:artifact:version"
-#      repository: "repository"
+    - dependency: "com.github.topi314.lavasrc:lavasrc-plugin:VERSION" # Replace VERSION with the latest from https://github.com/topi314/LavaSrc
+      repository: "https://maven.topi.wtf/releases"
   server:
-    password: # Add a password here
+    password: "youshallnotpass"
     sources:
-      youtube: false
+      youtube: false # Daddy Google and Mommy Discord don't like bots using YouTube. You can get beaned :(
       bandcamp: true
       soundcloud: true
       twitch: true
@@ -30,7 +57,7 @@ lavalink:
       rotation: true
       channelMix: true
       lowPass: true
-    bufferDurationMs: 400 # The duration of the NAS buffer. Higher values fare better against longer GC pauses. Duration <= 0 to disable JDA-NAS. Minimum of 40ms, lower values may introduce pauses.
+    bufferDurationMs: 100 # The duration of the NAS buffer. Higher values fare better against longer GC pauses. Duration <= 0 to disable JDA-NAS. Minimum of 40ms, lower values may introduce pauses.
     frameBufferDurationMs: 5000 # How many milliseconds of audio to keep buffered
     opusEncodingQuality: 7 # Opus encoder quality. Valid values range from 0 to 10, where 10 is best quality but is the most expensive on the CPU.
     resamplingQuality: LOW # Quality of resampling operations. Valid values are LOW, MEDIUM and HIGH, where HIGH uses the most CPU.
@@ -38,7 +65,7 @@ lavalink:
     useSeekGhosting: true # Seek ghosting is the effect where whilst a seek is in progress, the audio buffer is read from until empty, or until seek is ready.
     youtubePlaylistLoadLimit: 6 # Number of pages at 100 each
     playerUpdateInterval: 5 # How frequently to send player updates to clients, in seconds
-    youtubeSearchEnabled: true
+    youtubeSearchEnabled: false
     soundcloudSearchEnabled: true
     gc-warnings: true
     #ratelimit:

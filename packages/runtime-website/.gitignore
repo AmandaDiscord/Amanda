@@ -1,3 +1,4 @@
 webroot/scripts/wrappers
 webroot/scripts/*.mjs
 webroot/scripts/*.map
+/queue-restore.json

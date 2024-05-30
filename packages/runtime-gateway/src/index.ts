@@ -184,19 +184,18 @@ async function updateVoiceState(state: GatewayVoiceState, modifyIndex = true) {
 process.stdin.resume()
 
 function exitHandler(...params: Array<unknown>) {
+	console.warn(...params)
 	if (shardInfoChanged) {
 		try {
 			fs.unlinkSync(toSessionsJSON)
 		} catch {
 			void 0
 		}
-		console.warn(...params)
-		return
+		return process.exit()
 	}
 	if (alreadyWrote) return
 	alreadyWrote = true
 
-	console.warn(...params)
 	const data = {}
 	for (const shard of Object.values(client.shardManager.shards)) {
 		data[shard.id] = [shard.connector.sessionId, shard.connector.resumeAddress, shard.connector.seq]

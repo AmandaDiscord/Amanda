@@ -1,15 +1,14 @@
 import util = require("util")
 
-import { Rest } from "lavacord"
-
 import buttons = require("@amanda/buttons")
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import redis = require("@amanda/redis")
+import { type Lang, en_us } from "@amanda/lang"
+import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
-import type { Lang } from "@amanda/lang"
-import type { Track } from "./tracktypes"
+import { Track } from "./tracktypes"
 import type { APIEmbed, APIUser, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
@@ -27,6 +26,7 @@ const hiddenEmbedRegex = /(^<|>$)/g
 const searchShortRegex = /^\w+?search:/
 const startsWithHTTP = /^https?:\/\//
 const replaceExtraneousRegex = / ?\([^)]+\) ?/g
+const userTagRegex = /(.+?)#(\d+)$/
 
 type Key = Exclude<keyof typeof import("./tracktypes"), "FriskyTrack" | "ListenMoeTrack" | "RadioTrack" | "default">
 
@@ -257,7 +257,7 @@ const common = {
 			})
 
 			try {
-				const player = await lavalink!.join({ channel: channel, guild: cmd.guild_id!, node })
+				const player = await lavalink.join({ channel: channel, guild: cmd.guild_id!, node })
 				// wait to create timer so that we know for a fact the message was sent
 
 				await new Promise<void>((res, rej) => {
@@ -272,13 +272,13 @@ const common = {
 					}
 				})
 
-				queue!.node = node
-				queue!.player = player
-				queue!.addPlayerListeners()
+				queue.node = node
+				queue.player = player
+				queue.addPlayerListeners()
 				return queue
 			} catch (e) {
 				if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
-				queue!.destroy()
+				queue.destroy()
 
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
@@ -288,6 +288,42 @@ const common = {
 				})
 				return null
 			}
+		},
+
+		async createQueueFromRestore(guildID: string, data: ReturnType<Queue["toJSON"]>): Promise<void> {
+			const node = data.node ? lavalink.nodes.get(data.node) : undefined
+			if (!node) return void console.error(`Node ${data.node} doesn't exist in memory`)
+			const queueFile: typeof import("./queue") = sync.require("./queue")
+
+			const queue = new queueFile.Queue(guildID, data.voiceChannel.id, data.textChannelID)
+
+			queue.lang = en_us
+			queue.node = data.node
+			queue.player = new Player(node, guildID)
+
+			queue.loop = data.attributes.loop
+
+			for (const member of data.members) {
+				const tag = userTagRegex.exec(member.tag)
+				queue.listeners.set(member.id, {
+					id: member.id,
+					username: tag ? tag[1] : member.tag,
+					discriminator: tag ? tag[2] : "0",
+					global_name: "",
+					avatar: member.avatar
+				})
+			}
+
+			queue.pausedAt = data.pausedAt
+			if (data.pausedAt) queue.player.paused = true
+			queue.trackStartTime = data.trackStartTime
+
+			/* const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
+			for (const track of data.tracks) {
+				const ctrack = new trackTypes.Track()
+			}*/
+
+			queue.addPlayerListeners()
 		},
 
 		async getOrCreateQueue(cmd: ChatInputCommand, lang: Lang): Promise<{

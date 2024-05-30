@@ -79,11 +79,13 @@ export class Queue {
 				id: this.voiceChannelID,
 				name: "Amanda-Music"
 			},
+			textChannelID: this.textChannelID,
 			pausedAt: this.pausedAt,
 			trackStartTime: this.trackStartTime,
 			attributes: {
 				loop: this.loop
-			}
+			},
+			node: this.node
 		}
 	}
 

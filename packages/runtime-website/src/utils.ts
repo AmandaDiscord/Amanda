@@ -418,6 +418,10 @@ export function buttonHandlerParamsToInteraction(data: APIMessageComponentIntera
 			pinned: false,
 			type: 0
 		},
-		entitlements: []
+		entitlements: [],
+		authorizing_integration_owners: {
+			0: "",
+			1: ""
+		}
 	}
 }

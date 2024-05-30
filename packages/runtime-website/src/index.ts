@@ -1,8 +1,12 @@
 import "@amanda/logger"
 
+import fs = require("fs")
+import path = require("path")
+
 import uWS = require("uWebSockets.js")
 import { SnowTransfer } from "snowtransfer"
-import { Manager } from "lavacord"
+import { Manager, LavalinkNodeOptions } from "lavacord"
+import { GatewayVoiceState } from "discord-api-types/v10"
 
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
@@ -26,18 +30,23 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 ], console.error)
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
 
+const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
+
 ;(async () => {
 	await sql.connect().catch(console.error)
 	await redis.connect()
+	const oldQueuesAndNodes: StoredQueuesAndNodes = JSON.parse(await fs.promises.readFile(pathToOldQueuesAndNodes, { encoding: "utf-8" }).catch(() => "{\"queues\":{},\"nodes\":{}}"))
 	const lavalinkNodeData = await sql.orm.select("lavalink_nodes")
 	const lavalinkNodes = lavalinkNodeData.map(node => {
+		const id = node.name.toLowerCase()
 		const newData = {
 			password: passthrough.confprovider.config.lavalink_password,
-			id: node.name.toLowerCase(),
-			resuming: true,
-			resumeTimeout: 25
+			id: id,
+			resuming: true as const,
+			resumeTimeout: 25 as const,
+			sessionId: oldQueuesAndNodes.nodes[id]
 		}
-		return Object.assign(newData, node)
+		return Object.assign(newData, node) as typeof newData & typeof node
 	})
 
 	passthrough.confprovider.config.lavalink_nodes.push(...lavalinkNodes)
@@ -55,7 +64,7 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 			const worker = passthrough.gatewayWorkers.get(passthrough.gatewayShardIndex.get(shardID)!)
 
 			if (!worker) {
-				console.error(`No gateway worker available to send a message for shard ${shardID}`)
+				console.error(`No gateway worker available to send a message for shard ${shardID}`, packet)
 				return false
 			}
 
@@ -93,9 +102,49 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 		"./music/playlist"
 	])
 
+	/* const musicUtils: typeof import("./music/utils") = passthrough.sync.require("./music/utils")
+	Promise.all(
+		Object.entries(oldQueuesAndNodes.queues).map(async entry => {
+			const stillInVC = await redis.GET<GatewayVoiceState>("voice", passthrough.confprovider.config.client_id)
+			if (stillInVC?.channel_id !== entry[1].voiceChannel.id) return
+			musicUtils.queues.createQueueFromRestore(entry[0], entry[1])
+		})
+	)*/
+
 	const port = passthrough.confprovider.config.website_port
 	passthrough.server.listen(port, sock => {
 		if (sock) console.log(`Listening to port ${port}`)
 		else console.log(`Failed to listen to port ${port}`)
 	})
 })()
+
+process.stdin.resume()
+
+type StoredQueuesAndNodes = {
+	queues: { [guildID: string]: ReturnType<import("./music/queue").Queue["toJSON"]> }
+	nodes: { [nodeID: string]: string | undefined }
+}
+
+function exitHandler(...params: Array<unknown>) {
+	console.warn(...params)
+	if (passthrough.lavalink) {
+		const obj: StoredQueuesAndNodes = {
+			queues: {},
+			nodes: {}
+		}
+		for (const [id, node] of passthrough.lavalink.nodes.entries()) obj.nodes[id] = node.sessionId
+		for (const [id, queue] of passthrough.queues.entries()) {
+			// <= 1 means Amanda will leave eventually so dont add. The users all left during an update which sucks, but we cannot hold refs
+			if (this.listeners.size > 1) obj.queues[id] = queue.toJSON()
+			else queue.destroy()
+		}
+
+		fs.writeFileSync(pathToOldQueuesAndNodes, JSON.stringify(obj))
+	}
+	return process.exit()
+}
+
+process.on("exit", exitHandler)
+process.on("SIGINT", exitHandler)
+process.on("SIGUSR1", exitHandler)
+process.on("SIGUSR2", exitHandler)

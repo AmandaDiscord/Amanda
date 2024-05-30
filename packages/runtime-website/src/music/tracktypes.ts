@@ -146,6 +146,7 @@ export class Track {
 	public queue: Queue | undefined
 	public source: string
 	public uri: string | null
+	public cacheBypass = false
 
 	private _filledBarOffset = 0
 
@@ -257,6 +258,7 @@ export class RequiresSearchTrack extends Track {
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
+			if (this.cacheBypass) return
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 			try {
 				if (!this.searchString.length) throw new Error("Cannot search track by empty string")
