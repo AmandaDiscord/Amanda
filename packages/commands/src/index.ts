@@ -19,35 +19,38 @@ import type {
 	APIApplicationCommandInteractionDataSubcommandOption,
 	APIApplicationCommandInteractionDataSubcommandGroupOption,
 	APIApplicationCommandOption,
-	APIMessageComponentInteraction
+	APIContextMenuInteractionData,
+	APIContextMenuInteraction
 } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 
-export class ChatInputCommand<T extends APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction = APIChatInputApplicationCommandInteraction> {
+export class ChatInputCommand {
 	public author: APIUser
 	public member: APIInteractionGuildMember | null
 	public guild_id: string | null
 	public channel: APIChatInputApplicationCommandInteraction["channel"]
 	public locale: LocaleString
 	public guild_locale: LocaleString | null
-	public data: T extends APIChatInputApplicationCommandInteraction ? ChatInputCommandData : never
+	public data: ChatInputCommandData
 
 	public id: string
 	public application_id: string
 	public token: string
+	public app_permissions: string
 
-	public constructor(interaction: T) {
+	public constructor(interaction: APIChatInputApplicationCommandInteraction) {
 		this.author = interaction.member?.user ?? interaction.user!
 		this.member = interaction.member ?? null
 		this.guild_id = interaction.guild_id ?? null
 		this.channel = interaction.channel
 		this.locale = interaction.locale
 		this.guild_locale = interaction.guild_locale ?? null
-		if (interaction.type === 2) this.data = new ChatInputCommandData(interaction.data) as T extends APIChatInputApplicationCommandInteraction ? ChatInputCommandData : never
+		this.data = new ChatInputCommandData(interaction.data)
 
 		this.id = interaction.id
 		this.application_id = interaction.application_id
 		this.token = interaction.token
+		this.app_permissions = interaction.app_permissions
 	}
 }
 
@@ -98,6 +101,55 @@ export class CommandOption {
 
 	public asBoolean(): boolean | null {
 		return this.value as boolean
+	}
+}
+
+export class ContextMenuCommand {
+	public author: APIUser
+	public member: APIInteractionGuildMember | null
+	public guild_id: string | null
+	public channel: APIContextMenuInteraction["channel"]
+	public locale: LocaleString
+	public guild_locale: LocaleString | null
+	public data: ContextMenuCommandData
+	public target: string
+
+	public id: string
+	public application_id: string
+	public token: string
+	public app_permissions: string
+
+	public constructor(interaction: APIContextMenuInteraction) {
+		this.author = interaction.member?.user ?? interaction.user!
+		this.member = interaction.member ?? null
+		this.guild_id = interaction.guild_id ?? null
+		this.channel = interaction.channel
+		this.locale = interaction.locale
+		this.guild_locale = interaction.guild_locale ?? null
+		this.data = new ContextMenuCommandData(interaction.data)
+		this.target = interaction.data.target_id
+
+		this.id = interaction.id
+		this.application_id = interaction.application_id
+		this.token = interaction.token
+		this.app_permissions = interaction.app_permissions
+	}
+}
+
+export class ContextMenuCommandData {
+	public target_id: string
+
+	public users = new Map<string, APIUser>()
+	public members = new Map<string, APIInteractionDataResolvedGuildMember>()
+	public messages = new Map<string, APIMessage>()
+
+	public constructor(data: APIContextMenuInteractionData) {
+		this.target_id = data.target_id
+
+		if (data.type === 2) {
+			this.users = new Map(Object.entries(data.resolved.users))
+			this.members = new Map(Object.entries(data.resolved.members ?? {}))
+		} else this.messages = new Map(Object.entries(data.resolved.messages))
 	}
 }
 
@@ -188,13 +240,15 @@ export class CommandManager<Params extends Array<unknown>> {
 }
 
 export type Command<Params extends Array<unknown>> = {
-	name: string;
-	integration_types?: Array<number>;
-	contexts?: Array<number>;
-	options?: Array<APIApplicationCommandOption>;
-	description: string;
-	category: string;
-	examples?: Array<string>;
-	order?: number;
-	process(...args: Params): unknown;
+	name: string
+	type?: 1 | 2 | 3
+	integration_types?: Array<number>
+	contexts?: Array<number>
+	options?: Array<APIApplicationCommandOption>
+	description: string
+	category: string
+	guild_ids?: Array<string>
+	examples?: Array<string>
+	order?: number
+	process(...args: Params): unknown
 }

@@ -73,7 +73,7 @@ const extraContext = {
 		}) as APIApplicationCommandOption)
 	},
 	async refreshcommands(): Promise<void> {
-		let webcommands: Array<{ name: string; description: string; integration_types?: Array<number>; contexts?: Array<number>; options?: Array<APIApplicationCommandOption> }>
+		let webcommands: Array<{ name: string; type: number; description: string; guild_ids?: Array<string>; integration_types?: Array<number>; contexts?: Array<number>; options?: Array<APIApplicationCommandOption> }>
 		try {
 			webcommands = await fetch(`${confprovider.config.website_protocol}://${confprovider.config.website_domain}/commands.json`).then(r => r.json())
 		} catch (e) {
@@ -86,7 +86,9 @@ const extraContext = {
 			const options = extraContext.buildCommandLanguageOptions(c)
 			return {
 				name: c.name,
+				type: c.type ?? 1,
 				description: c.description,
+				guild_ids: c.guild_ids,
 				integration_types: c.integration_types,
 				contexts: c.contexts,
 				name_localizations: Object.keys(obj.name_localizations).length ? obj.name_localizations : void 0,
@@ -97,8 +99,22 @@ const extraContext = {
 		})
 
 		// Amanda is a "new" account which doesn't have a different ID from the application
-		const response = await client.snow.interaction.bulkOverwriteApplicationCommands(confprovider.config.client_id, payload).catch(console.error)
-		console.log(response)
+
+		const globalCommands = payload.filter(c => !c.guild_ids?.length)
+		if (globalCommands.length) {
+			const response = await client.snow.interaction.bulkOverwriteApplicationCommands(confprovider.config.client_id, globalCommands).catch(console.error)
+			console.log(response)
+		}
+
+		const guildedCommands = payload.filter(c => c.guild_ids?.length)
+		if (guildedCommands.length) {
+			const uniqueGuildIds = guildedCommands.map(c => c.guild_ids!).flat().filter((id, ind, arr) => arr.indexOf(id) === ind)
+			for (const guildID of uniqueGuildIds) {
+				const forGuild = guildedCommands.filter(c => c.guild_ids!.includes(guildID))
+				const response = await client.snow.interaction.bulkOverwriteGuildApplicationCommands(confprovider.config.client_id, guildID, forGuild).catch(console.error)
+				console.log(response)
+			}
+		}
 	},
 	assignOptions(option: APIApplicationCommandOption): NameAndDesc & { options?: Array<NameAndDesc> } {
 		const rt: ReturnType<typeof extraContext.assignOptions> = {

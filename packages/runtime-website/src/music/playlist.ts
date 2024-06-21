@@ -110,7 +110,7 @@ async function getExistingQueue(user: APIUser, guildID: string, appID: string, t
 	return { queue, state: userVoiceState }
 }
 
-async function getOrCreateQueue(cmd: ChatInputCommand<APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction>, lang: Lang, followup = false): Promise<Queue | null> {
+async function getOrCreateQueue(cmd: ChatInputCommand, lang: Lang, followup = false): Promise<Queue | null> {
 	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang, followup)
 	if (!data.state) return null
 
@@ -422,8 +422,9 @@ commands.assign([
 						style: 2,
 						type: 2
 					} as Omit<APIButtonComponentWithCustomId, "custom_id">, {}).setCallback(async interaction => {
+						if ((interaction.member?.user ?? interaction.user!).id !== cmd.author.id) return
 						if (added) return
-						const queue = await getOrCreateQueue(new ChatInputCommand(interaction), lang, true)
+						const queue = await getOrCreateQueue(cmd, lang, true)
 						if (!queue) return
 
 						added = true

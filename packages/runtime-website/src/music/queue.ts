@@ -55,7 +55,7 @@ export class Queue {
 	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 0.5
-	private _interaction: ChatInputCommand<APIChatInputApplicationCommandInteraction | APIMessageComponentInteraction> | undefined
+	private _interaction: ChatInputCommand | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 	private _destroyed = false

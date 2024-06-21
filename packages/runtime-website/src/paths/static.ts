@@ -29,7 +29,9 @@ server.get("/.well-known/traffic-advice", res => {
 server.get("/commands.json", res => {
 	const data = Array.from(commands.commands.values()).map(cmd => ({
 		name: cmd.name,
+		type: cmd.type ?? 1,
 		description: cmd.description,
+		guild_ids: cmd.guild_ids,
 		integration_types: cmd.integration_types,
 		contexts: cmd.contexts,
 		options: cmd.options

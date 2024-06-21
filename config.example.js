@@ -92,9 +92,7 @@ const config = {
 
 if (!config.live_token.length) config.live_token = config.current_token
 if (!config.client_id.length && config.current_token.length) config.client_id = Buffer.from(config.current_token.split(".")[0] || "dW5rbm93bg==", "base64").toString("utf8")
-if (!config.add_url_for_web_redirect.length && config.current_token.length) {
-	config.add_url_for_web_redirect = `https://discord.com/api/oauth2/authorize?client_id=${config.client_id}&permissions=0&scope=bot%20applications.commands`
-}
+if (!config.add_url_for_web_redirect.length && config.current_token.length) config.add_url_for_web_redirect = `https://discord.com/api/oauth2/authorize?client_id=${config.client_id}&permissions=0&scope=bot%20applications.commands`
 if (!config.weeb_identifier.length) config.weeb_identifier = `Amanda/1.0.0/${config.is_dev ? "dev" : "prod"}`
 
 
