@@ -74,53 +74,53 @@ async function updateVoiceState(state: GatewayVoiceState, modifyIndex = true) {
 			await updateVoiceState(packet.d)
 			break
 
-		case "GUILD_CREATE":
-			redis.SMEMBERS(`${packet.d.id}.channels`).then(async vcs => {
-				await redis.SREM(`${packet.d.id}.channels`, vcs) // remove all old voice channels as new ones will be populated
-				Promise.all([
-					redis.SADD("guilds", packet.d.id), // Our SADD removes dupes
-					redis.SADD(`${packet.d.id}.channels`, packet.d.channels.filter(c => c.type === 2).map(c => c.id)), // add voice channels to index
-					...(packet.d.voice_states ?? []).map(state => updateVoiceState(state, false)) // add voice states but dont add to index sequentually. Add all from each vc in 1 command below
-				])
-
-				const uniqueActiveVCs = new Map<string, Array<string>>()
-				for (const state of packet.d.voice_states) {
-					if (!uniqueActiveVCs.has(state.channel_id!)) uniqueActiveVCs.set(state.channel_id!, [state.user_id])
-					else uniqueActiveVCs.get(state.channel_id!)!.push(state.user_id)
-				}
-				for (const [channel, users] of uniqueActiveVCs) redis.SADD(`vcs.${channel}`, users)
-			})
-			return // do not send this
-
-		case "GUILD_DELETE":
-			if (packet.d.unavailable) return // specifically do not send this event as it's not used by Amanda
+		case "GUILD_CREATE": {
+			const vcs = await redis.SMEMBERS(`${packet.d.id}.channels`)
+			await redis.SREM(`${packet.d.id}.channels`, vcs) // remove all old voice channels as new ones will be populated
 			Promise.all([
+				redis.SADD("guilds", packet.d.id), // Our SADD removes dupes
+				redis.SADD(`${packet.d.id}.channels`, packet.d.channels.filter(c => c.type === 2).map(c => c.id)), // add voice channels to index
+				...(packet.d.voice_states ?? []).map(state => updateVoiceState(state, false)) // add voice states but dont add to index sequentually. Add all from each vc in 1 command below
+			])
+
+			const uniqueActiveVCs = new Map<string, Array<string>>()
+			for (const state of packet.d.voice_states) {
+				if (!uniqueActiveVCs.has(state.channel_id!)) uniqueActiveVCs.set(state.channel_id!, [state.user_id])
+				else uniqueActiveVCs.get(state.channel_id!)!.push(state.user_id)
+			}
+			for (const [channel, users] of uniqueActiveVCs) redis.SADD(`vcs.${channel}`, users)
+			return // do not send this
+		}
+
+		case "GUILD_DELETE": {
+			if (packet.d.unavailable) return // specifically do not send this event as it's not used by Amanda
+			const [vcs] = await Promise.all([
 				redis.SMEMBERS(`${packet.d.id}.channels`), // get all old vcs to delete states
 				redis.SREM("guilds", packet.d.id) // remove from guilds index
-			]).then(async ([vcs]) => {
-				redis.SREM(`${packet.d.id}.channels`, vcs, true) // we got all old vcs. Delete them from the index
-				const members = await Promise.all(vcs.map(vc => redis.SMEMBERS(`vcs.${vc}`))) // Get all voice states for each voice channel if any
-				for (let index = 0; index < members.length; index++) {
-					redis.SREM(`vcs.${vcs[index]}`, members[index], true) // remove members from voice state index and drop it for channel
-					for (const member of members[index]) redis.DEL("voice", member) // remove data
-				}
-			})
+			])
+			redis.SREM(`${packet.d.id}.channels`, vcs, true) // we got all old vcs. Delete them from the index
+			const members = await Promise.all(vcs.map(vc => redis.SMEMBERS(`vcs.${vc}`))) // Get all voice states for each voice channel if any
+			for (let index = 0; index < members.length; index++) {
+				redis.SREM(`vcs.${vcs[index]}`, members[index], true) // remove members from voice state index and drop it for channel
+				for (const member of members[index]) redis.DEL("voice", member) // remove data
+			}
 			return // do not send this
+		}
 
-		case "CHANNEL_DELETE":
+		case "CHANNEL_DELETE": {
 			if (packet.d.type !== 2) return // do not send this
 			if (!packet.d.guild_id) return // do not send this
 			redis.SREM(`${packet.d.guild_id}.channels`, packet.d.id)
-			redis.SMEMBERS(`vcs.${packet.d.id}`).then(members => {
-				Promise.all([
-					redis.SREM(`vcs.${packet.d.id}`, members, true),
-					...members.map(m => redis.DEL("voice", m))
-				])
-			})
+			const members = await redis.SMEMBERS(`vcs.${packet.d.id}`)
+			Promise.all([
+				redis.SREM(`vcs.${packet.d.id}`, members, true),
+				...members.map(m => redis.DEL("voice", m))
+			])
 			return // do not send this
+		}
 
 		case "READY":
-		case "RESUMED":
+		case "RESUMED": {
 			if (!alreadyStartedUpdates) {
 				alreadyStartedUpdates = true
 				await refresh()
@@ -129,6 +129,11 @@ async function updateVoiceState(state: GatewayVoiceState, modifyIndex = true) {
 				updateInterval = setInterval(() => update(), updateTime)
 				setInterval(() => refresh(), refreshTime)
 			}
+
+			break
+		}
+
+		default: break
 		}
 
 		webconnector.send(packet)
