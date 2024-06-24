@@ -642,7 +642,7 @@ export class Queue {
 			for (const state of states) {
 				if (!state) continue
 				if (this.listeners.has(state.user_id)) continue
-				const user = await sharedUtils.getUser(state.user_id, snow)
+				const user = state.member?.user ?? await sharedUtils.getUser(state.user_id, snow)
 				if (user && !user.bot) this.listeners.set(user.id, user)
 			}
 
