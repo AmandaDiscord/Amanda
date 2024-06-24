@@ -1,5 +1,5 @@
 declare class Widget {
-	public static Events: {
+	public static readonly Events: {
 		LOAD_PROGRESS: "loadProgress",
 		PLAY_PROGRESS: "playProgress",
 		PLAY: "play",

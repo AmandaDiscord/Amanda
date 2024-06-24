@@ -128,7 +128,7 @@ export class BufferAccumulator {
 	private _allocated: Buffer | null = null
 	private _streamed: number | null = null
 
-	public constructor(public expecting: number | null = null) {
+	public constructor(public readonly expecting: number | null = null) {
 		if (expecting) {
 			this._allocated = Buffer.allocUnsafe(expecting)
 			this._streamed = 0

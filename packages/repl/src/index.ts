@@ -4,7 +4,7 @@ import util = require("util")
 class REPLProvider<C> {
 	public repl: repl.REPLServer
 
-	public constructor(public context: C) {
+	public constructor(public readonly context: C) {
 		const cli = repl.start({ prompt: "", eval: this.customEval, writer: s => s })
 		Object.assign(cli.context, context)
 		this.repl = cli

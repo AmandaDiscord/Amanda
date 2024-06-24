@@ -23,11 +23,11 @@ const bcAcceptableTypes = [2, 3, 5, 6, 7, 8] as const
 
 class BetterComponent {
 	public callback: ((interaction: APIMessageComponentInteraction, component: BetterComponent) => unknown) | null = null
-	public id: string = BetterComponent.#nextID
+	public readonly id: string = BetterComponent.#nextID
 	public component: APIButtonComponentWithCustomId | APISelectMenuComponent
 
 	public constructor(
-		public info: Omit<APIButtonComponentWithCustomId | APISelectMenuComponent, "custom_id">,
+		public readonly info: Omit<APIButtonComponentWithCustomId | APISelectMenuComponent, "custom_id">,
 		extraEncodedInfo: Record<string, any>
 	) {
 		components.set(this.id, this)

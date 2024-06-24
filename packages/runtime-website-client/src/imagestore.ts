@@ -1,5 +1,5 @@
 class ImageStore {
-	public store = new Map<string, HTMLImageElement>()
+	public readonly store = new Map<string, HTMLImageElement>()
 
 	private _create(url: string): HTMLImageElement {
 		const e = document.createElement("img")

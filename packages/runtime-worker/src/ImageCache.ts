@@ -53,7 +53,7 @@ import type { UnpackArray } from "@amanda/shared-types"
 const rootImageDir = path.join(__dirname, "../images")
 
 class ImageCache {
-	private _cache: Record<keyof typeof images, AsyncValueCache<Canvas.Image>>
+	private readonly _cache: Record<keyof typeof images, AsyncValueCache<Canvas.Image>>
 
 	public constructor() {
 		const temp = {} as Record<keyof typeof images, AsyncValueCache<Canvas.Image>>

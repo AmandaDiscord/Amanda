@@ -36,9 +36,9 @@ export class Model<D> {
 }
 
 export class Database<M extends Record<string, Model<any>>> {
-	public buffers: Record<string, StatementBuffer> = {}
+	public readonly buffers: Record<string, StatementBuffer> = {}
 
-	public constructor(public tables: M, public provider: Provider) {
+	public constructor(public tables: M, public readonly provider: Provider) {
 		for (const table of Object.keys(this.tables)) {
 			this.buffers[table] = { bufferValues: { insert: [] }, timeouts: { insert: null } }
 		}

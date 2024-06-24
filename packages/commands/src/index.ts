@@ -155,8 +155,8 @@ export class ContextMenuCommandData {
 
 
 export class CommandManager<Params extends Array<unknown>> {
-	public commands = new Map<string, Command<Params>>()
-	public categories = new Map<string, Array<string>>()
+	public readonly commands = new Map<string, Command<Params>>()
+	public readonly categories = new Map<string, Array<string>>()
 
 	public constructor(
 		public paramGetter: (command: APIChatInputApplicationCommandInteraction) => Params,

@@ -6,7 +6,7 @@ import confprovider = require("@amanda/config")
 
 class Connector extends EventEmitter {
 	private ws: BetterWs
-	private queue: Array<{ res: (() => void), data: any }> = []
+	private readonly queue: Array<{ res: (() => void), data: any }> = []
 
 	public constructor(path: "/internal" | "/gateway") {
 		super()

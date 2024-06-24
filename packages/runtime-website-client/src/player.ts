@@ -14,13 +14,13 @@ type WebTrackJSON = ReturnType<WebTrack["toObject"]>
 
 export class Session {
 	public state: WebQueueJSON | null = null
-	public player: Player<HTMLElement> = new Player(q("#player-container")!, this)
-	public queue: Queue<HTMLElement> = new Queue(q("#queue-container")!, this)
-	public voiceInfo: VoiceInfo<HTMLElement> = new VoiceInfo(q("#voice-info")!)
-	public sideControls: SideControls<HTMLElement> = new SideControls(q("#side-controls")!, this)
-	public listenManager: ListenManager = new ListenManager()
+	public readonly player: Player<HTMLElement> = new Player(q("#player-container")!, this)
+	public readonly queue: Queue<HTMLElement> = new Queue(q("#queue-container")!, this)
+	public readonly voiceInfo: VoiceInfo<HTMLElement> = new VoiceInfo(q("#voice-info")!)
+	public readonly sideControls: SideControls<HTMLElement> = new SideControls(q("#side-controls")!, this)
+	public readonly listenManager: ListenManager = new ListenManager()
 
-	public constructor(public ws: WebSocket) {
+	public constructor(public readonly ws: WebSocket) {
 		const opcodeMethodMap = new Map<typeof opcodes[keyof typeof opcodes], string>([
 			[opcodes.ACKNOWLEDGE, "acknowledge"],
 			[opcodes.STATE, "updateState"],

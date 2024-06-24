@@ -15,10 +15,10 @@ function createEmbedURL(link: string, props: Record<string, unknown>): string {
 }
 
 export class SoundCloudWrapper implements Wrapper {
-	public frame = q<HTMLIFrameElement>("#f-soundcloud")
+	public readonly frame = q<HTMLIFrameElement>("#f-soundcloud")
 	public controller: typeof SC.Widget.prototype | null = null
 	public ready = false
-	public seekers = new Set<symbol>()
+	public readonly seekers = new Set<symbol>()
 
 	public async waitForReady(): Promise<void> {
 		if (this.ready) return Promise.resolve()

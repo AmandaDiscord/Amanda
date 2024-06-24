@@ -8,7 +8,7 @@ type WebTrackJSON = ReturnType<WebTrack["toObject"]>
 
 export class ListenManager {
 	public currentWrapper: Wrapper | null = null
-	public wrappers = { soundCloudWrapper: new SoundCloudWrapper() }
+	public readonly wrappers = { soundCloudWrapper: new SoundCloudWrapper() }
 	public enabled = false
 
 	public boot(track: WebTrackJSON, timeGetter: () => number): void {

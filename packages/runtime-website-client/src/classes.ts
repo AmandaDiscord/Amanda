@@ -15,7 +15,7 @@ type WebTrackJSON = ReturnType<WebTrack["toObject"]>
 
 export class ElemJS<E extends HTMLElement = HTMLElement> {
 	public parent: ElemJS<HTMLElement>
-	public children: Array<ElemJS<HTMLElement>> = []
+	public readonly children: Array<ElemJS<HTMLElement>> = []
 	public element: E
 
 	public constructor(type: keyof HTMLElementTagNameMap | E) {
@@ -131,7 +131,7 @@ export class Queue<E extends HTMLElement = HTMLElement> extends ElemJS<E> {
 
 	declare public children: Array<QueueItem<this>>
 
-	public constructor(container: E, public session: Session) {
+	public constructor(container: E, public readonly session: Session) {
 		super(container)
 	}
 
@@ -178,12 +178,12 @@ export class Queue<E extends HTMLElement = HTMLElement> extends ElemJS<E> {
 export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 	public adding = false
 	public removing = false
-	public parts = {
+	public readonly parts = {
 		title: ejs`div.song-title` as ElemJS<HTMLDivElement>,
 		length: ejs`div.song-length` as ElemJS<HTMLDivElement>,
 		controls: ejs`div.song-management` as ElemJS<HTMLDivElement>
 	}
-	public data: WebTrackJSON = {} as WebTrackJSON
+	public readonly data: WebTrackJSON = {} as WebTrackJSON
 	public shifting = false
 
 	declare public parent: Q
@@ -347,7 +347,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 }
 
 class AttributeButton extends ElemJS<HTMLImageElement> {
-	public constructor(public player: Player<HTMLElement>, public propertyName: keyof Player<HTMLElement>["attributes"]) {
+	public constructor(public readonly player: Player<HTMLElement>, public readonly propertyName: keyof Player<HTMLElement>["attributes"]) {
 		super("img")
 
 		this.direct("onclick", () => {
@@ -371,7 +371,7 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 		loop: false
 	}
 	public trackSet = false
-	public parts: {
+	public readonly parts: {
 		controls: ElemJS<HTMLElement>
 		time: PlayerTime
 		loopButton: AttributeButton
@@ -381,7 +381,7 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 			loopButton: new AttributeButton(this, "loop")
 		}
 
-	public constructor(container: E, public session: Session) {
+	public constructor(container: E, public readonly session: Session) {
 		super(container)
 
 		;(["rewind" as const, "togglePlayback" as const, "skip" as const, "stop" as const]).forEach(icon => {
@@ -445,7 +445,7 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 export class PlayerTime extends ElemJS<HTMLDivElement> {
 	public animation: Animation | null = null
 	public interval: NodeJS.Timeout | null = null
-	public state = {
+	public readonly state = {
 		playing: false,
 		trackStartTime: 0,
 		pausedAt: 0,
@@ -530,7 +530,7 @@ export class PlayerTime extends ElemJS<HTMLDivElement> {
 abstract class SideControl extends ElemJS<HTMLButtonElement> {
 	public disabled = false
 
-	public constructor(public sideControls: SideControls<HTMLElement>, name: string, image: string) {
+	public constructor(public readonly sideControls: SideControls<HTMLElement>, name: string, image: string) {
 		super("button")
 		this.class("control")
 		this.child(new ElemJS("img").class("icon").attribute("src", `/images/${image}.svg`))
@@ -614,7 +614,7 @@ class ListenInBrowserControl extends SideControl {
 
 export class SideControls<E extends HTMLElement> extends ElemJS<E> {
 	public mainLoaded = false
-	public parts = {
+	public readonly parts = {
 		listen: new ListenInBrowserControl(this),
 		add: new AddTrackControl(this),
 		info: new TrackInfoControl(this),
@@ -644,9 +644,9 @@ export class SideControls<E extends HTMLElement> extends ElemJS<E> {
 }
 
 export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
-	public oldMembers: Array<string> = []
-	public members: Array<string> = []
-	public memberStore = new Map<string, VoiceMember>()
+	private readonly oldMembers: Array<string> = []
+	private readonly members: Array<string> = []
+	public readonly memberStore = new Map<string, VoiceMember>()
 
 	public constructor(container: E) {
 		super(container)
@@ -659,8 +659,10 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 				this.memberStore.set(member.id, new VoiceMember(member))
 			}
 		})
-		this.oldMembers = this.members
-		this.members = members.map(m => m.id)
+		this.oldMembers.length = 0
+		this.oldMembers.push(...this.members)
+		this.members.length = 0
+		this.members.push(...members.map(m => m.id))
 		this.members.forEach(id => {
 			if (!this.oldMembers.includes(id)) this.memberStore.get(id)!.isNew = true
 		})
@@ -708,14 +710,14 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 
 export class VoiceMember extends ElemJS<HTMLDivElement> {
 	public avatarSize = 40
-	public parts = {
+	public readonly parts = {
 		avatar: this.getAvatar(),
 		name: this.getName()
 	}
 	public isNew = true
 	public leaving = false
 
-	public constructor(public props: UnpackArray<WebQueueMembers>) {
+	public constructor(public readonly props: UnpackArray<WebQueueMembers>) {
 		super("div")
 	}
 
