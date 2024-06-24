@@ -6,9 +6,9 @@ import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 const utils: typeof import("../utils") = sync.require("../utils")
 
 export class GatewayWorker {
-	public shards = new Set<number>()
+	public readonly shards = new Set<number>()
 
-	public constructor(public ws: WebSocket<unknown>, public clusterID: string) {
+	public constructor(public readonly ws: WebSocket<unknown>, public readonly clusterID: string) {
 		gatewayWorkers.set(clusterID, this)
 		console.log(`${clusterID} gateway cluster identified. ${gatewayWorkers.size} total clusters`)
 	}

@@ -55,7 +55,7 @@ export class Session {
 	public user: string | null = null
 	private closed = false
 
-	public constructor(public ws: WebSocket<unknown>) {
+	public constructor(public readonly ws: WebSocket<unknown>) {
 		setTimeout(() => {
 			if (!this.loggedin) this.cleanClose()
 		}, 5000)

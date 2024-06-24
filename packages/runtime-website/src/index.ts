@@ -102,14 +102,14 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 		"./music/playlist"
 	])
 
-	/* const musicUtils: typeof import("./music/utils") = passthrough.sync.require("./music/utils")
+	const musicUtils: typeof import("./music/utils") = passthrough.sync.require("./music/utils")
 	Promise.all(
 		Object.entries(oldQueuesAndNodes.queues).map(async entry => {
 			const stillInVC = await redis.GET<GatewayVoiceState>("voice", passthrough.confprovider.config.client_id)
 			if (stillInVC?.channel_id !== entry[1].voiceChannel.id) return
 			musicUtils.queues.createQueueFromRestore(entry[0], entry[1])
 		})
-	)*/
+	)
 
 	const port = passthrough.confprovider.config.website_port
 	passthrough.server.listen(port, sock => {

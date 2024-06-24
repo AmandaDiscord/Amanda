@@ -13,7 +13,7 @@ const handlers = {} as Parameters<typeof buttons["setHandlers"]>["1"]
 buttons.setHandlers(btn => encoding.decode(btn.custom_id).cluster, handlers)
 
 export class CommandWorker {
-	public constructor(public ws: WebSocket<unknown>, public clusterID: string) {
+	public constructor(public readonly ws: WebSocket<unknown>, public readonly clusterID: string) {
 		commandWorkers.push(this)
 		console.log(`${this.clusterID} command worker connected. ${commandWorkers.length} total workers`)
 	}

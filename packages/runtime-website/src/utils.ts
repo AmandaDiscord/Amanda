@@ -202,9 +202,9 @@ export function requestBody(res: HttpResponse, length: number): Promise<Buffer> 
 type State = object
 
 export class Validator<S extends State, P> {
-	public state = {} as S
+	public readonly state = {} as S
 	public previousValue: P
-	public operations: Array<{ expected: unknown, assign: string | undefined, errorValue: [number, string] | undefined, code: (state: S, previousValue: P) => unknown }> = []
+	public readonly operations: Array<{ expected: unknown, assign: string | undefined, errorValue: [number, string] | undefined, code: (state: S, previousValue: P) => unknown }> = []
 	public stage = 0
 	public promise: Promise<S> | undefined = void 0
 
@@ -404,7 +404,7 @@ export function buttonHandlerParamsToInteraction(data: APIMessageComponentIntera
 				username: "amanda_internal_user",
 				discriminator: "0",
 				avatar: null,
-				global_name: "Amanda"
+				global_name: "Amanda Internal User"
 			},
 			content: "",
 			timestamp: "",

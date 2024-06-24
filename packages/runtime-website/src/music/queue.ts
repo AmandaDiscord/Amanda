@@ -9,7 +9,7 @@ import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
-import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState, APIChatInputApplicationCommandInteraction, APIMessageComponentInteraction } from "discord-api-types/v10"
+import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
@@ -26,14 +26,14 @@ const interactionExpiresAfter = 1000 * 60 * 14
 const stopDisplayingErrorsAfter = 3
 
 export class Queue {
-	public tracks: Array<Track> = []
+	public readonly tracks: Array<Track> = []
 	public node: string | undefined
 	public lang: Lang
 	public leavingSoonID: string | undefined
 	public player: Player | undefined
-	public menu: Array<InstanceType<typeof BetterComponent>> = []
+	public readonly menu: Array<InstanceType<typeof BetterComponent>> = []
 	public playHasBeenCalled = false
-	public listeners = new Map<string, APIUser>()
+	public readonly listeners = new Map<string, APIUser>()
 
 	public loop = false
 
@@ -41,7 +41,7 @@ export class Queue {
 	public pausedAt: number | null = null
 	public errorChain = 0
 
-	public leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
+	public readonly leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
 		if (!this._interactionExpired && this.interaction) {
 			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
 				content: this.lang.GLOBAL.EVERYONE_LEFT
@@ -52,7 +52,7 @@ export class Queue {
 
 	public createResolveCallback: (() => unknown) | undefined
 
-	public messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
+	public readonly messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
 	private _volume = 0.5
 	private _interaction: ChatInputCommand | undefined
@@ -61,7 +61,7 @@ export class Queue {
 	private _destroyed = false
 	private _lastFMSent = false
 
-	public constructor(public guildID: string, public voiceChannelID: string, public textChannelID: string) {
+	public constructor(public readonly guildID: string, public readonly voiceChannelID: string, public readonly textChannelID: string) {
 		queues.set(guildID, this)
 	}
 
@@ -388,7 +388,7 @@ export class Queue {
 				this.menu.forEach(bn => bn.destroy())
 				this.menu.length = 0
 			}
-			this.menu = newMenu
+			this.menu.push(...newMenu)
 		}
 		return newMenu
 	}

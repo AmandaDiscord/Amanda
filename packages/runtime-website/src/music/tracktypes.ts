@@ -142,10 +142,11 @@ export class Track {
 	public error = ""
 	public id: string
 	public live: boolean
-	public thumbnail = { src: confprovider.config.unknown_placeholder, width: 128, height: 128 }
+	public readonly thumbnail = { src: confprovider.config.unknown_placeholder, width: 128, height: 128 }
 	public queue: Queue | undefined
 	public source: string
 	public uri: string | null
+	public isrc: string | null
 	public cacheBypass = false
 
 	private _filledBarOffset = 0
@@ -154,8 +155,8 @@ export class Track {
 		public track: string,
 		info: Partial<TrackInfo>,
 		public input: string,
-		public requester: APIUser,
-		public lang: Lang
+		public readonly requester: APIUser,
+		public readonly lang: Lang
 	) {
 		this.title = info.title ?? lang.GLOBAL.UNKNOWN_TRACK
 		this.author = info.author ?? lang.GLOBAL.UNKNOWN_AUTHOR
@@ -164,6 +165,7 @@ export class Track {
 		this.live = info.isStream ?? false
 		this.source = info.sourceName ?? lang.GLOBAL.HEADER_UNKNOWN
 		this.uri = info.uri ?? null
+		this.isrc = info.isrc ?? null
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 		if (info.artworkUrl) this.thumbnail.src = info.artworkUrl
 	}
@@ -191,6 +193,7 @@ export class Track {
 	public toObject() {
 		return {
 			class: this.constructor.name,
+			track: this.track,
 			id: this.id,
 			title: this.title,
 			length: this.lengthSeconds,
@@ -198,7 +201,9 @@ export class Track {
 			live: this.live,
 			uri: this.uri,
 			source: this.source,
-			author: this.author
+			author: this.author,
+			isrc: this.isrc,
+			input: this.input
 		}
 	}
 
@@ -294,7 +299,7 @@ const underscoreRegex = /_/g
 
 export class ExternalTrack extends Track {
 	public id = String(Date.now())
-	public thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
+	public readonly thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
 
 	public constructor(
 		track: string,
@@ -328,19 +333,24 @@ export class ExternalTrack extends Track {
 }
 
 export class RadioTrack extends RequiresSearchTrack {
-	public thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
+	public readonly thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
 	public stationData: UnpackRecord<InferMap<typeof radioStations>["value"]>
 
 	public constructor(
-		station: string,
+		track: string,
+		_info: Partial<TrackInfo>,
+		_input: string,
 		requester: APIUser,
-		lang: Lang
+		lang: Lang,
+		station?: string,
 	) {
-		const [namespace, substation] = station.split("/")
+		if (station) _input = station
+
+		const [namespace, substation] = _input.split("/")
 		const stationData = radioStations.get(namespace)?.[substation]
 		if (!stationData) throw new Error("Invalid radio station")
 
-		const info = {
+		const newInfo = {
 			sourceName: "http",
 			identifier: stationData.url,
 			length: 0,
@@ -352,7 +362,7 @@ export class RadioTrack extends RequiresSearchTrack {
 			author: stationData.author
 		} as TrackInfo
 
-		super("!", info, station, requester, lang)
+		super(track ?? "!", newInfo, _input, requester, lang)
 
 		this.title = stationData.title
 		this.author = stationData.author
@@ -378,7 +388,7 @@ export class RadioTrack extends RequiresSearchTrack {
 		const fromGenre = radioStationGenres.get(genre)
 		if (!fromGenre?.length) return null
 
-		return new RadioTrack(sharedUtils.arrayRandom(fromGenre), requester, lang)
+		return new RadioTrack("!", {}, "", requester, lang, sharedUtils.arrayRandom(fromGenre))
 	}
 
 	public static random(requester: import("discord-api-types/v10").APIUser, lang: Lang): RadioTrack | null {
@@ -387,6 +397,10 @@ export class RadioTrack extends RequiresSearchTrack {
 
 		return RadioTrack.randomFromGenre(genre, requester, lang)!
 	}
+}
+
+export class SecondTrack extends Track {
+
 }
 
 // https://stackoverflow.com/questions/44195322/a-plain-javascript-way-to-decode-html-entities-works-on-both-browsers-and-node
@@ -407,3 +421,87 @@ function decodeEntities(encodedString: string) {
 		return String.fromCharCode(num)
 	})
 }
+
+export type SecondVideo = {
+	type: "video"
+	title: string
+	videoId: string
+	videoThumbnails: Array<SecondVideoThumbnail>
+	storyboards: null
+	description: string
+	descriptionHtml: string
+	published: number
+	publishedText: null
+	keywords: null
+	viewCount: number
+	second__viewCountText: string
+	second__viewCountTextShort: string
+	likeCount: number
+	dislikeCount: number
+	paid: null
+	premium: null
+	isFamilyFriendly: null
+	allowedRegions: Array<unknown>
+	genre: null
+	genreUrl: null
+	author: string
+	authorId: string
+	authorUrl: string
+	second__uploaderId: string
+	second__uploaderUrl: string
+	authorThumbnails: Array<unknown>
+	subCountText: null
+	lengthSeconds: number
+	allowRatings: boolean
+	rating: null
+	isListed: null
+	liveNow: boolean
+	isUpcoming: null
+	dashUrl: string
+	second__provideDashURL: null
+	adaptiveFormats: Array<SecondVideoFormat>
+	formatStreams: Array<SecondVideoFormat>
+	captions: Array<SecondVideoCaption>
+	recommendedVideos: Array<SecondPartialVideo>
+}
+
+export type SecondVideoThumbnail = {
+	quality: "maxres" | "maxresdefault" | "sddefault" | "high" | "medium" | "default" | "start" | "middle" | "end"
+	url: string
+	second__originalUrl: string
+	width: number
+	height: number
+}
+
+export type SecondVideoFormat = {
+	index: string | null
+	bitrate: string
+	init: string | null
+	url: string
+	itag: string
+	type: string
+	second__mime: string
+	second__codecs: Array<string>
+	clen: string
+	lmt: null
+	projectionType: null
+	fps: null
+	container: string
+	encoding: null
+	resolution: "low" | "medium" | "144p" | "360p" | "720p"
+}
+
+export type SecondVideoCaption = {
+	label: string
+	languageCode: string
+	url: string
+	second__remoteUrl: string
+}
+
+export type SecondPartialVideo = Pick<SecondVideo, "videoId" | "title" | "videoThumbnails" | "author" | "authorUrl" | "authorId" | "lengthSeconds" | "viewCount"> & {
+	second__lengthText: string
+	viewCountText: string
+	second__liveNow: boolean
+}
+
+export type SecondSearchResult = Array<SecondPartialVideo>

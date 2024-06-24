@@ -101,8 +101,9 @@ function setFontSize(size: number, ctx: Canvas.CanvasRenderingContext2D): void {
 
 const DiscordsProfile = {
 	id: "643945264868098049",
-	username: "Discord",
-	discriminator: "0000",
+	username: "discord",
+	global_name: "Discord",
+	discriminator: "0",
 	avatar: null
 } as APIUser
 

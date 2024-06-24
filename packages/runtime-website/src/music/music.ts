@@ -112,7 +112,7 @@ commands.assign([
 			queue.addTrack(
 				track === "random"
 					? trackTypes.RadioTrack.random(cmd.author, lang)!
-					: new trackTypes.RadioTrack(track, cmd.author, lang),
+					: new trackTypes.RadioTrack("!", {}, "", cmd.author, lang, track),
 				position
 			)
 

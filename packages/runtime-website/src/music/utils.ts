@@ -8,7 +8,7 @@ import { type Lang, en_us } from "@amanda/lang"
 import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
-import { Track } from "./tracktypes"
+import type { Track } from "./tracktypes"
 import type { APIEmbed, APIUser, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
@@ -35,7 +35,7 @@ const sourceMap = new Map<string, Key>([
 ])
 
 class LoadTracksError extends Error {
-	constructor(message: string, public node: string, options?: ErrorOptions) {
+	constructor(message: string, public readonly node: string, options?: ErrorOptions) {
 		super(message, options)
 	}
 }
@@ -66,7 +66,7 @@ const common = {
 				.catch(() => null)
 		},
 
-		pickApart(track: import("./tracktypes").Track) {
+		pickApart(track: Track) {
 			let title = "", artist: string | undefined = undefined
 			let confidence = 0
 			let skip = false
@@ -318,10 +318,35 @@ const common = {
 			if (data.pausedAt) queue.player.paused = true
 			queue.trackStartTime = data.trackStartTime
 
-			/* const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
+			const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 			for (const track of data.tracks) {
-				const ctrack = new trackTypes.Track()
-			}*/
+				const ctrack = new (trackTypes[track.class] as typeof Track)(
+					track.track,
+					{
+						identifier: track.id,
+						isSeekable: !track.live,
+						author: track.author,
+						length: track.length * 1000,
+						isStream: track.live,
+						position: 0,
+						title: track.title,
+						uri: track.uri,
+						isrc: track.isrc,
+						sourceName: track.source
+					},
+					track.input,
+					{
+						id: confprovider.config.client_id,
+						username: "amanda_restore_internal",
+						discriminator: "0",
+						global_name: "Amanda Restore Internal",
+						avatar: null
+					},
+					queue.lang
+				)
+				ctrack.cacheBypass = true
+				await queue.addTrack(ctrack)
+			}
 
 			queue.addPlayerListeners()
 		},

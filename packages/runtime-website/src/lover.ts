@@ -9,7 +9,7 @@ let lastLover: Lover | undefined
 let loverMessageSendTimeout: NodeJS.Timeout | undefined
 
 class Lover {
-	public channelGetter = new sharedUtils.AsyncValueCache<APIDMChannel | null>(
+	public readonly channelGetter = new sharedUtils.AsyncValueCache<APIDMChannel | null>(
 		() => snow.user.createDirectMessageChannel(this.id).catch(() => null) as Promise<APIDMChannel>
 	)
 	public lastTimeoutDuration = confprovider.config.amandas_lover_send_timeout
