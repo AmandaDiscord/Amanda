@@ -421,7 +421,7 @@ const common = {
 					track.track,
 					{
 						identifier: track.id,
-						isSeekable: !track.live,
+						isSeekable: track.seekable,
 						author: track.author,
 						length: track.length * 1000,
 						isStream: track.live,

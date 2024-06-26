@@ -431,7 +431,7 @@ export class Queue {
 	public async seek(position: number): Promise<0 | 1 | 2 | 3 | 4> {
 		const track = this.tracks[0]
 		if (!track) return 1
-		if (track.live) return 2
+		if (track.live || !track.canSeek) return 2
 		if (position > (track.lengthSeconds * 1000)) return 3
 
 		const result = await this.player?.seek(position)

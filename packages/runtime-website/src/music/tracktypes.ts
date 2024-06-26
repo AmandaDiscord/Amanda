@@ -149,6 +149,7 @@ export class Track {
 	public isrc: string | null
 	public complete = true
 	public lyricsCache: string | null | undefined = undefined
+	public canSeek: boolean
 
 	private _filledBarOffset = 0
 
@@ -164,6 +165,7 @@ export class Track {
 		this.lengthSeconds = Math.round(Number(info.length ?? 0) / 1000)
 		this.id = info.identifier ?? "!"
 		this.live = info.isStream ?? false
+		this.canSeek = info.isSeekable ?? !info.isStream
 		this.source = info.sourceName ?? lang.GLOBAL.HEADER_UNKNOWN
 		this.uri = info.uri ?? null
 		this.isrc = info.isrc ?? null
@@ -205,6 +207,7 @@ export class Track {
 			author: this.author,
 			isrc: this.isrc,
 			input: this.input,
+			seekable: this.canSeek,
 			complete: this.complete
 		}
 	}
@@ -346,6 +349,7 @@ export class ExternalTrack extends Track {
 export class RadioTrack extends RequiresSearchTrack {
 	public readonly thumbnail = { src: confprovider.config.local_placeholder, width: 512, height: 512 }
 	public stationData: UnpackRecord<InferMap<typeof radioStations>["value"]>
+	public canSeek = false
 
 	public constructor(
 		track: string,
@@ -413,6 +417,7 @@ export class RadioTrack extends RequiresSearchTrack {
 export class SecondTrack extends RequiresSearchTrack {
 	private completeData: SecondVideo | null = null
 	private secondDataPrepareCache: sharedUtils.AsyncValueCache<void>
+	public canSeek = false
 
 	public constructor(
 		track: string,
