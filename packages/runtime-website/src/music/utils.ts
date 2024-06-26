@@ -328,6 +328,7 @@ const common = {
 		},
 		async byID(id: string, baseURL: string): Promise<SecondVideo> {
 			const r = await fetch(`${baseURL}/api/v1/videos/${id}`)
+			if ("error" in r) throw new Error(r.error as string)
 			return r.json()
 		}
 	},

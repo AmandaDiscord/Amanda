@@ -456,7 +456,7 @@ export class SecondTrack extends RequiresSearchTrack {
 	public async prepare(): Promise<void> {
 		if (this.completeData || this.complete) return super.prepare()
 		await this.secondDataPrepareCache.get()
-		super.prepare()
+		return super.prepare()
 	}
 
 	public async getLyrics(): Promise<string | null> {
