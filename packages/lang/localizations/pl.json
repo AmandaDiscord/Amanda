@@ -1,4 +1,5 @@
 {
+	"CODE": "pl",
 	"GLOBAL": {
 		"MUSIC_DISABLED": "Funkcja muzyczna jest wyłączona z powodu problemów. Prace nad poprawką trwają.",
 		"GUILD_ONLY": "Możesz użyć tej komendy tylko na serwerze.",

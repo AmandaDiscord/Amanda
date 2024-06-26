@@ -5,8 +5,7 @@ import path = require("path")
 
 import uWS = require("uWebSockets.js")
 import { SnowTransfer } from "snowtransfer"
-import { Manager, LavalinkNodeOptions } from "lavacord"
-import { GatewayVoiceState } from "discord-api-types/v10"
+import { Manager } from "lavacord"
 
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
@@ -17,6 +16,7 @@ import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
 
 import type { CommandManagerParams } from "@amanda/shared-types"
+import type { GatewayVoiceState } from "discord-api-types/v10"
 
 import passthrough = require("./passthrough")
 

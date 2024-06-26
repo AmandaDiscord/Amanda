@@ -1,8 +1,9 @@
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
+import { Rest } from "lavacord"
 
 import passthrough = require("../passthrough")
-const { sync, confprovider } = passthrough
+const { sync, confprovider, lavalink } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
@@ -147,7 +148,8 @@ export class Track {
 	public source: string
 	public uri: string | null
 	public isrc: string | null
-	public cacheBypass = false
+	public complete = true
+	public lyricsCache: string | null | undefined = undefined
 
 	private _filledBarOffset = 0
 
@@ -203,7 +205,8 @@ export class Track {
 			source: this.source,
 			author: this.author,
 			isrc: this.isrc,
-			input: this.input
+			input: this.input,
+			complete: this.complete
 		}
 	}
 
@@ -232,8 +235,9 @@ export class Track {
 	}
 
 	public async getLyrics(): Promise<string | null> {
+		if (typeof this.lyricsCache === "string" || this.lyricsCache === null) return this.lyricsCache
 		const picked = common.genius.pickApart(this)
-		if (!picked.artist || !picked.title) return null
+		if (!picked.artist || !picked.title) return this.assignLyrics(null)
 		let lyrics: string | null
 
 		try {
@@ -243,6 +247,11 @@ export class Track {
 			lyrics = null
 		}
 
+		return this.assignLyrics(lyrics)
+	}
+
+	public assignLyrics(lyrics: string | null): string | null {
+		this.lyricsCache = lyrics
 		return lyrics
 	}
 }
@@ -250,6 +259,8 @@ export class Track {
 export class RequiresSearchTrack extends Track {
 	public prepareCache: sharedUtils.AsyncValueCache<void>
 	public searchString: string
+
+	public complete = false
 
 	public constructor(
 		track: string | null = null,
@@ -263,7 +274,7 @@ export class RequiresSearchTrack extends Track {
 		this.queueLine = `**${this.title}** (${sharedUtils.prettySeconds(this.lengthSeconds)})`
 
 		this.prepareCache = new sharedUtils.AsyncValueCache(async () => {
-			if (this.cacheBypass) return
+			if (this.complete) return
 			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
 			try {
 				if (!this.searchString.length) throw new Error("Cannot search track by empty string")
@@ -282,6 +293,7 @@ export class RequiresSearchTrack extends Track {
 				this.track = chosen.encoded
 				if (this.author === lang.GLOBAL.UNKNOWN_AUTHOR) this.author = chosen.info.author
 				if (chosen.info.artworkUrl) this.thumbnail.src = chosen.info.artworkUrl
+				this.complete = true
 
 				if (this.queue) this.queue.sendToSubscribedSessions("onTrackUpdate", this, this.queue.tracks.indexOf(this))
 			} else if (chosen && !chosen.encoded) this.error = langReplace((this.queue?.lang ?? this.lang).GLOBAL.MISSING_TRACK, { "id": this.searchString })
@@ -362,7 +374,7 @@ export class RadioTrack extends RequiresSearchTrack {
 			author: stationData.author
 		} as TrackInfo
 
-		super(track ?? "!", newInfo, _input, requester, lang)
+		super(track, newInfo, _input, requester, lang)
 
 		this.title = stationData.title
 		this.author = stationData.author
@@ -399,8 +411,77 @@ export class RadioTrack extends RequiresSearchTrack {
 	}
 }
 
-export class SecondTrack extends Track {
+export class SecondTrack extends RequiresSearchTrack {
+	private completeData: SecondVideo | null = null
+	private secondDataPrepareCache: sharedUtils.AsyncValueCache<void>
 
+	public constructor(
+		track: string,
+		info: Partial<TrackInfo>,
+		input: string,
+		requester: APIUser,
+		lang: Lang,
+		secondData?: SecondVideo | SecondPartialVideo
+	) {
+		super(track, info, input, requester, lang)
+
+		if (secondData) {
+			if ("adaptiveFormats" in secondData) this.processSecondData(secondData)
+		}
+
+		this.secondDataPrepareCache = new sharedUtils.AsyncValueCache(async () => {
+			if (this.completeData || this.complete) return
+			const node = (this.queue?.node ? common.nodes.byID(this.queue.node) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
+			let data: Awaited<ReturnType<typeof common.second.byID>>
+			try {
+				data = await common.second.byID(this.id, node.invidious_origin)
+			} catch (e) {
+				this.error = e.message
+				return
+			}
+			this.processSecondData(data)
+		})
+	}
+
+	private processSecondData(data: SecondVideo) {
+		const audioOnly = data.adaptiveFormats
+			.filter(f => f.second__mime.startsWith("audio/"))
+		const selected = audioOnly.find(f => f.qualityLabel === "medium" || f.qualityLabel === "medium, DRC")
+			?? audioOnly.find(f => f.qualityLabel === "low" || f.qualityLabel === "low, DRC")
+			?? data.adaptiveFormats[0]
+
+		this.searchString = selected.url
+		this.completeData = data
+	}
+
+	public async prepare(): Promise<void> {
+		if (this.completeData || this.complete) return super.prepare()
+		await this.secondDataPrepareCache.get()
+		super.prepare()
+	}
+
+	public async getLyrics(): Promise<string | null> {
+		if (typeof this.lyricsCache === "string" || this.lyricsCache === null) return this.lyricsCache
+
+		const preferred = this.completeData?.captions.find(c => c.languageCode === (this.queue?.lang.CODE ?? this.lang.CODE))?.second__remoteUrl ?? null // prefer the queue's lang
+		const english = this.completeData?.captions.find(c => c.languageCode === "en")?.second__remoteUrl ?? null
+		const chosen = preferred ?? english
+
+		if (chosen) {
+			const remote = await fetch(chosen).then(r => r.text())
+			if (!remote.startsWith("WEBVTT")) {
+				console.error(remote)
+				return super.getLyrics()
+			}
+			const split = remote.split("\n")
+			const sliced = split.slice(4)
+			let result = ""
+			for (let i = 0; i < sliced.length / 3; i++) {
+				result += sliced[(i * 3) + 1] + "\n"
+			}
+			return this.assignLyrics(result)
+		} else return super.getLyrics()
+	}
 }
 
 // https://stackoverflow.com/questions/44195322/a-plain-javascript-way-to-decode-html-entities-works-on-both-browsers-and-node
@@ -488,8 +569,16 @@ export type SecondVideoFormat = {
 	fps: null
 	container: string
 	encoding: null
-	resolution: "low" | "medium" | "144p" | "360p" | "720p"
+	resolution: SecondVideoFormatResolution
+	qualityLabel: SecondVideoFormatResolution
+	second__width: number | null
+	second__height: number | null
+	second__audioChannels: number | null
+	second__order: number
 }
+
+export type SecondVideoFormatResolution =
+	"low" | "low, DRC" | "medium" | "medium, DRC" | "128p" | "144p" | "214p" | "320p" | "360p" | "428p" | "640p" | "720p" | "960p" | "1280p" | "1920p"
 
 export type SecondVideoCaption = {
 	label: string

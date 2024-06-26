@@ -727,16 +727,9 @@ commands.assign([
 
 			const prefix = source ? `${source}search:` : confprovider.config.lavalink_default_search_prefix
 
-			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
-			try {
-				tracks = await common.loadtracks(`${prefix}${input}`, lang, queue?.node)
-			} catch (e) {
-				return common.handleTrackLoadError(cmd, e, input)
-			}
+			const tracks = await common.inputToTrack(`${prefix}${input}`, cmd, lang, queue?.node, false) ?? []
 
-			const mapped = common.handleTrackLoadsToArray(tracks)
-
-			if (!mapped) {
+			if (!tracks.length) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.NO_RESULTS,
 					embeds: []
@@ -747,8 +740,8 @@ commands.assign([
 				embeds: [
 					{
 						color: confprovider.config.standard_embed_color,
-						description: mapped
-							.map(track => `[${track.info.author} - ${track.info.title}](${track.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(track.info.length) / 1000))})`)
+						description: tracks
+							.map(track => `[${track.author} - ${track.title}](${track.uri}) (${sharedUtils.prettySeconds(Math.round(Number(track.lengthSeconds) / 1000))})`)
 							.join("\n").slice(0, 1998)
 					}
 				]

@@ -15,7 +15,7 @@ import type { Queue } from "./queue"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
 import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser, APIMessageComponentInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
-import type { TrackInfo } from "lavalink-types/v4"
+import type { Track } from "./tracktypes"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
 const checkPlaylistName = (playlistName: string, cmd: ChatInputCommand, lang: Lang) => {
@@ -114,9 +114,7 @@ async function getOrCreateQueue(cmd: ChatInputCommand, lang: Lang, followup = fa
 	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang, followup)
 	if (!data.state) return null
 
-	const node = data.queue?.node
-		? common.nodes.byID(data.queue.node) ?? common.nodes.byIdeal() ?? common.nodes.random()
-		: common.nodes.byIdeal() ?? common.nodes.random()
+	const node = (data.queue?.node ? common.nodes.byID(data.queue.node) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
 
 	if (!data.queue) data.queue = await common.queues.createQueue(cmd, lang, data.state.channel_id!, node.id)
 
@@ -565,18 +563,7 @@ commands.assign([
 					})
 				}
 
-				let result: TrackInfo | undefined
-				try {
-					const res = await common.loadtracks(optionTrack, lang)
-
-					if (res.loadType === "track") result = res.data.info
-					else if (res.loadType === "playlist") result = res.data.tracks[0]?.info
-					else if (res.loadType === "search") result = res.data[0]?.info
-				} catch (e) {
-					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: e.message
-					})
-				}
+				let result = (await common.inputToTrack(optionTrack, cmd, lang, undefined, false) ?? [])[0]
 
 				if (!result) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -585,19 +572,19 @@ commands.assign([
 				}
 
 				const orderedTracks = await getTracks(playlistRow, cmd, lang, false)
-				if (orderedTracks.some(row => row.video_id === result!.identifier)) {
+				if (orderedTracks.some(row => row.video_id === result!.id)) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG
 					})
 				}
 
-				if (result.sourceName === "http") {
+				if (result.source === "http") {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.CANNOT_ADD_HTTP
 					})
 				}
 
-				const toUse = result.uri ? result.uri : result.identifier
+				const toUse = result.uri ? result.uri : result.id
 
 				if (toUse.length > 50) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -608,7 +595,7 @@ commands.assign([
 				await Promise.all([
 					sql.raw(
 						"INSERT INTO songs SELECT $1, $2, $3 WHERE NOT EXISTS (SELECT 1 FROM songs WHERE video_id = $1)",
-						[toUse, result.title, Math.floor(result.length / 1000)]
+						[toUse, result.title, result.lengthSeconds]
 					),
 					sql.orm.insert("playlist_songs", {
 						playlist_id: playlistRow.playlist_id,

@@ -1,4 +1,5 @@
 {
+	"CODE": "es",
 	"GLOBAL": {
 		"MUSIC_DISABLED": "La música está deshabilitada por un problema. Ya se está solucionando.",
 		"GUILD_ONLY": "Solo puedes usar este comando en un servidor.",

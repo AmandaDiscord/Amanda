@@ -8,7 +8,7 @@ import { type Lang, en_us } from "@amanda/lang"
 import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
-import type { Track } from "./tracktypes"
+import { type Track, type SecondVideo, type SecondPartialVideo, type SecondSearchResult, SecondTrack } from "./tracktypes"
 import type { APIEmbed, APIUser, GatewayVoiceState } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
@@ -161,69 +161,154 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string): Promise<Array<Track> | null> {
+	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string, doSelection = true): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
-		let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
-		try {
-			tracks = await common.loadtracks(resource, lang, node)
-		} catch (e) {
-			common.handleTrackLoadError(cmd, e, resource)
-			return null
-		}
+		const llnode = (node ? common.nodes.byID(node) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
 
-		const mapped = common.handleTrackLoadsToArray(tracks)
+		const secondMatch = confprovider.config.second_matcher_regex.exec(resource)
 
-		if (!mapped) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: lang.GLOBAL.NO_RESULTS,
-				embeds: []
-			})
+		if (llnode.search_with_invidious && secondMatch) {
+			let input = "", precedenceIndex = 0, precedence = -1
+			while (input === "") {
+				precedence = confprovider.config.second_matcher_group_precedence[precedenceIndex]
+				if (secondMatch[precedence]) input = secondMatch[precedence]
+				precedenceIndex++
+				if (precedenceIndex === confprovider.config.second_matcher_group_precedence.length && input === "") return null
+			}
+			const mode: "search" | "id" = confprovider.config.second_matcher_map[precedence] ?? "search"
+			let tracks: Array<SecondVideo | SecondPartialVideo>
+			try {
+				tracks = mode === "search"
+					? await common.second.search(input, llnode.invidious_origin)
+					: [await common.second.byID(input, llnode.invidious_origin)]
+			} catch (e) {
+				common.handleTrackLoadError(cmd, e, resource)
+				return null
+			}
 
-			return null
-		}
+			if (!tracks.length) {
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NO_RESULTS,
+					embeds: []
+				})
 
-		if (tracks.loadType !== "search") {
-			return mapped.map(track => decodedToTrack(
-				track.encoded,
-				track.info,
-				resource,
-				cmd.author,
-				sharedUtils.getLang(cmd.guild_locale!)
-			))
-		}
+				return null
+			}
 
-		const chosen = await trackSelection(
-			cmd,
-			lang,
-			tracks.data,
-			i => `[${i.info.author} - ${i.info.title}](${i.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
-		)
+			if (mode !== "search" || doSelection === false) {
+				return tracks.map(t => new SecondTrack("!", {
+						identifier: t.videoId,
+						isSeekable: t.lengthSeconds !== 0,
+						author: t.author,
+						length: t.lengthSeconds * 1000,
+						isStream: t.lengthSeconds === 0,
+						position: 0,
+						title: t.title,
+						artworkUrl: t.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? t.videoThumbnails[0].second__originalUrl,
+						uri: confprovider.config.second_id_to_uri(t.videoId),
+						sourceName: "http"
+					},
+					resource,
+					cmd.author,
+					sharedUtils.getLang(cmd.guild_locale!)
+				))
+			}
 
-		if (!chosen) {
-			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: lang.GLOBAL.NO_RESULTS,
-				embeds: []
-			})
-
-			return null
-		}
-
-		return [
-			decodedToTrack(
-				chosen.encoded,
-				chosen.info,
-				resource,
-				cmd.author,
-				sharedUtils.getLang(cmd.guild_locale!)
+			const chosen = await trackSelection(
+				cmd,
+				lang,
+				tracks,
+				i => `${i.author} - ${i.title} (${sharedUtils.prettySeconds(i.lengthSeconds)})`
 			)
-		]
+
+			if (!chosen) {
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NO_RESULTS,
+					embeds: []
+				})
+
+				return null
+			}
+
+			return [
+				new SecondTrack("!", {
+						identifier: chosen.videoId,
+						isSeekable: chosen.lengthSeconds !== 0,
+						author: chosen.author,
+						length: chosen.lengthSeconds * 1000,
+						isStream: chosen.lengthSeconds === 0,
+						position: 0,
+						title: chosen.title,
+						artworkUrl: chosen.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? chosen.videoThumbnails[0].second__originalUrl,
+						uri: confprovider.config.second_id_to_uri(chosen.videoId),
+						sourceName: "http"
+					},
+					resource,
+					cmd.author,
+					sharedUtils.getLang(cmd.guild_locale!)
+				)
+			]
+		} else {
+			let tracks: Awaited<ReturnType<typeof common.loadtracks>> | undefined
+			try {
+				tracks = await common.loadtracks(resource, lang, llnode.id)
+			} catch (e) {
+				common.handleTrackLoadError(cmd, e, resource)
+				return null
+			}
+
+			const mapped = common.handleTrackLoadsToArray(tracks)
+
+			if (!mapped) {
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NO_RESULTS,
+					embeds: []
+				})
+
+				return null
+			}
+
+			if (tracks.loadType !== "search" || doSelection === false) {
+				return mapped.map(track => decodedToTrack(
+					track.encoded,
+					track.info,
+					resource,
+					cmd.author,
+					sharedUtils.getLang(cmd.guild_locale!)
+				))
+			}
+
+			const chosen = await trackSelection(
+				cmd,
+				lang,
+				tracks.data,
+				i => `[${i.info.author} - ${i.info.title}](${i.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
+			)
+
+			if (!chosen) {
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.NO_RESULTS,
+					embeds: []
+				})
+
+				return null
+			}
+
+			return [
+				decodedToTrack(
+					chosen.encoded,
+					chosen.info,
+					resource,
+					cmd.author,
+					sharedUtils.getLang(cmd.guild_locale!)
+				)
+			]
+		}
 	},
 
 	async loadtracks(input: string, lang: Lang, nodeID?: string): Promise<TrackLoadingResult> {
-		const node = nodeID
-			? common.nodes.byID(nodeID) ?? common.nodes.byIdeal() ?? common.nodes.random()
-			: common.nodes.byIdeal() ?? common.nodes.random()
+		const node = (nodeID ? common.nodes.byID(nodeID) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
 
 		const llnode = lavalink.nodes.get(node.id)
 		if (!llnode) throw new LoadTracksError(`Lavalink node ${node.id} doesn't exist in lavacord`, node.id)
@@ -234,6 +319,17 @@ const common = {
 		if (data.loadType === "error") throw new LoadTracksError(data.data.message ?? lang.GLOBAL.UNKNOWN_TRACK_EXCEPTION, node.id)
 
 		return data
+	},
+
+	second: {
+		async search(input: string, baseURL: string): Promise<SecondSearchResult> {
+			const r = await fetch(`${baseURL}/api/v1/search?q=${encodeURIComponent(input)}`)
+			return r.json()
+		},
+		async byID(id: string, baseURL: string): Promise<SecondVideo> {
+			const r = await fetch(`${baseURL}/api/v1/videos/${id}`)
+			return r.json()
+		}
 	},
 
 	queues: {
@@ -344,11 +440,12 @@ const common = {
 					},
 					queue.lang
 				)
-				ctrack.cacheBypass = true
+				ctrack.complete = track.complete
 				await queue.addTrack(ctrack)
 			}
 
 			queue.addPlayerListeners()
+			console.warn(`Restored queue ${guildID}`)
 		},
 
 		async getOrCreateQueue(cmd: ChatInputCommand, lang: Lang): Promise<{

@@ -18,7 +18,9 @@ function describe(value) {
 			? `Array<${typeof value[0] !== "undefined" ? describe(value[0]) : "unknown"}>`
 			: value === null
 				? "null"
-				: `{ ${Object.keys(value).map(k => `${k}: ${describe(value[k])}`).join(", ")} }`
+				: value instanceof RegExp
+					? "RegExp"
+					: `{ ${Object.keys(value).map(k => `${k}: ${describe(value[k])}`).join(", ")} }`
 }
 
 for (const [key, value] of Object.entries(config)) {

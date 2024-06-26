@@ -70,6 +70,13 @@ const config = {
 	lover_messages: [
 		"I love you <3"
 	],
+	second_matcher_regex: /(^matcher$)|(^somethingelse2$)/,
+	second_matcher_group_precedence: [1, 2], // 1 based indexing
+	second_matcher_map: { // values can be "search" or "id". The key is the index of the group of the regex
+		1: "search",
+		2: "id"
+	},
+	second_id_to_uri: (id) => `https://example.com/${id}`,
 
 	// constants
 	patreon_url: "",
