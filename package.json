@@ -12,13 +12,13 @@
         "build": "turbo run build"
     },
     "devDependencies": {
-        "@types/node": "^20.14.8",
+        "@types/node": "^20.14.9",
         "@typescript-eslint/eslint-plugin": "^7.14.1",
         "@typescript-eslint/parser": "^7.14.1",
         "discord-api-types": "0.37.90",
         "eslint": "^9.5.0",
         "tsup": "^8.1.0",
-        "turbo": "^2.0.4",
+        "turbo": "^2.0.5",
         "typescript": "^5.5.2"
     },
     "packageManager": "yarn@3.6.1",
