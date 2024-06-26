@@ -14,8 +14,7 @@ const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 import type { Queue } from "./queue"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser, APIMessageComponentInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
-import type { Track } from "./tracktypes"
+import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
 const checkPlaylistName = (playlistName: string, cmd: ChatInputCommand, lang: Lang) => {

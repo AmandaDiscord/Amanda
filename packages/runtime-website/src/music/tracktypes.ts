@@ -1,9 +1,8 @@
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
-import { Rest } from "lavacord"
 
 import passthrough = require("../passthrough")
-const { sync, confprovider, lavalink } = passthrough
+const { sync, confprovider } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
