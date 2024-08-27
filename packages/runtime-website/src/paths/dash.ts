@@ -172,7 +172,7 @@ server.post("/dash", async (res, req) => {
 server.get("/channels/:channelID", async (res, req) => {
 	const reqCookie = req.getHeader("cookie")
 
-	const channelID = req.getParameter(0)
+	const channelID = req.getParameter(0)!
 
 	utils.attachResponseAbortListener(res)
 

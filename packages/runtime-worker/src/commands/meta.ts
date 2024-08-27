@@ -281,7 +281,7 @@ commands.assign([
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
 				} else if (category && category != "hidden" && commands.categories.has(category)) {
-					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL">>
+					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL" | "CODE">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 
 					embed = {
@@ -533,8 +533,8 @@ function getDocs(c: import("@amanda/shared-types").UnpackArray<Parameters<typeof
 
 	if (lang[c.name]) {
 		info = {
-			name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].name,
-			description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL">].description,
+			name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL" | "CODE">].name,
+			description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL" | "CODE">].description,
 			options: Object.values(lang[c.name as "image"].options) as Array<APIApplicationCommandOption>
 		}
 	}
