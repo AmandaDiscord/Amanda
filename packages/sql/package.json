@@ -13,9 +13,9 @@
   "dependencies": {
     "@amanda/config": "1.0.0",
     "@amanda/shared-utils": "1.0.0",
-    "pg": "^8.12.0"
+    "pg": "^8.13.0"
   },
   "devDependencies": {
-    "@types/pg": "8.11.6"
+    "@types/pg": "8.11.10"
   }
 }
