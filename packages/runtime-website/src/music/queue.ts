@@ -9,7 +9,7 @@ import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
-import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, GatewayVoiceState } from "discord-api-types/v10"
+import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, APIVoiceState } from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
@@ -623,7 +623,7 @@ export class Queue {
 		inGuild?.forEach(s => sessions.get(s)![method](...args))
 	}
 
-	public async voiceStateUpdate(packet: GatewayVoiceState): Promise<void> {
+	public async voiceStateUpdate(packet: APIVoiceState): Promise<void> {
 		if (packet.channel_id && packet.user_id === confprovider.config.client_id) {
 			if (!this.createResolveCallback) {
 				console.error("Amanda joined the VC before a callback was set. Likely a race condition with rejection or new Queue is being called elsewhere")
@@ -634,7 +634,7 @@ export class Queue {
 
 			const [clientUser, states] = await Promise.all([
 				sharedUtils.getUser(confprovider.config.client_id, snow),
-				redis.SMEMBERS(`vcs.${this.voiceChannelID}`).then(mems => Promise.all(mems.map(mem => redis.GET<GatewayVoiceState>("voice", mem))))
+				redis.SMEMBERS(`vcs.${this.voiceChannelID}`).then(mems => Promise.all(mems.map(mem => redis.GET<APIVoiceState>("voice", mem))))
 			])
 
 			if (clientUser) this.listeners.set(clientUser.id, clientUser)

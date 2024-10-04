@@ -16,7 +16,7 @@ import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
 
 import type { CommandManagerParams } from "@amanda/shared-types"
-import type { GatewayVoiceState } from "discord-api-types/v10"
+import type { APIVoiceState } from "discord-api-types/v10"
 
 import passthrough = require("./passthrough")
 
@@ -105,7 +105,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 	const musicUtils: typeof import("./music/utils") = passthrough.sync.require("./music/utils")
 	Promise.all(
 		Object.entries(oldQueuesAndNodes.queues).map(async entry => {
-			const stillInVC = await redis.GET<GatewayVoiceState>("voice", passthrough.confprovider.config.client_id)
+			const stillInVC = await redis.GET<APIVoiceState>("voice", passthrough.confprovider.config.client_id)
 			if (stillInVC?.channel_id !== entry[1].voiceChannel.id) return
 			musicUtils.queues.createQueueFromRestore(entry[0], entry[1])
 		})

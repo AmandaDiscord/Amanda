@@ -9,7 +9,7 @@ import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
 import { type Track, type SecondVideo, type SecondPartialVideo, type SecondSearchResult, SecondTrack } from "./tracktypes"
-import type { APIEmbed, APIUser, GatewayVoiceState } from "discord-api-types/v10"
+import type { APIEmbed, APIUser, APIVoiceState } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
 
@@ -455,7 +455,7 @@ const common = {
 		}> {
 			let queue = queues.get(cmd.guild_id!) ?? null
 
-			const userVoiceState = await redis.GET<GatewayVoiceState>("voice", cmd.author.id)
+			const userVoiceState = await redis.GET<APIVoiceState>("voice", cmd.author.id)
 
 			if (!userVoiceState) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

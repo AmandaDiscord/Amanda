@@ -14,7 +14,7 @@ const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 import type { Queue } from "./queue"
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor, GatewayVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
+import type { APIEmbedAuthor, APIVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
 const checkPlaylistName = (playlistName: string, cmd: ChatInputCommand, lang: Lang) => {
@@ -78,8 +78,8 @@ async function getAuthor(u: string, lang: Lang) {
 	} else return "(?)"
 }
 
-async function getUserVoiceState(user: APIUser, appID: string, token: string, lang: Lang, followup = false): Promise<GatewayVoiceState | null> {
-	const userVoiceState = await redis.GET<GatewayVoiceState>("voice", user.id)
+async function getUserVoiceState(user: APIUser, appID: string, token: string, lang: Lang, followup = false): Promise<APIVoiceState | null> {
+	const userVoiceState = await redis.GET<APIVoiceState>("voice", user.id)
 
 	if (!userVoiceState) {
 		const method = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
@@ -92,7 +92,7 @@ async function getUserVoiceState(user: APIUser, appID: string, token: string, la
 	return userVoiceState
 }
 
-async function getExistingQueue(user: APIUser, guildID: string, appID: string, token: string, lang: Lang, followup = false): Promise<{ queue: Queue | null, state: GatewayVoiceState | null }> {
+async function getExistingQueue(user: APIUser, guildID: string, appID: string, token: string, lang: Lang, followup = false): Promise<{ queue: Queue | null, state: APIVoiceState | null }> {
 	const userVoiceState = await getUserVoiceState(user, appID, token, lang, followup)
 	if (!userVoiceState) return { queue: null, state: null }
 

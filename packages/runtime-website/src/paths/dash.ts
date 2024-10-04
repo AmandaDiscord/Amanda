@@ -5,7 +5,7 @@ import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
 
 import passthrough = require("../passthrough");
-import type { GatewayVoiceState } from "discord-api-types/v10"
+import type { APIVoiceState } from "discord-api-types/v10"
 const { server, sync, rootFolder, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
@@ -91,7 +91,7 @@ server.get("/dash", async (res, req) => {
 
 	if (session && confprovider.config.db_enabled) {
 		const [user, html] = await Promise.all([
-			redis.GET<GatewayVoiceState>("voice", session.user_id),
+			redis.GET<APIVoiceState>("voice", session.user_id),
 			fs.promises.readFile(path.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
 		])
 

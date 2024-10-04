@@ -12,7 +12,7 @@ import REPLProvider = require("@amanda/repl")
 import sharedUtils = require("@amanda/shared-utils")
 import redis = require("@amanda/redis")
 
-import type { GatewayVoiceState } from "discord-api-types/v10"
+import type { APIVoiceState } from "discord-api-types/v10"
 
 const toSessionsJSON = path.join(__dirname, "../sessions.json")
 
@@ -42,11 +42,11 @@ confprovider.addCallback(() => {
 	if (confprovider.config.total_shards !== _oldTotalShards) shardInfoChanged = true
 })
 
-async function updateVoiceState(state: GatewayVoiceState, modifyIndex = true) {
+async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 	if (!state.guild_id) return
 	let promise: Promise<void>
 	if (state.channel_id === null) {
-		const old = await redis.GET<GatewayVoiceState>("voice", state.user_id)
+		const old = await redis.GET<APIVoiceState>("voice", state.user_id)
 		promise = redis.DEL("voice", state.user_id, old?.channel_id && modifyIndex ? `vcs.${old.channel_id}` : undefined)
 	} else promise = redis.SET("voice", state.user_id, state, modifyIndex ? `vcs.${state.channel_id}` : undefined)
 	Promise.all([
