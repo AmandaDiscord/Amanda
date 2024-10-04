@@ -125,21 +125,17 @@ export class BufferAccumulator {
 	public last: AccumulatorNode | null = null
 	public size = 0
 
-	private _allocated: Buffer | null = null
-	private _streamed: number | null = null
+	private readonly _allocated: Buffer | null = null
 
 	public constructor(public readonly expecting: number | null = null) {
-		if (expecting) {
-			this._allocated = Buffer.allocUnsafe(expecting)
-			this._streamed = 0
-		}
+		if (expecting) this._allocated = Buffer.allocUnsafe(expecting)
 	}
 
 	public add(buf: Buffer): void {
-		if (this._allocated && this._streamed !== null && this.expecting !== null) {
-			if (this._streamed === this.expecting) return
-			if ((this._streamed + buf.byteLength) > this.expecting) buf.subarray(0, this.expecting - this._streamed).copy(this._allocated, this._streamed)
-			else buf.copy(this._allocated, this._streamed)
+		if (this._allocated && this.expecting !== null) {
+			if (this.size === this.expecting) return
+			if ((this.size + buf.byteLength) > this.expecting) buf.subarray(0, this.expecting - this.size).copy(this._allocated, this.size)
+			else buf.copy(this._allocated, this.size)
 			return
 		}
 		const obj = { chunk: buf, next: null }

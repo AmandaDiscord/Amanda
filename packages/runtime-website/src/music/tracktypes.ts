@@ -416,7 +416,7 @@ export class RadioTrack extends RequiresSearchTrack {
 
 export class SecondTrack extends RequiresSearchTrack {
 	private completeData: SecondVideo | null = null
-	private secondDataPrepareCache: sharedUtils.AsyncValueCache<void>
+	private readonly secondDataPrepareCache: sharedUtils.AsyncValueCache<void>
 	public canSeek = false
 
 	public constructor(

@@ -79,7 +79,7 @@ class SQLProvider {
 				attempts--
 				console.warn(`${statement}\n${String(prepared)}`)
 				if (attempts) SQLProvider.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
-				else reject(err)
+				else reject(err as Error)
 			})
 		})
 	}

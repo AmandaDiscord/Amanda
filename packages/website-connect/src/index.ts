@@ -5,7 +5,7 @@ import { BetterWs } from "cloudstorm"
 import confprovider = require("@amanda/config")
 
 class Connector extends EventEmitter {
-	private ws: BetterWs
+	private readonly ws: BetterWs
 	private readonly queue: Array<{ res: (() => void), data: any }> = []
 
 	public constructor(path: "/internal" | "/gateway") {

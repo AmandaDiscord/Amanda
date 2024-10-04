@@ -14,13 +14,15 @@ const dirs = localDirs.filter(d => d !== outputDir && d !== commonDir && d !== "
 
 const md = fs.readFileSync(path.join(__dirname, mdDir), { encoding: "utf-8" })
 
+const setMetaRegex = /set meta_(\w+) ([\w\-/:.?&=]+)/
+
 for (const dir of dirs) {
 	console.log(`Building ${dir}...`)
 	const meta = fs.readFileSync(path.join(dir, "meta.fish"), { encoding: "utf-8" })
 	const template = fs.readFileSync(path.join(dir, "output.template"), { encoding: "utf-8" })
 	const style = sass.renderSync({ file: path.join(dir, "style.sass") })
 
-	const metaVars = meta.split("\n").map(line => line.match(/set meta_(\w+) ([\w\-/:.?&=]+)/)?.slice(1))
+	const metaVars = meta.split("\n").map(line => setMetaRegex.exec(line)?.slice(1))
 
 	const fileName = metaVars.find(v => v?.[0] === "name")
 	if (!fileName) {
