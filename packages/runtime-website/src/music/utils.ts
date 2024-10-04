@@ -283,7 +283,7 @@ const common = {
 				cmd,
 				lang,
 				tracks.data,
-				i => `[${i.info.author} - ${i.info.title}](${i.info.uri}) (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
+				i => `${i.info.author} - ${i.info.title} (${sharedUtils.prettySeconds(Math.round(Number(i.info.length) / 1000))})`
 			)
 
 			if (!chosen) {
