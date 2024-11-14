@@ -25,6 +25,8 @@ const queueDestroyAfter = 20000
 const interactionExpiresAfter = 1000 * 60 * 14
 const stopDisplayingErrorsAfter = 3
 
+const defaultVolumeAmount = 0.1
+
 export class Queue {
 	public readonly tracks: Array<Track> = []
 	public node: string | undefined
@@ -54,7 +56,7 @@ export class Queue {
 
 	public readonly messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
 
-	private _volume = 0.5
+	private _volume = defaultVolumeAmount
 	private _interaction: ChatInputCommand | undefined
 	private _interactionExpired = false
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
@@ -404,7 +406,7 @@ export class Queue {
 		if (!this.playHasBeenCalled) {
 			await this.play()
 			// already at 0.5, but it needs to trigger the update
-			this.volume = 0.5
+			this.volume = defaultVolumeAmount
 			this.sendToSubscribedSessions("sendState")
 		} else this.sendToSubscribedSessions("onTrackAdd", track, position)
 	}
