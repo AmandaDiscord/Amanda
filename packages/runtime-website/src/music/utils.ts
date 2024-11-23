@@ -21,7 +21,7 @@ const selectTimeout = 1000 * 60
 const waitForClientVCJoinTimeout = 5000
 
 const trackNameRegex = /(?:\w+ ? \| ?)?([^|[\]]+?) ?([-–—|:]|\bby\b) ?([^()[\],|]+)?/ // (Toni Romiti) - (Switch Up )\(Ft. Big Rod\) | Non escaped () means cap group
-const knownGoodArtistRegex = /(.+?)(?:\b - Topic\b|VEVO)/
+const knownGoodArtistRegex = /(.+?)(?:(?: - Topic)|(?:VEVO))/
 const hiddenEmbedRegex = /(^<|>$)/g
 const searchShortRegex = /^\w+?search:/
 const startsWithHTTP = /^https?:\/\//
