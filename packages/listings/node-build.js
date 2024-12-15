@@ -2,7 +2,7 @@
 
 const fs = require("fs")
 const path = require("path")
-const sass = require("node-sass")
+const sass = require("sass")
 
 const outputDir = "dist"
 const commonDir = "common"
@@ -20,7 +20,7 @@ for (const dir of dirs) {
 	console.log(`Building ${dir}...`)
 	const meta = fs.readFileSync(path.join(dir, "meta.fish"), { encoding: "utf-8" })
 	const template = fs.readFileSync(path.join(dir, "output.template"), { encoding: "utf-8" })
-	const style = sass.renderSync({ file: path.join(dir, "style.sass") })
+	const style = sass.compile(path.join(dir, "style.sass"))
 
 	const metaVars = meta.split("\n").map(line => setMetaRegex.exec(line)?.slice(1))
 
@@ -37,7 +37,7 @@ for (const dir of dirs) {
 	}
 
 	finalFile = finalFile.replace("@markdown", md)
-	finalFile = finalFile.replace("@sass", style.css.toString("utf-8"))
+	finalFile = finalFile.replace("@sass", style.css.toString())
 	if (!fs.existsSync(path.join(__dirname, outputDir))) fs.mkdirSync(path.join(__dirname, outputDir))
 	fs.writeFileSync(path.join(__dirname, outputDir, `${fileName[1]}.md`), finalFile, { encoding: "utf8", flag: "w" })
 	console.log("Done building listings")

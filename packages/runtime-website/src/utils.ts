@@ -14,7 +14,7 @@ const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queu
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
 import type { IGatewayMessage } from "cloudstorm"
-import type { APIUser, APIMessageComponentInteractionData, APIMessageComponentInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
+import { type APIUser, type APIMessageComponentInteractionData, type APIMessageComponentInteraction, type APIChatInputApplicationCommandInteraction, Locale } from "discord-api-types/v10"
 import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
 
 const commaRegex = /,/g
@@ -22,7 +22,7 @@ const slashSingleRegex = /\//
 const toEndOfSemiRegex = /([^;]+);?/
 
 export function toArrayBuffer(buffer: Buffer): ArrayBuffer {
-	return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
+	return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer
 }
 
 export function onAbortedOrFinishedResponseStream(res: HttpResponse, readStream: Readable): void {
@@ -387,7 +387,7 @@ export function buttonHandlerParamsToInteraction(data: APIMessageComponentIntera
 		type: 3,
 		token: "",
 		version: 1,
-		locale: "en-US",
+		locale: Locale.EnglishUS,
 		channel: {
 			type: 0,
 			id: ""
