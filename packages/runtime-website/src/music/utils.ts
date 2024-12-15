@@ -334,10 +334,18 @@ const common = {
 	},
 
 	queues: {
-		async createQueue(cmd: ChatInputCommand, lang: Lang, channel: string, node: string): Promise<Queue | null> {
+		async createQueue(cmd: ChatInputCommand, lang: Lang, state: APIVoiceState, node: string, followup = false): Promise<Queue | null> {
+			const respond = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
+			if (cmd.guild_id! !== state.guild_id!) {
+				respond(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.VC_IN_OTHER_GUILD
+				})
+				return null
+			}
+
 			const queueFile: typeof import("./queue") = sync.require("./queue")
 
-			const queue = new queueFile.Queue(cmd.guild_id!, channel, cmd.channel.id)
+			const queue = new queueFile.Queue(cmd.guild_id!, state.channel_id!, cmd.channel.id)
 
 			queue.lang = cmd.guild_locale ? sharedUtils.getLang(cmd.guild_locale) : lang
 			queue.interaction = cmd
@@ -354,7 +362,7 @@ const common = {
 			})
 
 			try {
-				const player = await lavalink.join({ channel: channel, guild: cmd.guild_id!, node })
+				const player = await lavalink.join({ channel: state.channel_id!, guild: cmd.guild_id!, node })
 				// wait to create timer so that we know for a fact the message was sent
 
 				await new Promise<void>((res, rej) => {
@@ -377,11 +385,11 @@ const common = {
 				if (e !== lang.GLOBAL.TIMED_OUT) console.error(e)
 				queue.destroy()
 
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				respond(cmd.application_id, cmd.token, {
 					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
 				})
 				snow.channel.createMessage(confprovider.config.error_log_channel_id, {
-					content: `Unable to join voice channel ${channel} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}`
+					content: `Unable to join voice channel ${state.channel_id} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}`
 				})
 				return null
 			}
@@ -449,23 +457,24 @@ const common = {
 			console.warn(`Restored queue ${guildID}`)
 		},
 
-		async getOrCreateQueue(cmd: ChatInputCommand, lang: Lang): Promise<{
+		async getOrCreateQueue(cmd: ChatInputCommand, lang: Lang, followup = false): Promise<{
 			queue: import("./queue").Queue | null;
 			existed: boolean
 		}> {
 			let queue = queues.get(cmd.guild_id!) ?? null
 
 			const userVoiceState = await redis.GET<APIVoiceState>("voice", cmd.author.id)
+			const respond = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 
 			if (!userVoiceState) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				respond(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
 				})
 				return { queue: null, existed: !!queue }
 			}
 
 			if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				respond(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 				})
 				return { queue: null, existed: true }
@@ -474,7 +483,7 @@ const common = {
 			if (queue) return { queue, existed: true }
 			const node = common.nodes.byIdeal() ?? common.nodes.random()
 
-			queue = await common.queues.createQueue(cmd, lang, userVoiceState.channel_id!, node.id).catch(() => null)
+			queue = await common.queues.createQueue(cmd, lang, userVoiceState, node.id, followup).catch(() => null)
 			if (!queue) return { queue: null, existed: false }
 
 			return { queue, existed: false }

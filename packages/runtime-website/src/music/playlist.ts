@@ -78,48 +78,6 @@ async function getAuthor(u: string, lang: Lang) {
 	} else return "(?)"
 }
 
-async function getUserVoiceState(user: APIUser, appID: string, token: string, lang: Lang, followup = false): Promise<APIVoiceState | null> {
-	const userVoiceState = await redis.GET<APIVoiceState>("voice", user.id)
-
-	if (!userVoiceState) {
-		const method = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
-		method(appID, token, {
-			content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: sharedUtils.userString(user) })
-		})
-		return null
-	}
-
-	return userVoiceState
-}
-
-async function getExistingQueue(user: APIUser, guildID: string, appID: string, token: string, lang: Lang, followup = false): Promise<{ queue: Queue | null, state: APIVoiceState | null }> {
-	const userVoiceState = await getUserVoiceState(user, appID, token, lang, followup)
-	if (!userVoiceState) return { queue: null, state: null }
-
-	const queue = queues.get(guildID) ?? null
-
-	if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
-		const method = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
-		method(appID, token, {
-			content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
-		})
-		return { queue: null, state: userVoiceState }
-	}
-
-	return { queue, state: userVoiceState }
-}
-
-async function getOrCreateQueue(cmd: ChatInputCommand, lang: Lang, followup = false): Promise<Queue | null> {
-	const data = await getExistingQueue(cmd.author, cmd.guild_id!, cmd.application_id, cmd.token, lang, followup)
-	if (!data.state) return null
-
-	const node = (data.queue?.node ? common.nodes.byID(data.queue.node) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
-
-	if (!data.queue) data.queue = await common.queues.createQueue(cmd, lang, data.state.channel_id!, node.id)
-
-	return data.queue
-}
-
 commands.assign([
 	{
 		name: "playlists",
@@ -421,8 +379,8 @@ commands.assign([
 					} as Omit<APIButtonComponentWithCustomId, "custom_id">, {}).setCallback(async interaction => {
 						if ((interaction.member?.user ?? interaction.user!).id !== cmd.author.id) return
 						if (added) return
-						const queue = await getOrCreateQueue(cmd, lang, true)
-						if (!queue) return
+						const queue = await common.queues.getOrCreateQueue(cmd, lang, true)
+						if (!queue.queue) return
 
 						added = true
 						destroyTimer.triggerNow()
@@ -440,7 +398,7 @@ commands.assign([
 						))
 
 						for (const track of trackss) {
-							queue.addTrack(track)
+							queue.queue.addTrack(track)
 						}
 					})
 
@@ -766,8 +724,8 @@ commands.assign([
 				const orderedTracks = await getTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 
-				const queue = await getOrCreateQueue(cmd, lang)
-				if (!queue) return
+				const queue = await common.queues.getOrCreateQueue(cmd, lang)
+				if (!queue.queue) return
 
 				const sliced = orderedTracks.slice(optionStart - 1)
 				const trackss = (optionShuffle
@@ -786,10 +744,10 @@ commands.assign([
 					))
 
 				for (const track of trackss) {
-					queue.addTrack(track)
+					queue.queue.addTrack(track)
 				}
 
-				queue.interaction = cmd
+				queue.queue.interaction = cmd
 
 				sql.orm.update("playlists", { play_count: playlistRow.play_count + 1 }, { playlist_id: playlistRow.playlist_id })
 			}
