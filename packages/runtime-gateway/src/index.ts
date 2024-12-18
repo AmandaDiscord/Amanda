@@ -241,7 +241,7 @@ function startAnnouncement(duration: number, message: string) {
 	updateInterval = void 0
 	enqueued = void 0
 
-	client.shardManager.presenceUpdate({
+	client.presenceUpdate({
 		activities: [{
 			name: "Announcement",
 			state: message,
@@ -333,7 +333,7 @@ function update() {
 
 		const message = `${choice.message} | /help | ${confprovider.config.cluster_id}`
 
-		client.shardManager.presenceUpdate({
+		client.presenceUpdate({
 			activities: [{
 				name: type === 4 ? "Custom" : message,
 				state: type === 4 ? message : undefined,

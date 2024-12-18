@@ -744,7 +744,7 @@
 		}
 	},
 	"deposit": {
-		"name": "withdraw",
+		"name": "deposit",
 		"description": "Deposit money to your couple balance",
 		"options": {
 			"amount": {
