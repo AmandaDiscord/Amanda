@@ -1,11 +1,11 @@
 import Lang = require("@amanda/lang")
 
-import type { APIApplicationCommandOption, LocaleString } from "discord-api-types/v10"
+import type { APIApplicationCommandOption, Locale } from "discord-api-types/v10"
 
 import passthrough = require("./passthrough")
 const { client, confprovider, commands } = passthrough
 
-type LocaledObject = { [locale in LocaleString]?: string; }
+type LocaledObject = { [locale in Locale]?: string; }
 type NameAndDesc = { name: string; description: string; }
 
 const extraContext = {
