@@ -14,20 +14,22 @@ import type { APIEmbed } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 
+import { en_us as English } from "@amanda/lang"
+
 const nameRegex = /[^a-zA-Z0-9_-]+/g
 
 const cmds = [
 	{
-		name: "bean",
-		description: "Beans a user",
+		name: English.bean.name,
+		description: English.bean.description,
 		category: "interaction",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user",
+				name: English.bean.options.user.name,
 				type: 6,
-				description: "The user to bean",
+				description: English.bean.options.user.description,
 				required: true
 			}
 		],
@@ -58,22 +60,22 @@ const cmds = [
 		}
 	},
 	{
-		name: "ship",
-		description: "Ships two people",
+		name: English.ship.name,
+		description: English.ship.description,
 		category: "interaction",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user2",
+				name: English.ship.options.user2.name,
 				type: 6,
-				description: "The second user to ship",
+				description: English.ship.options.user2.description,
 				required: true
 			},
 			{
-				name: "user1",
+				name: English.ship.options.user1.name,
 				type: 6,
-				description: "The user to ship user2 with other than yourself",
+				description: English.ship.options.user1.description,
 				required: false
 			}
 		],
@@ -126,55 +128,57 @@ const cmds = [
 	}
 ] as Parameters<typeof commands.assign>["0"]
 
+type InteractionType = "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat"
+
 const interactionSources: Array<{
-	name: "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat";
+	name: InteractionType;
 	description: string;
 	shortcut: "weeb.sh" | "durl";
 	traaOverride?: boolean;
 	url?: () => Promise<string>;
 }> = [
 	{
-		name: "hug", // Command object key and text filler
-		description: "Hugs someone", // Command description
+		name: English.hug.name, // Command object key and text filler
+		description: English.hug.description, // Command description
 		shortcut: "weeb.sh", // Where the image should be fetched from
 		traaOverride: true // don't set this true for newly added types
 	},
 	{
-		name: "nom",
-		description: "Noms someone",
+		name: English.nom.name,
+		description: English.nom.description,
 		shortcut: "weeb.sh"
 	},
 	{
-		name: "kiss",
-		description: "Kisses someone",
+		name: English.kiss.name,
+		description: English.kiss.description,
 		shortcut: "weeb.sh",
 		traaOverride: true
 	},
 	{
-		name: "cuddle",
-		description: "Cuddles someone",
+		name: English.cuddle.name,
+		description: English.cuddle.description,
 		shortcut: "weeb.sh",
 		traaOverride: true
 	},
 	{
-		name: "poke",
-		description: "Pokes someone",
+		name: English.poke.name,
+		description: English.poke.description,
 		shortcut: "weeb.sh"
 	},
 	{
-		name: "slap",
-		description: "Slaps someone",
+		name: English.slap.name,
+		description: English.slap.description,
 		shortcut: "weeb.sh"
 	},
 	{
-		name: "boop",
-		description: "Boops someone",
+		name: English.boop.name,
+		description: English.boop.description,
 		shortcut: "durl",
 		url: () => { return getGif("boop") }
 	},
 	{
-		name: "pat",
-		description: "Pats someone",
+		name: English.pat.name,
+		description: English.pat.description,
 		shortcut: "weeb.sh",
 		traaOverride: true
 	}
@@ -189,9 +193,9 @@ for (const source of interactionSources) {
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user",
+				name: English[source.name].options.user.name,
 				type: 6,
-				description: `The user to ${source.name}`,
+				description: English[source.name].options.user.description,
 				required: true
 			}
 		],
@@ -203,7 +207,7 @@ for (const source of interactionSources) {
 function doInteraction(
 	cmd: ChatInputCommand,
 	lang: Lang,
-	source: Extract<keyof Lang, "hug" | "nom" | "kiss" | "cuddle" | "poke" | "slap" | "boop" | "pat">,
+	source: InteractionType,
 	shortcut: string,
 	url?: () => Promise<string>
 ) {
@@ -246,7 +250,7 @@ function doInteraction(
 			}
 		}).then(d => d.json()
 			.then(j => j.url))
-			.catch(() => "https://cdn.discordapp.com/attachments/1123048509470429365/1124107984528740392/helloamanda.png")
+			.catch(() => "https://b.catgirlsare.sexy/3ttIsFrtqsQP.png")
 	} else if (shortcut === "durl") fetched = url!()
 	else fetched = Promise.reject(new Error("Shortcut didn't match a function."))
 

@@ -8,10 +8,13 @@ import gifdecoder = require("gifuct-js")
 import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
 
+import canvasUtils = require("@amanda/canvas-utils")
 import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")
+
+import { en_us as English } from "@amanda/lang"
 
 import type { APIUser } from "discord-api-types/v10"
 import type { UnpackArray } from "@amanda/shared-types"
@@ -27,368 +30,18 @@ const imageCacheDirectory = path.join("../../image-cache")
 const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
 import type { CooldownInfo } from "../money-manager"
 
-function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image, width?: number, height?: number): Canvas.Canvas {
-	const canvas = Canvas.createCanvas(width ?? base.width, height ?? base.height).getContext("2d")
-	canvas.drawImage(imageMask, 0, 0, width ?? base.width, height ?? base.height)
-	const oldOp = canvas.globalCompositeOperation
-	canvas.globalCompositeOperation = "source-in"
-	canvas.drawImage(base, 0, 0, width ?? base.width, height ?? base.height)
-	canvas.globalCompositeOperation = oldOp
-	return canvas.canvas
-}
-
-function getHeartType(user: APIUser, married?: boolean): "full" | "broken" {
-	// Full hearts for Amanda! Amanda loves everyone.
-	if (user.id === client.user.id) return "full"
-	// User doesn't love anyone. Sad.
-	if (!married) return "broken"
-	// If we get here, then the user is in a relationship
-	return "full"
-}
-
-const datemap = {
-	0: "January",
-	1: "February",
-	2: "March",
-	3: "April",
-	4: "May",
-	5: "June",
-	6: "July",
-	7: "August",
-	8: "September",
-	9: "October",
-	10: "November",
-	11: "December"
-}
-
-async function getDefaultBG(user: APIUser, images: Map<string, Canvas.Image>): Promise<Canvas.Image> {
-	const attempt = await sql.orm.get("settings", {
-		user_id: user.id,
-		key: "defaultprofilebackground"
-	})
-
-	if (attempt && attempt.value !== "default") return images.get(attempt.value)!
-	else return images.get("defaultbg")!
-}
-
-async function getOverlay(user: APIUser, images: Map<string, Canvas.Image>, themeoverlay: string): Promise<{
-	style: "old" | "new",
-	image: Canvas.Image
-}> {
-	const attempt = await sql.orm.get("settings", {
-		user_id: user.id,
-		key: "profilestyle"
-	})
-
-	if (attempt && attempt.value !== "new") {
-		return {
-			style: "old" as const,
-			image: images.get(`old-${themeoverlay}`)!
-		}
-	} else {
-		return {
-			style: "new" as const,
-			image: images.get(themeoverlay)!
-		}
-	}
-}
-
-const fontRegex = /(?<value>\d+\.?\d*)/
-
-function setFontSize(size: number, ctx: Canvas.CanvasRenderingContext2D): void {
-	ctx.font = ctx.font.replace(fontRegex, String(size))
-}
-
-const DiscordsProfile = {
-	id: "643945264868098049",
-	username: "discord",
-	global_name: "Discord",
-	discriminator: "0",
-	avatar: null
-} as APIUser
-
-function buildOldProfile(
-	canvas: Canvas.CanvasRenderingContext2D,
-	user: APIUser,
-	others: Array<APIUser> | null,
-	money: bigint,
-	background: Canvas.Image,
-	job: Awaited<ReturnType<typeof getOverlay>>,
-	avatar: Canvas.Image,
-	discoin: Canvas.Image,
-	heart: Canvas.Image,
-	badgeImage: Canvas.Image | null,
-	giverImage: Canvas.Image | null
-): void {
-	// badge coords [219, 289, 359, 419, 489] (increments of 70)
-	canvas.drawImage(background, 0, 0)
-	canvas.drawImage(job.image, 0, 0)
-	canvas.drawImage(avatar, 65, 61, 111, 111)
-
-	if (badgeImage) canvas.drawImage(badgeImage, 219, 120)
-	if (!badgeImage && giverImage) canvas.drawImage(giverImage, 219, 120)
-	else if (badgeImage && giverImage) canvas.drawImage(giverImage, 289, 120)
-
-	const otherTags = others
-		? others.map(o => sharedUtils.userString(o)).join("\n")
-		: null
-
-	const useDiscrim = !user.global_name
-	setFontSize(25, canvas)
-	canvas.fillText(user.global_name ?? user.username, 219, useDiscrim ? 78 : 98)
-	setFontSize(20, canvas)
-	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 219, 90)
-	canvas.drawImage(discoin, 62, 215)
-	canvas.fillText(sharedUtils.numberComma(money), 106, 242)
-	canvas.drawImage(heart, 62, 259)
-	canvas.fillText(
-		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
-		106,
-		285
-	)
-}
-
-function buildNewProfile(
-	canvas: Canvas.CanvasRenderingContext2D,
-	user: APIUser,
-	others: Array<APIUser> | null,
-	money: bigint,
-	background: Canvas.Image,
-	bgmask: Canvas.Image,
-	job: Awaited<ReturnType<typeof getOverlay>>,
-	avatar: Canvas.Image,
-	avatarMask: Canvas.Image,
-	discoin: Canvas.Image,
-	heart: Canvas.Image,
-	badgeImage: Canvas.Image | null,
-	giverImage: Canvas.Image | null
-): void {
-	canvas.drawImage(mask(background, bgmask), 0, 0)
-
-	canvas.drawImage(job.image, 0, 0)
-
-	canvas.drawImage(mask(avatar, avatarMask, 111, 111), 32, 85)
-
-	if (badgeImage) canvas.drawImage(badgeImage, 166, 113)
-
-	const useDiscrim = user.discriminator && user.discriminator !== "0"
-	setFontSize(25, canvas)
-	canvas.fillText(user.username, 508, useDiscrim ? 92 : 112)
-	setFontSize(20, canvas)
-	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 508, 124)
-
-	const otherTags = others
-		? others.map(o => sharedUtils.userString(o)).join("\n")
-		: null
-
-	canvas.drawImage(discoin, 508, 156)
-	canvas.fillText(sharedUtils.numberComma(money), 550, 183)
-	canvas.drawImage(heart, 508, 207)
-	canvas.fillText(
-		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
-		550,
-		233
-	)
-	if (giverImage) canvas.drawImage(giverImage, 595, 370)
-}
-
-function makefakeCardEnding(personal: boolean, user: APIUser, couple: { users: Array<string> } | null): string {
-	const IDs = !personal && !!couple
-		? couple.users.slice(0, 2)
-		: [user.id]
-
-	return `**** ${IDs.reduce((acc, cur) => acc + BigInt(cur), BigInt(0)).toString().slice(-4)}`
-}
-
-async function buildCard(
-	card: Canvas.Image,
-	cardOverlap: Canvas.Image,
-	avatar: Canvas.Canvas,
-	circleMask: Canvas.Image,
-	circleOverlap: Canvas.Image,
-	addCircle: Canvas.Canvas,
-	neko: Canvas.Image,
-	cardSizes: readonly [number, number],
-	avatarSize: number,
-	avatarStartX: number,
-	avatarStartY: number,
-	personal = true,
-	fakePersonal: string,
-	fakeCouple: string,
-	page = 1,
-	money: { amount: string },
-	couple: { amount: string, users: Array<string> } | null,
-	lang: Lang
-): Promise<Canvas.CanvasRenderingContext2D> {
-	const masked = (personal && page === 2) || (!personal && page === 1)
-	const canvas = (masked
-		? mask(card, cardOverlap, cardSizes[0], cardSizes[1]).getContext("2d")
-		: (() => {
-			const tempCanvas = Canvas.createCanvas(cardSizes[0], cardSizes[1]).getContext("2d")
-			tempCanvas.drawImage(card, 0, 0, cardSizes[0], cardSizes[1])
-			return tempCanvas
-		})())
-
-	canvas.fillStyle = "#ffffff"
-	setFontSize(16, canvas)
-	canvas.fillText(personal ? lang.GLOBAL.PRIVATE_CARD : lang.GLOBAL.COUPLE_CARD, 25, 50)
-	canvas.fillText(personal ? fakePersonal : fakeCouple, 25, 70)
-
-	setFontSize(22, canvas)
-	canvas.fillText(sharedUtils.abbreviateNumber(personal ? money.amount : couple!.amount), 25, 30)
-
-	if (!masked) {
-		let avatars: Array<Canvas.Canvas>
-		if (!personal) {
-			avatars = await Promise.all(couple!.users.map(async u => {
-				const user = await sharedUtils.getUser(u, client.snow, client) ?? DiscordsProfile
-
-				return Canvas.loadImage(sharedUtils.displayAvatarURL(user))
-					.catch(() => Canvas.loadImage(sharedUtils.displayAvatarURL(DiscordsProfile)))
-			}))
-				.then(pfps => pfps.map(a => mask(a, circleMask, avatarSize, avatarSize)))
-		} else avatars = [avatar]
-
-		const offset = 46
-		canvas.drawImage(avatars[0], avatarStartX, avatarStartY)
-		avatars.slice(1).forEach((pfp, index) => canvas.drawImage(mask(pfp, circleOverlap), avatarStartX + ((index + 1) * offset), avatarStartY))
-		canvas.drawImage(addCircle, avatarStartX + (avatars.length * offset), avatarStartY)
-		canvas.drawImage(neko, 280, avatarStartY + 10)
-	}
-
-	return canvas
-}
-
-async function printTransactions(
-	page: Canvas.CanvasRenderingContext2D,
-	id: string,
-	fakeID: string,
-	transactionOffset: number
-): Promise<void> {
-	const transactions = await sql.orm.select("transactions", {
-		target: id
-	}, {
-		order: "date",
-		orderDescending: true,
-		limit: 7
-	})
-
-	const green = "#72BB72"
-	const red = "#FF3B3B"
-
-	transactions.forEach((transaction, index) => {
-		page.textAlign = "left"
-		const indexoffset = 570 + (index * transactionOffset)
-		page.fillStyle = "#ffffff"
-		setFontSize(18, page)
-		page.fillText(transaction.description, 30, indexoffset)
-		page.fillText(fakeID, 30, indexoffset + 30)
-
-		page.textAlign = "right"
-		const date = new Date(transaction.date)
-		page.fillText(`${sharedUtils.position(date.getDate())} ${datemap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
-		page.fillStyle = transaction.mode === 0 ? green : red
-		page.fillText(`${transaction.mode === 0 ? "+" : "-"}${sharedUtils.abbreviateNumber(transaction.amount)}`, 460, indexoffset - 10)
-	})
-}
-
-async function buildPage1(
-	base: Canvas.CanvasRenderingContext2D,
-	card1: Canvas.Image,
-	card2: Canvas.Image,
-	cardOverlap: Canvas.Image,
-	avatar: Canvas.Canvas,
-	circleMask: Canvas.Image,
-	circleOverlap: Canvas.Image,
-	addCircle: Canvas.Canvas,
-	neko: Canvas.Image,
-	cardSizes: readonly [number, number],
-	avatarSize: number,
-	avatarStartX: number,
-	avatarStartY: number,
-	fakePersonal: string,
-	fakeCouple: string,
-	money: { id: string, amount: string },
-	couple: { amount: string, users: Array<string> } | null,
-	lang: Lang,
-	cardOffset: number,
-	transactionOffset: number
-): Promise<Canvas.CanvasRenderingContext2D> {
-	const promises: Array<Promise<Canvas.CanvasRenderingContext2D>> = []
-	promises.push(buildCard(card1, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, true, fakePersonal, fakeCouple, 1, money, couple, lang))
-	if (couple) promises.push(buildCard(card2, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, false, fakePersonal, fakeCouple, 1, money, couple, lang))
-	const cards = await Promise.all(promises)
-
-	let offset = 0
-
-	if (couple) {
-		offset = cardOffset
-		base.drawImage(cards[1].canvas, 42, 150)
-	}
-
-	base.drawImage(cards[0].canvas, 42, 150 + offset)
-	base.fillStyle = "#FFFFFF"
-	setFontSize(24, base)
-	base.textAlign = "center"
-	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, Math.floor(base.canvas.width / 2), 525)
-
-	await printTransactions(base, money.id, fakePersonal, transactionOffset)
-
-	return base
-}
-
-async function buildPage2(
-	base: Canvas.CanvasRenderingContext2D,
-	card1: Canvas.Image,
-	card2: Canvas.Image,
-	cardOverlap: Canvas.Image,
-	avatar: Canvas.Canvas,
-	circleMask: Canvas.Image,
-	circleOverlap: Canvas.Image,
-	addCircle: Canvas.Canvas,
-	neko: Canvas.Image,
-	cardSizes: readonly [number, number],
-	avatarSize: number,
-	avatarStartX: number,
-	avatarStartY: number,
-	fakePersonal: string,
-	fakeCouple: string,
-	money: { id: string, amount: string },
-	couple: { id: string, amount: string, users: Array<string> },
-	lang: Lang,
-	cardOffset: number,
-	transactionOffset: number
-) {
-	const promises = [
-		buildCard(card2, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, false, fakePersonal, fakeCouple, 2, money, couple, lang),
-		buildCard(card1, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, true, fakePersonal, fakeCouple, 2, money, couple, lang)
-	]
-	const cards = await Promise.all(promises)
-
-	base.drawImage(cards[1].canvas, 42, 150)
-	base.drawImage(cards[0].canvas, 42, 150 + cardOffset)
-	base.fillStyle = "#FFFFFF"
-	setFontSize(24, base)
-	base.textAlign = "center"
-	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, Math.floor(base.canvas.width / 2), 525)
-
-	await printTransactions(base, couple.id, fakeCouple, transactionOffset)
-
-	return base
-}
-
 commands.assign([
 	{
-		name: "slots",
-		description: "Run the slot machine",
+		name: English.slots.name,
+		description: English.slots.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "amount",
+				name: English.slots.options.amount.name,
 				type: 4,
-				description: "The amount of money to bet",
+				description: English.slots.options.amount.description,
 				required: false,
 				min_value: 2
 			}
@@ -474,7 +127,7 @@ commands.assign([
 			}
 
 			let result = ""
-			let winning = BigInt(0)
+			let winning: bigint
 			if (slots.every(s => s === "heart")) {
 				winning = bet * BigInt(20)
 				result = lang.GLOBAL.THREE_HEARTS
@@ -502,23 +155,23 @@ commands.assign([
 		}
 	},
 	{
-		name: "flip",
-		description: "Flips a coin",
+		name: English.flip.name,
+		description: English.flip.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "amount",
+				name: English.flip.options.amount.name,
 				type: 4,
-				description: "The amount of money to bet",
+				description: English.flip.options.amount.description,
 				required: false,
 				min_value: 2
 			},
 			{
-				name: "side",
+				name: English.flip.options.side.name,
 				type: 3,
-				description: "The side to bet on",
+				description: English.flip.options.side.description,
 				required: false,
 				choices: [
 					{
@@ -605,22 +258,22 @@ commands.assign([
 		}
 	},
 	{
-		name: "money",
-		description: "Shows how much money you/another person/the couple has",
+		name: English.money.name,
+		description: English.money.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "user",
+				name: English.money.options.user.name,
 				type: 6,
-				description: "The user to get info on",
+				description: English.money.options.user.description,
 				required: false
 			},
 			{
-				name: "couple",
+				name: English.money.options.couple.name,
 				type: 5,
-				description: "Whether to show the couple balance",
+				description: English.money.options.couple.description,
 				required: false
 			}
 		],
@@ -665,7 +318,7 @@ commands.assign([
 			const circleOverlap = images.get("circle-overlap-mask")!
 			const neko = images.get("neko")!
 
-			setFontSize(24, canvas)
+			canvasUtils.setFontSize(24, canvas)
 			canvas.textAlign = "center"
 			canvas.fillStyle = "#FFFFFF"
 			canvas.fillText(sharedUtils.userString(user), Math.floor(bg.width / 2), 70)
@@ -676,8 +329,8 @@ commands.assign([
 			const cardSizes = [400, 225] as const
 			const cardOffset = 95
 
-			const maskedAddCircle = mask(addCircle, circleOverlap, avatarSize, avatarSize)
-			const maskedAvatar = mask(avatar, circleMask, avatarSize, avatarSize)
+			const maskedAddCircle = canvasUtils.mask(addCircle, circleOverlap, avatarSize, avatarSize)
+			const maskedAvatar = canvasUtils.mask(avatar, circleMask, avatarSize, avatarSize)
 
 			const fakePersonal = makefakeCardEnding(true, user, null)
 			const fakeCouple = makefakeCardEnding(false, user, couple)
@@ -685,15 +338,15 @@ commands.assign([
 			const transactionOffset = 70
 
 			const buffer = await (couple && showCouple
-				? buildPage2(canvas, card1, card2, cardOverlap, maskedAvatar, circleMask, circleOverlap, maskedAddCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, fakePersonal, fakeCouple, money, couple, lang, cardOffset, transactionOffset)
-				: buildPage1(canvas, card1, card2, cardOverlap, maskedAvatar, circleMask, circleOverlap, maskedAddCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, fakePersonal, fakeCouple, money, couple, lang, cardOffset, transactionOffset)
+				? buildMoneyPage2(canvas, card1, card2, cardOverlap, maskedAvatar.canvas, circleMask, circleOverlap, maskedAddCircle.canvas, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, fakePersonal, fakeCouple, money, couple, lang, cardOffset, transactionOffset)
+				: buildMoneyPage1(canvas, card1, card2, cardOverlap, maskedAvatar.canvas, circleMask, circleOverlap, maskedAddCircle.canvas, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, fakePersonal, fakeCouple, money, couple, lang, cardOffset, transactionOffset)
 			).then(c => c.canvas.toBuffer("image/png"))
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { files: [{ name: "money.png", file: buffer }] })
 		}
 	},
 	{
-		name: "leaderboard",
-		description: "Shows the leaderboard for top users of money",
+		name: English.leaderboard.name,
+		description: English.leaderboard.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
@@ -750,23 +403,23 @@ commands.assign([
 		}
 	},
 	{
-		name: "give",
-		description: "Gives another user money",
+		name: English.give.name,
+		description: English.give.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "amount",
+				name: English.give.options.amount.name,
 				type: 4,
-				description: "The amount of money to give",
+				description: English.give.options.amount.description,
 				required: true,
 				min_value: 1
 			},
 			{
-				name: "user",
+				name: English.give.options.user.name,
 				type: 6,
-				description: "The user to give money to",
+				description: English.give.options.user.description,
 				required: true
 			}
 		],
@@ -799,7 +452,7 @@ commands.assign([
 			})
 		}
 	},
-	{
+	/*{
 		name: "wheel",
 		description: "Spin the wheel of (mis)fortune",
 		category: "money",
@@ -839,24 +492,81 @@ commands.assign([
 			await moneyManager.awardAmount(cmd.author.id, award, `Wheel Of ${award <= BigInt(0) ? "Misf" : "F"}ortune`)
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: sharedUtils.numberComma(award), files: [{ name: "wheel.png", file: image }] })
 		}
+	},*/
+	{
+		name: English.fortune.name,
+		description: English.fortune.description,
+		category: "money",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
+		async process(cmd, lang) {
+			if (!confprovider.config.db_enabled) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: lang.GLOBAL.DATABASE_OFFLINE
+				})
+			}
+
+			const claim = await sql.orm.get("daily_cooldown", { user_id: cmd.author.id })
+			if (claim && claim.last_claim < Date.now() - (1000 * 60 * 60 * 24)) {
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.ALREADY_CLAIMED_DAILY, { "time": sharedUtils.shortTime((claim.last_claim + (1000 * 60 * 60 * 24)) - Date.now(), "ms") })
+				})
+			}
+
+			const [images, isPremium] = await Promise.all([
+				imageCache.getAll([
+					"fortune",
+					"fortune-hands",
+					"fortune-wheel"
+				]),
+				sql.orm.get("premium", { user_id: cmd.author.id })
+			])
+
+			const ranges: [number, number] = isPremium?.state ? [1000, 5000] : [100, 2000]
+			const winnings = BigInt(Math.floor(Math.random() * (ranges[1] - ranges[0]) + ranges[0]))
+			const winningsStr = sharedUtils.numberComma(winnings)
+
+			const canvas = Canvas.createCanvas(837, 1024).getContext("2d")
+			const bg = images.get("fortune")!
+			canvas.drawImage(bg, 0, 0)
+			const wheel = images.get("fortune-wheel")!
+			canvas.drawImage(wheel, 0, 0)
+
+			const textCanvas = Canvas.createCanvas(587, 586).getContext("2d")
+			const paddingSide = 50
+			const pixSize = Math.floor(((587 - paddingSide) / winningsStr.length) * 2)
+			canvasUtils.setFontSize(pixSize, textCanvas)
+			textCanvas.fillStyle = "#344054"
+			textCanvas.fillText(winningsStr, Math.floor(paddingSide / 2), Math.floor((586 / 1.25) - (pixSize / 2)))
+
+			canvas.drawImage(canvasUtils.pinchBuldge(50, textCanvas.canvas).canvas, 132, 416)
+
+			const hands = images.get("fortune-hands")!
+			canvas.drawImage(hands, 0, 0)
+
+			await moneyManager.awardAmount(cmd.author.id, winnings, "Amanda fortune")
+			await sql.orm.upsert("daily_cooldown", { user_id: cmd.author.id, last_claim: Date.now() })
+
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { files: [{ name: "fortune.png", file: canvas.canvas.toBuffer("image/png") }] })
+		}
 	},
 	{
-		name: "profile",
-		description: "Gets a user's Amanda profile",
+		name: English.profile.name,
+		description: English.profile.description,
 		category: "money",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "user",
+				name: English.profile.options.user.name,
 				type: 6,
-				description: "The user's profile to get",
+				description: English.profile.options.user.description,
 				required: false
 			},
 			{
-				name: "light",
+				name: English.profile.options.light.name,
 				type: 5,
-				description: "If light mode should be force used (default false)",
+				description: English.profile.options.light.description,
 				required: false
 			}
 		],
@@ -868,9 +578,8 @@ commands.assign([
 			const lightSpecified = !!cmd.data.options.get("light")
 
 			let themeoverlay: "profile" | "profile-light" = "profile"
-			if (lightSpecified) {
-				themeoverlay = light ? "profile-light" : "profile"
-			} else {
+			if (lightSpecified) themeoverlay = light ? "profile-light" : "profile"
+			else {
 				const themedata = await sql.orm.get("settings", { user_id: user.id, key: "profiletheme" })
 				if (themedata?.value === "light") themeoverlay = "profile-light"
 			}
@@ -923,13 +632,13 @@ commands.assign([
 							? images.get("badge-giver1")!
 							: null
 
-			const job = await getOverlay(user, images, themeoverlay)
+			const job = await getProfileOverlay(user, images, themeoverlay)
 
 			let avatarAsStatic: Canvas.Image | undefined
 			let avatarAsGif: Array<gifdecoder.ParsedFrame> | undefined
 			let encoder
 
-			if (isPremium?.state && ((member?.avatar ?? user.avatar)?.startsWith("a_"))) {
+			if (isPremium?.state && ((member?.avatar ?? user.avatar)?.startsWith("a_")) && confprovider.config.gif_profile) {
 				try {
 					const response = await fetch(sharedUtils.displayAvatarURL(user, member, cmd.guild_id, true))
 					const buf = await response.arrayBuffer()
@@ -950,9 +659,9 @@ commands.assign([
 					bgimg = await Canvas.loadImage(path.join(imageCacheDirectory, `${user.id}.png`))
 					if (!bgimg) throw new Error("NOTHING")
 				} catch {
-					bgimg = await getDefaultBG(user, images)
+					bgimg = await getDefaultProfileBG(user, images)
 				}
-			} else bgimg = await getDefaultBG(user, images)
+			} else bgimg = await getDefaultProfileBG(user, images)
 
 			if (!bgimg) throw new Error("SHIT YOURSELF NOW")
 
@@ -1019,3 +728,315 @@ commands.assign([
 		}
 	}
 ])
+
+function getHeartType(user: APIUser, married?: boolean): "full" | "broken" {
+	// Full hearts for Amanda! Amanda loves everyone.
+	if (user.id === client.user.id) return "full"
+	// User doesn't love anyone. Sad.
+	if (!married) return "broken"
+	// If we get here, then the user is in a relationship
+	return "full"
+}
+
+async function getDefaultProfileBG(user: APIUser, images: Map<string, Canvas.Image>): Promise<Canvas.Image> {
+	const attempt = await sql.orm.get("settings", {
+		user_id: user.id,
+		key: "defaultprofilebackground"
+	})
+
+	if (attempt && attempt.value !== "default") return images.get(attempt.value)!
+	else return images.get("defaultbg")!
+}
+
+async function getProfileOverlay(user: APIUser, images: Map<string, Canvas.Image>, themeoverlay: string): Promise<{
+	style: "old" | "new",
+	image: Canvas.Image
+}> {
+	const attempt = await sql.orm.get("settings", {
+		user_id: user.id,
+		key: "profilestyle"
+	})
+
+	if (attempt && attempt.value !== "new") {
+		return {
+			style: "old" as const,
+			image: images.get(`old-${themeoverlay}`)!
+		}
+	} else {
+		return {
+			style: "new" as const,
+			image: images.get(themeoverlay)!
+		}
+	}
+}
+
+
+function buildOldProfile(
+	canvas: Canvas.CanvasRenderingContext2D,
+	user: APIUser,
+	others: Array<APIUser> | null,
+	money: bigint,
+	background: Canvas.Image,
+	job: Awaited<ReturnType<typeof getProfileOverlay>>,
+	avatar: Canvas.Image,
+	discoin: Canvas.Image,
+	heart: Canvas.Image,
+	badgeImage: Canvas.Image | null,
+	giverImage: Canvas.Image | null
+): void {
+	// badge coords [219, 289, 359, 419, 489] (increments of 70)
+	canvas.drawImage(background, 0, 0)
+	canvas.drawImage(job.image, 0, 0)
+	canvas.drawImage(avatar, 65, 61, 111, 111)
+
+	if (badgeImage) canvas.drawImage(badgeImage, 219, 120)
+	if (!badgeImage && giverImage) canvas.drawImage(giverImage, 219, 120)
+	else if (badgeImage && giverImage) canvas.drawImage(giverImage, 289, 120)
+
+	const otherTags = others
+		? others.map(o => sharedUtils.userString(o)).join("\n")
+		: null
+
+	const useDiscrim = !user.global_name
+	canvasUtils.setFontSize(25, canvas)
+	canvas.fillText(user.global_name ?? user.username, 219, useDiscrim ? 78 : 98)
+	canvasUtils.setFontSize(20, canvas)
+	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 219, 90)
+	canvas.drawImage(discoin, 62, 215)
+	canvas.fillText(sharedUtils.numberComma(money), 106, 242)
+	canvas.drawImage(heart, 62, 259)
+	canvas.fillText(
+		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
+		106,
+		285
+	)
+}
+
+function buildNewProfile(
+	canvas: Canvas.CanvasRenderingContext2D,
+	user: APIUser,
+	others: Array<APIUser> | null,
+	money: bigint,
+	background: Canvas.Image,
+	bgmask: Canvas.Image,
+	job: Awaited<ReturnType<typeof getProfileOverlay>>,
+	avatar: Canvas.Image,
+	avatarMask: Canvas.Image,
+	discoin: Canvas.Image,
+	heart: Canvas.Image,
+	badgeImage: Canvas.Image | null,
+	giverImage: Canvas.Image | null
+): void {
+	canvas.drawImage(canvasUtils.mask(background, bgmask).canvas, 0, 0)
+
+	canvas.drawImage(job.image, 0, 0)
+
+	canvas.drawImage(canvasUtils.mask(avatar, avatarMask, 111, 111).canvas, 32, 85)
+
+	if (badgeImage) canvas.drawImage(badgeImage, 166, 113)
+
+	const useDiscrim = user.discriminator && user.discriminator !== "0"
+	canvasUtils.setFontSize(25, canvas)
+	canvas.fillText(user.username, 508, useDiscrim ? 92 : 112)
+	canvasUtils.setFontSize(20, canvas)
+	if (useDiscrim) canvas.fillText(`#${user.discriminator}`, 508, 124)
+
+	const otherTags = others
+		? others.map(o => sharedUtils.userString(o)).join("\n")
+		: null
+
+	canvas.drawImage(discoin, 508, 156)
+	canvas.fillText(sharedUtils.numberComma(money), 550, 183)
+	canvas.drawImage(heart, 508, 207)
+	canvas.fillText(
+		user.id === client.user.id ? "You <3" : otherTags ?? "Nobody, yet",
+		550,
+		233
+	)
+	if (giverImage) canvas.drawImage(giverImage, 595, 370)
+}
+
+function makefakeCardEnding(personal: boolean, user: APIUser, couple: { users: Array<string> } | null): string {
+	const IDs = !personal && !!couple
+		? couple.users.slice(0, 2)
+		: [user.id]
+
+	return `**** ${IDs.reduce((acc, cur) => acc + BigInt(cur), BigInt(0)).toString().slice(-4)}`
+}
+
+async function buildMoneyCard(
+	card: Canvas.Image,
+	cardOverlap: Canvas.Image,
+	avatar: Canvas.Canvas,
+	circleMask: Canvas.Image,
+	circleOverlap: Canvas.Image,
+	addCircle: Canvas.Canvas,
+	neko: Canvas.Image,
+	cardSizes: readonly [number, number],
+	avatarSize: number,
+	avatarStartX: number,
+	avatarStartY: number,
+	personal = true,
+	fakePersonal: string,
+	fakeCouple: string,
+	page = 1,
+	money: { amount: string },
+	couple: { amount: string, users: Array<string> } | null,
+	lang: Lang
+): Promise<Canvas.CanvasRenderingContext2D> {
+	const masked = (personal && page === 2) || (!personal && page === 1)
+	const canvas = (masked
+		? canvasUtils.mask(card, cardOverlap, cardSizes[0], cardSizes[1])
+		: (() => {
+			const tempCanvas = Canvas.createCanvas(cardSizes[0], cardSizes[1]).getContext("2d")
+			tempCanvas.drawImage(card, 0, 0, cardSizes[0], cardSizes[1])
+			return tempCanvas
+		})())
+
+	canvas.fillStyle = "#ffffff"
+	canvasUtils.setFontSize(16, canvas)
+	canvas.fillText(personal ? lang.GLOBAL.PRIVATE_CARD : lang.GLOBAL.COUPLE_CARD, 25, 50)
+	canvas.fillText(personal ? fakePersonal : fakeCouple, 25, 70)
+
+	canvasUtils.setFontSize(22, canvas)
+	canvas.fillText(sharedUtils.abbreviateNumber(personal ? money.amount : couple!.amount), 25, 30)
+
+	if (!masked) {
+		let avatars: Array<Canvas.Canvas>
+		if (!personal) {
+			avatars = await Promise.all(couple!.users.map(async u => {
+				const user = await sharedUtils.getUser(u, client.snow, client) ?? sharedUtils.DiscordsProfile
+
+				return Canvas.loadImage(sharedUtils.displayAvatarURL(user))
+					.catch(() => Canvas.loadImage(sharedUtils.displayAvatarURL(sharedUtils.DiscordsProfile)))
+			}))
+				.then(pfps => pfps.map(a => canvasUtils.mask(a, circleMask, avatarSize, avatarSize).canvas))
+		} else avatars = [avatar]
+
+		const offset = 46
+		canvas.drawImage(avatars[0], avatarStartX, avatarStartY)
+		avatars.slice(1).forEach((pfp, index) => canvas.drawImage(canvasUtils.mask(pfp, circleOverlap).canvas, avatarStartX + ((index + 1) * offset), avatarStartY))
+		canvas.drawImage(addCircle, avatarStartX + (avatars.length * offset), avatarStartY)
+		canvas.drawImage(neko, 280, avatarStartY + 10)
+	}
+
+	return canvas
+}
+
+async function printTransactionsOnMoneyCard(
+	page: Canvas.CanvasRenderingContext2D,
+	id: string,
+	fakeID: string,
+	transactionOffset: number
+): Promise<void> {
+	const transactions = await sql.orm.select("transactions", {
+		target: id
+	}, {
+		order: "date",
+		orderDescending: true,
+		limit: 7
+	})
+
+	const green = "#72BB72"
+	const red = "#FF3B3B"
+
+	transactions.forEach((transaction, index) => {
+		page.textAlign = "left"
+		const indexoffset = 570 + (index * transactionOffset)
+		page.fillStyle = "#ffffff"
+		canvasUtils.setFontSize(18, page)
+		page.fillText(transaction.description, 30, indexoffset)
+		page.fillText(fakeID, 30, indexoffset + 30)
+
+		page.textAlign = "right"
+		const date = new Date(transaction.date)
+		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.datemap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
+		page.fillStyle = transaction.mode === 0 ? green : red
+		page.fillText(`${transaction.mode === 0 ? "+" : "-"}${sharedUtils.abbreviateNumber(transaction.amount)}`, 460, indexoffset - 10)
+	})
+}
+
+async function buildMoneyPage1(
+	base: Canvas.CanvasRenderingContext2D,
+	card1: Canvas.Image,
+	card2: Canvas.Image,
+	cardOverlap: Canvas.Image,
+	avatar: Canvas.Canvas,
+	circleMask: Canvas.Image,
+	circleOverlap: Canvas.Image,
+	addCircle: Canvas.Canvas,
+	neko: Canvas.Image,
+	cardSizes: readonly [number, number],
+	avatarSize: number,
+	avatarStartX: number,
+	avatarStartY: number,
+	fakePersonal: string,
+	fakeCouple: string,
+	money: { id: string, amount: string },
+	couple: { amount: string, users: Array<string> } | null,
+	lang: Lang,
+	cardOffset: number,
+	transactionOffset: number
+): Promise<Canvas.CanvasRenderingContext2D> {
+	const promises: Array<Promise<Canvas.CanvasRenderingContext2D>> = []
+	promises.push(buildMoneyCard(card1, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, true, fakePersonal, fakeCouple, 1, money, couple, lang))
+	if (couple) promises.push(buildMoneyCard(card2, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, false, fakePersonal, fakeCouple, 1, money, couple, lang))
+	const cards = await Promise.all(promises)
+
+	let offset = 0
+
+	if (couple) {
+		offset = cardOffset
+		base.drawImage(cards[1].canvas, 42, 150)
+	}
+
+	base.drawImage(cards[0].canvas, 42, 150 + offset)
+	base.fillStyle = "#FFFFFF"
+	canvasUtils.setFontSize(24, base)
+	base.textAlign = "center"
+	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, Math.floor(base.canvas.width / 2), 525)
+
+	await printTransactionsOnMoneyCard(base, money.id, fakePersonal, transactionOffset)
+
+	return base
+}
+
+async function buildMoneyPage2(
+	base: Canvas.CanvasRenderingContext2D,
+	card1: Canvas.Image,
+	card2: Canvas.Image,
+	cardOverlap: Canvas.Image,
+	avatar: Canvas.Canvas,
+	circleMask: Canvas.Image,
+	circleOverlap: Canvas.Image,
+	addCircle: Canvas.Canvas,
+	neko: Canvas.Image,
+	cardSizes: readonly [number, number],
+	avatarSize: number,
+	avatarStartX: number,
+	avatarStartY: number,
+	fakePersonal: string,
+	fakeCouple: string,
+	money: { id: string, amount: string },
+	couple: { id: string, amount: string, users: Array<string> },
+	lang: Lang,
+	cardOffset: number,
+	transactionOffset: number
+) {
+	const promises = [
+		buildMoneyCard(card2, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, false, fakePersonal, fakeCouple, 2, money, couple, lang),
+		buildMoneyCard(card1, cardOverlap, avatar, circleMask, circleOverlap, addCircle, neko, cardSizes, avatarSize, avatarStartX, avatarStartY, true, fakePersonal, fakeCouple, 2, money, couple, lang)
+	]
+	const cards = await Promise.all(promises)
+
+	base.drawImage(cards[1].canvas, 42, 150)
+	base.drawImage(cards[0].canvas, 42, 150 + cardOffset)
+	base.fillStyle = "#FFFFFF"
+	canvasUtils.setFontSize(24, base)
+	base.textAlign = "center"
+	base.fillText(`${lang.GLOBAL.TRANSACTIONS}:`, Math.floor(base.canvas.width / 2), 525)
+
+	await printTransactionsOnMoneyCard(base, couple.id, fakeCouple, transactionOffset)
+
+	return base
+}

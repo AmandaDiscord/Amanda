@@ -12,10 +12,10 @@
         "build": "turbo run build"
     },
     "devDependencies": {
-        "@types/node": "^22.10.2",
-        "@typescript-eslint/eslint-plugin": "^8.18.2",
-        "@typescript-eslint/parser": "^8.18.2",
-        "discord-api-types": "0.37.114",
+        "@types/node": "^22.10.3",
+        "@typescript-eslint/eslint-plugin": "^8.19.0",
+        "@typescript-eslint/parser": "^8.19.0",
+        "discord-api-types": "0.37.115",
         "eslint": "^9.17.0",
         "tsup": "^8.3.5",
         "turbo": "^2.3.3",
@@ -28,8 +28,8 @@
         "snowtransfer": "^0.10.9"
     },
     "resolutions": {
-        "discord-api-types": "0.37.114",
-        "canvas": "3.0.0",
+        "discord-api-types": "0.37.115",
+        "canvas": "3.0.1",
         "undici": "6.6.2"
     }
 }

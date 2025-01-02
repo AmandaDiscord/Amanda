@@ -12,6 +12,7 @@ const images = {
 	"bank": "backgrounds/commands/bank.png",
 	"card1": "backgrounds/commands/card.png",
 	"card2": "backgrounds/commands/card2.png",
+	"fortune": "backgrounds/commands/fortune.png",
 
 	"badge-developer": "badges/Developer_50x50.png",
 	"badge-donator": "badges/Donator_50x50.png",
@@ -45,7 +46,9 @@ const images = {
 	"profile": "overlays/profile.png",
 	"slot-jackpot": "overlays/JACKPOT.png",
 	"slot-win": "overlays/YOUWIN.png",
-	"slot-lost": "overlays/YOULOST.png"
+	"slot-lost": "overlays/YOULOST.png",
+	"fortune-hands": "overlays/amanda_hands.png",
+	"fortune-wheel": "overlays/wheel2.png"
 }
 
 import type { UnpackArray } from "@amanda/shared-types"

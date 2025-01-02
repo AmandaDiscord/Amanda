@@ -16,73 +16,18 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import redis = require("@amanda/redis")
 
+import { en_us as English } from "@amanda/lang"
+
 import type { APIApplicationCommandOption, APIEmbed } from "discord-api-types/v10"
 import type { Lang } from "@amanda/lang"
-
-function bToMB(number: number) {
-	return `${((number / 1024) / 1024).toFixed(2)}MB`
-}
 
 const imageCacheDirectory = path.join("../../image-cache")
 const numberVerifyRegex = /^[\d,]+$/g
 
-async function updateCache() {
-	const [backgroundRows, mineRows] = await Promise.all([
-		sql.orm.select("settings", { key: "profilebackground" }, { select: ["user_id", "value"] }).then(rs => rs.filter(r => r.value.startsWith("http"))),
-		sql.orm.select("background_sync", { machine_id: confprovider.config.cluster_id }, { select: ["user_id", "url"] })
-	])
-
-	const mineMap = new Map(mineRows.map(r => [r.user_id, r.url]))
-
-	await Promise.all(backgroundRows.map(async row => {
-		const mine = mineMap.get(row.user_id)
-		if (!mine || mine !== row.value) {
-			let image: Canvas.Image | undefined
-
-			try {
-				image = await Canvas.loadImage(row.value)
-			} catch {
-				return console.log(`Image cache update for ${row.user_id} failed.`)
-			}
-
-			const canvas = Canvas.createCanvas(800, 500).getContext("2d")
-
-			CanvasCover(image, 0, 0, 800, 500).render(canvas)
-			const buf = canvas.canvas.toBuffer("image/png")
-
-			try {
-				await fs.promises.stat(imageCacheDirectory)
-			} catch {
-				await fs.promises.mkdir(imageCacheDirectory, { recursive: true })
-			}
-
-			await Promise.all([
-				fs.promises.writeFile(path.join(imageCacheDirectory, `${row.user_id}.png`), buf),
-				sql.orm.upsert("background_sync", { machine_id: confprovider.config.cluster_id, user_id: row.user_id, url: row.value })
-			])
-
-			console.log(`Saved background for ${row.user_id}`)
-		}
-	}))
-}
-
-let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
-updateCache()
-
-function cacheUpdateTimeoutFunction() {
-	updateCache()
-	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
-}
-
-sync.events.once(__filename, () => {
-	clearTimeout(cacheUpdateTimeout)
-	console.log("cleared old cache update timeout")
-})
-
 commands.assign([
 	{
-		name: "stats",
-		description: "Show detailed statistics",
+		name: English.stats.name,
+		description: English.stats.description,
 		category: "meta",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
@@ -104,7 +49,7 @@ commands.assign([
 							{
 								name: leadingIdentity,
 								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime(), "sec")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}\n`,
+									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${sharedUtils.bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}\n`,
 								inline: true
 							},
 							{
@@ -121,8 +66,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "info",
-		description: "Gets info about Amanda",
+		name: English.info.name,
+		description: English.info.description,
 		category: "meta",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
@@ -161,8 +106,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "git",
-		description: "Gets the latest git commits to Amanda",
+		name: English.git.name,
+		description: English.git.description,
 		category: "meta",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
@@ -238,23 +183,23 @@ commands.assign([
 		}
 	},
 	{
-		name: "help",
-		description: "Your average help command",
+		name: English.help.name,
+		description: English.help.description,
 		category: "meta",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "category",
+				name: English.help.options.category.name,
 				type: 3,
-				description: "The category to get help with",
-				choices: ["meta", ...commands.categories.keys()].map(i => ({ name: i, value: i })),
+				description: English.help.options.category.description,
+				choices: ["meta", ...commands.categories.keys()].filter(cat => cat !== "hidden").map(i => ({ name: i, value: i })),
 				required: false
 			},
 			{
-				name: "command",
+				name: English.help.options.command.name,
 				type: 3,
-				description: "The command to get help with",
+				description: English.help.options.command.description,
 				required: false
 			}
 		],
@@ -280,7 +225,7 @@ commands.assign([
 					}
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
-				} else if (category && category != "hidden" && commands.categories.has(category)) {
+				} else if (category && category !== "hidden" && commands.categories.has(category)) {
 					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL" | "CODE">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 
@@ -342,16 +287,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "settings",
-		description: "Modify settings for Amanda to use",
+		name: English.settings.name,
+		description: English.settings.description,
 		category: "meta",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "setting",
+				name: English.settings.options.setting.name,
 				type: 3,
-				description: "The setting you want to modify/view",
+				description: English.settings.options.setting.description,
 				required: true,
 				choices: [
 					{
@@ -369,9 +314,9 @@ commands.assign([
 				]
 			},
 			{
-				name: "modify",
+				name: English.settings.options.modify.name,
 				type: 3,
-				description: "What to modify the setting value to"
+				description: English.settings.options.modify.description
 			}
 		],
 		async process(cmd, lang) {
@@ -504,7 +449,7 @@ commands.assign([
 							})
 						}
 
-						updateCache()
+						cacheUpdateTimeoutFunction()
 					} else if (isPremium) {
 						await Promise.all([
 							fs.promises.unlink(path.join(imageCacheDirectory, cmd.author.id)).catch(() => void 0),
@@ -541,3 +486,57 @@ function getDocs(c: import("@amanda/shared-types").UnpackArray<Parameters<typeof
 
 	return info
 }
+
+async function updateCache() {
+	const [backgroundRows, mineRows] = await Promise.all([
+		sql.orm.select("settings", { key: "profilebackground" }, { select: ["user_id", "value"] }).then(rs => rs.filter(r => r.value.startsWith("http"))),
+		sql.orm.select("background_sync", { machine_id: confprovider.config.cluster_id }, { select: ["user_id", "url"] })
+	])
+
+	const mineMap = new Map(mineRows.map(r => [r.user_id, r.url]))
+
+	await Promise.all(backgroundRows.map(async row => {
+		const mine = mineMap.get(row.user_id)
+		if (!mine || mine !== row.value) {
+			let image: Canvas.Image | undefined
+
+			try {
+				image = await Canvas.loadImage(row.value)
+			} catch {
+				return console.log(`Image cache update for ${row.user_id} failed.`)
+			}
+
+			const canvas = Canvas.createCanvas(800, 500).getContext("2d")
+
+			CanvasCover(image, 0, 0, 800, 500).render(canvas)
+			const buf = canvas.canvas.toBuffer("image/png")
+
+			try {
+				await fs.promises.stat(imageCacheDirectory)
+			} catch {
+				await fs.promises.mkdir(imageCacheDirectory, { recursive: true })
+			}
+
+			await Promise.all([
+				fs.promises.writeFile(path.join(imageCacheDirectory, `${row.user_id}.png`), buf),
+				sql.orm.upsert("background_sync", { machine_id: confprovider.config.cluster_id, user_id: row.user_id, url: row.value })
+			])
+
+			console.log(`Saved background for ${row.user_id}`)
+		}
+	}))
+}
+
+let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+updateCache()
+
+function cacheUpdateTimeoutFunction() {
+	updateCache()
+	clearTimeout(cacheUpdateTimeout)
+	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
+}
+
+sync.events.once(__filename, () => {
+	clearTimeout(cacheUpdateTimeout)
+	console.log("cleared old cache update timeout")
+})

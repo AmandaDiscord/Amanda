@@ -11,214 +11,155 @@ const { snow, commands, sync, queues, confprovider } = passthrough
 const common: typeof import("./utils") = sync.require("./utils")
 const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 
-import type { Queue } from "./queue"
+import { en_us as English } from "@amanda/lang"
+
 import type { Lang } from "@amanda/lang"
 import type { QueryResultRow } from "pg"
-import type { APIEmbedAuthor, APIVoiceState, APIButtonComponentWithCustomId, APIUser } from "discord-api-types/v10"
+import type { APIEmbedAuthor, APIButtonComponentWithCustomId } from "discord-api-types/v10"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
-const checkPlaylistName = (playlistName: string, cmd: ChatInputCommand, lang: Lang) => {
-	let value = true
-	if (playlistName.includes("http") || playlistName.includes("www.") || plRegex.exec(playlistName)) value = false
-	if (playlistName.length > 24) value = false
-	if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
-	return value
-}
-
-const unbreakDatabase = async (tracks: Array<QueryResultRow>) => {
-	console.warn("unbreakDatabase was called!")
-
-	await Promise.all(tracks.map((row, index) => sql.orm.update("playlist_songs", {
-		next: (tracks[index + 1] ? tracks[index + 1].video_id : null)
-	}, {
-		playlist_id: row.playlist_id,
-		video_id: row.video_id
-	})))
-}
-
-const getTracks = async (playlistRow: { playlist_id: number }, cmd: ChatInputCommand, lang: Lang, notifyNone = true) => {
-	const tracks = await sql.all<{ next: string, video_id: string, name: string, length: number, playlist_id: number }>(
-		"SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1",
-		[playlistRow.playlist_id]
-	)
-
-	if (tracks.length === 0 && notifyNone) {
-		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: lang.GLOBAL.PLAYLIST_EMPTY
-		})
-
-		return []
-	}
-
-	const orderedTracks: typeof tracks = []
-	let track = tracks.find(row => !tracks.some(r => r.next === row.video_id))
-
-	while (track) {
-		orderedTracks.push(track!)
-		if (track.next) track = tracks.find(row => row.video_id === track!.next)
-		else track = void 0
-		if (orderedTracks.includes(track!)) await unbreakDatabase(tracks)
-	}
-
-	if (orderedTracks.length != tracks.length) await unbreakDatabase(tracks)
-
-	return orderedTracks
-}
-
-function addRanking(r: number | string, p: { ranking: string }) {
-	p.ranking += `${r}.`
-}
-
-async function getAuthor(u: string, lang: Lang) {
-	const user = await sharedUtils.getUser(u, snow)
-	if (user) {
-		let username = user.username || lang.GLOBAL.HEADER_UNKNOWN
-		if (username.length > 14) username = `${username.slice(0, 13)}…`
-		return `\`${username}\``
-	} else return "(?)"
-}
 
 commands.assign([
 	{
-		name: "playlists",
-		description: "Manage and play Amanda playlists",
+		name: English.playlists.name,
+		description: English.playlists.description,
 		category: "audio",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "lists",
-				description: "View and create/delete playlists",
+				name: English.playlists.options.lists.name,
+				description: English.playlists.options.lists.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "info",
-						description: "Shows info for a playlist",
+						name: English.playlists.options.lists.options.info.name,
+						description: English.playlists.options.lists.options.info.description,
 						type: 3,
 						required: false
 					},
 					{
-						name: "create",
-						description: "Creates a playlist",
+						name: English.playlists.options.lists.options.create.name,
+						description: English.playlists.options.lists.options.create.description,
 						type: 3,
 						required: false
 					},
 					{
-						name: "delete",
-						description: "Deletes a playlist",
+						name: English.playlists.options.lists.options.delete.name,
+						description: English.playlists.options.lists.options.delete.description,
 						type: 3,
 						required: false
 					}
 				]
 			},
 			{
-				name: "add",
-				description: "Adds a track to a playlist",
+				name: English.playlists.options.add.name,
+				description: English.playlists.options.add.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "playlist",
-						description: "The name of the playlist",
+						name: English.playlists.options.add.options.playlist.name,
+						description: English.playlists.options.add.options.playlist.description,
 						type: 3,
 						required: true
 					},
 					{
-						name: "track",
-						description: "A resolveable track (link, name, id)",
+						name: English.playlists.options.add.options.track.name,
+						description: English.playlists.options.add.options.track.description,
 						type: 3,
 						required: true
 					}
 				]
 			},
 			{
-				name: "remove",
-				description: "Removes a track from a playlist",
+				name: English.playlists.options.remove.name,
+				description: English.playlists.options.remove.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "playlist",
-						description: "The name of the playlist",
+						name: English.playlists.options.remove.options.playlist.name,
+						description: English.playlists.options.remove.options.playlist.description,
 						type: 3,
 						required: true
 					},
 					{
-						name: "index",
-						description: "The 1 based index of the track to remove",
+						name: English.playlists.options.remove.options.index.name,
+						description: English.playlists.options.remove.options.index.description,
 						type: 4,
 						required: true
 					}
 				]
 			},
 			{
-				name: "move",
-				description: "Moves a track in a playlist from one index to another",
+				name: English.playlists.options.move.name,
+				description: English.playlists.options.move.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "playlist",
-						description: "The name of the playlist",
+						name: English.playlists.options.move.options.playlist.name,
+						description: English.playlists.options.move.options.playlist.description,
 						type: 3,
 						required: true
 					},
 					{
-						name: "from",
-						description: "The 1 based index of the track to move",
+						name: English.playlists.options.move.options.from.name,
+						description: English.playlists.options.move.options.from.description,
 						type: 4,
 						required: true
 					},
 					{
-						name: "to",
-						description: "The 1 based index the track should appear at",
+						name: English.playlists.options.move.options.to.name,
+						description: English.playlists.options.move.options.to.description,
 						type: 4,
 						required: true
 					}
 				]
 			},
 			{
-				name: "search",
-				description: "Filters tracks in a playlist",
+				name: English.playlists.options.search.name,
+				description: English.playlists.options.search.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "playlist",
-						description: "The name of the playlist",
+						name: English.playlists.options.search.options.playlist.name,
+						description: English.playlists.options.search.options.playlist.description,
 						type: 3,
 						required: true
 					},
 					{
-						name: "query",
-						description: "The search term to filter by",
+						name: English.playlists.options.search.options.query.name,
+						description: English.playlists.options.search.options.query.description,
 						type: 3,
 						required: true
 					}
 				]
 			},
 			{
-				name: "play",
-				description: "Plays a playlist",
+				name: English.playlists.options.play.name,
+				description: English.playlists.options.play.description,
 				type: 1,
 				required: false,
 				options: [
 					{
-						name: "playlist",
-						description: "The name of the playlist",
+						name: English.playlists.options.play.options.playlist.name,
+						description: English.playlists.options.play.options.playlist.description,
 						type: 3,
 						required: true
 					},
 					{
-						name: "shuffle",
-						description: "If the playlist should start shuffled",
+						name: English.playlists.options.play.options.shuffle.name,
+						description: English.playlists.options.play.options.shuffle.description,
 						type: 5,
 						required: false
 					},
 					{
-						name: "start",
-						description: "The 1 based index to start from. When shuffling, only a portion is selected and then shuffled",
+						name: English.playlists.options.play.options.start.name,
+						description: English.playlists.options.play.options.start.description,
 						type: 4,
 						required: false,
 						min_value: 1
@@ -362,7 +303,7 @@ commands.assign([
 					const a: APIEmbedAuthor = { name: authorText }
 					if (authorIcon) a.icon_url = authorIcon
 
-					const orderedTracks = await getTracks(playlistRow, cmd, lang)
+					const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
 					if (orderedTracks.length === 0) return
 
 					const rows = orderedTracks.map((s, index) => `${index + 1}. **${s.name}** (${sharedUtils.prettySeconds(s.length)})`)
@@ -528,7 +469,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang, false)
+				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang, false)
 				if (orderedTracks.some(row => row.video_id === result!.id)) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG
@@ -589,7 +530,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 				const toRemove = orderedTracks[optionIndex - 1]
 				if (!toRemove) {
@@ -628,7 +569,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -689,7 +630,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 
 				let body = orderedTracks
@@ -721,7 +662,7 @@ commands.assign([
 					})
 				}
 
-				const orderedTracks = await getTracks(playlistRow, cmd, lang)
+				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
 				if (orderedTracks.length === 0) return
 
 				const queue = await common.queues.getOrCreateQueue(cmd, lang)
@@ -754,3 +695,64 @@ commands.assign([
 		}
 	}
 ])
+
+function checkPlaylistName(playlistName: string, cmd: ChatInputCommand, lang: Lang): boolean {
+	let value = true
+	if (playlistName.includes("http") || playlistName.includes("www.") || plRegex.exec(playlistName)) value = false
+	if (playlistName.length > 24) value = false
+	if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
+	return value
+}
+
+async function unbreakDatabase(tracks: Array<QueryResultRow>): Promise<void> {
+	console.warn("unbreakDatabase was called!")
+
+	await Promise.all(tracks.map((row, index) => sql.orm.update("playlist_songs", {
+		next: (tracks[index + 1] ? tracks[index + 1].video_id : null)
+	}, {
+		playlist_id: row.playlist_id,
+		video_id: row.video_id
+	})))
+}
+
+async function getPlaylistTracks(playlistRow: { playlist_id: number }, cmd: ChatInputCommand, lang: Lang, notifyNone = true) {
+	const tracks = await sql.all<{ next: string, video_id: string, name: string, length: number, playlist_id: number }>(
+		"SELECT * FROM playlist_songs INNER JOIN songs ON songs.video_id = playlist_songs.video_id WHERE playlist_id = $1",
+		[playlistRow.playlist_id]
+	)
+
+	if (tracks.length === 0 && notifyNone) {
+		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			content: lang.GLOBAL.PLAYLIST_EMPTY
+		})
+
+		return []
+	}
+
+	const orderedTracks: typeof tracks = []
+	let track = tracks.find(row => !tracks.some(r => r.next === row.video_id))
+
+	while (track) {
+		orderedTracks.push(track!)
+		if (track.next) track = tracks.find(row => row.video_id === track!.next)
+		else track = void 0
+		if (orderedTracks.includes(track!)) await unbreakDatabase(tracks)
+	}
+
+	if (orderedTracks.length != tracks.length) await unbreakDatabase(tracks)
+
+	return orderedTracks
+}
+
+function addRanking(r: number | string, p: { ranking: string }): void {
+	p.ranking += `${r}.`
+}
+
+async function getAuthor(u: string, lang: Lang): Promise<string> {
+	const user = await sharedUtils.getUser(u, snow)
+	if (user) {
+		let username = user.username || lang.GLOBAL.HEADER_UNKNOWN
+		if (username.length > 14) username = `${username.slice(0, 13)}…`
+		return `\`${username}\``
+	} else return "(?)"
+}

@@ -10,26 +10,28 @@ const { snow, commands, sync, queues, confprovider } = passthrough
 const common = sync.require("./utils") as typeof import("./utils")
 const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 
+import { en_us as English } from "@amanda/lang"
+
 const notWordRegex = /\W/g
 
 commands.assign([
 	{
-		name: "play",
-		description: "Play music from multiple sources",
+		name: English.play.name,
+		description: English.play.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "track",
+				name: English.play.options.track.name,
 				type: 3,
-				description: "The track you'd like to play",
+				description: English.play.options.track.description,
 				required: true
 			},
 			{
-				name: "position",
+				name: English.play.options.position.name,
 				type: 4,
-				description: "1 based index to start adding tracks from",
+				description: English.play.options.position.description,
 				required: false,
 				min_value: 1
 			}
@@ -60,16 +62,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "radio",
-		description: "Play from radio stations",
+		name: English.radio.name,
+		description: English.radio.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "station",
+				name: English.radio.options.station.name,
 				type: 3,
-				description: "The station to play from",
+				description: English.radio.options.station.description,
 				required: true,
 				choices: [
 					{ name: "random", value: "random" },
@@ -90,9 +92,9 @@ commands.assign([
 				]
 			},
 			{
-				name: "position",
+				name: English.radio.options.position.name,
 				type: 4,
-				description: "1 based index to start adding tracks from",
+				description: English.radio.options.position.description,
 				required: false,
 				min_value: 1
 			}
@@ -120,23 +122,23 @@ commands.assign([
 		}
 	},
 	{
-		name: "skip",
-		description: "Skip tracks in the queue",
+		name: English.skip.name,
+		description: English.skip.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "start",
+				name: English.skip.options.start.name,
 				type: 4,
-				description: "1 based index to start skipping tracks from",
+				description: English.skip.options.start.description,
 				required: false,
 				min_value: 1
 			},
 			{
-				name: "amount",
+				name: English.skip.options.amount.name,
 				type: 4,
-				description: "The amount of tracks to skip in the queue",
+				description: English.skip.options.amount.description,
 				required: false,
 				min_value: 1
 			}
@@ -173,8 +175,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "stop",
-		description: "Stops the queue",
+		name: English.stop.name,
+		description: English.stop.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
@@ -192,37 +194,37 @@ commands.assign([
 		}
 	},
 	{
-		name: "queue",
-		description: "Show the queue and do actions",
+		name: English.queue.name,
+		description: English.queue.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "page",
+				name: English.queue.options.page.name,
 				type: 4,
-				description: "Choose what page in the queue to show",
+				description: English.queue.options.page.description,
 				required: false,
 				min_value: 1
 			},
 			{
-				name: "volume",
+				name: English.queue.options.volume.name,
 				type: 4,
 				min_value: 1,
 				max_value: 500,
-				description: "Set the volume % of the queue",
+				description: English.queue.options.volume.description,
 				required: false
 			},
 			{
-				name: "loop",
+				name: English.queue.options.loop.name,
 				type: 5,
-				description: "Set the state of loop mode for the queue",
+				description: English.queue.options.loop.description,
 				required: false
 			},
 			{
-				name: "pause",
+				name: English.queue.options.pause.name,
 				type: 5,
-				description: "Sets the paused state of the queue",
+				description: English.queue.options.pause.description,
 				required: false
 			}
 		],
@@ -296,8 +298,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "nowplaying",
-		description: "Show the queue now playing message",
+		name: English.nowplaying.name,
+		description: English.nowplaying.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
@@ -315,8 +317,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "trackinfo",
-		description: "Shows info about the currently playing track",
+		name: English.trackinfo.name,
+		description: English.trackinfo.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
@@ -342,8 +344,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "lyrics",
-		description: "Shows the lyrics of the currently playing track",
+		name: English.lyrics.name,
+		description: English.lyrics.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
@@ -375,16 +377,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "seek",
-		description: "Seek to a time in the currently playing track",
+		name: English.seek.name,
+		description: English.seek.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "time",
+				name: English.seek.options.time.name,
 				type: 4,
-				description: "The time in seconds to seek in the track",
+				description: English.seek.options.time.description,
 				required: true,
 				min_value: 0
 			}
@@ -431,24 +433,24 @@ commands.assign([
 		}
 	},
 	{
-		name: "filters",
-		description: "Apply filters to the queue",
+		name: English.filters.name,
+		description: English.filters.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "pitch",
+				name: English.filters.options.pitch.name,
 				type: 4,
-				description: "Sets the pitch of the queue in semitones",
+				description: English.filters.options.pitch.description,
 				min_value: -7,
 				max_value: 7,
 				required: false
 			},
 			{
-				name: "speed",
+				name: English.filters.options.speed.name,
 				type: 10,
-				description: "Sets the speed % of the queue",
+				description: English.filters.options.speed.description,
 				min_value: 0.1,
 				max_value: 5.0,
 				required: false
@@ -488,8 +490,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "shuffle",
-		description: "Shuffle the queue",
+		name: English.shuffle.name,
+		description: English.shuffle.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
@@ -516,16 +518,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "remove",
-		description: "Removes a track from the queue",
+		name: English.remove.name,
+		description: English.remove.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "index",
+				name: English.remove.options.index.name,
 				type: 4,
-				description: "1 based index to start removing tracks from",
+				description: English.remove.options.index.description,
 				required: true,
 				min_value: 2
 			}
@@ -563,15 +565,15 @@ commands.assign([
 		}
 	},
 	{
-		name: "musictoken",
-		description: "Obtain a web dashboard login token",
+		name: English.musictoken.name,
+		description: English.musictoken.description,
 		category: "audio",
 		integration_types: [1],
 		contexts: [1],
 		options: [
 			{
-				name: "action",
-				description: "What to do",
+				name: English.musictoken.options.action.name,
+				description: English.musictoken.options.action.description,
 				type: 3,
 				choices: [
 					{
@@ -641,23 +643,23 @@ commands.assign([
 		}
 	},
 	{
-		name: "move",
-		description: "Move a track in the queue to a new position",
+		name: English.move.name,
+		description: English.move.description,
 		category: "audio",
 		integration_types: [0],
 		contexts: [0],
 		options: [
 			{
-				name: "from",
+				name: English.move.options.from.name,
 				type: 4,
-				description: "1 based index of the track to move",
+				description: English.move.options.from.description,
 				required: true,
 				min_value: 2
 			},
 			{
-				name: "to",
+				name: English.move.options.to.name,
 				type: 4,
-				description: "1 based index to move the track to",
+				description: English.move.options.to.description,
 				required: true,
 				min_value: 2
 			}
@@ -687,22 +689,22 @@ commands.assign([
 		}
 	},
 	{
-		name: "search",
-		description: "Search for a track from multiple sources",
+		name: English.search.name,
+		description: English.search.description,
 		category: "audio",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "input",
+				name: English.search.options.input.name,
 				type: 3,
-				description: "What to search for",
+				description: English.search.options.input.description,
 				required: true
 			},
 			{
-				name: "source",
+				name: English.search.options.source.name,
 				type: 3,
-				description: "The website to use to search for the track",
+				description: English.search.options.source.description,
 				required: false,
 				choices: [
 					{

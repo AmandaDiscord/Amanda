@@ -1,10 +1,12 @@
 import passthrough = require("../passthrough")
 const { commands, client, confprovider } = passthrough
 
+import { en_us as English } from "@amanda/lang"
+
 commands.assign([
 	{
-		name: "sit",
-		description: "mood",
+		name: English.sit.name,
+		description: English.sit.description,
 		category: "hidden",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
@@ -14,7 +16,7 @@ commands.assign([
 					{
 						color: confprovider.config.standard_embed_color,
 						image: {
-							url: "https://cdn.discordapp.com/attachments/1123048509470429365/1123048642882842665/chibiv3.png"
+							url: "https://b.catgirlsare.sexy/QSiJKTO0-z7i.png"
 						}
 					}
 				]

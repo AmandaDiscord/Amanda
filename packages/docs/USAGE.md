@@ -12,7 +12,7 @@ not supported because of technical limitations. From there, you can tell her wha
 The main music interface can be accessed via `/music`. From there, a pretty hefty list of what you can do
 will be presented to you.
 
-![An image containing a list of some of the things you can do with Amanda's music](https://cdn.discordapp.com/attachments/405285983794364417/1008896598580924426/unknown.png)
+![An image containing a list of some of the things you can do with Amanda's music](https://b.catgirlsare.sexy/AR-iN45Gjm39.png)
 
 Don't get overwhelmed, what you want is `/music play:anything you want` where
 you just replace "anything you want" with... Well, anything you want like despacito 2 or never gonna give you up by rick astley.

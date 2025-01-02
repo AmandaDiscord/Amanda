@@ -575,3 +575,30 @@ export function getMSUntilStepped(timeAsMS: number, offset?: number) {
 	const remaining = timeAsMS - (Date.now() % timeAsMS)
 	return (timeAsMS * (offset ?? 0)) + remaining
 }
+
+export const DiscordsProfile = {
+	id: "643945264868098049",
+	username: "discord",
+	global_name: "Discord",
+	discriminator: "0",
+	avatar: null
+} as APIUser
+
+export const datemap = {
+	0: "January",
+	1: "February",
+	2: "March",
+	3: "April",
+	4: "May",
+	5: "June",
+	6: "July",
+	7: "August",
+	8: "September",
+	9: "October",
+	10: "November",
+	11: "December"
+}
+
+export function bToMB(number: number) {
+	return `${((number / 1024) / 1024).toFixed(2)}MB`
+}

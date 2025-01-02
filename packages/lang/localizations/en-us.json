@@ -202,7 +202,8 @@
 		"REJECTED": "You declined %user's proposal",
 		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
 		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
-		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update"
+		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
+		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time"
 	},
 	"sit": {
 		"name": "sit",
@@ -779,5 +780,9 @@
 				"description": "The website to use to search for the track"
 			}
 		}
+	},
+	"fortune": {
+		"name": "fortune",
+		"description": "Left Amanda predict your daily fortune"
 	}
 }

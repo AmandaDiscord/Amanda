@@ -6,7 +6,7 @@ import confprovider = require("@amanda/config")
 import type {
 	APIUser,
 	APIInteractionGuildMember,
-	LocaleString,
+	Locale,
 	APIChatInputApplicationCommandInteraction,
 	APIInteractionDataResolvedGuildMember,
 	APIRole,
@@ -29,8 +29,8 @@ export class ChatInputCommand {
 	public member: APIInteractionGuildMember | null
 	public guild_id: string | null
 	public channel: APIChatInputApplicationCommandInteraction["channel"]
-	public locale: LocaleString
-	public guild_locale: LocaleString | null
+	public locale: Locale
+	public guild_locale: Locale | null
 	public data: ChatInputCommandData
 
 	public id: string
@@ -109,8 +109,8 @@ export class ContextMenuCommand {
 	public member: APIInteractionGuildMember | null
 	public guild_id: string | null
 	public channel: APIContextMenuInteraction["channel"]
-	public locale: LocaleString
-	public guild_locale: LocaleString | null
+	public locale: Locale
+	public guild_locale: Locale | null
 	public data: ContextMenuCommandData
 	public target: string
 

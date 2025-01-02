@@ -3,6 +3,8 @@ const { confprovider, commands, client } = passthrough
 
 import type { ChatInputCommand } from "@amanda/commands"
 
+import { en_us as English } from "@amanda/lang"
+
 const poweredbychewey = `Powered by ${confprovider.config.chewey_api_url}`.replace(/https?:\/\//, "")
 
 async function sendImage(host: string, path: string, cmd: ChatInputCommand, footer: string) {
@@ -27,16 +29,16 @@ async function sendImage(host: string, path: string, cmd: ChatInputCommand, foot
 
 commands.assign([
 	{
-		name: "image",
-		description: "Send an image of something",
+		name: English.image.name,
+		description: English.image.description,
 		category: "images",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "type",
+				name: English.image.options.type.name,
 				type: 3,
-				description: "The type of image",
+				description: English.image.options.type.description,
 				choices: [
 					{
 						name: "cat",
@@ -56,7 +58,7 @@ commands.assign([
 					},
 					{
 						name: "bird",
-						value: "bird"
+						value: "birb"
 					}
 				],
 				required: true
@@ -71,9 +73,8 @@ commands.assign([
 			case "dog":
 			case "space":
 			case "snake":
+			case "birb":
 				return sendImage("chewey", type, cmd, poweredbychewey).catch(onFail)
-			case "bird":
-				return sendImage("chewey", "birb", cmd, poweredbychewey).catch(onFail)
 			default: break
 			}
 		}

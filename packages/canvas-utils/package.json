@@ -1,0 +1,15 @@
+{
+  "name": "@amanda/canvas-utils",
+  "version": "1.0.0",
+  "description": "Utils for Canvas",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint . -c eslint.config.js"
+  },
+  "author": "PapiOphidian",
+  "license": "SEE LICENSE IN LICENSE",
+  "dependencies": {
+    "canvas": "^3.0.1"
+  }
+}

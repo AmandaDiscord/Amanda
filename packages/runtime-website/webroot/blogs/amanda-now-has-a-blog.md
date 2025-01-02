@@ -16,4 +16,4 @@ The goal is to ultimately replace Amanda's "need" for Twitter. We realistically 
 
 Have a cat girl for now.
 
-![Amanda, a red hair cat girl sitting at a desk while looking at a monitor and holding a computer mouse](https://cdn.discordapp.com/attachments/608456955660468224/960449965354811432/Amanda_Banner.png)
+![Amanda, a red hair cat girl sitting at a desk while looking at a monitor and holding a computer mouse](https://b.catgirlsare.sexy/rD4aNJB1X4KE.png)

@@ -8,18 +8,20 @@ import langReplace = require("@amanda/lang/replace")
 const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
 const emojis: typeof import("../emojis") = sync.require("../emojis")
 
+import { en_us as English } from "@amanda/lang"
+
 commands.assign([
 	{
-		name: "couple",
-		description: "Get couple information about a user",
+		name: English.couple.name,
+		description: English.couple.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "user",
+				name: English.couple.options.user.name,
 				type: 6,
-				description: "The user to get info on",
+				description: English.couple.options.user.description,
 				required: false
 			}
 		],
@@ -53,16 +55,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "propose",
-		description: "Propose to a user",
+		name: English.propose.name,
+		description: English.propose.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user",
+				name: English.propose.options.user.name,
 				type: 6,
-				description: "The user to propose to",
+				description: English.propose.options.user.description,
 				required: true
 			}
 		],
@@ -106,16 +108,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "marry",
-		description: "Accepts a proposal from a user",
+		name: English.marry.name,
+		description: English.marry.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user",
+				name: English.marry.options.user.name,
 				type: 6,
-				description: "The user to marry",
+				description: English.marry.options.user.description,
 				required: true
 			}
 		],
@@ -179,16 +181,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "reject",
-		description: "Rejects a proposal from a user",
+		name: English.reject.name,
+		description: English.reject.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 2],
 		options: [
 			{
-				name: "user",
+				name: English.reject.options.user.name,
 				type: 6,
-				description: "The user to reject",
+				description: English.reject.options.user.description,
 				required: true
 			}
 		],
@@ -230,16 +232,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "divorce",
-		description: "Divorces your significant other(s)",
+		name: English.divorce.name,
+		description: English.divorce.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "user",
+				name: English.divorce.options.user.name,
 				type: 6,
-				description: "The user to remove from the marriage",
+				description: English.divorce.options.user.description,
 				required: false
 			}
 		],
@@ -308,16 +310,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "withdraw",
-		description: "Withdraw money from your couple balance",
+		name: English.withdraw.name,
+		description: English.withdraw.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "amount",
+				name: English.withdraw.options.amount.name,
 				type: 4,
-				description: "The amount of money to withdraw",
+				description: English.withdraw.options.amount.description,
 				required: true,
 				min_value: 2
 			}
@@ -363,16 +365,16 @@ commands.assign([
 		}
 	},
 	{
-		name: "deposit",
-		description: "Deposit money to your couple balance",
+		name: English.deposit.name,
+		description: English.deposit.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		options: [
 			{
-				name: "amount",
+				name: English.deposit.options.amount.name,
 				type: 4,
-				description: "The amount of money to deposit",
+				description: English.deposit.options.amount.description,
 				required: true,
 				min_value: 2
 			}
@@ -418,8 +420,8 @@ commands.assign([
 		}
 	},
 	{
-		name: "coupleleaderboard",
-		description: "Shows the leaderboard for top couples of money",
+		name: English.coupleleaderboard.name,
+		description: English.coupleleaderboard.description,
 		category: "couples",
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
