@@ -533,11 +533,12 @@ commands.assign([
 			canvas.drawImage(wheel, 0, 0)
 
 			const textCanvas = Canvas.createCanvas(587, 586).getContext("2d")
-			const paddingSide = 50
+			const paddingSide = 150
 			const pixSize = Math.floor(((587 - paddingSide) / winningsStr.length) * 2)
 			canvasUtils.setFontSize(pixSize, textCanvas)
 			textCanvas.fillStyle = "#344054"
-			textCanvas.fillText(winningsStr, Math.floor(paddingSide / 2), Math.floor((586 / 1.25) - (pixSize / 2)))
+			textCanvas.textAlign = "center"
+			textCanvas.fillText(winningsStr, textCanvas.canvas.width / 2, Math.floor(textCanvas.canvas.height / 2) + 20)
 
 			canvas.drawImage(canvasUtils.pinchBuldge(50, textCanvas.canvas).canvas, 132, 416)
 
