@@ -507,9 +507,9 @@ commands.assign([
 			}
 
 			const claim = await sql.orm.get("daily_cooldown", { user_id: cmd.author.id })
-			if (claim && claim.last_claim < Date.now() - (1000 * 60 * 60 * 24)) {
+			if (claim && Number(claim.last_claim) + (1000 * 60 * 60 * 24) > Date.now()) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.ALREADY_CLAIMED_DAILY, { "time": sharedUtils.shortTime((claim.last_claim + (1000 * 60 * 60 * 24)) - Date.now(), "ms") })
+					content: langReplace(lang.GLOBAL.ALREADY_CLAIMED_DAILY, { "time": sharedUtils.shortTime((Number(claim.last_claim) + (1000 * 60 * 60 * 24)) - Date.now(), "ms") })
 				})
 			}
 

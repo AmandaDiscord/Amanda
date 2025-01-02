@@ -17,7 +17,7 @@ const models = {
 	connections: new Model<{ user_id: string, type: "lastfm", access: string }>(["user_id", "type"]),
 	couples: new Model<{ user1: string, user2: string, married_at: string, balance: number }>(),
 	csrf_tokens: new Model<{ token: string, login_token: string, expires: number }>(["token"]),
-	daily_cooldown: new Model<{ user_id: string, last_claim: number }>(["user_id"]),
+	daily_cooldown: new Model<{ user_id: string, last_claim: string }>(["user_id"]),
 	interaction_gifs: new Model<{ type: string, url: string }>(),
 	lavalink_nodes: new Model<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string }>(["host"]),
 	money: new Model<{ user_id: string, coins: string, won_coins: string, lost_coins: string, given_coins: string }>(["user_id"]),
