@@ -217,7 +217,7 @@ commands.assign([
 						author: { name: c.name },
 						description: langReplace(lang.GLOBAL.HELP_COMMAND_BODY, {
 							"description": info.description,
-							"args": info.options?.map(o => o.name).join(", ") ?? lang.GLOBAL.NONE,
+							"args": info.options?.length ? info.options.map(o => o.name).join(", ") : lang.GLOBAL.NONE,
 							"category": c.category
 						}),
 						footer: { text: `${langReplace(lang.GLOBAL.FOOTER_HELP_MAIN, { "prefix": "/" })}\n\n${lang.GLOBAL.FOOTER_HELP}` },
