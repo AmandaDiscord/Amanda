@@ -476,11 +476,12 @@ function getDocs(c: import("@amanda/shared-types").UnpackArray<Parameters<typeof
 		options: c.options
 	}
 
-	if (lang[c.name]) {
+	const langc = lang[c.name as "image"]
+	if (langc) {
 		info = {
-			name: lang[c.name as Exclude<keyof typeof lang, "GLOBAL" | "CODE">].name,
-			description: lang[c.name as Exclude<keyof typeof lang, "GLOBAL" | "CODE">].description,
-			options: Object.values(lang[c.name as "image"].options) as Array<APIApplicationCommandOption>
+			name: langc.name,
+			description: langc.description,
+			options: (langc.options ? Object.values(langc.options) : []) as Array<APIApplicationCommandOption>
 		}
 	}
 
