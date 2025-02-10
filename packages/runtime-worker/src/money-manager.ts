@@ -25,12 +25,10 @@ function getTimeoutDuration(): number {
 	}
 }
 
-let autoPayTimeout: NodeJS.Timeout | undefined
-if (confprovider.config.donor_payments_enabled_on_this_cluster) autoPayTimeout = setTimeout(autoPayTimeoutFunction, getTimeoutDuration())
+if (confprovider.config.donor_payments_enabled_on_this_cluster) sync.addTemporaryTimeout(autoPayTimeoutFunction, getTimeoutDuration())
 
 
 export async function autoPayTimeoutFunction() {
-	clearTimeout(autoPayTimeout)
 	const donors = await sql.orm.select("premium").then(rows => rows.map(r => r.user_id))
 
 	for (const ID of donors) {
@@ -39,15 +37,8 @@ export async function autoPayTimeoutFunction() {
 
 	const time = getTimeoutDuration()
 	console.log(`Donor payments completed. Set a timeout for ${sharedUtils.shortTime(time, "ms")}`)
-	autoPayTimeout = setTimeout(autoPayTimeoutFunction, time)
+	sync.addTemporaryTimeout(autoPayTimeoutFunction, time)
 }
-
-sync.events.once(__filename, () => {
-	if (autoPayTimeout) {
-		clearTimeout(autoPayTimeout)
-		console.log("cleared old donor pay timeout")
-	}
-})
 
 export async function getPersonalRow(userID: string) {
 	const row = await sql.get<{ id: string, amount: string }>(

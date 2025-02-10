@@ -528,16 +528,11 @@ async function updateCache() {
 	}))
 }
 
-let cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
+let cacheUpdateTimeout = sync.addTemporaryTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24 - (Date.now() % (1000 * 60 * 60 * 24)))
 updateCache()
 
 function cacheUpdateTimeoutFunction() {
 	updateCache()
 	clearTimeout(cacheUpdateTimeout)
-	cacheUpdateTimeout = setTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
+	cacheUpdateTimeout = sync.addTemporaryTimeout(cacheUpdateTimeoutFunction, 1000 * 60 * 60 * 24)
 }
-
-sync.events.once(__filename, () => {
-	clearTimeout(cacheUpdateTimeout)
-	console.log("cleared old cache update timeout")
-})
