@@ -73,10 +73,17 @@ server.get("/blog/:blogID", async (res, req) => {
 
 	if (!res.continue) return
 
-	const [template, data] = await Promise.all([
-		fs.promises.readFile(path.join(rootFolder, "./templates/blog.html"), { encoding: "utf-8" }),
-		fs.promises.readFile(toMD, { encoding: "utf-8" })
-	])
+	let template: string, data: string
+
+	try {
+		[template, data] = await Promise.all([
+			fs.promises.readFile(path.join(rootFolder, "./templates/blog.html"), { encoding: "utf-8" }),
+			fs.promises.readFile(toMD, { encoding: "utf-8" })
+		])
+	} catch {
+		if (!res.continue) return
+		return utils.streamFile("404.html", res, void 0, void 0, false, 404)
+	}
 
 	if (!res.continue) return
 

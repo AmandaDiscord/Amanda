@@ -27,7 +27,7 @@ const stopDisplayingErrorsAfter = 3
 
 const defaultVolumeAmount = 0.1
 
-export class Queue {
+export class Queue extends sync.ReloadableClass {
 	public readonly tracks: Array<Track> = []
 	public node: string | undefined
 	public lang: Lang
@@ -64,6 +64,7 @@ export class Queue {
 	private _lastFMSent = false
 
 	public constructor(public readonly guildID: string, public readonly voiceChannelID: string, public readonly textChannelID: string) {
+		super()
 		queues.set(guildID, this)
 	}
 
@@ -675,3 +676,5 @@ export class Queue {
 		this.sendToSubscribedSessions("onListenersUpdate", this.toJSON().members)
 	}
 }
+
+sync.reloadClassMethods(Queue)
