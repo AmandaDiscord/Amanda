@@ -84,6 +84,8 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 	attachResponseAbortListener(res)
 	let stats: import("fs").Stats
 	const joined = p.join(rootFolder, path)
+	if (!joined.startsWith(rootFolder)) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
+
 	try {
 		stats = await fs.promises.stat(joined)
 		if (!res.continue) return

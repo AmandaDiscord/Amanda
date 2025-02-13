@@ -64,7 +64,8 @@ server.get("/blog/:blogID", async (res, req) => {
 	const blogID = req.getParameter(0)!
 	const title = blogID.split("-").map(i => `${i[0]?.toUpperCase()}${i.slice(1)}`).join(" ")
 	const toMD = path.join(rootFolder, `./blogs/${blogID}.md`)
-	const stat = await fs.promises.stat(toMD)
+	if (!toMD.startsWith(rootFolder)) return utils.streamFile("404.html", res, void 0, void 0, false, 404)
+	const stat = await fs.promises.stat(toMD).catch(() => void 0)
 
 	if (!stat) {
 		if (!res.continue) return
