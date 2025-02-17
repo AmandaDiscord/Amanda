@@ -1447,7 +1447,7 @@ __metadata:
     "@types/node": ^22.13.4
     "@typescript-eslint/eslint-plugin": ^8.24.0
     "@typescript-eslint/parser": ^8.24.0
-    cloudstorm: ^0.11.3
+    cloudstorm: ^0.11.4
     discord-api-types: 0.37.119
     eslint: ^9.20.1
     heatsync: ^2.7.1
@@ -1701,13 +1701,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:^0.11.3":
-  version: 0.11.3
-  resolution: "cloudstorm@npm:0.11.3"
+"cloudstorm@npm:^0.11.4":
+  version: 0.11.4
+  resolution: "cloudstorm@npm:0.11.4"
   dependencies:
     discord-api-types: ^0.37.119
     snowtransfer: ^0.12.0
-  checksum: c603f597ad7d580139010b22a6daeccac499ef429a47567496636765f7fa783c51ef316aa60fb64a221d53dfb5dfcdda0d2641912033cbf582561171b1995b83
+  checksum: 0cb64a2eb9b665e5f219da2f0f4087f4e23308c63a7deba2e51341bee387b3c2cfddf4949d3216f453d6d27c12cd7aaee67a001c33a49703bb9cb10bf1646e3a
   languageName: node
   linkType: hard
 
