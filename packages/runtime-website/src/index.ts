@@ -30,6 +30,9 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 ], console.error)
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
 
+passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
+passthrough.snow.requestHandler.on("requestError", (_reqID, err) => console.error(err))
+
 const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 ;(async () => {

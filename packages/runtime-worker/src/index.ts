@@ -35,6 +35,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 	await redis.connect()
 
 	passthrough.client.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
+	passthrough.client.snow.requestHandler.on("requestError", (_reqID, err) => console.error(err))
 
 	const user = await sharedUtils.getUser(
 		passthrough.confprovider.config.client_id,

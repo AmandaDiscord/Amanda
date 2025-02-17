@@ -12,7 +12,7 @@
         "build": "turbo run build"
     },
     "devDependencies": {
-        "@types/node": "^22.13.2",
+        "@types/node": "^22.13.4",
         "@typescript-eslint/eslint-plugin": "^8.24.0",
         "@typescript-eslint/parser": "^8.24.0",
         "discord-api-types": "0.37.119",
@@ -23,9 +23,9 @@
     },
     "packageManager": "yarn@3.6.1",
     "dependencies": {
-        "cloudstorm": "^0.11.2",
+        "cloudstorm": "^0.11.3",
         "heatsync": "^2.7.1",
-        "snowtransfer": "^0.11.0"
+        "snowtransfer": "^0.12.0"
     },
     "resolutions": {
         "discord-api-types": "0.37.119",

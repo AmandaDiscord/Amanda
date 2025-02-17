@@ -121,7 +121,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@amanda/listings@workspace:packages/listings"
   dependencies:
-    sass: ^1.84.0
+    sass: ^1.85.0
   languageName: unknown
   linkType: soft
 
@@ -1183,12 +1183,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.13.2":
-  version: 22.13.2
-  resolution: "@types/node@npm:22.13.2"
+"@types/node@npm:^22.13.4":
+  version: 22.13.4
+  resolution: "@types/node@npm:22.13.4"
   dependencies:
     undici-types: ~6.20.0
-  checksum: 000762c410e0d09e5c756d598ac812af4945f071dc06e2ead8a7edbc05a44c4a336670ae778f82ea822e12cce5fddf7e14b9e286735eddde28e95e453b8e63ea
+  checksum: 39ecbd84fc2c6268c57f0479bc095cd304d2e97fee0b4ed7e6a77508aaadb28dc21be0ec91bf866ab2be822bf6c9749945795dbd6ba60e0851b50a967fd784b5
   languageName: node
   linkType: hard
 
@@ -1444,14 +1444,14 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "amanda@workspace:."
   dependencies:
-    "@types/node": ^22.13.2
+    "@types/node": ^22.13.4
     "@typescript-eslint/eslint-plugin": ^8.24.0
     "@typescript-eslint/parser": ^8.24.0
-    cloudstorm: ^0.11.2
+    cloudstorm: ^0.11.3
     discord-api-types: 0.37.119
     eslint: ^9.20.1
     heatsync: ^2.7.1
-    snowtransfer: ^0.11.0
+    snowtransfer: ^0.12.0
     tsup: ^8.3.6
     turbo: ^2.4.2
     typescript: ^5.7.3
@@ -1701,13 +1701,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:^0.11.2":
-  version: 0.11.2
-  resolution: "cloudstorm@npm:0.11.2"
+"cloudstorm@npm:^0.11.3":
+  version: 0.11.3
+  resolution: "cloudstorm@npm:0.11.3"
   dependencies:
     discord-api-types: ^0.37.119
-    snowtransfer: ^0.11.0
-  checksum: 3a4b54e273e9a904cc8708d4f3aed2bc13bc9dda44abc7a1ee2bd2d6ca3f0f29578aca51965d847d80ab566e808b795afc7d7d540673bbd8a6a87c42823357a4
+    snowtransfer: ^0.12.0
+  checksum: c603f597ad7d580139010b22a6daeccac499ef429a47567496636765f7fa783c51ef316aa60fb64a221d53dfb5dfcdda0d2641912033cbf582561171b1995b83
   languageName: node
   linkType: hard
 
@@ -3860,9 +3860,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"sass@npm:^1.84.0":
-  version: 1.84.0
-  resolution: "sass@npm:1.84.0"
+"sass@npm:^1.85.0":
+  version: 1.85.0
+  resolution: "sass@npm:1.85.0"
   dependencies:
     "@parcel/watcher": ^2.4.1
     chokidar: ^4.0.0
@@ -3873,7 +3873,7 @@ __metadata:
       optional: true
   bin:
     sass: sass.js
-  checksum: fdaad6ac0c9fabedf944941086dd6e872a8a7ccc561199b4584adf70394bc41442180c719e756dea0935845b6719e43d196e4a489649506ddf0b6049cc24d4c2
+  checksum: 53c70831d1235f9ee40489a8bdde9b3304ba350df78417c4edaa8a8ac79426208054a69ac9b6d53c4dc5837362e552a92e3bcaa975a1a3e8975c0af9fbccfe1c
   languageName: node
   linkType: hard
 
@@ -3966,12 +3966,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:^0.11.0":
-  version: 0.11.0
-  resolution: "snowtransfer@npm:0.11.0"
+"snowtransfer@npm:^0.12.0":
+  version: 0.12.0
+  resolution: "snowtransfer@npm:0.12.0"
   dependencies:
     discord-api-types: ^0.37.119
-  checksum: 0fc7e3e32ccd750302a405bd20dcdbd4f74ec0a280e7742a71300d4ea59d6d89f866a316c3e4018de102f57310eca6bebb6e5e3da77926d59c9c1e5813b6487d
+  checksum: c688d24f58af6b2b1cb0d75e42e5e0cba1a63b5ff60febb8ca622d0c4dc1d0fa6caecbe9a27d025820cc4afd0a699702aff001e1fb100070345a313091c14ac2
   languageName: node
   linkType: hard
 
