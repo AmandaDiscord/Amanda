@@ -31,7 +31,6 @@ server.get("/login", async (res) => {
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(html)))
 			.end(html)
 	})
 })
@@ -89,7 +88,6 @@ server.post("/logout", async (res, req) => {
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
 					.end(errorValue[1])
 			})
 		})
@@ -129,7 +127,6 @@ server.get("/dash", async (res, req) => {
 			res
 				.writeStatus("200")
 				.writeHeader("Content-Type", "text/html")
-				.writeHeader("Content-Length", String(Buffer.byteLength(html2)))
 				.end(html2)
 		})
 	} else utils.redirect(res, "/login")
@@ -216,7 +213,6 @@ server.post("/dash", async (res, req) => {
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
 					.end(errorValue[1])
 			})
 		})
@@ -272,7 +268,6 @@ server.get("/channels/:channelID", async (res, req) => {
 				res
 					.writeStatus("200")
 					.writeHeader("Content-Type", "text/html")
-					.writeHeader("Content-Length", String(Buffer.byteLength(html)))
 					.end(html)
 			})
 		})

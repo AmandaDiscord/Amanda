@@ -58,7 +58,6 @@ server.get("/link", async (res, req) => {
 			res
 				.writeStatus("200")
 				.writeHeader("Content-Type", "text/html")
-				.writeHeader("Content-Length", String(Buffer.byteLength(html)))
 				.end(html)
 		})
 	} else {
@@ -156,7 +155,6 @@ server.post("/unlink", async (res, req) => {
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
 					.end(errorValue[1])
 			})
 		})
@@ -234,7 +232,6 @@ server.get("/flow", (res, req) => {
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.writeHeader("Content-Length", String(Buffer.byteLength(errorValue[1])))
 					.end(errorValue[1])
 			})
 		})

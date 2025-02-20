@@ -160,7 +160,6 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 		if (written) return
 		written = true
 		res.writeStatus(String(status))
-		res.writeHeader("Content-Length", String(stats.size))
 		res.writeHeader("Content-Type", type)
 		res.writeHeader("Last-Modified", stats.mtime.toUTCString())
 		res.writeHeader("Cache-Control", "no-cache")
@@ -181,7 +180,6 @@ export function redirect(res: HttpResponse, location: string) {
 			.writeStatus("303")
 			.writeHeader("Location", location)
 			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(bod)))
 			.end(bod)
 	})
 }

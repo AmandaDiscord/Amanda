@@ -22,7 +22,6 @@ server.get("/.well-known/traffic-advice", res => {
 	res
 		.writeStatus("200")
 		.writeHeader("Content-Type", "application/trafficadvice+json") // done because of fancy Content-Type
-		.writeHeader("Content-Length", String(Buffer.byteLength(payload)))
 		.end(payload)
 })
 

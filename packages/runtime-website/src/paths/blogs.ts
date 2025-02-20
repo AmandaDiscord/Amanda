@@ -57,7 +57,6 @@ server.get("/blogs", async (res) => {
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(template2)))
 			.end(template2)
 	})
 })
@@ -113,7 +112,6 @@ server.get("/blog/:blogID", async (res, req) => {
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")
-			.writeHeader("Content-Length", String(Buffer.byteLength(html)))
 			.end(html)
 	})
 })
