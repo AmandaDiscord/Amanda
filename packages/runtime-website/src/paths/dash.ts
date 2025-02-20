@@ -24,7 +24,10 @@ server.get("/login", async (res) => {
 
 	const csrftoken = utils.generateCSRF()
 	html = html.replace(csrftokenRegex, csrftoken)
+	let written = false
 	res.cork(() => {
+		if (written) return
+		written = true
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")
@@ -51,7 +54,12 @@ server.post("/logout", async (res, req) => {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.cork(() => res.writeStatus("408").endWithoutBody())
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("408").endWithoutBody()
+		})
 	}
 
 	if (!res.continue) return
@@ -64,12 +72,20 @@ server.post("/logout", async (res, req) => {
 		.then(() => {
 			if (!res.continue) return
 
-			res.cork(() => res.writeHeader("Set-Cookie", `token=; path=/; expires=${new Date(0).toUTCString()}`))
+			let written = false
+			res.cork(() => {
+				if (written) return
+				written = true
+				res.writeHeader("Set-Cookie", `token=; path=/; expires=${new Date(0).toUTCString()}`)
+			})
 			utils.redirect(res, "/login")
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
+			let written = false
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
@@ -106,7 +122,10 @@ server.get("/dash", async (res, req) => {
 			: "The dashboard is temporarily disabled. Please check back later"
 
 		const html2 = html.replace(bodyRegex, body).replace(csrftokenRegex, csrftoken)
+		let written = false
 		res.cork(() => {
+			if (written) return
+			written = true
 			res
 				.writeStatus("200")
 				.writeHeader("Content-Type", "text/html")
@@ -123,9 +142,30 @@ server.post("/dash", async (res, req) => {
 	const reqReferrer = req.getHeader("referrer")
 	const reqHost = req.getHeader("host")
 
-	if (!reqLength || isNaN(Number(reqLength))) return void res.cork(() => res.writeStatus("411").endWithoutBody())
-	if (Number(reqLength) > 130) return void res.cork(() => res.writeStatus("413").endWithoutBody())
-	if (reqType !== "application/x-www-form-urlencoded") return void res.cork(() => res.writeStatus("415").endWithoutBody())
+	if (!reqLength || isNaN(Number(reqLength))) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("411").endWithoutBody()
+		})
+	}
+	if (Number(reqLength) > 130) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("413").endWithoutBody()
+		})
+	}
+	if (reqType !== "application/x-www-form-urlencoded") {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("415").endWithoutBody()
+		})
+	}
 
 	utils.attachResponseAbortListener(res)
 
@@ -134,7 +174,12 @@ server.post("/dash", async (res, req) => {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.cork(() => res.writeStatus("408").endWithoutBody())
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("408").endWithoutBody()
+		})
 	}
 
 	if (!res.continue) return
@@ -154,12 +199,20 @@ server.post("/dash", async (res, req) => {
 
 			const token = state.params.get("token")
 			const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toUTCString()
-			res.cork(() => res.writeHeader("Set-Cookie", `token=${token}; path=/; expires=${expires}`))
+			let written = false
+			res.cork(() => {
+				if (written) return
+				written = true
+				res.writeHeader("Set-Cookie", `token=${token}; path=/; expires=${expires}`)
+			})
 			utils.redirect(res, "/dash")
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
+			let written = false
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
@@ -212,7 +265,10 @@ server.get("/channels/:channelID", async (res, req) => {
 				.replace(channelIDRegex, channelID)
 				.replace(timestampRegex, Date.now().toString())
 
+			let written = false
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus("200")
 					.writeHeader("Content-Type", "text/html")

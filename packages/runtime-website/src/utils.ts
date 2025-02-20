@@ -93,15 +93,36 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 		console.log(`404 ${path}`)
 		if (!res.continue) return
 		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else return void res.cork(() => res.writeStatus("404").endWithoutBody())
+		else {
+			let written = false
+			return void res.cork(() => {
+				if (written) return
+				written = true
+				res.writeStatus("404").endWithoutBody()
+			})
+		}
 	}
 
 	if (!stats.isFile()) {
 		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else return void res.cork(() => res.writeStatus("404").endWithoutBody())
+		else {
+			let written = false
+			return void res.cork(() => {
+				if (written) return
+				written = true
+				res.writeStatus("404").endWithoutBody()
+			})
+		}
 	}
 
-	if (stats.size === 0) return void res.cork(() => res.writeStatus("204").endWithoutBody())
+	if (stats.size === 0) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("204").endWithoutBody()
+		})
+	}
 
 	const type = mime.lookup(path) || "application/octet-stream"
 
@@ -117,7 +138,14 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 		if (vWithoutQ[1] !== "*" && resType !== vWithoutQ[1]) return false
 		return true
 	})
-	if (!canAccept) return void res.cork(() => res.writeStatus("406").endWithoutBody())
+	if (!canAccept) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("406").endWithoutBody()
+		})
+	}
 	if (!cameFrom404 && ifModifiedSinceHeader) { // check modified header(s)
 		if (sharedUtils.checkDateHeader(ifModifiedSinceHeader)) {
 			const expecting = new Date(ifModifiedSinceHeader)
@@ -127,7 +155,10 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 			}
 		}
 	}
+	let written = false
 	res.cork(() => {
+		if (written) return
+		written = true
 		res.writeStatus(String(status))
 		res.writeHeader("Content-Length", String(stats.size))
 		res.writeHeader("Content-Type", type)
@@ -142,7 +173,10 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 
 export function redirect(res: HttpResponse, location: string) {
 	const bod = `Redirecting to <a href="${location}">${location}</a>...`
+	let written = false
 	res.cork(() => {
+		if (written) return
+		written = true
 		res
 			.writeStatus("303")
 			.writeHeader("Location", location)

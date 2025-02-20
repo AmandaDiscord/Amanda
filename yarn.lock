@@ -1450,7 +1450,7 @@ __metadata:
     cloudstorm: ^0.11.4
     discord-api-types: 0.37.119
     eslint: ^9.20.1
-    heatsync: ^2.7.1
+    heatsync: ^2.7.2
     snowtransfer: ^0.12.0
     tsup: ^8.3.6
     turbo: ^2.4.2
@@ -2578,12 +2578,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"heatsync@npm:^2.7.1":
-  version: 2.7.1
-  resolution: "heatsync@npm:2.7.1"
+"heatsync@npm:^2.7.2":
+  version: 2.7.2
+  resolution: "heatsync@npm:2.7.2"
   dependencies:
     backtracker: ^4.0.0
-  checksum: 06ac11ba0953556f309924ce8f52b90b45e83777d21a48358c131b6c24d9c29261f97b1a2dd1c19924cc445576500f42be6bcc36c86960ab4cce8e684c7bcf7b
+  checksum: e7825f1a524eb0024f5a1f3befebe9a50bea3c79f1241cdf3b2ee3e193998323abaeab703ebefc8f10733f312fc49f063db1161dc66875aa1ae5eca272e59ea4
   languageName: node
   linkType: hard
 

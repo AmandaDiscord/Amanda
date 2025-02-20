@@ -50,7 +50,11 @@ server.get("/link", async (res, req) => {
 			.replace(lastfmCallback, encodeURIComponent(`${baseWebsiteCallback}&type=lastfm`))
 			.replace(connectionsRegex, connectionsString)
 
+		let written = false
+
 		res.cork(() => {
+			if (written) return
+			written = true
 			res
 				.writeStatus("200")
 				.writeHeader("Content-Type", "text/html")
@@ -82,7 +86,14 @@ server.post("/unlink", async (res, req) => {
 
 	if (!res.continue) return
 
-	if (!session) return void res.cork(() => res.writeStatus("401").endWithoutBody())
+	if (!session) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("401").endWithoutBody()
+		})
+	}
 
 
 	let body: Buffer | undefined
@@ -90,7 +101,12 @@ server.post("/unlink", async (res, req) => {
 		body = await utils.requestBody(res, Number(reqLength))
 	} catch {
 		if (!res.continue) return
-		return void res.cork(() => res.writeStatus("408").endWithoutBody())
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("408").endWithoutBody()
+		})
 	}
 
 	if (!res.continue) return
@@ -118,7 +134,11 @@ server.post("/unlink", async (res, req) => {
 				type: state.params.get("type") as unknown as undefined
 			}).catch(console.error)
 
+			let written = false
+
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus("200")
 					.writeHeader("Content-Type", "text/plain")
@@ -128,7 +148,11 @@ server.post("/unlink", async (res, req) => {
 		.catch(errorValue => {
 			if (!res.continue) return
 
+			let written = false
+
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")
@@ -203,7 +227,10 @@ server.get("/flow", (res, req) => {
 		})
 		.catch(errorValue => {
 			if (!res.continue) return
+			let written = false
 			res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus(String(errorValue[0]))
 					.writeHeader("Content-Type", "text/plain")

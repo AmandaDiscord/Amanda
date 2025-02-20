@@ -27,14 +27,26 @@ server.post("/interaction", async (res, req) => {
 	const body = await utils.requestBody(res, Number(reqLength))
 	if (!body) {
 		if (!res.continue) return
-		return void res.cork(() => res.writeStatus("400").endWithoutBody())
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("400").endWithoutBody()
+		})
 	}
 	if (!res.continue) return
 
 	const bodyString = body.toString("utf8")
 	const allowed = await verify(bodyString, reqSig, reqTimestamp, confprovider.config.discord_app_public_key, webcrypto.subtle).catch(() => false)
 	if (!res.continue) return
-	if (!allowed) return void res.cork(() => res.writeStatus("401").endWithoutBody())
+	if (!allowed) {
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res.writeStatus("401").endWithoutBody()
+		})
+	}
 
 	const payload: APIInteraction = JSON.parse(bodyString)
 	let rt = "{}"
@@ -69,7 +81,10 @@ server.post("/interaction", async (res, req) => {
 	if (!commandHandled) {
 		if (!commandWorkers.length) {
 			console.warn("No command workers to handle interaction")
+			let written = false
 			return void res.cork(() => {
+				if (written) return
+				written = true
 				res
 					.writeStatus("503 Service Unavailable")
 					.endWithoutBody()
@@ -83,7 +98,10 @@ server.post("/interaction", async (res, req) => {
 		})
 	}
 
+	let written = false
 	return void res.cork(() => {
+		if (written) return
+		written = true
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "application/json")

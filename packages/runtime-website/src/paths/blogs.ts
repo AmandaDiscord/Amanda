@@ -49,7 +49,11 @@ server.get("/blogs", async (res) => {
 
 	const template2 = template.replace(bodyRegex, htmlData)
 
+	let written = false
+
 	res.cork(() => {
+		if (written) return
+		written = true
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")
@@ -101,7 +105,11 @@ server.get("/blog/:blogID", async (res, req) => {
 		.replace(bodyShortRegex, short)
 		.replace(bodyRegex, rendered)
 
+	let written = false
+
 	res.cork(() => {
+		if (written) return
+		written = true
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "text/html")

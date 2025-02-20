@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
--- Dumped by pg_dump version 14.8 (Ubuntu 14.8-0ubuntu0.22.04.1)
+-- Dumped from database version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
+-- Dumped by pg_dump version 14.12 (Ubuntu 14.12-0ubuntu0.22.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -67,7 +67,7 @@ COMMENT ON COLUMN public.background_sync.url IS 'TRIAL';
 
 CREATE TABLE public.bank_access (
     id bigint NOT NULL,
-    user_id character varying(22) NOT NULL
+    user_id character varying(30) NOT NULL
 );
 
 
@@ -112,7 +112,7 @@ ALTER SEQUENCE public.bank_accounts_id_seq OWNED BY public.bank_accounts.id;
 --
 
 CREATE TABLE public.bans (
-    user_id character varying(22) NOT NULL,
+    user_id character varying(30) NOT NULL,
     temporary smallint,
     expires bigint
 );
@@ -153,9 +153,9 @@ COMMENT ON COLUMN public.bans.expires IS 'TRIAL';
 --
 
 CREATE TABLE public.channels (
-    id character varying(20) NOT NULL,
+    id character varying(30) NOT NULL,
     type smallint,
-    guild_id character varying(20) DEFAULT NULL::character varying,
+    guild_id character varying(30) DEFAULT NULL::character varying,
     name character varying(100),
     rtc_region character varying(20) DEFAULT NULL::character varying
 );
@@ -168,7 +168,7 @@ ALTER TABLE public.channels OWNER TO amanda;
 --
 
 CREATE TABLE public.connections (
-    user_id character varying(20) NOT NULL,
+    user_id character varying(30) NOT NULL,
     type character varying(15) NOT NULL,
     access character varying(100)
 );
@@ -181,8 +181,8 @@ ALTER TABLE public.connections OWNER TO amanda;
 --
 
 CREATE TABLE public.couples (
-    user1 character varying(22),
-    user2 character varying(22),
+    user1 character varying(30),
+    user2 character varying(30),
     balance bigint DEFAULT 0 NOT NULL,
     married_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
@@ -316,8 +316,8 @@ ALTER TABLE public.gateway_clusters OWNER TO amanda;
 --
 
 CREATE TABLE public.guilds (
-    guild_id character varying(20) NOT NULL,
-    client_id character varying(20) NOT NULL,
+    guild_id character varying(30) NOT NULL,
+    client_id character varying(30) NOT NULL,
     cluster_id character varying(20) NOT NULL,
     shard_id integer NOT NULL
 );
@@ -461,7 +461,7 @@ COMMENT ON COLUMN public.lavalink_nodes.name IS 'TRIAL';
 --
 
 CREATE TABLE public.money (
-    user_id character varying(22) NOT NULL,
+    user_id character varying(30) NOT NULL,
     coins bigint DEFAULT 5000 NOT NULL,
     won_coins bigint DEFAULT 0 NOT NULL,
     lost_coins bigint DEFAULT 0 NOT NULL,
@@ -518,7 +518,7 @@ COMMENT ON COLUMN public.money.given_coins IS 'TRIAL';
 --
 
 CREATE TABLE public.money_cooldown (
-    user_id character varying(22),
+    user_id character varying(30),
     command text,
     date bigint,
     value integer
@@ -567,8 +567,8 @@ COMMENT ON COLUMN public.money_cooldown.value IS 'TRIAL';
 --
 
 CREATE TABLE public.pending_relations (
-    user1 character varying(22),
-    user2 character varying(22)
+    user1 character varying(30),
+    user2 character varying(30)
 );
 
 
@@ -601,8 +601,8 @@ COMMENT ON COLUMN public.pending_relations.user2 IS 'TRIAL';
 
 CREATE TABLE public.playlist_songs (
     playlist_id integer NOT NULL,
-    video_id character(11) NOT NULL,
-    next character(11)
+    video_id text NOT NULL,
+    next text
 );
 
 
@@ -642,7 +642,7 @@ COMMENT ON COLUMN public.playlist_songs.next IS 'TRIAL';
 
 CREATE TABLE public.playlists (
     playlist_id integer NOT NULL,
-    author character varying(22),
+    author character varying(30),
     name text,
     play_count integer DEFAULT 0 NOT NULL
 );
@@ -712,7 +712,7 @@ ALTER SEQUENCE public.playlists_playlistid_seq OWNED BY public.playlists.playlis
 --
 
 CREATE TABLE public.premium (
-    user_id character varying(22) NOT NULL,
+    user_id character varying(30) NOT NULL,
     state integer DEFAULT 0 NOT NULL,
     flavor text
 );
@@ -742,11 +742,25 @@ COMMENT ON COLUMN public.premium.state IS 'TRIAL';
 
 
 --
+-- Name: settings; Type: TABLE; Schema: public; Owner: amanda
+--
+
+CREATE TABLE public.settings (
+    user_id character varying(30) NOT NULL,
+    key text NOT NULL,
+    value text,
+    type character varying(15)
+);
+
+
+ALTER TABLE public.settings OWNER TO amanda;
+
+--
 -- Name: songs; Type: TABLE; Schema: public; Owner: amanda
 --
 
 CREATE TABLE public.songs (
-    video_id character(11) NOT NULL,
+    video_id text NOT NULL,
     name text,
     length integer
 );
@@ -788,7 +802,7 @@ COMMENT ON COLUMN public.songs.length IS 'TRIAL';
 
 CREATE TABLE public.stat_logs (
     "time" bigint NOT NULL,
-    id character varying(22) NOT NULL,
+    id character varying(30) NOT NULL,
     ram_usage_kb integer,
     users integer,
     guilds integer,
@@ -999,7 +1013,7 @@ COMMENT ON COLUMN public.status_ranges.end_day IS 'TRIAL';
 
 CREATE TABLE public.status_users (
     label character varying(20) NOT NULL,
-    user_id character varying(22) NOT NULL
+    user_id character varying(30) NOT NULL
 );
 
 
@@ -1054,7 +1068,7 @@ ALTER SEQUENCE public.statusmessages_id_seq OWNED BY public.status_messages.id;
 
 CREATE TABLE public.transactions (
     id bigint NOT NULL,
-    user_id character varying(22) NOT NULL,
+    user_id character varying(30) NOT NULL,
     amount bigint NOT NULL,
     mode smallint NOT NULL,
     description character varying(50) NOT NULL,
@@ -1091,7 +1105,7 @@ ALTER SEQUENCE public.transactions_id_seq OWNED BY public.transactions.id;
 --
 
 CREATE TABLE public.users (
-    id character varying(20) NOT NULL,
+    id character varying(30) NOT NULL,
     tag character varying(37) NOT NULL,
     avatar character varying(50) DEFAULT NULL::character varying,
     bot smallint DEFAULT 0 NOT NULL,
@@ -1119,9 +1133,9 @@ ALTER TABLE public.voice_servers OWNER TO amanda;
 --
 
 CREATE TABLE public.voice_states (
-    guild_id character varying(20) NOT NULL,
-    channel_id character varying(20) NOT NULL,
-    user_id character varying(20) NOT NULL,
+    guild_id character varying(30) NOT NULL,
+    channel_id character varying(30) NOT NULL,
+    user_id character varying(30) NOT NULL,
     session_id character varying(50) DEFAULT NULL::character varying
 );
 
@@ -1363,6 +1377,14 @@ ALTER TABLE ONLY public.status_users
 
 ALTER TABLE ONLY public.web_tokens
     ADD CONSTRAINT pk_webtokens PRIMARY KEY (user_id);
+
+
+--
+-- Name: settings settings_pkey; Type: CONSTRAINT; Schema: public; Owner: amanda
+--
+
+ALTER TABLE ONLY public.settings
+    ADD CONSTRAINT settings_pkey PRIMARY KEY (user_id, key);
 
 
 --
