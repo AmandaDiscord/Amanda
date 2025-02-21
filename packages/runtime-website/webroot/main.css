@@ -4,7 +4,7 @@
 	--grey: #444;
 	--pink: #de56a9;
 	--text-color: #282828;
-	--header-bg: linear-gradient(180deg, #fead7b, #c76d7f, #462371);
+	--header-bg: linear-gradient(180deg, #462371, #c76d7f, #fead7b);
 }
 
 html, body {
@@ -14,8 +14,8 @@ html, body {
 	padding: 0;
 	font-size: 24px;
 	color: var(--text-color);
-	background-image: url("/images/background.gif");
-	background-color: #b5d7e7;
+	background-image: url("/images/night-background.gif");
+	background-color: #281040;
 	image-rendering: crisp-edges;
 	background-repeat: no-repeat;
 	background-size: 100%, 100%;
