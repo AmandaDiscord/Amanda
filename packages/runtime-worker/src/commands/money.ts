@@ -545,7 +545,7 @@ commands.assign([
 			const hands = images.get("fortune-hands")!
 			canvas.drawImage(hands, 0, 0)
 
-			await moneyManager.awardAmount(cmd.author.id, winnings, "Amanda fortune")
+			await moneyManager.awardAmount(cmd.author.id, winnings, "Amandark fortune")
 			await sql.orm.upsert("daily_cooldown", { user_id: cmd.author.id, last_claim: String(Date.now()) })
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { files: [{ name: "fortune.png", file: canvas.canvas.toBuffer("image/png") }] })
