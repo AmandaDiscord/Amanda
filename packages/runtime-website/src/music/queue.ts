@@ -503,7 +503,7 @@ export class Queue extends sync.ReloadableClass {
 
 		if (track) {
 			const progress = track.getProgress(this.timeSeconds, this.paused)
-			const link = await track.showLink().catch(() => "https://amanda.moe")
+			const link = await track.showLink().catch(() => `${confprovider.config.website_protocol}://${confprovider.config.website_domain}`)
 
 			snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
 				embeds: [

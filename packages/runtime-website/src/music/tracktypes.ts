@@ -174,7 +174,7 @@ export class Track {
 	}
 
 	public showLink(): Promise<string> {
-		return Promise.resolve(this.uri ?? "https://amanda.moe")
+		return Promise.resolve(this.uri ?? `${confprovider.config.website_protocol}://${confprovider.config.website_domain}`)
 	}
 
 	public showInfo(): Promise<string | APIEmbed> {
