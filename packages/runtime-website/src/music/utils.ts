@@ -355,7 +355,7 @@ const common = {
 					{
 						color: confprovider.config.standard_embed_color,
 						description: langReplace(lang.GLOBAL.NOW_PLAYING, {
-							"song": `[**${lang.GLOBAL.HEADER_LOADING}**](https://amanda.moe)\n\n\`[${sharedUtils.progressBar(18, 60, 60, `[${lang.GLOBAL.HEADER_LOADING}]`)}]\``
+							"song": `[**${lang.GLOBAL.HEADER_LOADING}**](${confprovider.config.website_protocol}://${confprovider.config.website_domain})\n\n\`[${sharedUtils.progressBar(18, 60, 60, `[${lang.GLOBAL.HEADER_LOADING}]`)}]\``
 						})
 					}
 				]
