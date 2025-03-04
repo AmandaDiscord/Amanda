@@ -18,7 +18,7 @@ let routeHandler: (button: APIMessageComponentInteractionData, user: APIUser) =>
 const components = new Map<string, typeof cc.BetterComponent["prototype"]>()
 // This string is important to create truly random IDs across restarts as the sequencing may produce an identical ID.
 const randomString = Math.random().toString(36).substring(7)
-let idSequence = 0
+let idSequence = BigInt(0)
 const bcAcceptableTypes = [2, 3, 5, 6, 7, 8] as const
 
 class BetterComponent {

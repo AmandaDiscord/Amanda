@@ -305,7 +305,7 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 		result = `${data.stack}${returnRaw ? "\n" : "```\n```"}${await stringify(errorObject, depth, returnRaw)}`
 	} else result = util.inspect(data, { depth: depth })
 
-	if (result.length >= 2000 && !returnRaw) result = `\`\`\`js\n${result.slice(0, 1995)}…\`\`\``
+	if (result.length > 2000 && !returnRaw) result = `\`\`\`js\n${result.slice(0, 1990)}…\`\`\``
 	return result
 }
 
