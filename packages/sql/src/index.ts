@@ -92,6 +92,8 @@ class SQLProvider {
 	public static async connect(): Promise<void> {
 		if (!confprovider.config.db_enabled) return
 
+		if (SQLProvider.pool) await SQLProvider.disconnect()
+
 		const pool = new Pool({
 			host: confprovider.config.sql_domain,
 			user: confprovider.config.sql_user,
@@ -110,6 +112,8 @@ class SQLProvider {
 			return
 		}
 
+		pool.once("error", SQLProvider._onError)
+
 		console.log("Connected to database")
 		SQLProvider.pool = pool
 		SQLProvider.poolClient = db
@@ -117,11 +121,22 @@ class SQLProvider {
 
 	public static async disconnect(): Promise<void> {
 		if (!SQLProvider.pool) return
+		SQLProvider.pool.removeListener("error", SQLProvider._onError)
 		await SQLProvider.pool.end()
 			.then(() => console.warn("Database disabled"))
 			.catch(console.error)
 		SQLProvider.pool = null
 		SQLProvider.poolClient = null
+	}
+
+	/**
+	 * Amanda handles query errors as best as she can. If an error occurs, we can mostly assume
+	 * that the error is related to the connection dropping
+	 */
+	private static _onError(): void {
+		setTimeout(() => {
+			SQLProvider.disconnect().then(() => SQLProvider.connect())
+		}, 5000)
 	}
 }
 
