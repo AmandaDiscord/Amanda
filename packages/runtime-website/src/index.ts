@@ -53,7 +53,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 	})
 
 	passthrough.confprovider.config.lavalink_nodes.push(...lavalinkNodes)
-	const oldLLNodes = passthrough.confprovider.config.lavalink_nodes
+	const oldLLNodes = passthrough.confprovider.config.lavalink_nodes.slice(0)
 
 	passthrough.confprovider.addCallback(() => {
 		passthrough.confprovider.config.lavalink_nodes.length = 0
