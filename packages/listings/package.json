@@ -12,6 +12,6 @@
   "author": "PapiOphidian",
   "license": "MIT",
   "devDependencies": {
-    "sass": "^1.85.0"
+    "sass": "^1.85.1"
   }
 }
