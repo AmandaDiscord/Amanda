@@ -13,6 +13,7 @@
   "dependencies": {
     "@amanda/buttons": "1.0.0",
     "@amanda/config": "1.0.0",
+    "@amanda/lang": "1.0.0",
     "@amanda/redis": "1.0.0"
   }
 }
