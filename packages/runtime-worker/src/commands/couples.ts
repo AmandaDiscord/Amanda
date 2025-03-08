@@ -1,4 +1,4 @@
-import { APIUser } from "discord-api-types/v10"
+import type { APIUser } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
 const { commands, sql, confprovider, client, sync } = passthrough
 

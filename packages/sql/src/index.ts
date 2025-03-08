@@ -4,7 +4,7 @@ import { Pool, QueryConfig, type PoolClient, type QueryResult, type QueryResultR
 
 import confprovider = require("@amanda/config")
 
-import { Database, Model, InferModelDef } from "./orm"
+import { Database, Model, type InferModelDef } from "./orm"
 
 
 import type { AcceptablePrepared } from "./types"
