@@ -22,11 +22,11 @@ class Connector extends EventEmitter {
 
 		this.ws.on("ws_receive", data => this.emit("message", data))
 		this.ws.on("ws_open", () => void this.onOpen())
-		this.ws.on("ws_close", (code, reason) => this.emit("close", code, reason))
-		this.ws.on("debug", console.error)
-		this.on("close", () => {
+		this.ws.on("ws_close", (code, reason) => {
+			this.emit("close", code, reason)
 			setTimeout(() => this._connect(), 5000)
 		})
+		this.ws.on("error", console.error)
 		this._connect()
 	}
 
@@ -38,7 +38,10 @@ class Connector extends EventEmitter {
 
 	public send(data: any): Promise<void> {
 		return new Promise(res => {
-			if (this.ws.status === 1) this.ws.sendMessage(data).then(res)
+			if (this.ws.status === 1) {
+				this.ws.sendMessage(data)
+				res(void 0)
+			}
 			else this.queue.push({ res, data })
 		})
 	}

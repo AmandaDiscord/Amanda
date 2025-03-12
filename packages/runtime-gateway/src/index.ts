@@ -181,7 +181,7 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 			if (!shard) return console.warn(`Shard ${parsed.d.shard_id} doesn't exist in this cluster`)
 			delete parsed.d.shard_id
 			delete parsed.t
-			shard.connector.betterWs.sendMessage(parsed)
+			shard.connector.sendMessage(parsed)
 		}
 	})
 })()
