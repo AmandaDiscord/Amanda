@@ -16,7 +16,7 @@ import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
 
 import type { CommandManagerParams } from "@amanda/shared-types"
-import type { APIVoiceState } from "discord-api-types/v10"
+import { type APIVoiceState, AllowedMentionsTypes } from "discord-api-types/v10"
 
 import passthrough = require("./passthrough")
 
@@ -28,7 +28,11 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	sharedUtils.getLang(cmd.locale),
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 ], console.error)
-passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token)
+passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token, {
+	allowed_mentions: {
+		parse: [AllowedMentionsTypes.Role, AllowedMentionsTypes.User]
+	}
+})
 
 passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
 passthrough.snow.requestHandler.on("requestError", (_reqID, err) => console.error(err))

@@ -12,7 +12,7 @@ import { CommandManager, ChatInputCommand } from "@amanda/commands"
 import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
-import type { APIChatInputApplicationCommandInteraction, GatewayDispatchPayload } from "discord-api-types/v10"
+import { type APIChatInputApplicationCommandInteraction, type GatewayDispatchPayload, AllowedMentionsTypes } from "discord-api-types/v10"
 import type { CommandManagerParams } from "@amanda/shared-types"
 
 import passthrough = require("./passthrough")
@@ -27,7 +27,11 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	sharedUtils.getLang(cmd.locale),
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 ], console.error)
-passthrough.client = new Amanda(new SnowTransfer(passthrough.confprovider.config.current_token))
+passthrough.client = new Amanda(new SnowTransfer(passthrough.confprovider.config.current_token, {
+	allowed_mentions: {
+		parse: [AllowedMentionsTypes.Role, AllowedMentionsTypes.User]
+	}
+}))
 passthrough.webconnector = new WebsiteConnector("/internal")
 
 ;(async () => {
