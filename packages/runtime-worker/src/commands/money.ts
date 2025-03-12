@@ -1,5 +1,4 @@
 import path = require("path")
-import fs = require("fs")
 
 import Canvas = require("canvas")
 import gifencoder = require("gifencoder")
