@@ -21,7 +21,7 @@
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
-    "lavacord": "^2.1.4-v4",
+    "lavacord": "^2.2.0",
     "marked": "15.0.7",
     "mime-types": "2.1.35",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.51.0"
