@@ -14,7 +14,7 @@ const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queu
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
 import type { IGatewayMessage } from "cloudstorm"
-import { type APIUser, type APIMessageComponentInteractionData, type APIMessageComponentInteraction, type APIChatInputApplicationCommandInteraction, Locale } from "discord-api-types/v10"
+import { type APIUser, type APIMessageComponentInteractionData, type APIMessageComponentInteraction, type APIChatInputApplicationCommandInteraction, Locale, APIInteraction } from "discord-api-types/v10"
 import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
 
 const commaRegex = /,/g
@@ -348,7 +348,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 	}
 }
 
-export async function onGatewayMessage(
+export function onGatewayMessage(
 	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
 	message: ArrayBuffer
 ) {
@@ -381,21 +381,7 @@ export async function onGatewayMessage(
 		break
 
 	case "INTERACTION_CREATE": {
-		const user = parsed.d.member?.user ?? parsed.d.user!
-		sharedUtils.updateUser(user)
-		updateUserInAllQueues(user)
-		if (parsed.d.type === 2) {
-			let commandHandled = false
-			if (commands.handle(parsed.d as APIChatInputApplicationCommandInteraction, snow)) commandHandled = true
-			if (!commandHandled && !commandWorkers.length) return console.warn("No command workers to handle interaction")
-			if (!commandHandled) {
-				const worker = sharedUtils.arrayRandom(commandWorkers)
-				worker.send(parsed)
-			}
-		} else if (parsed.d.type === 3) {
-			await snow.interaction.createInteractionResponse(parsed.d.id, parsed.d.token, { type: 6 })
-			buttons.handle(parsed.d)
-		}
+		handleInteraction(parsed.d).catch(console.error)
 		break
 	}
 
@@ -404,6 +390,53 @@ export async function onGatewayMessage(
 		updateUserInAllQueues(parsed.d)
 		break
 	}
+}
+
+export async function handleInteraction(payload: APIInteraction): Promise<void>
+export async function handleInteraction(payload: APIInteraction, returnJSON: true): Promise<string>
+export async function handleInteraction(payload: APIInteraction, returnJSON: false): Promise<void>
+export async function handleInteraction(payload: APIInteraction, returnJSON = false): Promise<string | void> {
+	let commandHandled = false
+	let rt = "{}"
+
+	const user = payload.member?.user ?? payload.user!
+	sharedUtils.updateUser(user)
+	updateUserInAllQueues(user)
+
+	switch (payload.type) {
+	case 1: // Pings to verify
+		rt = "{\"type\":1}"
+		commandHandled = true
+		break
+
+	case 2: // Commands
+		rt = "{\"type\":5}"
+		if (commands.handle(payload as APIChatInputApplicationCommandInteraction, returnJSON ? void 0 : snow)) commandHandled = true
+		break
+
+	case 3: // Buttons
+		rt = "{\"type\":6}"
+		if (!returnJSON) await snow.interaction.createInteractionResponse(payload.id, payload.token, { type: 6 })
+		buttons.handle(payload)
+		commandHandled = true
+		break
+
+	default:
+		console.error(`Unknown payload type ${payload.type}\n`, payload)
+		break
+	}
+
+	if (!commandHandled) {
+		if (!commandWorkers.length) throw new Error("NO_WORKERS")
+		const worker = sharedUtils.arrayRandom(commandWorkers)
+		worker.send({
+			op: 0,
+			t: "INTERACTION_CREATE",
+			d: payload
+		})
+	}
+
+	if (returnJSON) return rt
 }
 
 export function updateUserInAllQueues(user: APIUser) {

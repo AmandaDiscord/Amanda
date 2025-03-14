@@ -2,10 +2,7 @@ import { webcrypto } from "crypto"
 
 import { verify } from "discord-verify/node"
 
-import buttons = require("@amanda/buttons")
-import sharedUtils = require("@amanda/shared-utils")
-
-import type { APIInteraction, APIChatInputApplicationCommandInteraction } from "discord-api-types/v10"
+import type { APIInteraction } from "discord-api-types/v10"
 
 import passthrough = require("../passthrough")
 const { server, sync, confprovider, commands, commandWorkers } = passthrough
@@ -49,52 +46,18 @@ server.post("/interaction", async (res, req) => {
 	}
 
 	const payload: APIInteraction = JSON.parse(bodyString)
-	let rt = "{}"
-	let commandHandled = false
+	const fromHandler = await utils.handleInteraction(payload, true).catch(() => void 0)
+	if (!res.continue) return
 
-	const user = payload.member?.user ?? payload.user!
-	sharedUtils.updateUser(user)
-	utils.updateUserInAllQueues(user)
-
-	switch (payload.type) {
-	case 1: // Pings to verify
-		rt = "{\"type\":1}"
-		commandHandled = true
-		break
-
-	case 2: // Commands
-		rt = "{\"type\":5}"
-		if (commands.handle(payload as APIChatInputApplicationCommandInteraction)) commandHandled = true
-		break
-
-	case 3: // Buttons
-		rt = "{\"type\":6}"
-		buttons.handle(payload)
-		commandHandled = true
-		break
-
-	default:
-		console.error(`Unknown payload type ${payload.type}\n`, payload)
-		break
-	}
-
-	if (!commandHandled) {
-		if (!commandWorkers.length) {
-			console.warn("No command workers to handle interaction")
-			let written = false
-			return void res.cork(() => {
-				if (written) return
-				written = true
-				res
-					.writeStatus("503 Service Unavailable")
-					.endWithoutBody()
-			})
-		}
-		const worker = sharedUtils.arrayRandom(commandWorkers)
-		worker.send({
-			op: 0,
-			t: "INTERACTION_CREATE",
-			d: payload
+	if (!fromHandler) {
+		console.warn("No command workers to handle interaction")
+		let written = false
+		return void res.cork(() => {
+			if (written) return
+			written = true
+			res
+				.writeStatus("503 Service Unavailable")
+				.endWithoutBody()
 		})
 	}
 
@@ -105,6 +68,6 @@ server.post("/interaction", async (res, req) => {
 		res
 			.writeStatus("200")
 			.writeHeader("Content-Type", "application/json")
-			.end(rt)
+			.end(fromHandler)
 	})
 })

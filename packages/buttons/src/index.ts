@@ -63,8 +63,10 @@ const cc = {
 		if (bcAcceptableTypes.includes(interaction.data.component_type)) {
 			const decoded = encoding.decode(interaction.data.custom_id)
 			const btn = components.get(decoded?.mid ?? interaction.data.custom_id)
-			btn?.callback?.(interaction, btn)
-			return
+			if (btn) {
+				btn.callback?.(interaction, btn)
+				return
+			}
 		}
 
 		const route = routeHandler(interaction.data, interaction.member?.user ?? interaction.user!)
