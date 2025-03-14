@@ -57,8 +57,10 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 
 (async () => {
 	webconnector.on("open", () => {
-		console.log("Sent shard list to website")
-		webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
+		setTimeout(() => {
+			webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
+			console.log("Sent shard list to website")
+		}, 1000)
 	})
 
 	await sql.connect()

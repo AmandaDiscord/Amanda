@@ -348,7 +348,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 	}
 }
 
-export async function onGatewayMessage(
+export function onGatewayMessage(
 	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
 	message: ArrayBuffer
 ) {
@@ -381,11 +381,7 @@ export async function onGatewayMessage(
 		break
 
 	case "INTERACTION_CREATE": {
-		try {
-			await handleInteraction(parsed.d)
-		} catch (e) {
-			console.error(e)
-		}
+		handleInteraction(parsed.d).catch(console.error)
 		break
 	}
 
