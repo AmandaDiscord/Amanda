@@ -923,6 +923,9 @@ async function buildMoneyCard(
 	return canvas
 }
 
+const transferToRegex = /^transfer to \d+$/
+const transferFromRegex = /^transfer from \d+$/
+
 async function printTransactionsOnMoneyCard(
 	page: Canvas.CanvasRenderingContext2D,
 	id: string,
@@ -940,12 +943,25 @@ async function printTransactionsOnMoneyCard(
 	const green = "#72BB72"
 	const red = "#FF3B3B"
 
-	transactions.forEach((transaction, index) => {
+	for (let index = 0; index < transactions.length; index++) {
+		const transaction = transactions[index]
+
 		page.textAlign = "left"
 		const indexoffset = 570 + (index * transactionOffset)
 		page.fillStyle = "#ffffff"
 		canvasUtils.setFontSize(18, page)
-		page.fillText(transaction.description, 30, indexoffset)
+		let transactDescription = transaction.description
+		const toMatch = transferToRegex.exec(transactDescription)
+		const fromMatch = transferFromRegex.exec(transactDescription)
+		if (toMatch) {
+			const user = await sharedUtils.getUser(transaction.user_id, client.snow, client)
+			transactDescription = `Received from ${user ? sharedUtils.userString(user) : transaction.user_id}`
+		} else if (fromMatch) {
+			const user = await sharedUtils.getUser(transaction.user_id, client.snow, client)
+			transactDescription = `Sent to ${user ? sharedUtils.userString(user) : transaction.user_id}`
+		}
+
+		page.fillText(transactDescription, 30, indexoffset)
 		page.fillText(fakeID, 30, indexoffset + 30)
 
 		page.textAlign = "right"
@@ -953,7 +969,7 @@ async function printTransactionsOnMoneyCard(
 		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.datemap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
 		page.fillStyle = transaction.mode === 0 ? green : red
 		page.fillText(`${transaction.mode === 0 ? "+" : "-"}${sharedUtils.abbreviateNumber(transaction.amount)}`, 460, indexoffset - 10)
-	})
+	}
 }
 
 async function buildMoneyPage1(
