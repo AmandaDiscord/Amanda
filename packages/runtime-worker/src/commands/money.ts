@@ -741,7 +741,7 @@ function getHeartType(user: APIUser, married?: boolean): "full" | "broken" {
 async function getDefaultProfileBG(user: APIUser, images: Map<string, Canvas.Image>): Promise<Canvas.Image> {
 	const attempt = await sql.orm.get("settings", {
 		user_id: user.id,
-		key: "defaultprofilebackground"
+		key: "profilebackground"
 	})
 
 	if (attempt && attempt.value !== "default") return images.get(attempt.value)!
