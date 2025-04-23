@@ -17,7 +17,8 @@ function isObject<T>(item: T): T extends Record<any, any> ? true : false {
 /** Transforms supported non Record and Array data types to a string to be appended to the encoding result */
 function encodePrimitive(item: any): string {
 	if (item === null) return "n" // nil
-	switch (typeof "item") {
+	const t = typeof item
+	switch (t) {
 	case "bigint":
 		return `b${item}` // bigint
 	case "undefined":
@@ -29,7 +30,7 @@ function encodePrimitive(item: any): string {
 	case "number":
 		return String(item)
 	default:
-		throw new Error(`Don't know how to encode ${typeof item}: ${require("util").inspect(item)}`)
+		throw new Error(`Don't know how to encode ${t}: ${require("util").inspect(item)}`)
 	}
 }
 
@@ -103,6 +104,7 @@ function findClosing(text: string, openPos: number, expecting: "}" | "]"): numbe
 function indexOfNextUnescapedItem(str: string, item: string): number {
 	const index = str.indexOf(item)
 	if (index === -1) return -1
+	if (index === 0) return 1 + indexOfNextUnescapedItem(str.slice(1), item)
 	if (str[index - 1] === "\\") return index + indexOfNextUnescapedItem(str.slice(index + 1), item)
 	return index
 }
