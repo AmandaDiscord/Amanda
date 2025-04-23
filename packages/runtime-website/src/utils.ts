@@ -14,7 +14,16 @@ const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queu
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"
 import type { IGatewayMessage } from "cloudstorm"
-import { type APIUser, type APIMessageComponentInteractionData, type APIMessageComponentInteraction, type APIChatInputApplicationCommandInteraction, Locale, APIInteraction } from "discord-api-types/v10"
+import {
+	type APIUser,
+	type APIMessageComponentInteractionData,
+	type APIMessageComponentInteraction,
+	type APIChatInputApplicationCommandInteraction,
+
+	Locale,
+	APIInteraction,
+	MessageFlags
+} from "discord-api-types/v10"
 import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
 
 const commaRegex = /,/g
@@ -250,7 +259,7 @@ export class Validator<S extends State, P> {
 	}
 
 	public go(): Promise<S> {
-		if (!this.promise) this.promise = new Promise<S>((resolve, reject) => setImmediate(() => void this._next(resolve, reject)))
+		this.promise ??= new Promise<S>((resolve, reject) => setImmediate(() => void this._next(resolve, reject)));
 		return this.promise
 	}
 
@@ -410,7 +419,7 @@ export async function handleInteraction(payload: APIInteraction, returnJSON = fa
 		break
 
 	case 2: // Commands
-		rt = "{\"type\":5}"
+		rt = `{"type":5,"data":{"flags":${MessageFlags.IsComponentsV2}}}`
 		if (commands.handle(payload as APIChatInputApplicationCommandInteraction, returnJSON ? void 0 : snow)) commandHandled = true
 		break
 
@@ -489,6 +498,7 @@ export function buttonHandlerParamsToInteraction(data: APIMessageComponentIntera
 		authorizing_integration_owners: {
 			0: "",
 			1: ""
-		}
+		},
+		attachment_size_limit: 1024 * 1024 * 1024 * 10 // 10MB
 	}
 }

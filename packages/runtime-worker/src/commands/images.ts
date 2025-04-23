@@ -4,6 +4,7 @@ const { confprovider, commands, client } = passthrough
 import type { ChatInputCommand } from "@amanda/commands"
 
 import { en_us as English } from "@amanda/lang"
+import { ComponentType } from "discord-api-types/v10"
 
 const poweredbychewey = `Powered by ${confprovider.config.chewey_api_url}`.replace(/https?:\/\//, "")
 
@@ -13,15 +14,20 @@ async function sendImage(host: string, path: string, cmd: ChatInputCommand, foot
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-		embeds: [
+		components: [
 			{
-				color: confprovider.config.standard_embed_color,
-				image: {
-					url: data.data
-				},
-				footer: {
-					text: footer
-				}
+				type: ComponentType.MediaGallery,
+				items: [
+					{
+						media: {
+							url: data.data
+						}
+					}
+				]
+			},
+			{
+				type: ComponentType.TextDisplay,
+				content: footer
 			}
 		]
 	})
@@ -66,7 +72,7 @@ commands.assign([
 		],
 		process(cmd, lang) {
 			const type = cmd.data.options.get("type")!.asString()
-			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.IMAGE_FETCH_FAILED })
+			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.IMAGE_FETCH_FAILED }] })
 
 			switch (type) {
 			case "cat":

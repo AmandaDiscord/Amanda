@@ -6,7 +6,7 @@ const { sync, confprovider } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 
-import type { APIEmbed, APIUser } from "discord-api-types/v10"
+import type { APIMessageTopLevelComponent, APIUser } from "discord-api-types/v10"
 import type { Queue } from "./queue"
 import type { Lang } from "@amanda/lang"
 import type { UnpackRecord, InferMap } from "@amanda/shared-types"
@@ -177,7 +177,7 @@ export class Track {
 		return Promise.resolve(this.uri ?? `${confprovider.config.website_protocol}://${confprovider.config.website_domain}`)
 	}
 
-	public showInfo(): Promise<string | APIEmbed> {
+	public showInfo(): Promise<string | Array<APIMessageTopLevelComponent>> {
 		return Promise.resolve(this.uri ?? (this.queue?.lang ?? this.lang).GLOBAL.SONG_INFO_GENERIC)
 	}
 

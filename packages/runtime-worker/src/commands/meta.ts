@@ -156,7 +156,7 @@ commands.assign([
 							insertions +
 							deletions
 
-						return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] || "Unknown"}\`\n` +
+						return `\`» ${line.hash.slice(0, 7)}: ${dateString} — ${authorNameMap[line.author_name] ?? "Unknown"}\`\n` +
 										`\`» ${diff}\`\n${line.message}`
 					})
 					.join("\n\n")

@@ -1,3 +1,4 @@
+import { ComponentType } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
 const { commands, client, confprovider } = passthrough
 
@@ -12,12 +13,16 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				components: [
 					{
-						color: confprovider.config.standard_embed_color,
-						image: {
-							url: "https://b.catgirlsare.sexy/QSiJKTO0-z7i.png"
-						}
+						type: ComponentType.MediaGallery,
+						items: [
+							{
+								media: {
+									url: "https://b.catgirlsare.sexy/QSiJKTO0-z7i.png"
+								}
+							}
+						]
 					}
 				]
 			})

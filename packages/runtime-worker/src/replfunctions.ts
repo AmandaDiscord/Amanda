@@ -13,7 +13,7 @@ const extraContext = {
 	nameRegex: /^[-_\p{L}\p{N}\p{sc=Deva}\p{sc=Thai}]{1,32}$/u,
 	buildCommandLanguageObject(command: { name: string }): { name_localizations: LocaledObject; description_localizations: LocaledObject } {
 		const localizations = Object.entries(Lang).map(([k, l]) => ({
-			lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] || {}
+			lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] ?? {}
 		})) as Array<{ lang: string; cmd: NameAndDesc & { options?: Array<NameAndDesc & { options?: Array<NameAndDesc> }> } }>
 
 		return {
@@ -35,7 +35,7 @@ const extraContext = {
 	},
 	buildCommandLanguageOptions(command: { name: string, options?: Array<APIApplicationCommandOption> }): Array<APIApplicationCommandOption> | undefined {
 		if (!command.options) return void 0
-		const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] || {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Record<string, NameAndDesc & { options?: Record<string, NameAndDesc> }> } }>
+		const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] ?? {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Record<string, NameAndDesc & { options?: Record<string, NameAndDesc> }> } }>
 
 		return command.options.map(cur => ({
 			name_localizations: localizations.reduce((acc, desc) => {

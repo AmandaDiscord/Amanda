@@ -29,7 +29,6 @@ const clientID = Buffer.from(confprovider.config.current_token.split(".")[0], "b
 const client = new Client(confprovider.config.current_token, {
 	shards: confprovider.config.shards,
 	totalShards: confprovider.config.total_shards,
-	reconnect: true,
 	intents: ["GUILD_VOICE_STATES", "GUILDS"],
 	ws: {
 		compress: false,

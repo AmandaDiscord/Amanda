@@ -51,7 +51,7 @@ function onConfigChangeCallback() {
 
 	if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length && lastLover?.id !== confprovider.config.amandas_lover_id) {
 		lastLover = new Lover(confprovider.config.amandas_lover_id)
-		if (!loverMessageSendTimeout) loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
+		loverMessageSendTimeout ??= setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout);
 		console.log(`Lover channel changed to belong to ${confprovider.config.amandas_lover_id}`)
 	}
 

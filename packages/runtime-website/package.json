@@ -22,8 +22,8 @@
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
     "lavacord": "^2.2.0",
-    "marked": "15.0.7",
-    "mime-types": "2.1.35",
+    "marked": "15.0.9",
+    "mime-types": "3.0.1",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.51.0"
   },
   "devDependencies": {
