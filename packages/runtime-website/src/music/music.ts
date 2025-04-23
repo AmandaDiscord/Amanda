@@ -12,6 +12,11 @@ const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 
 import { en_us as English } from "@amanda/lang"
 
+import {
+	ComponentType,
+	MessageFlags
+} from "discord-api-types/v10"
+
 const notWordRegex = /\W/g
 
 commands.assign([
@@ -154,12 +159,12 @@ commands.assign([
 
 			if (queue.tracks.length < (amount - start)) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.TOO_MANY_SKIPS
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.TOO_MANY_SKIPS }]
 				})
 			} else if (start === 1 && amount === queue.tracks.length) {
 				queue.destroy()
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.SKIPPED_ALL
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.SKIPPED_ALL }]
 				})
 			}
 
@@ -170,7 +175,7 @@ commands.assign([
 			if (start === 1) queue.skip()
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.SKIPPED_AMOUNT, { "amount": amount })
+				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SKIPPED_AMOUNT, { "amount": amount }) }]
 			})
 		}
 	},
@@ -189,7 +194,7 @@ commands.assign([
 			queue.destroy()
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.QUEUE_STOPPED, { "username": sharedUtils.userString(cmd.author) })
+				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.QUEUE_STOPPED, { "username": sharedUtils.userString(cmd.author) }) }]
 			})
 		}
 	},
@@ -240,7 +245,7 @@ commands.assign([
 
 			if (!queue?.tracks[0]) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) }]
 				})
 			}
 
@@ -250,7 +255,7 @@ commands.assign([
 
 			if (!userIsListening && !executePage) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) }]
 				})
 			}
 
@@ -261,14 +266,27 @@ commands.assign([
 				const strings = sliced.map((track, index) => `${index + 1}. ${track.queueLine}`)
 				const body = `${strings.join("\n")}${totalLength}\n${langReplace(lang.GLOBAL.PAGE_LENGTH, { "time": sharedUtils.prettySeconds(sliced.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)) })}`
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
-					embeds: [
+					flags: MessageFlags.IsComponentsV2,
+					components: [
 						{
-							title: lang.GLOBAL.QUEUE_FOR,
-							description: body,
-							footer: {
-								text: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page ?? 1, "total": Math.ceil(queue.tracks.length / 10) })
-							},
-							color: confprovider.config.standard_embed_color
+							type: ComponentType.Container,
+							components: [
+								{
+									type: ComponentType.TextDisplay,
+									content: lang.GLOBAL.QUEUE_FOR
+								},
+								{
+									type: ComponentType.TextDisplay,
+									content: body
+								},
+								{
+									type: ComponentType.Separator,
+								},
+								{
+									type: ComponentType.TextDisplay,
+									content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page ?? 1, "total": Math.ceil(queue.tracks.length / 10) })
+								}
+							]
 						}
 					]
 				})
@@ -277,7 +295,7 @@ commands.assign([
 			if (volume !== null && userIsListening) {
 				queue.volume = volume / 100
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.VOLUME_SET, { "volume": volume })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.VOLUME_SET, { "volume": volume }) }]
 				})
 			}
 
@@ -285,14 +303,14 @@ commands.assign([
 				queue.loop = loop
 				queue.sendToSubscribedSessions("onAttributesChange", queue)
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"]
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL[queue.loop ? "LOOP_ON" : "LOOP_OFF"] }]
 				})
 			}
 
 			if (pause !== null && userIsListening) {
 				queue.paused = pause
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL[queue.paused ? "QUEUE_PAUSED" : "QUEUE_UNPAUSED"]
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL[queue.paused ? "QUEUE_PAUSED" : "QUEUE_UNPAUSED"] }]
 				})
 			}
 		}
@@ -309,7 +327,7 @@ commands.assign([
 			const queue = queues.get(cmd.guild_id!)
 			if (!queue) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) }]
 				})
 			}
 
@@ -328,7 +346,7 @@ commands.assign([
 			const queue = queues.get(cmd.guild_id!)
 			if (!queue?.tracks[0]) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) }]
 				})
 			}
 
@@ -338,8 +356,8 @@ commands.assign([
 				cmd.application_id,
 				cmd.token,
 				typeof info === "string"
-					? { content: info }
-					: { embeds: [info] }
+					? { components: [{ type: ComponentType.TextDisplay, content: info }] }
+					: { components: info }
 			)
 		}
 	},
@@ -355,22 +373,27 @@ commands.assign([
 			const queue = queues.get(cmd.guild_id!)
 			if (!queue) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) }]
 				})
 			}
 
 			const lyrics = await queue.tracks[0].getLyrics()
 			if (!lyrics) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_LYRICS
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_LYRICS }]
 				})
 			}
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				components: [
 					{
-						color: confprovider.config.standard_embed_color,
-						description: `${lyrics.slice(0, 1996)}...`
+						type: ComponentType.Container,
+						components: [
+							{
+								type: ComponentType.TextDisplay,
+								content: `${lyrics.slice(0, 1996)}...`
+							}
+						]
 					}
 				]
 			})
@@ -404,30 +427,30 @@ commands.assign([
 			switch (result) {
 			case 1:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { "username": cmd.author.username }) }]
 				})
 
 			case 2:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.CANNOT_SEEK_LIVE
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_SEEK_LIVE }]
 				})
 
 			case 3:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.SEEK_GREATER_THAN_SONG_LENGTH
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.SEEK_GREATER_THAN_SONG_LENGTH }]
 				})
 
 			case 4:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.SEEK_ERROR, {
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SEEK_ERROR, {
 						"parsed": sharedUtils.numberComma(timeOpt * 1000),
 						"server": `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/to/server`
-					})
+					}) }]
 				})
 
 			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(timeOpt, "sec") })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(timeOpt, "sec") }) }]
 				})
 			}
 		}
@@ -467,7 +490,7 @@ commands.assign([
 
 			if (typeof pitchOption !== "number" && typeof speedOption !== "number") {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: `${lang.filters.options.pitch.name}: ${Math.ceil(Math.log(queue.pitch) * 12 / Math.log(2))}\n${lang.filters.options.speed.name}: ${queue.speed * 100}%`
+					components: [{ type: ComponentType.TextDisplay, content: `${lang.filters.options.pitch.name}: ${Math.ceil(Math.log(queue.pitch) * 12 / Math.log(2))}\n${lang.filters.options.speed.name}: ${queue.speed * 100}%` }]
 				})
 			}
 
@@ -480,11 +503,11 @@ commands.assign([
 
 			if (!result) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.FILTERS_ERROR
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.FILTERS_ERROR }]
 				})
 			} else {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.FILTERS_APPLIED
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.FILTERS_APPLIED }]
 				})
 			}
 		}
@@ -513,7 +536,7 @@ commands.assign([
 			}
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: lang.GLOBAL.SHUFFLED
+				components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.SHUFFLED }]
 			})
 		}
 	},
@@ -546,20 +569,20 @@ commands.assign([
 			switch (result) {
 			case 1:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.OUT_OF_BOUNDS
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.OUT_OF_BOUNDS }]
 				})
 			case 2:
 				console.error("Was in Array but isn't anymore in the same tick. Did the queue tracks array somehow turn into a proxy?")
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.ERROR_OCCURRED
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.ERROR_OCCURRED }]
 				})
 			case 0:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": track.title })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": track.title }) }]
 				})
 			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.ERROR_OCCURRED
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.ERROR_OCCURRED }]
 				})
 			}
 		}
@@ -591,13 +614,13 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
 				})
 			}
 
 			if (cmd.guild_id) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DM_ONLY
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DM_ONLY }]
 				})
 			}
 
@@ -608,7 +631,7 @@ commands.assign([
 				await sql.orm.delete("web_tokens", { user_id: cmd.author.id })
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.TOKENS_DELETED, { prefix: "/" }) }]
 				})
 
 			case "n": {
@@ -618,11 +641,11 @@ commands.assign([
 				await sql.orm.insert("web_tokens", { user_id: cmd.author.id, token: hash, staging: 1 })
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.TOKENS_NEW, {
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.TOKENS_NEW, {
 						"website": `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/dash`,
 						"prefix": "/"
 					})
-					+ `\n${hash}`
+					+ `\n${hash}` }]
 				})
 			}
 
@@ -631,11 +654,11 @@ commands.assign([
 
 				if (existing) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: `${langReplace(lang.GLOBAL.TOKENS_PREVIOUS, { "prefix": "/" })}\n${existing.token}`
+						components: [{ type: ComponentType.TextDisplay, content: `${langReplace(lang.GLOBAL.TOKENS_PREVIOUS, { "prefix": "/" })}\n${existing.token}` }]
 					})
 				} else {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						content: langReplace(lang.GLOBAL.TOKENS_NONE, { "prefix": "/" })
+						components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.TOKENS_NONE, { "prefix": "/" }) }]
 					})
 				}
 			}
@@ -677,14 +700,14 @@ commands.assign([
 
 			if (fromOption > queue.tracks.length || toOption > queue.tracks.length || !track) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.OUT_OF_BOUNDS
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.OUT_OF_BOUNDS }]
 				})
 			}
 
 			await queue.removeTrack(fromOption - 1)
 			queue.addTrack(track, toOption - 1)
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.SONG_MOVED, { "title": track.title })
+				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SONG_MOVED, { "title": track.title }) }]
 			})
 		}
 	},
@@ -733,18 +756,22 @@ commands.assign([
 
 			if (!tracks.length) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_RESULTS,
-					embeds: []
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
 			}
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				components: [
 					{
-						color: confprovider.config.standard_embed_color,
-						description: tracks
-							.map(track => `[${track.author} - ${track.title}](${track.uri}) (${sharedUtils.prettySeconds(Math.round(Number(track.lengthSeconds) / 1000))})`)
-							.join("\n").slice(0, 1998)
+						type: ComponentType.Container,
+						components: [
+							{
+								type: ComponentType.TextDisplay,
+								content: tracks
+								.map(track => `[${track.author} - ${track.title}](${track.uri}) (${sharedUtils.prettySeconds(Math.round(Number(track.lengthSeconds) / 1000))})`)
+								.join("\n").slice(0, 1998)
+							}
+						]
 					}
 				]
 			})

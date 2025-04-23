@@ -3,24 +3,27 @@ import util = require("util")
 import { getLang, userString } from "@amanda/shared-utils"
 import confprovider = require("@amanda/config")
 
-import type {
-	APIUser,
-	APIInteractionGuildMember,
-	Locale,
-	APIChatInputApplicationCommandInteraction,
-	APIInteractionDataResolvedGuildMember,
-	APIRole,
-	APIInteractionDataResolvedChannel,
-	APIMessage,
-	APIAttachment,
-	APIChatInputApplicationCommandInteractionData,
-	APIApplicationCommandInteractionDataOption,
-	APIApplicationCommandInteractionDataBasicOption,
-	APIApplicationCommandInteractionDataSubcommandOption,
-	APIApplicationCommandInteractionDataSubcommandGroupOption,
-	APIApplicationCommandOption,
-	APIContextMenuInteractionData,
-	APIContextMenuInteraction
+import {
+	type APIUser,
+	type APIInteractionGuildMember,
+	type Locale,
+	type APIChatInputApplicationCommandInteraction,
+	type APIInteractionDataResolvedGuildMember,
+	type APIRole,
+	type APIInteractionDataResolvedChannel,
+	type APIMessage,
+	type APIAttachment,
+	type APIChatInputApplicationCommandInteractionData,
+	type APIApplicationCommandInteractionDataOption,
+	type APIApplicationCommandInteractionDataBasicOption,
+	type APIApplicationCommandInteractionDataSubcommandOption,
+	type APIApplicationCommandInteractionDataSubcommandGroupOption,
+	type APIApplicationCommandOption,
+	type APIContextMenuInteractionData,
+	type APIContextMenuInteraction,
+
+	ComponentType,
+	MessageFlags
 } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 
@@ -194,7 +197,7 @@ export class CommandManager<Params extends Array<unknown>> {
 			const params = this.paramGetter(command)
 			let returnValue: unknown
 			try {
-				await snow?.interaction.createInteractionResponse(command.id, command.token, { type: 5 })
+				await snow?.interaction.createInteractionResponse(command.id, command.token, { type: 5, data: { flags: MessageFlags.IsComponentsV2 } })
 				returnValue = this.commands.get(command.data.name)!.process(...params)
 			} catch (e) {
 				if (snow) {
@@ -217,13 +220,27 @@ export class CommandManager<Params extends Array<unknown>> {
 						).join("\n")
 
 						snow.channel.createMessage(confprovider.config.error_log_channel_id, {
-							embeds: [
+							flags: MessageFlags.IsComponentsV2,
+							components: [
 								{
-									color: 0xdd2d2d,
-									title: "Command error occurred.",
-									fields: [
-										{ name: "Details", value: detailsString },
-										{ name: "Exception", value: util.inspect(e, false, 5, false) }
+									type: ComponentType.Container,
+									accent_color: 0xdd2d2d,
+									components: [
+										{
+											type: ComponentType.TextDisplay,
+											content: "Command error occurred."
+										},
+										{
+											type: ComponentType.TextDisplay,
+											content: detailsString
+										},
+										{
+											type: ComponentType.Separator
+										},
+										{
+											type: ComponentType.TextDisplay,
+											content: util.inspect(e, false, 5, false)
+										}
 									]
 								}
 							]

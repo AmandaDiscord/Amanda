@@ -9,7 +9,15 @@ import redis = require("@amanda/redis")
 
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
-import type { APIUser, APIButtonComponentWithCustomId, APIEmbed, APIVoiceState } from "discord-api-types/v10"
+import {
+	type APIUser,
+	type APIButtonComponentWithCustomId,
+	type APIVoiceState,
+	type APIContainerComponent,
+
+	ComponentType,
+	MessageFlags,
+} from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
 import type { Player } from "lavacord"
@@ -46,7 +54,7 @@ export class Queue extends sync.ReloadableClass {
 	public readonly leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
 		if (!this._interactionExpired && this.interaction) {
 			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
-				content: this.lang.GLOBAL.EVERYONE_LEFT
+				components: [{ type: ComponentType.TextDisplay, content: this.lang.GLOBAL.EVERYONE_LEFT }]
 			})
 		}
 		this.destroy()
@@ -100,11 +108,13 @@ export class Queue extends sync.ReloadableClass {
 		if (value && value.channel.id !== this.textChannelID) return
 		if (!this._interactionExpired && this._interaction) {
 			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
-				embeds: [{
-					color: confprovider.config.standard_embed_color,
-					description: this.lang.GLOBAL.NEWER_NOW_PLAYING
-				}],
-				components: []
+				components: [{
+					type: ComponentType.Container,
+					components: [{
+						type: ComponentType.TextDisplay,
+						content: this.lang.GLOBAL.NEWER_NOW_PLAYING
+					}]
+				}]
 			})
 		}
 
@@ -307,11 +317,13 @@ export class Queue extends sync.ReloadableClass {
 
 		if (!this._interactionExpired && this.interaction && editInteraction) {
 			await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
-				embeds: [{
-					color: confprovider.config.standard_embed_color,
-					description: this.lang.GLOBAL.QUEUE_ENDED
-				}],
-				components: []
+				components: [{
+					type: ComponentType.Container,
+					components: [{
+						type: ComponentType.TextDisplay,
+						content: this.lang.GLOBAL.QUEUE_ENDED
+					}]
+				}]
 			})
 		}
 
@@ -346,8 +358,8 @@ export class Queue extends sync.ReloadableClass {
 		}
 	}
 
-	public createNPMenu(assign = true): Queue["menu"] {
-		const newMenu: Queue["menu"] = [
+	public createNPMenu(assign = true): Array<InstanceType<typeof BetterComponent>> {
+		const newMenu = [
 			new BetterComponent( // rewind
 				{ emoji: { name: "⏪" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
@@ -506,16 +518,23 @@ export class Queue extends sync.ReloadableClass {
 			const link = await track.showLink().catch(() => `${confprovider.config.website_protocol}://${confprovider.config.website_domain}`)
 
 			snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
-				embeds: [
-					{
-						color: confprovider.config.standard_embed_color,
-						description: langReplace(this.lang.GLOBAL.NOW_PLAYING, { "song": `[**${track.title}**](${link})\n\n${progress}` })
-					}
-				],
 				components: [
 					{
-						type: 1,
-						components: this.menu.map(c => c.component)
+						type: ComponentType.Container,
+						components: [
+							{
+								type: ComponentType.TextDisplay,
+								content: langReplace(this.lang.GLOBAL.NOW_PLAYING, { "song": `[**${track.title}**](${link})` })
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: progress
+							},
+							{
+								type: ComponentType.ActionRow,
+								components: this.menu.map(c => c.component)
+							}
+						]
 					}
 				]
 			}).catch(() => {
@@ -538,11 +557,13 @@ export class Queue extends sync.ReloadableClass {
 		const serverURL = `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/to/server`
 		const track = this.tracks[0]
 
-		const sendReport = (contents: APIEmbed) => {
-			contents.url = serverURL
-			contents.footer = { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
+		const sendReport = (contents: APIContainerComponent) => {
+			contents.components.push(
+				{ type: ComponentType.Separator },
+				{ type: ComponentType.TextDisplay, content: `[${this.lang.GLOBAL.TITLE_JOIN_SERVER}](${serverURL})` }
+			)
 			// Report to original channel
-			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { embeds: [contents] })
+			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { flags: MessageFlags.IsComponentsV2, components: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = confprovider.config.error_log_channel_id
 			const node = this.node ? common.nodes.byID(this.node) : void 0
@@ -569,12 +590,28 @@ export class Queue extends sync.ReloadableClass {
 				`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
 			).join("\n")
 			snow.channel.createMessage(reportTarget, {
-				embeds: [
+				flags: MessageFlags.IsComponentsV2,
+				components: [
 					{
-						color: 0xff2ee7,
-						title: "Music error occurred.",
-						description: "The next message is the message that was sent to the user.",
-						fields: [{ name: "Details", value: detailsString }]
+						type: ComponentType.Container,
+						accent_color: 0xff2ee7,
+						components: [
+							{
+								type: ComponentType.TextDisplay,
+								content: "Music error occurred."
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: "The next container is what was sent to the user."
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: detailsString
+							}
+						]
 					},
 					contents
 				]
@@ -586,28 +623,68 @@ export class Queue extends sync.ReloadableClass {
 		if (this.errorChain <= stopDisplayingErrorsAfter) {
 			if (track) {
 				sendReport({
-					title: this.lang.GLOBAL.SONG_NOT_PLAYABLE,
-					description: `**${track.title}** (ID: ${track.id})\n${track.error}`,
-					color: 0xdd2d2d
+					type: ComponentType.Container,
+					accent_color: 0xdd2d2d,
+					components: [
+						{
+							type: ComponentType.TextDisplay,
+							content: this.lang.GLOBAL.SONG_NOT_PLAYABLE
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: `**${track.title}** (ID: ${track.id})`
+						},
+						{
+							type: ComponentType.Separator
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: track.error
+						}
+					]
 				})
 			} else {
 				sendReport({
-					title: this.lang.GLOBAL.ERROR_OCCURRED,
-					description: langReplace(this.lang.GLOBAL.SONG_NOT_OBJECT, { "song": track }),
-					color: 0xdd2d2d
+					type: ComponentType.Container,
+					accent_color: 0xdd2d2d,
+					components: [
+						{
+							type: ComponentType.TextDisplay,
+							content: this.lang.GLOBAL.ERROR_OCCURRED
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: langReplace(this.lang.GLOBAL.SONG_NOT_OBJECT, { "song": track })
+						}
+					]
 				})
 			}
 
 			if (this.errorChain === 3) {
 				if (!this._interactionExpired && this.interaction) {
 					snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
-						embeds: [
+						flags: MessageFlags.IsComponentsV2,
+						components: [
 							{
-								title: this.lang.GLOBAL.TOO_MANY_ERRORS,
-								url: serverURL,
-								description: this.lang.GLOBAL.ERRORS_SUPPRESSED,
-								color: 0xff2ee7,
-								footer: { text: this.lang.GLOBAL.TITLE_JOIN_SERVER }
+								type: ComponentType.Container,
+								accent_color: 0xff2ee7,
+								components: [
+									{
+										type: ComponentType.TextDisplay,
+										content: this.lang.GLOBAL.TOO_MANY_ERRORS
+									},
+									{
+										type: ComponentType.TextDisplay,
+										content: this.lang.GLOBAL.ERRORS_SUPPRESSED
+									},
+									{
+										type: ComponentType.Separator
+									},
+									{
+										type: ComponentType.TextDisplay,
+										content: `[${this.lang.GLOBAL.TITLE_JOIN_SERVER}](${serverURL})`
+									}
+								]
 							}
 						]
 					})

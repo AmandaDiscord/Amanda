@@ -139,7 +139,7 @@ export class BufferAccumulator {
 			return
 		}
 		const obj = { chunk: buf, next: null }
-		if (!this.first) this.first = obj
+		this.first ??= obj;
 		if (this.last) this.last.next = obj
 		this.last = obj
 		this.size += buf.byteLength
@@ -310,7 +310,7 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 }
 
 export function progressBar(length: number, value: number, max: number, text?: string): string {
-	if (!text) text = ""
+	text ??= "";
 	const textPosition = Math.floor(length / 2) - Math.ceil(text.length / 2) + 1
 	let result = ""
 
@@ -462,7 +462,7 @@ export function prettySeconds(seconds: number): string {
 
 export function getLang(id: string): Lang {
 	const code = id.toLowerCase().replace(dashRegex, "_")
-	return language[code] || language.en_us
+	return language[code] ?? language.en_us
 }
 
 // TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability
@@ -566,9 +566,7 @@ export function paginate(pageCount: number, callback: (page: number, component: 
 }
 
 export function userString(user: APIUser) {
-	return user.global_name
-		? user.global_name
-		: `${user.username}#${user.discriminator}`
+	return user.global_name ?? `${user.username}#${user.discriminator}`
 }
 
 export function getMSUntilStepped(timeAsMS: number, offset?: number) {

@@ -10,7 +10,7 @@ import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")
 
-import type { APIEmbed } from "discord-api-types/v10"
+import { type APIMessageTopLevelComponent, ComponentType } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 
@@ -36,7 +36,7 @@ const cmds = [
 		process(cmd, lang) {
 			if (!cmd.guild_id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) }]
 				})
 			}
 
@@ -44,18 +44,18 @@ const cmds = [
 
 			if (user.id === confprovider.config.client_id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_U
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_U }]
 				})
 			}
 
 			if (user.id === cmd.author.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) }]
 				})
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${sharedUtils.userString(user)}**` })
+				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${sharedUtils.userString(user)}**` }) }]
 			})
 		}
 	},
@@ -88,7 +88,7 @@ const cmds = [
 
 			if (user1.id === user2.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
+					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) }]
 				})
 			}
 
@@ -112,11 +112,11 @@ const cmds = [
 			const percentage = Number(`0x${hash}`) % 101
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: langReplace(lang.GLOBAL.SHIP_RATING, {
+				components: [{ type: ComponentType.TextDisplay, content: (langReplace(lang.GLOBAL.SHIP_RATING, {
 					"display1": sharedUtils.userString(user1),
 					"display2": sharedUtils.userString(user2),
 					"percentage": percentage
-				}),
+				})) }],
 				files: [
 					{
 						name: `ship_${user1.username}_${user2.username}`.replace(nameRegex, "") + ".png",
@@ -229,13 +229,13 @@ function doInteraction(
 		]
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: sharedUtils.arrayRandom(responses)
+			components: [{ type: ComponentType.TextDisplay, content: sharedUtils.arrayRandom(responses) }]
 		})
 	}
 
 	if (user.id === confprovider.config.client_id) {
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: langReplace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username })
+			components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) }]
 		})
 	}
 
@@ -257,21 +257,43 @@ function doInteraction(
 	fetched.then(u => {
 		const keyOther = `${source.toUpperCase()}_OTHER` as `${Uppercase<typeof source>}_OTHER`
 
-		const embed: APIEmbed = {
-			description: langReplace(lang.GLOBAL[keyOther], {
-				"user": cmd.author.username,
-				"action": source,
-				"mention": `<@${user.id}>`
-			}),
-			image: { url: u },
-			color: confprovider.config.standard_embed_color
-		}
+		const extra: Array<APIMessageTopLevelComponent> = footer
+			? [{
+					type: ComponentType.Separator,
+					spacing: 2
+				},
+				{
+					type: ComponentType.TextDisplay,
+					content: footer
+				}]
+			: []
 
-		if (footer) embed.footer = { text: footer }
-		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: null, embeds: [embed] })
+		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			components: [
+				{
+					type: ComponentType.TextDisplay,
+					content: langReplace(lang.GLOBAL[keyOther], {
+						"user": cmd.author.username,
+						"action": source,
+						"mention": `<@${user.id}>`
+					})
+				},
+				{
+					type: ComponentType.MediaGallery,
+					items: [
+						{
+							media: {
+								url: u
+							}
+						}
+					]
+				},
+				...extra
+			]
+		})
 	}).catch(() => {
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: "There was an error with that command"
+			components: [{ type: ComponentType.TextDisplay, content: "There was an error with that command" }]
 		})
 	})
 }
