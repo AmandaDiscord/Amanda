@@ -10,7 +10,7 @@ import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")
 
-import { type APIMessageTopLevelComponent, ComponentType } from "discord-api-types/v10"
+import { type APIMessageTopLevelComponent, ComponentType, MessageFlags } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 
@@ -36,7 +36,7 @@ const cmds = [
 		process(cmd, lang) {
 			if (!cmd.guild_id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username }) }]
+					content: langReplace(lang.GLOBAL.GUILD_ONLY, { "username": cmd.author.username })
 				})
 			}
 
@@ -44,18 +44,18 @@ const cmds = [
 
 			if (user.id === confprovider.config.client_id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_U }]
+					content: lang.GLOBAL.NO_U
 				})
 			}
 
 			if (user.id === cmd.author.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username }) }]
+					content: langReplace(lang.GLOBAL.CANNOT_SELF_BEAN, { "username": cmd.author.username })
 				})
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${sharedUtils.userString(user)}**` }) }]
+				content: langReplace(lang.GLOBAL.BEANED, { "tag": `**${sharedUtils.userString(user)}**` })
 			})
 		}
 	},
@@ -88,7 +88,7 @@ const cmds = [
 
 			if (user1.id === user2.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username }) }]
+					content: langReplace(lang.GLOBAL.CANNOT_SELF_SHIP, { "username": cmd.author.username })
 				})
 			}
 
@@ -112,11 +112,11 @@ const cmds = [
 			const percentage = Number(`0x${hash}`) % 101
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: (langReplace(lang.GLOBAL.SHIP_RATING, {
+				content: langReplace(lang.GLOBAL.SHIP_RATING, {
 					"display1": sharedUtils.userString(user1),
 					"display2": sharedUtils.userString(user2),
 					"percentage": percentage
-				})) }],
+				}),
 				files: [
 					{
 						name: `ship_${user1.username}_${user2.username}`.replace(nameRegex, "") + ".png",
@@ -229,13 +229,13 @@ function doInteraction(
 		]
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			components: [{ type: ComponentType.TextDisplay, content: sharedUtils.arrayRandom(responses) }]
+			content: sharedUtils.arrayRandom(responses)
 		})
 	}
 
 	if (user.id === confprovider.config.client_id) {
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username }) }]
+			content: langReplace(lang.GLOBAL[keyAmanda], { "username": cmd.author.username })
 		})
 	}
 
@@ -269,6 +269,8 @@ function doInteraction(
 			: []
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
 					type: ComponentType.TextDisplay,
@@ -293,7 +295,7 @@ function doInteraction(
 		})
 	}).catch(() => {
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			components: [{ type: ComponentType.TextDisplay, content: "There was an error with that command" }]
+			content: "There was an error with that command"
 		})
 	})
 }

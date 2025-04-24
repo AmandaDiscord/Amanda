@@ -18,7 +18,12 @@ import redis = require("@amanda/redis")
 
 import { en_us as English } from "@amanda/lang"
 
-import type { APIApplicationCommandOption, APIEmbed } from "discord-api-types/v10"
+import {
+	type APIApplicationCommandOption,
+
+	ComponentType,
+	MessageFlags
+} from "discord-api-types/v10"
 import type { Lang } from "@amanda/lang"
 
 const imageCacheDirectory = path.join("../../image-cache")
@@ -33,7 +38,6 @@ commands.assign([
 		contexts: [0, 1, 2],
 		async process(cmd, lang, shardID) {
 			const leadingIdentity = `${sharedUtils.userString(client.user)} <:online:606664341298872324>\n${confprovider.config.cluster_id} tree, branch ${shardID}`
-			const leadingSpace = `${emojis.bl}\n​`
 			const ram = process.memoryUsage()
 
 			const [userCount, guildCount] = await Promise.all([
@@ -42,22 +46,28 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
+				components: [
 					{
-						color: confprovider.config.standard_embed_color,
-						fields: [
+						type: ComponentType.Container,
+						components: [
 							{
-								name: leadingIdentity,
-								value: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime(), "sec")}\n`
-									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${sharedUtils.bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}\n`,
-								inline: true
+								type: ComponentType.TextDisplay,
+								content: leadingIdentity
 							},
 							{
-								name: leadingSpace,
-								value: `**❯ ${lang.GLOBAL.HEADER_USER_COUNT}:**\n${sharedUtils.numberComma(userCount)}\n`
-								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${sharedUtils.numberComma(guildCount)}`, // \n`
-								// + `**❯ ${lang.GLOBAL.HEADER_VOICE_CONNECTIONS}:**\n${text.numberComma(stats.connections)}`,
-								inline: true
+								type: ComponentType.TextDisplay,
+								content: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime(), "sec")}\n`
+									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${sharedUtils.bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: `**❯ ${lang.GLOBAL.HEADER_USER_COUNT}:**\n${sharedUtils.numberComma(userCount)}\n`
+								+ `**❯ ${lang.GLOBAL.HEADER_GUILD_COUNT}:**\n${sharedUtils.numberComma(guildCount)}`
 							}
 						]
 					}
@@ -73,21 +83,48 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd, lang) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
+				components: [
 					{
-						description: lang.GLOBAL.INFO_THANKS,
-						fields: [
+						type: ComponentType.Container,
+						components: [
 							{
-								name: lang.GLOBAL.HEADER_CREATORS,
-								value: "papiophidian <:bravery:479939311593324557> <:ActiveDeveloper:1047367962153197609> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl9:678713116598468669>"
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.INFO_THANKS
 							},
 							{
-								name: lang.GLOBAL.HEADER_CODE,
-								value: `[node.js](https://nodejs.org/) ${process.version} + [SnowTransfer](https://www.npmjs.com/package/snowtransfer) & [CloudStorm](https://www.npmjs.com/package/cloudstorm)`
+								type: ComponentType.Separator
 							},
 							{
-								name: lang.GLOBAL.HEADER_LINKS,
-								value: langReplace(lang.GLOBAL.INFO_LINKS, {
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.HEADER_CREATORS
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: "papiophidian <:bravery:479939311593324557> <:ActiveDeveloper:1047367962153197609> <:VerifiedDeveloper:699408396591300618> <:EarlySupporter:585638218255564800> <:NitroBadge:421774688507920406> <:boostlvl9:678713116598468669>"
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.HEADER_CODE
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: `[node.js](https://nodejs.org/) ${process.version} + [SnowTransfer](https://www.npmjs.com/package/snowtransfer) & [CloudStorm](https://www.npmjs.com/package/cloudstorm)`
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.HEADER_LINKS
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: langReplace(lang.GLOBAL.INFO_LINKS, {
 									"website": `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/`,
 									"stats": confprovider.config.stats_url,
 									"server": confprovider.config.server_url,
@@ -98,8 +135,7 @@ commands.assign([
 								}) +
 								`\n${confprovider.config.add_url}`
 							}
-						],
-						color: confprovider.config.standard_embed_color
+						]
 					}
 				]
 			})
@@ -163,20 +199,36 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				embeds: [
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
+				components: [
 					{
-						title: lang.GLOBAL.HEADER_GIT_INFO,
-						fields: [
+						type: ComponentType.Container,
+						components: [
 							{
-								name: lang.GLOBAL.HEADER_STATUS,
-								value: langReplace(lang.GLOBAL.GIT_STATUS, { "branch": res.branch, "hash": res.latestCommitHash })
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.HEADER_GIT_INFO
 							},
 							{
-								name: langReplace(lang.GLOBAL.GIT_COMMITS, { "amount": limit }),
-								value: res.logString
+								type: ComponentType.TextDisplay,
+								content: lang.GLOBAL.HEADER_STATUS
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: langReplace(lang.GLOBAL.GIT_STATUS, { "branch": res.branch, "hash": res.latestCommitHash })
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: langReplace(lang.GLOBAL.GIT_COMMITS, { "amount": limit })
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: res.logString
 							}
-						],
-						color: confprovider.config.standard_embed_color
+						]
 					}
 				]
 			})
@@ -204,7 +256,6 @@ commands.assign([
 			}
 		],
 		process(cmd, lang) {
-			let embed: APIEmbed
 			const category = cmd.data.options.get("category")?.asString()
 			const command = cmd.data.options.get("command")?.asString()
 
@@ -213,60 +264,100 @@ commands.assign([
 					const c = commands.commands.get(command)!
 					const info = getDocs(c, lang)
 
-					embed = {
-						author: { name: c.name },
-						description: langReplace(lang.GLOBAL.HELP_COMMAND_BODY, {
-							"description": info.description,
-							"args": info.options?.length ? info.options.map(o => o.name).join(", ") : lang.GLOBAL.NONE,
-							"category": c.category
-						}),
-						footer: { text: `${langReplace(lang.GLOBAL.FOOTER_HELP_MAIN, { "prefix": "/" })}\n\n${lang.GLOBAL.FOOTER_HELP}` },
-						color: confprovider.config.standard_embed_color
-					}
-
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
+						components: [
+							{
+								type: ComponentType.Container,
+								components: [
+									{
+										type: ComponentType.TextDisplay,
+										content: c.name
+									},
+									{
+										type: ComponentType.TextDisplay,
+										content: langReplace(lang.GLOBAL.HELP_COMMAND_BODY, {
+											"description": info.description,
+											"args": info.options?.length ? info.options.map(o => o.name).join(", ") : lang.GLOBAL.NONE,
+											"category": c.category
+										})
+									},
+									{
+										type: ComponentType.Separator
+									},
+									{
+										type: ComponentType.TextDisplay,
+										content: `${langReplace(lang.GLOBAL.FOOTER_HELP_MAIN, { "prefix": "/" })}\n\n${lang.GLOBAL.FOOTER_HELP}`
+									}
+								]
+							}
+						]
+					})
 				} else if (category && category !== "hidden" && commands.categories.has(category)) {
 					const cat = commands.categories.get(category)! as Array<Exclude<keyof typeof lang, "GLOBAL" | "CODE">>
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 
-					embed = {
-						author: { name: langReplace(lang.GLOBAL.HEADER_COMMAND_CATEGORY, { "category": category }) },
-						description: cat.sort((a, b) => {
-							const cmda = commands.commands.get(a)!
-							const cmdb = commands.commands.get(b)!
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
+						components: [
+							{
+								type: ComponentType.Container,
+								components: [
+									{
+										type: ComponentType.TextDisplay,
+										content: langReplace(lang.GLOBAL.HEADER_COMMAND_CATEGORY, { "category": category })
+									},
+									{
+										type: ComponentType.TextDisplay,
+										content: cat.sort((a, b) => {
+											const cmda = commands.commands.get(a)!
+											const cmdb = commands.commands.get(b)!
 
-							if (cmda.order !== void 0 && cmdb.order !== void 0) { // both are numbers, sort based on that, lowest first
-								return cmda.order - cmdb.order
-							} else if (cmda.order !== void 0) { // a is defined, sort a first
-								return -1
-							} else if (cmdb.order !== void 0) { // b is defined, sort b first
-								return 1
-							} else { // we don't care
-								return 0
+											if (cmda.order !== void 0 && cmdb.order !== void 0) { // both are numbers, sort based on that, lowest first
+												return cmda.order - cmdb.order
+											} else if (cmda.order !== void 0) { // a is defined, sort a first
+												return -1
+											} else if (cmdb.order !== void 0) { // b is defined, sort b first
+												return 1
+											} else { // we don't care
+												return 0
+											}
+										}).map(c2 => {
+											const cm = commands.commands.get(c2)!
+											let desc = cm.description
+											let name = cm.name
+											if (lang[c2]) {
+												name = lang[c2].name
+												desc = lang[c2].description
+											}
+											let repeat = maxLength - name.length
+											if (isNaN(repeat) || !repeat || repeat < 0) repeat = 0
+											return `\`${name}${" ​".repeat(repeat)}\` ${desc}`
+										}).join("\n")
+									}
+								]
 							}
-						}).map(c2 => {
-							const cm = commands.commands.get(c2)!
-							let desc = cm.description
-							let name = cm.name
-							if (lang[c2]) {
-								name = lang[c2].name
-								desc = lang[c2].description
-							}
-							let repeat = maxLength - name.length
-							if (isNaN(repeat) || !repeat || repeat < 0) repeat = 0
-							return `\`${name}${" ​".repeat(repeat)}\` ${desc}`
-						}).join("\n"),
-						color: confprovider.config.standard_embed_color
-					}
-
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+						]
+					})
 				} else {
-					embed = {
-						description: langReplace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": sharedUtils.userString(cmd.author) }),
-						color: 0xB60000
-					}
-
-					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
+						components: [
+							{
+								type: ComponentType.Container,
+								accent_color: 0xb60000,
+								components: [
+									{
+										type: ComponentType.TextDisplay,
+										content: langReplace(lang.GLOBAL.HELP_INVALID_COMMAND, { "tag": sharedUtils.userString(cmd.author) })
+									}
+								]
+							}
+						]
+					})
 				}
 			} else {
 				const categories = Array.from(commands.categories.keys()).filter(c => c != "admin" && c != "hidden").join("\n❯ ")
@@ -276,13 +367,25 @@ commands.assign([
 					"link": confprovider.config.invite_link_for_help
 				})
 
-				embed = {
-					author: { name: lang.GLOBAL.HEADER_COMMAND_CATEGORIES },
-					description: `❯ ${categories}\n\n${seeAll}\n\n${helpInfo}`,
-					color: confprovider.config.standard_embed_color
-				}
-
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { embeds: [embed] })
+				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [
+						{
+							type: ComponentType.Container,
+							components: [
+								{
+									type: ComponentType.TextDisplay,
+									content: lang.GLOBAL.HEADER_COMMAND_CATEGORIES
+								},
+								{
+									type: ComponentType.TextDisplay,
+									content: `❯ ${categories}\n\n${seeAll}\n\n${helpInfo}`
+								}
+							]
+						}
+					]
+				})
 			}
 		}
 	},

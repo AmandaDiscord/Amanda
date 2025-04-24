@@ -15,7 +15,7 @@ import imageCache = require("../ImageCache")
 
 import { en_us as English } from "@amanda/lang"
 
-import type { APIUser } from "discord-api-types/v10"
+import { APIMessageTopLevelComponent, ComponentType, MessageFlags, type APIUser } from "discord-api-types/v10"
 import type { UnpackArray } from "@amanda/shared-types"
 import type { Lang } from "@amanda/lang"
 
@@ -383,20 +383,31 @@ commands.assign([
 
 				const thisTable = sharedUtils.tableifyRows(thisDisplayRows, ["left", "left"], () => "`")
 
+				const extra: Array<APIMessageTopLevelComponent> = btn
+					? [{ type: 1, components: [btn.component] }]
+					: []
+
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					embeds: [
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [
 						{
-							author: { name: "Leaderboard" },
-							description: thisTable.join("\n"),
-							color: confprovider.config.standard_embed_color,
-							footer: {
-								text: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
-							}
-						}
-					],
-					components: btn
-						? [{ type: 1, components: [btn.component] }]
-						: []
+							type: ComponentType.TextDisplay,
+							content: "Leaderboard"
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: thisTable.join("\n")
+						},
+						{
+							type: ComponentType.Separator
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
+						},
+						...extra
+					]
 				})
 			})
 		}

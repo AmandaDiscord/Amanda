@@ -1,6 +1,6 @@
 import "@amanda/logger"
 
-import { SnowTransfer } from "snowtransfer"
+import { SnowTransfer, DiscordAPIError } from "snowtransfer"
 
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
@@ -39,7 +39,10 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 	await redis.connect()
 
 	passthrough.client.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
-	passthrough.client.snow.requestHandler.on("requestError", (_reqID, err) => console.error(err))
+	passthrough.client.snow.requestHandler.on("requestError", (_reqID, err) => {
+		const e = err as DiscordAPIError
+		console.error(e, e.request.data)
+	})
 
 	const user = await sharedUtils.getUser(
 		passthrough.confprovider.config.client_id,

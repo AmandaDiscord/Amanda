@@ -4,7 +4,7 @@ import fs = require("fs")
 import path = require("path")
 
 import uWS = require("uWebSockets.js")
-import { SnowTransfer } from "snowtransfer"
+import { SnowTransfer, DiscordAPIError } from "snowtransfer"
 import { Manager } from "lavacord"
 
 import sync = require("@amanda/sync")
@@ -35,7 +35,10 @@ passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_toke
 })
 
 passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
-passthrough.snow.requestHandler.on("requestError", (_reqID, err) => console.error(err))
+passthrough.snow.requestHandler.on("requestError", (_reqID, err) => {
+	const e = err as DiscordAPIError
+	console.error(e, e.request.data)
+})
 
 const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 

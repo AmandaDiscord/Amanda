@@ -1,4 +1,9 @@
-import { type APIComponentInContainer, type APIUser, ComponentType } from "discord-api-types/v10"
+import {
+	type APIComponentInContainer,
+	type APIUser,
+	ComponentType,
+	MessageFlags
+} from "discord-api-types/v10"
 import passthrough = require("../passthrough")
 const { commands, sql, confprovider, client, sync } = passthrough
 
@@ -28,7 +33,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -37,13 +42,15 @@ commands.assign([
 
 			if (!info) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: user.id === cmd.author.id ? lang.GLOBAL.SELF_NOT_IN_COUPLE : lang.GLOBAL.USER_NOT_IN_COUPLE }]
+					content: user.id === cmd.author.id ? lang.GLOBAL.SELF_NOT_IN_COUPLE : lang.GLOBAL.USER_NOT_IN_COUPLE
 				})
 			}
 
 			const users = [user, ...(await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u) as Array<APIUser>]
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -79,7 +86,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -87,7 +94,7 @@ commands.assign([
 
 			if (user.id === cmd.author.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_MARRY_SELF }]
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -98,20 +105,20 @@ commands.assign([
 
 			if (self) { // The user can't already be in a marriage. How would you join the relationships?
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.ALREADY_IN_COUPLE_SELF }]
+					content: lang.GLOBAL.ALREADY_IN_COUPLE_SELF
 				})
 			}
 
 			if (proposed) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.ALREADY_PROPOSED, { user: sharedUtils.userString(user) }) }]
+					content: langReplace(lang.GLOBAL.ALREADY_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			await sql.orm.insert("pending_relations", { user1: cmd.author.id, user2: user.id })
 
 			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.PROPOSED, { user: sharedUtils.userString(user) }) }]
+				content: langReplace(lang.GLOBAL.PROPOSED, { user: sharedUtils.userString(user) })
 			})
 		}
 	},
@@ -132,7 +139,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -140,7 +147,7 @@ commands.assign([
 
 			if (cmd.author.id === user.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_MARRY_SELF }]
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -152,21 +159,21 @@ commands.assign([
 
 			if (!pending) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) }) }]
+					content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (userrel) {
 				await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.ALREADY_IN_COUPLE_OTHER, { user: sharedUtils.userString(user) }) }]
+					content: langReplace(lang.GLOBAL.ALREADY_IN_COUPLE_OTHER, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (pending.user1 === cmd.author.id) {
 				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF }]
+					content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF
 				})
 			}
 
@@ -182,9 +189,9 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: (selfrel
+				content: selfrel
 					? langReplace(lang.GLOBAL.MARRIED_MULTIPLE_OTHERS, { user1: sharedUtils.userString(user), user2: sharedUtils.userString(cmd.author), amount: selfrel.users.length - 1 })
-					: langReplace(lang.GLOBAL.MARRIED_ONE_OTHER, { user1: sharedUtils.userString(user), user2: sharedUtils.userString(cmd.author) })) }]
+					: langReplace(lang.GLOBAL.MARRIED_ONE_OTHER, { user1: sharedUtils.userString(user), user2: sharedUtils.userString(cmd.author) })
 			})
 		}
 	},
@@ -205,7 +212,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -213,7 +220,7 @@ commands.assign([
 
 			if (cmd.author.id === user.id) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_MARRY_SELF }]
+					content: lang.GLOBAL.CANNOT_MARRY_SELF
 				})
 			}
 
@@ -221,21 +228,21 @@ commands.assign([
 
 			if (!pending) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) }) }]
+					content: langReplace(lang.GLOBAL.HASNT_PROPOSED, { user: sharedUtils.userString(user) })
 				})
 			}
 
 			if (pending.user1 === cmd.author.id) {
 				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF }]
+					content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF
 				})
 			}
 
 			await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.REJECTED, { user: sharedUtils.userString(user) }) }]
+				content: langReplace(lang.GLOBAL.REJECTED, { user: sharedUtils.userString(user) })
 			})
 		}
 	},
@@ -256,7 +263,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -266,7 +273,7 @@ commands.assign([
 
 			if (!selfinfo) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.SELF_NOT_IN_COUPLE }]
+					content: lang.GLOBAL.SELF_NOT_IN_COUPLE
 				})
 			}
 
@@ -275,13 +282,13 @@ commands.assign([
 
 				if (!userinfo) {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.USER_NOT_IN_COUPLE }]
+						content: lang.GLOBAL.USER_NOT_IN_COUPLE
 					})
 				}
 
 				if (selfinfo.id !== userinfo.id) {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.USER_NOT_IN_COUPLE_WITH_YOU }]
+						content: lang.GLOBAL.USER_NOT_IN_COUPLE_WITH_YOU
 					})
 				}
 
@@ -295,9 +302,9 @@ commands.assign([
 				}
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: (selfinfo.users.length === 2
+					content: selfinfo.users.length === 2
 						? langReplace(lang.GLOBAL.DIVORCED_ONE_OTHER, { user: sharedUtils.userString(user) })
-						: langReplace(lang.GLOBAL.DIVORCED_MULTIPLE_OTHERS, { user: sharedUtils.userString(user) })) }]
+						: langReplace(lang.GLOBAL.DIVORCED_MULTIPLE_OTHERS, { user: sharedUtils.userString(user) })
 				})
 			}
 
@@ -313,7 +320,7 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DIVORCED_LEFT }]
+				content: lang.GLOBAL.DIVORCED_LEFT
 			})
 		}
 	},
@@ -335,7 +342,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -344,20 +351,20 @@ commands.assign([
 			const married = await moneyManager.getCoupleRow(cmd.author.id)
 			if (!married) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.SELF_NOT_IN_COUPLE }]
+					content: lang.GLOBAL.SELF_NOT_IN_COUPLE
 				})
 			}
 
 			const money = BigInt(married.amount)
 			if (money === BigInt(0)) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NONE_WITHDRAW }]
+					content: lang.GLOBAL.NONE_WITHDRAW
 				})
 			}
 
 			if (amount > money) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_WITHDRAW_MORE }]
+					content: lang.GLOBAL.CANNOT_WITHDRAW_MORE
 				})
 			}
 
@@ -368,7 +375,7 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) }) }]
+				content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) })
 			})
 		}
 	},
@@ -390,7 +397,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -403,7 +410,7 @@ commands.assign([
 
 			if (!married) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NONE }]
+					content: lang.GLOBAL.NONE
 				})
 			}
 
@@ -412,7 +419,7 @@ commands.assign([
 
 			if (amount > selfMoney) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_WITHDRAW_MORE }]
+					content: lang.GLOBAL.CANNOT_WITHDRAW_MORE
 				})
 			}
 
@@ -423,7 +430,7 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) }) }]
+				content: langReplace(lang.GLOBAL.TRANSACTED_AMOUNT, { amount: sharedUtils.numberComma(amount) })
 			})
 		}
 	},
@@ -436,7 +443,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!confprovider.config.db_enabled) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }]
+					content: lang.GLOBAL.DATABASE_OFFLINE
 				})
 			}
 
@@ -446,7 +453,7 @@ commands.assign([
 
 			if (count === 0) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NONE }]
+					content: lang.GLOBAL.NONE
 				})
 			}
 
@@ -484,6 +491,8 @@ commands.assign([
 					: []
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{
 							type: ComponentType.Container,
