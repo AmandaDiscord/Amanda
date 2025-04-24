@@ -385,6 +385,8 @@ commands.assign([
 			}
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -761,6 +763,8 @@ commands.assign([
 			}
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,

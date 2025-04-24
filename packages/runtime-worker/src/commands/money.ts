@@ -15,7 +15,7 @@ import imageCache = require("../ImageCache")
 
 import { en_us as English } from "@amanda/lang"
 
-import { APIMessageTopLevelComponent, ComponentType, type APIUser } from "discord-api-types/v10"
+import { APIMessageTopLevelComponent, ComponentType, MessageFlags, type APIUser } from "discord-api-types/v10"
 import type { UnpackArray } from "@amanda/shared-types"
 import type { Lang } from "@amanda/lang"
 
@@ -388,6 +388,8 @@ commands.assign([
 					: []
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{
 							type: ComponentType.TextDisplay,

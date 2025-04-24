@@ -21,8 +21,7 @@ import {
 	type APIChatInputApplicationCommandInteraction,
 
 	Locale,
-	APIInteraction,
-	MessageFlags
+	APIInteraction
 } from "discord-api-types/v10"
 import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
 

@@ -4,7 +4,7 @@ const { confprovider, commands, client } = passthrough
 import type { ChatInputCommand } from "@amanda/commands"
 
 import { en_us as English } from "@amanda/lang"
-import { ComponentType } from "discord-api-types/v10"
+import { ComponentType, MessageFlags } from "discord-api-types/v10"
 
 const poweredbychewey = `Powered by ${confprovider.config.chewey_api_url}`.replace(/https?:\/\//, "")
 
@@ -14,6 +14,8 @@ async function sendImage(host: string, path: string, cmd: ChatInputCommand, foot
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+		// @ts-ignore
+		flags: MessageFlags.IsComponentsV2,
 		components: [
 			{
 				type: ComponentType.MediaGallery,

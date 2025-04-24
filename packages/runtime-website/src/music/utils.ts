@@ -13,7 +13,8 @@ import {
 	type APIUser,
 	type APIVoiceState,
 
-	ComponentType
+	ComponentType,
+	MessageFlags
 } from "discord-api-types/v10"
 import type { TrackLoadingResult, TrackInfo, Track as LLTrack } from "lavalink-types/v4"
 import type { Queue } from "./queue"
@@ -137,6 +138,8 @@ const common = {
 		})
 
 		snow.channel.createMessage(reportTarget, {
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
 					type: ComponentType.Container,
@@ -208,7 +211,9 @@ const common = {
 
 			if (!tracks.length) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_RESULTS
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
 
 				return null
@@ -242,6 +247,8 @@ const common = {
 
 			if (!chosen) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
 
@@ -279,7 +286,9 @@ const common = {
 
 			if (!mapped) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_RESULTS
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
 
 				return null
@@ -304,7 +313,9 @@ const common = {
 
 			if (!chosen) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_RESULTS
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
 
 				return null
@@ -353,7 +364,9 @@ const common = {
 			const respond = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 			if (cmd.guild_id! !== state.guild_id!) {
 				respond(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.VC_IN_OTHER_GUILD
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.VC_IN_OTHER_GUILD }]
 				})
 				return null
 			}
@@ -366,6 +379,8 @@ const common = {
 			queue.interaction = cmd
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -406,7 +421,9 @@ const common = {
 				queue.destroy()
 
 				respond(cmd.application_id, cmd.token, {
-					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
+					components: [{ type: ComponentType.TextDisplay, content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}` }]
 				})
 				snow.channel.createMessage(confprovider.config.error_log_channel_id, {
 					content: `Unable to join voice channel ${state.channel_id} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}`
@@ -567,6 +584,8 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			component.destroy()
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -593,6 +612,8 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			const selected = trackss[Number(select.data.values[0])]
 
 			await snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [{
 					type: ComponentType.Container,
 					components: [
@@ -607,6 +628,8 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		})
 
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
 					type: ComponentType.Container,

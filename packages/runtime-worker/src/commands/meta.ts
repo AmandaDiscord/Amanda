@@ -21,7 +21,8 @@ import { en_us as English } from "@amanda/lang"
 import {
 	type APIApplicationCommandOption,
 
-	ComponentType
+	ComponentType,
+	MessageFlags
 } from "discord-api-types/v10"
 import type { Lang } from "@amanda/lang"
 
@@ -45,6 +46,8 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -80,6 +83,8 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd, lang) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -194,6 +199,8 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.Container,
@@ -258,6 +265,8 @@ commands.assign([
 					const info = getDocs(c, lang)
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
 								type: ComponentType.Container,
@@ -290,6 +299,8 @@ commands.assign([
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
 								type: ComponentType.Container,
@@ -332,6 +343,8 @@ commands.assign([
 					})
 				} else {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						// @ts-ignore
+						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
 								type: ComponentType.Container,
@@ -355,6 +368,8 @@ commands.assign([
 				})
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{
 							type: ComponentType.Container,

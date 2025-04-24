@@ -10,7 +10,7 @@ import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")
 
-import { type APIMessageTopLevelComponent, ComponentType } from "discord-api-types/v10"
+import { type APIMessageTopLevelComponent, ComponentType, MessageFlags } from "discord-api-types/v10"
 import type { ChatInputCommand } from "@amanda/commands"
 import type { Lang } from "@amanda/lang"
 
@@ -269,6 +269,8 @@ function doInteraction(
 			: []
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
 					type: ComponentType.TextDisplay,

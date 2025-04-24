@@ -13,6 +13,7 @@ import {
 	type APIInteractionGuildMember,
 
 	ComponentType,
+	MessageFlags,
 	APIComponentInContainer
 } from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
@@ -535,7 +536,9 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 		const extra: Array<APIComponentInContainer> = component
 			? [{ type: 1, components: [component.component] }]
 			: []
-		const data: Parameters<import("snowtransfer").InteractionMethods["editOriginalInteractionResponse"]>["2"] = {
+		return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
 					type: ComponentType.Container,
@@ -555,8 +558,7 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 					]
 				}
 			]
-		}
-		return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, data)
+		})
 	})
 }
 

@@ -1,4 +1,4 @@
-import { ComponentType } from "discord-api-types/v10"
+import { ComponentType, MessageFlags } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
 const { commands, client, confprovider } = passthrough
 
@@ -13,6 +13,8 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				// @ts-ignore
+				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
 						type: ComponentType.MediaGallery,

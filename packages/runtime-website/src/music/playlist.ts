@@ -18,7 +18,8 @@ import type { QueryResultRow } from "pg"
 import {
 	type APIButtonComponentWithCustomId,
 
-	ComponentType
+	ComponentType,
+	MessageFlags
 } from "discord-api-types/v10"
 
 const plRegex = /PL[A-Za-z0-9_-]{16,}/
@@ -348,6 +349,8 @@ commands.assign([
 
 					if (rows.length <= 22 && rows.join("\n").length + totalLength.length <= 2000) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+							// @ts-ignore
+							flags: MessageFlags.IsComponentsV2,
 							components: [
 								{
 									type: ComponentType.Container,
@@ -401,6 +404,8 @@ commands.assign([
 
 						return sharedUtils.paginate(pages.length, (page, menu) => {
 							return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+								// @ts-ignore
+								flags: MessageFlags.IsComponentsV2,
 								components: [
 									{
 										type: ComponentType.Container,
@@ -678,6 +683,8 @@ commands.assign([
 				if (body.length > 2000) body = `${body.slice(0, 1998).split("\n").slice(0, -1).join("\n")}\n…`
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					// @ts-ignore
+					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{
 							type: ComponentType.Container,
