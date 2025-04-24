@@ -15,7 +15,7 @@ import imageCache = require("../ImageCache")
 
 import { en_us as English } from "@amanda/lang"
 
-import { APIMessageTopLevelComponent, ComponentType, MessageFlags, type APIUser } from "discord-api-types/v10"
+import { APIComponentInContainer, ComponentType, MessageFlags, type APIUser } from "discord-api-types/v10"
 import type { UnpackArray } from "@amanda/shared-types"
 import type { Lang } from "@amanda/lang"
 
@@ -383,31 +383,34 @@ commands.assign([
 
 				const thisTable = sharedUtils.tableifyRows(thisDisplayRows, ["left", "left"], () => "`")
 
-				const extra: Array<APIMessageTopLevelComponent> = btn
+				const extra: Array<APIComponentInContainer> = btn
 					? [{ type: 1, components: [btn.component] }]
 					: []
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
-					components: [
-						{
-							type: ComponentType.TextDisplay,
-							content: "Leaderboard"
-						},
-						{
-							type: ComponentType.TextDisplay,
-							content: thisTable.join("\n")
-						},
-						{
-							type: ComponentType.Separator
-						},
-						{
-							type: ComponentType.TextDisplay,
-							content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
-						},
-						...extra
-					]
+					components: [{
+						type: ComponentType.Container,
+						components: [
+							{
+								type: ComponentType.TextDisplay,
+								content: "Leaderboard"
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: thisTable.join("\n")
+							},
+							{
+								type: ComponentType.Separator
+							},
+							{
+								type: ComponentType.TextDisplay,
+								content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": count })
+							},
+							...extra
+						]
+					}]
 				})
 			})
 		}
