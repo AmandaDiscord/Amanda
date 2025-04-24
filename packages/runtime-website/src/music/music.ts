@@ -357,7 +357,8 @@ commands.assign([
 				cmd.token,
 				typeof info === "string"
 					? { content: info }
-					: { components: info }
+					// @ts-ignore
+					: { flags: MessageFlags.IsComponentsV2, components: info }
 			)
 		}
 	},

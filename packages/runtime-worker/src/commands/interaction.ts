@@ -275,7 +275,7 @@ function doInteraction(
 				{
 					type: ComponentType.TextDisplay,
 					content: langReplace(lang.GLOBAL[keyOther], {
-						"user": cmd.author.username,
+						"user": `<@${cmd.author.id}>`,
 						"action": source,
 						"mention": `<@${user.id}>`
 					})
