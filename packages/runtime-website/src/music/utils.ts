@@ -133,7 +133,7 @@ const common = {
 		).join("\n")
 
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			components: [{ type: ComponentType.TextDisplay, content: error.message ?? "A load tracks exception occured, but no error message was provided" }]
+			content: error.message ?? "A load tracks exception occured, but no error message was provided"
 		})
 
 		snow.channel.createMessage(reportTarget, {
@@ -208,7 +208,7 @@ const common = {
 
 			if (!tracks.length) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
+					content: lang.GLOBAL.NO_RESULTS
 				})
 
 				return null
@@ -279,7 +279,7 @@ const common = {
 
 			if (!mapped) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
+					content: lang.GLOBAL.NO_RESULTS
 				})
 
 				return null
@@ -304,7 +304,7 @@ const common = {
 
 			if (!chosen) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
+					content: lang.GLOBAL.NO_RESULTS
 				})
 
 				return null
@@ -353,7 +353,7 @@ const common = {
 			const respond = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 			if (cmd.guild_id! !== state.guild_id!) {
 				respond(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.VC_IN_OTHER_GUILD }]
+					content: lang.GLOBAL.VC_IN_OTHER_GUILD
 				})
 				return null
 			}
@@ -406,10 +406,10 @@ const common = {
 				queue.destroy()
 
 				respond(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}` }]
+					content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}`
 				})
 				snow.channel.createMessage(confprovider.config.error_log_channel_id, {
-					components: [{ type: ComponentType.TextDisplay, content: `Unable to join voice channel ${state.channel_id} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}` }]
+					content: `Unable to join voice channel ${state.channel_id} in guild ${cmd.guild_id}\n\n${util.inspect(e, false, 3, false)}`
 				})
 				return null
 			}
@@ -488,14 +488,14 @@ const common = {
 
 			if (!userVoiceState) {
 				respond(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username }) }]
+					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
 				})
 				return { queue: null, existed: !!queue }
 			}
 
 			if (queue?.voiceChannelID && userVoiceState.channel_id !== queue.voiceChannelID) {
 				respond(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) }]
+					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 				})
 				return { queue: null, existed: true }
 			}
@@ -511,17 +511,17 @@ const common = {
 
 		doChecks(cmd: ChatInputCommand, lang: Lang, isAddTrack = false): boolean {
 			if (!confprovider.config.redis_enabled) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.DATABASE_OFFLINE }] })
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
 				return false
 			}
 
 			if (!confprovider.config.music_enabled && isAddTrack) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.MUSIC_DISABLED }] })
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.MUSIC_DISABLED })
 				return false
 			}
 
 			if (!cmd.guild_id) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.GUILD_ONLY }] })
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.GUILD_ONLY })
 				return false
 			}
 
@@ -533,7 +533,7 @@ const common = {
 
 			if (!queue) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username }) }]
+					content: langReplace(lang.GLOBAL.NOTHING_PLAYING, { username: cmd.author.username })
 				})
 
 				return null
@@ -541,7 +541,7 @@ const common = {
 
 			if (!queue.listeners.has(cmd.author.id)) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` }) }]
+					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 				})
 
 				return null

@@ -174,7 +174,7 @@ commands.assign([
 		async process(cmd, lang) {
 			if (!common.queues.doChecks(cmd, lang, true)) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.MUSIC_DISABLED }]
+					content: lang.GLOBAL.MUSIC_DISABLED
 				})
 			}
 
@@ -198,13 +198,13 @@ commands.assign([
 
 			if (notNull.length === 0) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username, prefix: "/" }) }]
+					content: langReplace(lang.GLOBAL.MUSIC_INVALID_ACTION, { username: cmd.author.username, prefix: "/" })
 				})
 			}
 
 			if (notNull.length > 1) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.ONE_ACTION }]
+					content: lang.GLOBAL.ONE_ACTION
 				})
 			}
 
@@ -225,7 +225,7 @@ commands.assign([
 
 				if (notNull2.length > 1) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.ONE_ACTION }]
+						content: lang.GLOBAL.ONE_ACTION
 					})
 				}
 
@@ -292,7 +292,7 @@ commands.assign([
 					const playlistRow = await sql.orm.get("playlists", { name: optionInfo })
 					if (!playlistRow) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-							components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+							content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 						})
 					}
 
@@ -439,7 +439,7 @@ commands.assign([
 					if (!checkPlaylistName(optionCreate, cmd, lang)) return
 
 					const playlistRow = await sql.orm.get("playlists", { name: optionCreate })
-					if (playlistRow) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_ALREADY_EXISTS }] })
+					if (playlistRow) return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.PLAYLIST_ALREADY_EXISTS })
 
 					await sql.orm.insert("playlists", {
 						name: optionCreate,
@@ -447,7 +447,7 @@ commands.assign([
 					})
 
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_CREATED }]
+						content: lang.GLOBAL.PLAYLIST_CREATED
 					})
 				} else if (optionDelete !== null) {
 
@@ -458,13 +458,13 @@ commands.assign([
 
 					if (!playlistRow) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-							components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+							content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 						})
 					}
 
 					if (playlistRow.author !== cmd.author.id) {
 						return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-							components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE }]
+							content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE
 						})
 					}
 
@@ -474,7 +474,7 @@ commands.assign([
 					])
 
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_DELETED }]
+						content: lang.GLOBAL.PLAYLIST_DELETED
 					})
 				}
 			} else if (optionAdd !== null) {
@@ -488,13 +488,13 @@ commands.assign([
 				const playlistRow = await sql.orm.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+						content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 					})
 				}
 
 				if (playlistRow.author !== cmd.author.id) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE }]
+						content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE
 					})
 				}
 
@@ -502,20 +502,20 @@ commands.assign([
 
 				if (!result) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
+						content: lang.GLOBAL.NO_RESULTS
 					})
 				}
 
 				const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang, false)
 				if (orderedTracks.some(row => row.video_id === result!.id)) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG }]
+						content: lang.GLOBAL.PLAYLIST_DUPLICATE_SONG
 					})
 				}
 
 				if (result.source === "http") {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.CANNOT_ADD_HTTP }]
+						content: lang.GLOBAL.CANNOT_ADD_HTTP
 					})
 				}
 
@@ -523,7 +523,7 @@ commands.assign([
 
 				if (toUse.length > 50) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_TRACK_TOO_LONG }]
+						content: lang.GLOBAL.PLAYLIST_TRACK_TOO_LONG
 					})
 				}
 
@@ -544,7 +544,7 @@ commands.assign([
 				])
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.PLAYLIST_SONG_ADDED, { "title": result.title }) }]
+					content: langReplace(lang.GLOBAL.PLAYLIST_SONG_ADDED, { "title": result.title })
 				})
 			} else if (optionRemove !== null) {
 
@@ -557,13 +557,13 @@ commands.assign([
 				const playlistRow = await sql.orm.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+						content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 					})
 				}
 
 				if (playlistRow.author !== cmd.author.id) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE }]
+						content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE
 					})
 				}
 
@@ -572,7 +572,7 @@ commands.assign([
 				const toRemove = orderedTracks[optionIndex - 1]
 				if (!toRemove) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.OUT_OF_BOUNDS }]
+						content: lang.GLOBAL.OUT_OF_BOUNDS
 					})
 				}
 
@@ -582,7 +582,7 @@ commands.assign([
 				])
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": toRemove.name }) }]
+					content: langReplace(lang.GLOBAL.SONG_REMOVED, { "title": toRemove.name })
 				})
 			} else if (optionMove !== null) {
 
@@ -596,13 +596,13 @@ commands.assign([
 				const playlistRow = await sql.orm.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+						content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 					})
 				}
 
 				if (playlistRow.author !== cmd.author.id) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE }]
+						content: lang.GLOBAL.PLAYLIST_CANNOT_MANAGE
 					})
 				}
 
@@ -610,7 +610,7 @@ commands.assign([
 				if (orderedTracks.length === 0) return
 				if (!orderedTracks[optionFrom] || !orderedTracks[optionTo]) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.OUT_OF_BOUNDS }]
+						content: lang.GLOBAL.OUT_OF_BOUNDS
 					})
 				}
 
@@ -647,12 +647,12 @@ commands.assign([
 					}) // update moved item
 				} else {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_INDEXES_EQUAL }]
+						content: lang.GLOBAL.PLAYLIST_INDEXES_EQUAL
 					})
 				}
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_SONG_MOVED }]
+					content: lang.GLOBAL.PLAYLIST_SONG_MOVED
 				})
 			} else if (optionSearch !== null) {
 
@@ -663,7 +663,7 @@ commands.assign([
 				const playlistRow = await sql.orm.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+						content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 					})
 				}
 
@@ -700,7 +700,7 @@ commands.assign([
 				const playlistRow = await sql.orm.get("playlists", { name: optionPlaylist })
 				if (!playlistRow) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_NOT_EXIST }]
+						content: lang.GLOBAL.PLAYLIST_NOT_EXIST
 					})
 				}
 
@@ -742,7 +742,7 @@ function checkPlaylistName(playlistName: string, cmd: ChatInputCommand, lang: La
 	let value = true
 	if (playlistName.includes("http") || playlistName.includes("www.") || plRegex.exec(playlistName)) value = false
 	if (playlistName.length > 24) value = false
-	if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.INVALID_PLAYLIST_NAME }] })
+	if (!value) snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.INVALID_PLAYLIST_NAME })
 	return value
 }
 
@@ -765,7 +765,7 @@ async function getPlaylistTracks(playlistRow: { playlist_id: number }, cmd: Chat
 
 	if (tracks.length === 0 && notifyNone) {
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.PLAYLIST_EMPTY }]
+			content: lang.GLOBAL.PLAYLIST_EMPTY
 		})
 
 		return []

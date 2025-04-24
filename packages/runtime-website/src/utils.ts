@@ -419,7 +419,7 @@ export async function handleInteraction(payload: APIInteraction, returnJSON = fa
 		break
 
 	case 2: // Commands
-		rt = `{"type":5,"data":{"flags":${MessageFlags.IsComponentsV2}}}`
+		rt = "{\"type\":5}"
 		if (commands.handle(payload as APIChatInputApplicationCommandInteraction, returnJSON ? void 0 : snow)) commandHandled = true
 		break
 

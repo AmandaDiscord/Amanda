@@ -6,7 +6,15 @@ import buttons = require("@amanda/buttons")
 import confprovider = require("@amanda/config")
 import redis = require("@amanda/redis")
 
-import type { APIUser, APIGuildMember, APIInteractionDataResolvedGuildMember, APIInteractionGuildMember } from "discord-api-types/v10"
+import {
+	type APIUser,
+	type APIGuildMember,
+	type APIInteractionDataResolvedGuildMember,
+	type APIInteractionGuildMember,
+
+	ComponentType,
+	APIComponentInContainer
+} from "discord-api-types/v10"
 import type { SnowTransfer } from "snowtransfer"
 import type { Lang } from "@amanda/lang"
 import type { BetterComponent } from "@amanda/buttons"
@@ -524,18 +532,30 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 	alignedRows = alignedRows.slice(1)
 	const pages = createPages(alignedRows, maxLength - formattedTitle.length - 1, 16, 4)
 	paginate(pages.length, (page, component) => {
+		const extra: Array<APIComponentInContainer> = component
+			? [{ type: 1, components: [component.component] }]
+			: []
 		const data: Parameters<import("snowtransfer").InteractionMethods["editOriginalInteractionResponse"]>["2"] = {
-			embeds: [
+			components: [
 				{
-					color: confprovider.config.standard_embed_color,
-					description: `${formattedTitle}\n${pages[page].join("\n")}`,
-					footer: {
-						text: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": pages.length })
-					}
+					type: ComponentType.Container,
+					components: [
+						{
+							type: ComponentType.TextDisplay,
+							content: `${formattedTitle}\n${pages[page].join("\n")}`
+						},
+						{
+							type: ComponentType.Separator
+						},
+						{
+							type: ComponentType.TextDisplay,
+							content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": pages.length })
+						},
+						...extra
+					]
 				}
 			]
 		}
-		if (component) data.components = [{ type: 1, components: [component.component] }]
 		return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, data)
 	})
 }

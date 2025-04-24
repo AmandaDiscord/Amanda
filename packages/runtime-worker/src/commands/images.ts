@@ -72,7 +72,7 @@ commands.assign([
 		],
 		process(cmd, lang) {
 			const type = cmd.data.options.get("type")!.asString()
-			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.IMAGE_FETCH_FAILED }] })
+			const onFail = () => client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.IMAGE_FETCH_FAILED })
 
 			switch (type) {
 			case "cat":

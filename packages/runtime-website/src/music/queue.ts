@@ -54,7 +54,7 @@ export class Queue extends sync.ReloadableClass {
 	public readonly leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
 		if (!this._interactionExpired && this.interaction) {
 			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
-				components: [{ type: ComponentType.TextDisplay, content: this.lang.GLOBAL.EVERYONE_LEFT }]
+				content: this.lang.GLOBAL.EVERYONE_LEFT
 			})
 		}
 		this.destroy()
