@@ -134,7 +134,9 @@ const common = {
 		).join("\n")
 
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: error.message ?? "A load tracks exception occured, but no error message was provided"
+			// @ts-ignore
+			flags: MessageFlags.IsComponentsV2,
+			components: [{ type: ComponentType.TextDisplay, content: error.message ?? "A load tracks exception occured, but no error message was provided" }]
 		})
 
 		snow.channel.createMessage(reportTarget, {
