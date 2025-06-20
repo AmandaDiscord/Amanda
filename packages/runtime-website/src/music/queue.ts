@@ -374,7 +374,7 @@ export class Queue extends sync.ReloadableClass {
 				this.seek(0)
 			}),
 			new BetterComponent( // play/pause
-				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
+				{ emoji: { name: "playpauseorang", id: "1385477006535163935" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
 				const user = interaction.member?.user ?? interaction.user!
