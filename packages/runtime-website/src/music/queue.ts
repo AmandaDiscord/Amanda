@@ -35,7 +35,7 @@ const stopDisplayingErrorsAfter = 3
 
 const defaultVolumeAmount = 0.1
 
-export class Queue extends sync.ReloadableClass {
+export class Queue extends sync.reloadClassMethods(() => Queue) {
 	public readonly tracks: Array<Track> = []
 	public node: string | undefined
 	public lang: Lang
@@ -759,5 +759,3 @@ export class Queue extends sync.ReloadableClass {
 		this.sendToSubscribedSessions("onListenersUpdate", this.toJSON().members)
 	}
 }
-
-sync.reloadClassMethods(Queue)
