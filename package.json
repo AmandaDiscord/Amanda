@@ -24,9 +24,9 @@
     },
     "packageManager": "yarn@3.6.1",
     "dependencies": {
-        "cloudstorm": "^0.13.2",
+        "cloudstorm": "^0.14.0",
         "heatsync": "^2.8.2",
-        "snowtransfer": "^0.14.1"
+        "snowtransfer": "^0.14.2"
     },
     "resolutions": {
         "discord-api-types": "0.38.1",

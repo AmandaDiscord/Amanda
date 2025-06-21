@@ -17,7 +17,8 @@ class Connector extends EventEmitter {
 				"X-Cluster-Id": confprovider.config.cluster_id
 			},
 			bypassBuckets: true,
-			encoding: "json"
+			encoding: "json",
+			connectThrottle: 5000
 		})
 
 		this.ws.on("ws_receive", data => this.emit("message", data))
@@ -31,14 +32,12 @@ class Connector extends EventEmitter {
 	}
 
 	private _connect() {
-		this.ws.connect().catch(() => {
-			setTimeout(() => this._connect(), 5000)
-		})
+		this.ws.connect()
 	}
 
 	public send(data: any): Promise<void> {
 		return new Promise(res => {
-			if (this.ws.status === 1) {
+			if (this.ws.sm.currentStateName === "connected") {
 				this.ws.sendMessage(data)
 				res(void 0)
 			}
@@ -50,7 +49,7 @@ class Connector extends EventEmitter {
 		this.emit("open")
 		let item = this.queue.shift()
 		while (item) {
-			if (this.ws.status !== 1) return
+			if (this.ws.sm.currentStateName !== "connected") return
 			await this.send(item.data)
 			item.res()
 			item = this.queue.shift()
