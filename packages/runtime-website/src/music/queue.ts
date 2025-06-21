@@ -35,7 +35,7 @@ const stopDisplayingErrorsAfter = 3
 
 const defaultVolumeAmount = 0.1
 
-export class Queue extends sync.ReloadableClass {
+export class Queue extends sync.reloadClassMethods(() => Queue) {
 	public readonly tracks: Array<Track> = []
 	public node: string | undefined
 	public lang: Lang
@@ -374,7 +374,7 @@ export class Queue extends sync.ReloadableClass {
 				this.seek(0)
 			}),
 			new BetterComponent( // play/pause
-				{ emoji: { name: "⏯" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
+				{ emoji: { name: "playpauseorang", id: "1385477006535163935" }, style: 2, type: 2 } as Omit<APIButtonComponentWithCustomId, "custom_id">,
 				{}
 			).setCallback(interaction => {
 				const user = interaction.member?.user ?? interaction.user!
@@ -759,5 +759,3 @@ export class Queue extends sync.ReloadableClass {
 		this.sendToSubscribedSessions("onListenersUpdate", this.toJSON().members)
 	}
 }
-
-sync.reloadClassMethods(Queue)

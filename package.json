@@ -8,24 +8,25 @@
         "packages/*"
     ],
     "scripts": {
-        "lint": "turbo run lint",
-        "build": "turbo run build"
+        "build": "node scripts/amanda-build.js"
     },
     "devDependencies": {
+        "@types/minimist": "^1.2.5",
         "@types/node": "^22.15.3",
         "@typescript-eslint/eslint-plugin": "^8.31.1",
         "@typescript-eslint/parser": "^8.31.1",
+        "chalk": "4",
         "discord-api-types": "^0.38.1",
         "eslint": "^9.25.1",
+        "minimist": "1",
         "tsup": "^8.4.0",
-        "turbo": "^2.5.2",
         "typescript": "^5.8.3"
     },
     "packageManager": "yarn@3.6.1",
     "dependencies": {
-        "cloudstorm": "^0.13.2",
+        "cloudstorm": "^0.14.0",
         "heatsync": "^2.8.2",
-        "snowtransfer": "^0.14.1"
+        "snowtransfer": "^0.14.2"
     },
     "resolutions": {
         "discord-api-types": "0.38.1",

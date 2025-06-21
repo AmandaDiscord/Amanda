@@ -411,10 +411,9 @@ commands.assign([
 		options: [
 			{
 				name: English.seek.options.time.name,
-				type: 4,
+				type: 3,
 				description: English.seek.options.time.description,
-				required: true,
-				min_value: 0
+				required: true
 			}
 		],
 		async process(cmd, lang) {
@@ -423,9 +422,17 @@ commands.assign([
 			const queue = common.queues.getQueueWithRequiredPresence(cmd, lang)
 			if (!queue) return
 
-			const timeOpt = cmd.data.options.get("time")!.asNumber()!
+			const timeOpt = cmd.data.options.get("time")!.asString()!
 
-			const result = await queue.seek(timeOpt * 1000)
+			if (!/^\d+(:\d+){0,2}$/.exec(timeOpt)) { // [[hours:]minutes:]seconds
+				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.INVALID_DATA_TYPE_NO_DONOR_ARBITRARY, { acceptable: "0:00" })
+				})
+			}
+
+			const seconds = timeOpt.split(":").reduce((a, c, i, o) => a + +c * 60 ** (o.length - i - 1), 0)
+
+			const result = await queue.seek(seconds * 1000)
 
 			switch (result) {
 			case 1:
@@ -446,14 +453,14 @@ commands.assign([
 			case 4:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: langReplace(lang.GLOBAL.SEEK_ERROR, {
-						"parsed": sharedUtils.numberComma(timeOpt * 1000),
+						"parsed": sharedUtils.numberComma(seconds * 1000),
 						"server": `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/to/server`
 					})
 				})
 
 			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(timeOpt, "sec") })
+					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(seconds, "sec") })
 				})
 			}
 		}

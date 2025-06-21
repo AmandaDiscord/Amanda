@@ -3,7 +3,7 @@
 	"GLOBAL": {
 		"MUSIC_DISABLED": "Music is currently disabled due to issues. A fix is currently being worked on.",
 		"GUILD_ONLY": "You can only use this command in a server.",
-		"MUSIC_INVALID_ACTION": "%username, that's not a valid action. If you want to play something, try `%prefixplay track:<song>`.\nCheque out `%prefixhelp category:audio` and `%prefixhelp command:playlists` for more things you can do!",
+		"MUSIC_INVALID_ACTION": "%username, that's not a valid action. If you want to play something, try `%prefixplay track:<song>`.\nCheck out `%prefixhelp category:audio` and `%prefixhelp command:playlists` for more things you can do!",
 		"ONE_ACTION": "You can only do 1 action at a time.",
 		"NOTHING_PLAYING": "%username, nothing is currently playing.",
 		"MUSIC_SEE_OTHER": "The current music session is over in %channel. Go there to see what's playing!",
@@ -409,7 +409,7 @@
 		"options": {
 			"time": {
 				"name": "time",
-				"description": "The time in seconds to seek in the track"
+				"description": "The time to seek in the track, like 1:05"
 			}
 		}
 	},
