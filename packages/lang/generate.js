@@ -3,7 +3,8 @@
 const fs = require("fs")
 const path = require("path")
 
-const outDir = path.join(__dirname)
+const outDir = path.join(__dirname, "dist")
+if (!fs.existsSync(outDir)) fs.mkdirSync(outDir)
 
 const en_us = require("./localizations/en-us.json")
 

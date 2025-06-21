@@ -6,4 +6,3 @@ dist/
 tsconfig.tsbuildinfo
 /.yarn/install-state.gz
 void/
-.turbo

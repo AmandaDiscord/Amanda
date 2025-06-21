@@ -409,7 +409,7 @@
 		"options": {
 			"time": {
 				"name": "time",
-				"description": "The time in seconds to seek in the track"
+				"description": "The time to seek in the track, like 1:05"
 			}
 		}
 	},
