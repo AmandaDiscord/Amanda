@@ -21,10 +21,10 @@
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "@amanda/web-internal": "1.0.0",
-    "canvas": "^3.1.0",
+    "canvas": "^3.1.2",
     "canvas-image-cover": "2.0.2",
     "gifencoder": "2.0.1",
     "gifuct-js": "^2.1.2",
-    "simple-git": "^3.27.0"
+    "simple-git": "^3.28.0"
   }
 }
