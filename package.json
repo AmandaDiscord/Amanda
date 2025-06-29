@@ -12,14 +12,14 @@
     },
     "devDependencies": {
         "@types/minimist": "^1.2.5",
-        "@types/node": "^22.15.3",
-        "@typescript-eslint/eslint-plugin": "^8.31.1",
-        "@typescript-eslint/parser": "^8.31.1",
+        "@types/node": "^22.15.34",
+        "@typescript-eslint/eslint-plugin": "^8.35.0",
+        "@typescript-eslint/parser": "^8.35.0",
         "chalk": "4",
-        "discord-api-types": "^0.38.1",
-        "eslint": "^9.25.1",
-        "minimist": "1",
-        "tsup": "^8.4.0",
+        "discord-api-types": "^0.38.13",
+        "eslint": "^9.30.0",
+        "minimist": "^1.2.8",
+        "tsup": "^8.5.0",
         "typescript": "^5.8.3"
     },
     "packageManager": "yarn@3.6.1",
@@ -29,8 +29,8 @@
         "snowtransfer": "^0.14.2"
     },
     "resolutions": {
-        "discord-api-types": "0.38.1",
-        "canvas": "3.1.0",
+        "discord-api-types": "0.38.13",
+        "canvas": "3.1.2",
         "undici": "7.8.0"
     }
 }
