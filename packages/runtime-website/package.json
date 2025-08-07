@@ -22,7 +22,7 @@
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
     "lavacord": "^2.2.0",
-    "marked": "^16.0.0",
+    "marked": "^16.1.2",
     "mime-types": "^3.0.1",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.52.0"
   },
