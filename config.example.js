@@ -10,6 +10,7 @@ const config = {
 	discord_app_public_key: "",
 	lastfm_key: "",
 	lastfm_sec: "",
+	sra_token: "",
 
 	// usernames/identifiers
 	sql_user: "",

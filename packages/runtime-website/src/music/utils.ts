@@ -66,10 +66,14 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist: string | undefined = void 0): Promise<string | null> {
-			return fetch(`https://some-random-api.com/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`)
-				.then(d => d.json())
-				.then(j => j.lyrics ?? j.error ?? null)
-				.catch(() => null)
+			return fetch(`https://some-random-api.com/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`, {
+				headers: {
+					Authorization: confprovider.config.sra_token
+				}
+			})
+			.then(d => d.json())
+			.then(j => j.lyrics ?? j.error ?? null)
+			.catch(() => null)
 		},
 
 		pickApart(track: Track) {
