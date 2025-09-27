@@ -537,7 +537,6 @@ export function createPagination(cmd: ChatInputCommand, lang: Lang, title: Array
 			? [{ type: 1, components: [component.component] }]
 			: []
 		return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			// @ts-ignore
 			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{

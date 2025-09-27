@@ -108,7 +108,6 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		if (value && value.channel.id !== this.textChannelID) return
 		if (!this._interactionExpired && this._interaction) {
 			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [{
 					type: ComponentType.Container,
@@ -319,7 +318,6 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 
 		if (!this._interactionExpired && this.interaction && editInteraction) {
 			await snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [{
 					type: ComponentType.Container,
@@ -522,7 +520,6 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			const link = await track.showLink().catch(() => `${confprovider.config.website_protocol}://${confprovider.config.website_domain}`)
 
 			snow.interaction.editOriginalInteractionResponse(this.interaction.application_id, this.interaction.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{

@@ -46,7 +46,6 @@ commands.assign([
 			])
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -83,7 +82,6 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd, lang) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -199,7 +197,6 @@ commands.assign([
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -265,7 +262,6 @@ commands.assign([
 					const info = getDocs(c, lang)
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						// @ts-ignore
 						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
@@ -299,7 +295,6 @@ commands.assign([
 					const maxLength = cat.reduce((acc, cur) => Math.max(acc, cur.length), 0)
 
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						// @ts-ignore
 						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
@@ -343,7 +338,6 @@ commands.assign([
 					})
 				} else {
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-						// @ts-ignore
 						flags: MessageFlags.IsComponentsV2,
 						components: [
 							{
@@ -368,7 +362,6 @@ commands.assign([
 				})
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{

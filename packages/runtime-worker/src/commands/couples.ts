@@ -49,7 +49,6 @@ commands.assign([
 			const users = [user, ...(await Promise.all(info.users.filter(u => u !== user.id).map(u => sharedUtils.getUser(u, client.snow, client)))).filter(u => !!u) as Array<APIUser>]
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -491,7 +490,6 @@ commands.assign([
 					: []
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{

@@ -13,7 +13,6 @@ commands.assign([
 		contexts: [0, 1, 2],
 		process(cmd) {
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{

@@ -357,7 +357,6 @@ commands.assign([
 				cmd.token,
 				typeof info === "string"
 					? { content: info }
-					// @ts-ignore
 					: { flags: MessageFlags.IsComponentsV2, components: info }
 			)
 		}
@@ -386,7 +385,6 @@ commands.assign([
 			}
 
 			return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -771,7 +769,6 @@ commands.assign([
 			}
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{

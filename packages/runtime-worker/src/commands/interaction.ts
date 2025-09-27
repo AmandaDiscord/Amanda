@@ -269,7 +269,6 @@ function doInteraction(
 			: []
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			// @ts-ignore
 			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{

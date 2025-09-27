@@ -14,7 +14,6 @@ async function sendImage(host: string, path: string, cmd: ChatInputCommand, foot
 	else return Promise.reject(new Error("Host provided not supported"))
 	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-		// @ts-ignore
 		flags: MessageFlags.IsComponentsV2,
 		components: [
 			{

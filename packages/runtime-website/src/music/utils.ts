@@ -138,13 +138,11 @@ const common = {
 		).join("\n")
 
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			// @ts-ignore
 			flags: MessageFlags.IsComponentsV2,
 			components: [{ type: ComponentType.TextDisplay, content: error.message ?? "A load tracks exception occured, but no error message was provided" }]
 		})
 
 		snow.channel.createMessage(reportTarget, {
-			// @ts-ignore
 			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{
@@ -217,7 +215,6 @@ const common = {
 
 			if (!tracks.length) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
@@ -253,7 +250,6 @@ const common = {
 
 			if (!chosen) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
@@ -292,7 +288,6 @@ const common = {
 
 			if (!mapped) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
@@ -319,7 +314,6 @@ const common = {
 
 			if (!chosen) {
 				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
 				})
@@ -370,7 +364,6 @@ const common = {
 			const respond = (followup ? snow.interaction.createFollowupMessage : snow.interaction.editOriginalInteractionResponse).bind(snow.interaction)
 			if (cmd.guild_id! !== state.guild_id!) {
 				respond(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.VC_IN_OTHER_GUILD }]
 				})
@@ -385,7 +378,6 @@ const common = {
 			queue.interaction = cmd
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -427,7 +419,6 @@ const common = {
 				queue.destroy()
 
 				respond(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{ type: ComponentType.TextDisplay, content: `${langReplace(lang.GLOBAL.VC_NOT_JOINABLE, { username: cmd.author.username })}\n${await sharedUtils.stringify(e)}` }]
 				})
@@ -590,7 +581,6 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			component.destroy()
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [
 					{
@@ -618,7 +608,6 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			const selected = trackss[Number(select.data.values[0])]
 
 			await snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				// @ts-ignore
 				flags: MessageFlags.IsComponentsV2,
 				components: [{
 					type: ComponentType.Container,
@@ -634,7 +623,6 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		})
 
 		snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			// @ts-ignore
 			flags: MessageFlags.IsComponentsV2,
 			components: [
 				{

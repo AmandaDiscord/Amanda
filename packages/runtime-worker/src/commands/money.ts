@@ -388,7 +388,6 @@ commands.assign([
 					: []
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					// @ts-ignore
 					flags: MessageFlags.IsComponentsV2,
 					components: [{
 						type: ComponentType.Container,
