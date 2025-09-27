@@ -10,6 +10,6 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "canvas": "^3.1.2"
+    "canvas": "^3.2.0"
   }
 }
