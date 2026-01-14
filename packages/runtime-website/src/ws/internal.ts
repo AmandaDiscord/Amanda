@@ -1,5 +1,5 @@
 import buttons = require("@amanda/buttons")
-import encoding = require("@amanda/encoding")
+import encoding = require("@amanda/scratch")
 
 import passthrough = require("../passthrough")
 const { server, confprovider, commandWorkers, sync } = passthrough

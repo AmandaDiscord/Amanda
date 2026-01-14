@@ -11,19 +11,19 @@
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
-    "@amanda/buttons": "1.0.0",
+    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#3dd71859e4f0ed1aae48e31acee27fc4cd29b170",
     "@amanda/commands": "1.0.0",
     "@amanda/config": "1.0.0",
-    "@amanda/encoding": "1.0.0",
     "@amanda/lang": "1.0.0",
     "@amanda/redis": "1.0.0",
     "@amanda/repl": "1.0.0",
+    "@amanda/scratch": "github:AmandaDiscord/Scratch#3cf54142d00e2d36fbcb984a160024ed128be4a9",
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
     "lavacord": "^2.2.0",
-    "marked": "^16.3.0",
-    "mime-types": "^3.0.1",
+    "marked": "^17.0.1",
+    "mime-types": "^3.0.2",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.52.0"
   },
   "devDependencies": {
