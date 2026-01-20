@@ -12,9 +12,9 @@
     },
     "devDependencies": {
         "@types/minimist": "^1.2.5",
-        "@types/node": "^25.0.8",
-        "@typescript-eslint/eslint-plugin": "^8.53.0",
-        "@typescript-eslint/parser": "^8.53.0",
+        "@types/node": "^25.0.9",
+        "@typescript-eslint/eslint-plugin": "^8.53.1",
+        "@typescript-eslint/parser": "^8.53.1",
         "chalk": "4",
         "discord-api-types": "^0.38.37",
         "eslint": "^9.39.2",
@@ -24,15 +24,15 @@
     },
     "packageManager": "yarn@3.6.1",
     "dependencies": {
-        "cloudstorm": "^0.15.1",
+        "cloudstorm": "^0.15.2",
         "heatsync": "^2.8.3",
-        "snowtransfer": "^0.16.1"
+        "snowtransfer": "^0.17.0"
     },
     "resolutions": {
         "discord-api-types": "0.38.37",
         "canvas": "3.2.1",
         "undici": "7.18.2",
-        "snowtransfer": "^0.16.0",
-        "cloudstorm": "^0.15.1"
+        "snowtransfer": "^0.17.0",
+        "cloudstorm": "^0.15.2"
     }
 }
