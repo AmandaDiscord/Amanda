@@ -26,13 +26,13 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@amanda-runtime/website@workspace:packages/runtime-website"
   dependencies:
-    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#3dd71859e4f0ed1aae48e31acee27fc4cd29b170"
+    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#ec5ad7994d9fcd755db8790ec5f94b039d328a4c"
     "@amanda/commands": 1.0.0
     "@amanda/config": 1.0.0
     "@amanda/lang": 1.0.0
     "@amanda/redis": 1.0.0
     "@amanda/repl": 1.0.0
-    "@amanda/scratch": "github:AmandaDiscord/Scratch#3cf54142d00e2d36fbcb984a160024ed128be4a9"
+    "@amanda/scratch": "github:AmandaDiscord/Scratch#efb765a1068f9b4fe75507375b16b86880ed30c5"
     "@amanda/shared-utils": 1.0.0
     "@amanda/sql": 1.0.0
     "@types/mime-types": 3.0.1
@@ -48,7 +48,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@amanda-runtime/worker@workspace:packages/runtime-worker"
   dependencies:
-    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#3dd71859e4f0ed1aae48e31acee27fc4cd29b170"
+    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#ec5ad7994d9fcd755db8790ec5f94b039d328a4c"
     "@amanda/canvas-utils": 1.0.0
     "@amanda/commands": 1.0.0
     "@amanda/config": 1.0.0
@@ -66,13 +66,13 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@amanda/buttons@github:AmandaDiscord/CallbackComponents#3dd71859e4f0ed1aae48e31acee27fc4cd29b170":
+"@amanda/buttons@github:AmandaDiscord/CallbackComponents#ec5ad7994d9fcd755db8790ec5f94b039d328a4c":
   version: 1.0.0
-  resolution: "@amanda/buttons@https://github.com/AmandaDiscord/CallbackComponents.git#commit=3dd71859e4f0ed1aae48e31acee27fc4cd29b170"
+  resolution: "@amanda/buttons@https://github.com/AmandaDiscord/CallbackComponents.git#commit=ec5ad7994d9fcd755db8790ec5f94b039d328a4c"
   dependencies:
-    "@amanda/scratch": "github:AmandaDiscord/Scratch#3cf54142d00e2d36fbcb984a160024ed128be4a9"
-    discord-api-types: ^0.38.28
-  checksum: d2c5ca73793b6bcdfb1fe421943cfe6e7c0433b84c1cb4accab94619f55d8df6af42f63be856d5fd23099c21aa717b7945f802ec3e79a4b841701bcc1b57664b
+    "@amanda/scratch": "github:AmandaDiscord/Scratch#efb765a1068f9b4fe75507375b16b86880ed30c5"
+    discord-api-types: ^0.38.37
+  checksum: 2993f3b1e1ba7bc93cd6a2ac9e6964ab02337efcee7a05d76c7c989e5846291e1f264ce4a50c57959aa7626e4a41948903f30e1043c2ae9e99abf65d9598ac31
   languageName: node
   linkType: hard
 
@@ -136,10 +136,10 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@amanda/scratch@github:AmandaDiscord/Scratch#3cf54142d00e2d36fbcb984a160024ed128be4a9":
+"@amanda/scratch@github:AmandaDiscord/Scratch#efb765a1068f9b4fe75507375b16b86880ed30c5":
   version: 1.0.0
-  resolution: "@amanda/scratch@https://github.com/AmandaDiscord/Scratch.git#commit=3cf54142d00e2d36fbcb984a160024ed128be4a9"
-  checksum: 371a70cb32fdd8a7be865e7938c68add81b360ad8296e774960701cf5f9c6ee3b72cebdc557e9b9ffea4404064fbb90db47a813f20b9b8d3a548a7a74e40f6f3
+  resolution: "@amanda/scratch@https://github.com/AmandaDiscord/Scratch.git#commit=efb765a1068f9b4fe75507375b16b86880ed30c5"
+  checksum: 39ff407038c5ad727cea64729b05a803dda7a54ed5cb87106f8a0f733e84cacd9f4ac2a6d895489901727c283aa65d858c43d8ff5c51fdce5bd0447e3b06f90d
   languageName: node
   linkType: hard
 
@@ -153,7 +153,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@amanda/shared-utils@workspace:packages/shared-utils"
   dependencies:
-    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#3dd71859e4f0ed1aae48e31acee27fc4cd29b170"
+    "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#ec5ad7994d9fcd755db8790ec5f94b039d328a4c"
     "@amanda/config": 1.0.0
     "@amanda/lang": 1.0.0
     "@amanda/redis": 1.0.0
