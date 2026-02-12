@@ -57,7 +57,7 @@ commands.assign([
 							},
 							{
 								type: ComponentType.TextDisplay,
-								content: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime(), "sec")}\n`
+								content: `**❯ ${lang.GLOBAL.HEADER_UPTIME}:**\n${sharedUtils.shortTime(process.uptime() * 1000)}\n`
 									+ `**❯ ${lang.GLOBAL.HEADER_MEMORY}:**\n${sharedUtils.bToMB(ram.rss - (ram.heapTotal - ram.heapUsed))}`
 							},
 							{

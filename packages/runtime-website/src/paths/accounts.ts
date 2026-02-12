@@ -121,7 +121,7 @@ server.post("/unlink", async (res, req) => {
 					type: state.params.get("type") as unknown as undefined
 				})
 				: void 0,
-			v => v !== void 0,
+			v => !!v,
 			[400, "Connection not linked"]
 		)
 		.go()

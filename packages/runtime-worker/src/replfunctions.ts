@@ -34,7 +34,7 @@ const extraContext = {
 		}
 	},
 	buildCommandLanguageOptions(command: { name: string, options?: Array<APIApplicationCommandOption> }): Array<APIApplicationCommandOption> | undefined {
-		if (!command.options) return void 0
+		if (!command.options) return
 		const localizations = Object.entries(Lang).map(([k, l]) => ({ lang: k.replace(extraContext.underscoreToEndRegex, sub => `-${sub.slice(1).toUpperCase()}`), cmd: l[command.name] ?? {} })) as Array<{ lang: string; cmd: NameAndDesc & { options?: Record<string, NameAndDesc & { options?: Record<string, NameAndDesc> }> } }>
 
 		return command.options.map(cur => ({

@@ -65,7 +65,7 @@ const common = {
 	},
 
 	genius: {
-		getLyrics(title: string, artist: string | undefined = void 0): Promise<string | null> {
+		getLyrics(title: string, artist?: string | undefined): Promise<string | null> {
 			return fetch(`https://some-random-api.com/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`, {
 				headers: {
 					Authorization: confprovider.config.sra_token
@@ -77,7 +77,7 @@ const common = {
 		},
 
 		pickApart(track: Track) {
-			let title = "", artist: string | undefined = undefined
+			let title = "", artist: string | undefined
 			let confidence = 0
 			let skip = false
 
@@ -187,7 +187,7 @@ const common = {
 		}
 	},
 
-	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string, doSelection = true): Promise<Array<Track> | null> {
+	async inputToTrack(resource: string, cmd: ChatInputCommand, lang: Lang, node?: string | undefined, doSelection = true): Promise<Array<Track> | null> {
 		resource = resource.replace(hiddenEmbedRegex, "")
 
 		const llnode = (node ? common.nodes.byID(node) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
@@ -333,7 +333,7 @@ const common = {
 		}
 	},
 
-	async loadtracks(input: string, lang: Lang, nodeID?: string): Promise<TrackLoadingResult> {
+	async loadtracks(input: string, lang: Lang, nodeID?: string | undefined): Promise<TrackLoadingResult> {
 		const node = (nodeID ? common.nodes.byID(nodeID) : void 0) ?? common.nodes.byIdeal() ?? common.nodes.random()
 
 		const llnode = lavalink.nodes.get(node.id)
@@ -400,7 +400,7 @@ const common = {
 
 				await new Promise<void>((res, rej) => {
 					const timer = setTimeout(() => {
-						queue.createResolveCallback = undefined
+						queue.createResolveCallback = void 0
 						rej(lang.GLOBAL.TIMED_OUT)
 					}, waitForClientVCJoinTimeout)
 
@@ -430,7 +430,7 @@ const common = {
 		},
 
 		async createQueueFromRestore(guildID: string, data: ReturnType<Queue["toJSON"]>): Promise<void> {
-			const node = data.node ? lavalink.nodes.get(data.node) : undefined
+			const node = data.node ? lavalink.nodes.get(data.node) : void 0
 			if (!node) return void console.error(`Node ${data.node} doesn't exist in memory`)
 			const queueFile: typeof import("./queue") = sync.require("./queue")
 
@@ -577,7 +577,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 	} as import("discord-api-types/v10").APISelectMenuComponent, {})
 
 	return new Promise(res => {
-		const timer = new sharedUtils.BetterTimeout().setDelay(selectTimeout).setCallback(() => {
+		const timer = new sharedUtils.BetterTimeout(() => {
 			component.destroy()
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -596,7 +596,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 			})
 
 			return res(null)
-		}).run()
+		}, selectTimeout).run()
 
 		component.setCallback(async (interaction) => {
 			if ((interaction.member?.user ?? interaction.user!).id != cmd.author.id) return
@@ -630,7 +630,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 					components: [
 						{
 							type: ComponentType.TextDisplay,
-							content: langReplace(lang.GLOBAL.SONG_SELECTION_FOOTER, { "timeout": sharedUtils.shortTime(selectTimeout, "ms") })
+							content: langReplace(lang.GLOBAL.SONG_SELECTION_FOOTER, { "timeout": sharedUtils.shortTime(selectTimeout) })
 						},
 						{
 							type: ComponentType.ActionRow,

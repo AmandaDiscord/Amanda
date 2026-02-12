@@ -458,7 +458,7 @@ commands.assign([
 
 			default:
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(seconds, "sec") })
+					content: langReplace(lang.GLOBAL.SEEKING, { "time": sharedUtils.shortTime(seconds * 1000) })
 				})
 			}
 		}

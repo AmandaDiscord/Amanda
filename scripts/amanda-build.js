@@ -89,7 +89,7 @@ class ManagedSubprocess {
 }
 
 class Package {
-	/** @type {Package[]} */
+	/** @type {Array<Package>} */
 	upstream = []
 	/** @type {Promise<void>?} */
 	task

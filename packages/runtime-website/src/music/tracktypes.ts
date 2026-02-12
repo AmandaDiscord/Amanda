@@ -142,13 +142,13 @@ export class Track {
 	public error = ""
 	public id: string
 	public live: boolean
-	public readonly thumbnail = { src: confprovider.config.unknown_placeholder, width: 128, height: 128 }
+	public thumbnail = { src: confprovider.config.unknown_placeholder, width: 128, height: 128 }
 	public queue: Queue | undefined
 	public source: string
 	public uri: string | null
 	public isrc: string | null
 	public complete = true
-	public lyricsCache: string | null | undefined = undefined
+	public lyricsCache: string | null | undefined
 	public canSeek: boolean
 
 	private _filledBarOffset = 0

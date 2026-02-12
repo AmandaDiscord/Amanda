@@ -4,7 +4,7 @@
   "description": "A repl provider for AmandaDiscord",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup && node ../../scripts/fixup-dts.js",
+    "build": "tsup && node ../../scripts/fixup-dts.js && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",

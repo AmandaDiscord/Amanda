@@ -5,7 +5,7 @@ import path = require("path")
 
 import uWS = require("uWebSockets.js")
 import { SnowTransfer, DiscordAPIError } from "snowtransfer"
-import { Manager } from "lavacord"
+import { Manager, RestError } from "lavacord"
 
 import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
@@ -23,16 +23,16 @@ import passthrough = require("./passthrough")
 passthrough.server = uWS.App()
 passthrough.sync = sync
 passthrough.confprovider = confprovider
-passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
-	new ChatInputCommand(cmd),
-	sharedUtils.getLang(cmd.locale),
-	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
-], console.error)
 passthrough.snow = new SnowTransfer(passthrough.confprovider.config.current_token, {
 	allowed_mentions: {
 		parse: [AllowedMentionsTypes.Role, AllowedMentionsTypes.User]
 	}
 })
+passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
+	new ChatInputCommand(cmd),
+	sharedUtils.getLang(cmd.locale),
+	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
+], (c, e) => sharedUtils.defaultCommandManagerErrorHandler(c, passthrough.snow, e))
 
 passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
 passthrough.snow.requestHandler.on("requestError", (_reqID, err) => {
@@ -43,7 +43,7 @@ passthrough.snow.requestHandler.on("requestError", (_reqID, err) => {
 const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 ;(async () => {
-	await sql.connect().catch(console.error)
+	await sql.connect()
 	await redis.connect()
 	const oldQueuesAndNodes: StoredQueuesAndNodes = JSON.parse(await fs.promises.readFile(pathToOldQueuesAndNodes, { encoding: "utf-8" }).catch(() => "{\"queues\":{},\"nodes\":{}}"))
 	const lavalinkNodeData = await sql.orm.select("lavalink_nodes")
@@ -52,9 +52,10 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 		const newData = {
 			password: passthrough.confprovider.config.lavalink_password,
 			id: id,
-			resuming: true as const,
-			resumeTimeout: 25 as const,
-			sessionId: oldQueuesAndNodes.nodes[id]
+			resuming: true,
+			resumeTimeout: 25,
+			sessionId: oldQueuesAndNodes.nodes[id],
+			reconnectInterval: 20000
 		}
 		return Object.assign(newData, node) as typeof newData & typeof node
 	})
@@ -68,7 +69,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 	})
 
 	passthrough.lavalink = new Manager(oldLLNodes.filter(n => n.enabled), {
-		user: passthrough.confprovider.config.client_id,
+		userId: passthrough.confprovider.config.client_id,
 		send: packet => {
 			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 			const worker = passthrough.gatewayWorkers.get(passthrough.gatewayShardIndex.get(shardID)!)
@@ -78,10 +79,11 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 				return false
 			}
 
-			packet.d.shard_id = shardID
-			packet.t = "SEND_MESSAGE"
+			const toWorker: typeof packet & { t?: string; d?: { shard_id?: number } } = packet
+			toWorker.t = "SEND_MESSAGE"
+			toWorker.d.shard_id = shardID
 
-			worker.send(packet)
+			worker.send(toWorker)
 
 			return true
 		}
@@ -91,7 +93,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 	passthrough.lavalink.once("ready", () => console.log("Lavalink ready"))
 
-	passthrough.lavalink.on("error", error => console.error(`There was a LavaLink error: ${error && (error as Error).message ? (error as Error).message : error}`))
+	passthrough.lavalink.on("error", error => console.error(`There was a LavaLink error: ${error instanceof RestError ? `${error.message}\n${error.error.path}\n${JSON.stringify(error.data)}` : (error as Error)?.stack ?? error}`))
 
 	await passthrough.lavalink.connect().catch(console.error)
 

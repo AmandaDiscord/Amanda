@@ -4,7 +4,7 @@
   "description": "Utils for Canvas",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",

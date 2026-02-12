@@ -51,18 +51,18 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	public pausedAt: number | null = null
 	public errorChain = 0
 
-	public readonly leaveTimeout = new sharedUtils.BetterTimeout().setCallback(() => {
+	public readonly leaveTimeout = new sharedUtils.BetterTimeout(() => {
 		if (!this._interactionExpired && this.interaction) {
 			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
 				content: this.lang.GLOBAL.EVERYONE_LEFT
 			})
 		}
 		this.destroy()
-	}).setDelay(queueDestroyAfter)
+	}, queueDestroyAfter)
 
 	public createResolveCallback: (() => unknown) | undefined
 
-	public readonly messageUpdater: sharedUtils.FrequencyUpdater = new sharedUtils.FrequencyUpdater(() => this._updateMessage())
+	public readonly messageUpdater: sharedUtils.BetterTimeout = new sharedUtils.BetterTimeout(() => this._updateMessage()).setAsInterval(true)
 
 	private _volume = defaultVolumeAmount
 	private _interaction: ChatInputCommand | undefined
@@ -123,18 +123,18 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		this.menu.forEach(bn => bn.destroy())
 		this.menu.length = 0
 
-		if (value !== void 0) {
+		if (value) {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
 			this.createNPMenu()
 			this._interactionExpireTimeout = setTimeout(() => {
-				this.messageUpdater.stop()
+				this.messageUpdater.clear()
 				this._interactionExpired = true
 			}, interactionExpiresAfter)
 		} else {
 			if (this._interactionExpireTimeout) clearTimeout(this._interactionExpireTimeout)
 			this._interactionExpired = false
-			this.messageUpdater.stop()
+			this.messageUpdater.clear()
 		}
 
 		this._interaction = value
@@ -142,21 +142,21 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	}
 
 	public get speed(): number {
-		return this.player?.state.filters.timescale?.speed ?? 1
+		return this.player?.filters.timescale?.speed ?? 1
 	}
 
 	public set speed(amount) {
 		if (amount === this.speed) return
 
 		if (this.player) {
-			Object.assign(this.player!.state.filters, {
+			Object.assign(this.player!.filters, {
 				timescale: { speed: amount, pitch: this.pitch }
 			})
 		}
 	}
 
 	public get paused(): boolean {
-		return this.player?.paused ?? false
+		return this.pausedAt !== null
 	}
 
 	public set paused(newState) {
@@ -172,18 +172,18 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 
 	public set volume(amount) {
 		this._volume = amount
-		this.player?.volume(amount)
+		this.player?.update({ volume: amount * 100 })
 	}
 
 	public get pitch(): number {
-		return this.player?.state.filters.timescale?.pitch ?? 1
+		return this.player?.filters.timescale?.pitch ?? 1
 	}
 
 	public set pitch(amount) {
 		if (amount === this.pitch) return
 
 		if (this.player) {
-			Object.assign(this.player.state.filters, {
+			Object.assign(this.player.filters, {
 				timescale: { speed: this.speed, pitch: amount }
 			})
 		}
@@ -203,12 +203,12 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	}
 
 	public applyFilters(): Promise<LLPlayer> | undefined {
-		return this.player?.filters(this.player!.state.filters)
+		return this.player?.update({ filters: this.player!.filters })
 	}
 
 	public addPlayerListeners(): void {
-		this.player!.on("end", event => this._onEnd(event))
-		this.player!.on("playerUpdate", event => this._onPlayerUpdate(event))
+		this.player!.on("trackEnd", event => this._onEnd(event))
+		this.player!.on("state", event => this._onPlayerUpdate(event))
 		this.player!.on("error", event => this._onPlayerError(event))
 	}
 
@@ -313,7 +313,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 
 		this.tracks.length = 0
 		this.leaveTimeout.clear()
-		this.messageUpdater.stop()
+		this.messageUpdater.clear()
 		this.sendToSubscribedSessions("onStop")
 
 		if (!this._interactionExpired && this.interaction && editInteraction) {
@@ -472,9 +472,9 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		this._nextTrack()
 	}
 
-	private _onPlayerUpdate(data: { state: PlayerState }): void {
+	private _onPlayerUpdate(state: PlayerState): void {
 		if (this.player && !this.paused) {
-			const newTrackStartTime = (Number(data.state.time ?? 0)) - (data.state.position ?? 0)
+			const newTrackStartTime = (Number(state.time ?? 0)) - (state.position ?? 0)
 			this.trackStartTime = newTrackStartTime
 		}
 
@@ -506,7 +506,9 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		const timeUntilNext5 = frequency - ((Date.now() - this.trackStartTime) % frequency)
 		const triggerNow = timeUntilNext5 > 1500
 
-		this.messageUpdater.start(frequency, triggerNow, timeUntilNext5)
+		this.messageUpdater.setDelay(frequency)
+		if (triggerNow) this.messageUpdater.triggerNow()
+		this.messageUpdater.run()
 	}
 
 	private async _updateMessage(): Promise<void> {
@@ -551,7 +553,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 
 		if (!this._interactionExpired && this.interaction) {
 			snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, {
-				content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter, "ms") })
+				content: langReplace(this.lang.GLOBAL.NO_USERS_IN_VC, { time: sharedUtils.shortTime(queueDestroyAfter) })
 			}).then(msg => this.leavingSoonID = msg.id)
 		}
 	}
@@ -569,23 +571,19 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			if (!this._interactionExpired && this.interaction) snow.interaction.createFollowupMessage(this.interaction.application_id, this.interaction.token, { flags: MessageFlags.IsComponentsV2, components: [contents] })
 			// Report to #amanda-error-log
 			const reportTarget = confprovider.config.error_log_channel_id
-			const node = this.node ? common.nodes.byID(this.node) : void 0
 			const undef = "undefined"
 			const details = [
 				["Tree", confprovider.config.cluster_id],
+				["Node", this.node ?? "UNNAMED"],
 				["Guild ID", this.interaction?.guild_id ?? undef],
-				["Text Channel", this.interaction?.channel.id ?? undef],
-				["Voice Channel", this.voiceChannelID || undef],
-				["Using Invidious", String(!!node?.search_with_invidious)],
-				["Invidious Origin", `\`${node?.invidious_origin ?? "NONE"}\``],
-				["Queue Node", this.node ?? "UNNAMED"]
+				["Text Channel", this.interaction?.channel.id ?? undef]
 			]
 			if (track) {
 				details.push(...[
-					["Track", track.id],
-					["Input", track.input],
+					["Requester", sharedUtils.userString(track.requester)],
 					["Requester ID", track.requester.id],
-					["Requester Tag", sharedUtils.userString(track.requester)]
+					["Input", track.input],
+					["Track", track.id.length > 50 ? track.id.slice(0, 48) + "…" : track.id]
 				])
 			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)

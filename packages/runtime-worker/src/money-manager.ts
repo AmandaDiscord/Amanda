@@ -36,7 +36,7 @@ export async function autoPayTimeoutFunction() {
 	}
 
 	const time = getTimeoutDuration()
-	console.log(`Donor payments completed. Set a timeout for ${sharedUtils.shortTime(time, "ms")}`)
+	console.log(`Donor payments completed. Set a timeout for ${sharedUtils.shortTime(time)}`)
 	sync.addTemporaryTimeout(autoPayTimeoutFunction, time)
 }
 

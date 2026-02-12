@@ -4,8 +4,13 @@ import { BetterWs } from "cloudstorm"
 
 import confprovider = require("@amanda/config")
 
+/**
+ * Websocket backed connector for Amanda internal communication
+ */
 class Connector extends EventEmitter {
+	/** The backing websocket */
 	private readonly ws: BetterWs
+	/** A queue of functions to be run after connection resumes */
 	private readonly queue: Array<{ res: (() => void), data: any }> = []
 
 	public constructor(path: "/internal" | "/gateway") {
@@ -35,6 +40,10 @@ class Connector extends EventEmitter {
 		this.ws.connect()
 	}
 
+	/**
+	 * Send a JSON message to the websocket server
+	 * @param data Anything that can be JSON.stringify()'d
+	 */
 	public send(data: any): Promise<void> {
 		return new Promise(res => {
 			if (this.ws.sm.currentStateName === "connected") {

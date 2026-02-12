@@ -1,9 +1,16 @@
 import repl = require("repl")
 import util = require("util")
 
+/**
+ * Custom repl initializer that handles custom commands and output formatting
+ */
 class REPLProvider<C> {
-	public repl: repl.REPLServer
+	/** The backing repl server */
+	public readonly repl: repl.REPLServer
 
+	/**
+	 * @param context The data that will be accessable from `this.context`
+	 */
 	public constructor(public readonly context: C) {
 		const cli = repl.start({ prompt: "", eval: this.customEval, writer: s => s })
 		Object.assign(cli.context, context)

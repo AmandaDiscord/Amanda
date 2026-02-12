@@ -64,11 +64,11 @@ export class ElemJS<E extends HTMLElement = HTMLElement> {
 		return this
 	}
 
-	public child(toAdd?: ElemJS<HTMLElement>, position?: number): this {
+	public child(toAdd: ElemJS<HTMLElement>, position?: number): this {
 		if (typeof (toAdd) === "object") {
 			toAdd.parent = this
 
-			if (typeof (position) === "number" && position >= 0) {
+			if (position !== void 0 && position >= 0) {
 				this.element.insertBefore(toAdd.element, this.element.children[position])
 				this.children.splice(position, 0, toAdd)
 			} else {
@@ -118,7 +118,7 @@ function ejs(string: string | TemplateStringsArray): ElemJS | undefined {
 		} while (next)
 
 		indentHistory.set(indent, element!)
-		if (indent > 0) indentHistory.get(indent - 1)!.child(element)
+		if (indent > 0 && element) indentHistory.get(indent - 1)!.child(element)
 	})
 
 	return indentHistory.get(0)

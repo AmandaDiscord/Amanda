@@ -21,10 +21,16 @@ type StatementBuffer = {
 
 export type InferModelDef<M> = M extends Model<infer D> ? D : unknown
 
-
+/**
+ * Structure that holds types and options for PG tables
+ */
 export class Model<D> {
-	public options: { useBuffer: boolean; bufferSize: number; bufferTimeout: number }
+	/** The options for the buffer system of the ORM for this table */
+	public readonly options: { useBuffer: boolean; bufferSize: number; bufferTimeout: number }
 
+	/**
+	 * @param primaryKey The rows as they are defined in order in the PG table that are the primary key
+	 */
 	public constructor(public primaryKey: Array<keyof D> = [], options: { useBuffer?: boolean; bufferSize?: number; bufferTimeout?: number } = {}) {
 		this.options = {
 			useBuffer: false,
@@ -35,19 +41,40 @@ export class Model<D> {
 	}
 }
 
+/**
+ * The main ORM that handles building SQL statements, optimizing prepared statements
+ * and buffering volumes of certain operations into 1 statement so as to not overload
+ * the SQL server
+ */
 export class Database<M extends Record<string, Model<any>>> {
+	/** The buffers for tables that opt into the system */
 	public readonly buffers: Record<string, StatementBuffer> = {}
 
+	/**
+	 * @param tables An Object of Models keyed by the table names that this ORM should be able to query
+	 * @param provider The backing SQL executor
+	 */
 	public constructor(public tables: M, public readonly provider: Provider) {
 		for (const table of Object.keys(this.tables)) {
 			this.buffers[table] = { bufferValues: { insert: [] }, timeouts: { insert: null } }
 		}
 	}
 
+	/**
+	 * Execute a statement and return the raw query result
+	 */
 	public raw<R extends QueryResultRow>(statement: string, prepared?: Array<AcceptablePrepared>): Promise<QueryResult<R> | null> {
 		return this.provider.raw(statement, prepared)
 	}
 
+	/**
+	 * Like the INSERT statement, but updates existing matching entries if available instead of trying to create
+	 * a new record in the table
+	 * @param table The table to query
+	 * @param properties The data of the row to upsert
+	 * @param options Options for if the buffer should be skipped for this query only
+	 * @returns The result of the query
+	 */
 	public upsert<T extends keyof M, R extends QueryResultRow>(
 		table: T,
 		properties: Partial<InferModelDef<M[T]>>,
@@ -57,6 +84,13 @@ export class Database<M extends Record<string, Model<any>>> {
 		return this._in(table, properties, opts, "upsert")
 	}
 
+	/**
+	 * INSERT an entry into a table. Will fail if the data includes a primary key that is already in the table
+	 * @param table The table to query
+	 * @param properties The data of the row to insert
+	 * @param options Options for if the buffer should be skipped for this query only
+	 * @returns The result of the query
+	 */
 	public insert<T extends keyof M, R extends QueryResultRow>(
 		table: T,
 		properties: Partial<InferModelDef<M[T]>>,
@@ -84,11 +118,11 @@ export class Database<M extends Record<string, Model<any>>> {
 				} else {
 					this.buffers[table as string].bufferValues.insert.push(properties)
 					if (!this.buffers[table as string].timeouts.insert) {
-						this.buffers[table as string].timeouts.insert = new BetterTimeout().setCallback(() => {
+						this.buffers[table as string].timeouts.insert = new BetterTimeout(() => {
 							const res2 = this._buildStatement(method, table, void 0, { useBuffer: true })
 							this.provider.raw(res2.statement, res2.prepared).then(r).catch(rej)
 							this.buffers[table as string].timeouts.insert = null
-						}).setDelay(model.options.bufferTimeout).run()
+						}, model.options.bufferTimeout).run()
 					}
 					return
 				}
@@ -97,10 +131,17 @@ export class Database<M extends Record<string, Model<any>>> {
 		})
 	}
 
+	/**
+	 * UPDATE an existing record in a table
+	 * @param table The table to query
+	 * @param set Properties to modify
+	 * @param where Conditions that must be met in order to UPDATE any rows
+	 * @returns The result of the query
+	 */
 	public update<T extends keyof M, R extends QueryResultRow>(
 		table: T,
 		set: Partial<InferModelDef<M[T]>>,
-		where: Partial<InferModelDef<M[T]>> | undefined = void 0
+		where?: Partial<InferModelDef<M[T]>>
 	): Promise<QueryResult<R> | null> {
 		const options = {}
 		if (where) Object.assign(options, { where: where })
@@ -108,9 +149,16 @@ export class Database<M extends Record<string, Model<any>>> {
 		return this.provider.raw(res.statement, res.prepared)
 	}
 
+	/**
+	 * SELECT or get one or multiple rows from a table
+	 * @param table The table to query
+	 * @param where Conditions that must be met for the data to be selected
+	 * @param options How many rows to select, what rows should be included in the returned data, and how the result is ordered
+	 * @returns The rows that were selected
+	 */
 	public select<T extends keyof M>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = void 0,
+		where?: Partial<InferModelDef<M[T]>> | undefined,
 		options: {
 			select?: Array<keyof InferModelDef<M[T]>>;
 			limit?: number;
@@ -122,9 +170,16 @@ export class Database<M extends Record<string, Model<any>>> {
 		return this.provider.all(res.statement, res.prepared)
 	}
 
+	/**
+	 * SELECT one row from a table
+	 * @param table The table to query
+	 * @param where Conditions that must be met for the data to be selected
+	 * @param options What rows should be included in the returned data, and how the result is ordered
+	 * @returns The row that was selected
+	 */
 	public get<T extends keyof M>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = void 0,
+		where?: Partial<InferModelDef<M[T]>> | undefined,
 		options: {
 			select?: Array<keyof InferModelDef<M[T]>>;
 			order?: keyof InferModelDef<M[T]>;
@@ -136,14 +191,24 @@ export class Database<M extends Record<string, Model<any>>> {
 		return this.provider.get(res.statement, res.prepared)
 	}
 
+	/**
+	 * Delete one or multiple entries from a table
+	 * @param table The table to query
+	 * @param where Conditions that must be met for the data to be deleted
+	 * @returns The result of the query
+	 */
 	public delete<T extends keyof M, R extends QueryResultRow>(
 		table: T,
-		where: Partial<InferModelDef<M[T]>> | undefined = void 0
+		where?: Partial<InferModelDef<M[T]>>
 	): Promise<QueryResult<R> | null> {
 		const res = this._buildStatement("delete", table, where)
 		return this.provider.raw(res.statement, res.prepared)
 	}
 
+	/**
+	 * Trigger a buffer of a table to trigger and flush
+	 * @param table The table that has the buffer to flush
+	 */
 	public triggerBufferWrite<T extends keyof M>(table: T) {
 		const timeout = this.buffers[table as string].timeouts.insert
 		timeout?.triggerNow()
@@ -152,7 +217,7 @@ export class Database<M extends Record<string, Model<any>>> {
 	private _buildStatement<T extends keyof M>(
 		method: "select" | "upsert" | "insert" | "update" | "delete",
 		table: T,
-		properties: Partial<InferModelDef<M[T]>> | undefined = void 0,
+		properties?: Partial<InferModelDef<M[T]>> | undefined,
 		options: {
 			select?: Array<keyof Partial<InferModelDef<M[T]>> | "*">;
 			limit?: number;
@@ -188,7 +253,7 @@ export class Database<M extends Record<string, Model<any>>> {
 
 			if (options.order !== void 0) statement += ` ORDER BY ${String(options.order)}`
 			if (options.orderDescending) statement += " DESC"
-			if (options.limit !== void 0 && options.limit !== 0) statement += ` LIMIT ${options.limit}`
+			if (options.limit) statement += ` LIMIT ${options.limit}`
 			break
 
 		case "update":

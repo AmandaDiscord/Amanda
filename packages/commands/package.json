@@ -5,13 +5,9 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",
-  "license": "SEE LICENSE IN LICENSE",
-  "dependencies": {
-    "@amanda/config": "1.0.0",
-    "@amanda/shared-utils": "1.0.0"
-  }
+  "license": "SEE LICENSE IN LICENSE"
 }

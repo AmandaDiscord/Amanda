@@ -302,7 +302,7 @@ commands.assign([
 						? `${sharedUtils.userString(user)} — ${optionInfo}`
 						: optionInfo
 					/* const authorIcon = user
-						? sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : undefined, user.id === cmd.author.id ? cmd.guild_id : undefined, true) + "?size=32"
+						? sharedUtils.displayAvatarURL(user, user.id === cmd.author.id ? cmd.member : void 0, user.id === cmd.author.id ? cmd.guild_id : void 0, true) + "?size=32"
 						: void 0 */
 
 					const orderedTracks = await getPlaylistTracks(playlistRow, cmd, lang)
@@ -501,7 +501,7 @@ commands.assign([
 					})
 				}
 
-				let result = (await common.inputToTrack(optionTrack, cmd, lang, undefined, false) ?? [])[0]
+				let result = (await common.inputToTrack(optionTrack, cmd, lang, void 0, false) ?? [])[0]
 
 				if (!result) {
 					return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

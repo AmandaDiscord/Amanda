@@ -46,8 +46,8 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 	let promise: Promise<void>
 	if (state.channel_id === null) {
 		const old = await redis.GET<APIVoiceState>("voice", state.user_id)
-		promise = redis.DEL("voice", state.user_id, old?.channel_id && modifyIndex ? `vcs.${old.channel_id}` : undefined)
-	} else promise = redis.SET("voice", state.user_id, state, modifyIndex ? `vcs.${state.channel_id}` : undefined)
+		promise = redis.DEL("voice", state.user_id, old?.channel_id && modifyIndex ? `vcs.${old.channel_id}` : void 0)
+	} else promise = redis.SET("voice", state.user_id, state, modifyIndex ? `vcs.${state.channel_id}` : void 0)
 	Promise.all([
 		promise,
 		state.channel_id ? redis.SADD(`${state.guild_id}.channels`, state.channel_id) : Promise.resolve(void 0)
@@ -143,9 +143,7 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 	let stats: fs.Stats | undefined
 	try {
 		stats = await fs.promises.stat(toSessionsJSON)
-	} catch {
-		stats = void 0
-	}
+	} catch {}
 
 	await client.fetchConnectInfo()
 
@@ -233,6 +231,15 @@ const activities = {
 	"WATCHING": 3 as const,
 	"CUSTOM": 4 as const,
 	"COMPETING": 5 as const
+}
+
+const activityPrefixes = {
+	0: "Playing ",
+	1: "Streaming ",
+	2: "Listening to ",
+	3: "Watching ",
+	4: "",
+	5: "Competing in"
 }
 
 function startAnnouncement(duration: number, message: string) {
@@ -331,13 +338,14 @@ function update() {
 
 	if (choice) {
 		const type: number = activities[choice.type] ?? choice.type ?? 0
+		const prefix = activityPrefixes[type] ?? ""
 
-		const message = `${choice.message} | /help | ${confprovider.config.cluster_id}`
+		const message = `${prefix}${choice.message} | /help | ${confprovider.config.cluster_id}`
 
 		client.presenceUpdate({
 			activities: [{
 				name: type === 4 ? "Custom" : message,
-				state: type === 4 ? message : undefined,
+				state: type === 4 ? message : void 0,
 				type: type,
 				url: "https://www.twitch.tv/papiophidian/"
 			}]

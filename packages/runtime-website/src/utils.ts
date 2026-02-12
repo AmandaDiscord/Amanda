@@ -23,7 +23,7 @@ import {
 	Locale,
 	APIInteraction
 } from "discord-api-types/v10"
-import type { VoiceStateUpdate, VoiceServerUpdate } from "lavacord"
+
 
 const commaRegex = /,/g
 const slashSingleRegex = /\//
@@ -88,7 +88,7 @@ export function attachResponseAbortListener(res: HttpResponse): void {
 	res.onAborted(() => res.continue = false)
 }
 
-export async function streamFile(path: string, res: HttpResponse, acceptHead?: string, ifModifiedSinceHeader?: string, headersOnly = false, status = 200, cameFrom404 = false): Promise<void> {
+export async function streamFile(path: string, res: HttpResponse, acceptHead?: string | undefined, ifModifiedSinceHeader?: string | undefined, headersOnly = false, status = 200, cameFrom404 = false): Promise<void> {
 	attachResponseAbortListener(res)
 	let stats: import("fs").Stats
 	const joined = p.join(rootFolder, path)
@@ -248,7 +248,7 @@ export class Validator<S extends State, P> {
 	public previousValue: P
 	public readonly operations: Array<{ expected: unknown, assign: string | undefined, errorValue: [number, string] | undefined, code: (state: S, previousValue: P) => unknown }> = []
 	public stage = 0
-	public promise: Promise<S> | undefined = void 0
+	public promise: Promise<S> | undefined
 
 	public do<C extends (state: S, previousValue: P) => unknown, A extends undefined>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | undefined, assign?: A): Validator<S, Awaited<ReturnType<C>>>
 	public do<C extends (state: S, previousValue: P) => unknown, A extends string>(code: C, expected?: ((value: Awaited<ReturnType<C>>) => boolean) | Awaited<ReturnType<C>> | undefined, errorValue?: [number, string] | undefined, assign?: A): Validator<S & { [K in A]: Awaited<ReturnType<C>> }, Awaited<ReturnType<C>>>
@@ -272,13 +272,13 @@ export class Validator<S extends State, P> {
 		const processSuccess = async (result: unknown) => {
 			if (input.expected && (typeof input.expected === "function" ? !input.expected(result) : input.expected !== result)) return processError()
 			// @ts-expect-error They are assignable
-			if (input.assign !== undefined) this.state[input.assign as keyof S] = result
+			if (input.assign) this.state[input.assign as keyof S] = result
 			this.previousValue = result as P
 			await this._next(resolve, reject)
 		}
 
 		const processError = () => {
-			if (input.errorValue !== void 0) reject(input.errorValue)
+			if (input.errorValue) reject(input.errorValue)
 			else reject([500, `Unlabelled error in validator stage ${this.stage}`])
 		}
 
@@ -380,12 +380,12 @@ export function onGatewayMessage(
 
 	case "VOICE_STATE_UPDATE":
 		if (!parsed.d.guild_id) return
-		lavalink.voiceStateUpdate(parsed.d as VoiceStateUpdate)
+		lavalink.voiceStateUpdate(parsed.d)
 		queues.get(parsed.d.guild_id)?.voiceStateUpdate(parsed.d)
 		break
 
 	case "VOICE_SERVER_UPDATE":
-		lavalink.voiceServerUpdate(parsed.d as VoiceServerUpdate)
+		lavalink.voiceServerUpdate(parsed.d)
 		break
 
 	case "INTERACTION_CREATE": {
@@ -419,7 +419,7 @@ export async function handleInteraction(payload: APIInteraction, returnJSON = fa
 
 	case 2: // Commands
 		rt = "{\"type\":5}"
-		if (commands.handle(payload as APIChatInputApplicationCommandInteraction, returnJSON ? void 0 : snow)) commandHandled = true
+		if (commands.handle(payload as APIChatInputApplicationCommandInteraction, returnJSON ? void 0 : () => snow.interaction.createInteractionResponse(payload.id, payload.token, { type: 5 }))) commandHandled = true
 		break
 
 	case 3: // Buttons

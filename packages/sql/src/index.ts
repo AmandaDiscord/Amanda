@@ -37,11 +37,20 @@ const models = {
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"])
 }
 
+/**
+ * Wrapper around the postgres lib with strong types and special handling
+ */
 class SQLProvider {
+	/** The backing pg pool */
 	public static pool: Pool | null = null
+	/** The backing pg ppol client */
 	public static poolClient: PoolClient | null = null
+	/** A custom Object Relational Mapper with types for our tables */
 	public static readonly orm = new Database(models, SQLProvider)
 
+	/**
+	 * Execute a statement and return all of the matching rows
+	 */
 	public static async all<T extends QueryResultRow | keyof typeof models>(
 		statement: string,
 		prepared?: Array<AcceptablePrepared>
@@ -50,6 +59,9 @@ class SQLProvider {
 		return result?.rows ?? []
 	}
 
+	/**
+	 * Execute a statement and return the first matching row. Usually for SELECT
+	 */
 	public static async get<T extends QueryResultRow | keyof typeof models>(
 		statement: string,
 		prepared?: Array<AcceptablePrepared>): Promise<(T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T) | null> {
@@ -57,15 +69,19 @@ class SQLProvider {
 		return result?.rows?.[0] ?? null
 	}
 
+	/**
+	 * Execute a statement and return the raw query result
+	 */
 	public static raw<T extends QueryResultRow | keyof typeof models>(
 		statement: string,
 		prepared?: Array<AcceptablePrepared>,
 		attempts = 2
 	): Promise<QueryResult<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T> | null> {
+		if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return Promise.resolve(null)
 		let prep: Array<AcceptablePrepared>
 
-		if (prepared !== void 0 && typeof (prepared) != "object") prep = [prepared]
-		else if (prepared !== void 0 && Array.isArray(prepared)) prep = prepared
+		if (prepared && typeof (prepared) != "object") prep = [prepared]
+		else if (prepared && Array.isArray(prepared)) prep = prepared
 
 		return new Promise((resolve, reject) => {
 			if (Array.isArray(prepared) && (prepared as unknown as Array<undefined>).includes(void 0)) {
@@ -73,8 +89,7 @@ class SQLProvider {
 			}
 
 			const query: QueryConfig = { text: statement, values: prep }
-			if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return resolve(null)
-			SQLProvider.poolClient.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
+			SQLProvider.poolClient!.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
 				console.error(err)
 				attempts--
 				console.warn(`${statement}\n${String(prepared)}`)
@@ -84,11 +99,17 @@ class SQLProvider {
 		})
 	}
 
+	/**
+	 * Internal method that gets called when the config file changes
+	 */
 	public static onConfigChange(): void {
-		if (confprovider.config.db_enabled && !SQLProvider.pool) SQLProvider.connect().catch(console.error)
-		else if (!confprovider.config.db_enabled && SQLProvider.pool) SQLProvider.disconnect().catch(console.error)
+		if (confprovider.config.db_enabled && !SQLProvider.pool) SQLProvider.connect()
+		else if (!confprovider.config.db_enabled && SQLProvider.pool) SQLProvider.disconnect()
 	}
 
+	/**
+	 * Initiate the connection of the SQLProvider
+	 */
 	public static async connect(): Promise<void> {
 		if (!confprovider.config.db_enabled) return
 
@@ -119,6 +140,9 @@ class SQLProvider {
 		SQLProvider.poolClient = db
 	}
 
+	/**
+	 * Destroy the connection of the SQLProvider
+	 */
 	public static async disconnect(): Promise<void> {
 		if (!SQLProvider.pool) return
 		SQLProvider.pool.removeListener("error", SQLProvider._onError)

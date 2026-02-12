@@ -4,9 +4,10 @@
   "description": "Gateway worker package for AmandaDiscord",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js",
-    "start": "node --optimize-for-size ."
+    "start": "node --optimize-for-size .",
+    "dev": "node --enable-source-maps --optimize-for-size ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",

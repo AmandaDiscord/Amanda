@@ -187,7 +187,7 @@ server.post("/dash", async (res, req) => {
 		.useCSRF()
 		.do(
 			state => confprovider.config.db_enabled ? sql.orm.get("web_tokens", { token: state.params.get("token")! }) : void 0,
-			v => v !== void 0,
+			v => !!v,
 			[400, "Invalid token"]
 		)
 		.go()

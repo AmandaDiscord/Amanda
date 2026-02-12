@@ -1,8 +1,3 @@
-import util = require("util")
-
-import { getLang, userString } from "@amanda/shared-utils"
-import confprovider = require("@amanda/config")
-
 import {
 	type APIUser,
 	type APIInteractionGuildMember,
@@ -21,26 +16,39 @@ import {
 	type APIApplicationCommandOption,
 	type APIContextMenuInteractionData,
 	type APIContextMenuInteraction,
-
-	ComponentType,
-	MessageFlags
 } from "discord-api-types/v10"
-import type { SnowTransfer } from "snowtransfer"
 
+/**
+ * A wrapper around the Discord Chat Input Interaction
+ */
 export class ChatInputCommand {
-	public author: APIUser
-	public member: APIInteractionGuildMember | null
-	public guild_id: string | null
-	public channel: APIChatInputApplicationCommandInteraction["channel"]
-	public locale: Locale
-	public guild_locale: Locale | null
-	public data: ChatInputCommandData
+	/** The user who initiated this command */
+	public readonly author: APIUser
+	/** The member object of the user if this command was initiated in a guild */
+	public readonly member: APIInteractionGuildMember | null
+	/** The id of the guild this command was initiated in if any */
+	public readonly guild_id: string | null
+	/** The channel this command was initiated in */
+	public readonly channel: APIChatInputApplicationCommandInteraction["channel"]
+	/** The language the user initiating this command has set on their Discord client */
+	public readonly locale: Locale
+	/** The preferred language of the guild this command was initiated in if any */
+	public readonly guild_locale: Locale | null
+	/** The data inputted to the command if any such as options and their resolutions */
+	public readonly data: ChatInputCommandData
 
-	public id: string
-	public application_id: string
-	public token: string
-	public app_permissions: string
+	/** The Discord auto generated id of the command/webhook */
+	public readonly id: string
+	/** The id of the app this command is for */
+	public readonly application_id: string
+	/** The token for this command/webhook to respond/update responses */
+	public readonly token: string
+	/** The permissions the app or bot has within the channel the command was initiated in */
+	public readonly app_permissions: string
 
+	/**
+	 * @param interaction The Chat Input Interaction received from Discord
+	 */
 	public constructor(interaction: APIChatInputApplicationCommandInteraction) {
 		this.author = interaction.member?.user ?? interaction.user!
 		this.member = interaction.member ?? null
@@ -57,16 +65,31 @@ export class ChatInputCommand {
 	}
 }
 
+/**
+ * A wrapper around the Chat Input Interaction's options and their resolutions
+ * using Maps for fast K, V fetching instead of iterating over the raw Object from the
+ * API to find options and their resolutions
+ */
 export class ChatInputCommandData {
-	public users: Map<string, APIUser>
-	public members: Map<string, APIInteractionDataResolvedGuildMember>
-	public roles: Map<string, APIRole>
-	public channels: Map<string, APIInteractionDataResolvedChannel>
-	public messages: Map<string, APIMessage>
-	public attachments: Map<string, APIAttachment>
+	/** Resolved users from the supplied options */
+	public readonly users: Map<string, APIUser>
+	/** Resolved members from the supplied options */
+	public readonly members: Map<string, APIInteractionDataResolvedGuildMember>
+	/** Resolved roles from the supllied options */
+	public readonly roles: Map<string, APIRole>
+	/** Resolved channels from the supplied options */
+	public readonly channels: Map<string, APIInteractionDataResolvedChannel>
+	/** Resolved messages from the supplied options */
+	public readonly messages: Map<string, APIMessage>
+	/** Resolved attachments from the supplied options */
+	public readonly attachments: Map<string, APIAttachment>
 
-	public options: Map<string, CommandOption>
+	/** The options the user sent. For options that needed resolutions, the command options wrap id strings */
+	public readonly options: Map<string, CommandOption>
 
+	/**
+	 * @param data The data for the Chat Input Interaction received from Discord
+	 */
 	public constructor(data: APIChatInputApplicationCommandInteractionData) {
 		this.users = new Map(Object.entries(data.resolved?.users ?? {}))
 		this.members = new Map(Object.entries(data.resolved?.members ?? {}))
@@ -78,10 +101,19 @@ export class ChatInputCommandData {
 	}
 }
 
+/**
+ * A wrapper around any of the option types Discord could send from a user
+ * Supports sub commands and their subsequent options
+ */
 export class CommandOption {
-	public options: Map<string, CommandOption>
-	public value: unknown
+	/** If a sub command, the options for said sub command. Empty Map otherwise */
+	public readonly options: Map<string, CommandOption>
+	/** The backing value this CommandOption represents or null if a sub command or was optional and not supplied. Use the as* methods to assert types */
+	public readonly value: unknown
 
+	/**
+	 * @param data The data for this option received from Discord
+	 */
 	public constructor(data: APIApplicationCommandInteractionDataOption | APIApplicationCommandInteractionDataBasicOption) {
 		this.options = new Map(
 			(data as APIApplicationCommandInteractionDataSubcommandOption)
@@ -94,34 +126,55 @@ export class CommandOption {
 		>).value ?? null
 	}
 
+	/** Assert this command option to be a string or null if the option was optional and not supplied */
 	public asString(): string | null {
 		return this.value as string
 	}
 
+	/** Assert this command option to be a number or null if the option was optional and not supplied */
 	public asNumber(): number | null {
 		return this.value as number
 	}
 
+	/** Assert this command option to be a boolean or null if the option was optional and not supplied */
 	public asBoolean(): boolean | null {
 		return this.value as boolean
 	}
 }
 
+/**
+ * A wrapper around commands issued from the Discord context menu
+ */
 export class ContextMenuCommand {
-	public author: APIUser
-	public member: APIInteractionGuildMember | null
-	public guild_id: string | null
-	public channel: APIContextMenuInteraction["channel"]
-	public locale: Locale
-	public guild_locale: Locale | null
-	public data: ContextMenuCommandData
-	public target: string
+	/** The user who initiated this command */
+	public readonly author: APIUser
+	/** The member object of the user if this command was initiated in a guild */
+	public readonly member: APIInteractionGuildMember | null
+	/** The id of the guild this command was initiated in if any */
+	public readonly guild_id: string | null
+	/** The channel this command was initiated in */
+	public readonly channel: APIChatInputApplicationCommandInteraction["channel"]
+	/** The language the user initiating this command has set on their Discord client */
+	public readonly locale: Locale
+	/** The preferred language of the guild this command was initiated in if any */
+	public readonly guild_locale: Locale | null
+	/** The resolved data for the target of this command */
+	public readonly data: ContextMenuCommandData
+	/** The id of the target this command was issued for */
+	public readonly target: string
 
-	public id: string
-	public application_id: string
-	public token: string
-	public app_permissions: string
+	/** The Discord auto generated id of the command/webhook */
+	public readonly id: string
+	/** The id of the app this command is for */
+	public readonly application_id: string
+	/** The token for this command/webhook to respond/update responses */
+	public readonly token: string
+	/** The permissions the app or bot has within the channel the command was initiated in */
+	public readonly app_permissions: string
 
+	/**
+	 * @param interaction The Context Menu Interaction from Discord
+	 */
 	public constructor(interaction: APIContextMenuInteraction) {
 		this.author = interaction.member?.user ?? interaction.user!
 		this.member = interaction.member ?? null
@@ -139,33 +192,64 @@ export class ContextMenuCommand {
 	}
 }
 
+/**
+ * A wrapper around the Context Menu command and its resolutions
+ * using Maps for fast K, V fetching instead of iterating over the raw Object from the
+ * API to find options and their resolutions
+ */
 export class ContextMenuCommandData {
-	public target_id: string
+	/** The id of the target this command was issued for */
+	public readonly target_id: string
 
-	public users = new Map<string, APIUser>()
-	public members = new Map<string, APIInteractionDataResolvedGuildMember>()
-	public messages = new Map<string, APIMessage>()
+	/** Resolved users from the context menu interaction */
+	public readonly users: Map<string, APIUser>
+	/** Resolved members from the context menu interaction */
+	public readonly members: Map<string, APIInteractionDataResolvedGuildMember>
+	/** Resolved messages from the context menu interaction */
+	public readonly messages: Map<string, APIMessage>
 
+	/**
+	 * @param data The data for the Context Menu Interaction from Discord
+	 */
 	public constructor(data: APIContextMenuInteractionData) {
 		this.target_id = data.target_id
 
 		if (data.type === 2) {
 			this.users = new Map(Object.entries(data.resolved.users))
 			this.members = new Map(Object.entries(data.resolved.members ?? {}))
-		} else this.messages = new Map(Object.entries(data.resolved.messages))
+			this.messages = new Map()
+		} else {
+			this.messages = new Map(Object.entries(data.resolved.messages))
+			this.users = new Map()
+			this.members = new Map()
+		}
 	}
 }
 
-
+/**
+ * A manager to store command info and their callback along with a centralized
+ * way to handle incoming commands and handle the errors that might arise from
+ * their execution
+ */
 export class CommandManager<Params extends Array<unknown>> {
+	/** Commands assigned to this manager */
 	public readonly commands = new Map<string, Command<Params>>()
+	/** Categories from assigned commands. Managed automatically */
 	public readonly categories = new Map<string, Array<string>>()
 
+	/**
+	 * @param paramGetter Function to get the types and values for every or specific commands. Typically for all
+	 * @param errorHandler Function to handle errors from command execution or from the reply function
+	 */
 	public constructor(
 		public paramGetter: (command: APIChatInputApplicationCommandInteraction) => Params,
-		public errorHandler?: (error: unknown) => unknown
-	) { void 0 }
+		public errorHandler?: (command: APIChatInputApplicationCommandInteraction, error: unknown) => unknown
+	) {}
 
+	/**
+	 * Assign commands to this manager
+	 * @param properties An Array of commands
+	 */
 	public assign(properties: Array<Command<Params>>): void {
 		properties.forEach(i => {
 			if (this.commands.get(i.name)) this.commands.delete(i.name)
@@ -179,80 +263,46 @@ export class CommandManager<Params extends Array<unknown>> {
 		})
 	}
 
+	/**
+	 * Remove commands from this manager
+	 * @param commands An array of command names
+	 */
 	public remove(commands: Array<string>): void {
 		for (const command of commands) {
 			if (this.commands.get(command)) {
 				this.commands.delete(command)
-				this.categories.forEach(c => {
+				this.categories.forEach((c, k) => {
 					if (c.includes(command)) c.splice(c.indexOf(command), 1)
+					if (c.length === 0) this.categories.delete(k)
 				})
 			}
 		}
 	}
 
-	public handle(command: APIChatInputApplicationCommandInteraction, snow?: SnowTransfer): boolean {
+	/**
+	 * Handler for incoming chat input command interactions
+	 * @param command The interaction from Discord
+	 * @param replyFn An optional function to reply to Discord
+	 * @returns A boolean of if the command was handled or not
+	 */
+	public handle(command: APIChatInputApplicationCommandInteraction, replyFn?: () => Promise<unknown> | unknown): boolean {
 		if (!this.commands.has(command.data?.name)) return false
 
-		setImmediate(async () => {
-			const params = this.paramGetter(command)
-			let returnValue: unknown
-			try {
-				await snow?.interaction.createInteractionResponse(command.id, command.token, { type: 5 })
-				returnValue = this.commands.get(command.data.name)!.process(...params)
-			} catch (e) {
-				if (snow) {
-					const userLang = getLang(command.locale)
-					snow.interaction.createFollowupMessage(command.application_id, command.token, { content: userLang.GLOBAL.COMMAND_ERROR }).catch(() => void 0)
-					if (confprovider.config.error_log_channel_id?.length) {
-						const user = (command.member?.user ?? command.user!)
-
-						const undef = "undefined"
-						const details = [
-							["Tree", confprovider.config.cluster_id],
-							["Guild ID", command.guild_id ?? undef],
-							["Text Channel", `${command.channel.name ?? undef} (${command.channel.id})`],
-							["User ID", user.id],
-							["User Tag", userString(user)]
-						]
-						const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
-						const detailsString = details.map(row =>
-							`\`${row[0]}${" ​".repeat(maxLength - row?.[0].length)}\` ${row[1]}` // SC: space + zwsp, wide space
-						).join("\n")
-
-						snow.channel.createMessage(confprovider.config.error_log_channel_id, {
-							flags: MessageFlags.IsComponentsV2,
-							components: [
-								{
-									type: ComponentType.Container,
-									accent_color: 0xdd2d2d,
-									components: [
-										{
-											type: ComponentType.TextDisplay,
-											content: "Command error occurred."
-										},
-										{
-											type: ComponentType.TextDisplay,
-											content: detailsString
-										},
-										{
-											type: ComponentType.Separator
-										},
-										{
-											type: ComponentType.TextDisplay,
-											content: util.inspect(e, false, 5, false)
-										}
-									]
-								}
-							]
-						})
-					}
-				}
-				this.errorHandler?.(e)
-			}
-			if (returnValue instanceof Promise) returnValue.catch(reason => this.errorHandler?.(reason))
-		})
+		this._handle(command, replyFn)
 
 		return true
+	}
+
+	private async _handle(command: APIChatInputApplicationCommandInteraction, replyFn?: () => Promise<unknown> | unknown): Promise<void> {
+		const params = this.paramGetter(command)
+		let returnValue: unknown
+		try {
+			await replyFn?.()
+			returnValue = this.commands.get(command.data.name)!.process(...params)
+		} catch (e) {
+			this.errorHandler?.(command, e)
+		}
+		if (returnValue instanceof Promise) returnValue.catch(reason => this.errorHandler?.(command, reason))
 	}
 }
 

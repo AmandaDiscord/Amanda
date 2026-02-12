@@ -285,7 +285,7 @@ commands.assign([
 
 			const userOption = cmd.data.options.get("user")
 			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
-			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? undefined : cmd.member
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? void 0 : cmd.member
 			const showCouple = cmd.data.options.get("couple")?.asBoolean() ?? false
 
 			const money = await moneyManager.getPersonalRow(user.id)
@@ -521,7 +521,7 @@ commands.assign([
 			const claim = await sql.orm.get("daily_cooldown", { user_id: cmd.author.id })
 			if (claim && Number(claim.last_claim) + (1000 * 60 * 60 * 24) > Date.now()) {
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.ALREADY_CLAIMED_DAILY, { "time": sharedUtils.shortTime((Number(claim.last_claim) + (1000 * 60 * 60 * 24)) - Date.now(), "ms") })
+					content: langReplace(lang.GLOBAL.ALREADY_CLAIMED_DAILY, { "time": sharedUtils.shortTime((Number(claim.last_claim) + (1000 * 60 * 60 * 24)) - Date.now()) })
 				})
 			}
 
@@ -586,7 +586,7 @@ commands.assign([
 		async process(cmd) {
 			const userOption = cmd.data.options.get("user")
 			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
-			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? undefined : cmd.member // for cases of in DMs
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? void 0 : cmd.member // for cases of in DMs
 			const light = cmd.data.options.get("light")?.asBoolean() ?? false
 			const lightSpecified = !!cmd.data.options.get("light")
 
@@ -979,7 +979,7 @@ async function printTransactionsOnMoneyCard(
 
 		page.textAlign = "right"
 		const date = new Date(transaction.date)
-		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.datemap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
+		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.dateMonthMap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
 		page.fillStyle = transaction.mode === 0 ? green : red
 		page.fillText(`${transaction.mode === 0 ? "+" : "-"}${sharedUtils.abbreviateNumber(transaction.amount)}`, 460, indexoffset - 10)
 	}

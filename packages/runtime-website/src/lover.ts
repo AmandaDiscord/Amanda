@@ -14,7 +14,7 @@ class Lover {
 	)
 	public lastTimeoutDuration = confprovider.config.amandas_lover_send_timeout
 
-	public constructor(public id: string) { void 0 }
+	public constructor(public id: string) {}
 
 	public async send(message: string): Promise<void> {
 		const channel = await this.channelGetter.get()
@@ -44,8 +44,8 @@ function loverMessageSendTimeoutFunction() {
 function onConfigChangeCallback() {
 	if ((lastLover && confprovider.config.lover_messages_enabled_on_this_cluster && !confprovider.config.amandas_lover_id.length) || (lastLover && !confprovider.config.lover_messages_enabled_on_this_cluster)) {
 		if (loverMessageSendTimeout) clearTimeout(loverMessageSendTimeout)
-		loverMessageSendTimeout = undefined
-		lastLover = undefined
+		loverMessageSendTimeout = void 0
+		lastLover = void 0
 		console.log("Lover messages have been disabled")
 	}
 
@@ -58,9 +58,9 @@ function onConfigChangeCallback() {
 	if (lastLover && confprovider.config.amandas_lover_send_timeout !== lastLover.lastTimeoutDuration) {
 		lastLover.lastTimeoutDuration = confprovider.config.amandas_lover_send_timeout
 		if (loverMessageSendTimeout) clearTimeout(loverMessageSendTimeout)
-		loverMessageSendTimeout = undefined
+		loverMessageSendTimeout = void 0
 		if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length) loverMessageSendTimeout = setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
-		else lastLover = undefined
+		else lastLover = void 0
 
 		console.log("The lover send timeout has been changed")
 	}
