@@ -195,7 +195,7 @@ function exitHandler(...params: Array<unknown>) {
 		} catch {
 			void 0
 		}
-		return process.exit()
+		process.exit()
 	}
 	if (alreadyWrote) return
 	alreadyWrote = true
@@ -207,7 +207,7 @@ function exitHandler(...params: Array<unknown>) {
 
 	fs.writeFileSync(toSessionsJSON, JSON.stringify(data))
 	console.log("Wrote session data to fs to restore later")
-	process.exit()
+	if (params.length > 1 && params[0] === "SIGINT" && params[1] === 2) process.exit()
 }
 
 

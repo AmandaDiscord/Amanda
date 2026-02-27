@@ -66,7 +66,7 @@ const common = {
 
 	genius: {
 		getLyrics(title: string, artist?: string | undefined): Promise<string | null> {
-			return fetch(`https://some-random-api.com/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`, {
+			return fetch(`https://some-random-api.com/others/lyrics?title=${encodeURIComponent(artist ? `${artist} - ${title}` : title)}`, {
 				headers: {
 					Authorization: confprovider.config.sra_token
 				}

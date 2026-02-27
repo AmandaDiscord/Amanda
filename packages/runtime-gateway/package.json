@@ -7,7 +7,7 @@
     "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js",
     "start": "node --optimize-for-size .",
-    "dev": "node --enable-source-maps --optimize-for-size ."
+    "dev": "node --trace-warnings --enable-source-maps --optimize-for-size ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",

@@ -153,7 +153,7 @@ function exitHandler(...params: Array<unknown>) {
 
 		fs.writeFileSync(pathToOldQueuesAndNodes, JSON.stringify(obj))
 	}
-	return process.exit()
+	if (params.length > 1 && params[0] === "SIGINT" && params[1] === 2) process.exit()
 }
 
 process.on("exit", exitHandler)

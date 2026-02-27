@@ -7,7 +7,7 @@
     "build": "tsc -p .",
     "lint": "eslint . -c eslint.config.js",
     "start": "node --optimize-for-size .",
-    "dev": "node --enable-source-maps --optimize-for-size ."
+    "dev": "node --trace-warnings --enable-source-maps --optimize-for-size ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",
@@ -22,8 +22,8 @@
     "@amanda/shared-utils": "1.0.0",
     "@amanda/sql": "1.0.0",
     "discord-verify": "1.2.0",
-    "lavacord": "^3.0.0",
-    "marked": "^17.0.2",
+    "lavacord": "^3.0.1",
+    "marked": "^17.0.3",
     "mime-types": "^3.0.2",
     "uWebSockets.js": "uNetworking/uWebSockets.js#v20.52.0"
   },
