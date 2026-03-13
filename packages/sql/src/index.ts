@@ -1,6 +1,7 @@
 import util = require("util")
 
 import { Pool, QueryConfig, type PoolClient, type QueryResult, type QueryResultRow } from "pg"
+import { Bucket, type Counter } from "snowtransfer"
 
 import confprovider = require("@amanda/config")
 
@@ -37,6 +38,36 @@ const models = {
 	web_tokens: new Model<{ user_id: string, token: string, staging: number }>(["user_id"])
 }
 
+class SequentialCounter implements Counter {
+	public readonly id = new Array(3).fill(0).map(() => String.fromCodePoint(Math.floor(Math.random()*26+65))).join("")
+
+	private canGo = true
+
+	public hasReset(): boolean {
+		return this.canGo
+	}
+
+	public canTake(): boolean {
+		return this.canGo
+	}
+
+	public take(): boolean {
+		if (!this.canGo) return false
+		this.canGo = false
+		return true
+	}
+
+	public timeUntilReset(): number {
+		return 10
+	}
+
+	public responseReceived(): void {
+		this.canGo = true
+	}
+
+	public applyCount(limit: number | null, remaining: number, resetAfter: number): void { void 0 }
+}
+
 /**
  * Wrapper around the postgres lib with strong types and special handling
  */
@@ -47,6 +78,8 @@ class SQLProvider {
 	public static poolClient: PoolClient | null = null
 	/** A custom Object Relational Mapper with types for our tables */
 	public static readonly orm = new Database(models, SQLProvider)
+
+	private static readonly bucket = new Bucket([new SequentialCounter()])
 
 	/**
 	 * Execute a statement and return all of the matching rows
@@ -88,13 +121,15 @@ class SQLProvider {
 				return reject(new Error(`Prepared statement includes undefined\n	Query: ${statement}\n	Prepared: ${util.inspect(prepared)}`))
 			}
 
-			const query: QueryConfig = { text: statement, values: prep }
-			SQLProvider.poolClient!.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
-				console.error(err)
-				attempts--
-				console.warn(`${statement}\n${String(prepared)}`)
-				if (attempts) SQLProvider.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
-				else reject(err as Error)
+			this.bucket.enqueue(async () => {
+				const query: QueryConfig = { text: statement, values: prep }
+				SQLProvider.poolClient!.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
+					console.error(err)
+					attempts--
+					console.warn(`${statement}\n${String(prepared)}`)
+					if (attempts) SQLProvider.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
+					else reject(err as Error)
+				})
 			})
 		})
 	}
