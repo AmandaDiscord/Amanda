@@ -822,7 +822,7 @@ export function bToMB(number: number): string {
 export async function defaultCommandManagerErrorHandler(command: APIChatInputApplicationCommandInteraction, snow: SnowTransfer, e: any) {
 	console.error(e)
 	const userLang = getLang(command.locale)
-	snow.interaction.createFollowupMessage(command.application_id, command.token, { content: userLang.GLOBAL.COMMAND_ERROR }).catch(() => void 0)
+	snow.interaction.createFollowupMessage(command.application_id, command.token, { content: langReplace(userLang.GLOBAL.COMMAND_ERROR, { name: command.data.name, server: confprovider.config.invite_link_for_help }) }).catch(() => void 0)
 	if (confprovider.config.error_log_channel_id?.length) {
 		const user = (command.member?.user ?? command.user!)
 

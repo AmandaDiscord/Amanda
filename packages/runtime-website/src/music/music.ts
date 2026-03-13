@@ -762,11 +762,7 @@ commands.assign([
 
 			const tracks = await common.inputToTrack(`${prefix}${input}`, cmd, lang, queue?.node, false) ?? []
 
-			if (!tracks.length) {
-				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.NO_RESULTS
-				})
-			}
+			if (!tracks.length) return // inputToTrack notifies the user already
 
 			snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				flags: MessageFlags.IsComponentsV2,
