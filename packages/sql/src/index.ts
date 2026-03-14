@@ -108,7 +108,8 @@ class SQLProvider {
 	public static raw<T extends QueryResultRow | keyof typeof models>(
 		statement: string,
 		prepared?: Array<AcceptablePrepared>,
-		attempts = 2
+		attempts = 2,
+		bypassBucket = false
 	): Promise<QueryResult<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T> | null> {
 		if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return Promise.resolve(null)
 		let prep: Array<AcceptablePrepared>
@@ -121,16 +122,19 @@ class SQLProvider {
 				return reject(new Error(`Prepared statement includes undefined\n	Query: ${statement}\n	Prepared: ${util.inspect(prepared)}`))
 			}
 
-			this.bucket.enqueue(async () => {
+			const fn = async () => {
 				const query: QueryConfig = { text: statement, values: prep }
 				SQLProvider.poolClient!.query(Array.isArray(prep) ? query : query.text).then(resolve).catch(err => {
 					console.error(err)
 					attempts--
 					console.warn(`${statement}\n${String(prepared)}`)
-					if (attempts) SQLProvider.raw<T>(statement, prep, attempts).then(resolve).catch(reject)
-					else reject(err as Error)
-				})
-			})
+					if (attempts) return SQLProvider.raw<T>(statement, prep, attempts, true).then(resolve).catch(reject)
+					else return reject(err as Error)
+				}).finally(() => this.bucket.counters[0].responseReceived())
+			}
+
+			if (bypassBucket) fn()
+			else this.bucket.enqueue(fn)
 		})
 	}
 
