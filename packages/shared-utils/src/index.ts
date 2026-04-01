@@ -396,7 +396,7 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
 	else if (typeof (data) === "bigint") result = `${data.toString()}n`
 	else if (data instanceof Promise) return stringify(await data, depth, returnRaw)
 	else if (data instanceof Error) {
-		const errorObject = {}
+		const errorObject: Record<string, any> = {}
 		Object.entries(data).forEach(e => errorObject[e[0]] = e[1])
 		result = `${data.stack}${returnRaw ? "\n" : "```\n```"}${await stringify(errorObject, depth, returnRaw)}`
 	} else result = util.inspect(data, { depth: depth })
@@ -604,7 +604,7 @@ export function prettySeconds(seconds: number): string {
  */
 export function getLang(id: string): Lang {
 	const code = id.toLowerCase().replace(dashRegex, "_")
-	return language[code] ?? language.en_us
+	return language[code as keyof typeof language] ?? language.en_us
 }
 
 // TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability

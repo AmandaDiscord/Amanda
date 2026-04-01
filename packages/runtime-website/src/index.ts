@@ -5,6 +5,7 @@ import path = require("path")
 
 import uWS = require("uWebSockets.js")
 import { SnowTransfer, DiscordAPIError } from "snowtransfer"
+// @ts-expect-error no
 import { Manager, RestError } from "lavacord"
 
 import sync = require("@amanda/sync")
@@ -70,7 +71,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 	passthrough.lavalink = new Manager(oldLLNodes.filter(n => n.enabled), {
 		userId: passthrough.confprovider.config.client_id,
-		send: packet => {
+		send: (packet: any) => {
 			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 			const worker = passthrough.gatewayWorkers.get(passthrough.gatewayShardIndex.get(shardID)!)
 
@@ -93,7 +94,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 	passthrough.lavalink.once("ready", () => console.log("Lavalink ready"))
 
-	passthrough.lavalink.on("error", error => console.error(`There was a LavaLink error: ${error instanceof RestError ? `${error.message}\n${error.error.path}\n${JSON.stringify(error.data)}` : (error as Error)?.stack ?? error}`))
+	passthrough.lavalink.on("error", (error: any) => console.error(`There was a LavaLink error: ${error instanceof RestError ? `${error.message}\n${error.error.path}\n${JSON.stringify(error.data)}` : (error as Error)?.stack ?? error}`))
 
 	await passthrough.lavalink.connect().catch(console.error)
 
@@ -147,7 +148,7 @@ function exitHandler(...params: Array<unknown>) {
 		for (const [id, node] of passthrough.lavalink.nodes.entries()) obj.nodes[id] = node.sessionId
 		for (const [id, queue] of passthrough.queues.entries()) {
 			// <= 1 means Amanda will leave eventually so dont add. The users all left during an update which sucks, but we cannot hold refs
-			if (this.listeners.size > 1) obj.queues[id] = queue.toJSON()
+			if (queue.listeners.size > 1) obj.queues[id] = queue.toJSON()
 			else queue.destroy()
 		}
 

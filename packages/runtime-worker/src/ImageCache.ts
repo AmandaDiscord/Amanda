@@ -64,7 +64,7 @@ class ImageCache {
 		const temp = {} as Record<keyof typeof images, AsyncValueCache<Canvas.Image>>
 
 		for (const [key, value] of Object.entries(images)) {
-			temp[key] = new AsyncValueCache(() => Canvas.loadImage(path.join(rootImageDir, value)), 1000 * 60 * 60 * 24)
+			temp[key as keyof typeof temp] = new AsyncValueCache(() => Canvas.loadImage(path.join(rootImageDir, value)), 1000 * 60 * 60 * 24)
 		}
 
 		this._cache = temp

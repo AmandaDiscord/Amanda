@@ -20,6 +20,7 @@ import {
 } from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
+// @ts-expect-error
 import type { Player } from "lavacord"
 
 import type { Session } from "../ws/public"
@@ -38,6 +39,7 @@ const defaultVolumeAmount = 0.1
 export class Queue extends sync.reloadClassMethods(() => Queue) {
 	public readonly tracks: Array<Track> = []
 	public node: string | undefined
+	// @ts-expect-error trust it is
 	public lang: Lang
 	public leavingSoonID: string | undefined
 	public player: Player | undefined
@@ -207,9 +209,9 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	}
 
 	public addPlayerListeners(): void {
-		this.player!.on("trackEnd", event => this._onEnd(event))
-		this.player!.on("state", event => this._onPlayerUpdate(event))
-		this.player!.on("error", event => this._onPlayerError(event))
+		this.player!.on("trackEnd", (event: any) => this._onEnd(event))
+		this.player!.on("state", (event: any) => this._onPlayerUpdate(event))
+		this.player!.on("error", (event: any) => this._onPlayerError(event))
 	}
 
 	public async play(): Promise<void> {

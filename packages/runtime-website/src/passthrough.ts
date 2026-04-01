@@ -8,6 +8,7 @@ type Passthrough = {
 	commands: import("@amanda/commands").CommandManager<import("@amanda/shared-types").CommandManagerParams>
 	queues: Map<string, import("./music/queue").Queue>,
 	snow: import("snowtransfer").SnowTransfer
+	// @ts-expect-error
 	lavalink: import("lavacord").Manager
 	sessions: Map<string, import("./ws/public").Session>
 	sessionGuildIndex: Map<string, Set<string>>

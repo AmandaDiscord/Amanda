@@ -245,6 +245,7 @@ type State = object
 
 export class Validator<S extends State, P> {
 	public readonly state = {} as S
+	// @ts-expect-error
 	public previousValue: P
 	public readonly operations: Array<{ expected: unknown, assign: string | undefined, errorValue: [number, string] | undefined, code: (state: S, previousValue: P) => unknown }> = []
 	public stage = 0

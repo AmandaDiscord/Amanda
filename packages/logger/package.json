@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "A logger that overrides console methods for AmandaDiscord",
   "main": "dist/index.js",
+  "types": "empty.d.ts",
   "scripts": {
     "build": "tsup",
     "lint": "eslint . -c eslint.config.js"

@@ -1,9 +1,10 @@
 {
 	"extends": "../../tsconfig.json",
 	"include": ["src/**/*.ts"],
+	"exclude": ["dist/**/*.*"],
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"types": ["./types/canvas-image-cover"]
+		"types": ["./types/canvas-image-cover", "./types/gifencoder"]
 	}
 }

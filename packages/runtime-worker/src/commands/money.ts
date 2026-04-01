@@ -690,7 +690,7 @@ commands.assign([
 				encoder.setQuality(2)
 				encoder.setRepeat(0)
 				encoder.setTransparent("#000000")
-				let resolve
+				let resolve: (value: Buffer<ArrayBufferLike>) => void
 				prom = new Promise(res => {
 					resolve = res
 				})
@@ -710,7 +710,7 @@ commands.assign([
 
 				if (avatarAsGif) {
 					const f = frame as gifdecoder.ParsedFrame
-					encoder.setDelay(f.delay)
+					encoder!.setDelay(f.delay)
 					const imgData = new Canvas.ImageData(f.patch, f.dims.width, f.dims.height)
 					const temp = Canvas.createCanvas(f.dims.width, f.dims.height)
 					const tempCtx = temp.getContext("2d")
@@ -979,7 +979,7 @@ async function printTransactionsOnMoneyCard(
 
 		page.textAlign = "right"
 		const date = new Date(transaction.date)
-		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.dateMonthMap[date.getMonth()]}, ${date.getFullYear()}`, 460, indexoffset + 20)
+		page.fillText(`${sharedUtils.position(date.getDate())} ${sharedUtils.dateMonthMap[date.getMonth() as keyof typeof sharedUtils.dateMonthMap]}, ${date.getFullYear()}`, 460, indexoffset + 20)
 		page.fillStyle = transaction.mode === 0 ? green : red
 		page.fillText(`${transaction.mode === 0 ? "+" : "-"}${sharedUtils.abbreviateNumber(transaction.amount)}`, 460, indexoffset - 10)
 	}

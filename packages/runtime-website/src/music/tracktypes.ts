@@ -281,7 +281,7 @@ export class RequiresSearchTrack extends Track {
 			try {
 				if (!this.searchString.length) throw new Error("Cannot search track by empty string")
 				tracks = await common.loadtracks(this.searchString, this.lang, this.queue?.node)
-			} catch (e) {
+			} catch (e: any) {
 				this.error = e.message
 				return
 			}
@@ -439,7 +439,7 @@ export class SecondTrack extends RequiresSearchTrack {
 			let data: Awaited<ReturnType<typeof common.second.byID>>
 			try {
 				data = await common.second.byID(this.id, node.invidious_origin)
-			} catch (e) {
+			} catch (e: any) {
 				this.error = e.message
 				return
 			}
@@ -500,7 +500,7 @@ function decodeEntities(encodedString: string) {
 		"gt" : ">"
 	}
 	return encodedString.replace(translateRegex, function(_, entity) {
-		return translate[entity]
+		return translate[entity as keyof typeof translate]
 	}).replace(entityCodeRegex, function(_, numStr) {
 		const num = parseInt(numStr, 10)
 		return String.fromCharCode(num)

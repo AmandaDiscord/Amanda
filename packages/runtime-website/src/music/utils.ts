@@ -5,6 +5,7 @@ import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import redis = require("@amanda/redis")
 import { type Lang, en_us } from "@amanda/lang"
+// @ts-expect-error
 import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
@@ -202,14 +203,14 @@ const common = {
 				precedenceIndex++
 				if (precedenceIndex === confprovider.config.second_matcher_group_precedence.length && input === "") return null
 			}
-			const mode: "search" | "id" = confprovider.config.second_matcher_map[precedence] ?? "search"
+			const mode = confprovider.config.second_matcher_map[precedence as keyof typeof confprovider.config.second_matcher_map] as "search" | "id" ?? "search" as const
 			let tracks: Array<SecondVideo | SecondPartialVideo>
 			try {
 				tracks = mode === "search"
 					? await common.second.search(input, llnode.invidious_origin)
 					: [await common.second.byID(input, llnode.invidious_origin)]
 			} catch (e) {
-				common.handleTrackLoadError(cmd, e, resource)
+				common.handleTrackLoadError(cmd, e as LoadTracksError, resource)
 				return null
 			}
 
@@ -280,7 +281,7 @@ const common = {
 			try {
 				tracks = await common.loadtracks(resource, lang, llnode.id)
 			} catch (e) {
-				common.handleTrackLoadError(cmd, e, resource)
+				common.handleTrackLoadError(cmd, e as LoadTracksError, resource)
 				return null
 			}
 
@@ -459,7 +460,7 @@ const common = {
 
 			const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
 			for (const track of data.tracks) {
-				const ctrack = new (trackTypes[track.class] as typeof Track)(
+				const ctrack = new (trackTypes[track.class as keyof typeof trackTypes] as typeof Track)(
 					track.track,
 					{
 						identifier: track.id,
