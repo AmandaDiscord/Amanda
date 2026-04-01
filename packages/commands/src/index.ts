@@ -79,8 +79,6 @@ export class ChatInputCommandData {
 	public readonly roles: Map<string, APIRole>
 	/** Resolved channels from the supplied options */
 	public readonly channels: Map<string, APIInteractionDataResolvedChannel>
-	/** Resolved messages from the supplied options */
-	public readonly messages: Map<string, APIMessage>
 	/** Resolved attachments from the supplied options */
 	public readonly attachments: Map<string, APIAttachment>
 
