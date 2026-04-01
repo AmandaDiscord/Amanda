@@ -4,7 +4,7 @@ import path = require("path")
 import marked = require("marked")
 
 import passthrough = require("../passthrough");
-const { server, sync, rootFolder } = passthrough
+const { server, sync, rootFolder, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
@@ -20,7 +20,7 @@ server.get("/blogs", async (res) => {
 	utils.attachResponseAbortListener(res)
 
 	const [template, blogsDir] = await Promise.all([
-		fs.promises.readFile(path.join(rootFolder, "./templates/blogs.html"), { encoding: "utf-8" }),
+		fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/blogs-dark.html" : "./templates/blogs.html"), { encoding: "utf-8" }),
 		fs.promises.readdir(path.join(rootFolder, "./blogs"))
 	])
 
@@ -81,7 +81,7 @@ server.get("/blog/:blogID", async (res, req) => {
 
 	try {
 		[template, data] = await Promise.all([
-			fs.promises.readFile(path.join(rootFolder, "./templates/blog.html"), { encoding: "utf-8" }),
+			fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/blog-dark.html" : "./templates/blog.html"), { encoding: "utf-8" }),
 			fs.promises.readFile(toMD, { encoding: "utf-8" })
 		])
 	} catch {

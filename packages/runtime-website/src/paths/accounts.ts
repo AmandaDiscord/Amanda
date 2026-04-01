@@ -25,7 +25,7 @@ server.get("/link", async (res, req) => {
 
 	if (session && confprovider.config.db_enabled) {
 		const [template, connections] = await Promise.all([
-			fs.promises.readFile(path.join(rootFolder, "./templates/link.html"), { encoding: "utf-8" }),
+			fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/link-dark.html" : "./templates/link.html"), { encoding: "utf-8" }),
 			sql.orm.select("connections", { user_id: session.user_id })
 		])
 

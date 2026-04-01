@@ -69,7 +69,7 @@ commands.assign([
 				moneyManager.getPersonalRow(cmd.author.id),
 				moneyManager.updateCooldown(cmd.author.id, "slot", cooldownInfo),
 				imageCache.getAll([
-					"slot-background",
+					confprovider.config.alternate_personality ? "slot-background-dark" : "slot-background",
 					"apple",
 					"cherries",
 					"heart",
@@ -527,7 +527,7 @@ commands.assign([
 
 			const [images, isPremium] = await Promise.all([
 				imageCache.getAll([
-					"fortune",
+					confprovider.config.alternate_personality ? "fortune-dark" : "fortune",
 					"fortune-hands",
 					"fortune-wheel"
 				]),

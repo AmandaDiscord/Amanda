@@ -16,6 +16,6 @@
     "pg": "^8.20.0"
   },
   "devDependencies": {
-    "@types/pg": "8.18.0"
+    "@types/pg": "8.20.0"
   }
 }

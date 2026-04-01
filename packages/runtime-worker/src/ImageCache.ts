@@ -9,10 +9,12 @@ const images = {
 	"sakura": "backgrounds/sakura.png",
 	"vicinity": "backgrounds/vicinity.png",
 	"slot-background": "backgrounds/commands/slot.png",
+	"slot-background-dark": "backgrounds/commands/slot-dark.png",
 	"bank": "backgrounds/commands/bank.png",
 	"card1": "backgrounds/commands/card.png",
 	"card2": "backgrounds/commands/card2.png",
 	"fortune": "backgrounds/commands/fortune.png",
+	"fortune-dark": "backgrounds/commands/fortune-dark.png",
 
 	"badge-developer": "badges/Developer_50x50.png",
 	"badge-donator": "badges/Donator_50x50.png",
@@ -62,7 +64,7 @@ class ImageCache {
 		const temp = {} as Record<keyof typeof images, AsyncValueCache<Canvas.Image>>
 
 		for (const [key, value] of Object.entries(images)) {
-			temp[key] = new AsyncValueCache(() => Canvas.loadImage(path.join(rootImageDir, value)))
+			temp[key] = new AsyncValueCache(() => Canvas.loadImage(path.join(rootImageDir, value)), 1000 * 60 * 60 * 24)
 		}
 
 		this._cache = temp

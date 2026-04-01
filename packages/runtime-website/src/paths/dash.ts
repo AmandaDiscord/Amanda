@@ -18,7 +18,7 @@ const timestampRegex = /\$timestamp/gm
 server.get("/login", async (res) => {
 	utils.attachResponseAbortListener(res)
 
-	let html = await fs.promises.readFile(path.join(rootFolder, "templates/login.html"), { encoding: "utf8" })
+	let html = await fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/login-dark.html" : "templates/login.html"), { encoding: "utf8" })
 
 	if (!res.continue) return
 
@@ -106,7 +106,7 @@ server.get("/dash", async (res, req) => {
 	if (session && confprovider.config.db_enabled) {
 		const [user, html] = await Promise.all([
 			redis.GET<APIVoiceState>("voice", session.user_id),
-			fs.promises.readFile(path.join(rootFolder, "templates/dash.html"), { encoding: "utf8" })
+			fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/dash-dark.html" : "templates/dash.html"), { encoding: "utf8" })
 		])
 
 		if (!res.continue) return
@@ -248,7 +248,7 @@ server.get("/channels/:channelID", async (res, req) => {
 		.then(async () => {
 			if (!res.continue) return
 
-			let html = await fs.promises.readFile(path.join(rootFolder, "templates/channel.html"), { encoding: "utf8" })
+			let html = await fs.promises.readFile(path.join(rootFolder, confprovider.config.alternate_personality ? "templates/channel-dark.html" : "templates/channel.html"), { encoding: "utf8" })
 
 			if (!res.continue) return
 

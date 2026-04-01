@@ -79,6 +79,7 @@ const config = {
 	},
 	second_id_to_uri: (id) => `https://example.com/${id}`,
 	gif_profile: false,
+	alternate_personality: false,
 
 	// constants
 	patreon_url: "",

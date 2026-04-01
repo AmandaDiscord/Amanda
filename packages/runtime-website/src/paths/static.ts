@@ -1,12 +1,12 @@
 import passthrough = require("../passthrough");
-const { server, sync, commands } = passthrough
+const { server, sync, commands, confprovider } = passthrough
 
 const utils: typeof import("../utils") = sync.require("../utils")
 
 // non specified paths (fs)
 server.get("/*", (res, req) => utils.streamFile(req.getUrl(), res, req.getHeader("accept"), req.getHeader("if-modified-since")))
 
-server.get("/", (res, req) => utils.streamFile("index.html", res, req.getHeader("accept"), req.getHeader("if-modified-since")))
+server.get("/", (res, req) => utils.streamFile(confprovider.config.alternate_personality ? "index-dark.html" : "index.html", res, req.getHeader("accept"), req.getHeader("if-modified-since")))
 
 
 // fake fs paths
