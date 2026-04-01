@@ -61,15 +61,10 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 		return Object.assign(newData, node) as typeof newData & typeof node
 	})
 
-	passthrough.confprovider.config.lavalink_nodes.push(...lavalinkNodes)
-	const oldLLNodes = passthrough.confprovider.config.lavalink_nodes.slice(0)
+	passthrough.lavalink_nodes.push(...confprovider.config.extra_lavalink_nodes.filter(n => !lavalinkNodes.some(o => o.id === n.id)))
+	passthrough.lavalink_nodes.push(...lavalinkNodes)
 
-	passthrough.confprovider.addCallback(() => {
-		passthrough.confprovider.config.lavalink_nodes.length = 0
-		passthrough.confprovider.config.lavalink_nodes.push(...oldLLNodes)
-	})
-
-	passthrough.lavalink = new Manager(oldLLNodes.filter(n => n.enabled), {
+	passthrough.lavalink = new Manager(passthrough.lavalink_nodes.filter(n => n.enabled), {
 		userId: passthrough.confprovider.config.client_id,
 		send: (packet: any) => {
 			const shardID = packet.d.guild_id ? Number((BigInt(packet.d.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0

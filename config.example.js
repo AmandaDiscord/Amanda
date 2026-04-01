@@ -52,7 +52,7 @@ const config = {
 		value: "sc"
 	}],
 	website_port: 10400,
-	lavalink_nodes: [{
+	extra_lavalink_nodes: [{
 		host: "localhost",
 		port: 10402,
 		invidious_origin: "",

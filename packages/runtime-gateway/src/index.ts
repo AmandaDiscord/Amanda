@@ -200,7 +200,7 @@ function exitHandler(...params: Array<unknown>) {
 	if (alreadyWrote) return
 	alreadyWrote = true
 
-	const data = {}
+	const data = {} as Record<number, [string | null, string | null, number]>
 	for (const shard of Object.values(client.shardManager.shards)) {
 		data[shard.id] = [shard.connector.sessionId, shard.connector.resumeAddress, shard.connector.seq]
 	}
@@ -337,8 +337,8 @@ function update() {
 	const choice = sharedUtils.arrayRandom(choices)
 
 	if (choice) {
-		const type: number = activities[choice.type] ?? choice.type ?? 0
-		const prefix = activityPrefixes[type] ?? ""
+		const type: number = activities[choice.type as keyof typeof activities] ?? choice.type ?? 0
+		const prefix = activityPrefixes[type as keyof typeof activityPrefixes] ?? ""
 
 		const message = `${prefix}${choice.message} | /help | ${confprovider.config.cluster_id}`
 

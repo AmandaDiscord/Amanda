@@ -50,12 +50,12 @@ class LoadTracksError extends Error {
 const common = {
 	nodes: {
 		random() {
-			const filtered = confprovider.config.lavalink_nodes.filter(n => n.enabled)
+			const filtered = passthrough.lavalink_nodes.filter(n => n.enabled)
 			return sharedUtils.arrayRandom(filtered)
 		},
 
 		byID(id: string) {
-			return confprovider.config.lavalink_nodes.find(n => n.id === id && n.enabled) ?? null
+			return passthrough.lavalink_nodes.find(n => n.id === id && n.enabled) ?? null
 		},
 
 		byIdeal() {

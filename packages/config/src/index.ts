@@ -9,7 +9,7 @@ import type Config = require("../config")
  * and notify subscribers of the changes that it was reloaded
  */
 class ConfigProvider {
-	/** The raw config JSON */
+	/** The raw config JSON. DO NOT MUTATE */
 	public static config: typeof Config
 	/** A set of sucscribers to push change callbacks to */
 	public static readonly changeCallbacks = new Set<() => unknown>()

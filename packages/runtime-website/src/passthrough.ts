@@ -15,6 +15,7 @@ type Passthrough = {
 	commandWorkers: Array<import("./ws/internal").CommandWorker>
 	gatewayWorkers: Map<string, import("./ws/gateway").GatewayWorker>
 	gatewayShardIndex: Map<number, string>
+	lavalink_nodes: Array<{ host: string, port: number, invidious_origin: string, enabled: number, search_with_invidious: number, name: string, password: string, id: string }>
 }
 
 export = {
@@ -26,5 +27,6 @@ export = {
 	sessionGuildIndex: new Map(),
 	commandWorkers: new Array(),
 	gatewayWorkers: new Map(),
-	gatewayShardIndex: new Map()
-} as Passthrough
+	gatewayShardIndex: new Map(),
+	lavalink_nodes: []
+} as unknown as Passthrough
