@@ -89,7 +89,7 @@ commands.assign([
 			}
 
 			const canvas = Canvas.createCanvas(1200, 1600).getContext("2d")
-			const bg = images.get("slot-background")!
+			const bg = images.get(confprovider.config.alternate_personality ? "slot-background-dark" : "slot-background")!
 			canvas.drawImage(bg, 0, 0)
 
 			const pieces: Array<Canvas.Image> = []
@@ -539,7 +539,7 @@ commands.assign([
 			const winningsStr = sharedUtils.numberComma(winnings)
 
 			const canvas = Canvas.createCanvas(837, 1024).getContext("2d")
-			const bg = images.get("fortune")!
+			const bg = images.get(confprovider.config.alternate_personality ? "fortune-dark" : "fortune")!
 			canvas.drawImage(bg, 0, 0)
 			const wheel = images.get("fortune-wheel")!
 			canvas.drawImage(wheel, 0, 0)
