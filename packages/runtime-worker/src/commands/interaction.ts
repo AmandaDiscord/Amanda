@@ -150,6 +150,7 @@ const cmds = [
 			const prompt = cmd.data.options.get("prompt")!.asString()!
 
 			const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
+				method: "POST",
 				headers: {
 					Authorization: confprovider.config.ai_token,
 					"Content-Type": "application/json"
