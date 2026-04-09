@@ -143,7 +143,7 @@ const cmds = [
 		async process(cmd, lang) {
 			const prompt = cmd.data.options.get("prompt")!.asString()!
 
-			const response = await sharedUtils.sendMessageToAI(cmd.author.username, prompt, lang)
+			const response = await sharedUtils.sendMessageToAI(cmd.author.username, cmd.channel.id, prompt, lang)
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: response

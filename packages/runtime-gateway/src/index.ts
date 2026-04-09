@@ -147,7 +147,7 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 				await snow.channel.startChannelTyping(packet.d.channel_id)
 
 				const prompt = packet.d.content.slice(`<@${clientID}>`.length)
-				const content = await sharedUtils.sendMessageToAI(packet.d.author.username, prompt)
+				const content = await sharedUtils.sendMessageToAI(packet.d.author.username, packet.d.channel_id, prompt)
 				if (content === null) return
 
 				return snow.channel.createMessage(packet.d.channel_id, {

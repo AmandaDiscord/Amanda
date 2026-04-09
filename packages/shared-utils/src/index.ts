@@ -868,8 +868,21 @@ export async function defaultCommandManagerErrorHandler(command: APIChatInputApp
 	}
 }
 
-export async function sendMessageToAI(user: string, prompt: string, lang?: Lang): Promise<string> {
+const rememberHistory = new Map<string, { timer: BetterTimeout, reference: string | undefined, counter: number }>()
+
+export async function sendMessageToAI(user: string, channel: string, prompt: string, lang?: Lang): Promise<string> {
 	if (!confprovider.config.ai_enabled) return lang ? lang.GLOBAL.AI_OFFLINE : language.en_us.GLOBAL.AI_OFFLINE
+
+	const key = `${channel}.${user}`
+	const previous = rememberHistory.get(key)
+	if (previous) {
+		previous.timer.run() // auto clears
+		if (previous.counter === 50) {
+			previous.counter = 0
+			previous.reference = undefined
+		}
+		previous.counter++
+	}
 
 	const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
 		method: "POST",
@@ -881,11 +894,22 @@ export async function sendMessageToAI(user: string, prompt: string, lang?: Lang)
 			model: confprovider.config.ai_model_id,
 			system_prompt: confprovider.config.ai_system_prompt,
 			input: `${user} just sent this to you: ${prompt}`,
-			integrations: confprovider.config.ai_integrations
+			integrations: confprovider.config.ai_integrations,
+			store: true,
+			previous_response_id: previous?.reference
 		})
 	})
 
-	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
+	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }>; response_id: string } = await response.json()
+
+	if (!previous?.reference) {
+		rememberHistory.set(key, {
+			timer: new BetterTimeout(() => rememberHistory.delete(key), 1000 * 60 * 10),
+			reference: data.response_id,
+			counter: 1
+		})
+	}
+
 	const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
 
 	return content.length > 2000 ? `${content.slice(0, 1990)}…` : content
