@@ -164,9 +164,14 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 				})
 
 				const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
-				const content = `<@${packet.d.author.id}> ${data.output.filter(o => o.type === "message").map(o => o.content).join("\n")}`
+				const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
 
 				return snow.channel.createMessage(packet.d.channel_id, {
+					message_reference: {
+						message_id: packet.d.id,
+						channel_id: packet.d.channel_id,
+						guild_id: packet.d.guild_id
+					},
 					content: content.length > 2000 ? `${content.slice(0, 1990)}…` : content
 				}).catch(() => void 0)
 			}
