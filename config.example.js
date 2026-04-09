@@ -85,6 +85,13 @@ const config = {
 	ai_system_prompt: "",
 	ai_model_id: "",
 	ai_enabled: false,
+	ai_integrations: [
+		{
+			type: "",
+			id: "",
+			allowed_tools: ["tool"]
+		}
+	],
 
 	// constants
 	patreon_url: "",

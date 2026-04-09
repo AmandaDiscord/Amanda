@@ -125,50 +125,6 @@ const cmds = [
 				]
 			})
 		}
-	},
-	{
-		name: English.chat.name,
-		description: English.chat.description,
-		category: "interaction",
-		integration_types: [0, 1],
-		contexts: [0, 1, 2],
-		options: [
-			{
-				name: English.chat.options.prompt.name,
-				type: 3,
-				description: English.chat.options.prompt.description,
-				required: true
-			}
-		],
-		async process(cmd, lang) {
-			if (!confprovider.config.ai_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.AI_OFFLINE
-				})
-			}
-
-			const prompt = cmd.data.options.get("prompt")!.asString()!
-
-			const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${confprovider.config.ai_token}`,
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify({
-					model: confprovider.config.ai_model_id,
-					system_prompt: confprovider.config.ai_system_prompt,
-					input: `${cmd.author.global_name} just sent this to you: ${prompt}`
-				})
-			})
-
-			const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
-			const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
-
-			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-				content: content.length > 2000 ? `${content.slice(0, 1990)}…` : content
-			})
-		},
 	}
 ] as Parameters<typeof commands.assign>["0"]
 

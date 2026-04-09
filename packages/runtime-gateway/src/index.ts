@@ -4,6 +4,7 @@ import fs = require("fs")
 import path = require("path")
 
 import { Client } from "cloudstorm"
+import { SnowTransfer } from "snowtransfer"
 
 import confprovider = require("@amanda/config")
 import sql = require("@amanda/sql")
@@ -12,7 +13,7 @@ import REPLProvider = require("@amanda/repl")
 import sharedUtils = require("@amanda/shared-utils")
 import redis = require("@amanda/redis")
 
-import type { APIVoiceState } from "discord-api-types/v10"
+import { type APIVoiceState, AllowedMentionsTypes } from "discord-api-types/v10"
 
 const toSessionsJSON = path.join(__dirname, "../sessions.json")
 
@@ -26,10 +27,16 @@ const _oldTotalShards = confprovider.config.total_shards
 
 const webconnector = new WebsiteConnector("/gateway")
 const clientID = Buffer.from(confprovider.config.current_token.split(".")[0], "base64").toString("utf8")
+const snow = new SnowTransfer(confprovider.config.current_token, {
+	allowed_mentions: {
+		parse: [AllowedMentionsTypes.Role, AllowedMentionsTypes.User]
+	}
+})
 const client = new Client(confprovider.config.current_token, {
 	shards: confprovider.config.shards,
 	totalShards: confprovider.config.total_shards,
-	intents: ["GUILD_VOICE_STATES", "GUILDS"],
+	intents: ["GUILD_VOICE_STATES", "GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"],
+	snowtransferInstance: snow,
 	ws: {
 		compress: false,
 		encoding: "json"
@@ -132,6 +139,37 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 			}
 
 			break
+		}
+
+		case "MESSAGE_CREATE": {
+			if (packet.d.content.startsWith(`<@${clientID}>`)) {
+				if (!confprovider.config.ai_enabled) return
+
+				const prompt = packet.d.content.slice(`<@${clientID}>`.length)
+
+				await snow.channel.startChannelTyping(packet.d.channel_id)
+
+				const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
+					method: "POST",
+					headers: {
+						Authorization: `Bearer ${confprovider.config.ai_token}`,
+						"Content-Type": "application/json"
+					},
+					body: JSON.stringify({
+						model: confprovider.config.ai_model_id,
+						system_prompt: confprovider.config.ai_system_prompt,
+						input: `${packet.d.author.username} just sent this to you: ${prompt}`,
+						integrations: confprovider.config.ai_integrations
+					})
+				})
+
+				const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
+				const content = `<@${packet.d.author.id}> ${data.output.filter(o => o.type === "message").map(o => o.content).join("\n")}`
+
+				return snow.channel.createMessage(packet.d.channel_id, {
+					content: content.length > 2000 ? `${content.slice(0, 1990)}…` : content
+				}).catch(() => void 0)
+			}
 		}
 
 		default: break
