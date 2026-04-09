@@ -158,7 +158,7 @@ const cmds = [
 				body: JSON.stringify({
 					model: confprovider.config.ai_model_id,
 					system_prompt: confprovider.config.ai_system_prompt,
-					input: prompt
+					input: `${cmd.author.global_name} just sent this to you: ${prompt}`
 				})
 			})
 
