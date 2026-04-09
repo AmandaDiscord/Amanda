@@ -163,7 +163,7 @@ const cmds = [
 			})
 
 			const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
-			const content = data.output.filter(o => o.type === "message").join("\n")
+			const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: content.length > 2000 ? `${content.slice(0, 1990)}…` : content
