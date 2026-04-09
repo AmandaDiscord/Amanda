@@ -142,29 +142,13 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 		}
 
 		case "MESSAGE_CREATE": {
+			if (packet.d.author.bot) return
 			if (packet.d.content.startsWith(`<@${clientID}>`)) {
-				if (!confprovider.config.ai_enabled) return
-
-				const prompt = packet.d.content.slice(`<@${clientID}>`.length)
-
 				await snow.channel.startChannelTyping(packet.d.channel_id)
 
-				const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
-					method: "POST",
-					headers: {
-						Authorization: `Bearer ${confprovider.config.ai_token}`,
-						"Content-Type": "application/json"
-					},
-					body: JSON.stringify({
-						model: confprovider.config.ai_model_id,
-						system_prompt: confprovider.config.ai_system_prompt,
-						input: `${packet.d.author.username} just sent this to you: ${prompt}`,
-						integrations: confprovider.config.ai_integrations
-					})
-				})
-
-				const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
-				const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
+				const prompt = packet.d.content.slice(`<@${clientID}>`.length)
+				const content = await sharedUtils.sendMessageToAI(packet.d.author.username, prompt)
+				if (content === null) return
 
 				return snow.channel.createMessage(packet.d.channel_id, {
 					message_reference: {

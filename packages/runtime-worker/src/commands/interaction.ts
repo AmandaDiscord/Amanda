@@ -125,6 +125,30 @@ const cmds = [
 				]
 			})
 		}
+	},
+	{
+		name: English.chat.name,
+		description: English.chat.description,
+		category: "interaction",
+		integration_types: [0, 1],
+		contexts: [0, 1, 2],
+		options: [
+			{
+				name: English.chat.options.prompt.name,
+				type: 3,
+				description: English.chat.options.prompt.description,
+				required: true
+			}
+		],
+		async process(cmd, lang) {
+			const prompt = cmd.data.options.get("prompt")!.asString()!
+
+			const response = await sharedUtils.sendMessageToAI(cmd.author.username, prompt, lang)
+
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+				content: response
+			})
+		}
 	}
 ] as Parameters<typeof commands.assign>["0"]
 

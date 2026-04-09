@@ -867,3 +867,26 @@ export async function defaultCommandManagerErrorHandler(command: APIChatInputApp
 		})
 	}
 }
+
+export async function sendMessageToAI(user: string, prompt: string, lang?: Lang): Promise<string> {
+	if (!confprovider.config.ai_enabled) return lang ? lang.GLOBAL.AI_OFFLINE : language.en_us.GLOBAL.AI_OFFLINE
+
+	const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${confprovider.config.ai_token}`,
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			model: confprovider.config.ai_model_id,
+			system_prompt: confprovider.config.ai_system_prompt,
+			input: `${user} just sent this to you: ${prompt}`,
+			integrations: confprovider.config.ai_integrations
+		})
+	})
+
+	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }> } = await response.json()
+	const content = data.output.filter(o => o.type === "message").map(o => o.content).join("\n")
+
+	return content.length > 2000 ? `${content.slice(0, 1990)}…` : content
+}
