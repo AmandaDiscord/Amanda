@@ -894,7 +894,7 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 		body: JSON.stringify({
 			model: confprovider.config.ai_model_id,
 			system_prompt: confprovider.config.ai_system_prompt,
-			input: `${user} just sent this to you: ${prompt}`,
+			input: prompt,
 			integrations: confprovider.config.ai_integrations,
 			store: true,
 			previous_response_id: previous?.reference
