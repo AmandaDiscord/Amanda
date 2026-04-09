@@ -880,6 +880,7 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 		if (previous.counter === 50) {
 			previous.counter = 0
 			previous.reference = undefined
+			previous.timer.clear()
 		}
 		previous.counter++
 	}
@@ -902,7 +903,8 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 
 	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }>; response_id: string } = await response.json()
 
-	if (!previous?.reference) {
+	if (previous?.reference) previous.reference = data.response_id
+	else {
 		rememberHistory.set(key, {
 			timer: new BetterTimeout(() => rememberHistory.delete(key), 1000 * 60 * 10),
 			reference: data.response_id,
