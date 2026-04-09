@@ -208,7 +208,8 @@
 		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
 		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
 		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
-		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time"
+		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time",
+		"AI_OFFLINE": "The AI is currently disabled"
 	},
 	"sit": {
 		"name": "zit",
@@ -789,5 +790,15 @@
 	"fortune": {
 		"name": "fortune",
 		"description": "Let Amanda predict your daily fortune"
+	},
+	"chat": {
+		"name": "chat",
+		"description": "Talk with Amanda's AI",
+		"options": {
+			"prompt": {
+				"name": "prompt",
+				"description": "The message to send to Amanda"
+			}
+		}
 	}
 }

@@ -11,6 +11,7 @@ const config = {
 	lastfm_key: "",
 	lastfm_sec: "",
 	sra_token: "",
+	ai_token: "",
 
 	// usernames/identifiers
 	sql_user: "",
@@ -33,6 +34,7 @@ const config = {
 	chewey_api_url: "https://api.chewey-bot.top",
 	ipc_protocol: "ws",
 	ipc_bind: "localhost:10400",
+	ai_url: "",
 
 	// this gateway cluster
 	cluster_id,
@@ -80,6 +82,9 @@ const config = {
 	second_id_to_uri: (id) => `https://example.com/${id}`,
 	gif_profile: false,
 	alternate_personality: false,
+	ai_system_prompt: "",
+	ai_model_id: "",
+	ai_enabled: false,
 
 	// constants
 	patreon_url: "",
