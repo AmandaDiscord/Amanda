@@ -152,7 +152,7 @@ const cmds = [
 			const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
 				method: "POST",
 				headers: {
-					Authorization: confprovider.config.ai_token,
+					Authorization: `Bearer ${confprovider.config.ai_token}`,
 					"Content-Type": "application/json"
 				},
 				body: JSON.stringify({
