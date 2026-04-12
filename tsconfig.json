@@ -1,16 +1,14 @@
 {
 	"compilerOptions": {
-		"allowSyntheticDefaultImports": false,
 		"allowJs": true,
 		"checkJs": true,
-		"esModuleInterop": false,
 		"declaration": false,
 		"emitDecoratorMetadata": false,
 		"experimentalDecorators": false,
 		"incremental": true,
 		"lib": ["esnext", "dom"],
-		"module": "commonjs",
-		"moduleResolution": "node",
+		"module": "nodenext",
+		"moduleResolution": "nodenext",
 		"noUnusedLocals": false,
 		"pretty": true,
 		"removeComments": true,
@@ -20,12 +18,11 @@
 		"strictFunctionTypes": true,
 		"strictBindCallApply": true,
 		"strictNullChecks": true,
-		"target": "ES2022",
+		"target": "ES2024",
 		"types": ["node"],
-		"outDir": "./void",
-		"rootDir": "./void",
-		"ignoreDeprecations": "6.0"
+		"outDir": "./brazil",
+		"rootDir": "./void"
 	},
-	"include": ["scripts/*.js"],
+	"include": ["./void"],
 	"exclude": ["node_modules"]
 }

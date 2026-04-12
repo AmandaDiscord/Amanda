@@ -6,14 +6,16 @@ import path = require("path")
 import { Client } from "cloudstorm"
 import { SnowTransfer } from "snowtransfer"
 
+import sync = require("@amanda/sync")
 import confprovider = require("@amanda/config")
 import sql = require("@amanda/sql")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
-import sharedUtils = require("@amanda/shared-utils")
 import redis = require("@amanda/redis")
 
 import { type APIVoiceState, AllowedMentionsTypes } from "discord-api-types/v10"
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 const toSessionsJSON = path.join(__dirname, "../sessions.json")
 

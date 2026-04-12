@@ -2,7 +2,6 @@ import util = require("util")
 import { createHash } from "crypto"
 
 import { BetterComponent } from "@amanda/buttons"
-import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
@@ -20,7 +19,6 @@ import {
 } from "discord-api-types/v10"
 import type { TrackEndEvent, EventOP, TrackStuckEvent, PlayerState, Player as LLPlayer } from "lavalink-types/v4"
 import type { Track } from "./tracktypes"
-// @ts-expect-error
 import type { Player } from "lavacord"
 
 import type { Session } from "../ws/public"
@@ -29,6 +27,7 @@ import passthrough = require("../passthrough")
 const { sync, queues, confprovider, snow, lavalink, sessions, sessionGuildIndex } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 const queueDestroyAfter = 20000
 const interactionExpiresAfter = 1000 * 60 * 14
@@ -64,7 +63,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 
 	public createResolveCallback: (() => unknown) | undefined
 
-	public readonly messageUpdater: sharedUtils.BetterTimeout = new sharedUtils.BetterTimeout(() => this._updateMessage()).setAsInterval(true)
+	public readonly messageUpdater: InstanceType<typeof sharedUtils.BetterTimeout> = new sharedUtils.BetterTimeout(() => this._updateMessage()).setAsInterval(true)
 
 	private _volume = defaultVolumeAmount
 	private _interaction: ChatInputCommand | undefined

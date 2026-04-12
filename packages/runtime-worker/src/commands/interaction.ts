@@ -3,9 +3,9 @@ import crypto = require("crypto")
 import Canvas = require("canvas")
 
 import passthrough = require("../passthrough")
-const { client, commands, confprovider, sql } = passthrough
+const { client, commands, confprovider, sql, sync } = passthrough
 
-import sharedUtils = require("@amanda/shared-utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")

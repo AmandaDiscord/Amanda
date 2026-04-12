@@ -4,12 +4,13 @@ import crypto = require("crypto")
 
 import mime = require("mime-types")
 
-import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 import sql = require("@amanda/sql")
 
 import passthrough = require("./passthrough")
-const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, gatewayShardIndex } = passthrough
+const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, gatewayShardIndex, sync } = passthrough
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import type { HttpResponse, WebSocket } from "uWebSockets.js"
 import type { Readable } from "stream"

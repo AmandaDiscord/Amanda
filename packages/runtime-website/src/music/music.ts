@@ -1,6 +1,5 @@
 import crypto = require("crypto")
 
-import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
 
@@ -9,6 +8,7 @@ const { snow, commands, sync, queues, confprovider } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
 const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import { en_us as English } from "@amanda/lang"
 

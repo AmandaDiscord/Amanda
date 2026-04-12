@@ -5,7 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
+    "build": "tsc -p .",
+    "build-tsup": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
     "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",

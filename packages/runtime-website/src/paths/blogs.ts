@@ -6,7 +6,7 @@ import marked = require("marked")
 import passthrough = require("../passthrough");
 const { server, sync, rootFolder, confprovider } = passthrough
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 const fileNameRegex = /(.+?)\.\w+$/
 const dashRegex = /-/g

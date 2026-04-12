@@ -1,11 +1,9 @@
 import util = require("util")
 
 import buttons = require("@amanda/buttons")
-import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import redis = require("@amanda/redis")
 import { type Lang, en_us } from "@amanda/lang"
-// @ts-expect-error
 import { Player, Rest } from "lavacord"
 
 import type { ChatInputCommand } from "@amanda/commands"
@@ -22,6 +20,8 @@ import type { Queue } from "./queue"
 
 import passthrough = require("../passthrough")
 const { sync, confprovider, lavalink, snow, queues } = passthrough
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 
 const selectTimeout = 1000 * 60
@@ -371,7 +371,7 @@ const common = {
 				return null
 			}
 
-			const queueFile: typeof import("./queue") = sync.require("./queue")
+			const queueFile = sync.require("./queue") as typeof import("./queue")
 
 			const queue = new queueFile.Queue(cmd.guild_id!, state.channel_id!, cmd.channel.id)
 
@@ -433,7 +433,7 @@ const common = {
 		async createQueueFromRestore(guildID: string, data: ReturnType<Queue["toJSON"]>): Promise<void> {
 			const node = data.node ? lavalink.nodes.get(data.node) : void 0
 			if (!node) return void console.error(`Node ${data.node} doesn't exist in memory`)
-			const queueFile: typeof import("./queue") = sync.require("./queue")
+			const queueFile = sync.require("./queue") as typeof import("./queue")
 
 			const queue = new queueFile.Queue(guildID, data.voiceChannel.id, data.textChannelID)
 
@@ -458,7 +458,7 @@ const common = {
 			if (data.pausedAt) queue.player.paused = true
 			queue.trackStartTime = data.trackStartTime
 
-			const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
+			const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
 			for (const track of data.tracks) {
 				const ctrack = new (trackTypes[track.class as keyof typeof trackTypes] as typeof Track)(
 					track.track,

@@ -1,10 +1,10 @@
-import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import passthrough = require("../passthrough")
 const { sync, confprovider } = passthrough
 
 const common = sync.require("./utils") as typeof import("./utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import type { APIMessageTopLevelComponent, APIUser } from "discord-api-types/v10"
 import type { Queue } from "./queue"
@@ -259,7 +259,7 @@ export class Track {
 }
 
 export class RequiresSearchTrack extends Track {
-	public prepareCache: sharedUtils.AsyncValueCache<void>
+	public prepareCache: InstanceType<typeof sharedUtils.AsyncValueCache<void>>
 	public searchString: string
 
 	public complete = false
@@ -416,7 +416,7 @@ export class RadioTrack extends RequiresSearchTrack {
 
 export class SecondTrack extends RequiresSearchTrack {
 	private completeData: SecondVideo | null = null
-	private readonly secondDataPrepareCache: sharedUtils.AsyncValueCache<void>
+	private readonly secondDataPrepareCache: InstanceType<typeof sharedUtils.AsyncValueCache<void>>
 	public canSeek = false
 
 	public constructor(

@@ -82,7 +82,6 @@ const config = {
 	second_id_to_uri: (id) => `https://example.com/${id}`,
 	gif_profile: false,
 	alternate_personality: false,
-	ai_system_prompt: "",
 	ai_model_id: "",
 	ai_enabled: false,
 	ai_integrations: [
@@ -92,6 +91,7 @@ const config = {
 			allowed_tools: ["tool"]
 		}
 	],
+	ai_history_timeout: 1000 * 60 * 10,
 
 	// constants
 	patreon_url: "",

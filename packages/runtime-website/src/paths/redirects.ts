@@ -3,7 +3,7 @@ const { server, sync } = passthrough
 
 import confprovider = require("@amanda/config")
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 const redirects = {
 	stats: "https://cheweyz.github.io/discord-bot-analytics-dash/index.html?id=320067006521147393",

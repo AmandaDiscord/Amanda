@@ -1,4 +1,6 @@
 import util = require("util")
+import fs = require("fs")
+import path = require("path")
 
 import language = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
@@ -868,22 +870,16 @@ export async function defaultCommandManagerErrorHandler(command: APIChatInputApp
 	}
 }
 
-const rememberHistory = new Map<string, { timer: BetterTimeout, reference: string | undefined, counter: number }>()
+const rememberHistory = new Map<string, { timer: BetterTimeout, reference: string | undefined }>()
 
 export async function sendMessageToAI(user: string, channel: string, prompt: string, lang?: Lang): Promise<string> {
 	if (!confprovider.config.ai_enabled) return lang ? lang.GLOBAL.AI_OFFLINE : language.en_us.GLOBAL.AI_OFFLINE
 
 	const key = `${channel}.${user}`
 	const previous = rememberHistory.get(key)
-	if (previous) {
-		previous.timer.run() // auto clears
-		if (previous.counter === 50) {
-			previous.counter = 0
-			previous.reference = undefined
-			previous.timer.clear()
-		}
-		previous.counter++
-	}
+	if (previous) previous.timer.run() // auto clears
+
+	const systemPrompt = await fs.promises.readFile(path.join(__dirname, "../../../AI_System_Prompt.txt"), { encoding: "utf-8" }).catch(() => void 0)
 
 	const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
 		method: "POST",
@@ -893,7 +889,7 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 		},
 		body: JSON.stringify({
 			model: confprovider.config.ai_model_id,
-			system_prompt: confprovider.config.ai_system_prompt,
+			system_prompt: systemPrompt,
 			input: prompt,
 			integrations: confprovider.config.ai_integrations,
 			store: true,
@@ -906,9 +902,8 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 	if (previous?.reference) previous.reference = data.response_id
 	else {
 		rememberHistory.set(key, {
-			timer: new BetterTimeout(() => rememberHistory.delete(key), 1000 * 60 * 10),
-			reference: data.response_id,
-			counter: 1
+			timer: new BetterTimeout(() => rememberHistory.delete(key), confprovider.config.ai_history_timeout),
+			reference: data.response_id
 		})
 	}
 

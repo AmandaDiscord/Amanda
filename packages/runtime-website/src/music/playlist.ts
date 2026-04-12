@@ -1,4 +1,3 @@
-import sharedUtils = require("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
@@ -6,10 +5,12 @@ import btn = require("@amanda/buttons")
 import { ChatInputCommand } from "@amanda/commands"
 
 import passthrough = require("../passthrough")
-const { snow, commands, sync, queues, confprovider } = passthrough
+const { snow, commands, sync } = passthrough
 
-const common: typeof import("./utils") = sync.require("./utils")
-const trackTypes: typeof import("./tracktypes") = sync.require("./tracktypes")
+const common = sync.require("./utils") as typeof import("./utils")
+const trackTypes = sync.require("./tracktypes") as typeof import("./tracktypes")
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import { en_us as English } from "@amanda/lang"
 

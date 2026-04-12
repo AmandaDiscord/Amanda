@@ -5,7 +5,6 @@ import path = require("path")
 
 import uWS = require("uWebSockets.js")
 import { SnowTransfer, DiscordAPIError } from "snowtransfer"
-// @ts-expect-error no
 import { Manager, RestError } from "lavacord"
 
 import sync = require("@amanda/sync")
@@ -14,7 +13,8 @@ import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
-import sharedUtils = require("@amanda/shared-utils")
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import type { CommandManagerParams } from "@amanda/shared-types"
 import { type APIVoiceState, AllowedMentionsTypes } from "discord-api-types/v10"
@@ -93,16 +93,16 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 
 	await passthrough.lavalink.connect().catch(console.error)
 
-	import("./paths/accounts")
-	import("./paths/blogs")
-	import("./paths/dash")
-	import("./paths/discord")
-	import("./paths/redirects")
-	import("./paths/static")
+	import("./paths/accounts.js")
+	import("./paths/blogs.js")
+	import("./paths/dash.js")
+	import("./paths/discord.js")
+	import("./paths/redirects.js")
+	import("./paths/static.js")
 
-	import("./ws/gateway")
-	import("./ws/internal")
-	import("./ws/public")
+	import("./ws/gateway.js")
+	import("./ws/internal.js")
+	import("./ws/public.js")
 
 	passthrough.sync.require([
 		"./lover",
@@ -110,7 +110,7 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 		"./music/playlist"
 	])
 
-	const musicUtils: typeof import("./music/utils") = passthrough.sync.require("./music/utils")
+	const musicUtils = passthrough.sync.require("./music/utils") as typeof import("./music/utils")
 	Promise.all(
 		Object.entries(oldQueuesAndNodes.queues).map(async entry => {
 			const stillInVC = await redis.GET<APIVoiceState>("voice", passthrough.confprovider.config.client_id)

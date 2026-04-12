@@ -1,9 +1,9 @@
-import sharedUtils = require("@amanda/shared-utils")
-
 import type { APIDMChannel } from "discord-api-types/v10"
 
 import passthrough = require("./passthrough")
 const { snow, confprovider, sync } = passthrough
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 let lastLover: Lover | undefined
 let loverMessageSendTimeout: NodeJS.Timeout | undefined

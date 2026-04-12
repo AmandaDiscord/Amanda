@@ -73,12 +73,14 @@ class ManagedSubprocess {
 	printOutput(isError, data) {
 		const content = data.toString()
 
+		/** @type {"red"} */
+		// @ts-expect-error
 		const color = isError ? "red" : this.color
 		const channel = isError ? "stderr" : "stdout"
 		for (let line of content.split("\n")) {
 			if (line) {
 				try {
-					process[channel].write(`${chalk[color](this.label.padEnd(this.longestName))}  ${line}\n`)
+					process[channel].write(`${chalk.default[color](this.label.padEnd(this.longestName))}  ${line}\n`)
 				} catch (e) {
 					console.log(channel, color)
 					throw e
@@ -92,7 +94,7 @@ class Package {
 	/** @type {Array<Package>} */
 	upstream = []
 	/** @type {Promise<void>?} */
-	task
+	task = null
 	/** @type {string} */
 	packageName
 	/** @type {string} */

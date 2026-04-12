@@ -4,7 +4,7 @@ import encoding = require("@amanda/scratch")
 import passthrough = require("../passthrough")
 const { server, confprovider, commandWorkers, sync } = passthrough
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 

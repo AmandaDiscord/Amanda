@@ -6,3 +6,4 @@ dist/
 tsconfig.tsbuildinfo
 /.yarn/install-state.gz
 void/
+/AI_System_Prompt*

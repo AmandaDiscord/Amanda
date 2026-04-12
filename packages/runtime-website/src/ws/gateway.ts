@@ -3,7 +3,7 @@ const { server, confprovider, gatewayWorkers, sync } = passthrough
 
 import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 export class GatewayWorker {
 	public readonly shards = new Set<number>()

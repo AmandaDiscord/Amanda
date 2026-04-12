@@ -7,11 +7,11 @@ import {
 import passthrough = require("../passthrough")
 const { commands, sql, confprovider, client, sync } = passthrough
 
-import sharedUtils = require("@amanda/shared-utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
-const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
-const emojis: typeof import("../emojis") = sync.require("../emojis")
+const moneyManager = sync.require("../money-manager") as typeof import("../money-manager")
+const emojis = sync.require("../emojis") as typeof import("../emojis")
 
 import { en_us as English } from "@amanda/lang"
 

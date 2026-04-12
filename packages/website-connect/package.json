@@ -4,7 +4,8 @@
   "description": "Code base for internal and gateway website websocket routes",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup && node ../../scripts/fixup-dts.js",
+    "build": "tsc -p .",
+    "build-tsup": "tsup && node ../../scripts/fixup-dts.js",
     "lint": "eslint . -c eslint.config.js"
   },
   "author": "PapiOphidian",

@@ -9,11 +9,12 @@ import redis = require("@amanda/redis")
 import WebsiteConnector = require("@amanda/web-internal")
 import REPLProvider = require("@amanda/repl")
 import { CommandManager, ChatInputCommand } from "@amanda/commands"
-import sharedUtils = require("@amanda/shared-utils")
 import buttons = require("@amanda/buttons")
 
 import { type APIChatInputApplicationCommandInteraction, type GatewayDispatchPayload, AllowedMentionsTypes } from "discord-api-types/v10"
 import type { CommandManagerParams } from "@amanda/shared-types"
+
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 import passthrough = require("./passthrough")
 
@@ -74,7 +75,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 		}
 	})
 
-	const replfunctions: typeof import("./replfunctions") = passthrough.sync.require("./replfunctions")
+	const replfunctions = passthrough.sync.require("./replfunctions") as typeof import("./replfunctions")
 
 	void new REPLProvider({ passthrough, replfunctions })
 

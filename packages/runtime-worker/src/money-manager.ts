@@ -1,7 +1,7 @@
 import passthrough = require("./passthrough")
 const { client, sql, confprovider, sync } = passthrough
 
-import sharedUtils = require("@amanda/shared-utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 export const startingCoins = 5000
 

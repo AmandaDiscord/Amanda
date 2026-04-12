@@ -1,7 +1,7 @@
 import passthrough = require("../passthrough");
 const { server, sync, commands, confprovider } = passthrough
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 // non specified paths (fs)
 server.get("/*", (res, req) => utils.streamFile(req.getUrl(), res, req.getHeader("accept"), req.getHeader("if-modified-since")))

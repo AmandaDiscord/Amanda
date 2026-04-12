@@ -8,7 +8,7 @@ import type { Track } from "../music/tracktypes"
 import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
 import { APIVoiceState } from "discord-api-types/v10"
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 const opcodes = {
 	IDENTIFY: 1,

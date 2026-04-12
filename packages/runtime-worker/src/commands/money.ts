@@ -8,7 +8,7 @@ import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
 
 import canvasUtils = require("@amanda/canvas-utils")
-import sharedUtils = require("@amanda/shared-utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 
 import imageCache = require("../ImageCache")
@@ -26,7 +26,7 @@ const giverTier4 = BigInt(100000000) // 100,000,000
 
 const imageCacheDirectory = path.join("../../image-cache")
 
-const moneyManager: typeof import("../money-manager") = sync.require("../money-manager")
+const moneyManager = sync.require("../money-manager") as typeof import("../money-manager")
 import type { CooldownInfo } from "../money-manager"
 
 commands.assign([

@@ -10,9 +10,7 @@ const simpleGit = sG.simpleGit(__dirname)
 import passthrough = require("../passthrough")
 const { client, confprovider, commands, sql, sync } = passthrough
 
-const emojis: typeof import("../emojis") = sync.require("../emojis")
-
-import sharedUtils = require("@amanda/shared-utils")
+const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
 import redis = require("@amanda/redis")
 

@@ -7,7 +7,7 @@ import type { APIInteraction } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
 const { server, sync, confprovider, commands, commandWorkers } = passthrough
 
-const utils: typeof import("../utils") = sync.require("../utils")
+const utils = sync.require("../utils") as typeof import("../utils")
 
 server.post("/interaction", async (res, req) => {
 	utils.attachResponseAbortListener(res)
