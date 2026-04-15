@@ -893,7 +893,8 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 			input: prompt,
 			integrations: confprovider.config.ai_integrations,
 			store: true,
-			previous_response_id: previous?.reference
+			previous_response_id: previous?.reference,
+			reasoning: confprovider.config.ai_reasoning ? "on" : "off"
 		})
 	})
 

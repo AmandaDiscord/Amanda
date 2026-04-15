@@ -92,6 +92,7 @@ const config = {
 		}
 	],
 	ai_history_timeout: 1000 * 60 * 10,
+	ai_reasoning: false,
 
 	// constants
 	patreon_url: "",
