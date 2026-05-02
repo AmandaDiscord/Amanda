@@ -1669,7 +1669,7 @@ __metadata:
     eslint: "npm:^10.3.0"
     heatsync: "npm:^3.0.0"
     minimist: "npm:^1.2.8"
-    snowtransfer: "npm:^0.17.6"
+    snowtransfer: "npm:^0.17.7"
     tsup: "npm:^8.5.1"
     typescript: "npm:^6.0.3"
   languageName: unknown
@@ -3863,12 +3863,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:^0.17.6":
-  version: 0.17.6
-  resolution: "snowtransfer@npm:0.17.6"
+"snowtransfer@npm:^0.17.7":
+  version: 0.17.7
+  resolution: "snowtransfer@npm:0.17.7"
   dependencies:
     discord-api-types: "npm:^0.38.47"
-  checksum: 10/f6aa81eaf712c7e9382ab6afb3502603d20e3369c67c8b6f3d310b96a304509edf67ef6ee9e96387e9836688fb01928896c9e81ae87384db29d2a7b361266543
+  checksum: 10/fdaf2d3ca41077122a22b0560be9ed0b125b0dd61749b28944c5d3c272f9f54480c6ac1158cf80a52c1fa904d525f711fd9214fe24788fe4226d1c50278f4b7f
   languageName: node
   linkType: hard
 

@@ -27,7 +27,7 @@
     "dependencies": {
         "cloudstorm": "^0.17.0",
         "heatsync": "^3.0.0",
-        "snowtransfer": "^0.17.6"
+        "snowtransfer": "^0.17.7"
     },
     "resolutions": {
         "discord-api-types": "0.38.47",
