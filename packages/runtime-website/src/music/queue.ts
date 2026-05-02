@@ -340,6 +340,10 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		}
 
 		await lavalink!.leave(this.guildID)
+		if (this._canSetVCStatus) {
+			snow.channel.setVoiceChannelStatus(this.voiceChannelID, "").catch(() => void 0)
+			snow.channel.setVoiceChannelHangout(this.voiceChannelID, "").catch(() => void 0)
+		}
 	}
 
 	private _nextTrack(): void {
