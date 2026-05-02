@@ -246,7 +246,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			if (this._canSetVCStatus) {
 				try {
 					await snow.channel.setVoiceChannelStatus(this.voiceChannelID, track.title)
-					await snow.channel.setVoiceChannelHangout(this.voiceChannelID, track.thumbnail.src)
+					// await snow.channel.setVoiceChannelHangout(this.voiceChannelID, track.thumbnail.src)
 				} catch {
 					this._canSetVCStatus = false
 				}
@@ -339,11 +339,11 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			})
 		}
 
-		await lavalink!.leave(this.guildID)
 		if (this._canSetVCStatus) {
 			snow.channel.setVoiceChannelStatus(this.voiceChannelID, "").catch(() => void 0)
-			snow.channel.setVoiceChannelHangout(this.voiceChannelID, "").catch(() => void 0)
+			// snow.channel.setVoiceChannelHangout(this.voiceChannelID, "").catch(() => void 0)
 		}
+		await lavalink!.leave(this.guildID)
 	}
 
 	private _nextTrack(): void {
