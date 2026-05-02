@@ -881,24 +881,30 @@ export async function sendMessageToAI(user: string, channel: string, prompt: str
 
 	const systemPrompt = await fs.promises.readFile(path.join(__dirname, "../../../AI_System_Prompt.txt"), { encoding: "utf-8" }).catch(() => void 0)
 
-	const response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${confprovider.config.ai_token}`,
-			"Content-Type": "application/json"
-		},
-		body: JSON.stringify({
-			model: confprovider.config.ai_model_id,
-			system_prompt: systemPrompt,
-			input: prompt,
-			integrations: confprovider.config.ai_integrations,
-			store: true,
-			previous_response_id: previous?.reference,
-			reasoning: confprovider.config.ai_reasoning ? "on" : "off"
+	let response: Response
+	try {
+		response = await fetch(`${confprovider.config.ai_url}/api/v1/chat`, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${confprovider.config.ai_token}`,
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify({
+				model: confprovider.config.ai_model_id,
+				system_prompt: systemPrompt,
+				input: prompt,
+				integrations: confprovider.config.ai_integrations,
+				store: true,
+				previous_response_id: previous?.reference,
+				reasoning: confprovider.config.ai_reasoning ? "on" : "off"
+			})
 		})
-	})
+	} catch {
+		return lang ? lang.GLOBAL.AI_OFFLINE : language.en_us.GLOBAL.AI_OFFLINE
+	}
 
-	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }>; response_id: string } = await response.json()
+	const data: { output: Array<{ type: "message", content: string } | { type: "tool_call", tool: string }>; response_id: string } | null = await response.json().catch(() => null)
+	if (data === null) return lang ? lang.GLOBAL.AI_OFFLINE : language.en_us.GLOBAL.AI_OFFLINE
 
 	if (previous?.reference) previous.reference = data.response_id
 	else {

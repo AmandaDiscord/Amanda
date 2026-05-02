@@ -71,6 +71,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	private _interactionExpireTimeout: NodeJS.Timeout | null = null
 	private _destroyed = false
 	private _lastFMSent = false
+	private _canSetVCStatus = true
 
 	public constructor(public readonly guildID: string, public readonly voiceChannelID: string, public readonly textChannelID: string) {
 		super()
@@ -242,6 +243,14 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			setTimeout(() => {
 				if (this.tracks[0] === track) this._lastFMSetTrack()
 			}, percent40 < 10000 ? percent40 : 10000)
+			if (this._canSetVCStatus) {
+				try {
+					await snow.channel.setVoiceChannelStatus(this.voiceChannelID, track.title)
+					await snow.channel.setVoiceChannelHangout(this.voiceChannelID, track.thumbnail.src)
+				} catch {
+					this._canSetVCStatus = false
+				}
+			}
 		}
 	}
 
