@@ -14,7 +14,7 @@
   "dependencies": {
     "@amanda/buttons": "github:AmandaDiscord/CallbackComponents#ec5ad7994d9fcd755db8790ec5f94b039d328a4c",
     "@amanda/canvas-utils": "1.0.0",
-    "@amanda/commands": "1.0.0",
+    "@amanda/commands": "github:AmandaDiscord/CommandManager#d778198775239d03356e1835b66d02c70eee9267",
     "@amanda/config": "1.0.0",
     "@amanda/lang": "1.0.0",
     "@amanda/redis": "1.0.0",
