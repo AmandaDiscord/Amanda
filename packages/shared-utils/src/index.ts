@@ -730,7 +730,7 @@ export function createPagination(cmd: PartialChatInputCommand, lang: Lang, title
 /**
  * Create a callback for user page selection returning the page number and a Discord select menu component if there are more than 1 page
  * @param pageCount How many pages there are
- * @param callback The callback function for the root to know what page the user selected and the component if mroe than 1 page
+ * @param callback The callback function for the root to know what page the user selected and the component if more than 1 page
  */
 export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
 	let page = 0

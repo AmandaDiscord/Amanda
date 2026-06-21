@@ -13,6 +13,6 @@
   "license": "SEE LICENSE IN LICENSE",
   "dependencies": {
     "@amanda/config": "1.0.0",
-    "redis": "^5.12.1"
+    "redis": "^6.0.0"
   }
 }
