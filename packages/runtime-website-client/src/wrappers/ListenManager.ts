@@ -11,49 +11,45 @@ export class ListenManager {
 	public readonly wrappers = { soundCloudWrapper: new SoundCloudWrapper() }
 	public enabled = false
 
-	public boot(track: WebTrackJSON, timeGetter: () => number): void {
+	public async boot(track: WebTrackJSON, timeGetter: () => number): Promise<void> {
 		this.enabled = true
 		this._selectWrapper(track)
 		if (!this.currentWrapper) return
-		this.currentWrapper.load(track)
-		this.currentWrapper.seekAndPlay(timeGetter, track.length * 1000)
+		await this.currentWrapper.load(track)
+		await this.currentWrapper.seekAndPlay(timeGetter, track.length * 1000)
 	}
 
-	public load(track: WebTrackJSON): void {
+	public async load(track: WebTrackJSON): Promise<void> {
 		if (!this.enabled) return
-		this.stop()
+		await this.stop()
 		this._selectWrapper(track)
 		if (!this.currentWrapper) return
-		this.currentWrapper.load(track)
+		await this.currentWrapper.load(track)
 	}
 
 	public async next(track: WebTrackJSON): Promise<void> {
 		if (!this.enabled) return
-		console.log("next: calling stop")
 		if (this.currentWrapper) await this.currentWrapper.stop()
-		console.log("next: selecting wrapper")
 		this._selectWrapper(track)
 		if (this.currentWrapper) {
-			console.log("next: loading")
 			await this.currentWrapper.load(track)
-			console.log("next: resuming")
 			await this.currentWrapper.resume()
 		}
 	}
 
-	public pause(): void {
+	public async pause(): Promise<void> {
 		if (!this.currentWrapper) return
-		this.currentWrapper.pause()
+		await this.currentWrapper.pause()
 	}
 
-	public resume(): void {
+	public async resume(): Promise<void> {
 		if (!this.currentWrapper) return
-		this.currentWrapper.resume()
+		await this.currentWrapper.resume()
 	}
 
-	public stop(): void {
+	public async stop(): Promise<void> {
 		if (!this.currentWrapper) return
-		this.currentWrapper.stop()
+		await this.currentWrapper.stop()
 		this.currentWrapper = null
 	}
 

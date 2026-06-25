@@ -5,7 +5,7 @@ import redis = require("@amanda/redis")
 
 import type { Queue } from "../music/queue"
 import type { Track } from "../music/tracktypes"
-import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
+import type { WebSocket as UWS, WebSocketBehavior } from "uWebSockets.js"
 import { APIVoiceState } from "discord-api-types/v10"
 
 const utils = sync.require("../utils") as typeof import("../utils")
@@ -55,7 +55,7 @@ export class Session {
 	public user: string | null = null
 	private closed = false
 
-	public constructor(public readonly ws: WebSocket<unknown>) {
+	public constructor(public readonly ws: UWS<unknown>) {
 		setTimeout(() => {
 			if (!this.loggedin) this.cleanClose()
 		}, 5000)
@@ -105,8 +105,8 @@ export class Session {
 			if (!session) return
 			if (!confprovider.config.db_enabled) return
 			const state = await redis.GET<APIVoiceState>("voice", session.user_id)
-			if (!state) return console.warn(`Fake user tried to identify:\n${require("util").inspect(session)}`)
-			if (sessions.has(session.user_id)) return console.warn(`User tried to identify multiple times:\n${require("util").inspect(session)}`)
+			if (!state) return console.warn(`Fake user tried to identify: ${session.user_id}`)
+			if (sessions.has(session.user_id)) return console.warn(`User tried to identify multiple times: ${session.user_id}`)
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
@@ -260,6 +260,9 @@ export class Session {
 }
 
 server.ws("/public", {
+	maxPayloadLength: 16 * 1024,
+	idleTimeout: 120,
+
 	upgrade(res, req, context) {
 		const secWebSocketKey = req.getHeader("sec-websocket-key")
 		const secWebSocketProtocol = req.getHeader("sec-websocket-protocol")

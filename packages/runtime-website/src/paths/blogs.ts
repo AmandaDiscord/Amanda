@@ -1,5 +1,5 @@
-import fs = require("fs")
-import path = require("path")
+import fs = require("node:fs")
+import path = require("node:path")
 
 import marked = require("marked")
 
@@ -42,7 +42,7 @@ server.get("/blogs", async (res) => {
 			"</h2>" +
 			"<div class=\"section\">" +
 				`<a href="/blog/${name}">` +
-					`${name.replace(dashRegex, " ").split(" ").map(s => `${s[0]?.toUpperCase()}${s.slice(1)}`).join(" ")}` +
+					`${name.replaceAll(dashRegex, " ").split(" ").map(s => `${s[0]?.toUpperCase()}${s.slice(1)}`).join(" ")}` +
 				"</a>" +
 			"</div>"
 		}).join("\n")

@@ -8,20 +8,19 @@ class ImageStore {
 	}
 
 	public add(url: string): HTMLImageElement | null {
-		if (!this.store.has(url)) {
+		if (this.store.has(url)) return null
+		else {
 			const e = this._create(url)
 			this.store.set(url, e)
 			return e
-		} else return null
+		}
 	}
 
 	public get(url: string): HTMLImageElement | null {
 		if (!url.length) return null
 
 		if (this.store.has(url)) {
-			const e = this.store.get(url)
-			this.store.delete(url)
-			return e ?? null
+			return this.store.get(url) ?? null
 		} else return this._create(url)
 	}
 }

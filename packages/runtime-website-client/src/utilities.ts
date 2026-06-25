@@ -1,3 +1,5 @@
+/* eslint-disable no-redeclare */
+/* eslint-disable no-undef */
 export function q<K extends keyof HTMLElementTagNameMap>(selectors: K): HTMLElementTagNameMap[K] | null
 export function q<K extends keyof SVGElementTagNameMap>(selectors: K): SVGElementTagNameMap[K] | null
 export function q<K extends keyof MathMLElementTagNameMap>(selectors: K): MathMLElementTagNameMap[K] | null
@@ -39,15 +41,17 @@ export let generateNonce: () => number
 }
 
 export function prettySeconds(seconds: number) {
-	if (isNaN(seconds)) return String(seconds)
+	if (Number.isNaN(seconds)) return String(seconds)
 	let minutes = Math.floor(seconds / 60)
 	seconds = seconds % 60
 	const hours = Math.floor(minutes / 60)
 	minutes = minutes % 60
 	const output: Array<string> = []
 	if (hours) {
-		output.push(hours.toString())
-		output.push(minutes.toString().padStart(2, "0"))
+		output.push(
+			hours.toString(),
+			minutes.toString().padStart(2, "0")
+		)
 	} else output.push(minutes.toString())
 	output.push(seconds.toString().padStart(2, "0"))
 	return output.join(":")

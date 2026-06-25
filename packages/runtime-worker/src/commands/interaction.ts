@@ -1,4 +1,4 @@
-import crypto = require("crypto")
+import nodeCrypto = require("node:crypto")
 
 import Canvas = require("canvas")
 
@@ -108,7 +108,7 @@ const cmds = [
 			const buffer = ctx.canvas.toBuffer("image/png")
 			const strings = [user1.id, user2.id].sort((a, b) => Number(a) - Number(b)).join(" ")
 
-			const hash = crypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
+			const hash = nodeCrypto.createHash("sha256").update(strings).digest("hex").slice(0, 6)
 			const percentage = Number(`0x${hash}`) % 101
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -283,13 +283,13 @@ function doInteraction(
 
 		const extra: Array<APIMessageTopLevelComponent> = footer
 			? [{
-					type: ComponentType.Separator,
-					spacing: 2
-				},
-				{
-					type: ComponentType.TextDisplay,
-					content: footer
-				}]
+				type: ComponentType.Separator,
+				spacing: 2
+			},
+			{
+				type: ComponentType.TextDisplay,
+				content: footer
+			}]
 			: []
 
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

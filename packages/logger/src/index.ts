@@ -1,4 +1,4 @@
-import util = require("util")
+import util = require("node:util")
 
 import { getStack } from "backtracker"
 
@@ -19,7 +19,7 @@ function getPrefix(type: "warn" | "info" | "error") {
 
 	const datePart = new Date().toISOString().replace(T, " ").replace(Z, "")
 	const dateToTypePadding = type.length === 4 ? " " : ""
-	const scopeToLogPadding = " ".repeat((scopeNameMaxLogLength - scope.length) < 1 ? 1 : scopeNameMaxLogLength - scope.length)
+	const scopeToLogPadding = " ".repeat(Math.max(scopeNameMaxLogLength - scope.length, 1))
 
 	return `\x1b[90m${datePart} ${dateToTypePadding}${color}${type.toUpperCase()} \x1b[0m--- \x1b[36m${scope}${scopeToLogPadding}\x1b[0m :`
 }

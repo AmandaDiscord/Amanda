@@ -1,4 +1,4 @@
-import path = require("path")
+import path = require("node:path")
 
 type Passthrough = {
 	server: import("uWebSockets.js").TemplatedApp
@@ -24,7 +24,7 @@ export = {
 	// your guess is as good as mine
 	sessions: new Map(),
 	sessionGuildIndex: new Map(),
-	commandWorkers: new Array(),
+	commandWorkers: [],
 	gatewayWorkers: new Map(),
 	gatewayShardIndex: new Map(),
 	lavalink_nodes: []

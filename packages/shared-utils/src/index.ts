@@ -1,6 +1,6 @@
-import util = require("util")
-import fs = require("fs")
-import path = require("path")
+import util = require("node:util")
+import fs = require("node:fs")
+import path = require("node:path")
 
 import language = require("@amanda/lang")
 import langReplace = require("@amanda/lang/replace")
@@ -38,7 +38,7 @@ const alignedRowsRegex = /`.+?`/g
  */
 export class AsyncValueCache<T> {
 	/** Timeout to expire the cache value if a lifetime was supplied */
-	public lifetimeTimeout: NodeJS.Timeout | null = null
+	public lifetimeTimeout: globalThis.NodeJS.Timeout | null = null
 	/** The backing Promise from the getter if the getter was called */
 	public promise: Promise<T> | null = null
 	/** The return value of the Promise once it finishes */
@@ -82,7 +82,7 @@ export class BetterTimeout<TArgs extends Array<any> = []> {
 	/** If the backing timeout is currently waiting to execute */
 	public isActive = false
 	/** The backing timeout */
-	public timeout: NodeJS.Timeout | null = null
+	public timeout: globalThis.NodeJS.Timeout | null = null
 	/** If this timeout will run in an interval */
 	public interval: boolean = false
 
@@ -199,7 +199,7 @@ export class BufferAccumulator {
 			return
 		}
 		const obj = { chunk: buf, next: null }
-		this.first ??= obj;
+		this.first ??= obj
 		if (this.last) this.last.next = obj
 		this.last = obj
 		this.size += buf.byteLength
@@ -224,8 +224,8 @@ export class BufferAccumulator {
 	}
 }
 
-const dateDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-const dateMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+const dateDays = new Set(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"])
+const dateMonths = new Set(["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"])
 
 /**
  * Checks the passed string to ensure it's HTTP Date type compliant
@@ -234,12 +234,12 @@ const dateMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep
  */
 export function checkDateHeader(date?: string): boolean {
 	if (!date) return false
-	if (!dateDays.includes(date.slice(0, 3))) return false
+	if (!dateDays.has(date.slice(0, 3))) return false
 
 	const [day, month, year, time, tz] = date.slice(5).split(spaceRegex)
 
 	if (day?.length !== 2) return false
-	if (!dateMonths.includes(month)) return false
+	if (!dateMonths.has(month)) return false
 	if (year?.length !== 4) return false // sucks for people past Year 9999, but the HTTP spec says 4 digit
 
 	const [hour, minute, second] = time ? time.split(colonRegex) : []
@@ -281,32 +281,34 @@ export function arrayShuffle<T extends Array<unknown>>(array: T): T {
  * the Array to pagify them while displaying pages of info to avoid taking up a large chunk of the viewport
  */
 export function tableifyRows(rows: Array<Array<string>>, align: Array<"left" | "right" | "none">, surround: (currentLine: number) => string = () => "", spacer = " "): Array<string> { // SC: en space
+	if (rows.length === 0) return []
 	const output = [] as Array<string>
 	const maxLength = [] as Array<number>
 	for (let i = 0; i < rows[0].length; i++) {
 		let thisLength = 0
 		for (const row of rows) {
-			if (thisLength < row[i].length) thisLength = row[i].length
+			if (thisLength < (row[i]?.length ?? 0)) thisLength = row[i]?.length ?? 0
 		}
 		maxLength.push(thisLength)
 	}
 	for (let i = 0; i < rows.length; i++) {
 		let line = ""
 		for (let j = 0; j < rows[0].length; j++) {
+			const cell = rows[i][j] ?? ""
 			if (align[j] === "left" || align[j] === "right") {
 				line += surround(i)
 				if (align[j] === "left") {
 					const pad = " ​"
-					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
-					line += rows[i][j] + padding
+					const padding = pad.repeat(maxLength[j] - cell.length)
+					line += cell + padding
 				} else if (align[j] === "right") {
 					const pad = "​ "
-					const padding = pad.repeat(maxLength[j] - rows[i][j].length)
-					line += padding + rows[i][j]
+					const padding = pad.repeat(maxLength[j] - cell.length)
+					line += padding + cell
 				}
 				line += surround(i)
 			} else {
-				line += rows[i][j]
+				line += cell
 			}
 			if (j < rows[0].length - 1) line += spacer
 		}
@@ -377,7 +379,7 @@ export function createPages(rows: Array<string>, maxLength: number, joinLength: 
 		currentPage.push(row)
 		currentPageLength += row.length + 1
 	}
-	pages.push(currentPage)
+	if (currentPage.length) pages.push(currentPage)
 	return pages
 }
 
@@ -389,6 +391,7 @@ export function createPages(rows: Array<string>, maxLength: number, joinLength: 
  * a repl, this determines if the returned string is formatted and truncated or not
  */
 export async function stringify(data: unknown, depth = 0, returnRaw = false): Promise<string> {
+	// eslint-disable-next-line no-useless-assignment
 	let result = ""
 	if (data === void 0) result = "(undefined)"
 	else if (data === null) result = "(null)"
@@ -417,16 +420,18 @@ export async function stringify(data: unknown, depth = 0, returnRaw = false): Pr
  * some of the last `barFragment` may be cut off
  */
 export function progressBar(length: number, value: number, max: number, innerText?: string | undefined, barFragment = "="): string {
-	innerText ??= "";
+	innerText ??= ""
 	const textPosition = Math.floor(length / 2) - Math.ceil(innerText.length / 2) + 1
+	const ratio = max > 0 ? value / max : 0
 	let result = ""
 
 	for (let i = 1; i <= length; i += barFragment.length) {
 		if (i >= textPosition && i < textPosition + innerText.length) result += innerText[i - textPosition]
-		else if (value / max * length >= i) result += barFragment
+		else if (ratio * length >= i) result += barFragment
 		else result += " ​" // space + zwsp to prevent shrinking
 	}
 
+	// eslint-disable-next-line no-irregular-whitespace
 	return `​${result}`.slice(0, length) // zwsp + result
 }
 
@@ -448,7 +453,7 @@ export function numberComma(value: number | string | bigint): string {
  * would get messy.
  */
 export function parseBigInt(value: string): bigint | null {
-	const numstr = value.replace(commaRegex, "").replace(dotRegex, "")
+	const numstr = value.replaceAll(commaRegex, "").replaceAll(dotRegex, "")
 	if (!/^\d+$/.exec(numstr)) return null
 	return BigInt(numstr)
 }
@@ -460,15 +465,15 @@ export function position(pos: number | bigint): string {
 	let value = numberComma(pos)
 
 	if (value.endsWith("1")) {
-		if (value.slice(value.length - 2, value.length) === "11") value += "th"
+		if (value.slice(-2, value.length) === "11") value += "th"
 		else value += "st"
 	} else if (value.endsWith("2")) {
-		if (value.slice(value.length - 2, value.length) === "12") value += "th"
+		if (value.slice(-2, value.length) === "12") value += "th"
 		else value += "nd"
 	} else if (value.endsWith("3")) {
-		if (value.slice(value.length - 2, value.length) === "13") value += "th"
+		if (value.slice(-2, value.length) === "13") value += "th"
 		else value += "rd"
-	} else if (["0", "4", "5", "6", "7", "8", "9"].find(e => value.endsWith(e))) value += "th"
+	} else if (["0", "4", "5", "6", "7", "8", "9"].some(e => value.endsWith(e))) value += "th"
 
 	return value
 }
@@ -488,8 +493,10 @@ export function abbreviateNumber(value: number | string | bigint, precision = 2)
 		const split = converted.toLocaleString().split(",")
 		const index = split.length - 1
 
-		if (index > identifiers.length - 1) return `${(BigInt(split[0]) * (BigInt(1000) * BigInt(index - identifiers.length - 1))).toLocaleString()} ${identifiers.slice(-1)[0]}` // Because BigInts can be HUGE
-		else return `${Number(split[0])}${split[1] && Number(split[1]) !== 0 ? "." : ""}${split[1] && Number(split[1]) !== 0 ? split[1].slice(0, precision) : ""}${identifiers[index]}`
+		if (index > identifiers.length - 1) {
+			const scaled = converted / (BigInt(1000) ** BigInt(identifiers.length - 1)) // Because BigInts can be HUGE
+			return `${scaled.toLocaleString()} ${identifiers.at(-1)}`
+		} else return `${Number(split[0])}${split[1] && Number(split[1]) !== 0 ? "." : ""}${split[1] && Number(split[1]) !== 0 ? split[1].slice(0, precision) : ""}${identifiers[index]}`
 	}
 
 	return converted.toLocaleString()
@@ -525,7 +532,7 @@ export function getSixTime(when: Date | string | number | undefined, seperator: 
  * @param number The time to convert in ms
  */
 export function shortTime(number: number): string {
-	if (isNaN(number)) throw new TypeError("Input provided is NaN")
+	if (Number.isNaN(number)) throw new TypeError("Input provided is NaN")
 	number = Math.floor(number)
 
 	const days = Math.floor(number / 1000 / 60 / 60 / 24)
@@ -541,7 +548,7 @@ export function shortTime(number: number): string {
 	if (hours > 0) timestr += `${hours}h `
 	if (mins > 0) timestr += `${mins}m `
 	if (secs > 0) timestr += `${secs}s`
-	if (!timestr) timestr = `0s`
+	if (!timestr) timestr = "0s"
 
 	return timestr
 }
@@ -562,7 +569,7 @@ export function parseDuration(input?: string): number | null {
 		if (!test[1]) return null
 		const [duration, identifier] = [test[1], test[2]]
 		const num = Number(parseBigInt(duration))
-		if (!num || isNaN(num)) return null
+		if (!num || Number.isNaN(num)) return null
 		let multiply = 1
 
 		if (identifier) {
@@ -592,8 +599,10 @@ export function prettySeconds(seconds: number): string {
 
 	const output = [] as Array<number | string>
 	if (hours) {
-		output.push(hours)
-		output.push(minutes.toString().padStart(2, "0"))
+		output.push(
+			hours,
+			minutes.toString().padStart(2, "0")
+		)
 	} else output.push(minutes)
 
 	output.push(seconds.toString().padStart(2, "0"))
@@ -605,13 +614,13 @@ export function prettySeconds(seconds: number): string {
  * Gets and Amanda lang object from a lang id
  */
 export function getLang(id: string): Lang {
-	const code = id.toLowerCase().replace(dashRegex, "_")
+	const code = id.toLowerCase().replaceAll(dashRegex, "_")
 	return language[code as keyof typeof language] ?? language.en_us
 }
 
 // TypeScript complains about string.prototype.substr being deprecated and only being available for browser compatability
-// this polyfill has been tested to be compliant with the real substr with some of its quirks like not actually returning a length
-// of the specified length
+// this polyfill implements the same algorithm the spec (ECMA-262 Annex B) defines for the real substr, fuzz-tested
+// against the real thing across negative/NaN/Infinity/undefined from and length values
 /**
  * Gets a substring beginning at the specified location and having the specified length.
  * @param text this string
@@ -619,9 +628,24 @@ export function getLang(id: string): Lang {
  * @param length The number of characters to include in the returned substring.
  */
 export function substr(text: string, from: number, length?: number): string {
-	if (length === 0) return ""
-	if (!length || (from + length) <= text.length) return text.slice(from, length ? from + length : void 0)
-	return text.repeat(Math.ceil(length / (from + text.length))).slice(from, from + length)
+	const size = text.length
+
+	let intStart = toIntegerOrInfinity(from)
+	if (intStart === -Infinity) intStart = 0
+	else if (intStart < 0) intStart = Math.max(size + intStart, 0)
+	else intStart = Math.min(intStart, size)
+
+	const intLength = length === void 0 ? size : toIntegerOrInfinity(length)
+	const clampedLength = Math.min(Math.max(intLength, 0), size)
+
+	const intEnd = Math.min(intStart + clampedLength, size)
+	return text.slice(intStart, intEnd)
+}
+function toIntegerOrInfinity(n: number): number {
+	const num = Number(n)
+	if (Number.isNaN(num)) return 0
+	if (num === Infinity || num === -Infinity) return num
+	return Math.trunc(num)
 }
 
 /**
@@ -735,7 +759,7 @@ export function createPagination(cmd: PartialChatInputCommand, lang: Lang, title
 export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
 	let page = 0
 	if (pageCount > 1) {
-		const options = Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
+		const options = new Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
 		const component = new buttons.BetterComponent({
 			type: 3,
 			placeholder: "Select page",

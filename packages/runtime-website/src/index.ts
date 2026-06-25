@@ -1,7 +1,7 @@
 import "@amanda/logger"
 
-import fs = require("fs")
-import path = require("path")
+import fs = require("node:fs")
+import path = require("node:path")
 
 import uWS = require("uWebSockets.js")
 import { SnowTransfer, DiscordAPIError } from "snowtransfer"
@@ -35,7 +35,7 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 	cmd.guild_id ? Number((BigInt(cmd.guild_id) >> BigInt(22)) % BigInt(passthrough.confprovider.config.total_shards)) : 0
 ], (c, e) => sharedUtils.defaultCommandManagerErrorHandler(c, passthrough.snow, e))
 
-passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
+passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error("Ratelimit hit\n", ...args))
 passthrough.snow.requestHandler.on("requestError", (_reqID, err) => {
 	const e = err as DiscordAPIError
 	console.error(e, e.request.data)
@@ -61,8 +61,10 @@ const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")
 		return Object.assign(newData, node) as typeof newData & typeof node
 	})
 
-	passthrough.lavalink_nodes.push(...confprovider.config.extra_lavalink_nodes.filter(n => !lavalinkNodes.some(o => o.id === n.id)))
-	passthrough.lavalink_nodes.push(...lavalinkNodes)
+	passthrough.lavalink_nodes.push(
+		...confprovider.config.extra_lavalink_nodes.filter(n => !lavalinkNodes.some(o => o.id === n.id)),
+		...lavalinkNodes
+	)
 
 	passthrough.lavalink = new Manager(passthrough.lavalink_nodes.filter(n => n.enabled), {
 		userId: passthrough.confprovider.config.client_id,

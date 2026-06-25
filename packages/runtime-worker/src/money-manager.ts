@@ -82,20 +82,27 @@ export async function getCoupleRow(userID: string) {
 	}
 }
 
+/** Thrown when a debit would take a bank account's balance below 0 */
+export class InsufficientFundsError extends Error {}
+
+async function applyDelta(bankAccountID: string, delta: bigint): Promise<void> {
+	const result = await sql.raw<{ amount: string }>(
+		"UPDATE bank_accounts SET amount = amount + $1 WHERE id = $2 AND amount + $1 >= 0 RETURNING amount",
+		[delta.toString(), bankAccountID]
+	)
+	if (!result?.rows.length) throw new InsufficientFundsError(`Bank account ${bankAccountID} has insufficient funds for a change of ${delta}`)
+}
+
 export async function awardAmount(userID: string, value: bigint, reason: string): Promise<void> {
 	const row = await getPersonalRow(userID)
-	await Promise.all([
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(row.amount) + value).toString()
-		}, { id: row.id }),
-		sql.orm.insert("transactions", {
-			user_id: client.user.id,
-			amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(),
-			mode: value < BigInt(0) ? 1 : 0,
-			description: reason,
-			target: row.id
-		})
-	])
+	await applyDelta(row.id, value)
+	await sql.orm.insert("transactions", {
+		user_id: client.user.id,
+		amount: (value < BigInt(0) ? (value * BigInt(-1)) : value).toString(),
+		mode: value < BigInt(0) ? 1 : 0,
+		description: reason,
+		target: row.id
+	})
 }
 
 export async function transact(from: string, to: string, amount: bigint): Promise<void> {
@@ -104,13 +111,10 @@ export async function transact(from: string, to: string, amount: bigint): Promis
 		getPersonalRow(to)
 	])
 
+	await applyDelta(fromRow.id, amount * BigInt(-1))
+	await applyDelta(toRow.id, amount)
+
 	await Promise.all([
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(toRow.amount) + amount).toString()
-		}, { id: toRow.id }),
-		sql.orm.update("bank_accounts", {
-			amount: (BigInt(fromRow.amount) - amount).toString()
-		}, { id: fromRow.id }),
 		sql.orm.insert("transactions", {
 			user_id: from,
 			amount: amount.toString(),

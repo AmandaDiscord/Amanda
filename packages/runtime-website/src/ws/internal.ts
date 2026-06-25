@@ -6,14 +6,14 @@ const { server, confprovider, commandWorkers, sync } = passthrough
 
 const utils = sync.require("../utils") as typeof import("../utils")
 
-import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
+import type { WebSocket as UWS, WebSocketBehavior } from "uWebSockets.js"
 
 const handlers = {} as Parameters<typeof buttons["setHandlers"]>["1"]
 
 buttons.setHandlers(btn => encoding.decode(btn.custom_id).cluster, handlers)
 
 export class CommandWorker {
-	public constructor(public readonly ws: WebSocket<unknown>, public readonly clusterID: string) {
+	public constructor(public readonly ws: UWS<unknown>, public readonly clusterID: string) {
 		commandWorkers.push(this)
 		console.log(`${this.clusterID} command worker connected. ${commandWorkers.length} total workers`)
 	}

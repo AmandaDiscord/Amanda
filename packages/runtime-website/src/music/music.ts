@@ -1,4 +1,4 @@
-import crypto = require("crypto")
+import nodeCrypto = require("node:crypto")
 
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
@@ -52,8 +52,8 @@ commands.assign([
 			const tracks = await common.inputToTrack(track, cmd, lang, queue.node!) ?? []
 
 			if (!tracks.length) {
-				if (!queue.playHasBeenCalled) return queue.destroy(false)
-				else return
+				if (queue.playHasBeenCalled) return
+				else return queue.destroy(false)
 			}
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
@@ -112,7 +112,7 @@ commands.assign([
 			const { queue } = await common.queues.getOrCreateQueue(cmd, lang)
 			if (!queue) return
 
-			if (track !== "random" && track.indexOf("/") === -1) throw new Error(lang.GLOBAL.NEGATIVE_1_INDEX_IN_RADIO)
+			if (track !== "random" && !track.includes("/")) throw new Error(lang.GLOBAL.NEGATIVE_1_INDEX_IN_RADIO)
 
 			const position = cmd.data.options.get("position")?.asNumber() ?? queue.tracks.length
 
@@ -157,7 +157,7 @@ commands.assign([
 			const start = cmd.data.options.get("start")?.asNumber() ?? 1
 			const amount = cmd.data.options.get("amount")?.asNumber() ?? 1
 
-			if (queue.tracks.length < (amount - start)) {
+			if (start - 1 + amount > queue.tracks.length) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.TOO_MANY_SKIPS
 				})
@@ -168,8 +168,12 @@ commands.assign([
 				})
 			}
 
-			for (let index = 0; index < amount; index++) {
-				await queue.removeTrack(start - 1 + index)
+			// removeTrack rejects index 0 (the now-playing track) by design; that one has to go through skip() instead.
+			// Each removal shifts everything after it down by one, so the removal index must stay fixed, not increment.
+			const removeIndex = start === 1 ? 1 : start - 1
+			const removeCount = start === 1 ? amount - 1 : amount
+			for (let index = 0; index < removeCount; index++) {
+				await queue.removeTrack(removeIndex)
 			}
 
 			if (start === 1) queue.skip()
@@ -483,7 +487,7 @@ commands.assign([
 				type: 10,
 				description: English.filters.options.speed.description,
 				min_value: 0.1,
-				max_value: 5.0,
+				max_value: 5,
 				required: false
 			}
 		],
@@ -645,7 +649,7 @@ commands.assign([
 			case "n": {
 				await sql.orm.delete("web_tokens", { user_id: cmd.author.id })
 
-				const hash = crypto.randomBytes(24).toString("base64").replace(notWordRegex, "_")
+				const hash = nodeCrypto.randomBytes(24).toString("base64").replace(notWordRegex, "_")
 				await sql.orm.insert("web_tokens", { user_id: cmd.author.id, token: hash, staging: 1 })
 
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {

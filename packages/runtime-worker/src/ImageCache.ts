@@ -1,4 +1,4 @@
-import path = require("path")
+import path = require("node:path")
 
 import Canvas = require("canvas")
 

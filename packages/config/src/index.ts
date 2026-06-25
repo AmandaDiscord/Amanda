@@ -1,4 +1,4 @@
-import path = require("path")
+import path = require("node:path")
 
 import sync = require("@amanda/sync")
 

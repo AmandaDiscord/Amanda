@@ -1,5 +1,5 @@
-import repl = require("repl")
-import util = require("util")
+import repl = require("node:repl")
+import util = require("node:util")
 
 /**
  * Custom repl initializer that handles custom commands and output formatting
@@ -17,7 +17,7 @@ class REPLProvider<C> {
 		this.repl = cli
 	}
 
-	private async customEval(input: string, _context: import("vm").Context, _filename: string, callback: (err: Error | null, result: unknown) => unknown): Promise<void> {
+	private async customEval(input: string, _context: import("node:vm").Context, _filename: string, callback: (err: Error | null, result: unknown) => unknown): Promise<void> {
 		let depth = 0
 
 		if (input === "exit\n") return process.exit()

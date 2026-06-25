@@ -7,18 +7,18 @@ const globals = require("globals")
 
 module.exports = [
 	{
-		ignores: []
+		ignores: ["node_modules", "dist"]
 	},
 	js.configs.recommended,
 	{
 		files: ["**/*.ts", "**/*.js"],
 		languageOptions: {
 			parser: tsparser,
-			ecmaVersion: 2015,
+			ecmaVersion: 2024,
 			sourceType: "commonjs",
 			globals: {
-				...globals.browser,
-				...globals.es2015
+				...globals.node,
+				...globals.es2024
 			}
 		},
 		plugins: {

@@ -1,7 +1,7 @@
 // @ts-check
 
-const fs = require("fs")
-const path = require("path")
+const fs = require("node:fs")
+const path = require("node:path")
 
 const config = require("../../config.example")
 
@@ -12,15 +12,18 @@ let dtsString = "declare namespace Config {\n"
  * @returns {string}
  */
 function describe(value) {
-	return typeof value !== "object"
-		? typeof value
-		: Array.isArray(value)
-			? `Array<${typeof value[0] !== "undefined" ? describe(value[0]) : "unknown"}>`
+	return typeof value === "object"
+		? Array.isArray(value)
+			? `Array<${value[0] === undefined ? "unknown" : describe(value[0])}>`
 			: value === null
 				? "null"
 				: value instanceof RegExp
 					? "RegExp"
+					// @ts-expect-error Accessing any keys is ok
 					: `{ ${Object.keys(value).map(k => `${k}: ${describe(value[k])}`).join(", ")} }`
+		: typeof value === "function"
+			? "(...args: any[]) => any"
+			: typeof value
 }
 
 for (const [key, value] of Object.entries(config)) {

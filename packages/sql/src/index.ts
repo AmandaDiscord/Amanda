@@ -1,4 +1,4 @@
-import util = require("util")
+import util = require("node:util")
 
 import { Pool, QueryConfig, type PoolClient, type QueryResult, type QueryResultRow } from "pg"
 import { Bucket, type Counter } from "snowtransfer"
@@ -65,7 +65,8 @@ class SequentialCounter implements Counter {
 		this.canGo = true
 	}
 
-	public applyCount(limit: number | null, remaining: number, resetAfter: number): void { void 0 }
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	public applyCount(_limit: number | null, _remaining: number, _resetAfter: number): void { void 0 }
 }
 
 /**
@@ -112,7 +113,7 @@ class SQLProvider {
 		bypassBucket = false
 	): Promise<QueryResult<T extends keyof typeof models ? InferModelDef<(typeof models)[T]> : T> | null> {
 		if (!SQLProvider.poolClient || !confprovider.config.db_enabled) return Promise.resolve(null)
-		let prep: Array<AcceptablePrepared>
+		let prep: Array<AcceptablePrepared> | undefined
 
 		if (prepared && typeof (prepared) != "object") prep = [prepared]
 		else if (prepared && Array.isArray(prepared)) prep = prepared
@@ -164,11 +165,17 @@ class SQLProvider {
 
 		const db = await pool.connect()
 			.catch(e => void console.error(e))
-		if (!db) return
+		if (!db) {
+			await pool.end().catch(console.error)
+			return
+		}
 
 		try {
 			await db.query({ text: "SELECT * FROM premium LIMIT 1" })
-		} catch {
+		} catch (e) {
+			console.error(e)
+			db.release()
+			await pool.end().catch(console.error)
 			return
 		}
 

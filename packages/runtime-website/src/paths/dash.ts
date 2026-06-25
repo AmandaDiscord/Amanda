@@ -1,5 +1,5 @@
-import fs = require("fs")
-import path = require("path")
+import fs = require("node:fs")
+import path = require("node:path")
 
 import sql = require("@amanda/sql")
 import redis = require("@amanda/redis")
@@ -42,7 +42,7 @@ server.post("/logout", async (res, req) => {
 	const reqReferrer = req.getHeader("referrer")
 	const reqHost = req.getHeader("host")
 
-	if (!reqLength || isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
+	if (!reqLength || Number.isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
 	if (Number(reqLength) > 100) return void res.writeStatus("413").endWithoutBody()
 	if (reqType !== "application/x-www-form-urlencoded") return void res.writeStatus("415").endWithoutBody()
 
@@ -79,16 +79,16 @@ server.post("/logout", async (res, req) => {
 			})
 			utils.redirect(res, "/login")
 		})
-		.catch(errorValue => {
+		.catch(error => {
 			if (!res.continue) return
 			let written = false
 			res.cork(() => {
 				if (written) return
 				written = true
 				res
-					.writeStatus(String(errorValue[0]))
+					.writeStatus(String(error[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.end(errorValue[1])
+					.end(error[1])
 			})
 		})
 })
@@ -139,7 +139,7 @@ server.post("/dash", async (res, req) => {
 	const reqReferrer = req.getHeader("referrer")
 	const reqHost = req.getHeader("host")
 
-	if (!reqLength || isNaN(Number(reqLength))) {
+	if (!reqLength || Number.isNaN(Number(reqLength))) {
 		let written = false
 		return void res.cork(() => {
 			if (written) return
@@ -204,16 +204,16 @@ server.post("/dash", async (res, req) => {
 			})
 			utils.redirect(res, "/dash")
 		})
-		.catch(errorValue => {
+		.catch(error => {
 			if (!res.continue) return
 			let written = false
 			res.cork(() => {
 				if (written) return
 				written = true
 				res
-					.writeStatus(String(errorValue[0]))
+					.writeStatus(String(error[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.end(errorValue[1])
+					.end(error[1])
 			})
 		})
 })
@@ -240,8 +240,8 @@ server.get("/channels/:channelID", async (res, req) => {
 			[400, "NO_SESSION"]
 		).do(
 			() => confprovider.config.db_enabled
-				? redis.GET("voice", session!.user_id) : void 0,
-			v => !!v,
+				? redis.GET<APIVoiceState>("voice", session!.user_id) : void 0,
+			v => !!v && v.channel_id === channelID,
 			[400, "USER_NOT_IN_CHANNEL"]
 		)
 		.go()

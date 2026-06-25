@@ -56,7 +56,7 @@ commands.assign([
 						components: [
 							{
 								type: ComponentType.TextDisplay,
-								content: `${users.slice(0, -1).map(sharedUtils.userString).join(", ")} & ${sharedUtils.userString(users.slice(-1)[0])}`
+								content: `${users.slice(0, -1).map(sharedUtils.userString).join(", ")} & ${sharedUtils.userString(users.at(-1)!)}`
 							},
 							{
 								type: ComponentType.TextDisplay,
@@ -178,13 +178,12 @@ commands.assign([
 
 			await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 
-			if (!selfrel) {
+			if (selfrel) await sql.orm.insert("bank_access", { id: selfrel.id, user_id: user.id })
+			else {
 				const bank = await sql.get<{ id: number }>("INSERT INTO bank_accounts (type) VALUES ($1) RETURNING id", [1])
 				if (!bank?.id) throw new Error("USER_MARRIED_NO_BANK_CREATED_FUCK_FUCK_FUCK")
 
 				await sql.raw("INSERT INTO bank_access (id, user_id) VALUES ($1, $2), ($1, $3)", [bank.id, cmd.author.id, user.id])
-			} else {
-				await sql.orm.insert("bank_access", { id: selfrel.id, user_id: user.id })
 			}
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -232,7 +231,7 @@ commands.assign([
 			}
 
 			if (pending.user1 === cmd.author.id) {
-				await sql.orm.delete("pending_relations", { user1: cmd.author.id, user2: cmd.author.id })
+				await sql.orm.delete("pending_relations", { user1: user.id, user2: cmd.author.id })
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL.YOU_SOMEHOW_PROPOSED_TO_YOURSELF
 				})
@@ -291,14 +290,13 @@ commands.assign([
 					})
 				}
 
-				if (selfinfo.users.length !== 2) await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: user.id })
-				else { // now the only one left is the author. Give all to user and delete row
+				if (selfinfo.users.length === 2) { // now the only one left is the author. Give all to user and delete row
 					await Promise.all([
 						moneyManager.awardAmount(user.id, BigInt(selfinfo.amount), "Divorce inheritance"),
 						sql.orm.delete("bank_access", { id: selfinfo.id }),
 						sql.orm.delete("bank_accounts", { id: selfinfo.id })
 					])
-				}
+				} else await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: user.id })
 
 				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					content: selfinfo.users.length === 2
@@ -309,14 +307,13 @@ commands.assign([
 
 			const otherids = selfinfo.users.filter(id => id !== cmd.author.id)
 
-			if (selfinfo.users.length !== 2) await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: cmd.author.id })
-			else {
+			if (selfinfo.users.length === 2) {
 				await Promise.all([
 					moneyManager.awardAmount(otherids[0], BigInt(selfinfo.amount), "Divorce inheritance"),
 					sql.orm.delete("bank_access", { id: selfinfo.id }),
 					sql.orm.delete("bank_accounts", { id: selfinfo.id })
 				])
-			}
+			} else await sql.orm.delete("bank_access", { id: selfinfo.id, user_id: cmd.author.id })
 
 			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: lang.GLOBAL.DIVORCED_LEFT
@@ -480,7 +477,7 @@ commands.assign([
 				const thisDisplayRows = thisRows.map((row, index) => {
 					const ranking = itemsPerPage * page + index + 1
 					const users = usersMap.get(row.id)!
-					return [`${ranking}. ${sharedUtils.numberComma(row.amount)}`, `${users.slice(0, -1).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.slice(-1)[0])}`]
+					return [`${ranking}. ${sharedUtils.numberComma(row.amount)}`, `${users.slice(0, -1).map(u => userTagMap.get(u)).join(", ")} & ${userTagMap.get(users.at(-1)!)}`]
 				})
 
 				const thisTable = sharedUtils.tableifyRows(thisDisplayRows, ["left", "left"], () => "`")

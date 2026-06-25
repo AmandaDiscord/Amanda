@@ -14,7 +14,7 @@ server.get("/.well-known/traffic-advice", res => {
 	const data = [{
 		user_agent: "prefetch-proxy",
 		google_prefetch_proxy_eap: {
-			fraction: 1.0
+			fraction: 1
 		}
 	}]
 	const payload = JSON.stringify(data)

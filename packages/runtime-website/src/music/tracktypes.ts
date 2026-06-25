@@ -214,7 +214,15 @@ export class Track {
 
 	public getProgress(time: number, paused: boolean): string {
 		const lang = this.queue?.lang ?? this.lang
-		if (!this.live) {
+		if (this.live) {
+			const part = "= ⋄ ==== ⋄ ==="
+			const fragment = sharedUtils.substr(part, 7 - this._filledBarOffset, 7)
+			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
+			this._filledBarOffset++
+			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
+			// eslint-disable-next-line no-irregular-whitespace
+			return `\`[ ${sharedUtils.prettySeconds(time)} ​${bar}​ ${lang.GLOBAL.HEADER_LIVE} ]\`` // SC: ZWSP x 2
+		} else {
 			const max = this.lengthSeconds
 			const rightTime = sharedUtils.prettySeconds(max)
 			if (time > max) time = max
@@ -226,13 +234,6 @@ export class Track {
 				paused ? ` [${lang.GLOBAL.HEADER_PAUSED}] ` : ""
 			)
 			return `\`[ ${leftTime} ${bar} ${rightTime} ]\``
-		} else {
-			const part = "= ⋄ ==== ⋄ ==="
-			const fragment = sharedUtils.substr(part, 7 - this._filledBarOffset, 7)
-			const bar = `${fragment.repeat(3)}` // SC: ZWSP x 2
-			this._filledBarOffset++
-			if (this._filledBarOffset >= 7) this._filledBarOffset = 0
-			return `\`[ ${sharedUtils.prettySeconds(time)} ​${bar}​ ${lang.GLOBAL.HEADER_LIVE} ]\`` // SC: ZWSP x 2
 		}
 	}
 
@@ -326,11 +327,8 @@ export class ExternalTrack extends Track {
 
 		if (!info.title || info.title === "Unknown title") {
 			const to = new URL(info.uri!)
-			let name = ""
 			const match = pathnamereg.exec(to.pathname)
-			if (!match) name = lang.GLOBAL.UNKNOWN_TRACK
-			else name = match[1]
-			this.title = decodeEntities(name.replace(underscoreRegex, " "))
+			this.title = decodeEntities((match?.[1]?.replaceAll(underscoreRegex, " ") ?? lang.GLOBAL.UNKNOWN_TRACK).replaceAll(underscoreRegex, " "))
 		}
 
 		this.live = info.isStream ?? true
@@ -502,8 +500,8 @@ function decodeEntities(encodedString: string) {
 	return encodedString.replace(translateRegex, function(_, entity) {
 		return translate[entity as keyof typeof translate]
 	}).replace(entityCodeRegex, function(_, numStr) {
-		const num = parseInt(numStr, 10)
-		return String.fromCharCode(num)
+		const num = Number.parseInt(numStr, 10)
+		return String.fromCodePoint(num)
 	})
 }
 

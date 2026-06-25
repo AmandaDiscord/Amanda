@@ -1,14 +1,14 @@
 import passthrough = require("../passthrough")
 const { server, confprovider, gatewayWorkers, sync } = passthrough
 
-import type { WebSocket, WebSocketBehavior } from "uWebSockets.js"
+import type { WebSocket as UWS, WebSocketBehavior } from "uWebSockets.js"
 
 const utils = sync.require("../utils") as typeof import("../utils")
 
 export class GatewayWorker {
 	public readonly shards = new Set<number>()
 
-	public constructor(public readonly ws: WebSocket<unknown>, public readonly clusterID: string) {
+	public constructor(public readonly ws: UWS<unknown>, public readonly clusterID: string) {
 		gatewayWorkers.set(clusterID, this)
 		console.log(`${clusterID} gateway cluster identified. ${gatewayWorkers.size} total clusters`)
 	}

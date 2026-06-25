@@ -1,6 +1,9 @@
+/* eslint-disable no-undef */
 // From HTML
 const channelID = _channelID
 let serverTimeDiff = _serverTimeDiff
+
+import "./global"
 
 import { Player, Queue, VoiceInfo, SideControls } from "./classes.js"
 import { q, opcodes, generateNonce } from "./utilities.js"
@@ -21,7 +24,10 @@ export class Session {
 	public readonly listenManager: ListenManager = new ListenManager()
 
 	public constructor(public readonly ws: WebSocket) {
-		const opcodeMethodMap = new Map<typeof opcodes[keyof typeof opcodes], string>([
+		const opcodeMethodMap = new Map<
+			number,
+			"acknowledge" | "updateState" | "trackAdd" | "next" | "trackUpdate" | "timeUpdate" | "trackRemove" | "listenersUpdate" | "attributesChange" | "clearQueue"
+		>([
 			[opcodes.ACKNOWLEDGE, "acknowledge"],
 			[opcodes.STATE, "updateState"],
 			[opcodes.TRACK_ADD, "trackAdd"],
@@ -40,7 +46,7 @@ export class Session {
 		this.ws.addEventListener("message", event => {
 			console.log("%c[WS ←]", "color: blue", event.data)
 			const data = JSON.parse(event.data)
-			const method = opcodeMethodMap.get(data.op)
+			const method = opcodeMethodMap.get(data.op) as import("@amanda/shared-types").InferMap<typeof opcodeMethodMap>["value"]
 			if (method) this[method](data)
 		})
 	}
@@ -84,7 +90,7 @@ export class Session {
 			this.player.updateAttributes({ loop: false })
 			this.resetTime()
 			this.queue.replaceItems([])
-			this.listenManager.stop()
+			this.listenManager.stop().catch(console.error)
 		} else {
 			q("#voice-channel-name")!.textContent = this.state.voiceChannel.name
 			this.player.setTrack(this.state.tracks[0])
@@ -93,7 +99,7 @@ export class Session {
 			this.queue.isFirstAdd = false
 			this.updatePlayerTime()
 			if (oldState === null && this.state.tracks[0]) {
-				this.listenManager.next(this.state.tracks[0])
+				this.listenManager.next(this.state.tracks[0]).catch(console.error)
 			}
 		}
 		this.sideControls.render()
@@ -115,7 +121,7 @@ export class Session {
 		if (this.state.tracks.length === 1) {
 			this.player.setTrack(data.d.track)
 			this.updatePlayerTime()
-			this.listenManager.next(data.d.track)
+			this.listenManager.next(data.d.track).catch(console.error)
 		} else this.queue.addItem(data.d.track, data.d.position)
 	}
 
@@ -138,22 +144,23 @@ export class Session {
 		this.queue.shift()
 		this.resetTime()
 		this.player.setTrack(this.state.tracks[0] || null)
-		this.listenManager.next(this.state.tracks[0])
+		this.listenManager.next(this.state.tracks[0]).catch(console.error)
 	}
 
 	public trackUpdate(data: { d: { index: number; track: WebTrackJSON } }): void {
 		if (!this.state) return
 		const track = data.d.track
 		const index = data.d.index
+		if (!this.state.tracks[index]) return
 		Object.assign(this.state.tracks[index], track)
 		if (index === 0) this.player.updateData(track)
-		else this.queue.children[index - 1].updateData(track)
+		else this.queue.children[index - 1]?.updateData(track)
 	}
 
 	public timeUpdate(data: { d: { playing: boolean } }): void {
 		if (!this.state) return
-		if (data.d.playing && !this.state.playing) this.listenManager.resume()
-		else if (!data.d.playing && this.state.playing) this.listenManager.pause()
+		if (data.d.playing && !this.state.playing) this.listenManager.resume().catch(console.error)
+		else if (!data.d.playing && this.state.playing) this.listenManager.pause().catch(console.error)
 		Object.assign(this.state, data.d)
 		this.updatePlayerTime()
 	}
@@ -216,7 +223,7 @@ export class Session {
 }
 
 const ws = (function() {
-	const origin = window.location.origin.replace("http", "ws")
+	const origin = globalThis.location.origin.replace("http", "ws")
 	return new WebSocket(`${origin}/public`)
 })()
 

@@ -1,7 +1,7 @@
 // @ts-check
 
-const fs = require("fs")
-const path = require("path")
+const fs = require("node:fs")
+const path = require("node:path")
 
 const english = require("@amanda/lang").en_us
 
@@ -28,8 +28,9 @@ function recurse(dir) {
 
 const globalRegex = /\.GLOBAL\.(\w+)/g
 
+/** @type {Array<string>} */
 const found = []
-const exclude = [ // These are definitely used in Amanda but the regex cannot pick up due to dynamic key usage
+const exclude = new Set([ // These are definitely used in Amanda but the regex cannot pick up due to dynamic key usage
 	"LOOP_ON",
 	"LOOP_OFF",
 	"QUEUE_PAUSED",
@@ -52,7 +53,7 @@ const exclude = [ // These are definitely used in Amanda but the regex cannot pi
 	"SLAP_OTHER",
 	"BOOP_OTHER",
 	"PAT_OTHER"
-]
+])
 
 /** @param {string} file */
 function processFile(file) {
@@ -70,7 +71,7 @@ for (const dir of paths) {
 }
 
 for (const key of Object.keys(english.GLOBAL)) {
-	if (!found.includes(key) && !exclude.includes(key)) console.log(`${key} not found in usages`)
+	if (!found.includes(key) && !exclude.has(key)) console.log(`${key} not found in usages`)
 }
 
 console.log("Done with usage checking")

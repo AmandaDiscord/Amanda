@@ -30,6 +30,7 @@ export function mask(base: Canvas.Image | Canvas.Canvas, imageMask: Canvas.Image
  * @returns A new canvas rendering context 2d. Doesn't mutate the supplied image
  */
 export function pinchBuldge(amountX: number, image: Canvas.Image | Canvas.Canvas, quality = 1): Canvas.CanvasRenderingContext2D {
+	if (quality <= 0) quality = 1 // a non-positive quality would make stepUnit <= 0, looping forever below
 	const w = image.width
 	const h = image.height
 	const easeW = (amountX / w) * 4
@@ -47,16 +48,16 @@ export function pinchBuldge(amountX: number, image: Canvas.Image | Canvas.Canvas
 		const rx = (x) * easeW
 		const ry = (y) * easeW
 		const rw = w - (rx * 2)
-		const rh = h - (ry * 2);
-		result.save();
-		result.beginPath();
-		result.arc(wh, hh, xw / 2, 0, Math.PI * 2);
-		result.clip();
-		result.drawImage(image, rx, ry, rw, rh, 0, 0, w, h);
-		result.restore();
+		const rh = h - (ry * 2)
+		result.save()
+		result.beginPath()
+		result.arc(wh, hh, xw / 2, 0, Math.PI * 2)
+		result.clip()
+		result.drawImage(image, rx, ry, rw, rh, 0, 0, w, h)
+		result.restore()
 	}
 
-	return result;
+	return result
 }
 
 /**

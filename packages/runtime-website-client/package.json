@@ -4,7 +4,6 @@
   "description": "Code base for the website's client code",
   "main": "dist/index.js",
   "scripts": {
-    "lint": "eslint . -c eslint.config.js",
     "build": "tsup"
   },
   "author": "PapiOphidian",

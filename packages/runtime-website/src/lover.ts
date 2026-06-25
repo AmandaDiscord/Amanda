@@ -6,7 +6,7 @@ const { snow, confprovider, sync } = passthrough
 const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
 let lastLover: Lover | undefined
-let loverMessageSendTimeout: NodeJS.Timeout | undefined
+let loverMessageSendTimeout: globalThis.NodeJS.Timeout | undefined
 
 class Lover {
 	public readonly channelGetter = new sharedUtils.AsyncValueCache<APIDMChannel | null>(
@@ -51,7 +51,7 @@ function onConfigChangeCallback() {
 
 	if (confprovider.config.lover_messages_enabled_on_this_cluster && confprovider.config.amandas_lover_id.length && lastLover?.id !== confprovider.config.amandas_lover_id) {
 		lastLover = new Lover(confprovider.config.amandas_lover_id)
-		loverMessageSendTimeout ??= setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout);
+		loverMessageSendTimeout ??= setTimeout(loverMessageSendTimeoutFunction, confprovider.config.amandas_lover_send_timeout)
 		console.log(`Lover channel changed to belong to ${confprovider.config.amandas_lover_id}`)
 	}
 

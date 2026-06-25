@@ -1,11 +1,11 @@
-import { webcrypto } from "crypto"
+import { webcrypto } from "node:crypto"
 
 import { verify } from "discord-verify/node"
 
 import type { APIInteraction } from "discord-api-types/v10"
 
 import passthrough = require("../passthrough")
-const { server, sync, confprovider, commands, commandWorkers } = passthrough
+const { server, sync, confprovider } = passthrough
 
 const utils = sync.require("../utils") as typeof import("../utils")
 
@@ -19,7 +19,7 @@ server.post("/interaction", async (res, req) => {
 
 	if (reqType !== "application/json") return void res.writeStatus("415").endWithoutBody()
 	if (!reqSig || !reqTimestamp) return void res.writeStatus("400").endWithoutBody()
-	if (!reqLength || isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
+	if (!reqLength || Number.isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
 
 	const body = await utils.requestBody(res, Number(reqLength))
 	if (!body) {

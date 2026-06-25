@@ -1,5 +1,5 @@
-import util = require("util")
-import { createHash } from "crypto"
+import util = require("node:util")
+import { createHash } from "node:crypto"
 
 import { BetterComponent } from "@amanda/buttons"
 import langReplace = require("@amanda/lang/replace")
@@ -68,7 +68,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	private _volume = defaultVolumeAmount
 	private _interaction: ChatInputCommand | undefined
 	private _interactionExpired = false
-	private _interactionExpireTimeout: NodeJS.Timeout | null = null
+	private _interactionExpireTimeout: globalThis.NodeJS.Timeout | null = null
 	private _destroyed = false
 	private _lastFMSent = false
 	private _canSetVCStatus = true
@@ -242,7 +242,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			const percent40 = Math.floor((track.lengthSeconds * 1000) * 0.4)
 			setTimeout(() => {
 				if (this.tracks[0] === track) this._lastFMSetTrack()
-			}, percent40 < 10000 ? percent40 : 10000)
+			}, Math.min(percent40, 10000))
 			if (this._canSetVCStatus) {
 				try {
 					await snow.channel.setVoiceChannelStatus(this.voiceChannelID, track.title)
@@ -343,13 +343,13 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 			snow.channel.setVoiceChannelStatus(this.voiceChannelID, "").catch(() => void 0)
 			// snow.channel.setVoiceChannelHangout(this.voiceChannelID, "").catch(() => void 0)
 		}
-		await lavalink!.leave(this.guildID)
+		await lavalink!.leave(this.guildID).catch(e => console.error(`lavalink leave error:\n${util.inspect(e, true, Infinity, true)}`))
 	}
 
 	private _nextTrack(): void {
 		this._lastFMSent = false
 
-		if (this.tracks?.[1]?.live && this.speed != 1) this.speed = 1.0
+		if (this.tracks?.[1]?.live && this.speed != 1) this.speed = 1
 
 		// Special case for loop 1
 		if (this.tracks.length === 1 && this.loop && !this.tracks[0].error) {
@@ -432,12 +432,13 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		if (position === -1) this.tracks.push(track)
 		else this.tracks.splice(position, 0, track)
 
-		if (!this.playHasBeenCalled) {
+		if (this.playHasBeenCalled) this.sendToSubscribedSessions("onTrackAdd", track, position)
+		else {
 			await this.play()
 			// already at 0.5, but it needs to trigger the update
 			this.volume = defaultVolumeAmount
 			this.sendToSubscribedSessions("sendState")
-		} else this.sendToSubscribedSessions("onTrackAdd", track, position)
+		}
 	}
 
 	public async removeTrack(index: number): Promise<0 | 1 | 2> {
@@ -593,12 +594,12 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 				["Text Channel", this.interaction?.channel.id ?? undef]
 			]
 			if (track) {
-				details.push(...[
+				details.push(
 					["Requester", sharedUtils.userString(track.requester)],
 					["Requester ID", track.requester.id],
 					["Input", track.input],
 					["Track", track.id.length > 50 ? track.id.slice(0, 48) + "…" : track.id]
-				])
+				)
 			}
 			const maxLength = details.reduce((p, c) => Math.max(p, c[0].length), 0)
 			const detailsString = details.map(row =>

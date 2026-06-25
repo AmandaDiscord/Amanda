@@ -1,4 +1,4 @@
-import util = require("util")
+import util = require("node:util")
 
 import buttons = require("@amanda/buttons")
 import langReplace = require("@amanda/lang/replace")
@@ -72,9 +72,9 @@ const common = {
 					Authorization: confprovider.config.sra_token
 				}
 			})
-			.then(d => d.json())
-			.then(j => j.lyrics ?? j.error ?? null)
-			.catch(() => null)
+				.then(d => d.json())
+				.then(j => j.lyrics ?? j.error ?? null)
+				.catch(() => null)
 		},
 
 		pickApart(track: Track) {
@@ -225,20 +225,20 @@ const common = {
 
 			if (mode !== "search" || doSelection === false) {
 				return tracks.map(t => new SecondTrack("!", {
-						identifier: t.videoId,
-						isSeekable: t.lengthSeconds !== 0,
-						author: t.author,
-						length: t.lengthSeconds * 1000,
-						isStream: t.lengthSeconds === 0,
-						position: 0,
-						title: t.title,
-						artworkUrl: t.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? t.videoThumbnails[0].second__originalUrl,
-						uri: confprovider.config.second_id_to_uri(t.videoId),
-						sourceName: "http"
-					},
-					resource,
-					cmd.author,
-					sharedUtils.getLang(cmd.guild_locale!)
+					identifier: t.videoId,
+					isSeekable: t.lengthSeconds !== 0,
+					author: t.author,
+					length: t.lengthSeconds * 1000,
+					isStream: t.lengthSeconds === 0,
+					position: 0,
+					title: t.title,
+					artworkUrl: t.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? t.videoThumbnails[0].second__originalUrl,
+					uri: confprovider.config.second_id_to_uri(t.videoId),
+					sourceName: "http"
+				},
+				resource,
+				cmd.author,
+				sharedUtils.getLang(cmd.guild_locale!)
 				))
 			}
 
@@ -260,20 +260,20 @@ const common = {
 
 			return [
 				new SecondTrack("!", {
-						identifier: chosen.videoId,
-						isSeekable: chosen.lengthSeconds !== 0,
-						author: chosen.author,
-						length: chosen.lengthSeconds * 1000,
-						isStream: chosen.lengthSeconds === 0,
-						position: 0,
-						title: chosen.title,
-						artworkUrl: chosen.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? chosen.videoThumbnails[0].second__originalUrl,
-						uri: confprovider.config.second_id_to_uri(chosen.videoId),
-						sourceName: "http"
-					},
-					resource,
-					cmd.author,
-					sharedUtils.getLang(cmd.guild_locale!)
+					identifier: chosen.videoId,
+					isSeekable: chosen.lengthSeconds !== 0,
+					author: chosen.author,
+					length: chosen.lengthSeconds * 1000,
+					isStream: chosen.lengthSeconds === 0,
+					position: 0,
+					title: chosen.title,
+					artworkUrl: chosen.videoThumbnails.find(t2 => t2.quality === "maxresdefault")?.second__originalUrl ?? chosen.videoThumbnails[0].second__originalUrl,
+					uri: confprovider.config.second_id_to_uri(chosen.videoId),
+					sourceName: "http"
+				},
+				resource,
+				cmd.author,
+				sharedUtils.getLang(cmd.guild_locale!)
 				)
 			]
 		} else {
@@ -355,8 +355,9 @@ const common = {
 		},
 		async byID(id: string, baseURL: string): Promise<SecondVideo> {
 			const r = await fetch(`${baseURL}/api/v1/videos/${id}`)
-			if ("error" in r) throw new Error(r.error as string)
-			return r.json()
+			const json = await r.json()
+			if ("error" in json) throw new Error(json.error as string)
+			return json
 		}
 	},
 

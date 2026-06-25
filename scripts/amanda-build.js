@@ -10,11 +10,11 @@
 
 void 0
 
-const fs = require("fs")
-const path = require("path")
-const childProcess = require("child_process")
+const fs = require("node:fs")
+const path = require("node:path")
+const childProcess = require("node:child_process")
 const chalk = require("chalk")
-const assert = require("assert/strict")
+const assert = require("node:assert/strict")
 const minimist = require("minimist")
 
 const toPackages = path.join(__dirname, "../packages")
@@ -32,8 +32,13 @@ class ManagedSubprocess {
 
 	/** @param {string} str */
 	static hashCode(str) {
-		for(var i = 0, h = 0; i < str.length; i++) {
-			h = Math.imul(31, h) + str.charCodeAt(i) | 0
+		let h = 0
+		for (let i = 0; i < str.length; i++) {
+			h = Math.trunc(
+				Math.imul(31, h) +
+				// @ts-expect-error It's fine
+				str.codePointAt(i)
+			)
 		}
 		return Math.abs(h)
 	}
@@ -41,7 +46,7 @@ class ManagedSubprocess {
 	/**
 	 * @param {string} label
 	 * @param {number} longestName
-	 * @param {import("child_process").ChildProcessWithoutNullStreams} proc
+	 * @param {import("node:child_process").ChildProcessWithoutNullStreams} proc
 	 */
 	constructor(label, longestName, proc) {
 		this.label = label
@@ -101,17 +106,21 @@ class Package {
 	folderName
 	/** @type {typeof packagePool} */
 	pool
+	/** @type {string} */
+	script
 
 	/**
 	 * @param {typeof packagePool} pool
 	 * @param {string} packageName
 	 * @param {string} folderName
+	 * @param {string} script
 	 */
-	constructor(pool, packageName, folderName) {
+	constructor(pool, packageName, folderName, script) {
 		this.pool = pool
 		this.packageName = packageName
 		this.folderName = folderName
 		this.path = path.join(toPackages, folderName)
+		this.script = script
 	}
 
 	/** @returns {Promise<void>} */
@@ -131,15 +140,17 @@ class Package {
 		return promise
 	}
 
-	/** @returns {Promise<void>} */
+	/**
+	 * @returns {Promise<void>}
+	 */
 	buildSelf() {
 		let proc
 		if (process.platform === "win32") {
-			proc = childProcess.spawn(`cd /d "${this.path}" && npm run build`, {
+			proc = childProcess.spawn(`cd /d "${this.path}" && npm run ${this.script}`, {
 				shell: true,
 			})
 		} else {
-			proc = childProcess.spawn("npm run build", {
+			proc = childProcess.spawn(`npm run ${this.script}`, {
 				shell: true,
 				cwd: this.path
 			})
@@ -156,9 +167,10 @@ const packagePool = new class PackagePool {
 	/**
 	 * @param {string} name
 	 * @param {string} folder
+	 * @param {string} script
 	 */
-	create(name, folder) {
-		this.packages.set(name, new Package(this, name, folder))
+	create(name, folder, script) {
+		this.packages.set(name, new Package(this, name, folder, script))
 	}
 
 	/**
@@ -186,41 +198,37 @@ const packagePool = new class PackagePool {
 
 const packageFolders = fs.readdirSync(toPackages)
 
-const mode = "clean" in minimist(process.argv.slice(2)) ? "clean" : "build"
+const otherModes = ["clean", "lint"]
 
-switch (mode) {
-	case "build": {
-		/** @type {Array<PackageJson>} */
-		const allPkgJSONs = []
+const mode = otherModes.find(m => m in minimist(process.argv.slice(2)) ? m : undefined) ?? "build"
 
-		for (const p of packageFolders) {
-			const toPkgJSON = path.join(toPackages, p, "package.json")
-			if (fs.existsSync(toPkgJSON)) {
-				const data = fs.readFileSync(toPkgJSON, { encoding: "utf-8" })
-				const json = JSON.parse(data)
-				if (!json.scripts?.build) continue
-				packagePool.create(json.name, p)
-				allPkgJSONs.push(json)
-			}
-		}
-
-		for (const json of allPkgJSONs) {
-			if (!json.dependencies) continue
-			packagePool.add(json.name, json.dependencies)
-		}
-
-		packagePool.buildAll()
-
-		break;
-	}
-
-	case "clean": {
-		for (const folder of packageFolders) {
-			const toDist = path.join(toPackages, folder, "dist")
-			if (fs.existsSync(toDist)) {
-				console.log(`Removing ${toDist}`)
-				fs.rmSync(toDist, { recursive: true })
-			}
+if (mode === "clean") {
+	for (const folder of packageFolders) {
+		const toDist = path.join(toPackages, folder, "dist")
+		if (fs.existsSync(toDist)) {
+			console.log(`Removing ${toDist}`)
+			fs.rmSync(toDist, { recursive: true })
 		}
 	}
+} else {
+	/** @type {Array<PackageJson>} */
+	const allPkgJSONs = []
+
+	for (const p of packageFolders) {
+		const toPkgJSON = path.join(toPackages, p, "package.json")
+		if (fs.existsSync(toPkgJSON)) {
+			const data = fs.readFileSync(toPkgJSON, { encoding: "utf-8" })
+			const json = JSON.parse(data)
+			if (!json.scripts?.[mode]) continue
+			packagePool.create(json.name, p, mode)
+			allPkgJSONs.push(json)
+		}
+	}
+
+	for (const json of allPkgJSONs) {
+		if (!json.dependencies) continue
+		packagePool.add(json.name, json.dependencies)
+	}
+
+	packagePool.buildAll()
 }

@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 declare class Widget {
 	public static readonly Events: {
 		LOAD_PROGRESS: "loadProgress",
@@ -70,4 +71,5 @@ declare global {
 		session: import("./player").Session
 	}
 }
-export {}
+const lol67IsSoFunnyIWannaDie = "420"
+export { lol67IsSoFunnyIWannaDie }

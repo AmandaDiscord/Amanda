@@ -1,5 +1,5 @@
-import path = require("path")
-import fs = require("fs")
+import path = require("node:path")
+import fs = require("node:fs")
 
 import Canvas = require("canvas")
 import CanvasCover = require("canvas-image-cover")
@@ -156,8 +156,10 @@ commands.assign([
 				simpleGit.log({ "--no-decorate": null })
 			])
 
+			const actualLimit = Math.min(limit, Math.max(log.all.length - 1, 0))
+
 			const diffs = await Promise.all(
-				Array(limit)
+				new Array(actualLimit)
 					.fill(void 0)
 					.map((_, i) => simpleGit.diffSummary([log.all[i + 1].hash, log.all[i].hash]))
 			)
@@ -312,10 +314,10 @@ commands.assign([
 												return cmda.order - cmdb.order
 											} else if (cmda.order !== void 0) { // a is defined, sort a first
 												return -1
-											} else if (cmdb.order !== void 0) { // b is defined, sort b first
-												return 1
-											} else { // we don't care
+											} else if (cmdb.order === void 0) { // we don't care
 												return 0
+											} else { // b is defined, sort b first
+												return 1
 											}
 										}).map(c2 => {
 											const cm = commands.commands.get(c2)!
@@ -326,7 +328,7 @@ commands.assign([
 												desc = lang[c2].description
 											}
 											let repeat = maxLength - name.length
-											if (isNaN(repeat) || !repeat || repeat < 0) repeat = 0
+											if (Number.isNaN(repeat) || !repeat || repeat < 0) repeat = 0
 											return `\`${name}${" ​".repeat(repeat)}\` ${desc}`
 										}).join("\n")
 									}
@@ -490,7 +492,7 @@ commands.assign([
 					return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 						content: langReplace(info.allowDonorArbitrary ? lang.GLOBAL.INVALID_DATA_TYPE_YES_DONOR_ARBITRARY : lang.GLOBAL.INVALID_DATA_TYPE_NO_DONOR_ARBITRARY, {
 							"link": `<${confprovider.config.patreon_url}>`,
-							"acceptable": info.type === "boolean"
+							"acceptable": (info.type === "boolean"
 								? "true, false"
 								: info.type === "number"
 									? info.allowedValues
@@ -501,10 +503,7 @@ commands.assign([
 											? info.allowedValues.join(", ")
 											: "any string"
 										: "unknown"
-
-										+ info.nullable
-											? ", null"
-											: ""
+							) + (info.nullable ? ", null" : "")
 						})
 					})
 				}

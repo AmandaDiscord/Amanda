@@ -1,6 +1,6 @@
-import fs = require("fs")
-import path = require("path")
-import { createHash } from "crypto"
+import fs = require("node:fs")
+import path = require("node:path")
+import { createHash } from "node:crypto"
 
 import sql = require("@amanda/sql")
 
@@ -33,15 +33,15 @@ server.get("/link", async (res, req) => {
 
 		const csrftoken = utils.generateCSRF(session.token)
 
-		const connectionsString = !connections.length
-			? "None"
-			: connections.map(c =>
+		const connectionsString = connections.length
+			? connections.map(c =>
 				"<form action=\"/unlink\" method=\"post\">" +
 					`<input type="hidden" id="csrftoken" name="csrftoken" value="${csrftoken}">` +
 					`<input type="hidden" id="type" name="type" value="${c.type}">` +
 					`<button type="submit">Unlink ${c.type}</button>` +
 				"</form>"
 			).join("<br>")
+			: "None"
 
 		const baseWebsiteCallback = `${confprovider.config.website_protocol}://${confprovider.config.website_domain}/flow?user_id=${session.user_id}`
 
@@ -74,7 +74,7 @@ server.post("/unlink", async (res, req) => {
 	const reqReferrer = req.getHeader("referrer")
 	const reqHost = req.getHeader("host")
 
-	if (!reqLength || isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
+	if (!reqLength || Number.isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
 	if (Number(reqLength) > 130) return void res.writeStatus("413").endWithoutBody()
 	if (reqType !== "application/x-www-form-urlencoded") return void res.writeStatus("415").endWithoutBody()
 
@@ -144,7 +144,7 @@ server.post("/unlink", async (res, req) => {
 					.end("Logged out successfully")
 			})
 		})
-		.catch(errorValue => {
+		.catch(error => {
 			if (!res.continue) return
 
 			let written = false
@@ -153,9 +153,9 @@ server.post("/unlink", async (res, req) => {
 				if (written) return
 				written = true
 				res
-					.writeStatus(String(errorValue[0]))
+					.writeStatus(String(error[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.end(errorValue[1])
+					.end(error[1])
 			})
 		})
 })
@@ -223,16 +223,16 @@ server.get("/flow", (res, req) => {
 
 			if (res.continue) utils.redirect(res, "/link")
 		})
-		.catch(errorValue => {
+		.catch(error => {
 			if (!res.continue) return
 			let written = false
 			res.cork(() => {
 				if (written) return
 				written = true
 				res
-					.writeStatus(String(errorValue[0]))
+					.writeStatus(String(error[0]))
 					.writeHeader("Content-Type", "text/plain")
-					.end(errorValue[1])
+					.end(error[1])
 			})
 		})
 })

@@ -39,7 +39,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 	await passthrough.sql.connect()
 	await redis.connect()
 
-	passthrough.client.snow.requestHandler.on("rateLimit", (...args) => console.error(`Ratelimit hit\n`, ...args))
+	passthrough.client.snow.requestHandler.on("rateLimit", (...args) => console.error("Ratelimit hit\n", ...args))
 	passthrough.client.snow.requestHandler.on("requestError", (_reqID, err) => {
 		const e = err as DiscordAPIError
 		console.error(e, e.request.data)

@@ -9,9 +9,10 @@ import { ComponentType, MessageFlags } from "discord-api-types/v10"
 const poweredbychewey = `Powered by ${confprovider.config.chewey_api_url}`.replace(/https?:\/\//, "")
 
 async function sendImage(host: string, path: string, cmd: ChatInputCommand, footer: string) {
+	// eslint-disable-next-line no-useless-assignment
 	let url = ""
 	if (host === "chewey") url = `${confprovider.config.chewey_api_url}/${path}?auth=${confprovider.config.chewey_token}`
-	else return Promise.reject(new Error("Host provided not supported"))
+	else throw new Error("Host provided not supported")
 	const data = await fetch(url).then(d => d.json())
 	return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 		flags: MessageFlags.IsComponentsV2,

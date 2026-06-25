@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p .",
     "build-tsup": "tsup && node ../../scripts/fixup-dts.js",
-    "lint": "eslint . -c eslint.config.js"
+    "lint": "eslint ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE",

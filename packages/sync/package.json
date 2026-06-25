@@ -5,7 +5,7 @@
   "main": "index.js",
   "types": "index.d.ts",
   "scripts": {
-    "lint": "eslint . -c eslint.config.js"
+    "lint": "eslint ."
   },
   "author": "PapiOphidian",
   "license": "MIT"

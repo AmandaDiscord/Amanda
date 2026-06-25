@@ -1,6 +1,5 @@
 import langReplace = require("@amanda/lang/replace")
 import sql = require("@amanda/sql")
-import redis = require("@amanda/redis")
 import btn = require("@amanda/buttons")
 import { ChatInputCommand } from "@amanda/commands"
 
@@ -592,8 +591,8 @@ commands.assign([
 
 
 				const optionPlaylist = optionMove.options.get("playlist")!.asString()!
-				const optionFrom = optionMove.options.get("from")!.asNumber()!
-				const optionTo = optionMove.options.get("to")!.asNumber()!
+				const optionFrom = optionMove.options.get("from")!.asNumber()! - 1
+				const optionTo = optionMove.options.get("to")!.asNumber()! - 1
 
 				if (!checkPlaylistName(optionPlaylist, cmd, lang)) return
 
@@ -776,17 +775,26 @@ async function getPlaylistTracks(playlistRow: { playlist_id: number }, cmd: Chat
 		return []
 	}
 
-	const orderedTracks: typeof tracks = []
-	let track = tracks.find(row => !tracks.some(r => r.next === row.video_id))
+	const orderedTracks = orderPlaylistTracks(tracks)
 
-	while (track) {
-		orderedTracks.push(track!)
-		if (track.next) track = tracks.find(row => row.video_id === track!.next)
-		else track = void 0
-		if (orderedTracks.includes(track!)) await unbreakDatabase(tracks)
+	if (orderedTracks.length != tracks.length) {
+		// The linked list is broken (a cycle, or no head row). Relink it to match fetch order and use that order for this call,
+		// instead of returning the partial/empty result we just computed from the broken data.
+		await unbreakDatabase(tracks)
+		return tracks
 	}
 
-	if (orderedTracks.length != tracks.length) await unbreakDatabase(tracks)
+	return orderedTracks
+}
+
+function orderPlaylistTracks<T extends { next: string | null, video_id: string }>(tracks: Array<T>): Array<T> {
+	const orderedTracks: Array<T> = []
+	let track = tracks.find(row => !tracks.some(r => r.next === row.video_id))
+
+	while (track && !orderedTracks.includes(track)) {
+		orderedTracks.push(track)
+		track = track.next ? tracks.find(row => row.video_id === track!.next) : void 0
+	}
 
 	return orderedTracks
 }

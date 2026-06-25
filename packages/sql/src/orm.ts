@@ -186,7 +186,7 @@ export class Database<M extends Record<string, Model<any>>> {
 			orderDescending?: boolean;
 		} = {}
 	): Promise<InferModelDef<M[T]> | null> {
-		const opts = Object.assign(options, { limit: 1 })
+		const opts = { ...options, limit: 1 }
 		const res = this._buildStatement("select", table, where, opts)
 		return this.provider.get(res.statement, res.prepared)
 	}
@@ -201,6 +201,7 @@ export class Database<M extends Record<string, Model<any>>> {
 		table: T,
 		where?: Partial<InferModelDef<M[T]>>
 	): Promise<QueryResult<R> | null> {
+		if (!where || !Object.keys(where).length) throw new Error("Potentially destructive DELETE statement. Use raw sql instead")
 		const res = this._buildStatement("delete", table, where)
 		return this.provider.raw(res.statement, res.prepared)
 	}
@@ -234,19 +235,19 @@ export class Database<M extends Record<string, Model<any>>> {
 		const prepared = [] as Array<unknown>
 		const props = properties ? Object.keys(properties) : []
 
-		const mapped = (!["insert", "upsert"].includes(method)) ? props.map(key => { // insert and upsert maps the prepared indexes. Doing so now would break their indexes.
+		const mapped = ["insert", "upsert"].includes(method) ? [] : props.map(key => { // insert and upsert maps the prepared indexes. Doing so now would break their indexes.
 			const value = properties?.[key]
 			if (value === null) return `${key} ${method === "update" ? "=" : "IS"} NULL`
 			const previous = prepared.indexOf(value)
-			const index = (previous !== -1) ? previous + 1 : preparedAmount++
+			const index = (previous === -1) ? preparedAmount++ : previous + 1
 			if (previous === -1) prepared.push(value)
 			return `${key} = $${index}`
-		}) : []
+		})
 
 		switch (method) {
 		case "select":
 			statement += `SELECT ${options.select?.join(", ") ?? "*"} FROM ${String(table)}`
-			if (properties) {
+			if (properties && Object.keys(properties).length) {
 				statement += " WHERE "
 				statement += mapped.join(" AND ")
 			}
@@ -264,7 +265,7 @@ export class Database<M extends Record<string, Model<any>>> {
 					const value = options.where?.[key]
 					if (value === null) return `${key} IS NULL`
 					const previous = prepared.indexOf(value)
-					const index = (previous !== -1) ? previous + 1 : preparedAmount++
+					const index = (previous === -1) ? preparedAmount++ : previous + 1
 					if (previous === -1) prepared.push(value)
 					return `${key} = $${index}`
 				})
@@ -280,7 +281,7 @@ export class Database<M extends Record<string, Model<any>>> {
 				const name = table as string
 				const buffer = this.buffers[name].bufferValues.insert
 				// Get all distinct columns from all entries
-				const distinct = buffer.map(i => Object.keys(i)).flat().filter((val, ind, arr) => arr.indexOf(val) === ind)
+				const distinct = buffer.flatMap(i => Object.keys(i)).filter((val, ind, arr) => arr.indexOf(val) === ind)
 				const values = [] as Array<string>
 				const addedRows = [] as Array<Record<string, unknown>>
 				for (const entry of buffer) {
@@ -293,7 +294,7 @@ export class Database<M extends Record<string, Model<any>>> {
 						const value = entry[key]
 						if (value === null) return "NULL"
 						const previous = prepared.indexOf(value)
-						const index = (previous !== -1) ? previous + 1 : preparedAmount++
+						const index = (previous === -1) ? preparedAmount++ : previous + 1
 						if (previous === -1) prepared.push(value)
 						return `$${index}`
 					}).join(", "))
@@ -317,7 +318,7 @@ export class Database<M extends Record<string, Model<any>>> {
 					const name = table as string
 					const buffer = this.buffers[name].bufferValues.insert
 					// Get all distinct columns from all entries
-					const distinct = buffer.map(i => Object.keys(i)).flat().filter((val, ind, arr) => arr.indexOf(val) === ind)
+					const distinct = buffer.flatMap(i => Object.keys(i)).filter((val, ind, arr) => arr.indexOf(val) === ind)
 					props2 = distinct
 					buffer.length = 0
 				}
@@ -328,7 +329,7 @@ export class Database<M extends Record<string, Model<any>>> {
 
 		case "delete":
 			statement += `DELETE FROM ${String(table)}`
-			if (properties) statement += ` WHERE ${mapped.join(" AND ")}`
+			if (properties && Object.keys(properties).length) statement += ` WHERE ${mapped.join(" AND ")}`
 			break
 
 		default: break

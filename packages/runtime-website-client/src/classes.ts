@@ -1,3 +1,4 @@
+/* eslint-disable no-undef */
 import { imageStore } from "./imagestore"
 import { prettySeconds, opcodes } from "./utilities.js"
 
@@ -14,8 +15,10 @@ type WebQueueMembers = ReturnType<WebQueue["toJSON"]>["members"]
 type WebTrackJSON = ReturnType<WebTrack["toObject"]>
 
 export class ElemJS<E extends HTMLElement = HTMLElement> {
+	// @ts-expect-error Dont worry
 	public parent: ElemJS<HTMLElement>
 	public readonly children: Array<ElemJS<HTMLElement>> = []
+	// @ts-expect-error assigned from this.bind which is called in ctor
 	public element: E
 
 	public constructor(type: keyof HTMLElementTagNameMap | E) {
@@ -82,7 +85,7 @@ export class ElemJS<E extends HTMLElement = HTMLElement> {
 
 	public clearChildren(): void {
 		this.children.length = 0
-		while (this.element.lastChild) this.element.removeChild(this.element.lastChild)
+		while (this.element.lastChild) this.element.lastChild.remove()
 	}
 }
 
@@ -105,15 +108,15 @@ function ejs(string: string | TemplateStringsArray): ElemJS | undefined {
 		const indent = spaceRegex.exec(line)![0].length
 		line = line.replace(spaceRegex, "")
 		let element: ElemJS | undefined
-		let next: any = null
+		let next: string | null = null
 
 		do {
-			next = r.exec(line)
-			if (next) {
-				next = next[0]
+			const nextMatch = r.exec(line)
+			if (nextMatch) {
+				next = nextMatch[0]
 				if (next.startsWith("#")) element!.id(next.slice(1))
 				else if (next.startsWith(".")) element!.class(next.slice(1))
-				else element = new ElemJS(next)
+				else element = new ElemJS(next as keyof HTMLElementTagNameMap)
 			}
 		} while (next)
 
@@ -192,7 +195,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		super("div")
 		this.class("queue-item")
 
-		;["play", "remove"].forEach(icon => {
+		;["play" as const, "remove" as const].forEach(icon => {
 			const child = new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this[icon]())
 			this.parts.controls.child(child)
 		})
@@ -255,8 +258,8 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 			// this is where the count is actually increased
 			this.queue.addingCount++
 
-			const style = window.getComputedStyle(this.element)
-			const props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
+			const style = globalThis.getComputedStyle(this.element)
+			const props = ["height" as const, "paddingTop" as const, "paddingBottom" as const, "marginBottom" as const]
 
 			const values: Keyframe = {}
 			props.forEach(key => {
@@ -270,10 +273,11 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 			props.forEach(key => {
 				endValues[key] = style[key]
 			})
-			if (this.element.children[2].getBoundingClientRect().height < 1) endValues.height = parseInt(endValues.height as string) + 24 + "px"
+			if (this.element.children[2].getBoundingClientRect().height < 1) endValues.height = Number.parseInt(endValues.height as string) + 24 + "px"
 			endValues.opacity = 1
 
 			Object.entries(values).forEach(entry => {
+				// @ts-expect-error the keys work dw
 				this.element.style[entry[0]] = entry[1]
 			})
 
@@ -284,6 +288,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 					this.adding = false
 					if (shouldAnimate) this.queue.addingCount--
 					Object.entries(values).forEach(entry => {
+						// @ts-expect-error the keys work dw
 						this.element.style[entry[0]] = ""
 					})
 				})
@@ -302,8 +307,8 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 
 		this.disable()
 
-		const style = window.getComputedStyle(this.element)
-		const props = ["height", "paddingTop", "paddingBottom", "marginBottom"]
+		const style = globalThis.getComputedStyle(this.element)
+		const props = ["height" as const, "paddingTop" as const, "paddingBottom" as const, "marginBottom" as const]
 
 		const values: Keyframe = {}
 		props.forEach(key => {
@@ -398,8 +403,9 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 	}
 
 	public updateData(data: WebTrackJSON): void {
+		if (!this.track) return
 		this.trackSet = true
-		Object.assign(this.track!, data)
+		Object.assign(this.track, data)
 		this.render()
 	}
 
@@ -552,9 +558,7 @@ class AddTrackControl extends SideControl {
 		// this.element.addEventListener("click", event => this.onClick(event))
 	}
 
-	public onClick(): void {
-		document.write("lol")
-	}
+	public onClick(): void {}
 }
 
 class TrackInfoControl extends SideControl {
@@ -601,7 +605,7 @@ class ListenInBrowserControl extends SideControl {
 	public onClick(): void {
 		if (!this.sideControls.session.state) return
 		const track = this.sideControls.session.state.tracks[0]
-		this.sideControls.session.listenManager.boot(track, () => this.sideControls.session.player.parts.time.getTime())
+		this.sideControls.session.listenManager.boot(track, () => this.sideControls.session.player.parts.time.getTime()).catch(console.error)
 		this.started = true
 		this.render()
 	}
@@ -634,11 +638,8 @@ export class SideControls<E extends HTMLElement> extends ElemJS<E> {
 	}
 
 	public render(): void {
-		if (!this.mainLoaded) {
-			this.element.style.visibility = "hidden"
-		} else {
-			this.element.style.visibility = "visible"
-		}
+		if (this.mainLoaded) this.element.style.visibility = "visible"
+		else this.element.style.visibility = "hidden"
 		this.partsList.forEach(part => part.render())
 	}
 }
@@ -776,6 +777,7 @@ export class VoiceMember extends ElemJS<HTMLDivElement> {
 	}
 
 	public getAvatar(): AnonImage {
+		if (!this.props.avatar) return new AnonImage("https://amanda.moe/images/unknown.webp")
 		return new AnonImage(`https://cdn.discordapp.com/avatars/${this.props.id}/${this.props.avatar}${this.props.avatar.startsWith("a_") ? ".gif" : ".png"}`).class("avatar").direct("width", this.avatarSize).direct("height", this.avatarSize)
 	}
 

@@ -1,6 +1,6 @@
-import fs = require("fs")
-import p = require("path")
-import crypto = require("crypto")
+import fs = require("node:fs")
+import p = require("node:path")
+import nodeCrypto = require("node:crypto")
 
 import mime = require("mime-types")
 
@@ -12,8 +12,8 @@ const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queu
 
 const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 
-import type { HttpResponse, WebSocket } from "uWebSockets.js"
-import type { Readable } from "stream"
+import type { HttpResponse, WebSocket as UWS } from "uWebSockets.js"
+import type { Readable } from "node:stream"
 import type { IGatewayMessage } from "cloudstorm"
 import {
 	type APIUser,
@@ -44,8 +44,8 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 	let cancel = false
 	res.onAborted(() => {
 		onAbortedOrFinishedResponseStream(res, readStream)
-		if (!resolveOuter) cancel = true
-		else resolveOuter()
+		if (resolveOuter) resolveOuter()
+		else cancel = true
 	})
 	return new Promise((resolve, reject) => {
 		if (cancel) return resolve()
@@ -91,7 +91,7 @@ export function attachResponseAbortListener(res: HttpResponse): void {
 
 export async function streamFile(path: string, res: HttpResponse, acceptHead?: string | undefined, ifModifiedSinceHeader?: string | undefined, headersOnly = false, status = 200, cameFrom404 = false): Promise<void> {
 	attachResponseAbortListener(res)
-	let stats: import("fs").Stats
+	let stats: import("node:fs").Stats
 	const joined = p.join(rootFolder, path)
 	if (!joined.startsWith(rootFolder)) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
 
@@ -101,27 +101,25 @@ export async function streamFile(path: string, res: HttpResponse, acceptHead?: s
 	} catch {
 		console.log(`404 ${path}`)
 		if (!res.continue) return
-		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else {
+		if (cameFrom404) {
 			let written = false
 			return void res.cork(() => {
 				if (written) return
 				written = true
 				res.writeStatus("404").endWithoutBody()
 			})
-		}
+		} else return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
 	}
 
 	if (!stats.isFile()) {
-		if (!cameFrom404) return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
-		else {
+		if (cameFrom404) {
 			let written = false
 			return void res.cork(() => {
 				if (written) return
 				written = true
 				res.writeStatus("404").endWithoutBody()
 			})
-		}
+		} else return streamFile("404.html", res, acceptHead, ifModifiedSinceHeader, headersOnly, 404, true)
 	}
 
 	if (stats.size === 0) {
@@ -194,7 +192,7 @@ export function redirect(res: HttpResponse, location: string) {
 }
 
 export function generateCSRF(loginToken: string | null = null) {
-	const token = crypto.randomBytes(32).toString("hex")
+	const token = nodeCrypto.randomBytes(32).toString("hex")
 	const expires = Date.now() + 6 * 60 * 60 * 1000 // 6 hours
 	sql.raw("INSERT INTO csrf_tokens (token, login_token, expires) VALUES ($1, $2, $3)", [token, loginToken, expires]).catch(console.error)
 	return token
@@ -260,7 +258,7 @@ export class Validator<S extends State, P> {
 	}
 
 	public go(): Promise<S> {
-		this.promise ??= new Promise<S>((resolve, reject) => setImmediate(() => void this._next(resolve, reject)));
+		this.promise ??= new Promise<S>((resolve, reject) => setImmediate(() => void this._next(resolve, reject)))
 		return this.promise
 	}
 
@@ -335,7 +333,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 	}
 
 	public ensureParams(list: Array<string>, matchMode: "get" | "has" = "get"): this {
-		if (!(list instanceof Array)) list = [list]
+		if (!Array.isArray(list)) list = [list]
 		list.forEach(item => {
 			// @ts-expect-error TypeScript doesn't know what it's talking about
 			this.do<(state: S & { params: URLSearchParams }, previousValue: P) => boolean, undefined>(
@@ -359,7 +357,7 @@ export class FormValidator<S extends State, P> extends Validator<S, P> {
 }
 
 export function onGatewayMessage(
-	ws: WebSocket<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
+	ws: UWS<{ worker: import("./ws/gateway").GatewayWorker; clusterID: string }>,
 	message: ArrayBuffer
 ) {
 	const parsed: IGatewayMessage & { cluster_id: string } = JSON.parse(Buffer.from(message).toString())
@@ -403,8 +401,11 @@ export function onGatewayMessage(
 }
 
 export async function handleInteraction(payload: APIInteraction): Promise<void>
+// eslint-disable-next-line no-redeclare
 export async function handleInteraction(payload: APIInteraction, returnJSON: true): Promise<string>
+// eslint-disable-next-line no-redeclare
 export async function handleInteraction(payload: APIInteraction, returnJSON: false): Promise<void>
+// eslint-disable-next-line no-redeclare
 export async function handleInteraction(payload: APIInteraction, returnJSON = false): Promise<string | void> {
 	let commandHandled = false
 	let rt = "{}"

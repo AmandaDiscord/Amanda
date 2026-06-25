@@ -1,4 +1,4 @@
-import path = require("path")
+import path = require("node:path")
 
 import Canvas = require("canvas")
 import gifencoder = require("gifencoder")
@@ -125,6 +125,7 @@ commands.assign([
 				})
 			}
 
+			// eslint-disable-next-line no-useless-assignment
 			let result = ""
 			let winning: bigint
 			if (slots.every(s => s === "heart")) {
@@ -285,7 +286,7 @@ commands.assign([
 
 			const userOption = cmd.data.options.get("user")
 			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
-			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? void 0 : cmd.member
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? (userOption ? void 0 : cmd.member)
 			const showCouple = cmd.data.options.get("couple")?.asBoolean() ?? false
 
 			const money = await moneyManager.getPersonalRow(user.id)
@@ -458,8 +459,8 @@ commands.assign([
 				})
 			}
 
-			moneyManager.transact(cmd.author.id, user.id, amount)
-			client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+			await moneyManager.transact(cmd.author.id, user.id, amount)
+			return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 				content: langReplace(lang.GLOBAL.GIVEN_TO_OTHER, { "amount": sharedUtils.numberComma(amount), "user": sharedUtils.userString(user) })
 			})
 		}
@@ -586,7 +587,7 @@ commands.assign([
 		async process(cmd) {
 			const userOption = cmd.data.options.get("user")
 			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
-			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? userOption ? void 0 : cmd.member // for cases of in DMs
+			const member = cmd.data.members.get(userOption?.asString() ?? "") ?? (userOption ? void 0 : cmd.member) // for cases of in DMs
 			const light = cmd.data.options.get("light")?.asBoolean() ?? false
 			const lightSpecified = !!cmd.data.options.get("light")
 
@@ -916,7 +917,8 @@ async function buildMoneyCard(
 
 	if (!masked) {
 		let avatars: Array<Canvas.Canvas>
-		if (!personal) {
+		if (personal) avatars = [avatar]
+		else {
 			avatars = await Promise.all(couple!.users.map(async u => {
 				const user = await sharedUtils.getUser(u, client.snow, client) ?? sharedUtils.DiscordsProfile
 
@@ -924,7 +926,7 @@ async function buildMoneyCard(
 					.catch(() => Canvas.loadImage(sharedUtils.displayAvatarURL(sharedUtils.DiscordsProfile)))
 			}))
 				.then(pfps => pfps.map(a => canvasUtils.mask(a, circleMask, avatarSize, avatarSize).canvas))
-		} else avatars = [avatar]
+		}
 
 		const offset = 46
 		canvas.drawImage(avatars[0], avatarStartX, avatarStartY)

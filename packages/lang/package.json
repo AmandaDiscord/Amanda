@@ -6,7 +6,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "node ./generate.js",
-    "lint": "eslint . -c eslint.config.js"
+    "lint": "eslint ."
   },
   "author": "PapiOphidian",
   "license": "MIT",

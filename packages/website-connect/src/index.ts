@@ -1,4 +1,4 @@
-import { EventEmitter } from "events"
+import { EventEmitter } from "node:events"
 
 import { BetterWs } from "cloudstorm"
 
@@ -43,14 +43,30 @@ class Connector extends EventEmitter {
 	/**
 	 * Send a JSON message to the websocket server
 	 * @param data Anything that can be JSON.stringify()'d
+	 * @param timeoutMs How long to wait for a connection to resume before giving up, if not currently connected
 	 */
-	public send(data: any): Promise<void> {
-		return new Promise(res => {
+	public send(data: any, timeoutMs = 30000): Promise<void> {
+		return new Promise((resolve, reject) => {
 			if (this.ws.sm.currentStateName === "connected") {
 				this.ws.sendMessage(data)
-				res(void 0)
+				resolve(void 0)
+				return
 			}
-			else this.queue.push({ res, data })
+
+			const entry: { res: () => void; data: any } = {
+				data,
+				res: () => {
+					clearTimeout(timeout)
+					resolve(void 0)
+				}
+			}
+			const timeout = setTimeout(() => {
+				const index = this.queue.indexOf(entry)
+				if (index !== -1) this.queue.splice(index, 1)
+				reject(new Error("Timed out waiting for the connection to resume before the message could be sent"))
+			}, timeoutMs)
+
+			this.queue.push(entry)
 		})
 	}
 

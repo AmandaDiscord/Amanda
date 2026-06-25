@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -p .",
-    "lint": "eslint . -c eslint.config.js",
+    "lint": "eslint .",
     "start": "node --optimize-for-size .",
     "dev": "node --trace-warnings --enable-source-maps --optimize-for-size ."
   },

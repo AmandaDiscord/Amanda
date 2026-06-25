@@ -1,6 +1,6 @@
 import { ComponentType, MessageFlags } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
-const { commands, client, confprovider } = passthrough
+const { commands, client } = passthrough
 
 import { en_us as English } from "@amanda/lang"
 
