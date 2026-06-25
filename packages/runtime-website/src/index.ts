@@ -38,7 +38,7 @@ passthrough.commands = new CommandManager<CommandManagerParams>(cmd => [
 passthrough.snow.requestHandler.on("rateLimit", (...args) => console.error("Ratelimit hit\n", ...args))
 passthrough.snow.requestHandler.on("requestError", (_reqID, err) => {
 	const e = err as DiscordAPIError
-	console.error(e, e.request.data)
+	console.error(e, e.request?.data)
 })
 
 const pathToOldQueuesAndNodes = path.join(__dirname, "../queue-restore.json")

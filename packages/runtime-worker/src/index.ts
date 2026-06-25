@@ -42,7 +42,7 @@ passthrough.webconnector = new WebsiteConnector("/internal")
 	passthrough.client.snow.requestHandler.on("rateLimit", (...args) => console.error("Ratelimit hit\n", ...args))
 	passthrough.client.snow.requestHandler.on("requestError", (_reqID, err) => {
 		const e = err as DiscordAPIError
-		console.error(e, e.request.data)
+		console.error(e, e.request?.data)
 	})
 
 	const user = await sharedUtils.getUser(
