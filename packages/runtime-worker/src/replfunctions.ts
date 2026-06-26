@@ -102,7 +102,7 @@ const extraContext = {
 
 		const globalCommands = payload.filter(c => !c.guild_ids?.length)
 		if (globalCommands.length) {
-			const response = await client.snow.interaction.bulkOverwriteApplicationCommands(confprovider.config.client_id, globalCommands).catch(console.error)
+			const response = await client.snow.interaction.editApplicationCommands(confprovider.config.client_id, globalCommands).catch(console.error)
 			console.log(response)
 		}
 
@@ -111,7 +111,7 @@ const extraContext = {
 			const uniqueGuildIds = guildedCommands.map(c => c.guild_ids!).flat().filter((id, ind, arr) => arr.indexOf(id) === ind)
 			for (const guildID of uniqueGuildIds) {
 				const forGuild = guildedCommands.filter(c => c.guild_ids!.includes(guildID))
-				const response = await client.snow.interaction.bulkOverwriteGuildApplicationCommands(confprovider.config.client_id, guildID, forGuild).catch(console.error)
+				const response = await client.snow.interaction.editGuildApplicationCommands(confprovider.config.client_id, guildID, forGuild).catch(console.error)
 				console.log(response)
 			}
 		}

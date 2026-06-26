@@ -3904,12 +3904,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"snowtransfer@npm:^0.17.7":
-  version: 0.17.7
-  resolution: "snowtransfer@npm:0.17.7"
+"snowtransfer@npm:^0.18.0":
+  version: 0.18.0
+  resolution: "snowtransfer@npm:0.18.0"
   dependencies:
-    discord-api-types: "npm:^0.38.47"
-  checksum: 10/fdaf2d3ca41077122a22b0560be9ed0b125b0dd61749b28944c5d3c272f9f54480c6ac1158cf80a52c1fa904d525f711fd9214fe24788fe4226d1c50278f4b7f
+    discord-api-types: "npm:^0.38.49"
+  checksum: 10/1b348a1ce0e3c0b6a7cbaa7c5ac2970263e788ad0de93bb863fff4063fa9f1653154d1c222a63f65e4f66d984b3ad836666fbe883e24f61baab3253ca1c0e78d
   languageName: node
   linkType: hard
 
@@ -4232,10 +4232,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"undici@npm:7.18.2":
-  version: 7.18.2
-  resolution: "undici@npm:7.18.2"
-  checksum: 10/7d8b921717f5a11fe7e3631dd46ea6dbd80173bdbd454c0115d2c52595352b4a620a3e48c02c40e8f32a416b8bd0028b027cbc8ddebc2d9cdc7a283d50399e3c
+"undici@npm:8.5.0":
+  version: 8.5.0
+  resolution: "undici@npm:8.5.0"
+  checksum: 10/e95913777afd47d76babfe62547bb4e9a94b93f44b50c84b4e0b6fa41c00364e31ff4f433a955b1592c3162f43e8757e2e0feae6eea195187730594523393568
   languageName: node
   linkType: hard
 
