@@ -11,6 +11,7 @@ import passthrough = require("./passthrough")
 const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, gatewayShardIndex, sync } = passthrough
 
 const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
+const autocomplete = sync.require("./music/autocomplete") as typeof import("./autocomplete")
 
 import type { HttpResponse, WebSocket as UWS } from "uWebSockets.js"
 import type { Readable } from "node:stream"
@@ -20,6 +21,7 @@ import {
 	type APIMessageComponentInteractionData,
 	type APIMessageComponentInteraction,
 	type APIChatInputApplicationCommandInteraction,
+	type APIApplicationCommandAutocompleteInteraction,
 
 	Locale,
 	APIInteraction
@@ -431,6 +433,18 @@ export async function handleInteraction(payload: APIInteraction, returnJSON = fa
 		buttons.handle(payload)
 		commandHandled = true
 		break
+
+	case 4: { // Autocomplete. Cannot be deferred and expects a response within 3 seconds, so the choices are awaited
+		const handler = autocomplete.handlers.get((payload as APIApplicationCommandAutocompleteInteraction).data.name)
+		const choices = handler
+			? await handler(payload as APIApplicationCommandAutocompleteInteraction).catch(() => [])
+			: []
+
+		rt = JSON.stringify({ type: 8, data: { choices } })
+		if (!returnJSON) await snow.interaction.createInteractionResponse(payload.id, payload.token, { type: 8, data: { choices } })
+		commandHandled = true
+		break
+	}
 
 	default:
 		console.error(`Unknown payload type ${payload.type}\n`, payload)

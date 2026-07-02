@@ -26,7 +26,8 @@ const opcodes = {
 	CLEAR_QUEUE: 13,
 	LISTENERS_UPDATE: 14,
 	TRACK_PLAY_NOW: 15,
-	SEEK: 16
+	SEEK: 16,
+	ERROR: 17
 }
 
 type Packet<T> = {
@@ -87,12 +88,29 @@ export class Session {
 		this.closed = true
 		this.loggedin = false
 		console.log(`WebSocket disconnected: ${this.user ?? "Unauthenticated"}`)
-		if (this.user) sessions.delete(this.user)
-		if (this.user && this.guild) {
+		this.removeFromIndexes()
+		console.log(`${sessions.size} sessions in memory`)
+	}
+
+	/** Remove this session from the indexes if it still owns its slots and close the socket */
+	public invalidate(): void {
+		this.removeFromIndexes()
+		this.loggedin = false
+		this.cleanClose()
+	}
+
+	private removeFromIndexes(): void {
+		// Only delete entries this session owns. A replacement session for the same user may have already taken the slot
+		if (!this.user || sessions.get(this.user) !== this) return
+		sessions.delete(this.user)
+		if (this.guild) {
 			sessionGuildIndex.get(this.guild)?.delete(this.user)
 			if (!sessionGuildIndex.get(this.guild)?.size) sessionGuildIndex.delete(this.guild)
 		}
-		console.log(`${sessions.size} sessions in memory`)
+	}
+
+	private deny(data: Packet<unknown> | undefined, code: string): void {
+		this.send({ op: opcodes.ERROR, nonce: data?.nonce ?? null, d: { code } })
 	}
 
 	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
@@ -102,11 +120,20 @@ export class Session {
 			// Check the user and guild are legit
 			const cookies = utils.getCookies(data.d.cookie)
 			const session = await utils.getSession(cookies)
-			if (!session) return
-			if (!confprovider.config.db_enabled) return
+			if (!session) return this.deny(data, "AUTH_FAILED")
+			if (!confprovider.config.db_enabled) return this.deny(data, "UNAVAILABLE")
 			const state = await redis.GET<APIVoiceState>("voice", session.user_id)
-			if (!state) return console.warn(`Fake user tried to identify: ${session.user_id}`)
-			if (sessions.has(session.user_id)) return console.warn(`User tried to identify multiple times: ${session.user_id}`)
+			if (!state) {
+				console.warn(`Fake user tried to identify: ${session.user_id}`)
+				return this.deny(data, "NO_VOICE_STATE")
+			}
+			const existingSession = sessions.get(session.user_id)
+			if (existingSession) {
+				// Replace the old session instead of rejecting so reconnecting clients
+				// aren't locked out while their stale session waits out the idle timeout
+				console.warn(`User re-identified. Replacing existing session: ${session.user_id}`)
+				existingSession.invalidate()
+			}
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
@@ -183,25 +210,25 @@ export class Session {
 		return true
 	}
 
-	public togglePlayback(): void {
+	public togglePlayback(data: Packet<unknown>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		q.paused = !q.paused
 	}
 
-	public requestSkip(): void {
+	public requestSkip(data: Packet<unknown>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		q.skip()
 	}
 
-	public requestStop(): void {
+	public requestStop(data: Packet<unknown>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		q.destroy(true)
@@ -209,15 +236,15 @@ export class Session {
 
 	public requestAttributesChange(data: Packet<{ loop?: boolean }>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		if (typeof data?.d?.loop === "boolean") q.loop = data.d.loop
 	}
 
-	public requestClearQueue(): void {
+	public requestClearQueue(data: Packet<unknown>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		q.tracks.splice(1, q.tracks.length - 1)
@@ -226,7 +253,7 @@ export class Session {
 
 	public requestTrackRemove(data: Packet<{ index: number }>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		if (typeof data?.d?.index === "number") q.removeTrack(data.d.index)
@@ -234,7 +261,7 @@ export class Session {
 
 	public requestPlayNow(data: Packet<{ index: number }>): void {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		if (typeof data?.d?.index === "number") {
@@ -249,7 +276,7 @@ export class Session {
 
 	public async requestSeek(data: Packet<{ time: 0 }>): Promise<void> {
 		const allowed = this.allowedToAction()
-		if (!allowed) return
+		if (!allowed) return this.deny(data, "NOT_LISTENING")
 		const q = queues.get(this.guild!)
 		if (!q) return this.cleanClose()
 		if (typeof data?.d?.time === "number") {

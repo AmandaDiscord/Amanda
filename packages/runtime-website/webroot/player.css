@@ -269,3 +269,51 @@ html, body {
 	height: 17px;
 	margin-right: 4px;
 }
+
+.icon-button {
+	appearance: none;
+	-moz-appearance: none;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-self: start;
+}
+
+.icon-button:focus-visible {
+	outline: 2px solid #58aef1;
+	outline-offset: 2px;
+}
+
+.icon-button[disabled] {
+	cursor: default;
+	pointer-events: none;
+}
+
+body.disconnected .player-grid {
+	opacity: 0.6;
+	pointer-events: none;
+}
+
+.toast {
+	position: fixed;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%);
+	background-color: var(--text-color);
+	color: white;
+	border: 2px solid grey;
+	border-style: ridge;
+	padding: 10px 16px;
+	font-size: 18px;
+	z-index: 10;
+	opacity: 1;
+	transition: opacity 0.5s ease;
+}
+
+.toast.toast-hide {
+	opacity: 0;
+}

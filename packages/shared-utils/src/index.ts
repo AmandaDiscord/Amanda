@@ -32,6 +32,9 @@ const durationFrameRegex = /(\d+) ?(\w+)?/
 const durationInputSplitterRegex = /(?! [^\d]+) /g
 const alignedRowsRegex = /`.+?`/g
 
+/** The one accent color user facing error containers should use. Successful responses stay colorless */
+export const ACCENT_COLOR_ERROR = 0xdd2d2d
+
 /**
  * Wrap promise's return values that will be accessed multiple times without
  * logic strictly to check for if the value exists already
@@ -707,6 +710,76 @@ type PartialChatInputCommand = {
 	token: string;
 }
 
+/** Definition of a user profile setting the settings command can view/modify */
+export type ProfileSettingDefinition = {
+	type: "string" | "boolean" | "number"
+	defaultValue: string
+	nullable?: boolean
+	allowedValues?: Array<unknown>
+	allowDonorArbitrary?: boolean
+}
+
+/** User profile settings for the settings command. Also drives its autocomplete suggestions */
+export const profileSettings: Record<string, ProfileSettingDefinition> = {
+	"profilebackground": {
+		type: "string",
+		nullable: true,
+		allowedValues: ["default", "vicinity", "sakura"],
+		allowDonorArbitrary: true,
+		defaultValue: "default"
+	},
+	"profiletheme": {
+		type: "string",
+		allowedValues: ["dark", "light"],
+		defaultValue: "dark"
+	},
+	"profilestyle": {
+		type: "string",
+		allowedValues: ["old", "new"],
+		defaultValue: "new"
+	}
+}
+
+type AutocompleteOptionNode = {
+	name: string;
+	value?: string | number | boolean;
+	focused?: boolean;
+	options?: Array<AutocompleteOptionNode>;
+}
+
+/**
+ * Walk an autocomplete interaction's options, including sub commands,
+ * to find the option the user is currently typing in
+ */
+export function findFocusedOption(options: Array<AutocompleteOptionNode> | undefined): AutocompleteOptionNode | null {
+	if (!options) return null
+
+	for (const option of options) {
+		if (option.focused) return option
+		const nested = findFocusedOption(option.options)
+		if (nested) return nested
+	}
+
+	return null
+}
+
+/**
+ * Check if the database is usable, replying to the interaction with DATABASE_OFFLINE if it isn't.
+ * Commands which require the database should return early when this returns false
+ * @param cmd The `@amanda/commands` ChatInputCommand
+ * @param lang The Amanda lang Object of the user or the guild the command was issued in
+ * @param snow The SnowTransfer instance to initiate the requests
+ */
+export function requireDb(cmd: PartialChatInputCommand, lang: Lang, snow: SnowTransfer): boolean {
+	if (confprovider.config.db_enabled) return true
+
+	snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+		content: lang.GLOBAL.DATABASE_OFFLINE
+	})
+
+	return false
+}
+
 /**
  * Create a paginated table UI in a Discord text channel
  * @param cmd The `@amanda/commands` ChatInputCommand
@@ -722,7 +795,7 @@ export function createPagination(cmd: PartialChatInputCommand, lang: Lang, title
 	const formattedTitle = alignedRows[0].replace(alignedRowsRegex, sub => `__**\`${sub}\`**__`)
 	alignedRows = alignedRows.slice(1)
 	const pages = createPages(alignedRows, maxLength - formattedTitle.length - 1, 1, 16, 4)
-	paginate(pages.length, (page, component) => {
+	paginate(pages.length, lang, (page, component) => {
 		const extra: Array<APIComponentInContainer> = component
 			? [{ type: 1, components: [component.component] }]
 			: []
@@ -754,15 +827,16 @@ export function createPagination(cmd: PartialChatInputCommand, lang: Lang, title
 /**
  * Create a callback for user page selection returning the page number and a Discord select menu component if there are more than 1 page
  * @param pageCount How many pages there are
+ * @param lang The language of the interaction for the select menu placeholder and option labels
  * @param callback The callback function for the root to know what page the user selected and the component if more than 1 page
  */
-export function paginate(pageCount: number, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
+export function paginate(pageCount: number, lang: Lang, callback: (page: number, component: InstanceType<typeof BetterComponent> | null) => unknown): void {
 	let page = 0
 	if (pageCount > 1) {
-		const options = new Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: `Page ${i + 1}`, value: String(i), default: false }))
+		const options = new Array(Math.min(pageCount, 25)).fill(null).map((_, i) => ({ label: langReplace(lang.GLOBAL.PAGE_NUMBER, { "number": i + 1 }), value: String(i), default: false }))
 		const component = new buttons.BetterComponent({
 			type: 3,
-			placeholder: "Select page",
+			placeholder: lang.GLOBAL.SELECT_PAGE,
 			max_values: 1,
 			min_values: 1,
 			options
@@ -870,7 +944,7 @@ export async function defaultCommandManagerErrorHandler(command: APIChatInputApp
 			components: [
 				{
 					type: ComponentType.Container,
-					accent_color: 0xdd2d2d,
+					accent_color: ACCENT_COLOR_ERROR,
 					components: [
 						{
 							type: ComponentType.TextDisplay,

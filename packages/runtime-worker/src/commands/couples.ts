@@ -5,7 +5,7 @@ import {
 	MessageFlags
 } from "discord-api-types/v10"
 import passthrough = require("../passthrough")
-const { commands, sql, confprovider, client, sync } = passthrough
+const { commands, sql, client, sync } = passthrough
 
 const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
 import langReplace = require("@amanda/lang/replace")
@@ -31,11 +31,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
 			const info = await moneyManager.getCoupleRow(user.id)
@@ -83,11 +79,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 
@@ -136,11 +128,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 
@@ -208,11 +196,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 
@@ -259,11 +243,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")?.asString() ?? "") ?? cmd.author
 
@@ -336,11 +316,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 
@@ -391,11 +367,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
 
@@ -437,11 +409,7 @@ commands.assign([
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const itemsPerPage = 10
 
@@ -453,7 +421,7 @@ commands.assign([
 				})
 			}
 
-			return sharedUtils.paginate(count, async (page, btn) => {
+			return sharedUtils.paginate(count, lang, async (page, btn) => {
 				const offset = page * itemsPerPage
 				const thisRows = await sql.all<{ id: string, amount: string }>(`SELECT bank_accounts.id, bank_accounts.amount FROM (SELECT DISTINCT ON (bank_access.id) bank_access.id FROM bank_access) temp INNER JOIN bank_accounts ON bank_accounts.id = temp.id WHERE bank_accounts.type = 1 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
 
@@ -494,7 +462,7 @@ commands.assign([
 							components: [
 								{
 									type: ComponentType.TextDisplay,
-									content: "Couple Leaderboard"
+									content: lang.GLOBAL.HEADER_COUPLE_LEADERBOARD
 								},
 								{
 									type: ComponentType.TextDisplay,

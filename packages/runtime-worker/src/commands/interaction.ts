@@ -24,7 +24,7 @@ const cmds = [
 		description: English.bean.description,
 		category: "interaction",
 		integration_types: [0, 1],
-		contexts: [0, 2],
+		contexts: [0],
 		options: [
 			{
 				name: English.bean.options.user.name,
@@ -267,7 +267,7 @@ function doInteraction(
 	let footer: string
 
 	if (shortcut === "weeb.sh") {
-		footer = "Powered by weeb.sh"
+		footer = langReplace(lang.GLOBAL.POWERED_BY, { "service": "weeb.sh" })
 		fetched = fetch(`https://api.weeb.sh/images/random?nsfw=false&type=${source}&filetype=gif`, {
 			headers: {
 				Authorization: `Wolke ${confprovider.config.weeb_token}`
@@ -318,7 +318,7 @@ function doInteraction(
 		})
 	}).catch(() => {
 		return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-			content: "There was an error with that command"
+			content: lang.GLOBAL.ERROR_OCCURRED
 		})
 	})
 }

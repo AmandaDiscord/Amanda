@@ -259,7 +259,7 @@ commands.assign([
 
 			if (!userIsListening && !executePage) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: langReplace(lang.GLOBAL.VC_REQUIRED, { username: cmd.author.username })
+					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 				})
 			}
 
@@ -269,7 +269,7 @@ commands.assign([
 				const sliced = queue.tracks.slice(start, start + 10)
 				const strings = sliced.map((track, index) => `${index + 1}. ${track.queueLine}`)
 				const body = `${strings.join("\n")}${totalLength}\n${langReplace(lang.GLOBAL.PAGE_LENGTH, { "time": sharedUtils.prettySeconds(sliced.reduce((acc, cur) => (acc + cur.lengthSeconds), 0)) })}`
-				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 					flags: MessageFlags.IsComponentsV2,
 					components: [
 						{
@@ -315,6 +315,12 @@ commands.assign([
 				queue.paused = pause
 				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
 					content: lang.GLOBAL[queue.paused ? "QUEUE_PAUSED" : "QUEUE_UNPAUSED"]
+				})
+			}
+
+			if (!userIsListening && [volume, loop, pause].some(i => i !== null)) {
+				snow.interaction.createFollowupMessage(cmd.application_id, cmd.token, {
+					content: langReplace(lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${queue.voiceChannelID}>` })
 				})
 			}
 		}
@@ -513,13 +519,13 @@ commands.assign([
 			queue.speed = speed
 			const result = await queue.applyFilters()
 
-			if (!result) {
+			if (result) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.FILTERS_ERROR
+					content: lang.GLOBAL.FILTERS_APPLIED
 				})
 			} else {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.FILTERS_APPLIED
+					content: lang.GLOBAL.FILTERS_ERROR
 				})
 			}
 		}
@@ -624,11 +630,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, snow)) return
 
 			if (cmd.guild_id) {
 				return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
@@ -728,7 +730,7 @@ commands.assign([
 		description: English.search.description,
 		category: "audio",
 		integration_types: [0, 1],
-		contexts: [0, 1, 2],
+		contexts: [0], // doChecks is guild-only, so don't offer the command in contexts where it would always fail
 		options: [
 			{
 				name: English.search.options.input.name,

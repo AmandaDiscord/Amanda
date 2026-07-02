@@ -24,7 +24,8 @@ export const opcodes = {
 	CLEAR_QUEUE: 13,
 	LISTENERS_UPDATE: 14,
 	TRACK_PLAY_NOW: 15,
-	SEEK: 16
+	SEEK: 16,
+	ERROR: 17
 }
 
 function* generator() {

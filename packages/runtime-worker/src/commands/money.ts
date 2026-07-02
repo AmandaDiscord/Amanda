@@ -46,11 +46,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const fruits = ["apple" as const, "cherries" as const, "watermelon" as const, "pear" as const, "strawberry" as const] // plus heart, which is chosen seperately
 			const isPremium = await sql.orm.get("premium", { user_id: cmd.author.id })
@@ -278,11 +274,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const userOption = cmd.data.options.get("user")
 			const user = cmd.data.users.get(userOption?.asString() ?? "") ?? cmd.author
@@ -351,11 +343,7 @@ commands.assign([
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const itemsPerPage = 10
 
@@ -367,7 +355,7 @@ commands.assign([
 				})
 			}
 
-			return sharedUtils.paginate(count, async (page, btn) => {
+			return sharedUtils.paginate(count, lang, async (page, btn) => {
 				const offset = page * itemsPerPage
 				const thisRows = await sql.all<{ user_id: string, amount: string }>(`SELECT bank_access.user_id, bank_accounts.amount FROM bank_accounts INNER JOIN bank_access ON bank_accounts.id = bank_access.id WHERE bank_accounts.type = 0 ORDER BY bank_accounts.amount DESC LIMIT ${itemsPerPage} OFFSET ${offset}`)
 
@@ -395,7 +383,7 @@ commands.assign([
 						components: [
 							{
 								type: ComponentType.TextDisplay,
-								content: "Leaderboard"
+								content: lang.GLOBAL.HEADER_LEADERBOARD
 							},
 							{
 								type: ComponentType.TextDisplay,
@@ -437,11 +425,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const user = cmd.data.users.get(cmd.data.options.get("user")!.asString()!)!
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
@@ -481,11 +465,7 @@ commands.assign([
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const money = await moneyManager.getPersonalRow(cmd.author.id)
 			const amount = BigInt(cmd.data.options.get("amount")!.asNumber()!)
@@ -513,11 +493,7 @@ commands.assign([
 		integration_types: [0, 1],
 		contexts: [0, 1, 2],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
 			const claim = await sql.orm.get("daily_cooldown", { user_id: cmd.author.id })
 			if (claim && Number(claim.last_claim) + (1000 * 60 * 60 * 24) > Date.now()) {

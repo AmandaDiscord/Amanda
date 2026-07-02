@@ -97,6 +97,23 @@ class AnonImage extends ElemJS<HTMLImageElement> {
 	}
 }
 
+/** A real button wrapping an icon so controls are focusable and usable with a keyboard/screen reader */
+function iconButton(icon: string, label: string, onActivate: () => void): ElemJS<HTMLButtonElement> {
+	const button = new ElemJS<HTMLButtonElement>("button").class("icon-button").attribute("aria-label", label)
+	button.child(new AnonImage(`/images/${icon}.svg`).attribute("alt", ""))
+	button.direct("onclick", onActivate)
+	return button
+}
+
+export function toast(message: string): void {
+	const element = new ElemJS("div").class("toast").attribute("role", "status").text(message)
+	document.body.appendChild(element.element)
+	setTimeout(() => {
+		element.element.classList.add("toast-hide")
+		setTimeout(() => element.element.remove(), 500)
+	}, 4000)
+}
+
 const r = /[.#]?[\w-]+/g
 const spaceRegex = /^\s*/
 
@@ -195,9 +212,9 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		super("div")
 		this.class("queue-item")
 
+		const labels = { play: "Play now", remove: "Remove from queue" }
 		;["play" as const, "remove" as const].forEach(icon => {
-			const child = new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this[icon]())
-			this.parts.controls.child(child)
+			this.parts.controls.child(iconButton(icon, labels[icon], () => this[icon]()))
 		})
 
 		this.updateData(data)
@@ -228,7 +245,7 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		this.queue.session.send({
 			op: opcodes.TRACK_PLAY_NOW,
 			d: { index: index + 1 }
-		})
+		}, () => this.enable()) // re-enable if the server rejects the action
 	}
 
 	public remove(): void {
@@ -237,12 +254,17 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 		this.queue.session.send({
 			op: opcodes.TRACK_REMOVE,
 			d: { index: index + 1 }
-		})
+		}, () => this.enable())
 	}
 
 	public disable(): void {
 		this.class("disabled")
-		this.parts.controls.children.forEach(button => button.direct("onclick", null))
+		this.parts.controls.children.forEach(button => ((button as ElemJS<HTMLButtonElement>).element.disabled = true))
+	}
+
+	public enable(): void {
+		this.element.classList.remove("disabled")
+		this.parts.controls.children.forEach(button => ((button as ElemJS<HTMLButtonElement>).element.disabled = false))
 	}
 
 	public animateAdd(): void {
@@ -351,9 +373,15 @@ export class QueueItem<Q extends Queue> extends ElemJS<HTMLDivElement> {
 	}
 }
 
-class AttributeButton extends ElemJS<HTMLImageElement> {
+class AttributeButton extends ElemJS<HTMLButtonElement> {
+	private readonly icon = new ElemJS<HTMLImageElement>("img").attribute("alt", "")
+
 	public constructor(public readonly player: Player<HTMLElement>, public readonly propertyName: keyof Player<HTMLElement>["attributes"]) {
-		super("img")
+		super("button")
+
+		this.class("icon-button")
+		this.attribute("aria-label", `Toggle ${propertyName}`)
+		this.child(this.icon)
 
 		this.direct("onclick", () => {
 			this.player.attributes[propertyName] = !this.player.attributes[propertyName]
@@ -365,7 +393,8 @@ class AttributeButton extends ElemJS<HTMLImageElement> {
 	}
 
 	public render(): void {
-		this.direct("src", `/images/${this.propertyName}_${this.player.attributes[this.propertyName] ? "active" : "inactive"}.svg`)
+		this.icon.direct("src", `/images/${this.propertyName}_${this.player.attributes[this.propertyName] ? "active" : "inactive"}.svg`)
+		this.attribute("aria-pressed", String(!!this.player.attributes[this.propertyName]))
 	}
 }
 
@@ -389,8 +418,9 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 	public constructor(container: E, public readonly session: Session) {
 		super(container)
 
+		const labels = { rewind: "Restart track", togglePlayback: "Play or pause", skip: "Skip track", stop: "Stop playback" }
 		;(["rewind" as const, "togglePlayback" as const, "skip" as const, "stop" as const]).forEach(icon => {
-			this.parts.controls.child(new AnonImage(`/images/${icon}.svg`).direct("onclick", () => this.session[icon]()))
+			this.parts.controls.child(iconButton(icon, labels[icon], () => this.session[icon]()))
 		})
 		this.parts.controls.child(this.parts.loopButton)
 		this.render()
@@ -420,7 +450,9 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 
 	public render(): void {
 		this.clearChildren()
-		if (this.track) {
+		if (this.session.connectionState !== "connected") {
+			this.child(new ElemJS("div").class("song-title", "nothing-playing").text(this.session.statusText()))
+		} else if (this.track) {
 			const thumbnail = new ElemJS(imageStore.get(this.track.thumbnail.src)!)
 			thumbnail.element.width = this.track.thumbnail.width
 			thumbnail.element.height = this.track.thumbnail.height
@@ -440,10 +472,8 @@ export class Player<E extends HTMLElement> extends ElemJS<E> {
 					this.parts.controls
 				)
 			)
-		} else if (this.trackSet) {
-			this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Nothing playing"))
 		} else {
-			this.child(new ElemJS("div").class("song-title", "nothing-playing").text("Connecting..."))
+			this.child(new ElemJS("div").class("song-title", "nothing-playing").text(this.trackSet ? "Nothing playing" : "Connecting..."))
 		}
 	}
 }
@@ -550,30 +580,6 @@ abstract class SideControl extends ElemJS<HTMLButtonElement> {
 	}
 }
 
-class AddTrackControl extends SideControl {
-	public disabled = true
-
-	public constructor(sideControls: SideControls<HTMLElement>) {
-		super(sideControls, "Add track", "add-shaped")
-		// this.element.addEventListener("click", event => this.onClick(event))
-	}
-
-	public onClick(): void {}
-}
-
-class TrackInfoControl extends SideControl {
-	public disabled = true
-
-	public constructor(sideControls: SideControls<HTMLElement>) {
-		super(sideControls, "Track information", "information-shaped")
-	}
-
-	public render(): void {
-		// this.disabled = !this.sideControls.session.state
-		super.render()
-	}
-}
-
 class ClearQueueControl extends SideControl {
 	public constructor(sideControls: SideControls<HTMLElement>) {
 		super(sideControls, "Clear queue", "remove-shaped")
@@ -620,8 +626,6 @@ export class SideControls<E extends HTMLElement> extends ElemJS<E> {
 	public mainLoaded = false
 	public readonly parts = {
 		listen: new ListenInBrowserControl(this),
-		add: new AddTrackControl(this),
-		info: new TrackInfoControl(this),
 		clear: new ClearQueueControl(this)
 	}
 	public partsList: Array<SideControls<E>["parts"][keyof SideControls<E>["parts"]]>
@@ -630,8 +634,6 @@ export class SideControls<E extends HTMLElement> extends ElemJS<E> {
 		super(container)
 
 		this.child(this.parts.listen)
-		this.child(this.parts.add)
-		this.child(this.parts.info)
 		this.child(this.parts.clear)
 		this.partsList = Object.values(this.parts)
 		this.render()

@@ -148,7 +148,7 @@ const common = {
 			components: [
 				{
 					type: ComponentType.Container,
-					accent_color: 0xdd2d2d,
+					accent_color: sharedUtils.ACCENT_COLOR_ERROR,
 					components: [
 						{
 							type: ComponentType.TextDisplay,
@@ -201,7 +201,14 @@ const common = {
 				precedence = confprovider.config.second_matcher_group_precedence[precedenceIndex]
 				if (secondMatch[precedence]) input = secondMatch[precedence]
 				precedenceIndex++
-				if (precedenceIndex === confprovider.config.second_matcher_group_precedence.length && input === "") return null
+				if (precedenceIndex === confprovider.config.second_matcher_group_precedence.length && input === "") {
+					snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
+						flags: MessageFlags.IsComponentsV2,
+						components: [{ type: ComponentType.TextDisplay, content: lang.GLOBAL.NO_RESULTS }]
+					})
+
+					return null
+				}
 			}
 			const mode = confprovider.config.second_matcher_map[precedence as keyof typeof confprovider.config.second_matcher_map] as "search" | "id" ?? "search" as const
 			let tracks: Array<SecondVideo | SecondPartialVideo>
@@ -527,7 +534,7 @@ const common = {
 
 		doChecks(cmd: ChatInputCommand, lang: Lang, isAddTrack = false): boolean {
 			if (!confprovider.config.redis_enabled) {
-				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.DATABASE_OFFLINE })
+				snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, { content: lang.GLOBAL.VOICE_STATUS_OFFLINE })
 				return false
 			}
 
@@ -575,7 +582,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 		placeholder: lang.GLOBAL.HEADER_SONG_SELECTION,
 		min_values: 1,
 		max_values: 1,
-		options: trackss.slice(0, 24).map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: `Track ${index + 1}`, default: false }))
+		options: trackss.slice(0, 24).map((s, index) => ({ label: label(s).slice(0, 98), value: String(index), description: langReplace(lang.GLOBAL.TRACK_NUMBER, { "number": index + 1 }), default: false }))
 	} as import("discord-api-types/v10").APISelectMenuComponent, {})
 
 	return new Promise(res => {
@@ -643,7 +650,7 @@ function trackSelection<T>(cmd: ChatInputCommand, lang: import("@amanda/lang").L
 						},
 						{
 							type: ComponentType.TextDisplay,
-							content: `1-${trackss.length}`
+							content: langReplace(lang.GLOBAL.RESULTS_COUNT, { "count": trackss.length })
 						}
 					]
 				}

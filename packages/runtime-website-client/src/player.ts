@@ -5,7 +5,7 @@ let serverTimeDiff = _serverTimeDiff
 
 import "./global"
 
-import { Player, Queue, VoiceInfo, SideControls } from "./classes.js"
+import { Player, Queue, VoiceInfo, SideControls, toast } from "./classes.js"
 import { q, opcodes, generateNonce } from "./utilities.js"
 import { ListenManager } from "./wrappers/ListenManager.js"
 
@@ -23,22 +23,49 @@ export class Session {
 	public readonly sideControls: SideControls<HTMLElement> = new SideControls(q("#side-controls")!, this)
 	public readonly listenManager: ListenManager = new ListenManager()
 
-	public constructor(public readonly ws: WebSocket) {
-		const opcodeMethodMap = new Map<
-			number,
-			"acknowledge" | "updateState" | "trackAdd" | "next" | "trackUpdate" | "timeUpdate" | "trackRemove" | "listenersUpdate" | "attributesChange" | "clearQueue"
-		>([
-			[opcodes.ACKNOWLEDGE, "acknowledge"],
-			[opcodes.STATE, "updateState"],
-			[opcodes.TRACK_ADD, "trackAdd"],
-			[opcodes.NEXT, "next"],
-			[opcodes.TRACK_UPDATE, "trackUpdate"],
-			[opcodes.TIME_UPDATE, "timeUpdate"],
-			[opcodes.TRACK_REMOVE, "trackRemove"],
-			[opcodes.LISTENERS_UPDATE, "listenersUpdate"],
-			[opcodes.ATTRIBUTES_CHANGE, "attributesChange"],
-			[opcodes.CLEAR_QUEUE, "clearQueue"]
-		])
+	public ws: WebSocket | null = null
+	public connectionState: "connecting" | "connected" | "reconnecting" | "dead" = "connecting"
+	public deadReason = ""
+	private reconnectAttempts = 0
+	private reconnectTimer: ReturnType<typeof setTimeout> | null = null
+	private readonly pendingActions = new Map<number, () => void>()
+
+	private readonly opcodeMethodMap = new Map<
+		number,
+		"acknowledge" | "updateState" | "trackAdd" | "next" | "trackUpdate" | "timeUpdate" | "trackRemove" | "listenersUpdate" | "attributesChange" | "clearQueue" | "error"
+	>([
+		[opcodes.ACKNOWLEDGE, "acknowledge"],
+		[opcodes.STATE, "updateState"],
+		[opcodes.TRACK_ADD, "trackAdd"],
+		[opcodes.NEXT, "next"],
+		[opcodes.TRACK_UPDATE, "trackUpdate"],
+		[opcodes.TIME_UPDATE, "timeUpdate"],
+		[opcodes.TRACK_REMOVE, "trackRemove"],
+		[opcodes.LISTENERS_UPDATE, "listenersUpdate"],
+		[opcodes.ATTRIBUTES_CHANGE, "attributesChange"],
+		[opcodes.CLEAR_QUEUE, "clearQueue"],
+		[opcodes.ERROR, "error"]
+	])
+
+	public constructor() {
+		globalThis.addEventListener("online", () => {
+			// No point waiting out the backoff if the browser knows connectivity just came back
+			if (this.connectionState === "reconnecting" && this.reconnectTimer) {
+				clearTimeout(this.reconnectTimer)
+				this.reconnectTimer = null
+				this.connect()
+			}
+		})
+	}
+
+	public connect(): void {
+		if (this.reconnectTimer) {
+			clearTimeout(this.reconnectTimer)
+			this.reconnectTimer = null
+		}
+
+		const origin = globalThis.location.origin.replace("http", "ws")
+		this.ws = new WebSocket(`${origin}/public`)
 
 		this.ws.addEventListener("open", () => this.onOpen())
 		this.ws.addEventListener("close", event => this.onClose(event))
@@ -46,13 +73,28 @@ export class Session {
 		this.ws.addEventListener("message", event => {
 			console.log("%c[WS ←]", "color: blue", event.data)
 			const data = JSON.parse(event.data)
-			const method = opcodeMethodMap.get(data.op) as import("@amanda/shared-types").InferMap<typeof opcodeMethodMap>["value"]
+			const method = this.opcodeMethodMap.get(data.op)
 			if (method) this[method](data)
 		})
+
+		this.player.render()
 	}
 
-	public send(data: any): void {
+	public send(data: any, revert?: () => void): void {
 		if (!data.nonce) data.nonce = generateNonce()
+
+		if (this.ws?.readyState !== WebSocket.OPEN) {
+			revert?.()
+			return
+		}
+
+		if (revert) {
+			const nonce = data.nonce as number
+			this.pendingActions.set(nonce, revert)
+			// Success is signaled through the normal state broadcasts, so just stop tracking after a while
+			setTimeout(() => this.pendingActions.delete(nonce), 10000)
+		}
+
 		const message = JSON.stringify(data)
 		console.log("%c[WS →]", "color: #c00000", message)
 		this.ws.send(message)
@@ -71,14 +113,80 @@ export class Session {
 
 	public onClose(event: CloseEvent): void {
 		console.log("WebSocket closed.", event)
+		this.ws = null
+		this.sideControls.mainLoaded = false
+		this.sideControls.render()
+		document.body.classList.add("disconnected")
+
+		if (this.connectionState === "dead") return
+
+		this.connectionState = "reconnecting"
+		this.player.render()
+
+		const delay = Math.min(30000, 1000 * 2 ** this.reconnectAttempts) + Math.random() * 500
+		this.reconnectAttempts++
+		this.reconnectTimer = setTimeout(() => this.connect(), delay)
+	}
+
+	public error(data: { nonce?: number | null; d?: { code?: string } }): void {
+		if (typeof data.nonce === "number") {
+			const revert = this.pendingActions.get(data.nonce)
+			if (revert) {
+				this.pendingActions.delete(data.nonce)
+				revert()
+			}
+		}
+
+		switch (data.d?.code) {
+		case "NOT_LISTENING":
+			toast("You need to be listening in the voice channel to do that.")
+			break
+
+		case "AUTH_FAILED":
+			this.die("Your login is invalid or expired. Log in again, then refresh the page.")
+			break
+
+		case "NO_VOICE_STATE":
+			this.die("Amanda can't see you in a voice channel. Join one, then refresh the page.")
+			break
+
+		case "UNAVAILABLE":
+			this.die("The dashboard is temporarily unavailable. Try again later.")
+			break
+
+		default: break
+		}
+	}
+
+	private die(reason: string): void {
+		this.connectionState = "dead"
+		this.deadReason = reason
+		if (this.reconnectTimer) {
+			clearTimeout(this.reconnectTimer)
+			this.reconnectTimer = null
+		}
+		this.player.render()
+	}
+
+	public statusText(): string {
+		switch (this.connectionState) {
+		case "connecting": return "Connecting..."
+		case "reconnecting": return "Reconnecting..."
+		case "dead": return this.deadReason || "Disconnected. Refresh the page."
+		default: return "Nothing playing"
+		}
 	}
 
 	public acknowledge(data: { d: { serverTimeDiff: number } }): void {
 		if (!data.d) return
 		serverTimeDiff = data.d.serverTimeDiff
+		this.connectionState = "connected"
+		this.reconnectAttempts = 0
+		document.body.classList.remove("disconnected")
 		console.log("Time difference: " + serverTimeDiff)
 		this.sideControls.mainLoaded = true
 		this.sideControls.render()
+		this.player.render()
 	}
 
 	public updateState(data: { d: WebQueueJSON }): void {
@@ -222,9 +330,5 @@ export class Session {
 	}
 }
 
-const ws = (function() {
-	const origin = globalThis.location.origin.replace("http", "ws")
-	return new WebSocket(`${origin}/public`)
-})()
-
-window.session = new Session(ws)
+window.session = new Session()
+window.session.connect()

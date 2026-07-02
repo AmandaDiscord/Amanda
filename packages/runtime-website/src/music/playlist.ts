@@ -42,7 +42,8 @@ commands.assign([
 						name: English.playlists.options.lists.options.info.name,
 						description: English.playlists.options.lists.options.info.description,
 						type: 3,
-						required: false
+						required: false,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.lists.options.create.name,
@@ -54,7 +55,8 @@ commands.assign([
 						name: English.playlists.options.lists.options.delete.name,
 						description: English.playlists.options.lists.options.delete.description,
 						type: 3,
-						required: false
+						required: false,
+						autocomplete: true
 					}
 				]
 			},
@@ -68,7 +70,8 @@ commands.assign([
 						name: English.playlists.options.add.options.playlist.name,
 						description: English.playlists.options.add.options.playlist.description,
 						type: 3,
-						required: true
+						required: true,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.add.options.track.name,
@@ -88,7 +91,8 @@ commands.assign([
 						name: English.playlists.options.remove.options.playlist.name,
 						description: English.playlists.options.remove.options.playlist.description,
 						type: 3,
-						required: true
+						required: true,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.remove.options.index.name,
@@ -108,7 +112,8 @@ commands.assign([
 						name: English.playlists.options.move.options.playlist.name,
 						description: English.playlists.options.move.options.playlist.description,
 						type: 3,
-						required: true
+						required: true,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.move.options.from.name,
@@ -134,7 +139,8 @@ commands.assign([
 						name: English.playlists.options.search.options.playlist.name,
 						description: English.playlists.options.search.options.playlist.description,
 						type: 3,
-						required: true
+						required: true,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.search.options.query.name,
@@ -154,7 +160,8 @@ commands.assign([
 						name: English.playlists.options.play.options.playlist.name,
 						description: English.playlists.options.play.options.playlist.description,
 						type: 3,
-						required: true
+						required: true,
+						autocomplete: true
 					},
 					{
 						name: English.playlists.options.play.options.shuffle.name,
@@ -401,7 +408,7 @@ commands.assign([
 
 						pages.push(currentPage)
 
-						return sharedUtils.paginate(pages.length, (page, menu) => {
+						return sharedUtils.paginate(pages.length, lang, (page, menu) => {
 							return snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
 								flags: MessageFlags.IsComponentsV2,
 								components: [
@@ -425,7 +432,7 @@ commands.assign([
 											},
 											{
 												type: ComponentType.TextDisplay,
-												content: `${page + 1} - ${pages.length}`
+												content: langReplace(lang.GLOBAL.PAGE_X_OF_Y, { "current": page + 1, "total": pages.length })
 											},
 											...(menu
 												? [{ type: 1, components: [menu.component] }, { type: 1, components: [playButton.component] }]

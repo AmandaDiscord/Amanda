@@ -260,6 +260,7 @@ server.get("/channels/:channelID", async (res, req) => {
 				.replace(bodyRegex, body)
 				.replace(channelIDRegex, channelID)
 				.replace(timestampRegex, Date.now().toString())
+				.replace(csrftokenRegex, utils.generateCSRF())
 
 			let written = false
 			res.cork(() => {

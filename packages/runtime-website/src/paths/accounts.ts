@@ -160,7 +160,7 @@ server.post("/unlink", async (res, req) => {
 		})
 })
 
-server.get("/flow", (res, req) => {
+server.get("/flow", async (res, req) => {
 	let searchParams: URLSearchParams | undefined
 	try {
 		searchParams = new URLSearchParams(req.getQuery())
@@ -173,11 +173,18 @@ server.get("/flow", (res, req) => {
 
 	utils.attachResponseAbortListener(res)
 
+	const session = await utils.getSession(utils.getCookies(req.getHeader("cookie")))
+	if (!res.continue) return
+
 	new utils.Validator()
 		.do(
 			() => searchParams!.has("user_id") && searchParams!.has("token") && searchParams!.has("type"),
 			true,
 			[400, "Missing params"]
+		).do(
+			() => session?.user_id === searchParams.get("user_id"),
+			true,
+			[403, "Unauthorized to edit users other than yourself"]
 		).do(
 			() => sql.orm.get("connections", {
 				user_id: searchParams!.get("user_id")!,

@@ -242,7 +242,7 @@ commands.assign([
 				name: English.help.options.category.name,
 				type: 3,
 				description: English.help.options.category.description,
-				choices: ["meta", ...commands.categories.keys()].filter(cat => cat !== "hidden").map(i => ({ name: i, value: i })),
+				choices: ["meta", ...commands.categories.keys()].filter(cat => cat !== "hidden" && cat !== "admin").map(i => ({ name: i, value: i })),
 				required: false
 			},
 			{
@@ -342,7 +342,7 @@ commands.assign([
 						components: [
 							{
 								type: ComponentType.Container,
-								accent_color: 0xb60000,
+								accent_color: sharedUtils.ACCENT_COLOR_ERROR,
 								components: [
 									{
 										type: ComponentType.TextDisplay,
@@ -412,43 +412,15 @@ commands.assign([
 			{
 				name: English.settings.options.modify.name,
 				type: 3,
-				description: English.settings.options.modify.description
+				description: English.settings.options.modify.description,
+				autocomplete: true
 			}
 		],
 		async process(cmd, lang) {
-			if (!confprovider.config.db_enabled) {
-				return client.snow.interaction.editOriginalInteractionResponse(cmd.application_id, cmd.token, {
-					content: lang.GLOBAL.DATABASE_OFFLINE
-				})
-			}
+			if (!sharedUtils.requireDb(cmd, lang, client.snow)) return
 
-			type Setting = {
-				type: "string" | "boolean" | "number"
-				defaultValue: string
-				nullable?: boolean
-				allowedValues?: Array<unknown>
-				allowDonorArbitrary?: boolean,
-			}
-
-			const settings = {
-				"profilebackground": {
-					type: "string",
-					nullable: true,
-					allowedValues: ["default", "vicinity", "sakura"],
-					allowDonorArbitrary: true,
-					defaultValue: "default"
-				} as Setting,
-				"profiletheme": {
-					type: "string",
-					allowedValues: ["dark", "light"],
-					defaultValue: "dark"
-				} as Setting,
-				"profilestyle": {
-					type: "string",
-					allowedValues: ["old", "new"],
-					defaultValue: "new"
-				} as Setting
-			}
+			// The website handles the autocomplete for this command using the same definitions
+			const settings = sharedUtils.profileSettings
 
 			const setting = cmd.data.options.get("setting")!.asString()! as keyof typeof settings
 			const modify = cmd.data.options.get("modify")?.asString() ?? null

@@ -107,7 +107,15 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 	}
 
 	public set interaction(value) {
-		if (value && value.channel.id !== this.textChannelID) return
+		if (value && value.channel.id !== this.textChannelID) {
+			// The interaction won't be adopted as the now playing message, so resolve the deferral
+			// instead of leaving the user with a reply that never arrives
+			snow.interaction.editOriginalInteractionResponse(value.application_id, value.token, {
+				content: langReplace(this.lang.GLOBAL.MUSIC_SEE_OTHER, { channel: `<#${this.textChannelID}>` })
+			})
+
+			return
+		}
 		if (!this._interactionExpired && this._interaction) {
 			snow.interaction.editOriginalInteractionResponse(this._interaction.application_id, this._interaction.token, {
 				flags: MessageFlags.IsComponentsV2,
