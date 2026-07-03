@@ -125,6 +125,7 @@ function ejs(string: string | TemplateStringsArray): ElemJS | undefined {
 		const indent = spaceRegex.exec(line)![0].length
 		line = line.replace(spaceRegex, "")
 		let element: ElemJS | undefined
+		// eslint-disable-next-line no-useless-assignment
 		let next: string | null = null
 
 		do {
@@ -134,7 +135,7 @@ function ejs(string: string | TemplateStringsArray): ElemJS | undefined {
 				if (next.startsWith("#")) element!.id(next.slice(1))
 				else if (next.startsWith(".")) element!.class(next.slice(1))
 				else element = new ElemJS(next as keyof HTMLElementTagNameMap)
-			}
+			} else next = null
 		} while (next)
 
 		indentHistory.set(indent, element!)
