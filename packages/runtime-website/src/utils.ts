@@ -49,8 +49,7 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 		if (resolveOuter) resolveOuter()
 		else cancel = true
 	}
-	if (res.abortListeners) res.abortListeners.push(onAbort)
-	else res.onAborted(onAbort)
+	attachResponseAbortListener(res, onAbort)
 	return new Promise((resolve, reject) => {
 		if (cancel) return resolve()
 		resolveOuter = reject
@@ -88,15 +87,22 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 	})
 }
 
-export function attachResponseAbortListener(res: HttpResponse): void {
-	res.continue = true
-	// A single onAborted registration that fans out to any listeners (e.g. streamResponse),
-	// because uWebSockets.js only permits onAborted to be set once per response
-	if (!res.abortListeners) res.abortListeners = []
-	res.onAborted(() => {
-		res.continue = false
-		for (const cb of res.abortListeners) cb()
-	})
+export function attachResponseAbortListener(res: HttpResponse, callback?: () => unknown): void {
+	if (res.alreadyAborted) return void callback?.()
+
+	if (res.abortListeners) res.abortListeners.push(callback)
+	else {
+		res.continue = true
+		res.abortListeners = []
+		res.onAborted(() => {
+			res.continue = false
+			for (const cb of res.abortListeners) {
+				cb()
+				res.abortListeners = undefined
+				res.alreadyAborted = true
+			}
+		})
+	}
 }
 
 export async function streamFile(path: string, res: HttpResponse, acceptHead?: string | undefined, ifModifiedSinceHeader?: string | undefined, headersOnly = false, status = 200, cameFrom404 = false): Promise<void> {
@@ -246,7 +252,7 @@ export function requestBody(res: HttpResponse, length: number): Promise<Buffer> 
 			acc.add(Buffer.from(chunk))
 			if (isLast) resolve(acc.concat() ?? Buffer.allocUnsafe(0))
 		})
-		res.onAborted(() => rej(new Error("ABORTED")))
+		attachResponseAbortListener(res, () => rej(new Error("ABORTED")))
 	})
 }
 
