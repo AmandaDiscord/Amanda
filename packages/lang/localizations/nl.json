@@ -28,7 +28,7 @@
 		"TOKENS_PREVIOUS": "Hier is de token die je eerder had aangemaakt:\nJe kan `%prefixmusictoken action:delete` gebruiken om hem te verwijderen en `%prefixmusictoken action:new` om een nieuwe aan te maken.",
 		"TOKENS_NONE": "Je hebt momenteel geen tokens. Gebruik `%prefixmusictoken action:new` om een nieuwe aan te maken.",
 		"HEADER_UNKNOWN": "Onbekend",
-		"HEADER_PLAYLIST": "Playlist",
+		"HEADER_PLAYLIST": "Afspeellijst",
 		"HEADER_SONGS": "Muzieknummers",
 		"HEADER_LENGTH": "Lengte",
 		"HEADER_PLAY_COUNT": "Afspeelbeurten",
@@ -97,7 +97,7 @@
 		"HEADER_HEARTBEAT": "Hartslag",
 		"HEADER_LATENCY": "Vertraging",
 		"HEADER_UPTIME": "Beschikbaarheid",
-		"HEADER_MEMORY": "Memory",
+		"HEADER_MEMORY": "Geheugen",
 		"HEADER_SHARDS": "Shards",
 		"HEADER_SONGS_QUEUED": "Wachtrijnummers",
 		"HEADER_USERS_LISTENING": "Luisterende gebruikers",
@@ -120,7 +120,7 @@
 		"GIT_DELETIONS": "%amount verwijderingen",
 		"GIT_DELETION": "1 verwijdering",
 		"HEADER_STATUS": "Status",
-		"HEADER_GIT_INFO": "Git info",
+		"HEADER_GIT_INFO": "Git-info",
 		"GIT_STATUS": "Op branch %branch, meest recente commit %hash",
 		"GIT_COMMITS": "Commits (laatste %amount resultaten)",
 		"FOOTER_HELP": "<> = verplicht, [] = optioneel, | = of. Gebruik geen <>, [] of | in je invoer.",
@@ -162,66 +162,66 @@
 		"NONE": "Geen",
 		"COMMAND_ERROR": "Er is iets misgegaan bij het commando %name. De ontwikkelaars zijn op de hoogte gebracht. Als je opnieuw dit commando gebruikt en dit bericht ziet, sta dan een redelijke periode toe zodat het probleem verholpen kan worden. Meld dit probleem als het opnieuw voorkomt: %server",
 		"UNKNOWN_AUTHOR": "Onbekende auteur",
-		"DM_ONLY": "This command can only be used in DMs",
-		"NOT_ENOUGH_MONEY": "You don't have enough money for that",
-		"THREE_HEARTS": "WOAH! 3 hearts!",
+		"DM_ONLY": "Deze opdracht kan alleen in DM's worden gebruikt",
+		"NOT_ENOUGH_MONEY": "Je hebt daar niet genoeg geld voor",
+		"THREE_HEARTS": "WAUW! 3 harten!",
 		"TWO_HEARTS": "Double hearts :heart: ",
-		"ONE_HEART": "1 heart",
-		"TRIPLE_PIECES": "Triple pieces",
-		"LOST": "You lost",
-		"FLIP_AMANDA_CHOSE_HEADS_WON": "Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_TAILS_WON": "Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Since you didn't choose a side, I chose heads for you and you lost %amount",
-		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Since you didn't choose a side, I chose tails for you and you lost %amount",
-		"FLIP_HEADS_WON": "You guessed heads and won %amount (+33%)",
-		"FLIP_TAILS_WON": "You guessed tails and won %amount (+33%)",
-		"FLIP_HEADS_LOST": "You guessed heads and lost %amount",
-		"FLIP_TAILS_LOST": "You guessed tails and lost %amount",
-		"PRIVATE_CARD": "Private card",
-		"COUPLE_CARD": "Couple card",
-		"TRANSACTIONS": "Transactions",
-		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
-		"GIVEN_TO_OTHER": "You have given %amount to %user",
-		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
-		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
-		"SETTING_UPDATED": "That setting was updated",
-		"SONG_MOVED": "%title moved",
-		"SELF_NOT_IN_COUPLE": "You aren't married.",
-		"USER_NOT_IN_COUPLE": "That user isn't married.",
-		"USER_NOT_IN_COUPLE_WITH_YOU": "That user isn't married to you.",
-		"DIVORCED_ONE_OTHER": "You divorced from %user",
-		"DIVORCED_MULTIPLE_OTHERS": "You removed %user from the marriage",
-		"DIVORCED_LEFT": "You left the marriage",
-		"NONE_WITHDRAW": "There is no money to withdraw",
-		"CANNOT_WITHDRAW_MORE": "You can't withdraw more than what is in the account",
-		"TRANSACTED_AMOUNT": "Successfully transacted %amount",
-		"CANNOT_MARRY_SELF": "You can't marry yourself",
-		"ALREADY_IN_COUPLE_SELF": "You're already married",
-		"ALREADY_IN_COUPLE_OTHER": "%user is already married",
-		"ALREADY_PROPOSED": "You've already proposed to %user",
-		"HASNT_PROPOSED": "%user hasn't proposed to you yet",
-		"PROPOSED": "You have proposed to %user. They must accept for you two to become married",
-		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOW DID YOU PROPOSE TO YOURSELF LOL???? PLEASE tell me how",
-		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
-		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
-		"REJECTED": "You declined %user's proposal",
-		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
-		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
-		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
-		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time",
-		"AI_OFFLINE": "The AI is currently disabled",
-		"HEADER_LEADERBOARD": "Leaderboard",
-		"HEADER_COUPLE_LEADERBOARD": "Couple Leaderboard",
-		"POWERED_BY": "Powered by %service",
-		"SELECT_PAGE": "Select page",
-		"PAGE_NUMBER": "Page %number",
-		"TRACK_NUMBER": "Track %number",
-		"RESULTS_COUNT": "Results 1-%count",
-		"VOICE_STATUS_OFFLINE": "Voice status tracking is currently unavailable, so music commands cannot be used right now"
+		"ONE_HEART": "1 hart",
+		"TRIPLE_PIECES": "Drie stukken",
+		"LOST": "Je hebt verloren",
+		"FLIP_AMANDA_CHOSE_HEADS_WON": "Omdat je geen kant koos, koos ik kop voor je en je won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_TAILS_WON": "Omdat je geen kant koos, koos ik munt voor je en je won %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Omdat je geen kant koos, koos ik kop voor je en je verloor %amount",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Omdat je geen kant koos, koos ik munt voor je en je verloor %amount",
+		"FLIP_HEADS_WON": "Je raadde kop en won %amount (+33%)",
+		"FLIP_TAILS_WON": "Je raadde munt en won %amount (+33%)",
+		"FLIP_HEADS_LOST": "Je raadde kop en verloor %amount",
+		"FLIP_TAILS_LOST": "Je raadde munt en verloor %amount",
+		"PRIVATE_CARD": "Privékaart",
+		"COUPLE_CARD": "Koppelkaart",
+		"TRANSACTIONS": "Transacties",
+		"CANNOT_GIVE_SELF": "Je kunt jezelf geen geld geven",
+		"GIVEN_TO_OTHER": "Je hebt %amount aan %user gegeven",
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "De waarde die je hebt opgegeven om die instelling bij te werken is ongeldig. Geldige waarden zijn %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "De waarde die je hebt opgegeven om die instelling bij te werken is ongeldig. Donateurs mogen willekeurige waarden voor deze instelling opgeven %link. Geldige waarden zijn %acceptable",
+		"SETTING_UPDATED": "Die instelling is bijgewerkt",
+		"SONG_MOVED": "%title verplaatst",
+		"SELF_NOT_IN_COUPLE": "Je bent niet getrouwd.",
+		"USER_NOT_IN_COUPLE": "Die gebruiker is niet getrouwd.",
+		"USER_NOT_IN_COUPLE_WITH_YOU": "Die gebruiker is niet met jou getrouwd.",
+		"DIVORCED_ONE_OTHER": "Je bent gescheiden van %user",
+		"DIVORCED_MULTIPLE_OTHERS": "Je hebt %user uit het huwelijk verwijderd",
+		"DIVORCED_LEFT": "Je hebt het huwelijk verlaten",
+		"NONE_WITHDRAW": "Er is geen geld om op te nemen",
+		"CANNOT_WITHDRAW_MORE": "Je kunt niet meer opnemen dan er op de rekening staat",
+		"TRANSACTED_AMOUNT": "%amount succesvol overgemaakt",
+		"CANNOT_MARRY_SELF": "Je kunt niet met jezelf trouwen",
+		"ALREADY_IN_COUPLE_SELF": "Je bent al getrouwd",
+		"ALREADY_IN_COUPLE_OTHER": "%user is al getrouwd",
+		"ALREADY_PROPOSED": "Je hebt %user al een aanzoek gedaan",
+		"HASNT_PROPOSED": "%user heeft je nog geen aanzoek gedaan",
+		"PROPOSED": "Je hebt %user een aanzoek gedaan. Zij moeten accepteren zodat jullie kunnen trouwen",
+		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOE HEB JE JEZELF EEN AANZOEK GEDAAN LOL???? Vertel me alsjeblieft hoe",
+		"MARRIED_ONE_OTHER": "%user1 is nu getrouwd met %user2",
+		"MARRIED_MULTIPLE_OTHERS": "%user1 is nu getrouwd met %user2 en %amount anderen",
+		"REJECTED": "Je hebt het aanzoek van %user afgewezen",
+		"CANNOT_ADD_HTTP": "Je kunt geen aangepaste links aan afspeellijsten toevoegen",
+		"PLAYLIST_TRACK_TOO_LONG": "De identificatie voor dat nummer was te lang. Deze mag maximaal 50 tekens zijn",
+		"VC_IN_OTHER_GUILD": "Het lijkt erop dat ik je in een andere server zie. Verlaat het kanaal en kom opnieuw, of demp/ondemp/verdoof/onverdoof jezelf in het kanaal waar ik je moet zien om een update te forceren",
+		"ALREADY_CLAIMED_DAILY": "Je hebt je dagelijkse fortuin al geclaimd. Je kunt over %time opnieuw claimen",
+		"AI_OFFLINE": "De AI is momenteel uitgeschakeld",
+		"HEADER_LEADERBOARD": "Ranglijst",
+		"HEADER_COUPLE_LEADERBOARD": "Koppel-ranglijst",
+		"POWERED_BY": "Mogelijk gemaakt door %service",
+		"SELECT_PAGE": "Pagina selecteren",
+		"PAGE_NUMBER": "Pagina %number",
+		"TRACK_NUMBER": "Nummer %number",
+		"RESULTS_COUNT": "Resultaten 1-%count",
+		"VOICE_STATUS_OFFLINE": "Het bijhouden van de spraakstatus is momenteel niet beschikbaar, dus muziekopdrachten kunnen nu niet worden gebruikt."
 	},
 	"sit": {
 		"name": "zit",
-		"description": "mood"
+		"description": "stemming"
 	},
 	"image": {
 		"name": "afbeelding",
@@ -268,7 +268,7 @@
 		}
 	},
 	"nom": {
-		"name": "nom",
+		"name": "knabbelen",
 		"description": "Nomt iemand",
 		"options": {
 			"user": {
@@ -356,7 +356,7 @@
 		"description": "Speel radiostations af",
 		"options": {
 			"station": {
-				"name": "station",
+				"name": "zender",
 				"description": "Het station om af te spelen"
 			},
 			"position": {
@@ -380,7 +380,7 @@
 		}
 	},
 	"stop": {
-		"name": "stop",
+		"name": "stoppen",
 		"description": "Stopt de wachtrij"
 	},
 	"queue": {
@@ -442,7 +442,7 @@
 		}
 	},
 	"shuffle": {
-		"name": "shuffle",
+		"name": "husselen",
 		"description": "Shuffelt de wachtrij"
 	},
 	"remove": {
@@ -466,12 +466,12 @@
 		}
 	},
 	"playlists": {
-		"name": "playlists",
+		"name": "afspeellijsten",
 		"description": "Beheer en speel Amanda playlists af",
 		"options": {
 			"lists": {
-				"name": "lists",
-				"description": "View and create/delete playlists",
+				"name": "lijsten",
+				"description": "Afspeellijsten bekijken en maken/verwijderen",
 				"options": {
 					"info": {
 						"name": "info",
@@ -492,7 +492,7 @@
 				"description": "Voegt een nummer toe aan een playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "afspeellijst",
 						"description": "De naam van de playlist"
 					},
 					"track": {
@@ -506,7 +506,7 @@
 				"description": "Verwijdert een muzieknummer van een playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "afspeellijst",
 						"description": "De naam van de playlist"
 					},
 					"index": {
@@ -520,7 +520,7 @@
 				"description": "Verplaatst een muzieknummer in een playlist van één index naar een andere",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "afspeellijst",
 						"description": "De naam van de playlist"
 					},
 					"from": {
@@ -538,7 +538,7 @@
 				"description": "Filtreert nummers in een playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "afspeellijst",
 						"description": "De naam van de playlist"
 					},
 					"query": {
@@ -552,11 +552,11 @@
 				"description": "Speelt een playlist af",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "afspeellijst",
 						"description": "De naam van de playlist"
 					},
 					"shuffle": {
-						"name": "shuffle",
+						"name": "husselen",
 						"description": "Of de playlist geshuffeld moet starten"
 					},
 					"start": {
@@ -586,7 +586,7 @@
 		"description": "Verkrijgt de laatste git commits van Amanda"
 	},
 	"help": {
-		"name": "help",
+		"name": "hulp",
 		"description": "Een normaal hulpcommando",
 		"options": {
 			"category": {
@@ -600,212 +600,212 @@
 		}
 	},
 	"slots": {
-		"name": "slots",
-		"description": "Run the slot machine",
+		"name": "gokkast",
+		"description": "Speel de gokkast",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om in te zetten"
 			}
 		}
 	},
 	"flip": {
-		"name": "flip",
-		"description": "Flips a coin",
+		"name": "munt",
+		"description": "Werpt een munt op",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om in te zetten"
 			},
 			"side": {
-				"name": "side",
-				"description": "The side to bet on"
+				"name": "kant",
+				"description": "De kant om op in te zetten"
 			}
 		}
 	},
 	"money": {
-		"name": "money",
-		"description": "Shows how much money you, another person, or a couple has",
+		"name": "geld",
+		"description": "Toont hoeveel geld jij, iemand anders of een koppel heeft",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to check their bank info"
+				"name": "gebruiker",
+				"description": "De gebruiker wiens bankgegevens je wilt bekijken"
 			},
 			"couple": {
-				"name": "couple",
-				"description": "Whether to show the couple balance"
+				"name": "koppel",
+				"description": "Of het koppelsaldo getoond moet worden"
 			}
 		}
 	},
 	"leaderboard": {
-		"name": "leaderboard",
-		"description": "Shows the leaderboard for the top users of money"
+		"name": "ranglijst",
+		"description": "Toont de ranglijst van gebruikers met het meeste geld"
 	},
 	"give": {
-		"name": "give",
-		"description": "Gives another user money",
+		"name": "geven",
+		"description": "Geeft een andere gebruiker geld",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to give"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om te geven"
 			},
 			"user": {
-				"name": "user",
-				"description": "The user to give money to"
+				"name": "gebruiker",
+				"description": "De gebruiker om geld aan te geven"
 			}
 		}
 	},
 	"wheel": {
-		"name": "wheel",
-		"description": "Spin the wheel of (mis)fortune",
+		"name": "rad",
+		"description": "Draai aan het rad van (on)fortuin",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om in te zetten"
 			}
 		}
 	},
 	"profile": {
-		"name": "profile",
-		"description": "Get a user's Amanda profile",
+		"name": "profiel",
+		"description": "Bekijk het Amanda-profiel van een gebruiker",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "gebruiker",
 				"description": "The user's profile to get'"
 			},
 			"light": {
-				"name": "light",
-				"description": "If light mode should be force used (default false)"
+				"name": "licht",
+				"description": "Of de lichte modus geforceerd moet worden (standaard onwaar)"
 			}
 		}
 	},
 	"settings": {
-		"name": "settings",
-		"description": "Modify settings for Amanda to use",
+		"name": "instellingen",
+		"description": "Wijzig de instellingen die Amanda gebruikt",
 		"options": {
 			"setting": {
-				"name": "setting",
-				"description": "The setting you want to modify/view"
+				"name": "instelling",
+				"description": "De instelling die je wilt wijzigen/bekijken"
 			},
 			"modify": {
-				"name": "modify",
-				"description": "What to modify the setting value to"
+				"name": "waarde",
+				"description": "De nieuwe waarde voor de instelling"
 			}
 		}
 	},
 	"couple": {
-		"name": "couple",
-		"description": "Get couple information about a user",
+		"name": "koppel",
+		"description": "Krijg koppelinformatie over een gebruiker",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to get info on"
+				"name": "gebruiker",
+				"description": "De gebruiker om info over te krijgen"
 			}
 		}
 	},
 	"propose": {
-		"name": "propose",
-		"description": "Propose to a user",
+		"name": "aanzoek",
+		"description": "Doe een aanzoek aan een gebruiker",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to propose to"
+				"name": "gebruiker",
+				"description": "De gebruiker om een aanzoek te doen"
 			}
 		}
 	},
 	"marry": {
-		"name": "marry",
-		"description": "Accepts a proposal from a user",
+		"name": "trouwen",
+		"description": "Accepteert een aanzoek van een gebruiker",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to marry"
+				"name": "gebruiker",
+				"description": "De gebruiker om mee te trouwen"
 			}
 		}
 	},
 	"reject": {
-		"name": "reject",
-		"description": "Rejects a proposal from a user",
+		"name": "afwijzen",
+		"description": "Wijst een aanzoek van een gebruiker af",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to reject"
+				"name": "gebruiker",
+				"description": "De gebruiker om af te wijzen"
 			}
 		}
 	},
 	"divorce": {
-		"name": "divorce",
-		"description": "Divorces your significant other(s)",
+		"name": "scheiden",
+		"description": "Scheiden van je partner(s)",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to remove from the marriage"
+				"name": "gebruiker",
+				"description": "De gebruiker om uit het huwelijk te verwijderen"
 			}
 		}
 	},
 	"withdraw": {
-		"name": "withdraw",
-		"description": "Withdraw money from your couple balance",
+		"name": "opnemen",
+		"description": "Neem geld op van jullie koppelsaldo",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to withdraw"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om op te nemen"
 			}
 		}
 	},
 	"deposit": {
-		"name": "deposit",
-		"description": "Deposit money to your couple balance",
+		"name": "storten",
+		"description": "Stort geld op jullie koppelsaldo",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to deposit"
+				"name": "bedrag",
+				"description": "Het bedrag aan geld om te storten"
 			}
 		}
 	},
 	"coupleleaderboard": {
-		"name": "coupleleaderboard",
-		"description": "Shows the leaderboard for top couples of money"
+		"name": "koppel-ranglijst",
+		"description": "Toont de ranglijst van de rijkste koppels"
 	},
 	"move": {
-		"name": "move",
-		"description": "Move a track in the queue to a new position",
+		"name": "verplaatsen",
+		"description": "Verplaats een nummer in de wachtrij naar een nieuwe positie",
 		"options": {
 			"from": {
-				"name": "from",
-				"description": "1 based index of the track to move"
+				"name": "van",
+				"description": "1-gebaseerde index van het te verplaatsen nummer"
 			},
 			"to": {
-				"name": "to",
-				"description": "1 based index to move the track to"
+				"name": "naar",
+				"description": "1-gebaseerde index waar het nummer naartoe moet"
 			}
 		}
 	},
 	"search": {
-		"name": "search",
-		"description": "Search for a track from multiple sources",
+		"name": "zoeken",
+		"description": "Zoek naar een nummer uit meerdere bronnen",
 		"options": {
 			"input": {
-				"name": "input",
-				"description": "What to search for"
+				"name": "invoer",
+				"description": "Waarnaar te zoeken"
 			},
 			"source": {
-				"name": "source",
-				"description": "The website to use to search for the track"
+				"name": "bron",
+				"description": "De website om te gebruiken bij het zoeken naar het nummer"
 			}
 		}
 	},
 	"fortune": {
-		"name": "fortune",
-		"description": "Let Amanda predict your daily fortune"
+		"name": "fortuin",
+		"description": "Laat Amanda je dagelijkse fortuin voorspellen"
 	},
 	"chat": {
-		"name": "chat",
-		"description": "Talk with Amanda's AI",
+		"name": "chatten",
+		"description": "Praat met Amanda's AI",
 		"options": {
 			"prompt": {
-				"name": "prompt",
-				"description": "The message to send to Amanda"
+				"name": "bericht",
+				"description": "Het bericht om naar Amanda te sturen"
 			}
 		}
 	}

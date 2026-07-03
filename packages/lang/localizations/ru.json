@@ -42,7 +42,7 @@
 		"UNKNOWN_TRACK_EXCEPTION": "Произошла ошибка при попытке включить этот трек. Это все, что я знаю.",
 		"NO_USERS_IN_VC": "Я одна в голосовом канале. Я уйду через %time секунд, если никто не присоединится.",
 		"SONG_NOT_PLAYABLE": "Я не смогла включить этот трек.",
-		"SONG_NOT_OBJECT": "Song is not an object %song",
+		"SONG_NOT_OBJECT": "Песня не является объектом %song",
 		"ERROR_OCCURRED": "У нас произошла ошибка.",
 		"TOO_MANY_ERRORS": "Слишком много ошибок!",
 		"ERRORS_SUPPRESSED": "Последующие ошибки с этой очередью не будут присылаться.\nЕсли будут проблемы с загрузкой треков, они будут пропущены без сообщения.\nЧтобы рассказать об ошибке, зайдите сюда: https://discord.gg/YMkZDsK",
@@ -96,8 +96,8 @@
 		"HEADER_SHARDS": "Шарды",
 		"HEADER_SONGS_QUEUED": "Треков в очереди",
 		"HEADER_USERS_LISTENING": "Пользователей, слушающих музыку",
-		"HEADER_NODE_USAGE": "Node usage",
-		"NO_NODES": "No nodes",
+		"HEADER_NODE_USAGE": "Использование узлов",
+		"NO_NODES": "Нет узлов",
 		"SHARD_NUMBER": "Шард %shard",
 		"HEADER_USER_COUNT": "Количество пользователей",
 		"HEADER_GUILD_COUNT": "Количество серверов",
@@ -157,66 +157,66 @@
 		"NONE": "Нет",
 		"COMMAND_ERROR": "Произошла неизвестная ошибка при использовании команды %name. Разработчикам были уведомлены. Если ты снова используешь команду и увидишь это сообщение, пожалуйста, подожди какое-то время. Расскажи об этом, если снова повторится: %server",
 		"UNKNOWN_AUTHOR": "Неизвестный автор",
-		"DM_ONLY": "This command can only be used in DMs",
-		"NOT_ENOUGH_MONEY": "You don't have enough money for that",
-		"THREE_HEARTS": "WOAH! 3 hearts!",
-		"TWO_HEARTS": "Double hearts :heart:",
-		"ONE_HEART": "1 heart",
-		"TRIPLE_PIECES": "Triple pieces",
-		"LOST": "You lost",
-		"FLIP_AMANDA_CHOSE_HEADS_WON": "Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_TAILS_WON": "Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Since you didn't choose a side, I chose heads for you and you lost %amount",
-		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Since you didn't choose a side, I chose tails for you and you lost %amount",
-		"FLIP_HEADS_WON": "You guessed heads and won %amount (+33%)",
-		"FLIP_TAILS_WON": "You guessed tails and won %amount (+33%)",
-		"FLIP_HEADS_LOST": "You guessed heads and lost %amount",
-		"FLIP_TAILS_LOST": "You guessed tails and lost %amount",
-		"PRIVATE_CARD": "Private card",
-		"COUPLE_CARD": "Couple card",
-		"TRANSACTIONS": "Transactions",
-		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
-		"GIVEN_TO_OTHER": "You have given %amount to %user",
-		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
-		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
-		"SETTING_UPDATED": "That setting was updated",
-		"SONG_MOVED": "%title moved",
-		"SELF_NOT_IN_COUPLE": "You aren't married.",
-		"USER_NOT_IN_COUPLE": "That user isn't married.",
-		"USER_NOT_IN_COUPLE_WITH_YOU": "That user isn't married to you.",
-		"DIVORCED_ONE_OTHER": "You divorced from %user",
-		"DIVORCED_MULTIPLE_OTHERS": "You removed %user from the marriage",
-		"DIVORCED_LEFT": "You left the marriage",
-		"NONE_WITHDRAW": "There is no money to withdraw",
-		"CANNOT_WITHDRAW_MORE": "You can't withdraw more than what is in the account",
-		"TRANSACTED_AMOUNT": "Successfully transacted %amount",
-		"CANNOT_MARRY_SELF": "You can't marry yourself",
-		"ALREADY_IN_COUPLE_SELF": "You're already married",
-		"ALREADY_IN_COUPLE_OTHER": "%user is already married",
-		"ALREADY_PROPOSED": "You've already proposed to %user",
-		"HASNT_PROPOSED": "%user hasn't proposed to you yet",
-		"PROPOSED": "You have proposed to %user. They must accept for you two to become married",
-		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOW DID YOU PROPOSE TO YOURSELF LOL???? PLEASE tell me how",
-		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
-		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
-		"REJECTED": "You declined %user's proposal",
-		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
-		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
-		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
-		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time",
-		"AI_OFFLINE": "The AI is currently disabled",
-		"HEADER_LEADERBOARD": "Leaderboard",
-		"HEADER_COUPLE_LEADERBOARD": "Couple Leaderboard",
-		"POWERED_BY": "Powered by %service",
-		"SELECT_PAGE": "Select page",
-		"PAGE_NUMBER": "Page %number",
-		"TRACK_NUMBER": "Track %number",
-		"RESULTS_COUNT": "Results 1-%count",
-		"VOICE_STATUS_OFFLINE": "Voice status tracking is currently unavailable, so music commands cannot be used right now"
+		"DM_ONLY": "Эту команду можно использовать только в личных сообщениях",
+		"NOT_ENOUGH_MONEY": "У тебя недостаточно денег для этого",
+		"THREE_HEARTS": "ВАУ! 3 сердца!",
+		"TWO_HEARTS": "Двойные сердца :heart:",
+		"ONE_HEART": "1 сердце",
+		"TRIPLE_PIECES": "Тройные элементы",
+		"LOST": "Ты проиграл",
+		"FLIP_AMANDA_CHOSE_HEADS_WON": "Так как ты не выбрал сторону, я выбрала орла за тебя, и ты выиграл %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_TAILS_WON": "Так как ты не выбрал сторону, я выбрала решку за тебя, и ты выиграл %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Так как ты не выбрал сторону, я выбрала орла за тебя, и ты проиграл %amount",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Так как ты не выбрал сторону, я выбрала решку за тебя, и ты проиграл %amount",
+		"FLIP_HEADS_WON": "Ты угадал орла и выиграл %amount (+33%)",
+		"FLIP_TAILS_WON": "Ты угадал решку и выиграл %amount (+33%)",
+		"FLIP_HEADS_LOST": "Ты угадал орла и проиграл %amount",
+		"FLIP_TAILS_LOST": "Ты угадал решку и проиграл %amount",
+		"PRIVATE_CARD": "Личная карточка",
+		"COUPLE_CARD": "Карточка пары",
+		"TRANSACTIONS": "Транзакции",
+		"CANNOT_GIVE_SELF": "Ты не можешь дать деньги самому себе",
+		"GIVEN_TO_OTHER": "Ты дал %amount пользователю %user",
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "Указанное значение для обновления этой настройки недопустимо. Допустимые значения: %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "Указанное значение для обновления этой настройки недопустимо. Донатеры могут указывать произвольные значения для этой настройки %link. Допустимые значения: %acceptable",
+		"SETTING_UPDATED": "Эта настройка была обновлена",
+		"SONG_MOVED": "%title перемещён",
+		"SELF_NOT_IN_COUPLE": "Ты не в браке.",
+		"USER_NOT_IN_COUPLE": "Этот пользователь не в браке.",
+		"USER_NOT_IN_COUPLE_WITH_YOU": "Этот пользователь не в браке с тобой.",
+		"DIVORCED_ONE_OTHER": "Ты развёлся с %user",
+		"DIVORCED_MULTIPLE_OTHERS": "Ты удалил %user из брака",
+		"DIVORCED_LEFT": "Ты покинул брак",
+		"NONE_WITHDRAW": "Нет денег для снятия",
+		"CANNOT_WITHDRAW_MORE": "Ты не можешь снять больше, чем есть на счету",
+		"TRANSACTED_AMOUNT": "Успешно проведена транзакция на %amount",
+		"CANNOT_MARRY_SELF": "Ты не можешь жениться на самом себе",
+		"ALREADY_IN_COUPLE_SELF": "Ты уже в браке",
+		"ALREADY_IN_COUPLE_OTHER": "%user уже в браке",
+		"ALREADY_PROPOSED": "Ты уже сделал предложение %user",
+		"HASNT_PROPOSED": "%user ещё не сделал тебе предложение",
+		"PROPOSED": "Ты сделал предложение %user. Они должны принять, чтобы вы вступили в брак",
+		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "КАК ТЫ СДЕЛАЛ ПРЕДЛОЖЕНИЕ САМОМУ СЕБЕ ЛОЛ???? ПОЖАЛУЙСТА, расскажи мне как",
+		"MARRIED_ONE_OTHER": "%user1 теперь в браке с %user2",
+		"MARRIED_MULTIPLE_OTHERS": "%user1 теперь в браке с %user2 и ещё %amount",
+		"REJECTED": "Ты отклонил предложение %user",
+		"CANNOT_ADD_HTTP": "Ты не можешь добавлять пользовательские ссылки в плейлисты",
+		"PLAYLIST_TRACK_TOO_LONG": "Идентификатор этого трека слишком длинный. Он должен быть не более 50 символов",
+		"VC_IN_OTHER_GUILD": "Похоже, я вижу, что ты зашёл на другой сервер. Выйди и зайди снова или включи/выключи микрофон/звук в канале, где хочешь, чтобы я тебя видела, чтобы вызвать обновление",
+		"ALREADY_CLAIMED_DAILY": "Ты уже получил своё ежедневное предсказание. Ты можешь получить снова через %time",
+		"AI_OFFLINE": "ИИ в настоящее время отключён",
+		"HEADER_LEADERBOARD": "Таблица лидеров",
+		"HEADER_COUPLE_LEADERBOARD": "Таблица лидеров пар",
+		"POWERED_BY": "Предоставлено %service",
+		"SELECT_PAGE": "Выбрать страницу",
+		"PAGE_NUMBER": "Страница %number",
+		"TRACK_NUMBER": "Трек %number",
+		"RESULTS_COUNT": "Результаты 1-%count",
+		"VOICE_STATUS_OFFLINE": "Отслеживание голосового статуса сейчас недоступно, поэтому музыкальные команды нельзя использовать в данный момент."
 	},
 	"sit": {
 		"name": "сидеть",
-		"description": "mood"
+		"description": "настроение"
 	},
 	"image": {
 		"name": "картинку",
@@ -229,7 +229,7 @@
 		}
 	},
 	"ship": {
-		"name": "ship",
+		"name": "шип",
 		"description": "Шипперит двух людей",
 		"options": {
 			"user2": {
@@ -313,7 +313,7 @@
 		}
 	},
 	"boop": {
-		"name": "boop",
+		"name": "буп",
 		"description": "Когда тыкнуть хочется именно в нос.",
 		"options": {
 			"user": {
@@ -323,7 +323,7 @@
 		}
 	},
 	"pat": {
-		"name": "pat",
+		"name": "погладить",
 		"description": "Гладит кого-то по голове",
 		"options": {
 			"user": {
@@ -333,125 +333,125 @@
 		}
 	},
 	"play": {
-		"name": "play",
+		"name": "играть",
 		"description": "Играет музыку из различных источников",
 		"options": {
 			"track": {
-				"name": "track",
+				"name": "трек",
 				"description": "Трек, который хочется включить"
 			},
 			"position": {
-				"name": "position",
+				"name": "позиция",
 				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
 			}
 		}
 	},
 	"radio": {
-		"name": "radio",
+		"name": "радио",
 		"description": "Играть музыку с радиостанций",
 		"options": {
 			"station": {
-				"name": "station",
+				"name": "станция",
 				"description": "Станция, с которой надо включить музыку"
 			},
 			"position": {
-				"name": "position",
+				"name": "позиция",
 				"description": "Номер, с которого нужно добавлять треки (начиная с 1)"
 			}
 		}
 	},
 	"skip": {
-		"name": "skip",
+		"name": "пропустить",
 		"description": "Пропускает трек в очереди",
 		"options": {
 			"start": {
-				"name": "start",
+				"name": "начало",
 				"description": "Номер, с которого нужно пропускать треки (начиная с 1)"
 			},
 			"amount": {
-				"name": "amount",
+				"name": "количество",
 				"description": "Количество треков, которые нужно пропустить"
 			}
 		}
 	},
 	"stop": {
-		"name": "stop",
+		"name": "стоп",
 		"description": "Останавливает очередь"
 	},
 	"queue": {
-		"name": "queue",
+		"name": "очередь",
 		"description": "Показать очередь и действия",
 		"options": {
 			"page": {
-				"name": "page",
+				"name": "страница",
 				"description": "Выбрать, какую страницу очереди показать"
 			},
 			"volume": {
-				"name": "volume",
+				"name": "громкость",
 				"description": "Нужная громкость музыки (в %)"
 			},
 			"loop": {
-				"name": "loop",
+				"name": "повтор",
 				"description": "Включить повторение очереди"
 			},
 			"pause": {
-				"name": "pause",
+				"name": "пауза",
 				"description": "Останавливает очередь"
 			}
 		}
 	},
 	"nowplaying": {
-		"name": "nowplaying",
+		"name": "текущий",
 		"description": "Прислать сообщение с играющим треком"
 	},
 	"trackinfo": {
-		"name": "trackinfo",
+		"name": "инфотрек",
 		"description": "Показывает информацию об играющем треке"
 	},
 	"lyrics": {
-		"name": "lyrics",
+		"name": "текст",
 		"description": "Показывает слова играющего трека"
 	},
 	"seek": {
-		"name": "seek",
+		"name": "перемотка",
 		"description": "Перемотать трек на нужное время",
 		"options": {
 			"time": {
-				"name": "time",
+				"name": "время",
 				"description": "Время в секундах, на которое нужно перемотать."
 			}
 		}
 	},
 	"filters": {
-		"name": "filters",
+		"name": "фильтры",
 		"description": "Применить фильтры к очереди",
 		"options": {
 			"pitch": {
-				"name": "pitch",
+				"name": "высота",
 				"description": "Изменить высоту звука в очереди"
 			},
 			"speed": {
-				"name": "speed",
+				"name": "скорость",
 				"description": "Устанавливает скорость (в %) в очереди"
 			}
 		}
 	},
 	"shuffle": {
-		"name": "shuffle",
+		"name": "перемешать",
 		"description": "Перемешивает песни в очереди"
 	},
 	"remove": {
-		"name": "remove",
+		"name": "удалить",
 		"description": "Удаляет трек из плейлиста",
 		"options": {
 			"index": {
-				"name": "index",
+				"name": "индекс",
 				"description": "Номер трека, который нужно удалить (начиная с 1)"
 			}
 		}
 	},
 	"musictoken": {
-		"name": "musictoken",
+		"name": "музтокен",
 		"description": "Получить токен ",
 		"options": {
 			"action": {
@@ -461,101 +461,101 @@
 		}
 	},
 	"playlists": {
-		"name": "playlists",
+		"name": "плейлисты",
 		"description": "Изменять и проигрывать плейлисты",
 		"options": {
 			"lists": {
-				"name": "lists",
-				"description": "View and create/delete playlists",
+				"name": "списки",
+				"description": "Просмотр и создание/удаление плейлистов",
 				"options": {
 					"info": {
-						"name": "info",
+						"name": "инфо",
 						"description": "Показывает информацию о плейлисте"
 					},
 					"create": {
-						"name": "create",
+						"name": "создать",
 						"description": "Создает плейлист"
 					},
 					"delete": {
-						"name": "delete",
+						"name": "удалить",
 						"description": "Удаляет плейлист"
 					}
 				}
 			},
 			"add": {
-				"name": "add",
+				"name": "добавить",
 				"description": "Добавляет трек в плейлист",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "плейлист",
 						"description": "Имя плейлиста"
 					},
 					"track": {
-						"name": "track",
+						"name": "трек",
 						"description": "Трек (ссылка, название, id)"
 					}
 				}
 			},
 			"remove": {
-				"name": "remove",
+				"name": "удалить",
 				"description": "Удаляет трек из плейлиста",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "плейлист",
 						"description": "Имя плейлиста"
 					},
 					"index": {
-						"name": "index",
+						"name": "индекс",
 						"description": "Номер трека, который нужно удалить (начиная с 1)"
 					}
 				}
 			},
 			"move": {
-				"name": "move",
+				"name": "переместить",
 				"description": "Двигает трек в плейлисте с одной позиции на другую",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "плейлист",
 						"description": "Имя плейлиста"
 					},
 					"from": {
-						"name": "from",
+						"name": "откуда",
 						"description": "Номер трека, который нужно передвинуть (начиная с 1)"
 					},
 					"to": {
-						"name": "to",
+						"name": "куда",
 						"description": "Номер, на который нужно передвинуть трек (начиная с 1)"
 					}
 				}
 			},
 			"search": {
-				"name": "search",
+				"name": "поиск",
 				"description": "Фильтрует треки в плейлисте",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "плейлист",
 						"description": "Имя плейлиста"
 					},
 					"query": {
-						"name": "query",
+						"name": "запрос",
 						"description": "Слово, по которому нужно фильтровать"
 					}
 				}
 			},
 			"play": {
-				"name": "play",
+				"name": "играть",
 				"description": "Проигрывает плейлист",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "плейлист",
 						"description": "Имя плейлиста"
 					},
 					"shuffle": {
-						"name": "shuffle",
+						"name": "перемешать",
 						"description": "Должен ли плейлист перемешаться"
 					},
 					"start": {
-						"name": "start",
+						"name": "начало",
 						"description": "Номер, с которого нужно начать (начиная с 1). При перемешивании выбирается лишь часть и перемешивается"
 					}
 				}
@@ -563,17 +563,17 @@
 		}
 	},
 	"stats": {
-		"name": "stats",
+		"name": "статистика",
 		"description": "Показывает детальную статистику",
 		"options": {
 			"window": {
-				"name": "window",
+				"name": "период",
 				"description": "Какую статистику нужно показать"
 			}
 		}
 	},
 	"info": {
-		"name": "info",
+		"name": "инфо",
 		"description": "Информация об Аманде"
 	},
 	"git": {
@@ -581,226 +581,226 @@
 		"description": "Получает последние git коммиты."
 	},
 	"help": {
-		"name": "help",
+		"name": "помощь",
 		"description": "Самая обыкновенная команда с помощью.",
 		"options": {
 			"category": {
-				"name": "category",
+				"name": "категория",
 				"description": "Категория, с которой нужна помощь"
 			},
 			"command": {
-				"name": "command",
+				"name": "команда",
 				"description": "Команда, с которой нужна помощь"
 			}
 		}
 	},
 	"slots": {
-		"name": "slots",
-		"description": "Run the slot machine",
+		"name": "слоты",
+		"description": "Запусти игровой автомат",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "сумма",
+				"description": "Сумма денег для ставки"
 			}
 		}
 	},
 	"flip": {
-		"name": "flip",
-		"description": "Flips a coin",
+		"name": "монетка",
+		"description": "Подбрасывает монетку",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "сумма",
+				"description": "Сумма денег для ставки"
 			},
 			"side": {
-				"name": "side",
-				"description": "The side to bet on"
+				"name": "сторона",
+				"description": "Сторона, на которую ставишь"
 			}
 		}
 	},
 	"money": {
-		"name": "money",
-		"description": "Shows how much money you, another person, or a couple has",
+		"name": "деньги",
+		"description": "Показывает, сколько денег у тебя, другого человека или пары",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to check their bank info"
+				"name": "пользователь",
+				"description": "Пользователь, чью банковскую информацию проверить"
 			},
 			"couple": {
-				"name": "couple",
-				"description": "Whether to show the couple balance"
+				"name": "пара",
+				"description": "Показывать ли баланс пары"
 			}
 		}
 	},
 	"leaderboard": {
-		"name": "leaderboard",
-		"description": "Shows the leaderboard for the top users of money"
+		"name": "рейтинг",
+		"description": "Показывает рейтинг пользователей с наибольшим количеством денег"
 	},
 	"give": {
-		"name": "give",
-		"description": "Gives another user money",
+		"name": "дать",
+		"description": "Даёт другому пользователю деньги",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to give"
+				"name": "сумма",
+				"description": "Сумма денег для передачи"
 			},
 			"user": {
-				"name": "user",
-				"description": "The user to give money to"
+				"name": "пользователь",
+				"description": "Пользователь, которому дать деньги"
 			}
 		}
 	},
 	"wheel": {
-		"name": "wheel",
-		"description": "Spin the wheel of (mis)fortune",
+		"name": "колесо",
+		"description": "Крутани колесо (не)фортуны",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "сумма",
+				"description": "Сумма денег для ставки"
 			}
 		}
 	},
 	"profile": {
-		"name": "profile",
-		"description": "Get a user's Amanda profile",
+		"name": "профиль",
+		"description": "Получить профиль Amanda пользователя",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "пользователь",
 				"description": "The user's profile to get'"
 			},
 			"light": {
-				"name": "light",
-				"description": "If light mode should be force used (default false)"
+				"name": "светлый",
+				"description": "Принудительно использовать светлый режим (по умолчанию нет)"
 			}
 		}
 	},
 	"settings": {
-		"name": "settings",
-		"description": "Modify settings for Amanda to use",
+		"name": "настройки",
+		"description": "Измени настройки, используемые Amanda",
 		"options": {
 			"setting": {
-				"name": "setting",
-				"description": "The setting you want to modify/view"
+				"name": "настройка",
+				"description": "Настройка, которую ты хочешь изменить/просмотреть"
 			},
 			"modify": {
-				"name": "modify",
-				"description": "What to modify the setting value to"
+				"name": "значение",
+				"description": "Новое значение настройки"
 			}
 		}
 	},
 	"couple": {
-		"name": "couple",
-		"description": "Get couple information about a user",
+		"name": "пара",
+		"description": "Получить информацию о паре пользователя",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to get info on"
+				"name": "пользователь",
+				"description": "Пользователь, о котором получить информацию"
 			}
 		}
 	},
 	"propose": {
-		"name": "propose",
-		"description": "Propose to a user",
+		"name": "предложение",
+		"description": "Сделать предложение пользователю",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to propose to"
+				"name": "пользователь",
+				"description": "Пользователь, которому сделать предложение"
 			}
 		}
 	},
 	"marry": {
-		"name": "marry",
-		"description": "Accepts a proposal from a user",
+		"name": "жениться",
+		"description": "Принимает предложение от пользователя",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to marry"
+				"name": "пользователь",
+				"description": "Пользователь, на котором жениться"
 			}
 		}
 	},
 	"reject": {
-		"name": "reject",
-		"description": "Rejects a proposal from a user",
+		"name": "отклонить",
+		"description": "Отклоняет предложение от пользователя",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to reject"
+				"name": "пользователь",
+				"description": "Пользователь, которого отклонить"
 			}
 		}
 	},
 	"divorce": {
-		"name": "divorce",
-		"description": "Divorces your significant other(s)",
+		"name": "развод",
+		"description": "Развод с твоей второй половинкой (половинками)",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to remove from the marriage"
+				"name": "пользователь",
+				"description": "Пользователь для удаления из брака"
 			}
 		}
 	},
 	"withdraw": {
-		"name": "withdraw",
-		"description": "Withdraw money from your couple balance",
+		"name": "снять",
+		"description": "Сними деньги с баланса вашей пары",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to withdraw"
+				"name": "сумма",
+				"description": "Сумма денег для снятия"
 			}
 		}
 	},
 	"deposit": {
-		"name": "deposit",
-		"description": "Deposit money to your couple balance",
+		"name": "внести",
+		"description": "Внеси деньги на баланс вашей пары",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to deposit"
+				"name": "сумма",
+				"description": "Сумма денег для внесения"
 			}
 		}
 	},
 	"coupleleaderboard": {
-		"name": "coupleleaderboard",
-		"description": "Shows the leaderboard for top couples of money"
+		"name": "рейтинг-пар",
+		"description": "Показывает рейтинг самых богатых пар"
 	},
 	"move": {
-		"name": "move",
-		"description": "Move a track in the queue to a new position",
+		"name": "переместить",
+		"description": "Перемести трек в очереди на новую позицию",
 		"options": {
 			"from": {
-				"name": "from",
-				"description": "1 based index of the track to move"
+				"name": "откуда",
+				"description": "Индекс (с 1) трека для перемещения"
 			},
 			"to": {
-				"name": "to",
-				"description": "1 based index to move the track to"
+				"name": "куда",
+				"description": "Индекс (с 1), на который переместить трек"
 			}
 		}
 	},
 	"search": {
-		"name": "search",
-		"description": "Search for a track from multiple sources",
+		"name": "поиск",
+		"description": "Поиск трека из нескольких источников",
 		"options": {
 			"input": {
-				"name": "input",
-				"description": "What to search for"
+				"name": "запрос",
+				"description": "Что искать"
 			},
 			"source": {
-				"name": "source",
-				"description": "The website to use to search for the track"
+				"name": "источник",
+				"description": "Сайт для поиска трека"
 			}
 		}
 	},
 	"fortune": {
-		"name": "fortune",
-		"description": "Let Amanda predict your daily fortune"
+		"name": "предсказание",
+		"description": "Позволь Amanda предсказать твою ежедневную удачу"
 	},
 	"chat": {
-		"name": "chat",
-		"description": "Talk with Amanda's AI",
+		"name": "чат",
+		"description": "Поговори с ИИ Amanda",
 		"options": {
 			"prompt": {
-				"name": "prompt",
-				"description": "The message to send to Amanda"
+				"name": "сообщение",
+				"description": "Сообщение для отправки Amanda"
 			}
 		}
 	}

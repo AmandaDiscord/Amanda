@@ -29,10 +29,10 @@
 		"TOKENS_NONE": "Du hast momentan keine Token. Benutze `%prefixmusictoken action:new` um einen neuen zu erstellen.",
 		"HEADER_UNKNOWN": "Unbekannt",
 		"HEADER_PLAYLIST": "Playlist",
-		"HEADER_SONGS": "Tracks",
+		"HEADER_SONGS": "Titel",
 		"HEADER_LENGTH": "Länge",
 		"HEADER_PLAY_COUNT": "Abgespielt",
-		"HEADER_AUTHOR": "Author",
+		"HEADER_AUTHOR": "Autor",
 		"EVERYONE_LEFT": "Jeder ist gegangen, also gehe ich jetzt auch.",
 		"NEWER_NOW_PLAYING": "Es gibt eine neue 'Jetzt läuft' Nachricht.",
 		"SONG_ERROR_EXCLAIMATION": "Der interne Identifikator des Liedes hatte den Platzhalter Wert `!`.\nDies ist ein Bug.",
@@ -75,7 +75,7 @@
 		"SHIP_ALREADY_COUPLE_OTHER": "Ich dnke nicht dass ich %user1 und %other bewerten muss wenn sie schon Verheiratet sind. Sie sind ein süßes Pärchen %emoji",
 		"AVATAR_FETCH_FAILED": "There was an error getting either user's avatar Es gab einen Fehler beim Laden eines Nutzer-Avatars.",
 		"SHIP_RATING": "Ich würde %display1 und %display2 zusammen %percentage% geben.",
-		"NO_U": "No u",
+		"NO_U": "Nein du",
 		"CANNOT_SELF_BEAN": "%username, du kannst dich nicht selbst bannen, Dummerchen",
 		"BEANED": "%tag wurde gebannt!",
 		"HUG_AMANDA": "**Gibt %username eine Umarmung zurück** :heart:",
@@ -94,10 +94,10 @@
 		"SLAP_OTHER": "%user schlägt %mention",
 		"BOOP_OTHER": "%user boopt %mention",
 		"PAT_OTHER": "%user streichelt %mention",
-		"HEADER_HEARTBEAT": "Heartbeat",
+		"HEADER_HEARTBEAT": "Herzschlag",
 		"HEADER_LATENCY": "Latenz",
-		"HEADER_UPTIME": "Uptime",
-		"HEADER_MEMORY": "Memory",
+		"HEADER_UPTIME": "Betriebszeit",
+		"HEADER_MEMORY": "Speicher",
 		"HEADER_SHARDS": "Shards",
 		"HEADER_SONGS_QUEUED": "Lieder in Playlist",
 		"HEADER_USERS_LISTENING": "Nutzer die zuhören",
@@ -120,18 +120,18 @@
 		"GIT_DELETIONS": "%amount gelöscht",
 		"GIT_DELETION": "1 gelöscht",
 		"HEADER_STATUS": "Status",
-		"HEADER_GIT_INFO": "Git info",
+		"HEADER_GIT_INFO": "Git-Info",
 		"GIT_STATUS": "Auf Zweig %branch, letzter commit %hash",
 		"GIT_COMMITS": "Commits (letzte %amount Einträge)",
 		"FOOTER_HELP": "<> = erforderlich, [] = optional, | = or. Nutze nicht <>, [] oder | in deinem input.",
-		"HELP_COMMAND_BODY": "%description\nArguments: %args\nCategory: %category",
+		"HELP_COMMAND_BODY": "%description\nArgumente: %args\nKategorie: %category",
 		"HEADER_COMMAND_CATEGORY": "Befehlskategorie: %category",
 		"FOOTER_HELP_MAIN": "Schreibe `%prefixhelp [command:command]` um mehr Informationen zu einem Befehl zu erhalten.",
 		"HELP_INVALID_COMMAND": "**%tag**, Ich konnte das Hilfspanel für diesen Befehl nicht finden.",
 		"HEADER_COMMAND_CATEGORIES": "Vefehlskategorien",
 		"HELP_SEE_ALL": "Schreibe `%prefixhelp [category:category]` um alle Befehle in der Kategorie zu sehen.\nSchreibe `%prefixhelp [command:command]` um mehr Informationen zu einem Befehl zu erhalten.",
 		"HELP_INFO": "Schreibe `%prefixinfo` um allgemeine Informationen zu Amanda zu erhalten.\nFür mehr, trete unserem Support Server bei: %link",
-		"TIMED_OUT": "Timed out",
+		"TIMED_OUT": "Zeitüberschreitung",
 		"DATABASE_OFFLINE": "Die Datenbank ist momentan nicht verbunden. Dies ist bekannt und es wird momentan daran gearbeitet um es zu beheben",
 		"NEGATIVE_1_INDEX_IN_RADIO": "-1 index in Radio",
 		"PAGE_X_OF_Y": "Seite %current von %total",
@@ -152,14 +152,14 @@
 		"PLAYLIST_DELETED": "Playlist gelöscht",
 		"PLAYLIST_DUPLICATE_SONG": "Du hast versucht ein Duplikat zur Playlist hinzuzufügen.",
 		"PLAYLIST_SONG_ADDED": "%title hinzugefügt",
-		"OUT_OF_BOUNDS": "Index out of bounds",
+		"OUT_OF_BOUNDS": "Index außerhalb des gültigen Bereichs",
 		"SONG_REMOVED": "%title entfernt",
 		"PLAYLIST_INDEXES_EQUAL": "Die von und zu Indizen dürfen nicht identisch sein.",
 		"PLAYLIST_SONG_MOVED": "Track verschoben",
 		"TITLE_JOIN_SERVER": "Klicke auf den Titel um unseren Support Server beizutreten.",
 		"SONG_INFO_GENERIC": "Versuche die Infos des Tracks auf der Webseite, wo du ihn gefunden hast, zu finden",
 		"SONG_SELECTION_CANCELLED": "Track Auswahl abgebrochen",
-		"NONE": "None",
+		"NONE": "Keine",
 		"COMMAND_ERROR": "Ein Fehler mit dem Befehl %name ist aufgetreten. Die Entwickler wurden benachrichtigt. Wenn du diesen Befehl erneut benutzt und diese Nachricht siehst, bitte gebe uns eine angemessene Zeit um das Problem zu beheben. Melde dies, sollte es erneut auftreten: %server",
 		"UNKNOWN_AUTHOR": "Unbekannter Author",
 		"DM_ONLY": "Dieser Befehl kann nur in DMs verwendet werden",
@@ -182,49 +182,49 @@
 		"TRANSACTIONS": "Transaktionen",
 		"CANNOT_GIVE_SELF": "Du kannst dir selbst kein Geld geben!",
 		"GIVEN_TO_OTHER": "Du hast %user %amount gegeben.",
-		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
-		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
-		"SETTING_UPDATED": "That setting was updated",
-		"SONG_MOVED": "%title moved",
-		"SELF_NOT_IN_COUPLE": "You aren't married.",
-		"USER_NOT_IN_COUPLE": "That user isn't married.",
-		"USER_NOT_IN_COUPLE_WITH_YOU": "That user isn't married to you.",
-		"DIVORCED_ONE_OTHER": "You divorced from %user",
-		"DIVORCED_MULTIPLE_OTHERS": "You removed %user from the marriage",
-		"DIVORCED_LEFT": "You left the marriage",
-		"NONE_WITHDRAW": "There is no money to withdraw",
-		"CANNOT_WITHDRAW_MORE": "You can't withdraw more than what is in the account",
-		"TRANSACTED_AMOUNT": "Successfully transacted %amount",
-		"CANNOT_MARRY_SELF": "You can't marry yourself",
-		"ALREADY_IN_COUPLE_SELF": "You're already married",
-		"ALREADY_IN_COUPLE_OTHER": "%user is already married",
-		"ALREADY_PROPOSED": "You've already proposed to %user",
-		"HASNT_PROPOSED": "%user hasn't proposed to you yet",
-		"PROPOSED": "You have proposed to %user. They must accept for you two to become married",
-		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOW DID YOU PROPOSE TO YOURSELF LOL???? PLEASE tell me how",
-		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
-		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
-		"REJECTED": "You declined %user's proposal",
-		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
-		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
-		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
-		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time",
-		"AI_OFFLINE": "The AI is currently disabled",
-		"HEADER_LEADERBOARD": "Leaderboard",
-		"HEADER_COUPLE_LEADERBOARD": "Couple Leaderboard",
-		"POWERED_BY": "Powered by %service",
-		"SELECT_PAGE": "Select page",
-		"PAGE_NUMBER": "Page %number",
-		"TRACK_NUMBER": "Track %number",
-		"RESULTS_COUNT": "Results 1-%count",
-		"VOICE_STATUS_OFFLINE": "Voice status tracking is currently unavailable, so music commands cannot be used right now"
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "Der Wert, den du zum Aktualisieren dieser Einstellung angegeben hast, ist ungültig. Gültige Werte sind %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "Der Wert, den du zum Aktualisieren dieser Einstellung angegeben hast, ist ungültig. Spender dürfen für diese Einstellung beliebige Werte angeben %link. Gültige Werte sind %acceptable",
+		"SETTING_UPDATED": "Diese Einstellung wurde aktualisiert",
+		"SONG_MOVED": "%title verschoben",
+		"SELF_NOT_IN_COUPLE": "Du bist nicht verheiratet.",
+		"USER_NOT_IN_COUPLE": "Dieser Benutzer ist nicht verheiratet.",
+		"USER_NOT_IN_COUPLE_WITH_YOU": "Dieser Benutzer ist nicht mit dir verheiratet.",
+		"DIVORCED_ONE_OTHER": "Du hast dich von %user scheiden lassen",
+		"DIVORCED_MULTIPLE_OTHERS": "Du hast %user aus der Ehe entfernt",
+		"DIVORCED_LEFT": "Du hast die Ehe verlassen",
+		"NONE_WITHDRAW": "Es ist kein Geld zum Abheben vorhanden",
+		"CANNOT_WITHDRAW_MORE": "Du kannst nicht mehr abheben, als auf dem Konto ist",
+		"TRANSACTED_AMOUNT": "%amount erfolgreich überwiesen",
+		"CANNOT_MARRY_SELF": "Du kannst dich nicht selbst heiraten",
+		"ALREADY_IN_COUPLE_SELF": "Du bist bereits verheiratet",
+		"ALREADY_IN_COUPLE_OTHER": "%user ist bereits verheiratet",
+		"ALREADY_PROPOSED": "Du hast %user bereits einen Antrag gemacht",
+		"HASNT_PROPOSED": "%user hat dir noch keinen Antrag gemacht",
+		"PROPOSED": "Du hast %user einen Antrag gemacht. Sie müssen annehmen, damit ihr beide verheiratet seid",
+		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "WIE HAST DU DIR SELBST EINEN ANTRAG GEMACHT LOL???? Bitte erklär mir wie",
+		"MARRIED_ONE_OTHER": "%user1 ist jetzt mit %user2 verheiratet",
+		"MARRIED_MULTIPLE_OTHERS": "%user1 ist jetzt mit %user2 und %amount weiteren verheiratet",
+		"REJECTED": "Du hast den Antrag von %user abgelehnt",
+		"CANNOT_ADD_HTTP": "Du kannst keine benutzerdefinierten Links zu Playlists hinzufügen",
+		"PLAYLIST_TRACK_TOO_LONG": "Die Kennung für diesen Titel war zu lang. Sie muss kleiner oder gleich 50 Zeichen sein",
+		"VC_IN_OTHER_GUILD": "Es sieht so aus, als wärst du in einem anderen Server beigetreten. Verlasse den Kanal und tritt erneut bei oder schalte dich im gewünschten Kanal stumm/laut bzw. taub/hörend, um eine Aktualisierung auszulösen",
+		"ALREADY_CLAIMED_DAILY": "Du hast dein tägliches Glück bereits eingelöst. Du kannst es in %time erneut einlösen",
+		"AI_OFFLINE": "Die KI ist derzeit deaktiviert",
+		"HEADER_LEADERBOARD": "Bestenliste",
+		"HEADER_COUPLE_LEADERBOARD": "Paar-Bestenliste",
+		"POWERED_BY": "Bereitgestellt von %service",
+		"SELECT_PAGE": "Seite auswählen",
+		"PAGE_NUMBER": "Seite %number",
+		"TRACK_NUMBER": "Titel %number",
+		"RESULTS_COUNT": "Ergebnisse 1-%count",
+		"VOICE_STATUS_OFFLINE": "Die Sprachstatus-Verfolgung ist derzeit nicht verfügbar, daher können Musikbefehle momentan nicht verwendet werden."
 	},
 	"sit": {
-		"name": "sit",
+		"name": "sitz",
 		"description": "Stimmung"
 	},
 	"image": {
-		"name": "image",
+		"name": "bild",
 		"description": "Sende ein Bild von etwas",
 		"options": {
 			"type": {
@@ -234,85 +234,85 @@
 		}
 	},
 	"ship": {
-		"name": "ship",
+		"name": "verkuppeln",
 		"description": "Shipt zwei Personen",
 		"options": {
 			"user2": {
-				"name": "user2",
+				"name": "benutzer2",
 				"description": "Der zweite Nutzer zum shippen"
 			},
 			"user1": {
-				"name": "user1",
+				"name": "benutzer1",
 				"description": "Der User zum shippen von user2, abgesehen von dir selbst."
 			}
 		}
 	},
 	"bean": {
-		"name": "bean",
+		"name": "bannen",
 		"description": "Banne einen User",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der gebannt werden soll"
 			}
 		}
 	},
 	"hug": {
-		"name": "hug",
+		"name": "umarmen",
 		"description": "Umarme jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der umarmt werden soll."
 			}
 		}
 	},
 	"nom": {
-		"name": "nom",
+		"name": "knabbern",
 		"description": "Knabber jemanden an",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der angeknabbert werden soll"
 			}
 		}
 	},
 	"kiss": {
-		"name": "kiss",
+		"name": "küssen",
 		"description": "Küsst jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der geküsst werden soll"
 			}
 		}
 	},
 	"cuddle": {
-		"name": "cuddle",
+		"name": "kuscheln",
 		"description": "Knuddel jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der geknuddelt werden soll"
 			}
 		}
 	},
 	"poke": {
-		"name": "poke",
+		"name": "anstupsen",
 		"description": "Stupse jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der nutzer der gestupst werden soll"
 			}
 		}
 	},
 	"slap": {
-		"name": "slap",
+		"name": "ohrfeigen",
 		"description": "Schlage jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der Nutzer der geschlagen werden soll"
 			}
 		}
@@ -322,27 +322,27 @@
 		"description": "Boopt jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der Nutzer der geboopt werden soll"
 			}
 		}
 	},
 	"pat": {
-		"name": "pat",
+		"name": "tätscheln",
 		"description": "Streichelt jemanden",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Der User der gestreichelt werden soll"
 			}
 		}
 	},
 	"play": {
-		"name": "play",
+		"name": "abspielen",
 		"description": "Spiel Musik von mehreren Quellen",
 		"options": {
 			"track": {
-				"name": "track",
+				"name": "titel",
 				"description": "Der Track den du abspielen möchtest"
 			},
 			"position": {
@@ -356,7 +356,7 @@
 		"description": "Spiel von einem Radiosender ab",
 		"options": {
 			"station": {
-				"name": "station",
+				"name": "sender",
 				"description": "Der Sender von dem du die Musik abspielen möchtest"
 			},
 			"position": {
@@ -366,7 +366,7 @@
 		}
 	},
 	"skip": {
-		"name": "skip",
+		"name": "überspringen",
 		"description": "Tracks in der Playlist überspringen",
 		"options": {
 			"start": {
@@ -374,29 +374,29 @@
 				"description": "Index von dem du anfangen möchtest (beginnend mit 1)"
 			},
 			"amount": {
-				"name": "amount",
+				"name": "anzahl",
 				"description": "wieviele Tracks du überspringen möchtest."
 			}
 		}
 	},
 	"stop": {
-		"name": "stop",
+		"name": "stopp",
 		"description": "Stoppt die Playlist"
 	},
 	"queue": {
-		"name": "queue",
+		"name": "warteschlange",
 		"description": "Zeige die Playlist und führe Aktionen aus",
 		"options": {
 			"page": {
-				"name": "page",
+				"name": "seite",
 				"description": "Wähle die Seitenzahl der Warteschlagen zum Anzeigen"
 			},
 			"volume": {
-				"name": "volume",
+				"name": "lautstärke",
 				"description": "Setze die Lautstärke auf X%"
 			},
 			"loop": {
-				"name": "loop",
+				"name": "schleife",
 				"description": "Soll die Playlist in einer Schleife abgespielt werden"
 			},
 			"pause": {
@@ -406,47 +406,47 @@
 		}
 	},
 	"nowplaying": {
-		"name": "nowplaying",
+		"name": "aktuell",
 		"description": "Zeige die `Jetzt Läuft:` Nachricht"
 	},
 	"trackinfo": {
-		"name": "trackinfo",
+		"name": "titelinfo",
 		"description": "Zeige Infos zum momentan laufenden Track"
 	},
 	"lyrics": {
-		"name": "lyrics",
+		"name": "songtext",
 		"description": "Zeige die Lyrik zum momentan laufenden Track"
 	},
 	"seek": {
-		"name": "seek",
+		"name": "spulen",
 		"description": "Springe zu einer angegebenen Zeit im Track",
 		"options": {
 			"time": {
-				"name": "time",
+				"name": "zeit",
 				"description": "Die Zeit zu der gesprungen werden soll (in Sekunden)"
 			}
 		}
 	},
 	"filters": {
-		"name": "filters",
+		"name": "filter",
 		"description": "Füge Filter zur Playlist hinzu",
 		"options": {
 			"pitch": {
-				"name": "pitch",
+				"name": "tonhöhe",
 				"description": "Setze die Tonhöhe der Wiedergabe in Halbtöne"
 			},
 			"speed": {
-				"name": "speed",
+				"name": "geschwindigkeit",
 				"description": "Setze die Geschwindigkeit der Wiedergabe auf X%"
 			}
 		}
 	},
 	"shuffle": {
-		"name": "shuffle",
+		"name": "mischen",
 		"description": "Mische die Playlist"
 	},
 	"remove": {
-		"name": "remove",
+		"name": "entfernen",
 		"description": "Entferne einen Track von einer Playlist",
 		"options": {
 			"index": {
@@ -456,11 +456,11 @@
 		}
 	},
 	"musictoken": {
-		"name": "musictoken",
+		"name": "musiktoken",
 		"description": "Erhalte einen Web Dashboard Login Token",
 		"options": {
 			"action": {
-				"name": "action",
+				"name": "aktion",
 				"description": "Was soll ich tun"
 			}
 		}
@@ -470,25 +470,25 @@
 		"description": "Verwalte und Spiele Amanda Playlists ab",
 		"options": {
 			"lists": {
-				"name": "lists",
-				"description": "View and create/delete playlists",
+				"name": "listen",
+				"description": "Playlists ansehen und erstellen/löschen",
 				"options": {
 					"info": {
 						"name": "info",
 						"description": "Zeige Infos zu einer Playlist"
 					},
 					"create": {
-						"name": "create",
+						"name": "erstellen",
 						"description": "Erstelle eine Playlist"
 					},
 					"delete": {
-						"name": "delete",
+						"name": "löschen",
 						"description": "Lösche eine Playlist"
 					}
 				}
 			},
 			"add": {
-				"name": "add",
+				"name": "hinzufügen",
 				"description": "Füge einen Track zu einer Playlist hinzu",
 				"options": {
 					"playlist": {
@@ -496,13 +496,13 @@
 						"description": "Der Name der Playlist"
 					},
 					"track": {
-						"name": "track",
+						"name": "titel",
 						"description": "Ein Auflösbarer Track (link, name, id)"
 					}
 				}
 			},
 			"remove": {
-				"name": "remove",
+				"name": "entfernen",
 				"description": "Entferne einen Track von einer Playlist",
 				"options": {
 					"playlist": {
@@ -516,7 +516,7 @@
 				}
 			},
 			"move": {
-				"name": "move",
+				"name": "verschieben",
 				"description": "Verschiebe einen Track in einer Playlist",
 				"options": {
 					"playlist": {
@@ -524,17 +524,17 @@
 						"description": "Der Name der Playlist"
 					},
 					"from": {
-						"name": "from",
+						"name": "von",
 						"description": "Der Index des Tracks (beginnend bei 1)"
 					},
 					"to": {
-						"name": "to",
+						"name": "nach",
 						"description": "Der Index an die der Track verschoben werden soll (beginnend bei 1)"
 					}
 				}
 			},
 			"search": {
-				"name": "search",
+				"name": "suchen",
 				"description": "Filter Track in einer Playlist",
 				"options": {
 					"playlist": {
@@ -542,13 +542,13 @@
 						"description": "Der Name der Playlist"
 					},
 					"query": {
-						"name": "query",
+						"name": "suchbegriff",
 						"description": "Der Suchbegriff"
 					}
 				}
 			},
 			"play": {
-				"name": "play",
+				"name": "abspielen",
 				"description": "Spielt eine Playlist ab",
 				"options": {
 					"playlist": {
@@ -556,7 +556,7 @@
 						"description": "Der Name der Playlist"
 					},
 					"shuffle": {
-						"name": "shuffle",
+						"name": "mischen",
 						"description": "Ob die Playlist gemischt abgespielt werden soll"
 					},
 					"start": {
@@ -568,11 +568,11 @@
 		}
 	},
 	"stats": {
-		"name": "stats",
+		"name": "statistiken",
 		"description": "Zeige eine detaillierte Statistik",
 		"options": {
 			"window": {
-				"name": "window",
+				"name": "zeitraum",
 				"description": "Die Art von Statistiken die angezeigt werden sollen"
 			}
 		}
@@ -586,15 +586,15 @@
 		"description": "Zeige die letzten Git Commits zu Amanda"
 	},
 	"help": {
-		"name": "help",
+		"name": "hilfe",
 		"description": "Der übliche Hilfe Befehl",
 		"options": {
 			"category": {
-				"name": "category",
+				"name": "kategorie",
 				"description": "Die Kategorie für die Hilfe angefordert wird"
 			},
 			"command": {
-				"name": "command",
+				"name": "befehl",
 				"description": "Der Befehl für den Hilfe angefordert wird"
 			}
 		}
@@ -610,7 +610,7 @@
 		}
 	},
 	"flip": {
-		"name": "flip",
+		"name": "münzwurf",
 		"description": "Wirf eine Münze",
 		"options": {
 			"amount": {
@@ -628,11 +628,11 @@
 		"description": "Zeigt dir wieviel Geld Du, eine andere Person, oder ein Paar hat",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "benutzer",
 				"description": "Nutzer dessen Bankinfo angezeigt werden soll"
 			},
 			"couple": {
-				"name": "couple",
+				"name": "paar",
 				"description": "Ob der Kontostand des Paares angezeigt werden soll"
 			}
 		}
@@ -642,7 +642,7 @@
 		"description": "Zeigt die Liste der Nutzer mit dem meisten Geld"
 	},
 	"give": {
-		"name": "give",
+		"name": "geben",
 		"description": "Gibt einem anderen Nutzer Geld",
 		"options": {
 			"amount": {
@@ -680,132 +680,132 @@
 		}
 	},
 	"settings": {
-		"name": "settings",
-		"description": "Modify settings for Amanda to use",
+		"name": "einstellungen",
+		"description": "Einstellungen für Amanda ändern",
 		"options": {
 			"setting": {
-				"name": "setting",
-				"description": "The setting you want to modify/view"
+				"name": "einstellung",
+				"description": "Die Einstellung, die du ändern/ansehen möchtest"
 			},
 			"modify": {
-				"name": "modify",
-				"description": "What to modify the setting value to"
+				"name": "wert",
+				"description": "Der neue Wert für die Einstellung"
 			}
 		}
 	},
 	"couple": {
-		"name": "couple",
-		"description": "Get couple information about a user",
+		"name": "paar",
+		"description": "Paar-Informationen über einen Benutzer abrufen",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to get info on"
+				"name": "benutzer",
+				"description": "Der Benutzer, über den Informationen abgerufen werden sollen"
 			}
 		}
 	},
 	"propose": {
-		"name": "propose",
-		"description": "Propose to a user",
+		"name": "antrag",
+		"description": "Einem Benutzer einen Antrag machen",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to propose to"
+				"name": "benutzer",
+				"description": "Der Benutzer, dem du einen Antrag machen möchtest"
 			}
 		}
 	},
 	"marry": {
-		"name": "marry",
-		"description": "Accepts a proposal from a user",
+		"name": "heiraten",
+		"description": "Nimmt den Antrag eines Benutzers an",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to marry"
+				"name": "benutzer",
+				"description": "Der Benutzer, den du heiraten möchtest"
 			}
 		}
 	},
 	"reject": {
-		"name": "reject",
-		"description": "Rejects a proposal from a user",
+		"name": "ablehnen",
+		"description": "Lehnt den Antrag eines Benutzers ab",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to reject"
+				"name": "benutzer",
+				"description": "Der Benutzer, dessen Antrag du ablehnen möchtest"
 			}
 		}
 	},
 	"divorce": {
-		"name": "divorce",
-		"description": "Divorces your significant other(s)",
+		"name": "scheidung",
+		"description": "Lässt dich von deinem/deinen Partner(n) scheiden",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to remove from the marriage"
+				"name": "benutzer",
+				"description": "Der Benutzer, der aus der Ehe entfernt werden soll"
 			}
 		}
 	},
 	"withdraw": {
-		"name": "withdraw",
-		"description": "Withdraw money from your couple balance",
+		"name": "abheben",
+		"description": "Geld von eurem Paar-Guthaben abheben",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to withdraw"
+				"name": "betrag",
+				"description": "Der abzuhebende Geldbetrag"
 			}
 		}
 	},
 	"deposit": {
-		"name": "deposit",
-		"description": "Deposit money to your couple balance",
+		"name": "einzahlen",
+		"description": "Geld auf euer Paar-Guthaben einzahlen",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to deposit"
+				"name": "betrag",
+				"description": "Der einzuzahlende Geldbetrag"
 			}
 		}
 	},
 	"coupleleaderboard": {
-		"name": "coupleleaderboard",
-		"description": "Shows the leaderboard for top couples of money"
+		"name": "paar-bestenliste",
+		"description": "Zeigt die Bestenliste der reichsten Paare"
 	},
 	"move": {
-		"name": "move",
-		"description": "Move a track in the queue to a new position",
+		"name": "verschieben",
+		"description": "Einen Titel in der Warteschlange an eine neue Position verschieben",
 		"options": {
 			"from": {
-				"name": "from",
-				"description": "1 based index of the track to move"
+				"name": "von",
+				"description": "1-basierter Index des zu verschiebenden Titels"
 			},
 			"to": {
-				"name": "to",
-				"description": "1 based index to move the track to"
+				"name": "nach",
+				"description": "1-basierter Index, an den der Titel verschoben wird"
 			}
 		}
 	},
 	"search": {
-		"name": "search",
-		"description": "Search for a track from multiple sources",
+		"name": "suchen",
+		"description": "Nach einem Titel aus mehreren Quellen suchen",
 		"options": {
 			"input": {
-				"name": "input",
-				"description": "What to search for"
+				"name": "eingabe",
+				"description": "Wonach gesucht werden soll"
 			},
 			"source": {
-				"name": "source",
-				"description": "The website to use to search for the track"
+				"name": "quelle",
+				"description": "Die Website, die zur Suche nach dem Titel verwendet wird"
 			}
 		}
 	},
 	"fortune": {
-		"name": "fortune",
-		"description": "Let Amanda predict your daily fortune"
+		"name": "glückskeks",
+		"description": "Lass Amanda dein tägliches Glück vorhersagen"
 	},
 	"chat": {
 		"name": "chat",
-		"description": "Talk with Amanda's AI",
+		"description": "Mit Amandas KI sprechen",
 		"options": {
 			"prompt": {
-				"name": "prompt",
-				"description": "The message to send to Amanda"
+				"name": "nachricht",
+				"description": "Die Nachricht, die an Amanda gesendet wird"
 			}
 		}
 	}

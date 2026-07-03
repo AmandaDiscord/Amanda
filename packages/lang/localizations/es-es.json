@@ -74,7 +74,7 @@
 		"CANNOT_SELF_BEAN": "%username, no puedes banearte a ti mismo, tonto",
 		"BEANED": "¡%tag ha sido baneado!",
 		"HUG_AMANDA": "**le devuelve el abrazo a %username** :heart:",
-		"NOM_AMANDA": "owie",
+		"NOM_AMANDA": "ay",
 		"KISS_AMANDA": "**le devuelve el beso a %username** :heart:",
 		"CUDDLE_AMANDA": "**le devuelve las caricias a %username** :heart:",
 		"POKE_AMANDA": "No me toques ; ^ ;",
@@ -105,7 +105,7 @@
 		"HEADER_VOICE_CONNECTIONS": "Conexiones de voz",
 		"HEADER_CREATORS": "Creadores",
 		"HEADER_CODE": "Código",
-		"HEADER_LINKS": "Links",
+		"HEADER_LINKS": "Enlaces",
 		"INFO_THANKS": "¡Gracias por escogerme como tu acompañante! :heart:\nAquí hay un poco de información sobre mi...",
 		"INFO_LINKS": "Visita la [página web](%website) de Amanada o su [servidor de soporte](%server)\n¿Quieres donar? Visita su [Patreon](%patreon) o haz una donación simple en [PayPal](%paypal).\n¿Quieres ver como Amanda crece con el tiempo? Puedes ver sus estadísticas [aquí](%stats)\nPolítica de Privacidad: %privacy\nLista de cosas por hacer: %todo",
 		"GIT_FILES_CHANGED": "%amount archivos cambiados",
@@ -158,61 +158,61 @@
 		"COMMAND_ERROR": "Hubo un error con el comando %name. Los desarrolladores han sido notificados. Si usted usa este comando otra vez y ve este mensaje, por favor espera una cantidad razonable de tiempo para que pueda esto ser arreglado. Reporta esto si vuelve a ocurrir: %server",
 		"UNKNOWN_AUTHOR": "Autor desconocido",
 		"DM_ONLY": "Este comando sólo puede ser utilizado en DMs",
-		"NOT_ENOUGH_MONEY": "You don't have enough money for that",
-		"THREE_HEARTS": "WOAH! 3 hearts!",
-		"TWO_HEARTS": "Double hearts :heart:",
-		"ONE_HEART": "1 heart",
-		"TRIPLE_PIECES": "Triple pieces",
-		"LOST": "You lost",
-		"FLIP_AMANDA_CHOSE_HEADS_WON": "Since you didn't choose a side, I chose heads for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_TAILS_WON": "Since you didn't choose a side, I chose tails for you and you won %amount (+33%)",
-		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Since you didn't choose a side, I chose heads for you and you lost %amount",
-		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Since you didn't choose a side, I chose tails for you and you lost %amount",
-		"FLIP_HEADS_WON": "You guessed heads and won %amount (+33%)",
-		"FLIP_TAILS_WON": "You guessed tails and won %amount (+33%)",
-		"FLIP_HEADS_LOST": "You guessed heads and lost %amount",
-		"FLIP_TAILS_LOST": "You guessed tails and lost %amount",
-		"PRIVATE_CARD": "Private card",
-		"COUPLE_CARD": "Couple card",
-		"TRANSACTIONS": "Transactions",
-		"CANNOT_GIVE_SELF": "You cannot give money to yourself",
-		"GIVEN_TO_OTHER": "You have given %amount to %user",
-		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Valid values are %acceptable",
-		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "The value you provided to update that setting with is invalid. Donors are allowed to supply arbitrary values to this setting %link. Valid values are %acceptable",
-		"SETTING_UPDATED": "That setting was updated",
-		"SONG_MOVED": "%title moved",
-		"SELF_NOT_IN_COUPLE": "You aren't married.",
-		"USER_NOT_IN_COUPLE": "That user isn't married.",
-		"USER_NOT_IN_COUPLE_WITH_YOU": "That user isn't married to you.",
-		"DIVORCED_ONE_OTHER": "You divorced from %user",
-		"DIVORCED_MULTIPLE_OTHERS": "You removed %user from the marriage",
-		"DIVORCED_LEFT": "You left the marriage",
-		"NONE_WITHDRAW": "There is no money to withdraw",
-		"CANNOT_WITHDRAW_MORE": "You can't withdraw more than what is in the account",
-		"TRANSACTED_AMOUNT": "Successfully transacted %amount",
-		"CANNOT_MARRY_SELF": "You can't marry yourself",
-		"ALREADY_IN_COUPLE_SELF": "You're already married",
-		"ALREADY_IN_COUPLE_OTHER": "%user is already married",
-		"ALREADY_PROPOSED": "You've already proposed to %user",
-		"HASNT_PROPOSED": "%user hasn't proposed to you yet",
-		"PROPOSED": "You have proposed to %user. They must accept for you two to become married",
-		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "HOW DID YOU PROPOSE TO YOURSELF LOL???? PLEASE tell me how",
-		"MARRIED_ONE_OTHER": "%user1 is now married to %user2",
-		"MARRIED_MULTIPLE_OTHERS": "%user1 is now married to %user2 and %amount others",
-		"REJECTED": "You declined %user's proposal",
-		"CANNOT_ADD_HTTP": "You cannot add custom links to playlists",
-		"PLAYLIST_TRACK_TOO_LONG": "The identifier for that track was too long. It must be less than or equal to 50 characters",
-		"VC_IN_OTHER_GUILD": "It looks like I see you joined in another server. Either leave and rejoin or mute/unmute/deafen/undeafen yourself in the channel you want me to see you in to trigger an update",
-		"ALREADY_CLAIMED_DAILY": "You have already claimed your daily fortune. You can claim again in %time",
-		"AI_OFFLINE": "The AI is currently disabled",
-		"HEADER_LEADERBOARD": "Leaderboard",
-		"HEADER_COUPLE_LEADERBOARD": "Couple Leaderboard",
-		"POWERED_BY": "Powered by %service",
-		"SELECT_PAGE": "Select page",
-		"PAGE_NUMBER": "Page %number",
-		"TRACK_NUMBER": "Track %number",
-		"RESULTS_COUNT": "Results 1-%count",
-		"VOICE_STATUS_OFFLINE": "Voice status tracking is currently unavailable, so music commands cannot be used right now"
+		"NOT_ENOUGH_MONEY": "No tienes suficiente dinero para eso",
+		"THREE_HEARTS": "¡GUAU! ¡3 corazones!",
+		"TWO_HEARTS": "Corazones dobles :heart:",
+		"ONE_HEART": "1 corazón",
+		"TRIPLE_PIECES": "Piezas triples",
+		"LOST": "Perdiste",
+		"FLIP_AMANDA_CHOSE_HEADS_WON": "Como no elegiste un lado, elegí cara por ti y ganaste %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_TAILS_WON": "Como no elegiste un lado, elegí cruz por ti y ganaste %amount (+33%)",
+		"FLIP_AMANDA_CHOSE_HEADS_LOST": "Como no elegiste un lado, elegí cara por ti y perdiste %amount",
+		"FLIP_AMANDA_CHOSE_TAILS_LOST": "Como no elegiste un lado, elegí cruz por ti y perdiste %amount",
+		"FLIP_HEADS_WON": "Adivinaste cara y ganaste %amount (+33%)",
+		"FLIP_TAILS_WON": "Adivinaste cruz y ganaste %amount (+33%)",
+		"FLIP_HEADS_LOST": "Adivinaste cara y perdiste %amount",
+		"FLIP_TAILS_LOST": "Adivinaste cruz y perdiste %amount",
+		"PRIVATE_CARD": "Tarjeta privada",
+		"COUPLE_CARD": "Tarjeta de pareja",
+		"TRANSACTIONS": "Transacciones",
+		"CANNOT_GIVE_SELF": "No puedes darte dinero a ti mismo",
+		"GIVEN_TO_OTHER": "Le has dado %amount a %user",
+		"INVALID_DATA_TYPE_NO_DONOR_ARBITRARY": "El valor que proporcionaste para actualizar esa configuración no es válido. Los valores válidos son %acceptable",
+		"INVALID_DATA_TYPE_YES_DONOR_ARBITRARY": "El valor que proporcionaste para actualizar esa configuración no es válido. Los donantes pueden proporcionar valores arbitrarios para esta configuración %link. Los valores válidos son %acceptable",
+		"SETTING_UPDATED": "Esa configuración se actualizó",
+		"SONG_MOVED": "%title movida",
+		"SELF_NOT_IN_COUPLE": "No estás casado.",
+		"USER_NOT_IN_COUPLE": "Ese usuario no está casado.",
+		"USER_NOT_IN_COUPLE_WITH_YOU": "Ese usuario no está casado contigo.",
+		"DIVORCED_ONE_OTHER": "Te divorciaste de %user",
+		"DIVORCED_MULTIPLE_OTHERS": "Eliminaste a %user del matrimonio",
+		"DIVORCED_LEFT": "Dejaste el matrimonio",
+		"NONE_WITHDRAW": "No hay dinero para retirar",
+		"CANNOT_WITHDRAW_MORE": "No puedes retirar más de lo que hay en la cuenta",
+		"TRANSACTED_AMOUNT": "Se realizó la transacción de %amount correctamente",
+		"CANNOT_MARRY_SELF": "No puedes casarte contigo mismo",
+		"ALREADY_IN_COUPLE_SELF": "Ya estás casado",
+		"ALREADY_IN_COUPLE_OTHER": "%user ya está casado",
+		"ALREADY_PROPOSED": "Ya le propusiste matrimonio a %user",
+		"HASNT_PROPOSED": "%user aún no te ha propuesto matrimonio",
+		"PROPOSED": "Le propusiste matrimonio a %user. Deben aceptar para que ambos se casen",
+		"YOU_SOMEHOW_PROPOSED_TO_YOURSELF": "¿¿¿¿CÓMO TE PROPUSISTE MATRIMONIO A TI MISMO JAJA???? Por favor dime cómo",
+		"MARRIED_ONE_OTHER": "%user1 ahora está casado con %user2",
+		"MARRIED_MULTIPLE_OTHERS": "%user1 ahora está casado con %user2 y %amount más",
+		"REJECTED": "Rechazaste la propuesta de %user",
+		"CANNOT_ADD_HTTP": "No puedes añadir enlaces personalizados a las listas de reproducción",
+		"PLAYLIST_TRACK_TOO_LONG": "El identificador de esa pista era demasiado largo. Debe tener 50 caracteres o menos",
+		"VC_IN_OTHER_GUILD": "Parece que te uniste en otro servidor. Sal y vuelve a entrar, o silénciate/actívate/ensordécete/reactívate en el canal donde quieres que te vea para forzar una actualización",
+		"ALREADY_CLAIMED_DAILY": "Ya reclamaste tu fortuna diaria. Puedes reclamar de nuevo en %time",
+		"AI_OFFLINE": "La IA está desactivada actualmente",
+		"HEADER_LEADERBOARD": "Clasificación",
+		"HEADER_COUPLE_LEADERBOARD": "Clasificación de parejas",
+		"POWERED_BY": "Con tecnología de %service",
+		"SELECT_PAGE": "Seleccionar página",
+		"PAGE_NUMBER": "Página %number",
+		"TRACK_NUMBER": "Pista %number",
+		"RESULTS_COUNT": "Resultados 1-%count",
+		"VOICE_STATUS_OFFLINE": "El seguimiento del estado de voz no está disponible en este momento, así que los comandos de música no se pueden usar ahora mismo."
 	},
 	"sit": {
 		"name": "sentarse",
@@ -229,7 +229,7 @@
 		}
 	},
 	"ship": {
-		"name": "ship",
+		"name": "emparejar",
 		"description": "Shipea a dos personas",
 		"options": {
 			"user2": {
@@ -263,7 +263,7 @@
 		}
 	},
 	"nom": {
-		"name": "nom",
+		"name": "mordisquear",
 		"description": "Muerde a alguien",
 		"options": {
 			"user": {
@@ -379,7 +379,7 @@
 		"description": "Parar la lista de reproducción"
 	},
 	"queue": {
-		"name": "queue",
+		"name": "cola",
 		"description": "Mostrar la lista para realizar acciones",
 		"options": {
 			"page": {
@@ -401,11 +401,11 @@
 		}
 	},
 	"nowplaying": {
-		"name": "nowplaying",
+		"name": "sonando",
 		"description": "Mostrar que se está reproduciendo actualmente"
 	},
 	"trackinfo": {
-		"name": "trackinfo",
+		"name": "infopista",
 		"description": "Muestra información de la canción actual"
 	},
 	"lyrics": {
@@ -451,7 +451,7 @@
 		}
 	},
 	"musictoken": {
-		"name": "musictoken",
+		"name": "token-musica",
 		"description": "Obtén un token para loguearte en la página web",
 		"options": {
 			"action": {
@@ -461,23 +461,23 @@
 		}
 	},
 	"playlists": {
-		"name": "playlists",
+		"name": "listas",
 		"description": "Interactuar y reproducir playlists de Amanda",
 		"options": {
 			"lists": {
-				"name": "lists",
-				"description": "View and create/delete playlists",
+				"name": "listas",
+				"description": "Ver y crear/eliminar listas de reproducción",
 				"options": {
 					"info": {
 						"name": "info",
 						"description": "Muestra información de una playlist"
 					},
 					"create": {
-						"name": "create",
+						"name": "crear",
 						"description": "Crea una playlist"
 					},
 					"delete": {
-						"name": "delete",
+						"name": "eliminar",
 						"description": "Elimina una playlist"
 					}
 				}
@@ -487,7 +487,7 @@
 				"description": "Agrega una pista a una playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "lista",
 						"description": "El nombre de la playlist"
 					},
 					"track": {
@@ -501,11 +501,11 @@
 				"description": "Eliminar una pista de una playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "lista",
 						"description": "El nombre de la playlist"
 					},
 					"index": {
-						"name": "index",
+						"name": "indice",
 						"description": "La pista a eliminar (índice 1)"
 					}
 				}
@@ -515,7 +515,7 @@
 				"description": "Mover una pista de una playlist de lugar",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "lista",
 						"description": "El nombre de la playlist"
 					},
 					"from": {
@@ -533,25 +533,25 @@
 				"description": "Filtra pistas de una playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "lista",
 						"description": "El nombre de la playlist"
 					},
 					"query": {
-						"name": "query",
+						"name": "consulta",
 						"description": "El texto a buscar"
 					}
 				}
 			},
 			"play": {
-				"name": "play",
+				"name": "reproducir",
 				"description": "Reproduce una playlist",
 				"options": {
 					"playlist": {
-						"name": "playlist",
+						"name": "lista",
 						"description": "El nombre de la playlist"
 					},
 					"shuffle": {
-						"name": "shuffle",
+						"name": "mezclar",
 						"description": "Si la playlist deberia empezar desordenada"
 					},
 					"start": {
@@ -563,7 +563,7 @@
 		}
 	},
 	"stats": {
-		"name": "stats",
+		"name": "estadisticas",
 		"description": "Muestra estadísticas detalladas",
 		"options": {
 			"window": {
@@ -595,212 +595,212 @@
 		}
 	},
 	"slots": {
-		"name": "slots",
-		"description": "Run the slot machine",
+		"name": "tragamonedas",
+		"description": "Juega a la máquina tragamonedas",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a apostar"
 			}
 		}
 	},
 	"flip": {
-		"name": "flip",
-		"description": "Flips a coin",
+		"name": "moneda",
+		"description": "Lanza una moneda",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a apostar"
 			},
 			"side": {
-				"name": "side",
-				"description": "The side to bet on"
+				"name": "lado",
+				"description": "El lado al que apostar"
 			}
 		}
 	},
 	"money": {
-		"name": "money",
-		"description": "Shows how much money you, another person, or a couple has",
+		"name": "dinero",
+		"description": "Muestra cuánto dinero tienes tú, otra persona o una pareja",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to check their bank info"
+				"name": "usuario",
+				"description": "El usuario cuya información bancaria consultar"
 			},
 			"couple": {
-				"name": "couple",
-				"description": "Whether to show the couple balance"
+				"name": "pareja",
+				"description": "Si se debe mostrar el saldo de la pareja"
 			}
 		}
 	},
 	"leaderboard": {
-		"name": "leaderboard",
-		"description": "Shows the leaderboard for the top users of money"
+		"name": "clasificacion",
+		"description": "Muestra la clasificación de los usuarios con más dinero"
 	},
 	"give": {
-		"name": "give",
-		"description": "Gives another user money",
+		"name": "dar",
+		"description": "Le da dinero a otro usuario",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to give"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a dar"
 			},
 			"user": {
-				"name": "user",
-				"description": "The user to give money to"
+				"name": "usuario",
+				"description": "El usuario al que darle dinero"
 			}
 		}
 	},
 	"wheel": {
-		"name": "wheel",
-		"description": "Spin the wheel of (mis)fortune",
+		"name": "ruleta",
+		"description": "Gira la ruleta de la (des)fortuna",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to bet"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a apostar"
 			}
 		}
 	},
 	"profile": {
-		"name": "profile",
-		"description": "Get a user's Amanda profile",
+		"name": "perfil",
+		"description": "Obtén el perfil de Amanda de un usuario",
 		"options": {
 			"user": {
-				"name": "user",
+				"name": "usuario",
 				"description": "The user's profile to get'"
 			},
 			"light": {
-				"name": "light",
-				"description": "If light mode should be force used (default false)"
+				"name": "claro",
+				"description": "Si se debe forzar el modo claro (falso por defecto)"
 			}
 		}
 	},
 	"settings": {
-		"name": "settings",
-		"description": "Modify settings for Amanda to use",
+		"name": "configuracion",
+		"description": "Modifica la configuración que usa Amanda",
 		"options": {
 			"setting": {
-				"name": "setting",
-				"description": "The setting you want to modify/view"
+				"name": "ajuste",
+				"description": "El ajuste que quieres modificar/ver"
 			},
 			"modify": {
-				"name": "modify",
-				"description": "What to modify the setting value to"
+				"name": "valor",
+				"description": "El nuevo valor para el ajuste"
 			}
 		}
 	},
 	"couple": {
-		"name": "couple",
-		"description": "Get couple information about a user",
+		"name": "pareja",
+		"description": "Obtén información de pareja sobre un usuario",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to get info on"
+				"name": "usuario",
+				"description": "El usuario del que obtener información"
 			}
 		}
 	},
 	"propose": {
-		"name": "propose",
-		"description": "Propose to a user",
+		"name": "proponer",
+		"description": "Proponle matrimonio a un usuario",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to propose to"
+				"name": "usuario",
+				"description": "El usuario al que proponerle matrimonio"
 			}
 		}
 	},
 	"marry": {
-		"name": "marry",
-		"description": "Accepts a proposal from a user",
+		"name": "casarse",
+		"description": "Acepta la propuesta de un usuario",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to marry"
+				"name": "usuario",
+				"description": "El usuario con quien casarse"
 			}
 		}
 	},
 	"reject": {
-		"name": "reject",
-		"description": "Rejects a proposal from a user",
+		"name": "rechazar",
+		"description": "Rechaza la propuesta de un usuario",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to reject"
+				"name": "usuario",
+				"description": "El usuario a rechazar"
 			}
 		}
 	},
 	"divorce": {
-		"name": "divorce",
-		"description": "Divorces your significant other(s)",
+		"name": "divorciarse",
+		"description": "Divórciate de tu(s) pareja(s)",
 		"options": {
 			"user": {
-				"name": "user",
-				"description": "The user to remove from the marriage"
+				"name": "usuario",
+				"description": "El usuario a eliminar del matrimonio"
 			}
 		}
 	},
 	"withdraw": {
-		"name": "withdraw",
-		"description": "Withdraw money from your couple balance",
+		"name": "retirar",
+		"description": "Retira dinero del saldo de tu pareja",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to withdraw"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a retirar"
 			}
 		}
 	},
 	"deposit": {
-		"name": "deposit",
-		"description": "Deposit money to your couple balance",
+		"name": "depositar",
+		"description": "Deposita dinero en el saldo de tu pareja",
 		"options": {
 			"amount": {
-				"name": "amount",
-				"description": "The amount of money to deposit"
+				"name": "cantidad",
+				"description": "La cantidad de dinero a depositar"
 			}
 		}
 	},
 	"coupleleaderboard": {
-		"name": "coupleleaderboard",
-		"description": "Shows the leaderboard for top couples of money"
+		"name": "clasificacion-parejas",
+		"description": "Muestra la clasificación de las parejas con más dinero"
 	},
 	"move": {
-		"name": "move",
-		"description": "Move a track in the queue to a new position",
+		"name": "mover",
+		"description": "Mueve una pista de la cola a una nueva posición",
 		"options": {
 			"from": {
-				"name": "from",
-				"description": "1 based index of the track to move"
+				"name": "desde",
+				"description": "Índice (basado en 1) de la pista a mover"
 			},
 			"to": {
-				"name": "to",
-				"description": "1 based index to move the track to"
+				"name": "hasta",
+				"description": "Índice (basado en 1) al que mover la pista"
 			}
 		}
 	},
 	"search": {
-		"name": "search",
-		"description": "Search for a track from multiple sources",
+		"name": "buscar",
+		"description": "Busca una pista en varias fuentes",
 		"options": {
 			"input": {
-				"name": "input",
-				"description": "What to search for"
+				"name": "entrada",
+				"description": "Qué buscar"
 			},
 			"source": {
-				"name": "source",
-				"description": "The website to use to search for the track"
+				"name": "fuente",
+				"description": "El sitio web a usar para buscar la pista"
 			}
 		}
 	},
 	"fortune": {
-		"name": "fortune",
-		"description": "Let Amanda predict your daily fortune"
+		"name": "fortuna",
+		"description": "Deja que Amanda prediga tu fortuna diaria"
 	},
 	"chat": {
-		"name": "chat",
-		"description": "Talk with Amanda's AI",
+		"name": "chatear",
+		"description": "Habla con la IA de Amanda",
 		"options": {
 			"prompt": {
-				"name": "prompt",
-				"description": "The message to send to Amanda"
+				"name": "mensaje",
+				"description": "El mensaje a enviar a Amanda"
 			}
 		}
 	}
