@@ -92,7 +92,7 @@ export function attachResponseAbortListener(res: HttpResponse): void {
 	res.continue = true
 	// A single onAborted registration that fans out to any listeners (e.g. streamResponse),
 	// because uWebSockets.js only permits onAborted to be set once per response
-	res.abortListeners = []
+	if (!res.abortListeners) res.abortListeners = []
 	res.onAborted(() => {
 		res.continue = false
 		for (const cb of res.abortListeners) cb()
