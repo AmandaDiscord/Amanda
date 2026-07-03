@@ -11,7 +11,7 @@ import passthrough = require("./passthrough")
 const { rootFolder, confprovider, lavalink, commands, snow, commandWorkers, queues, gatewayShardIndex, sync } = passthrough
 
 const sharedUtils = sync.require("@amanda/shared-utils") as typeof import("@amanda/shared-utils")
-const autocomplete = sync.require("./music/autocomplete") as typeof import("./autocomplete")
+const autocomplete = sync.require("./autocomplete") as typeof import("./autocomplete")
 
 import type { HttpResponse, WebSocket as UWS } from "uWebSockets.js"
 import type { Readable } from "node:stream"
