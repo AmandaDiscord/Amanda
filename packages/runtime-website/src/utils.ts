@@ -44,11 +44,16 @@ export function onAbortedOrFinishedResponseStream(res: HttpResponse, readStream:
 export function streamResponse(res: HttpResponse, readStream: Readable, totalSize: number): Promise<void> {
 	let resolveOuter: (value: void) => void
 	let cancel = false
-	res.onAborted(() => {
+	const onAbort = () => {
 		onAbortedOrFinishedResponseStream(res, readStream)
 		if (resolveOuter) resolveOuter()
 		else cancel = true
-	})
+	}
+	// uWebSockets.js allows onAborted to be registered only once per response. streamFile already
+	// registered it via attachResponseAbortListener, so hook into that instead of registering a second
+	// handler (a second registration breaks the response and the request hangs forever)
+	if (res.abortListeners) res.abortListeners.push(onAbort)
+	else res.onAborted(onAbort)
 	return new Promise((resolve, reject) => {
 		if (cancel) return resolve()
 		resolveOuter = reject
@@ -88,7 +93,13 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 
 export function attachResponseAbortListener(res: HttpResponse): void {
 	res.continue = true
-	res.onAborted(() => res.continue = false)
+	// A single onAborted registration that fans out to any listeners (e.g. streamResponse),
+	// because uWebSockets.js only permits onAborted to be set once per response
+	res.abortListeners = []
+	res.onAborted(() => {
+		res.continue = false
+		for (const cb of res.abortListeners) cb()
+	})
 }
 
 export async function streamFile(path: string, res: HttpResponse, acceptHead?: string | undefined, ifModifiedSinceHeader?: string | undefined, headersOnly = false, status = 200, cameFrom404 = false): Promise<void> {
