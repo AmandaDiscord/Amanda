@@ -20,6 +20,7 @@ server.post("/interaction", async (res, req) => {
 	if (reqType !== "application/json") return void res.writeStatus("415").endWithoutBody()
 	if (!reqSig || !reqTimestamp) return void res.writeStatus("400").endWithoutBody()
 	if (!reqLength || Number.isNaN(Number(reqLength))) return void res.writeStatus("411").endWithoutBody()
+	if (Number(reqLength) > 65536) return void res.writeStatus("413").endWithoutBody()
 
 	const body = await utils.requestBody(res, Number(reqLength))
 	if (!body) {

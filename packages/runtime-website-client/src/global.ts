@@ -64,6 +64,7 @@ declare global {
 	}
 	const _serverTimeDiff: number
 	const _channelID: string
+	const _wsTicket: string
 	interface HTMLElement {
 		js?: import("./classes").ElemJS<HTMLElement>
 	}

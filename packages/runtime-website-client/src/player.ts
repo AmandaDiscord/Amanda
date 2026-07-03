@@ -1,6 +1,7 @@
 /* eslint-disable no-undef */
 // From HTML
 const channelID = _channelID
+const wsTicket = _wsTicket
 let serverTimeDiff = _serverTimeDiff
 
 import "./global"
@@ -104,7 +105,7 @@ export class Session {
 		this.send({
 			op: opcodes.IDENTIFY,
 			d: {
-				cookie: document.cookie,
+				ticket: wsTicket,
 				channel_id: channelID,
 				timestamp: Date.now()
 			}

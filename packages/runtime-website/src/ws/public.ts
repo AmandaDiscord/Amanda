@@ -8,7 +8,7 @@ import type { Track } from "../music/tracktypes"
 import type { WebSocket as UWS, WebSocketBehavior } from "uWebSockets.js"
 import { APIVoiceState } from "discord-api-types/v10"
 
-const utils = sync.require("../utils") as typeof import("../utils")
+const wstickets = sync.require("../wstickets") as typeof import("../wstickets")
 
 const opcodes = {
 	IDENTIFY: 1,
@@ -113,32 +113,34 @@ export class Session {
 		this.send({ op: opcodes.ERROR, nonce: data?.nonce ?? null, d: { code } })
 	}
 
-	public async identify(data: Packet<{ cookie?: string; channel_id?: string; timestamp?: number; token?: string }>): Promise<void> {
+	public async identify(data: Packet<{ channel_id?: string; timestamp?: number; ticket?: string }>): Promise<void> {
 		if (this.loggedin) return this.cleanClose()
-		if (data?.d && typeof data.d.cookie === "string" && typeof data.d.channel_id === "string" && typeof data.d.timestamp === "number") {
+		if (data?.d && typeof data.d.ticket === "string" && typeof data.d.channel_id === "string" && typeof data.d.timestamp === "number") {
 			const serverTimeDiff = Date.now() - data.d.timestamp
-			// Check the user and guild are legit
-			const cookies = utils.getCookies(data.d.cookie)
-			const session = await utils.getSession(cookies)
-			if (!session) return this.deny(data, "AUTH_FAILED")
 			if (!confprovider.config.db_enabled) return this.deny(data, "UNAVAILABLE")
-			const state = await redis.GET<APIVoiceState>("voice", session.user_id)
+
+			// Redeem the single-use ticket minted when the dashboard page was rendered.
+			// The long-lived auth token never leaves the HttpOnly cookie
+			const redeemed = wstickets.redeem(data.d.ticket)
+			if (!redeemed || redeemed.channelID !== data.d.channel_id) return this.deny(data, "AUTH_FAILED")
+
+			const state = await redis.GET<APIVoiceState>("voice", redeemed.userID)
 			if (!state) {
-				console.warn(`Fake user tried to identify: ${session.user_id}`)
+				console.warn(`Fake user tried to identify: ${redeemed.userID}`)
 				return this.deny(data, "NO_VOICE_STATE")
 			}
-			const existingSession = sessions.get(session.user_id)
+			const existingSession = sessions.get(redeemed.userID)
 			if (existingSession) {
 				// Replace the old session instead of rejecting so reconnecting clients
 				// aren't locked out while their stale session waits out the idle timeout
-				console.warn(`User re-identified. Replacing existing session: ${session.user_id}`)
+				console.warn(`User re-identified. Replacing existing session: ${redeemed.userID}`)
 				existingSession.invalidate()
 			}
 			// User and guild are legit
 			// We don't assign these variable earlier to defend against multiple identifies
 			this.loggedin = true
 			this.guild = state.guild_id!
-			this.user = session.user_id
+			this.user = redeemed.userID
 			sessions.set(this.user!, this)
 			const existing = sessionGuildIndex.get(this.guild) ?? new Set()
 			existing.add(this.user!)

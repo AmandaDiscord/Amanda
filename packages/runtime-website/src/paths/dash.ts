@@ -9,11 +9,18 @@ import type { APIVoiceState } from "discord-api-types/v10"
 const { server, sync, rootFolder, confprovider } = passthrough
 
 const utils = sync.require("../utils") as typeof import("../utils")
+const wstickets = sync.require("../wstickets") as typeof import("../wstickets")
 
 const bodyRegex = /\$body/gm
 const csrftokenRegex = /\$csrftoken/gm
 const channelIDRegex = /\$channelID/gm
 const timestampRegex = /\$timestamp/gm
+const wsTicketRegex = /\$wsTicket/gm
+
+function tokenCookie(value: string, expires: string): string {
+	const secure = confprovider.config.website_protocol === "https" ? "; Secure" : ""
+	return `token=${value}; path=/; expires=${expires}; HttpOnly; SameSite=Lax${secure}`
+}
 
 server.get("/login", async (res) => {
 	utils.attachResponseAbortListener(res)
@@ -75,7 +82,7 @@ server.post("/logout", async (res, req) => {
 			res.cork(() => {
 				if (written) return
 				written = true
-				res.writeHeader("Set-Cookie", `token=; path=/; expires=${new Date(0).toUTCString()}`)
+				res.writeHeader("Set-Cookie", tokenCookie("", new Date(0).toUTCString()))
 			})
 			utils.redirect(res, "/login")
 		})
@@ -194,13 +201,13 @@ server.post("/dash", async (res, req) => {
 		.then(state => {
 			if (!res.continue) return
 
-			const token = state.params.get("token")
+			const token = state.params.get("token")!
 			const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toUTCString()
 			let written = false
 			res.cork(() => {
 				if (written) return
 				written = true
-				res.writeHeader("Set-Cookie", `token=${token}; path=/; expires=${expires}`)
+				res.writeHeader("Set-Cookie", tokenCookie(token, expires))
 			})
 			utils.redirect(res, "/dash")
 		})
@@ -261,6 +268,7 @@ server.get("/channels/:channelID", async (res, req) => {
 				.replace(channelIDRegex, channelID)
 				.replace(timestampRegex, Date.now().toString())
 				.replace(csrftokenRegex, utils.generateCSRF())
+				.replace(wsTicketRegex, wstickets.mint(session!.user_id, channelID))
 
 			let written = false
 			res.cork(() => {
