@@ -414,7 +414,7 @@
 		"description": "Zeige Infos zum momentan laufenden Track"
 	},
 	"lyrics": {
-		"name": "songtext",
+		"name": "lyrik",
 		"description": "Zeige die Lyrik zum momentan laufenden Track"
 	},
 	"seek": {
@@ -528,7 +528,7 @@
 						"description": "Der Index des Tracks (beginnend bei 1)"
 					},
 					"to": {
-						"name": "nach",
+						"name": "zu",
 						"description": "Der Index an die der Track verschoben werden soll (beginnend bei 1)"
 					}
 				}
@@ -776,7 +776,7 @@
 				"description": "1-basierter Index des zu verschiebenden Titels"
 			},
 			"to": {
-				"name": "nach",
+				"name": "zu",
 				"description": "1-basierter Index, an den der Titel verschoben wird"
 			}
 		}

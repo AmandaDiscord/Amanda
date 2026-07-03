@@ -49,9 +49,6 @@ export function streamResponse(res: HttpResponse, readStream: Readable, totalSiz
 		if (resolveOuter) resolveOuter()
 		else cancel = true
 	}
-	// uWebSockets.js allows onAborted to be registered only once per response. streamFile already
-	// registered it via attachResponseAbortListener, so hook into that instead of registering a second
-	// handler (a second registration breaks the response and the request hangs forever)
 	if (res.abortListeners) res.abortListeners.push(onAbort)
 	else res.onAborted(onAbort)
 	return new Promise((resolve, reject) => {
