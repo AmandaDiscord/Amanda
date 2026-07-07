@@ -34,16 +34,6 @@ const snow = new SnowTransfer(confprovider.config.current_token, {
 		parse: [AllowedMentionsTypes.Role, AllowedMentionsTypes.User]
 	}
 })
-const client = new Client(confprovider.config.current_token, {
-	shards: confprovider.config.shards,
-	totalShards: confprovider.config.total_shards,
-	intents: ["GUILD_VOICE_STATES", "GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"],
-	snowtransferInstance: snow,
-	ws: {
-		compress: false,
-		encoding: "json"
-	}
-})
 
 confprovider.addCallback(() => {
 	if (!confprovider.config.shards.every((item, index) => _oldShards[index] === item)) shardInfoChanged = true
@@ -63,7 +53,27 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 	])
 }
 
+let client: Client | undefined
+
 (async () => {
+	const [sessionStats, sessionData] = await Promise.all([fs.promises.stat(toSessionsJSON), fs.promises.readFile(toSessionsJSON, { encoding: "utf8" })]).catch(() => ([void 0, void 0]))
+
+	const willResume = sessionData && sessionStats && sessionStats.mtimeMs >= (Date.now() - (1000 * 60 * 1.5))
+
+	client = new Client(confprovider.config.current_token, {
+		shards: confprovider.config.shards,
+		totalShards: confprovider.config.total_shards,
+		intents: ["GUILD_VOICE_STATES", "GUILDS", "GUILD_MESSAGES", "DIRECT_MESSAGES"],
+		snowtransferInstance: snow,
+		resumeData: willResume ? JSON.parse(sessionData) : void 0,
+		ws: {
+			compress: false,
+			encoding: "json"
+		}
+	})
+
+	if (willResume) console.log("Setup previous resume info from session JSON for all shards")
+
 	webconnector.on("open", () => {
 		setTimeout(() => {
 			webconnector.send({ op: 0, t: "SHARD_LIST", d: confprovider.config.shards }).catch(console.error)
@@ -73,6 +83,7 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 
 	await sql.connect()
 	await redis.connect()
+
 	void new REPLProvider({ client, webconnector, confprovider, sql, startAnnouncement })
 	client.on("debug", d => console.log(d))
 	client.on("error", e => console.error(e))
@@ -169,43 +180,13 @@ async function updateVoiceState(state: APIVoiceState, modifyIndex = true) {
 		webconnector.send(packet)
 	})
 
-	let stats: fs.Stats | undefined
-	try {
-		stats = await fs.promises.stat(toSessionsJSON)
-	} catch { void 0 }
-
-	await client.fetchConnectInfo()
-
-	if (stats && stats.mtimeMs >= (Date.now() - (1000 * 60 * 1.5))) {
-		const data = await fs.promises.readFile(toSessionsJSON, { encoding: "utf8" })
-
-		let sessions
-		try {
-			sessions = JSON.parse(data)
-		} catch {
-			sessions = {}
-		}
-
-		client.shardManager.spawn()
-		for (const sid of Object.keys(sessions)) {
-			const shard = Object.entries(client.shardManager.shards).find(e => e[0] == sid)?.[1]
-
-			if (shard) {
-				shard.connector.sessionId = sessions[sid][0]
-				shard.connector.resumeAddress = sessions[sid][1]
-				shard.connector.betterWs.address = sessions[sid][1] ?? shard.connector.betterWs.address
-				shard.connector.seq = sessions[sid][2]
-
-				console.log(`Setup previous resume info from session JSON for shard ${shard.id}`)
-			}
-		}
-	} else await client.connect()
+	await client.connect()
 
 	webconnector.on("message", data => {
 		const parsed = data
 
 		if (parsed.t === "SEND_MESSAGE" && parsed.d && typeof parsed.d.shard_id === "number") {
-			const shard = Object.entries(client.shardManager.shards).find(e => e[0] == parsed.d.shard_id)?.[1]
+			const shard = Object.entries(client!.shardManager.shards).find(e => e[0] == parsed.d.shard_id)?.[1]
 			if (!shard) return console.warn(`Shard ${parsed.d.shard_id} doesn't exist in this cluster`)
 			delete parsed.d.shard_id
 			delete parsed.t
@@ -229,13 +210,12 @@ function exitHandler(...params: Array<unknown>) {
 	if (alreadyWrote) return
 	alreadyWrote = true
 
-	const data = {} as Record<number, [string | null, string | null, number]>
-	for (const shard of Object.values(client.shardManager.shards)) {
-		data[shard.id] = [shard.connector.sessionId, shard.connector.resumeAddress, shard.connector.seq]
+	const data = client?.getResumeData()
+	if (data) {
+		fs.writeFileSync(toSessionsJSON, JSON.stringify(data))
+		console.log("Wrote session data to fs to restore later")
 	}
 
-	fs.writeFileSync(toSessionsJSON, JSON.stringify(data))
-	console.log("Wrote session data to fs to restore later")
 	if (params.length > 1 && params[0] === "SIGINT" && params[1] === 2) process.exit()
 }
 
@@ -272,6 +252,7 @@ const activityPrefixes = {
 }
 
 function startAnnouncement(duration: number, message: string) {
+	if (!client) return console.error("Client doesn't exist in start announcement")
 	if (updateInterval) clearInterval(updateInterval)
 	if (enqueued) clearTimeout(enqueued)
 
@@ -361,6 +342,7 @@ function getMatchingMessages() {
 }
 
 function update() {
+	if (!client) return console.error("Client wasnt available in presence update")
 	const choices = getMatchingMessages()
 	// console.log(JSON.stringify(choices, null, 4))
 	const choice = sharedUtils.arrayRandom(choices)
