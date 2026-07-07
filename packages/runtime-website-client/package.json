@@ -4,7 +4,7 @@
   "description": "Code base for the website's client code",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup"
+    "build": "tsc -p ."
   },
   "author": "PapiOphidian",
   "license": "SEE LICENSE IN LICENSE"

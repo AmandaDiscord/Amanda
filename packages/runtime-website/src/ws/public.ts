@@ -122,7 +122,7 @@ export class Session {
 			// Redeem the single-use ticket minted when the dashboard page was rendered.
 			// The long-lived auth token never leaves the HttpOnly cookie
 			const redeemed = wstickets.redeem(data.d.ticket)
-			if (!redeemed || redeemed.channelID !== data.d.channel_id) return this.deny(data, "AUTH_FAILED")
+			if (redeemed?.channelID !== data.d.channel_id) return this.deny(data, "AUTH_FAILED")
 
 			const state = await redis.GET<APIVoiceState>("voice", redeemed.userID)
 			if (!state) {

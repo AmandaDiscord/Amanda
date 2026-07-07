@@ -4,9 +4,13 @@ import { prettySeconds, opcodes } from "./utilities.js"
 
 import "./global"
 import type { Session } from "./player"
-import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
-import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
-import type { UnpackArray } from "../../shared-types/index"
+// import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
+// import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
+// import type { UnpackArray } from "../../shared-types/index"
+
+type WebQueue = any
+type WebTrack = any
+type UnpackArray<T extends Array<any>> = T extends Array<infer R> ? R : never;
 
 // From HTML
 const serverTimeDiff = _serverTimeDiff
@@ -658,7 +662,7 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 	}
 
 	public setMembers(members: WebQueueMembers): void {
-		members.forEach(member => {
+		members.forEach((member: any) => {
 			if (!this.memberStore.has(member.id)) {
 				this.memberStore.set(member.id, new VoiceMember(member))
 			}
@@ -666,7 +670,7 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 		this.oldMembers.length = 0
 		this.oldMembers.push(...this.members)
 		this.members.length = 0
-		this.members.push(...members.map(m => m.id))
+		this.members.push(...members.map((m: any) => m.id))
 		this.members.forEach(id => {
 			if (!this.oldMembers.includes(id)) this.memberStore.get(id)!.isNew = true
 		})
@@ -692,7 +696,7 @@ export class VoiceInfo<E extends HTMLElement> extends ElemJS<E> {
 			this.element.style.visibility = visibility
 			let newAmanda = false
 			this.memberStore.forEach(member => {
-				if (member.isNew && member.props.isAmanda) {
+				if (member.isNew && (member.props as any).isAmanda) {
 					newAmanda = true
 					member.join(this).then(() => {
 						this.memberStore.forEach(member2 => {
@@ -748,8 +752,8 @@ export class VoiceMember extends ElemJS<HTMLDivElement> {
 	}
 
 	public addSelf(voiceInfo: VoiceInfo<HTMLElement>): void {
-		voiceInfo.child(this.parts.avatar, this.props.isAmanda ? 0 : -1)
-		voiceInfo.child(this.parts.name, this.props.isAmanda ? 1 : -1)
+		voiceInfo.child(this.parts.avatar, (this.props as any).isAmanda ? 0 : -1)
+		voiceInfo.child(this.parts.name, (this.props as any).isAmanda ? 1 : -1)
 		voiceInfo.element.style.visibility = "visible"
 	}
 
@@ -780,14 +784,14 @@ export class VoiceMember extends ElemJS<HTMLDivElement> {
 	}
 
 	public getAvatar(): AnonImage {
-		if (!this.props.avatar) return new AnonImage("https://amanda.moe/images/unknown.webp")
-		return new AnonImage(`https://cdn.discordapp.com/avatars/${this.props.id}/${this.props.avatar}${this.props.avatar.startsWith("a_") ? ".gif" : ".png"}`).class("avatar").direct("width", this.avatarSize).direct("height", this.avatarSize)
+		if (!(this.props as any).avatar) return new AnonImage("https://amanda.moe/images/unknown.webp")
+		return new AnonImage(`https://cdn.discordapp.com/avatars/${(this.props as any).id}/${(this.props as any).avatar}${(this.props as any).avatar.startsWith("a_") ? ".gif" : ".png"}`).class("avatar").direct("width", this.avatarSize).direct("height", this.avatarSize)
 	}
 
 	public getName(): ElemJS<HTMLDivElement> {
 		const name = new ElemJS<HTMLDivElement>("div").class("name")
-		if (this.props.isAmanda) name.child(new ElemJS<HTMLImageElement>("img").direct("src", "/images/notes.svg"))
-		name.child(new ElemJS("span").text(this.props.tag))
+		if ((this.props as any).isAmanda) name.child(new ElemJS<HTMLImageElement>("img").direct("src", "/images/notes.svg"))
+		name.child(new ElemJS("span").text((this.props as any).tag))
 		return name
 	}
 }

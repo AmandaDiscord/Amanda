@@ -4,7 +4,7 @@
   "description": "Gateway worker package for AmandaDiscord",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup && node ../../scripts/sourceMapPostProcess.js dist/index.js.map",
+    "build": "tsc -p .",
     "lint": "eslint .",
     "start": "node --optimize-for-size .",
     "dev": "node --trace-warnings --enable-source-maps --optimize-for-size ."

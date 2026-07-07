@@ -10,8 +10,11 @@ import { Player, Queue, VoiceInfo, SideControls, toast } from "./classes.js"
 import { q, opcodes, generateNonce } from "./utilities.js"
 import { ListenManager } from "./wrappers/ListenManager.js"
 
-import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
-import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
+// import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
+// import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
+
+type WebQueue = any
+type WebTrack = any
 
 type WebQueueJSON = ReturnType<WebQueue["toJSON"]>
 type WebTrackJSON = ReturnType<WebTrack["toObject"]>

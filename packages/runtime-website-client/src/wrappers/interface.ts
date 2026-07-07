@@ -1,4 +1,5 @@
-import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+// import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+type WebTrack = any
 
 export abstract class Wrapper {
 	abstract load(track: ReturnType<WebTrack["toObject"]>): Promise<void>

@@ -4,7 +4,8 @@ import { q } from "../utilities.js"
 import "../global.js"
 import type { Wrapper } from "./interface.js"
 
-import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+// import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+type WebTrack = any
 
 function createEmbedURL(link: string, props: Record<string, unknown>): string {
 	const url = new URL("https://w.soundcloud.com/player/")

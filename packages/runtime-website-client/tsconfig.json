@@ -6,7 +6,6 @@
 		"resolveJsonModule": false,
 		"outDir": "../runtime-website/webroot/scripts",
 		"rootDir": "./src",
-		"incremental": false,
 		"target": "es2015",
 		"module": "es2015",
 		"moduleResolution": "bundler"

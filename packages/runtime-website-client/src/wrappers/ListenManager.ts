@@ -2,7 +2,8 @@ import type { Wrapper } from "./interface"
 
 import { SoundCloudWrapper } from "./SoundCloudWrapper.js"
 
-import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+// import type { Track as WebTrack } from "../../../runtime-website/src/music/tracktypes"
+type WebTrack = any
 
 type WebTrackJSON = ReturnType<WebTrack["toObject"]>
 

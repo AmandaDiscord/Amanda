@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "empty.d.ts",
   "scripts": {
-    "build": "tsup",
+    "build": "tsc -p .",
     "lint": "eslint ."
   },
   "author": "PapiOphidian",
