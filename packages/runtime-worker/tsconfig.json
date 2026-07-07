@@ -5,6 +5,7 @@
 	"compilerOptions": {
 		"outDir": "./dist",
 		"rootDir": "./src",
-		"types": ["./types/canvas-image-cover", "./types/gifencoder"]
+		"types": ["./types/canvas-image-cover", "./types/gifencoder"],
+		"incremental": true
 	}
 }
