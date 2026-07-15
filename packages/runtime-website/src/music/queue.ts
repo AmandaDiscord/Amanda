@@ -348,7 +348,7 @@ export class Queue extends sync.reloadClassMethods(() => Queue) {
 		}
 
 		if (this._canSetVCStatus) {
-			snow.channel.setVoiceChannelStatus(this.voiceChannelID, "").catch(() => void 0)
+			await snow.channel.setVoiceChannelStatus(this.voiceChannelID, "").catch(() => void 0)
 			// snow.channel.setVoiceChannelHangout(this.voiceChannelID, "").catch(() => void 0)
 		}
 		await lavalink!.leave(this.guildID).catch(e => console.error(`lavalink leave error:\n${util.inspect(e, true, Infinity, true)}`))
