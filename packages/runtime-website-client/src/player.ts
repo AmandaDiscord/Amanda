@@ -4,7 +4,7 @@ const channelID = _channelID
 const wsTicket = _wsTicket
 let serverTimeDiff = _serverTimeDiff
 
-import "./global"
+import "./global.js"
 
 import { Player, Queue, VoiceInfo, SideControls, toast } from "./classes.js"
 import { q, opcodes, generateNonce } from "./utilities.js"

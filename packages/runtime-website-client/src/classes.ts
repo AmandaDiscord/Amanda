@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-import { imageStore } from "./imagestore"
+import { imageStore } from "./imagestore.js"
 import { prettySeconds, opcodes } from "./utilities.js"
 
 import "./global"
