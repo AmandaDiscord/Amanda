@@ -2,7 +2,7 @@
 import { imageStore } from "./imagestore.js"
 import { prettySeconds, opcodes } from "./utilities.js"
 
-import "./global"
+import "./global.js"
 import type { Session } from "./player"
 // import type { Queue as WebQueue } from "../../runtime-website/src/music/queue.js"
 // import type { Track as WebTrack } from "../../runtime-website/src/music/tracktypes.js"
