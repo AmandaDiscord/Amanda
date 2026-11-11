@@ -147,7 +147,7 @@ export class Session {
 			break
 
 		case "AUTH_FAILED":
-			this.die("Your login is invalid or expired. Log in again, then refresh the page.")
+			this.die("The temporary token to connect was invalid (alread used, expired before use, or wasn't for the requested channel). Refresh the page for a new one and if that doesn't work, re-login.")
 			break
 
 		case "NO_VOICE_STATE":
