@@ -37,7 +37,7 @@ __metadata:
     "@amanda/sql": "npm:1.0.0"
     "@types/mime-types": "npm:3.0.1"
     discord-verify: "npm:1.2.0"
-    lavacord: "npm:^3.1.0"
+    lavacord: "npm:^3.1.1"
     marked: "npm:^18.2.0"
     mime-types: "npm:^3.0.2"
     uWebSockets.js: "uNetworking/uWebSockets.js#v20.71.0"
@@ -271,9 +271,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@discordjs/voice@npm:^0.19.0":
-  version: 0.19.1
-  resolution: "@discordjs/voice@npm:0.19.1"
+"@discordjs/voice@npm:^0.19.2":
+  version: 0.19.2
+  resolution: "@discordjs/voice@npm:0.19.2"
   dependencies:
     "@snazzah/davey": "npm:^0.1.9"
     "@types/ws": "npm:^8.18.1"
@@ -281,7 +281,7 @@ __metadata:
     prism-media: "npm:^1.3.5"
     tslib: "npm:^2.8.1"
     ws: "npm:^8.19.0"
-  checksum: 10/9777cd59190b4c39cd8d0586f50e0197b1ac9ed1fbcf58d20497580d9b060b696191db4e1f66ccf3edcee7a6bc806e39394921d65657700a0caf07f19611f4a6
+  checksum: 10/8e4daa932b5a35c71e548808d30a7bfacbf561a6e33dd382432534caa498d8253fafa433d05e00c552db2e7ab3662bc023376bb4a35a11e792ea49f80159476e
   languageName: node
   linkType: hard
 
@@ -1511,16 +1511,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cloudstorm@npm:^0.17.0":
-  version: 0.17.0
-  resolution: "cloudstorm@npm:0.17.0"
-  dependencies:
-    discord-api-types: "npm:^0.38.40"
-    snowtransfer: "npm:^0.17.5"
-  checksum: 10/a94c41e0ac7e6f3bf969f201b9b77b75db9757b7ca6a6388ff0b67b239484c6f0ca680fc09cdff8d81dea0cc83a13b1194cd5ceea8c9d6fdb933e8c449bfd63b
-  languageName: node
-  linkType: hard
-
 "cloudstorm@npm:^0.20.0":
   version: 0.20.0
   resolution: "cloudstorm@npm:0.20.0"
@@ -2390,17 +2380,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lavacord@npm:^3.1.0":
-  version: 3.1.0
-  resolution: "lavacord@npm:3.1.0"
+"lavacord@npm:^3.1.1":
+  version: 3.1.1
+  resolution: "lavacord@npm:3.1.1"
   dependencies:
-    cloudstorm: "npm:^0.17.0"
+    cloudstorm: "npm:^0.20.0"
     detritus-client: "npm:0.16.x"
-    discord-api-types: "npm:^0.38.42"
+    discord-api-types: "npm:^0.38.58"
     discord.js: "npm:14.x"
     eris: "npm:0.18.x"
     lavalink-types: "npm:^3.1.0"
-    oceanic.js: "npm:1.14.0"
+    oceanic.js: "npm:1.15.0"
   dependenciesMeta:
     detritus-client:
       optional: true
@@ -2410,7 +2400,7 @@ __metadata:
       optional: true
     oceanic.js:
       optional: true
-  checksum: 10/cbcd34c2d5c391a77241c9d4e3201ad131cb4e82720c61685373d9f5bfd27bf09efe844954fdead545e692b89ca91225afd53723afd3400ff8faa72e4cac351b
+  checksum: 10/0beca0944a0c576e8f6ebec866126772504036de33986f35b800bf421ed2af63b4853fd3d8002b588d9c33b797c87e57fab4c7dfc672b5e31bb2bd26bb9ec726
   languageName: node
   linkType: hard
 
@@ -2750,17 +2740,31 @@ __metadata:
   languageName: node
   linkType: hard
 
-"oceanic.js@npm:1.14.0":
-  version: 1.14.0
-  resolution: "oceanic.js@npm:1.14.0"
+"oceanic.js@npm:1.15.0":
+  version: 1.15.0
+  resolution: "oceanic.js@npm:1.15.0"
   dependencies:
-    "@discordjs/voice": "npm:^0.19.0"
+    "@discordjs/voice": "npm:^0.19.2"
     tslib: "npm:^2.8.1"
-    ws: "npm:^8.19.0"
+    ws: "npm:^8.21.3"
+  peerDependencies:
+    erlpack: ^0.1.4
+    pako: ^2.1.0
+    zlib-sync: ^0.1.10
+    zstd-napi: ^0.0.12
   dependenciesMeta:
     "@discordjs/voice":
       optional: true
-  checksum: 10/5a8bed37b90c1703e0a2f11b879b540c79674e254cdd53c4cf30dea1be0f781694991f928980334af34ac2957436f138aa710a1aa40cdf70e59e49ed1c8e3aec
+  peerDependenciesMeta:
+    erlpack:
+      optional: true
+    pako:
+      optional: true
+    zlib-sync:
+      optional: true
+    zstd-napi:
+      optional: true
+  checksum: 10/5be40dee2bb9daa44711725b3b0137f92c6904b188f280c203237a1f6d0fc7a28524b9052326f834161c1685c68594bb9658978c32e55c7c28c17827d08a7160
   languageName: node
   linkType: hard
 
@@ -3541,6 +3545,21 @@ __metadata:
     utf-8-validate:
       optional: true
   checksum: 10/26e4901e93abaf73af9f26a93707c95b4845e91a7a347ec8c569e6e9be7f9df066f6c2b817b2d685544e208207898a750b78461e6e8d810c11a370771450c31b
+  languageName: node
+  linkType: hard
+
+"ws@npm:^8.21.3":
+  version: 8.22.2
+  resolution: "ws@npm:8.22.2"
+  peerDependencies:
+    bufferutil: ^4.0.1
+    utf-8-validate: ">=5.0.2"
+  peerDependenciesMeta:
+    bufferutil:
+      optional: true
+    utf-8-validate:
+      optional: true
+  checksum: 10/f1b700df8e9df5bef79187fb10228412798aafbcb7b319abb774cdd1fcec0a71a26a5dd75221b7ceb52826d939eea492c410f7bb59f02c1308df624714883900
   languageName: node
   linkType: hard
 
